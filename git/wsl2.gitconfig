@@ -1,0 +1,8 @@
+[user]
+	email = lestebanpc@gmail.com
+	name = Esteban Peña
+[core]
+	editor = vim
+	autocrlf = input
+[init]
+	defaultBranch = main
