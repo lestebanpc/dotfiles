@@ -2,12 +2,18 @@
 	name = Luciano Peña
 	email = esteban_fiis@hotmail.com
 [core]
-	editor = D:/Tools/Vim/vim90/vim.exe
-	autocrlf = true
+	editor = vim
+	autocrlf = auto
+	pager = delta
 [init]
 	defaultBranch = main
-[filter "lfs"]
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
-	clean = git-lfs clean -- %f
+[interactive]
+    diffFilter = delta --color-only
+[delta]
+	line-numbers = true
+    light = false
+	syntax-theme = Coldark-Dark
+[merge]
+    conflictstyle = diff3
+[diff]
+    colorMoved = default

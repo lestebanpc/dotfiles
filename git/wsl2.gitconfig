@@ -4,5 +4,16 @@
 [core]
 	editor = vim
 	autocrlf = input
+	pager = delta
 [init]
 	defaultBranch = main
+[interactive]
+    diffFilter = delta --color-only
+[delta]
+	line-numbers = true
+    light = false
+	syntax-theme = Coldark-Dark
+[merge]
+    conflictstyle = diff3
+[diff]
+    colorMoved = default
