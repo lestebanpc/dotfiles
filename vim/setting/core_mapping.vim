@@ -36,8 +36,8 @@ if g:is_neovim
 else
     
     "set termwinsize=15*0
-    nnoremap <Leader>th :botright vertical terminal<CR>
-    nnoremap <Leader>tv :botright terminal<CR>
+    nnoremap <Leader>tv :botright vertical terminal<CR>
+    nnoremap <Leader>th :botright terminal<CR>
    
 endif
 

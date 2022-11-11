@@ -23,4 +23,4 @@ Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory
 $commandOverride = [ScriptBlock]{ param($Location) Write-Host $Location }
 Set-PsFzfOption -AltCCommand $commandOverride
 # Override default tab completion
-Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
+#Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
