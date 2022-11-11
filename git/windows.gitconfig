@@ -2,8 +2,8 @@
 	name = Luciano Peña
 	email = esteban_fiis@hotmail.com
 [core]
-	editor = vim
-	autocrlf = auto
+	editor = D:/Tools/Vim/vim90/vim.exe
+	autocrlf = true
 	pager = delta
 [init]
 	defaultBranch = main
