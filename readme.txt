@@ -3,9 +3,9 @@ chmod u+x ~/.files/tmux/oh-my-tmux.sh
 chmod u+x ~/.files/fzf/completion.bash
 chmod u+x ~/.files/fzf/key-bindings.bash
 
-#Enlaces de archivos
+#Enlaces de archivos (generalmente los archivos de configuracion se les colocara la extension '.conf')
 # 1> Interprete shell> Bash
-ln -s ~/.files/shell/ubuntu/bashrc.sh ~/.bashrc
+ls -sf ~/.files/terminal/linux/profile/ubuntu_wls_bash.sh ~/.bashrc
 # 2> SSH Config
 ln -sn ~/.files/ssh/wsl2.config ~/.ssh/config
 # 3> VIM
@@ -18,6 +18,10 @@ ln -s ~/.files/oh-my-posh/lepc-montys.omp.json /opt/tools/oh-my-posh/themes/lepc
 ln -s ~/.files/git/wsl2.gitconfig ~/.gitconfig
 # 7> TMUX
 ln -s ~/.files/tmux/tmux.conf ~/.tmux.conf
+# 8> Crear ~/.dircolors y modificarlo para crear una variable LS_COLORS mas adecuada
+dircolors --print-database > ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf
+vim ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf
+ln -s ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf ~/.dircolors
 
 #Enlaces de carpetas:
 # 1> NeoVim
@@ -27,8 +31,8 @@ ln -s ~/.files/nvim/lua ~/.config/nvim/lua
 
 #Enlaces de archivos/carpetas
 # 1> Interprete shell> Poweshell
-MKLINK E:\Documents\PowerShell\Microsoft.PowerShell_profile.ps1 %USERPROFILE%\.files\shell\windows\profile.ps1
-MKLINK E:\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 %USERPROFILE%\.files\shell\windows\profile.ps1
+MKLINK E:\Documents\PowerShell\Microsoft.PowerShell_profile.ps1 %USERPROFILE%\.files\terminal\windows\pwsh_profile.ps1
+MKLINK E:\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 %USERPROFILE%\.files\terminal\windows\pwsh_profile.ps1
 # 2> Git
 MKLINK %USERPROFILE%\.gitconfig %USERPROFILE%\.files\git\windows.gitconfig
 # 3> VIM
