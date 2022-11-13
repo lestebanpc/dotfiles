@@ -1,6 +1,6 @@
 [user]
-	name = Luciano Peña
 	email = esteban_fiis@hotmail.com
+	name = Luciano Peña
 [core]
 	editor = D:/Tools/Vim/vim90/vim.exe
 	autocrlf = true
