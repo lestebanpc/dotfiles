@@ -96,8 +96,8 @@ set termguicolors
 "set t_Co=256
 
 "Establcer el tipo de terminal (pseudoterminal o pty)
-"if (g:os == "Windows") && !g:is_neovim
-if g:os == "Windows"
+if (g:os == "Windows") && !g:is_neovim
+"if g:os == "Windows"
     "Si es Windows >= 10.1809, usar 'Windows Pseudo Console' (ConPTY)
 	set termwintype=conpty
     "Si es Windows <  10.1809, usar 'Windows Pseudo terminal' (WinPTY)
