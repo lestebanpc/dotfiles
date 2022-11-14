@@ -45,9 +45,7 @@ else
 endif
 
 "Color : Permitir que se traduzca los temas de VIM de 'ANSI 256 color' a 24 bits (RGB Hex)
-if g:os == "Windows"
-	let g:fzf_force_24_bit_colors = 1
-endif
+let g:fzf_force_24_bit_colors = 1
 
 "Color de popup de fzf, segun el tema usado en VIM
 "
@@ -88,7 +86,7 @@ nnoremap <silent> <leader>f :Files<CR>
 nnoremap <silent> <leader>b :Buffers<CR>
 nnoremap <silent> <leader>sa :Ag<CR>
 nnoremap <silent> <leader>sr :Rg<CR>
-nmap <leader>c :History:<CR>
+nnoremap <leader>c :History:<CR>
 "cnoremap <C-P> <C-R>=expand("%:p:h") . "/" <CR>
 "Recovery commands from history through FZF
 

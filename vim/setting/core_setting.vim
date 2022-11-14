@@ -21,6 +21,15 @@ if !exists("g:os")
     endif
 endif
 
+"Determinar si VIM corre en modo GUI o en el modo consola:
+" > En Linux y MacOS, se usa otro archivo de configuracion para este proceso
+" > En Windows se reusa el mismo archivo de configuracion para la versio GUI y la consola
+if has("gui_running")
+    let g:is_gui_vim = 1
+else
+    let g:is_gui_vim = 0
+endif
+
 "Cacular si NeoVim
 if has('nvim')
     let g:is_neovim = 1
@@ -87,12 +96,48 @@ set termguicolors
 "set t_Co=256
 
 "Establcer el tipo de terminal (pseudoterminal o pty)
-if (g:os == "Windows") && !g:is_neovim
+"if (g:os == "Windows") && !g:is_neovim
+if g:os == "Windows"
     "Si es Windows >= 10.1809, usar 'Windows Pseudo Console' (ConPTY)
 	set termwintype=conpty
     "Si es Windows <  10.1809, usar 'Windows Pseudo terminal' (WinPTY)
 	"set termwintype=winpty
 endif
+
+"Configuracion de la terminal que se puede abrir en VIM
+" > Personalizar los 16 colores usados por defecto por toda terminal
+"    00  Black        08  Bright Black (Gray)
+"    01  Red          09  Bright Red
+"    02  Green        10  Bright Green
+"    03  Yellow       11  Bright Yellow
+"    04  Blue         12  Bright Blue
+"    05  Magenta      13  Bright Magenta
+"    06  Cyan         14  Bright Cyan
+"    07  White        15  Bright White
+if g:is_neovim
+  let g:terminal_color_0 = '#104040'
+  let g:terminal_color_1 = '#D84A33'
+  let g:terminal_color_2 = '#5DA602'
+  let g:terminal_color_3 = '#EEBB6E'
+  let g:terminal_color_4 = '#417AB3'
+  let g:terminal_color_5 = '#9F4E85'
+  let g:terminal_color_6 = '#7DD6CF'
+  let g:terminal_color_7 = '#DBDED8'
+  let g:terminal_color_8 = '#685656'
+  let g:terminal_color_9 = '#D76B42'
+  let g:terminal_color_10 = '#99B52C'
+  let g:terminal_color_11 = '#FFB670'
+  let g:terminal_color_12 = '#6C99BB'
+  let g:terminal_color_13 = '#9F4E85'
+  let g:terminal_color_14 = '#7DD6CF'
+  let g:terminal_color_15 = '#E4D5C7'
+else
+  let g:terminal_ansi_colors = ['#104040', '#D84A33', '#5DA602', '#EEBB6E', '#417AB3', '#9F4E85', '#7DD6CF', '#DBDED8', '#685656', '#D76B42', '#99B52C', '#FFB670', '#6C99BB', '#9F4E85', '#7DD6CF', '#E4D5C7']
+endif
+
+" > Colores del sistema o propios del terminal
+"highlight Terminal guibg='#040404' guifg='#EBEBEB' ctermbg='#040404' ctermfg='#EBEBEB'
+"highlight Terminal guibg=#040404 guifg=#EBEBEB
 
 "----------------------------- Apareciencia : Otros   ------------------------------
 set ruler
@@ -175,7 +220,7 @@ endif
 
 
 "Solo para Windows y MAC (Linux usa gVim la cual tiene su propio archivo ".gvimrc")
-if has("gui_running")
+if g:is_gui_vim
     set guioptions=egmrti
     set gfn=Cousine\ Nerd\ Font\ Mono:h10
 endif
