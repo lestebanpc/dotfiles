@@ -1,1 +1,2 @@
-
+#Cualquier archivo que tenga extension '.swp' (archivos temporales de VIM)
+**/*.swp
