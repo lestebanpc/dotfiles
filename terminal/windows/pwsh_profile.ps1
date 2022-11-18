@@ -44,14 +44,15 @@ function glog()
     if (! $?)
 	{
         echo 'Invalid git repository'
-        return 0
+        return
     }
 
-	$gll_view="pwsh -noprofile -command ""git show --color=always '{}'.Substring(0,7) | delta"""
-    $gll_paste="pwsh -noprofile -command ""Set-Clipboard -Value '{}'.Substring(0,7)"""
+	$gll_view1="pwsh -noprofile -command ""git show --color=always ""'{}'.Substring(0,7)"""" | delta"
+	$gll_view2="pwsh -noprofile -command ""git show --color=always ""'{}'.Substring(0,7)"""""
+    $gll_paste="pwsh -noprofile -command ""Set-Clipboard -Value ""'{}'.Substring(0,7)"""""
 
     #Mostrar los commit y su preview
-    glogline | fzf -i -e --no-sort --reverse --tiebreak index --no-multi --ansi --preview "$gll_view" `
-        --bind "shift-up:preview-page-up,shift-down:preview-page-down" --bind "enter:execute:$gll_view" `
+    glogline | fzf -i -e --no-sort --reverse --tiebreak index --no-multi --ansi --preview "$gll_view1" `
+        --bind "shift-up:preview-page-up,shift-down:preview-page-down" --bind "enter:execute:$gll_view2" `
         --bind "ctrl-y:execute-silent:$gll_paste"
 }
