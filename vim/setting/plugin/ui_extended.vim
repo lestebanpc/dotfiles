@@ -37,12 +37,18 @@ let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
 "Layout 
 "  > Border : rounded, sharp, horizontal, vertical, top, bottom, left, right
 "  > Highlight: Comment, Identifier 
-if g:is_neovim
-    let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.8, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
-else
-    let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.8, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'border': 'rounded' } }
-    "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.8, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
-endif
+
+"Se dejo de Usar 'tmux popup' (tmux floating window) debido a que usa el color de fondo de la terminal
+"if g:use_tmux
+"    let g:fzf_layout = { 'tmux': '-p90%,80%' }
+"else
+    if g:is_neovim
+        let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
+    else
+        let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'border': 'rounded' } }
+        "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
+    endif
+"endif
 
 "Color : Permitir que se traduzca los temas de VIM de 'ANSI 256 color' a 24 bits (RGB Hex)
 let g:fzf_force_24_bit_colors = 1

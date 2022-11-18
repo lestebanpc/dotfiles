@@ -44,6 +44,14 @@ else
     let g:has_python3 = 0
 endif
 
+"Determinar si se usa TMUX
+if (g:os != "Windows") && exists('$TMUX') 
+    let g:use_tmux = 1
+else
+    let g:use_tmux = 0
+endif
+
+
 "----------------------------- Validar los requisitos ------------------------------
 
 "Si es VIM y no tiene tiene instalado python3, no soporta Snippets
