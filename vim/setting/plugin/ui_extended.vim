@@ -34,6 +34,10 @@ endif
 
 let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
 
+if g:os == "Windows"
+    let $FZF_DEFAULT_COMMAND="fd --type file"
+endif
+
 "Layout 
 "  > Border : rounded, sharp, horizontal, vertical, top, bottom, left, right
 "  > Highlight: Comment, Identifier 

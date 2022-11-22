@@ -481,6 +481,11 @@ function setup_git_commands() {
     #m_setup_git_artifact "${l_repo_base}" "${l_artifact_prefix}"
     printf "\n\n"
 
+    #Incluir oh-my-posh y sus temas
+    #Incluir fd
+    #Incluir less.exe (lesskey.exe) en Windows
+
+
     #2. Caducar las credecinales de root almacenadas temporalmente
     echo "Caducando el cache de temporal password de su 'sudo'"
     sudo -k

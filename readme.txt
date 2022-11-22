@@ -32,8 +32,8 @@ ln -s ~/.files/nvim/lua ~/.config/nvim/lua
 
 #Enlaces de archivos/carpetas
 # 1> Interprete shell> Poweshell
-MKLINK E:\Documents\PowerShell\Microsoft.PowerShell_profile.ps1 %USERPROFILE%\.files\terminal\windows\pwsh_profile.ps1
-MKLINK E:\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 %USERPROFILE%\.files\terminal\windows\pwsh_profile.ps1
+MKLINK E:\Documents\PowerShell\Microsoft.PowerShell_profile.ps1 %USERPROFILE%\.files\terminal\windows\profile\pwsh_profile.ps1
+MKLINK E:\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 %USERPROFILE%\.files\terminal\windows\profile\pwsh_profile.ps1
 # 2> Git
 MKLINK %USERPROFILE%\.gitconfig %USERPROFILE%\.files\git\windows_git.conf
 # 3> VIM
@@ -44,5 +44,5 @@ MKLINK /D %LOCALAPPDATA%\nvim\lua %USERPROFILE%\.files\nvim\lua
 # 5> SSH Config
 MKLINK %USERPROFILE%\.ssh\config %USERPROFILE%\.files\ssh\windows_ssh.conf
 # 6> Oh-My-Posh
-MKLINK D:\Tools\Cmds\Windows\oh-my-posh\themes\lepc-montys.omp.json %USERPROFILE%\.files\oh-my-posh\lepc-montys.omp.json
+MKLINK D:\Tools\Cmds\Windows\oh-my-posh\themes\lepc-montys.omp.json %USERPROFILE%\.files\terminal\oh-my-posh\lepc-montys.omp.json
 

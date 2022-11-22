@@ -18,7 +18,7 @@ let g:use_typing_surround = 1
 let g:use_typing_visual_multi = 1
 
 "IDE - Path de LSP Server C# (Roslyn)
-let g:lsp_server_cs_path = 'D:/Tools/Cmds/Windows/omnisharp-roslyn/OmniSharp.exe'
+let g:lsp_server_cs_path = 'D:/Tools/Cmds/omnisharp-roslyn/OmniSharp.exe'
 
 "----------------------------- Plugins Initialize      -----------------------------
 "Registro de los plugin en los gestores de plugins Vim-Plug y de paquetes Packer
