@@ -110,7 +110,7 @@ fi
 
 
 # Tema por defecto de "Oh My Posh"
-eval "$(oh-my-posh --init --shell bash --config ~/.files/oh-my-posh/lepc-montys.omp.json)"
+eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lepc-montys.omp.json)"
 
 
 # enable programmable completion features (you don't need to enable
@@ -132,8 +132,8 @@ export PATH=$PATH:/opt/tools/rh-ocp-cli
 
 # Opciones por defecto del comando fzf
 export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"
-source ~/.files/fzf/key-bindings.bash
-source ~/.files/fzf/completion.bash
+source ~/.files/terminal/linux/complete/fzf.bash
+source ~/.files/terminal/linux/keybindings/fzf.bash
 
 #Function: Search for commit with FZF preview and copy hash
 #  > [ENTER]           - Ver el detalle de commit y navegar en sus paginas

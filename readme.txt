@@ -1,7 +1,8 @@
 #Permiso de ejecucion de script
-chmod u+x ~/.files/tmux/oh-my-tmux.sh
-chmod u+x ~/.files/fzf/completion.bash
-chmod u+x ~/.files/fzf/key-bindings.bash
+chmod u+x ~/.files/terminal/linux/tmux/oh-my-tmux.sh
+chmod u+x ~/.files/terminal/linux/complete/fzf.bash
+chmod u+x ~/.files/terminal/linux/keybindings/fzf.bash
+chmod u+x ~/.files/setup/setup_git_commands.bash
 
 #Enlaces de archivos (generalmente los archivos de configuracion se les colocara la extension '.conf')
 # 1> Interprete shell> Bash
@@ -13,11 +14,11 @@ ls -s ~/.files/vim/vimrc_wsl2.vim ~/.vimrc
 # 4> NeoVim
 ln -s ~/.files/nvim/init_wsl2.vim ~/.config/nvim/init.vim
 # 5> Oh-My-Posh
-ln -s ~/.files/oh-my-posh/lepc-montys.omp.json /opt/tools/oh-my-posh/themes/lepc-montys.omp.json
+ln -s ~/.files/terminal/oh-my-posh/lepc-montys.omp.json /opt/tools/oh-my-posh/themes/lepc-montys.omp.json
 # 6> Git
 ln -s ~/.files/git/wsl2_git.conf ~/.gitconfig
 # 7> TMUX
-ln -s ~/.files/tmux/tmux.conf ~/.tmux.conf
+ln -s ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
 # 8> Crear ~/.dircolors y modificarlo para crear una variable LS_COLORS mas adecuada
 dircolors --print-database > ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf
 vim ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf
