@@ -85,15 +85,15 @@ Se tiene los siguientes pasos:
       :PlugInstall
       ```
 
-10. Configuracion de VIM
-    
-    ```shell
-    #Para mi WSL2 Ubuntu
-    ls -s ~/.files/vim/vimrc_wsl2.vim ~/.vimrc
-    #Para mi Fedora WS ...
-    ```
+   3. Configuracion de VIM
+       
+       ```shell
+       #Para mi WSL2 Ubuntu
+       ls -s ~/.files/vim/vimrc_wsl2.vim ~/.vimrc
+       #Para mi Fedora WS ...
+       ```
 
-11. Configuración de NoeVIM
+10. Configuración de NoeVIM
     Estoy usando Neovim como editor alternativo a VIM (uso mas Vim)
     
     1. Instalando del gestor de packetes Packer
