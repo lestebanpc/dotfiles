@@ -43,12 +43,15 @@ else
     packadd vim-airline
     packadd vim-airline-themes
     
-    "Package UI> EXTENDED> Explorador de archivos (deben cargarse antes de 'Vim-DevIcons')
+    "Plug-In> UI> EXTENDED> Explorador de archivos (deben cargarse antes de 'Vim-DevIcons')
     packadd nerdtree
 
 endif
 
-
+"Plug-In> UI> EXTENDED> FZF ("FuZzy Finder") - Funciones basicas
+packadd fzf
+"Plug-In> UI> EXTENDED> FZF ("FuZzy Finder") - Plugins para VIM
+packadd fzf.vim
 
 if g:use_ide
 
@@ -147,9 +150,6 @@ if g:os != "Windows"
     Plug 'preservim/vimux'
 endif
 
-"Plug-In> Search Files> FZF (FuZzy Finder"), instalacion manual del binario
-Plug 'junegunn/fzf'
-Plug 'junegunn/fzf.vim'
 
 "ONLY VIM : Iconos, para Neovim se usa la version lua
 if !g:is_neovim

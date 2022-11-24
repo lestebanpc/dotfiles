@@ -164,7 +164,8 @@ function s:get_version(bin)
   if has_key(s:versions, a:bin)
     return s:versions[a:bin]
   end
-  let command = (&shell =~ 'powershell' ? '&' : '') . s:fzf_call('shellescape', a:bin) . ' --version --no-height'
+  "CHANGE : Soporte a Powershell (solo soporta a Windows Powershell)
+  let command = ((&shell =~ 'pwsh') || (&shell =~ 'powershell') ? '&' : '') . shellescape(a:bin) . ' --version --no-height'
   let output = systemlist(command)
   if v:shell_error || empty(output)
     return ''

@@ -45,6 +45,28 @@ return require('packer').startup(function(use)
         opt = true
     }
 
+
+    -- Package UI> CORE> Facilita la navegacion entre Split VIM y Paneles TMUX
+    use {
+        'christoomey/vim-tmux-navigator',
+        opt = true
+    }
+
+    --En Windows esta plugin sera un enlace symbolic a '~/.files/vim_packages/fzf'
+    if (vim.g.os ~= "Windows") then
+        -- Package UI> EXTENDED> FZF - Plugin de funciones basicas
+        use {
+            'junegunn/fzf',
+            opt = true
+        }
+    end
+
+    -- Package UI> EXTENDED> FZF - Plugin que permite el uso FZF en VIM
+    use {
+        'junegunn/fzf.vim',
+        opt = true
+    }
+
     -- Package UI> EXTENDED> Explorer de archivos
     use {
         'nvim-tree/nvim-tree.lua',
