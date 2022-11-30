@@ -109,14 +109,14 @@ Se tiene los siguientes pasos:
        :PlugInstall
        ```
 
-12. Configuracion de NeoVim
-    
-    ```shell
-    #Los script LUA a usar
-    ln -s ~/.files/nvim/lua ~/.config/nvim/lua
-    #Mi archivo de configuracion
-    ln -s ~/.files/nvim/init_wsl2.vim ~/.config/nvim/init.vim
-    ```
+    4. Configuracion de NeoVim
+       
+       ```shell
+       #Los script LUA a usar
+       ln -s ~/.files/nvim/lua ~/.config/nvim/lua
+       #Mi archivo de configuracion
+       ln -s ~/.files/nvim/init_wsl2.vim ~/.config/nvim/init.vim
+       ```
 
 ## 2. Configuración en Windows
 
