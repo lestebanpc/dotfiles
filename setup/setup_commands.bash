@@ -43,7 +43,7 @@ declare -r g_os=$?
 
 #TODO Mejorar
 #Determinar si es un Linux de la familia debian (por ejemplo Ubuntu), use 0
-declare -r g_os_description=$(lsb_release -d 2> /dev/null | sed 's/\w*:\s*\(\w*.*\)/\1/')
+declare -r g_os_description=$(cat /etc/lsb-release | grep 'DISTRIB_DESCRIPTION' | sed 's/DISTRIB_DESCRIPTION="\(.*\)"/\1/')
 g_is_debian_os=1
 if [[ "$g_os_description" == *Ubuntu* ]]; then
     g_is_debian_os=0
