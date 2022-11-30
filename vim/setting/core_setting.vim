@@ -264,8 +264,8 @@ endif
 "    - Palabras enviados por un servidor de lenguajes LSP
 "    - Ruta del sistema operativo
 "    - etc.
-"Los plugins de completado principalmente la fuente "omni-complete", pero algunos como CoC
-"usan una fuente personalizada por usuario.
+"Varios plugins de completado implementan la fuente 'omni-complete', pero algunos como CoC
+"no usan esta fuente e implementan una fuente personalizada por usuario.
 
 "Configuraciones del completado en modo insercion de VIM
 if g:is_neovim

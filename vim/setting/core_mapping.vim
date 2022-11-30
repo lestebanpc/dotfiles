@@ -45,8 +45,6 @@ endif
 "noremap <C-N> <C-\><C-n>
 
 "----------------------------- Tabs                    -----------------------------
-"nnoremap <Tab> gt
-"nnoremap <S-Tab> gT
 "nnoremap <silent> <S-t> :tabnew<CR>
 
 "----------------------------- Session Management      -----------------------------

@@ -1,2 +1,8 @@
-#Cualquier archivo que tenga extension '.swp' (archivos temporales de VIM)
+#VIM - Archivos swap o temporales (formato '.filename.swp')
 **/*.swp
+
+#VIM - Archivos de 'persistence undo' (formato '.filename.un~')
+**/*.un~
+
+#Archivos de temas de oh-my-posh
+terminal/oh-my-posh/themes/*
