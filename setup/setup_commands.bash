@@ -628,39 +628,39 @@ function m_copy_artifact_files() {
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_subfolder}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"rg\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"delta\" a \"${l_path_bin}\" ..."
             if [ $p_update_windows -ne 0 ]; then
                 if [ $g_is_root -eq 0 ]; then
-                    cp "${l_path_temp}/rg" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/rg"
-                    mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_temp}/delta" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/delta"
+                    #mkdir -pm 755 "${l_path_man}"
                 else
-                    sudo cp "${l_path_temp}/rg" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/rg"
-                    sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_temp}/delta" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/delta"
+                    #sudo mkdir -pm 755 "${l_path_man}"
                 fi
             else
                 cp "${l_path_temp}/delta.exe" "${l_path_bin}"
                 #mkdir -p "${l_path_man}"
             fi
             
-            #Copiar los archivos de ayuda man para comando
-            if [ $p_update_windows -ne 0 ]; then
-                echo "Copiando \"doc/rg.1\" a \""${l_path_man}"/\" ..."
-                if [ $g_is_root -eq 0 ]; then
-                    cp "${l_path_temp}/doc/rg.1" "${l_path_man}"/
-                else
-                    sudo cp "${l_path_temp}/doc/rg.1" "${l_path_man}"/
-                fi
-            fi
+            ##Copiar los archivos de ayuda man para comando
+            #if [ $p_update_windows -ne 0 ]; then
+            #    echo "Copiando \"doc/rg.1\" a \""${l_path_man}"/\" ..."
+            #    if [ $g_is_root -eq 0 ]; then
+            #        cp "${l_path_temp}/doc/rg.1" "${l_path_man}"/
+            #    else
+            #        sudo cp "${l_path_temp}/doc/rg.1" "${l_path_man}"/
+            #    fi
+            #fi
 
-            #Copiar los script de completado
-            if [ $p_update_windows -ne 0 ]; then
-                echo "Copiando \"complete/rg.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-                cp "${l_path_temp}/complete/rg.bash" ~/.files/terminal/linux/complete/rg.bash
-                echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
-                cp "${l_path_temp}/complete/_rg.ps1" ~/.files/terminal/windows/complete/rg.ps1
-            fi
+            ##Copiar los script de completado
+            #if [ $p_update_windows -ne 0 ]; then
+            #    echo "Copiando \"complete/rg.bash\" a \"~/.files/terminal/linux/complete/\" ..."
+            #    cp "${l_path_temp}/complete/rg.bash" ~/.files/terminal/linux/complete/rg.bash
+            #    echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
+            #    cp "${l_path_temp}/complete/_rg.ps1" ~/.files/terminal/windows/complete/rg.ps1
+            #fi
             ;;
 
         less)
@@ -744,6 +744,7 @@ function m_copy_artifact_files() {
                 # Script que se usara como comando para abrir fzf en un panel popup tmux
                 echo "Copiando \"git/bin/fzf-tmux\" como \"~/.files/terminal/linux/functions/fzf-tmux.bash\" y crear un enlace como comando \"~/.local/bin/fzf-tmux\"..."
                 cp "${l_path_temp}/git/bin/fzf-tmux" ~/.files/terminal/linux/functions/fzf-tmux.bash
+                mkdir -p ~/.local/bin
                 ln -sfn ~/.files/terminal/linux/functions/fzf-tmux.bash ~/.local/bin/fzf-tmux
             fi
             ;;
@@ -1008,7 +1009,7 @@ function m_download_artifacts() {
         curl -fLo "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" "$l_artifact_url"
         l_status=$?
         if [ $l_status -eq 0 ]; then
-            echo "Artefacto[${l_i}] descargado en          : \"/tmp/${p_repo_id}/${l_i}/${l_artifact_name}\""
+            echo "Artefacto[${l_i}] descargado en         : \"/tmp/${p_repo_id}/${l_i}/${l_artifact_name}\""
         else
             echo "ERROR (${l_status}): Error en descargar el artefacto[${l_i}]"
             return $l_status
@@ -1285,7 +1286,8 @@ function setup_commands() {
 }
 
 
-#export -f setup_git_commands
+#export -f setup_commands
+setup_commands
 
 #}}}
 
