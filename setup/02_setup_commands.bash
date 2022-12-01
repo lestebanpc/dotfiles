@@ -1053,7 +1053,7 @@ function m_setup_artifacts() {
             #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
             echo "Descomprimiendo el artefacto[${l_i}] \"${l_artifact_name}\" en \"/tmp/${p_repo_id}/${l_i}\" ..."
             tar -xvf "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -C "/tmp/${p_repo_id}/${l_i}"
-            #chmod u+rw /tmp/${p_repo_id}/${l_i}/*
+            chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
             m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.tar.gz}" $p_update_windows
@@ -1064,7 +1064,7 @@ function m_setup_artifacts() {
             #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
             echo "Descomprimiendo el artefacto[${l_i}] \"${l_artifact_name}\" en \"/tmp/${p_repo_id}/${l_i}\" ..."
             unzip "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -d "/tmp/${p_repo_id}/${l_i}"
-            #chmod u+rw /tmp/${p_repo_id}/${l_i}/*
+            chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
             m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.zip}" $p_update_windows

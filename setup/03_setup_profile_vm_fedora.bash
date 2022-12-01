@@ -5,29 +5,10 @@
 
 #}}}
 
-#sudo dnf upgrade
-#sudo dnf --refresh upgrade
-
-
-#git clone https://github.com/lestebanpc/dotfiles.git ~/.files
-
-#chmod u+x ~/.files/terminal/linux/tmux/oh-my-tmux.sh
-#chmod u+x ~/.files/terminal/linux/complete/fzf.bash
-#chmod u+x ~/.files/terminal/linux/keybindings/fzf.bash
-#chmod u+x ~/.files/setup/setup_commands.bash
-
-#setup_commands.bash
-
 ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
 ln -snf ~/.files/git/vm_linux_git.conf ~/.gitconfig
 ln -snf ~/.files/ssh/vm_linux_ssh.conf ~/.ssh/config
 ln -snf ~/.files/terminal/linux/profile/fedora_vm.bash ~/.bashrc
-
-sudo mkdir -m 755 /u01
-sudo mkdir -m 755 /u01/userkeys
-sudo chown lucianoepc:lucianoepc /u01/userkeys
-mkdir -m 755 /u01/userkeys/ssh/
-
 
 echo "Configuración de NodeJS"
 curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
