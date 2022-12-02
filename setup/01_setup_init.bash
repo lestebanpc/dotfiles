@@ -9,7 +9,7 @@ sudo dnf upgrade
 #sudo dnf --refresh upgrade
 
 
-git clone https://github.com/lestebanpc/dotfiles.git ~/.files
+#git clone https://github.com/lestebanpc/dotfiles.git ~/.files
 
 chmod u+x ~/.files/terminal/linux/tmux/oh-my-tmux.sh
 chmod u+x ~/.files/terminal/linux/complete/fzf.bash
@@ -24,7 +24,7 @@ sudo mkdir -m 755 /u01/userkeys
 sudo chown lucianoepc:lucianoepc /u01/userkeys
 mkdir -m 755 /u01/userkeys/ssh/
 
-echo  "Instalar VIM-Enhanced"
-sudo dnf install vim-enhanced
+#echo  "Instalar VIM-Enhanced"
+#sudo dnf install vim-enhanced
 
 
