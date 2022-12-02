@@ -24,6 +24,7 @@ sudo mkdir -m 755 /u01/userkeys
 sudo chown lucianoepc:lucianoepc /u01/userkeys
 mkdir -m 755 /u01/userkeys/ssh/
 
-
+echo  "Instalar VIM-Enhanced"
+sudo dnf install vim-enhanced
 
 
