@@ -43,7 +43,7 @@ declare -r g_os=$?
 
 #TODO Mejorar
 #Determinar si es un Linux de la familia debian (por ejemplo Ubuntu), use 0
-declare -r g_os_description=$(cat /etc/lsb-release | grep 'DISTRIB_DESCRIPTION' | sed 's/DISTRIB_DESCRIPTION="\(.*\)"/\1/')
+declare -r g_os_description=$(cat /etc/lsb-release 2> /dev/null | grep 'DISTRIB_DESCRIPTION' | sed 's/DISTRIB_DESCRIPTION="\(.*\)"/\1/')
 g_is_debian_os=1
 if [[ "$g_os_description" == *Ubuntu* ]]; then
     g_is_debian_os=0
@@ -1381,10 +1381,10 @@ function setup_commands() {
             less)
                 if [ $p_is_wsl -eq 0 ]; then
                     echo "-------------------------------------------------------------------------------------------------"
-                    echo "- Repositorio \"${l_name}\""
+                    echo "- Repositorio \"${l_repo_name_aux}\""
                     echo "-------------------------------------------------------------------------------------------------"
 
-                    echo "Iniciando la instalación de los artefactos del repositorio \"${l_name}\" en el Windows donde esta su WSL2"
+                    echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en el Windows donde esta su WSL2"
                     m_setup_repository "$l_repo_id" "$l_repo_name" 0
                     printf "\n\n"
                 fi
@@ -1396,13 +1396,13 @@ function setup_commands() {
 
                     #Validando si el servicio esta detenido si esta instalado                    
                     echo "-------------------------------------------------------------------------------------------------"
-                    echo "- Repositorio \"${l_name}\""
+                    echo "- Repositorio \"${l_repo_name_aux}\""
                     echo "-------------------------------------------------------------------------------------------------"
 
                     if k0s status 2> /dev/null 1>&2; then
                        echo "el servicio k0s esta intalado y ejecutandose, debe detener para instalarlo. NO se instalara el repo."
                    else
-                        echo "Iniciando la instalación de los artefactos del repositorio \"${l_name}\" en Linux \"${g_os_description}\""
+                        echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_description}\""
                         m_setup_repository "$l_repo_id" "$l_repo_name" 1
                         printf "\n\n"
                     fi
@@ -1411,15 +1411,15 @@ function setup_commands() {
                 ;;
             *)
                 echo "-------------------------------------------------------------------------------------------------"
-                echo "- Repositorio \"${l_name}\""
+                echo "- Repositorio \"${l_repo_name_aux}\""
                 echo "-------------------------------------------------------------------------------------------------"
                 
-                echo "Iniciando la instalación de los artefactos del repositorio \"${l_name}\" en Linux \"${g_os_description}\""
+                echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_description}\""
                 m_setup_repository "$l_repo_id" "$l_repo_name" 1
                 printf "\n\n"
 
                 if [ $p_is_wsl -eq 0 ]; then
-                    echo "Iniciando la instalación de los artefactos del repositorio \"${l_name}\" en el Windows donde esta su WSL2"
+                    echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en el Windows donde esta su WSL2"
                     m_setup_repository "$l_repo_id" "$l_repo_name" 0
                     printf "\n\n"
                 fi
