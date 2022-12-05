@@ -15,7 +15,7 @@ function m_setup() {
 
     #1. Argumentos
     local p_opcion=0
-    if [[ ! "$1" =~ '^[0-9]+$' ]]; then
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_opcion=$1
     fi
 

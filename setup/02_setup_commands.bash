@@ -110,14 +110,15 @@ function m_compare_version() {
 }
 
 function m_url_encode() {
+    #set -x
     local l_string="${1}"
-    local l_strlen=${#string}
+    local l_n=${#l_string}
     local l_encoded=""
     local l_pos l_c l_o
 
-    for (( l_pos=0 ; l_pos<$l_strlen ; l_pos++ )); do
+    for (( l_pos=0 ; l_pos<$l_n ; l_pos++ )); do
 
-        l_c=${l_string:$pos:1}
+        l_c=${l_string:$l_pos:1}
         case "$l_c" in
             [-_.~a-zA-Z0-9]) 
                 l_o="${l_c}" ;;
@@ -128,6 +129,7 @@ function m_url_encode() {
     done
 
     echo "${l_encoded}"
+    #set +x
 }
 
 #}}}
@@ -1311,7 +1313,7 @@ function setup_commands() {
     
     #1. Argumentos 
     local p_opciones=0
-    if [[ ! "$1" =~ '^[0-9]+$' ]]; then
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_opciones=$1
     fi
 
@@ -1327,10 +1329,6 @@ function setup_commands() {
     fi
     
     #3. Determinar valores iniciales
-    local p_is_wsl=1
-    if [ $g_os -eq 1 ]; then
-        p_is_wsl=0
-    fi
 
     #4. Solicitar credenciales de administrador y almacenarlas temporalmente
     if [ $g_is_root -ne 0 ]; then
@@ -1349,8 +1347,10 @@ function setup_commands() {
     local l_repo_name_aux
     local l_repo_name
     local l_repo_flag=0
+    local l_aux=0
     local l_i=0
     for l_repo_id in "${!gA_repositories[@]}"; do
+
 
         #Nombre a mostrar el respositorio
         l_repo_name="${gA_repositories[$l_repo_id]}"
@@ -1364,22 +1364,23 @@ function setup_commands() {
         l_i=${gA_repositories_flags[$l_repo_id]}
         if [ -z "$l_i" ]; then
             l_repo_flag=-1
-        elif [[ ! "$l_i" =~ '^[0-9]+$' ]]; then
+        elif [[ ! "$l_i" =~ ^[0-9]+$ ]]; then
             l_repo_flag=-1
         else
             #Suma binarios es igual al flag, se debe instalar el repo opcional
-            l_repo_flag=$(( $p_opciones & $l_i ))
-            if [ $l_repo_flag -eq $l_i ]; then
+            l_aux=$(( $p_opciones & $l_i ))
+            if [ $l_aux -eq $l_i ]; then
                 l_repo_flag=0
             else
                 l_repo_flag=1
             fi            
         fi
 
+
         #Personalizar la logica segun el repositorio
-        case "$p_repo_id" in
+        case "$l_repo_id" in
             less)
-                if [ $p_is_wsl -eq 0 ]; then
+                if [ $g_os -eq 1 ]; then
                     echo "-------------------------------------------------------------------------------------------------"
                     echo "- Repositorio \"${l_repo_name_aux}\""
                     echo "-------------------------------------------------------------------------------------------------"
@@ -1392,7 +1393,7 @@ function setup_commands() {
             k0s)
 
                 #No instalar nunca en WSL2, debido a que es pesado y solo si el 1er-bit de la 'p_opciones' es 1                
-                if [ $p_is_wsl -ne 0 -a $l_repo_flag -eq 0 ]; then
+                if [ $g_os -ne 1 -a $l_repo_flag -eq 0 ]; then
 
                     #Validando si el servicio esta detenido si esta instalado                    
                     echo "-------------------------------------------------------------------------------------------------"
@@ -1418,7 +1419,7 @@ function setup_commands() {
                 m_setup_repository "$l_repo_id" "$l_repo_name" 1
                 printf "\n\n"
 
-                if [ $p_is_wsl -eq 0 ]; then
+                if [ $g_os -eq 1 ]; then
                     echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en el Windows donde esta su WSL2"
                     m_setup_repository "$l_repo_id" "$l_repo_name" 0
                     printf "\n\n"
