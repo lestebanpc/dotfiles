@@ -109,6 +109,27 @@ function m_compare_version() {
     return 0
 }
 
+function m_url_encode() {
+    local l_string="${1}"
+    local l_strlen=${#string}
+    local l_encoded=""
+    local l_pos l_c l_o
+
+    for (( l_pos=0 ; l_pos<$l_strlen ; l_pos++ )); do
+
+        l_c=${l_string:$pos:1}
+        case "$l_c" in
+            [-_.~a-zA-Z0-9]) 
+                l_o="${l_c}" ;;
+            *)  
+                printf -v l_o '%%%02x' "'$l_c";
+        esac
+        l_encoded+="${l_o}"
+    done
+
+    echo "${l_encoded}"
+}
+
 #}}}
 
 #Funciones especificas {{{
@@ -118,15 +139,15 @@ function m_show_final_message() {
 
     #1. Argumentos
     local p_repo_id="$1"
-    local p_update_windows=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
     if [ "$2" -eq 0 2> /dev/null ]; then
-        p_update_windows=0
+        p_install_win_cmds=0
     fi
 
     case "$p_repo_id" in
         fzf)
 
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 echo "En Windows, debe homologar los plugins de \"FZF\" de VIM y NeoVim para tener soporte a powershell:"
                 echo "   1. Homologar el plugin \"FZF base\" tanto en VIM como NeoVim:"
                 echo '      Ultimo vs Fixed  > vim -d ${env:USERPROFILE}\.files\vim_packages\fzf\plugin\fzf.vim ${env:USERPROFILE}\.files\vim_packages\fixes\fzf\plugin\fzf.vim'
@@ -160,9 +181,9 @@ function m_get_repo_current_version() {
 
     #1. Argumentos
     local p_repo_id="$1"
-    local p_update_windows=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
     if [ "$2" -eq 0 2> /dev/null ]; then
-        p_update_windows=0
+        p_install_win_cmds=0
     fi
 
     #2. Obtener la version actual
@@ -175,7 +196,7 @@ function m_get_repo_current_version() {
     local l_sustitution_regexp='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
     case "$p_repo_id" in
         jq)
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${g_path_win_commands}/bin/jq.exe --version 2> /dev/null)
                 l_status=$?
             else
@@ -184,7 +205,7 @@ function m_get_repo_current_version() {
             fi
             ;;
         yq)
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${g_path_win_commands}/bin/yq.exe --version 2> /dev/null)
                 l_status=$?
             else
@@ -193,7 +214,7 @@ function m_get_repo_current_version() {
             fi
             ;;
         fzf)
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${g_path_win_commands}/bin/fzf.exe --version 2> /dev/null)
                 l_status=$?
             else
@@ -203,7 +224,7 @@ function m_get_repo_current_version() {
             ;;
 
         delta)
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${g_path_win_commands}/bin/delta.exe --version 2> /dev/null)
                 l_status=$?
             else
@@ -216,7 +237,7 @@ function m_get_repo_current_version() {
             fi
             ;;
         ripgrep)
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${g_path_win_commands}/bin/rg.exe --version 2> /dev/null)
                 l_status=$?
             else
@@ -228,7 +249,7 @@ function m_get_repo_current_version() {
             fi
             ;;
         bat)
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${g_path_win_commands}/bin/bat.exe --version 2> /dev/null)
                 l_status=$?
             else
@@ -237,7 +258,7 @@ function m_get_repo_current_version() {
             fi
             ;;
         oh-my-posh)
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${g_path_win_commands}/bin/oh-my-posh.exe --version 2> /dev/null)
                 l_status=$?
             else
@@ -246,7 +267,7 @@ function m_get_repo_current_version() {
             fi
             ;;
         fd)
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${g_path_win_commands}/bin/fd.exe --version 2> /dev/null)
                 l_status=$?
             else
@@ -255,7 +276,7 @@ function m_get_repo_current_version() {
             fi
             ;;
         less)
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${g_path_win_commands}/bin/less.exe --version 2> /dev/null)
                 l_status=$?
             else
@@ -267,7 +288,7 @@ function m_get_repo_current_version() {
             fi
             ;;
         kubectl)
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${g_path_win_commands}/bin/kubectl.exe version --client=true -o json 2> /dev/null)
                 l_status=$?
             else
@@ -279,6 +300,18 @@ function m_get_repo_current_version() {
                 if [ $? -ne 0 ]; then
                     return 9;
                 fi
+            fi
+            ;;
+        k0s)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${g_path_win_commands}/bin/k0s.exe version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(k0s version 2> /dev/null)
+                l_status=$?
+            fi
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | cut -d ' ' -f 2 | head -n 1)
             fi
             ;;
         *)
@@ -320,9 +353,9 @@ function m_get_artifacts() {
     local p_repo_last_version="$2"
     declare -n pna_artifact_names=$3   #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
     declare -n pna_artifact_types=$4   #Parametro por referencia: Se devuelve un arreglo de los tipos de los artefactos
-    local p_update_windows=1           #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1           #Solo si es WSL2 y desea actualizar los comandos en Windows
     if [ "$5" -eq 0 2> /dev/null ]; then
-        p_update_windows=0
+        p_install_win_cmds=0
     fi
     
     #2. Generar el nombre
@@ -331,7 +364,7 @@ function m_get_artifacts() {
 
     case "$p_repo_id" in
         jq)
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("jq_linux64")
                 pna_artifact_types=(0)
             else
@@ -340,7 +373,7 @@ function m_get_artifacts() {
             fi
             ;;
         yq)
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("yq_linux_amd64.tar.gz")
                 pna_artifact_types=(2)
             else
@@ -349,7 +382,7 @@ function m_get_artifacts() {
             fi
             ;;
         fzf)
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("fzf-${p_repo_last_version}-linux_amd64.tar.gz")
                 pna_artifact_types=(2)
             else
@@ -358,7 +391,7 @@ function m_get_artifacts() {
             fi
             ;;
         delta)
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_is_debian_os -eq 0 ]; then
                     pna_artifact_names=("git-delta_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
@@ -372,7 +405,7 @@ function m_get_artifacts() {
             fi
             ;;
         ripgrep)
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_is_debian_os -eq 0 ]; then
                     pna_artifact_names=("ripgrep_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
@@ -386,7 +419,7 @@ function m_get_artifacts() {
             fi
             ;;
         bat)
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_is_debian_os -eq 0 ]; then
                     pna_artifact_names=("bat_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
@@ -400,7 +433,7 @@ function m_get_artifacts() {
             fi
             ;;
         oh-my-posh)
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("posh-linux-amd64" "themes.zip")
                 pna_artifact_types=(0 3)
             else
@@ -409,7 +442,7 @@ function m_get_artifacts() {
             fi
             ;;
         fd)
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_is_debian_os -eq 0 ]; then
                     pna_artifact_names=("fd_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
@@ -423,7 +456,7 @@ function m_get_artifacts() {
             fi
             ;;
         kubectl)
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("kubectl")
                 pna_artifact_types=(0)
             else
@@ -432,11 +465,20 @@ function m_get_artifacts() {
             fi
             ;;
         less)
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("less.exe" "lesskey.exe")
                 pna_artifact_types=(0 0)
             else
                 return 1
+            fi
+            ;;
+        k0s)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("k0s-v${p_repo_last_version}+k0s.0-amd64")
+                pna_artifact_types=(0)
+            else
+                pna_artifact_names=("k0s-v${p_repo_last_version}+k0s.0-amd64.exe")
+                pna_artifact_types=(0)
             fi
             ;;
        *)
@@ -476,7 +518,9 @@ function m_get_repo_latest_version() {
             ;;
     esac
 
-    echo "$l_repo_last_version"
+    #Codificar en base64
+    l_aux=$(m_url_encode "$l_repo_last_version")
+    echo "$l_aux"
 }
 
 
@@ -487,9 +531,9 @@ function m_get_artifact_url() {
     local p_repo_name="$2"
     local p_repo_last_version="$3"
     local p_artifact_name="$4"
-    local p_update_windows=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
     if [ "$5" -eq 0 2> /dev/null ]; then
-        p_update_windows=0
+        p_install_win_cmds=0
     fi
 
     #2. Obtener la URL base
@@ -498,7 +542,7 @@ function m_get_artifact_url() {
 
         kubectl)
 
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/windows/amd64"
             else
                 l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/linux/amd64"
@@ -524,15 +568,16 @@ function m_copy_artifact_files() {
     local p_repo_id="$1"
     local p_artifact_index="$2"
     local p_subfolder="$3"
-    local p_update_windows=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
-    if [ "$4" -eq 0 2> /dev/null ]; then
-        p_update_windows=0
+    local p_exe_name_without_ext="$4"
+    local p_install_win_cmds=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
+    if [ "$5" -eq 0 2> /dev/null ]; then
+        p_install_win_cmds=0
     fi
 
     #3. Copiar loa archivos del artefacto segun el prefijo
     local l_path_bin=""
     local l_path_man=""
-    if [ $p_update_windows -ne 0 ]; then
+    if [ $p_install_win_cmds -ne 0 ]; then
         l_path_bin='/usr/local/bin'
         l_path_man='/usr/local/man/man1'
     else
@@ -549,7 +594,7 @@ function m_copy_artifact_files() {
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"bat\" a \"${l_path_bin}\" ..."
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_is_root -eq 0 ]; then
                     cp "${l_path_temp}/bat" "${l_path_bin}"
                     chmod +x "${l_path_bin}/bat"
@@ -565,7 +610,7 @@ function m_copy_artifact_files() {
             fi
             
             #Copiar los archivos de ayuda man para comando
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"bat.1\" a \"${l_path_man}/\" ..."
                 if [ $g_is_root -eq 0 ]; then
                     cp "${l_path_temp}/bat.1" "${l_path_man}"
@@ -575,7 +620,7 @@ function m_copy_artifact_files() {
             fi
 
             #Copiar los script de completado
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"autocomplete/bat.bash\" a \"~/.files/terminal/linux/complete/\" ..."
                 cp "${l_path_temp}/autocomplete/bat.bash" ~/.files/terminal/linux/complete/bat.bash
                 echo "Copiando \"autocomplete/_bat.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
@@ -589,7 +634,7 @@ function m_copy_artifact_files() {
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"rg\" a \"${l_path_bin}\" ..."
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_is_root -eq 0 ]; then
                     cp "${l_path_temp}/rg" "${l_path_bin}"
                     chmod +x "${l_path_bin}/rg"
@@ -605,7 +650,7 @@ function m_copy_artifact_files() {
             fi
             
             #Copiar los archivos de ayuda man para comando
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"doc/rg.1\" a \""${l_path_man}"/\" ..."
                 if [ $g_is_root -eq 0 ]; then
                     cp "${l_path_temp}/doc/rg.1" "${l_path_man}"/
@@ -615,7 +660,7 @@ function m_copy_artifact_files() {
             fi
 
             #Copiar los script de completado
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"complete/rg.bash\" a \"~/.files/terminal/linux/complete/\" ..."
                 cp "${l_path_temp}/complete/rg.bash" ~/.files/terminal/linux/complete/rg.bash
                 echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
@@ -629,7 +674,7 @@ function m_copy_artifact_files() {
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"delta\" a \"${l_path_bin}\" ..."
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_is_root -eq 0 ]; then
                     cp "${l_path_temp}/delta" "${l_path_bin}"
                     chmod +x "${l_path_bin}/delta"
@@ -645,7 +690,7 @@ function m_copy_artifact_files() {
             fi
             
             ##Copiar los archivos de ayuda man para comando
-            #if [ $p_update_windows -ne 0 ]; then
+            #if [ $p_install_win_cmds -ne 0 ]; then
             #    echo "Copiando \"doc/rg.1\" a \""${l_path_man}"/\" ..."
             #    if [ $g_is_root -eq 0 ]; then
             #        cp "${l_path_temp}/doc/rg.1" "${l_path_man}"/
@@ -655,7 +700,7 @@ function m_copy_artifact_files() {
             #fi
 
             ##Copiar los script de completado
-            #if [ $p_update_windows -ne 0 ]; then
+            #if [ $p_install_win_cmds -ne 0 ]; then
             #    echo "Copiando \"complete/rg.bash\" a \"~/.files/terminal/linux/complete/\" ..."
             #    cp "${l_path_temp}/complete/rg.bash" ~/.files/terminal/linux/complete/rg.bash
             #    echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
@@ -665,7 +710,7 @@ function m_copy_artifact_files() {
 
         less)
 
-            if [ $p_update_windows -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Ruta local de los artefactos
                 l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_subfolder}"
@@ -690,7 +735,7 @@ function m_copy_artifact_files() {
 
             #Copiar el comando fzf y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"fzf\" a \"${l_path_bin}\" ..."
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_is_root -eq 0 ]; then
                     cp "${l_path_temp}/fzf" "${l_path_bin}"
                     chmod +x "${l_path_bin}/fzf"
@@ -705,7 +750,7 @@ function m_copy_artifact_files() {
                 #mkdir -p "${l_path_man}"
             fi
             
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
 
                 #Descargar archivos necesarios
                 echo "Descargando \"https://github.com/junegunn/fzf.git\" en el folder \"git/\" ..."
@@ -754,7 +799,7 @@ function m_copy_artifact_files() {
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Renombrar el binario antes de copiarlo
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"jq-linux64\" como \"${l_path_bin}/jq\" ..."
                 mv "${l_path_temp}/jq-linux64" "${l_path_temp}/jq"
                 
@@ -795,7 +840,7 @@ function m_copy_artifact_files() {
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Renombrar el binario antes de copiarlo
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
 
                 echo "Copiando \"yq_linux_amd64\" como \"${l_path_bin}/yq\" ..."
                 mv "${l_path_temp}/yq_linux_amd64" "${l_path_temp}/yq"
@@ -818,7 +863,7 @@ function m_copy_artifact_files() {
             fi
 
             #Copiar los archivos de ayuda man para comando
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"yq.1\" a \"${l_path_man}/\" ..."
                 if [ $g_is_root -eq 0 ]; then
                     cp "${l_path_temp}/yq.1" "${l_path_man}"
@@ -835,7 +880,7 @@ function m_copy_artifact_files() {
             if [ $p_artifact_index -eq 0 ]; then
 
                 #Renombrar el binario antes de copiarlo
-                if [ $p_update_windows -ne 0 ]; then
+                if [ $p_install_win_cmds -ne 0 ]; then
                     echo "Copiando \"posh-linux-amd64\" como \"${l_path_bin}/oh-my-posh\" ..."
                     mv "${l_path_temp}/posh-linux-amd64" "${l_path_temp}/oh-my-posh"
                 
@@ -870,7 +915,7 @@ function m_copy_artifact_files() {
                 #echo "Copiando \"autocomplete/_yq.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
                 #cp "${l_path_temp}/autocomplete/yq.ps1" ~/.files/terminal/windows/complete/yq.ps1
             else
-                if [ $p_update_windows -ne 0 ]; then
+                if [ $p_install_win_cmds -ne 0 ]; then
                     mkdir -p ~/.files/terminal/oh-my-posh/themes
                     cp -f ${l_path_temp}/*.json ~/.files/terminal/oh-my-posh/themes
                 else
@@ -884,9 +929,9 @@ function m_copy_artifact_files() {
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_subfolder}"
 
-            #Renombrar el binario antes de copiarlo
+            #Copiando el binario en una ruta del path
             echo "Copiando \"fd\" en \"${l_path_bin}\" ..."
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                 if [ $g_is_root -eq 0 ]; then
                     cp "${l_path_temp}/fd" "${l_path_bin}"
@@ -903,7 +948,7 @@ function m_copy_artifact_files() {
             fi
             
             #Copiar los archivos de ayuda man para comando
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"fd.1\" a \"${l_path_man}/\" ..."
                 if [ $g_is_root -eq 0 ]; then
                     cp "${l_path_temp}/fd.1" "${l_path_man}"
@@ -913,7 +958,7 @@ function m_copy_artifact_files() {
             fi
 
             #Copiar los script de completado
-            if [ $p_update_windows -ne 0 ]; then
+            if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"autocomplete/fd.bash\" a \"~/.files/terminal/linux/complete/\" ..."
                 cp "${l_path_temp}/autocomplete/fd.bash" ~/.files/terminal/linux/complete/fd.bash
                 echo "Copiando \"autocomplete/fd.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
@@ -925,9 +970,10 @@ function m_copy_artifact_files() {
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
 
-            if [ $p_update_windows -ne 0 ]; then
-                #Renombrar el binario antes de copiarlo
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_is_root -eq 0 ]; then
+                    cp "${l_path_temp}/kubectl" "${l_path_bin}"
                     chmod +x "${l_path_bin}/kubectl"
                     #mkdir -pm 755 "${l_path_man}"
                 else
@@ -953,6 +999,31 @@ function m_copy_artifact_files() {
             #cp "${l_path_temp}/autocomplete/fd.bash" ~/.files/terminal/linux/complete/fd.bash
             #echo "Copiando \"autocomplete/fd.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
             #cp "${l_path_temp}/autocomplete/fd.ps1" ~/.files/terminal/windows/complete/fd.ps1
+            ;;
+
+        k0s)
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+
+            #Renombrar el binario antes de copiarlo
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                echo "Copiando \"${p_exe_name_without_ext}\" como \"${l_path_bin}/k0s\" ..."
+                mv "${l_path_temp}/${p_exe_name_without_ext}" "${l_path_temp}/k0s"
+
+                if [ $g_is_root -eq 0 ]; then
+                    cp "${l_path_temp}/k0s" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/k0s"
+                else
+                    sudo cp "${l_path_temp}/k0s" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/k0s"
+                    #sudo mkdir -pm 755 "${l_path_man}"
+                fi
+            else
+                echo "Copiando \"${p_exe_name_without_ext}.exe\" como \"${l_path_bin}/k0s.exe\" ..."
+                mv "${l_path_temp}/${p_exe_name_without_ext}.exe" "${l_path_temp}/k0s.exe"
+                cp "${l_path_temp}/k0s.exe" "${l_path_bin}"
+            fi
             ;;
 
        *)
@@ -1000,7 +1071,7 @@ function m_download_artifacts() {
     for ((l_i=0; l_i < $l_n; l_i++)); do
 
         l_artifact_name="${pnra_artifact_names[$l_i]}"
-        l_artifact_url=$(m_get_artifact_url "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$l_artifact_name" $p_update_windows)
+        l_artifact_url=$(m_get_artifact_url "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$l_artifact_name" $p_install_win_cmds)
         echo "Artefecto[${l_i}] a descargar - Name    : ${l_artifact_name}"
         echo "Artefecto[${l_i}] a descargar - URL     : ${l_artifact_url}"
         
@@ -1027,9 +1098,9 @@ function m_setup_artifacts() {
     local p_repo_name="$2"
     declare -nr pnra_artifact_names=$3   #Parametro por referencia: Arreglo de los nombres de los artefactos
     declare -nr pnra_artifact_types=$4   #Parametro por referencia: Arreglo de los tipos de los artefactos
-    local p_update_windows=1            #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1            #Solo si es WSL2 y desea actualizar los comandos en Windows
     if [ "$5" -eq 0 2> /dev/null ]; then
-        p_update_windows=0
+        p_install_win_cmds=0
     fi
 
     #2. Descargar los artectos del repositorio
@@ -1056,7 +1127,7 @@ function m_setup_artifacts() {
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.tar.gz}" $p_update_windows
+            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.tar.gz}" "" $p_install_win_cmds
 
 
         elif [ $l_artifact_type -eq 3 ]; then
@@ -1067,12 +1138,16 @@ function m_setup_artifacts() {
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.zip}" $p_update_windows
+            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.zip}" ""  $p_install_win_cmds
 
         elif [ $l_artifact_type -eq 0 ]; then
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" "$l_i" "" $p_update_windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+                m_copy_artifact_files "$p_repo_id" "$l_i" "" "${l_artifact_name%.exe}" $p_install_win_cmds
+            else
+                m_copy_artifact_files "$p_repo_id" "$l_i" "" "$l_artifact_name" $p_install_win_cmds
+            fi
 
         elif [ $l_artifact_type -eq 1 ]; then
 
@@ -1104,9 +1179,9 @@ function m_setup_repository() {
     #1. Argumentos
     local p_repo_id="$1"
     local p_repo_name="$2"
-    local p_update_windows=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
     if [ "$3" -eq 0 2> /dev/null ]; then
-        p_update_windows=0
+        p_install_win_cmds=0
     fi
 
     if [ ! -z "$p_repo_name" ]; then
@@ -1131,7 +1206,7 @@ function m_setup_repository() {
     echo "Repositorio - Ultima Versión : \"${l_repo_last_version_pretty}\" (${l_repo_last_version})"
  
     #3. Validar si se debe instalar (ya esta instalado la ultima version)
-    t_tmp=$(m_get_repo_current_version "$p_repo_id" $p_update_windows) 
+    t_tmp=$(m_get_repo_current_version "$p_repo_id" $p_install_win_cmds) 
     local l_status=$?   #'$(..)' no es un comando, pero local es un comando, por eso se usa la variable global 't_tmp'
     local l_repo_current_version="$t_tmp"
 
@@ -1167,7 +1242,7 @@ function m_setup_repository() {
     #4. Obtener el los artefacto que se instalaran del repositorio
     declare -a la_artifact_names
     declare -a la_artifact_types
-    m_get_artifacts "$p_repo_id" "$l_repo_last_version_pretty" la_artifact_names la_artifact_types $p_update_windows
+    m_get_artifacts "$p_repo_id" "$l_repo_last_version_pretty" la_artifact_names la_artifact_types $p_install_win_cmds
     l_status=$?    
     if [ $l_status -ne 0 ]; then
         echo "ERROR (22): No esta configurado los artefactos para el repositorio \"${p_repo_id}\""
@@ -1196,13 +1271,13 @@ function m_setup_repository() {
     fi
 
     #6. Instalar segun el tipo de artefecto
-    if ! m_setup_artifacts "$p_repo_id" "$p_repo_name" la_artifact_names la_artifact_types $p_update_windows; then
+    if ! m_setup_artifacts "$p_repo_id" "$p_repo_name" la_artifact_names la_artifact_types $p_install_win_cmds; then
         echo "ERROR (24): No se ha podido instalar los artefecto de repositorio \"${p_repo_id}\""
         m_clean_temp "$p_repo_id"
         return 24
     fi
 
-    m_show_final_message "$p_repo_id" $p_update_windows
+    m_show_final_message "$p_repo_id" $p_install_win_cmds
     m_clean_temp "$p_repo_id"
     return 0
 
@@ -1223,11 +1298,30 @@ declare -A gA_repositories=(
         ['less']='jftuga/less-Windows'
         ['fd']='sharkdp/fd'
         ['oh-my-posh']='JanDeDobbeleer/oh-my-posh'
+        ['k0s']='k0sproject/k0s'
+    )
+
+
+#Flag paara instalar repositorios opcionales. Usar valores 2^n (1, 2, 4, 8, 16, ...)
+declare -A gA_repositories_flags=(
+        ['k0s']=1
     )
 
 function setup_commands() {
     
-    #1. Solicitar credenciales de administrador y almacenarlas temporalmente
+    #1. Argumentos 
+    local p_opciones=0
+    if [[ ! "$1" =~ '^[0-9]+$' ]]; then
+        p_opciones=$1
+    fi
+    
+    #2. Determinar valores iniciales
+    local p_is_wsl=1
+    if [ $g_os -eq 1 ]; then
+        p_is_wsl=0
+    fi
+
+    #3. Solicitar credenciales de administrador y almacenarlas temporalmente
     if [ $g_is_root -ne 0 ]; then
 
         #echo "Se requiere alamcenar temporalmente su password"
@@ -1239,47 +1333,92 @@ function setup_commands() {
         fi
     fi
 
-    #set -x
-
-    local p_update_windows=1
-    if [ $g_os -eq 1 ]; then
-        p_update_windows=0
-    fi
-
-
-    #Instalar los comandos de los diferentes repositorios
-    local l_repo_name
+    #4. Instalar los comandos de los diferentes repositorios
     local l_repo_id
-    local l_name
+    local l_repo_name_aux
+    local l_repo_name
+    local l_repo_flag=0
+    local l_i=0
     for l_repo_id in "${!gA_repositories[@]}"; do
 
+        #Nombre a mostrar el respositorio
         l_repo_name="${gA_repositories[$l_repo_id]}"
         if [ -z "$l_repo_name" ]; then
-            l_name="$l_repo_id"
+            l_repo_name_aux="$l_repo_id"
         else
-            l_name="$l_repo_name"
-        fi
-        echo "-------------------------------------------------------------------------------------------------"
-        echo "- Repositorio \"${l_name}\""
-        echo "-------------------------------------------------------------------------------------------------"
-
-        if [[ "$l_repo_id" != less ]]; then
-            echo "Iniciando la instalación de los artefactos del repositorio \"${l_name}\" en Linux \"${g_os_description}\""
-            m_setup_repository "$l_repo_id" "$l_repo_name" 1
-            printf "\n\n"
+            l_repo_name_aux="$l_repo_name"
         fi
 
-        if [ $p_update_windows -eq 0 ]; then
-            echo "Iniciando la instalación de los artefactos del repositorio \"${l_name}\" en el Windows donde esta su WSL2"
-            m_setup_repository "$l_repo_id" "$l_repo_name" 0
-            printf "\n\n"
+        #Flags para instalar los repositorios opcionales
+        l_i=${gA_repositories_flags[$l_repo_id]}
+        if [ -z "$l_i" ]; then
+            l_repo_flag=-1
+        elif [[ ! "$l_i" =~ '^[0-9]+$' ]]; then
+            l_repo_flag=-1
+        else
+            #Suma binarios es igual al flag, se debe instalar el repo opcional
+            l_repo_flag=$(( $p_opciones & $l_i ))
+            if [ $l_repo_flag -eq $l_i ]; then
+                l_repo_flag=0
+            else
+                l_repo_flag=1
+            fi            
         fi
+
+        #Personalizar la logica segun el repositorio
+        case "$p_repo_id" in
+            less)
+                if [ $p_is_wsl -eq 0 ]; then
+                    echo "-------------------------------------------------------------------------------------------------"
+                    echo "- Repositorio \"${l_name}\""
+                    echo "-------------------------------------------------------------------------------------------------"
+
+                    echo "Iniciando la instalación de los artefactos del repositorio \"${l_name}\" en el Windows donde esta su WSL2"
+                    m_setup_repository "$l_repo_id" "$l_repo_name" 0
+                    printf "\n\n"
+                fi
+                ;;
+            k0s)
+
+                #No instalar nunca en WSL2, debido a que es pesado y solo si el 1er-bit de la 'p_opciones' es 1                
+                if [ $p_is_wsl -ne 0 -a $l_repo_flag -eq 0 ]; then
+
+                    #Validando si el servicio esta detenido si esta instalado                    
+                    echo "-------------------------------------------------------------------------------------------------"
+                    echo "- Repositorio \"${l_name}\""
+                    echo "-------------------------------------------------------------------------------------------------"
+
+                    if k0s status 2> /dev/null 1>&2; then
+                       echo "el servicio k0s esta intalado y ejecutandose, debe detener para instalarlo. NO se instalara el repo."
+                   else
+                        echo "Iniciando la instalación de los artefactos del repositorio \"${l_name}\" en Linux \"${g_os_description}\""
+                        m_setup_repository "$l_repo_id" "$l_repo_name" 1
+                        printf "\n\n"
+                    fi
+                    
+                fi
+                ;;
+            *)
+                echo "-------------------------------------------------------------------------------------------------"
+                echo "- Repositorio \"${l_name}\""
+                echo "-------------------------------------------------------------------------------------------------"
+                
+                echo "Iniciando la instalación de los artefactos del repositorio \"${l_name}\" en Linux \"${g_os_description}\""
+                m_setup_repository "$l_repo_id" "$l_repo_name" 1
+                printf "\n\n"
+
+                if [ $p_is_wsl -eq 0 ]; then
+                    echo "Iniciando la instalación de los artefactos del repositorio \"${l_name}\" en el Windows donde esta su WSL2"
+                    m_setup_repository "$l_repo_id" "$l_repo_name" 0
+                    printf "\n\n"
+                fi
+                ;;
+        esac
+
         
     done; 
 
-    #set +x
-
-    #2. Caducar las credecinales de root almacenadas temporalmente
+    #5. Caducar las credecinales de root almacenadas temporalmente
     echo "Caducando el cache de temporal password de su 'sudo'"
     sudo -k
 
@@ -1287,7 +1426,7 @@ function setup_commands() {
 
 
 #export -f setup_commands
-setup_commands
+setup_commands $1
 
 #}}}
 
