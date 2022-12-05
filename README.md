@@ -10,13 +10,52 @@ Se puede tener varios escenarios:
 
 Se tiene los siguientes pasos:
 
+```shell
+#Descargar el repositorio en ~/.files
+git clone https://github.com/lestebanpc/dotfiles.git ~/.files
+#Actualizar los paquetes, instalar VIM
+chmod u+x ~/.files/setup/01_setup_init.bash
+. ~/.files/setup/01_setup_init.bash
+```
+
+Se recomienda, Instalar o actualizar los comandos que mas uso que estan en el repositorio GitHub (mas actuales que los que estan en los repositorio de la distribución Linux):
+
+```shell
+. ~/.files/setup/02_setup_commands.bash
+```
+
+Configurar el profile ("~/.bashrc", "~/.tmux.conf", "~/.gitconfig", "~/.ssh/config", ..) y la configuración de VIM:
+
+```shell
+. ~/.files/setup/03_setup_profile_vm_fedora.bash
+```
+
+Este script instalar plugins de VIM (solo para usuario no-root instalara plugins para convertir VIM en IDE).
+
+Una vez configurado el VIM como IDE (para un usuario no root) tambien debera:
+
+
+
+```shell
+#Instalar paquetes de VIM-Plug
+:PlugInstall
+
+#Para VIM como IDE, configurar COC
+:CocInstall coc-tsserver coc-json coc-html coc-css
+:CocInstall coc-pyright
+:CocInstall coc-ultisnips
+:CocConfig
+```
+
+El resumen:
+
 1. Establecer permisos de ejecuacion de los script basicos: 
    
    ```shell
    chmod u+x ~/.files/terminal/linux/tmux/oh-my-tmux.sh
    chmod u+x ~/.files/terminal/linux/complete/fzf.bash
    chmod u+x ~/.files/terminal/linux/keybindings/fzf.bash
-   chmod u+x ~/.files/setup/setup_git_commands.bash
+   chmod u+x ~/.files/setup/setup_commands.bash
    ```
 
 2. Instalar el cliente Git
@@ -32,9 +71,9 @@ Se tiene los siguientes pasos:
    
    ```shell
    #
-   . ~/.files/setup/setup_git_commands.bash
+   . ~/.files/setup/setup_commands.bash
    #
-   setup_git_commands
+   ...
    ```
 
 4. Configurar '~/.dircolors' (para que se crea una variable LS_COLORS mas adecuada): 
@@ -48,7 +87,7 @@ Se tiene los siguientes pasos:
    
    ```shell
    #Para mi WSL2 Ubuntu
-   ls -sf ~/.files/terminal/linux/profile/ubuntu_wls_bash.sh ~/.bashrc
+   ln -sf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc
    #Para mi Fedora WS ...
    ```
 
@@ -69,7 +108,8 @@ Se tiene los siguientes pasos:
    
    ```shell
    #Para mi WSL2 Ubuntu
-   ln -sn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config
+   mkdir -p ~/.ssh/
+   ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config
    ```
 
 9. Configuración de VIM
@@ -84,14 +124,14 @@ Se tiene los siguientes pasos:
       #Para actualizar los paquetes de Vim-Plug
       :PlugInstall
       ```
-
+   
    3. Configuracion de VIM
-       
-       ```shell
-       #Para mi WSL2 Ubuntu
-       ls -s ~/.files/vim/vimrc_wsl2.vim ~/.vimrc
-       #Para mi Fedora WS ...
-       ```
+      
+      ```shell
+      #Para mi WSL2 Ubuntu
+      ls -s ~/.files/vim/vimrc_wsl2.vim ~/.vimrc
+      #Para mi Fedora WS ...
+      ```
 
 10. Configuración de NoeVIM
     Estoy usando Neovim como editor alternativo a VIM (uso mas Vim)
@@ -108,7 +148,7 @@ Se tiene los siguientes pasos:
        #Para actualizar los paquetes de Vim-Plug
        :PlugInstall
        ```
-
+    
     4. Configuracion de NeoVim
        
        ```shell
