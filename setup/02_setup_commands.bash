@@ -1314,14 +1314,25 @@ function setup_commands() {
     if [[ ! "$1" =~ '^[0-9]+$' ]]; then
         p_opciones=$1
     fi
+
+    #2. Validar si fue descarga el repositorio git correspondiente
+    if [ -d ~/.files ]; then
+        echo "Debe obtener los archivos basicos:"
+        echo "   1> git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
+        echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
+        echo "   3> . ~/.files/setup/01_setup_init.bash"
+        echo "   4> . ~/.files/setup/02_setup_commands.bash"
+        echo "   5> . ~/.files/setup/03_setup_profile_XXXX.bash"
+        return 0
+    fi
     
-    #2. Determinar valores iniciales
+    #3. Determinar valores iniciales
     local p_is_wsl=1
     if [ $g_os -eq 1 ]; then
         p_is_wsl=0
     fi
 
-    #3. Solicitar credenciales de administrador y almacenarlas temporalmente
+    #4. Solicitar credenciales de administrador y almacenarlas temporalmente
     if [ $g_is_root -ne 0 ]; then
 
         #echo "Se requiere alamcenar temporalmente su password"
@@ -1333,7 +1344,7 @@ function setup_commands() {
         fi
     fi
 
-    #4. Instalar los comandos de los diferentes repositorios
+    #5. Instalar los comandos de los diferentes repositorios
     local l_repo_id
     local l_repo_name_aux
     local l_repo_name
@@ -1418,9 +1429,11 @@ function setup_commands() {
         
     done; 
 
-    #5. Caducar las credecinales de root almacenadas temporalmente
-    echo "Caducando el cache de temporal password de su 'sudo'"
-    sudo -k
+    #6. Caducar las credecinales de root almacenadas temporalmente
+    if [ $g_is_root -ne 0 ]; then
+        echo "Caducando el cache de temporal password de su 'sudo'"
+        sudo -k
+    fi
 
 }
 
