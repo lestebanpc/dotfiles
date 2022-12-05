@@ -1316,7 +1316,7 @@ function setup_commands() {
     fi
 
     #2. Validar si fue descarga el repositorio git correspondiente
-    if [ -d ~/.files ]; then
+    if [ ! -d ~/.files/.git ]; then
         echo "Debe obtener los archivos basicos:"
         echo "   1> git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
         echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
