@@ -9,7 +9,7 @@
           "foreground": "#b1b1b1",
           "leading_diamond": "\ue0b6",
           "style": "diamond",
-          "template": "<#ffffff>\uf120</>  {{ .Name }} ",
+          "template": "<#ffffff>\uf120</> {{ .Name }} ",
           "type": "shell"
         },
         {
@@ -17,7 +17,7 @@
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
-          "template": " <#ffffff>{{ .Icon }}</>  {{ .HostName }} ",
+          "template": " <#ffffff>{{ .Icon }}</> {{ .HostName }} ",
           "type": "os"
         },
         {
@@ -36,7 +36,7 @@
           },
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
-          "template": " <#ffffff>\uf251</>  {{ .FormattedMs }} ",
+          "template": " <#ffffff>\uf251</> {{ .FormattedMs }} ",
           "type": "executiontime"
         },
         {
@@ -50,7 +50,7 @@
           },
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
-          "template": " <#ffffff>\uf755</>  {{ .Path }} ",
+          "template": " <#ffffff>\uf755</> {{ .Path }} ",
           "type": "path"
         },
         {
@@ -80,7 +80,7 @@
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
-          "template": " <#ffffff>\ue718</>  {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }} ",
+          "template": " <#ffffff>\ue718</> {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }} ",
           "type": "node"
         },
 	{
@@ -88,7 +88,7 @@
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
-          "template": " <#ffffff>\ufd31</>  {{if .Namespace}}{{.Namespace}}{{else}}default{{end}} ",
+          "template": " <#ffffff>\ufd31</> {{if .Namespace}}{{.Namespace}}{{else}}default{{end}} ",
           "type": "kubectl"
         },
 	{

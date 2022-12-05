@@ -1323,7 +1323,7 @@ function setup_commands() {
         echo "   1> git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
         echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
         echo "   3> . ~/.files/setup/01_setup_init.bash"
-        echo "   4> . ~/.files/setup/02_setup_commands.bash"
+        echo "   4> . ~/.files/setup/02_setup_commands.bash (ONLY si no estan actualizados lo comandos)"
         echo "   5> . ~/.files/setup/03_setup_profile_XXXX.bash"
         return 0
     fi

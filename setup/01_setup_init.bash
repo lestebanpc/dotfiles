@@ -22,11 +22,11 @@ function m_setup() {
     #2. Validar si fue descarga el repositorio git correspondiente
     if [ ! -d ~/.files/.git ]; then
         echo "Debe obtener los archivos basicos:"
-        echo "   > git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
-        echo "   > chmod u+x ~/.files/setup/01_setup_init.bash"
-        echo "   > . ~/.files/setup/01_setup_init.bash"
-        echo "   > . ~/.files/setup/02_setup_commands.bash"
-        echo "   > . ~/.files/setup/03_setup_profile_XXXX.bash"
+        echo "   1> git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
+        echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
+        echo "   3> . ~/.files/setup/01_setup_init.bash"
+        echo "   4> . ~/.files/setup/02_setup_commands.bash (ONLY si no estan actualizados lo comandos)"
+        echo "   5> . ~/.files/setup/03_setup_profile_XXXX.bash"
         return 0
     fi
     
@@ -66,7 +66,7 @@ function m_setup() {
         mkdir -pm 755 /u01
         mkdir -pm 755 /u01/userkeys
         mkdir -pm 755 /u01/userkeys/ssh/
-        chown -r lucianoepc:lucianoepc /u01/userkeys
+        chown -R lucianoepc:lucianoepc /u01/userkeys
     else
         sudo mkdir -pm 755 /u01
         sudo mkdir -pm 755 /u01/userkeys
@@ -84,7 +84,8 @@ function m_setup() {
             sudo dnf install vim-enhanced
         fi
     else
-        echo "VIM-Enhaced instalado: $(echo $l_version | head -n 1)"
+        l_version=$(echo $l_version | head -n 1)
+        echo "VIM-Enhaced instalado: ${l_version}"
     fi
     
     #5. Caducar las credecinales de root almacenadas temporalmente
