@@ -8,12 +8,45 @@ if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
     g_is_root=0
 fi
 
+#Determinar el tipo de SO. Devuelve:
+#  00 - 10: Si es Linux
+#           00 - Si es Linux genrico
+#           01 - Si es WSL2
+#  11 - 20: Si es Unix
+#  21 - 30: si es MacOS
+#  31 - 40: Si es Windows
+function m_get_os() {
+    local l_system=$(uname -s)
+
+    local l_os=0
+    local l_tmp=""
+    case "$l_system" in
+        Linux*)
+            l_tmp=$(uname -r)
+            if [[ "$l_tmp" == *WSL* ]]; then
+                l_os=1
+            else
+                l_os=0
+            fi
+            ;;
+        Darwin*)  l_os=21;;
+        CYGWIN*)  l_os=31;;
+        MINGW*)   l_os=32;;
+        *)        l_os=99;;
+    esac
+
+    return $l_os
+
+}
+m_get_os
+declare -r g_os=$?
+
 #}}}
 
-#TODO Mejorar, solo esta escrito para fedora
+#TODO Mejorar, solo esta escrito para WSL que sea Ubuntu y no WSL que sea fedora
 # Opciones:
-#    0 - No se instala VIM en modo IDE
-#    1 - Se instala VIM en modo IDE
+#    0 - Se configura VIM en modo basico (por defecto)
+#    1 - Se configura VIM en modo IDE
 function m_setup() {
 
     #1. Argumentos
@@ -29,9 +62,10 @@ function m_setup() {
         echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
         echo "   3> . ~/.files/setup/01_setup_init.bash"
         echo "   4> . ~/.files/setup/02_setup_commands.bash"
-        echo "   6> . ~/.files/setup/03_setup_profile_XXXX.bash"
+        echo "   6> . ~/.files/setup/03_setup_profile.bash"
         return 0
     fi
+    echo "OS Type        : ${g_os}"
     
     #3. Solicitar credenciales de administrador y almacenarlas temporalmente
     if [ $g_is_root -ne 0 ]; then
@@ -49,10 +83,21 @@ function m_setup() {
     echo "-------------------------------------------------------------------------------------------------"
     echo "- Creando los enlaces simbolicos"
     echo "-------------------------------------------------------------------------------------------------"
-    ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
-    ln -snf ~/.files/git/vm_linux_git.conf ~/.gitconfig
-    ln -snf ~/.files/ssh/vm_linux_ssh.conf ~/.ssh/config
-    ln -snf ~/.files/terminal/linux/profile/fedora_vm.bash ~/.bashrc
+    echo "Creando los enlaces simbolicos ~/.tmux.conf, ~/.gitconfig, ~/.ssh/config, ~/.bashrc"
+
+    #Si es WSL (Ubuntu)
+    if [ $g_os -eq 1 ]; then
+        ln -snf ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf ~/.dircolors
+        ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
+        ln -snf ~/.files/git/wsl2_git.conf ~/.gitconfig
+        ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config
+        ln -snf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc
+    else
+        ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
+        ln -snf ~/.files/git/vm_linux_git.conf ~/.gitconfig
+        ln -snf ~/.files/ssh/vm_linux_ssh.conf ~/.ssh/config
+        ln -snf ~/.files/terminal/linux/profile/fedora_vm.bash ~/.bashrc
+    fi
 
     #Instalar Node.JS
     if [ $p_opcion -eq 1 ]; then
@@ -101,19 +146,23 @@ function m_setup() {
 
     local l_repo_git="tomasr/molokai"
     if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
+        echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
     l_repo_git="dracula/vim"
     if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
+        echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
     
@@ -123,55 +172,67 @@ function m_setup() {
     
     l_repo_git="vim-airline/vim-airline"
     if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
+        echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
     l_repo_git="vim-airline/vim-airline-themes"
     if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
+        echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
     l_repo_git="preservim/nerdtree"
     if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
+        echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
     l_repo_git="christoomey/vim-tmux-navigator"
     if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
+        echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
     l_repo_git="junegunn/fzf"
     if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
         git clone --depth 1 https://github.com/${l_repo_git}.git
     else
+        echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
     l_repo_git="junegunn/fzf.vim"
     if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
+        echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
     
@@ -182,10 +243,12 @@ function m_setup() {
         
         l_repo_git="tpope/vim-surround"
         if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+            echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
+            echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
     
@@ -196,6 +259,7 @@ function m_setup() {
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
+            echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
 
@@ -205,55 +269,67 @@ function m_setup() {
         
         l_repo_git="dense-analysis/ale"
         if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+            echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
+            echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
         l_repo_git="neoclide/coc.nvim"
         if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+            echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
             git clone --branch release --depth=1 https://github.com/${l_repo_git}.git
         else
+            echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
         l_repo_git="OmniSharp/omnisharp-vim"
         if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+            echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
+            echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
         l_repo_git="SirVer/ultisnips"
         if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+            echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
+            echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
         l_repo_git="honza/vim-snippets"
         if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+            echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
+            echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
         l_repo_git="nickspoons/vim-sharpenup"
         if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+            echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
+            echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
