@@ -625,8 +625,8 @@ function m_copy_artifact_files() {
             if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"autocomplete/bat.bash\" a \"~/.files/terminal/linux/complete/\" ..."
                 cp "${l_path_temp}/autocomplete/bat.bash" ~/.files/terminal/linux/complete/bat.bash
-                echo "Copiando \"autocomplete/_bat.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
-                cp "${l_path_temp}/autocomplete/_bat.ps1" ~/.files/terminal/windows/complete/bat.ps1
+                echo "Copiando \"autocomplete/_bat.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
+                cp "${l_path_temp}/autocomplete/_bat.ps1" ~/.files/terminal/powershell/complete/bat.ps1
             fi
             ;;
 
@@ -665,8 +665,8 @@ function m_copy_artifact_files() {
             if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"complete/rg.bash\" a \"~/.files/terminal/linux/complete/\" ..."
                 cp "${l_path_temp}/complete/rg.bash" ~/.files/terminal/linux/complete/rg.bash
-                echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
-                cp "${l_path_temp}/complete/_rg.ps1" ~/.files/terminal/windows/complete/rg.ps1
+                echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
+                cp "${l_path_temp}/complete/_rg.ps1" ~/.files/terminal/powershell/complete/rg.ps1
             fi
             ;;
 
@@ -705,8 +705,8 @@ function m_copy_artifact_files() {
             #if [ $p_install_win_cmds -ne 0 ]; then
             #    echo "Copiando \"complete/rg.bash\" a \"~/.files/terminal/linux/complete/\" ..."
             #    cp "${l_path_temp}/complete/rg.bash" ~/.files/terminal/linux/complete/rg.bash
-            #    echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
-            #    cp "${l_path_temp}/complete/_rg.ps1" ~/.files/terminal/windows/complete/rg.ps1
+            #    echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
+            #    cp "${l_path_temp}/complete/_rg.ps1" ~/.files/terminal/powershell/complete/rg.ps1
             #fi
             ;;
 
@@ -833,8 +833,8 @@ function m_copy_artifact_files() {
             #Copiar los script de completado
             #echo "Copiando \"autocomplete/jq.bash\" a \"~/.files/terminal/linux/complete/\" ..."
             #cp "${l_path_temp}/autocomplete/jq.bash" ~/.files/terminal/linux/complete/jq.bash
-            #echo "Copiando \"autocomplete/_jq.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
-            #cp "${l_path_temp}/autocomplete/jq.ps1" ~/.files/terminal/windows/complete/jq.ps1
+            #echo "Copiando \"autocomplete/_jq.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
+            #cp "${l_path_temp}/autocomplete/jq.ps1" ~/.files/terminal/powershell/complete/jq.ps1
             ;;
 
         yq)
@@ -914,8 +914,8 @@ function m_copy_artifact_files() {
                 #Copiar los script de completado
                 #echo "Copiando \"autocomplete/yq.bash\" a \"~/.files/terminal/linux/complete/\" ..."
                 #cp "${l_path_temp}/autocomplete/yq.bash" ~/.files/terminal/linux/complete/yq.bash
-                #echo "Copiando \"autocomplete/_yq.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
-                #cp "${l_path_temp}/autocomplete/yq.ps1" ~/.files/terminal/windows/complete/yq.ps1
+                #echo "Copiando \"autocomplete/_yq.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
+                #cp "${l_path_temp}/autocomplete/yq.ps1" ~/.files/terminal/powershell/complete/yq.ps1
             else
                 if [ $p_install_win_cmds -ne 0 ]; then
                     mkdir -p ~/.files/terminal/oh-my-posh/themes
@@ -963,8 +963,8 @@ function m_copy_artifact_files() {
             if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"autocomplete/fd.bash\" a \"~/.files/terminal/linux/complete/\" ..."
                 cp "${l_path_temp}/autocomplete/fd.bash" ~/.files/terminal/linux/complete/fd.bash
-                echo "Copiando \"autocomplete/fd.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
-                cp "${l_path_temp}/autocomplete/fd.ps1" ~/.files/terminal/windows/complete/fd.ps1
+                echo "Copiando \"autocomplete/fd.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
+                cp "${l_path_temp}/autocomplete/fd.ps1" ~/.files/terminal/powershell/complete/fd.ps1
             fi
             ;;
 
@@ -999,8 +999,8 @@ function m_copy_artifact_files() {
             ##Copiar los script de completado
             #echo "Copiando \"autocomplete/fd.bash\" a \"~/.files/terminal/linux/complete/\" ..."
             #cp "${l_path_temp}/autocomplete/fd.bash" ~/.files/terminal/linux/complete/fd.bash
-            #echo "Copiando \"autocomplete/fd.ps1\" a \"~/.files/terminal/windows/complete/\" ..."
-            #cp "${l_path_temp}/autocomplete/fd.ps1" ~/.files/terminal/windows/complete/fd.ps1
+            #echo "Copiando \"autocomplete/fd.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
+            #cp "${l_path_temp}/autocomplete/fd.ps1" ~/.files/terminal/powershell/complete/fd.ps1
             ;;
 
         k0s)
