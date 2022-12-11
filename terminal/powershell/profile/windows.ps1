@@ -22,7 +22,7 @@ $env:FZF_DEFAULT_OPTS = "--height=80% --layout=reverse --info=inline --border --
 #Funciones basicas
 #------------------------------------------------------------------------------------------------
 
-. "${env:USERPROFILE}\.files\terminal\powershell\functions\cli_core.ps1"
+. "${env:USERPROFILE}\.files\terminal\powershell\functions\func_basic_win.ps1"
 
 
 
