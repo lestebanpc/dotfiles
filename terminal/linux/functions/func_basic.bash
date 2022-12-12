@@ -25,7 +25,7 @@ glog() {
     fi
 
     #Mostrar los commit y su preview
-    glogline | fzf -i -e --no-sort --reverse --tiebreak index --no-multi --ansi --preview "$gll_view1" \
+    glogline | fzf -i -e --no-sort --reverse --tiebreak index -m --ansi --preview "$gll_view1" \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" --bind "ctrl-y:execute:$gll_view1" \
         --header $'Use [CTRL + y] para ver detalle, [ENTER] para mostrar el hash del commit\n\n' \
         --print-query 
