@@ -25,15 +25,18 @@ function glog()
         return
     }
 
-    #El comando pwsh no se ejecuta en una terminal Powershell, si no la terminal nativo Bash
-    $gll_view1="pwsh -noprofile -command \"git show --color=always '{}'.Substring(0,7) | delta\""
-    $gll_view2="pwsh -noprofile -command \"git show --color=always '{}'.Substring(0,7)\""
-    $gll_paste="pwsh -noprofile -command \"Set-Clipboard -Value '{}'.Substring(0,7)\""
+    #El comando pwsh no se ejecuta en una terminal Powershell, si no la terminal nativo Bash,
+    #Es decir: es un cadena powershell que se ejecutara en bash, no en powershell
+    $gll_hash="echo {} | grep -o '[a-f0-9]\{7\}' | head -1"
+    $gll_view1="$gll_hash | xargs git show --color=always | delta"
+    $gll_view2="$gll_hash | xargs git show --color=always"
+    $gll_paste="$gll_hash | cat"
 
     #Mostrar los commit y su preview
     glogline | fzf -i -e --no-sort --reverse --tiebreak index --no-multi --ansi --preview "$gll_view1" `
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" --bind "enter:execute:$gll_view2" `
-        --bind "ctrl-y:execute-silent:$gll_paste"
+        --bind "ctrl-y:execute-silent:$gll_paste" `
+        --header 'Use [ENTER] para ver detalle, [CRTL + Y] Mostrar el hash del commit:`n`n'
 }
 
 
