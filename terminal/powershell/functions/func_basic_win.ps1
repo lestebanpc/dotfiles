@@ -4,7 +4,7 @@
 
 #01. Search for commit with FZF preview and copy hash
 #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
-#    > [CTRL + o]    - Ver el detalle de commit y navegar en sus paginas
+#    > [CTRL + y]    - Ver el detalle de commit y navegar en sus paginas
 #    > [ENTER]       - Copiar el hash del commit en portapapeles de windows
 #    > [SHIFT + ↓/↑] - Cambio de pagina en la vista de preview
 #
@@ -32,8 +32,8 @@ function glog()
 
     #Mostrar los commit y su preview
     glogline | fzf -i -e --no-sort --reverse --tiebreak index --no-multi --ansi --preview "$gll_view1" `
-        --bind "shift-up:preview-page-up,shift-down:preview-page-down" --bind "ctrl-o:execute:$gll_view2" `
-        --header 'Use [CTRL + o] para ver detalle, [ENTER] imprimir el hash del commit' --print-query
+        --bind "shift-up:preview-page-up,shift-down:preview-page-down" --bind "ctrl-y:execute:$gll_view2" `
+        --header 'Use [CTRL + y] para ver detalle, [ENTER] imprimir el hash del commit' --print-query
 }
 
 
