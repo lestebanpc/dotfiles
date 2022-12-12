@@ -33,7 +33,8 @@ function glog()
     #Mostrar los commit y su preview
     glogline | fzf -i -e --no-sort --reverse --tiebreak index --no-multi --ansi --preview "$gll_view1" `
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" --bind "ctrl-y:execute:$gll_view2" `
-        --header 'Use [CTRL + y] para ver detalle, [ENTER] imprimir el hash del commit' --print-query
+        --header 'Use [CTRL + y] para ver detalle, [ENTER] imprimir el hash del commit' `
+        --print-query
 }
 
 
