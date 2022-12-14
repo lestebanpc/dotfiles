@@ -16,10 +16,8 @@ gll_view1="$gll_hash | xargs git show --color=always | delta"
 #gll_view2="$gll_hash | xargs git show --color=always"
 
 glog() {
-    #Obtener el directorio .git pero no imprimir su valor ni los errores
-    git rev-parse --git-dir > /dev/null 2>&1
-    #Si no es un repositorio valido salir
-    if [ $? != 0 ]; then
+    #Obtener el directorio .git pero no imprimir su valor ni los errores. Si no es un repositorio valido salir
+    if ! git rev-parse --git-dir > /dev/null 2>&1; then
         echo 'Invalid git repository'
         return 0
     fi

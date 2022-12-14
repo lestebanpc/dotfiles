@@ -396,7 +396,7 @@ function m_setup_vim() {
         echo "Creando el enlace de ~/.vimrc"
         ln -snf ~/.files/vim/vimrc_vm_linux_basic.vim ~/.vimrc
         #fi
-        echo "Complete la configuracion de VIM para IDE:"
+        echo "Complete la configuracion de VIM como editor basico:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
     fi
 
@@ -441,9 +441,9 @@ function m_setup() {
     
     echo "OS Type        : ${g_os}"
     #4 Configuracion: Crear enlaces simbolicos basicos
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "- Creando los enlaces simbolicos"
-    echo "-------------------------------------------------------------------------------------------------"
+    #echo "-------------------------------------------------------------------------------------------------"
+    #echo "- Creando los enlaces simbolicos"
+    #echo "-------------------------------------------------------------------------------------------------"
 
     #Si es WSL (Ubuntu)
     if [ $g_os -eq 1 ]; then
