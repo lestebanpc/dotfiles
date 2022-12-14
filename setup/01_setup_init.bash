@@ -25,7 +25,7 @@ function m_setup() {
         echo "   1> git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
         echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
         echo "   3> . ~/.files/setup/01_setup_init.bash"
-        echo "   4> . ~/.files/setup/02_setup_commands.bash (ONLY si no estan actualizados lo comandos)"
+        echo "   4> . ~/.files/setup/02_setup_commands.bash (instala y actuliza comandos)"
         echo "   5> . ~/.files/setup/03_setup_profile.bash"
         return 0
     fi
@@ -62,16 +62,18 @@ function m_setup() {
     chmod u+x ~/.files/setup/*.bash
     
     
-    if [ $g_is_root -eq 0 ]; then
-        mkdir -pm 755 /u01
-        mkdir -pm 755 /u01/userkeys
-        mkdir -pm 755 /u01/userkeys/ssh/
-        chown -R lucianoepc:lucianoepc /u01/userkeys
-    else
-        sudo mkdir -pm 755 /u01
-        sudo mkdir -pm 755 /u01/userkeys
-        sudo chown lucianoepc:lucianoepc /u01/userkeys
-        mkdir -pm 755 /u01/userkeys/ssh/
+    if [ ! -d /u01/userkeys/ssh ]; then
+        if [ $g_is_root -eq 0 ]; then
+            mkdir -pm 755 /u01
+            mkdir -pm 755 /u01/userkeys
+            mkdir -pm 755 /u01/userkeys/ssh
+            chown -R lucianoepc:lucianoepc /u01/userkeys
+        else
+            sudo mkdir -pm 755 /u01
+            sudo mkdir -pm 755 /u01/userkeys
+            sudo chown lucianoepc:lucianoepc /u01/userkeys
+            mkdir -pm 755 /u01/userkeys/ssh
+        fi
     fi
     
     #Validar si esta instalado VIM-Enhaced
@@ -84,10 +86,25 @@ function m_setup() {
             sudo dnf install vim-enhanced
         fi
     else
-        l_version=$(echo $l_version | head -n 1)
+        l_version=$(echo "$l_version" | head -n 1)
         echo "VIM-Enhaced instalado: ${l_version}"
     fi
     
+    #Validar si esta instalado NeoVIM
+    if ! l_version=$(nvim --version 2> /dev/null); then
+        echo "Se va instalar NeoVIM"
+        if [ $g_is_root -eq 0 ]; then
+            dnf install neovim
+            dnf install python3-neovim
+        else
+            sudo dnf install neovim
+            sudo dnf install python3-neovim
+        fi
+    else
+        l_version=$(echo "$l_version" | head -n 1)
+        echo "NeoVIM instalado: ${l_version}"
+    fi
+
     #5. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_is_root -ne 0 ]; then
         echo "Caducando el cache de temporal password de su 'sudo'"

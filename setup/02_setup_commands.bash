@@ -1304,11 +1304,15 @@ declare -A gA_repositories=(
     )
 
 
-#Flag paara instalar repositorios opcionales. Usar valores 2^n (1, 2, 4, 8, 16, ...)
-declare -A gA_repositories_flags=(
+#Flag para instalar repositorios opcionales. Usar valores 2^n (1, 2, 4, 8, 16, ...)
+declare -A gA_optional_repositories=(
         ['k0s']=1
     )
 
+# Argunentos:
+# - Repositorios opcionales que se se instalaran (flag en binario. entero que es suma de 2^n).
+#   Si es 0, no se instala ningun repositorio opcionales.
+# - Flag para solicitar las credenciales sudo. Solo si no es root y es 0, se solicita guardar credenciales de root
 function setup_commands() {
     
     #1. Argumentos 
@@ -1317,13 +1321,18 @@ function setup_commands() {
         p_opciones=$1
     fi
 
+    local p_flag_sudo=0
+    if [[ "$2" =~ ^[0-9]+$ ]]; then
+        p_flag_sudo=$2
+    fi
+
     #2. Validar si fue descarga el repositorio git correspondiente
     if [ ! -d ~/.files/.git ]; then
         echo "Debe obtener los archivos basicos:"
         echo "   1> git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
         echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
         echo "   3> . ~/.files/setup/01_setup_init.bash"
-        echo "   4> . ~/.files/setup/02_setup_commands.bash (ONLY si no estan actualizados lo comandos)"
+        echo "   4> . ~/.files/setup/02_setup_commands.bash (instala y actuliza comandos)"
         echo "   5> . ~/.files/setup/03_setup_profile.bash"
         return 0
     fi
@@ -1331,7 +1340,7 @@ function setup_commands() {
     #3. Determinar valores iniciales
 
     #4. Solicitar credenciales de administrador y almacenarlas temporalmente
-    if [ $g_is_root -ne 0 ]; then
+    if [ $g_is_root -ne 0 -a $p_flag_sudo -eq 0 ]; then
 
         #echo "Se requiere alamcenar temporalmente su password"
         sudo -v
@@ -1361,7 +1370,7 @@ function setup_commands() {
         fi
 
         #Flags para instalar los repositorios opcionales
-        l_i=${gA_repositories_flags[$l_repo_id]}
+        l_i=${gA_optional_repositories[$l_repo_id]}
         if [ -z "$l_i" ]; then
             l_repo_flag=-1
         elif [[ ! "$l_i" =~ ^[0-9]+$ ]]; then
@@ -1431,7 +1440,7 @@ function setup_commands() {
     done; 
 
     #6. Caducar las credecinales de root almacenadas temporalmente
-    if [ $g_is_root -ne 0 ]; then
+    if [ $g_is_root -ne 0 -a $p_flag_sudo -eq 0 ]; then
         echo "Caducando el cache de temporal password de su 'sudo'"
         sudo -k
     fi
@@ -1440,7 +1449,7 @@ function setup_commands() {
 
 
 #export -f setup_commands
-setup_commands $1
+setup_commands $1 $2
 
 #}}}
 

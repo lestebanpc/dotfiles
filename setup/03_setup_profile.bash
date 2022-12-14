@@ -43,11 +43,10 @@ declare -r g_os=$?
 
 #}}}
 
-#TODO Mejorar, solo esta escrito para WSL que sea Ubuntu y no WSL que sea fedora
 # Opciones:
 #    0 - Se configura VIM en modo basico (por defecto)
 #    1 - Se configura VIM en modo IDE
-function m_setup() {
+function m_setup_neovim() {
 
     #1. Argumentos
     local p_opcion=0
@@ -55,48 +54,56 @@ function m_setup() {
         p_opcion=$1
     fi
 
-    #2. Validar si fue descarga el repositorio git correspondiente
-    if [ ! -d ~/.files/.git ]; then
-        echo "Debe obtener los archivos basicos:"
-        echo "   1> git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
-        echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
-        echo "   3> . ~/.files/setup/01_setup_init.bash"
-        echo "   4> . ~/.files/setup/02_setup_commands.bash"
-        echo "   6> . ~/.files/setup/03_setup_profile.bash"
-        return 0
-    fi
-    echo "OS Type        : ${g_os}"
+    local path_data=~/.local/share
+
+    #Instalar los plugins
+    echo "-------------------------------------------------------------------------------------------------"
+    echo "- NeoVIM: Instalar plugins"
+    echo "-------------------------------------------------------------------------------------------------"
     
-    #3. Solicitar credenciales de administrador y almacenarlas temporalmente
-    if [ $g_is_root -ne 0 ]; then
+    echo "Instalar el gestor de paquetes Vim-Plug"
+    if [ ! -f ${path_data}/nvim/site/autoload/plug.vim ]; then
+        mkdir -p ${path_data}/nvim/site/autoload
+        curl -fLo ${path_data}/nvim/site/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    fi
+    
+    
+    echo "-------------------------------------------------------------------------------------------------"
+    echo "- NeoVIM: Finalizando la configuración"
+    echo "-------------------------------------------------------------------------------------------------"
+    if [ ! -e ~/.config/nvim/lua ]; then
+        echo "Creando el enlace de \"~/.config/nvim/lua\""
+        mkdir -p ~/.config/nvim
+        ln -snf ~/.files/nvim/lua ~/.config/nvim/lua
+    fi
 
-        #echo "Se requiere alamcenar temporalmente su password"
-        sudo -v
-
-        if [ $? -ne 0 ]; then
-            echo "ERROR(20): Se requiere \"sudo -v\" almacene temporalmente su credenciales de root"
-            return 20;
+    if [ ! -e ~/.config/nvim/init.vim ]; then
+        if [ $p_opcion -eq 1 ]; then
+            echo "Creando el enlace de \"~/.config/nvim/init.vim\" para usarlo como IDE"
+            ln -snf ~/.files/nvim/init_vm_linux_ide.vim ~/.config/nvim/init.vim
+        else
+            echo "Creando el enlace de \"~/.config/nvim/init.vim\" para usarlo como editor basico"
+            ln -snf ~/.files/nvim/init_vm_linux_basic.vim ~/.config/nvim/init.vim
         fi
     fi
-    
-    #4 Instalacion
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "- Creando los enlaces simbolicos"
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "Creando los enlaces simbolicos ~/.tmux.conf, ~/.gitconfig, ~/.ssh/config, ~/.bashrc"
 
-    #Si es WSL (Ubuntu)
-    if [ $g_os -eq 1 ]; then
-        ln -snf ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf ~/.dircolors
-        ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
-        ln -snf ~/.files/git/wsl2_git.conf ~/.gitconfig
-        ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config
-        ln -snf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc
-    else
-        ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
-        ln -snf ~/.files/git/vm_linux_git.conf ~/.gitconfig
-        ln -snf ~/.files/ssh/vm_linux_ssh.conf ~/.ssh/config
-        ln -snf ~/.files/terminal/linux/profile/fedora_vm.bash ~/.bashrc
+    echo "Complete la configuracion de los plugins en NeoVIM"
+    echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
+    echo "  2> Instalar los plugins de VIM-Plug: \":PackerUpdate\""
+
+    return 0
+}
+
+
+# Opciones:
+#    0 - Se configura VIM en modo basico (por defecto)
+#    1 - Se configura VIM en modo IDE
+function m_setup_vim() {
+
+    #1. Argumentos
+    local p_opcion=0
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_opcion=$1
     fi
 
     #Instalar Node.JS
@@ -138,8 +145,10 @@ function m_setup() {
     fi
     
     echo "Instalar el gestor de paquetes Vim-Plug"
-    mkdir -p ~/.vim/autoload
-    curl -fLo ~/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    if [ ! -f ~/.vim/autoload/plug.vim ]; then
+        mkdir -p ~/.vim/autoload
+        curl -fLo ~/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    fi
     
     local l_base_path=~/.vim/pack/themes/opt
     cd ${l_base_path}
@@ -165,8 +174,7 @@ function m_setup() {
         echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
-    
-     
+
     l_base_path=~/.vim/pack/ui/opt
     cd ${l_base_path}
     
@@ -235,7 +243,7 @@ function m_setup() {
         echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
-    
+
     if [ $p_opcion -eq 1 ]; then
 
         l_base_path=~/.vim/pack/typing/opt
@@ -299,7 +307,7 @@ function m_setup() {
             echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
-        
+
         l_repo_git="SirVer/ultisnips"
         if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
             echo "...................................................."
@@ -338,9 +346,12 @@ function m_setup() {
     echo "-------------------------------------------------------------------------------------------------"
     echo "- VIM: Finalizando la configuración"
     echo "-------------------------------------------------------------------------------------------------"
-    echo "Crear el enlace de ~/.vimrc"
     if [ $p_opcion -eq 1 ]; then
-        ln -snf ~/.files/vim/vimrc_vm_linux_ide.vim ~/.vimrc
+
+        if [ ! -e ~/.vimrc ]; then
+            echo "Creando el enlace de ~/.vimrc"
+            ln -snf ~/.files/vim/vimrc_vm_linux_ide.vim ~/.vimrc
+        fi
         echo "Complete la configuracion de VIM para IDE:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
         echo "  2> Configurar COC:"
@@ -350,12 +361,81 @@ function m_setup() {
         echo "  3> Usar ALE para liting y no el por defecto de COC: \":CocConfig\""
         echo "     { \"diagnostic.displayByAle\": true }"
     else
-        ln -snf ~/.files/vim/vimrc_vm_linux_basic.vim ~/.vimrc
+        if [ ! -e ~/.vimrc ]; then
+            echo "Creando el enlace de ~/.vimrc"
+            ln -snf ~/.files/vim/vimrc_vm_linux_basic.vim ~/.vimrc
+        fi
         echo "Complete la configuracion de VIM para IDE:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
     fi
+
+    return 0
+}
+
+
+#TODO Mejorar, solo esta escrito para WSL que sea Ubuntu y no WSL que sea fedora
+# Opciones:
+#    0 - Se configura VIM en modo basico (por defecto)
+#    1 - Se configura VIM en modo IDE
+function m_setup() {
+
+    #1. Argumentos
+    local p_opcion=0
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_opcion=$1
+    fi
+
+    #2. Validar si fue descarga el repositorio git correspondiente
+    if [ ! -d ~/.files/.git ]; then
+        echo "Debe obtener los archivos basicos:"
+        echo "   1> git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
+        echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
+        echo "   3> . ~/.files/setup/01_setup_init.bash"
+        echo "   4> . ~/.files/setup/02_setup_commands.bash (instala y actuliza comandos)"
+        echo "   5> . ~/.files/setup/03_setup_profile.bash"
+        return 0
+    fi
+    echo "OS Type        : ${g_os}"
     
-    #5. Caducar las credecinales de root almacenadas temporalmente
+    #3. Solicitar credenciales de administrador y almacenarlas temporalmente
+    if [ $g_is_root -ne 0 ]; then
+
+        #echo "Se requiere alamcenar temporalmente su password"
+        sudo -v
+
+        if [ $? -ne 0 ]; then
+            echo "ERROR(20): Se requiere \"sudo -v\" almacene temporalmente su credenciales de root"
+            return 20;
+        fi
+    fi
+    
+    #4 Configuracion: Crear enlaces simbolicos basicos
+    echo "-------------------------------------------------------------------------------------------------"
+    echo "- Creando los enlaces simbolicos"
+    echo "-------------------------------------------------------------------------------------------------"
+    echo "Creando los enlaces simbolicos ~/.tmux.conf, ~/.gitconfig, ~/.ssh/config, ~/.bashrc"
+
+    #Si es WSL (Ubuntu)
+    if [ $g_os -eq 1 ]; then
+        if [ ! -e ~/.dircolors ]; then ln -snf ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf ~/.dircolors; fi
+        if [ ! -e ~/.tmux.conf ]; then ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf; fi
+        if [ ! -e ~/.gitconfig ]; then ln -snf ~/.files/git/wsl2_git.conf ~/.gitconfig; fi
+        if [ ! -e ~/.ssh/config ]; then ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config; fi
+        if [ ! -e ~/.bashrc ]; then ln -snf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc; fi
+    else
+        if [ ! -e ~/.tmux.conf ]; then ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf; fi
+        if [ ! -e ~/.gitconfig ]; then ln -snf ~/.files/git/vm_linux_git.conf ~/.gitconfig; fi
+        if [ ! -e ~/.ssh/config ]; then ln -snf ~/.files/ssh/vm_linux_ssh.conf ~/.ssh/config; fi
+        if [ ! -e ~/.bashrc ]; then ln -snf ~/.files/terminal/linux/profile/fedora_vm.bash ~/.bashrc; fi
+    fi
+
+    #5 Configuración: Instalar VIM
+    m_setup_vim $p_opcion
+    
+    #6 Configuración: Instalar NeoVIM
+    m_setup_neovim $p_opcion
+      
+    #7. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_is_root -ne 0 ]; then
         echo "Caducando el cache de temporal password de su 'sudo'"
         sudo -k
