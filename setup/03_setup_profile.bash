@@ -161,7 +161,7 @@ function m_setup_vim() {
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
-        echo "...................................................."
+        #echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
@@ -173,7 +173,7 @@ function m_setup_vim() {
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
-        echo "...................................................."
+        #echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
@@ -188,7 +188,7 @@ function m_setup_vim() {
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
-        echo "...................................................."
+        #echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
@@ -200,7 +200,7 @@ function m_setup_vim() {
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
-        echo "...................................................."
+        #echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
@@ -212,7 +212,7 @@ function m_setup_vim() {
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
-        echo "...................................................."
+        #echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
@@ -224,7 +224,7 @@ function m_setup_vim() {
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
-        echo "...................................................."
+        #echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
@@ -236,7 +236,7 @@ function m_setup_vim() {
         echo "...................................................."
         git clone --depth 1 https://github.com/${l_repo_git}.git
     else
-        echo "...................................................."
+        #echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
@@ -248,7 +248,7 @@ function m_setup_vim() {
         echo "...................................................."
         git clone https://github.com/${l_repo_git}.git
     else
-        echo "...................................................."
+        #echo "...................................................."
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
@@ -265,7 +265,7 @@ function m_setup_vim() {
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
-            echo "...................................................."
+            #echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
     
@@ -277,7 +277,7 @@ function m_setup_vim() {
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
-            echo "...................................................."
+            #echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
 
@@ -293,7 +293,7 @@ function m_setup_vim() {
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
-            echo "...................................................."
+            #echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
@@ -305,7 +305,7 @@ function m_setup_vim() {
             echo "...................................................."
             git clone --branch release --depth=1 https://github.com/${l_repo_git}.git
         else
-            echo "...................................................."
+            #echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
@@ -317,7 +317,7 @@ function m_setup_vim() {
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
-            echo "...................................................."
+            #echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
 
@@ -329,7 +329,7 @@ function m_setup_vim() {
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
-            echo "...................................................."
+            #echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
@@ -341,7 +341,7 @@ function m_setup_vim() {
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
-            echo "...................................................."
+            #echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
@@ -353,7 +353,7 @@ function m_setup_vim() {
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
         else
-            echo "...................................................."
+            #echo "...................................................."
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
@@ -411,7 +411,6 @@ function m_setup() {
         echo "   5> . ~/.files/setup/03_setup_profile.bash"
         return 0
     fi
-    echo "OS Type        : ${g_os}"
     
     #3. Solicitar credenciales de administrador y almacenarlas temporalmente
     if [ $g_is_root -ne 0 ]; then
@@ -425,6 +424,7 @@ function m_setup() {
         fi
     fi
     
+    echo "OS Type        : ${g_os}"
     #4 Configuracion: Crear enlaces simbolicos basicos
     echo "-------------------------------------------------------------------------------------------------"
     echo "- Creando los enlaces simbolicos"
