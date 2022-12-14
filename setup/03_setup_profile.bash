@@ -67,6 +67,21 @@ function m_setup_neovim() {
         curl -fLo ${path_data}/nvim/site/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     fi
     
+    local l_base_path="${path_data}/nvim/site/pack/packer/start"
+    mkdir -p $l_base_path
+    cd ${l_base_path}
+
+    local l_repo_name="packer.nvim"
+    local l_repo_git="wbthomason/${l_repo_name}"
+    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
+        #echo "...................................................."
+        echo "Instalando el paquete VIM \"${l_repo_git}\""
+        #echo "...................................................."
+        git clone --depth 1 https://github.com/${l_repo_git}.git
+    else
+        #echo "...................................................."
+        echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
+    fi
     
     echo "-------------------------------------------------------------------------------------------------"
     echo "- NeoVIM: Finalizando la configuración"
