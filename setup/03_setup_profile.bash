@@ -144,8 +144,8 @@ function m_setup_vim() {
         mkdir -p ~/.vim/pack/ide/opt
     fi
     
-    echo "Instalar el gestor de paquetes Vim-Plug"
     if [ ! -f ~/.vim/autoload/plug.vim ]; then
+        echo "Instalar el gestor de paquetes Vim-Plug"
         mkdir -p ~/.vim/autoload
         curl -fLo ~/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     fi
@@ -153,8 +153,9 @@ function m_setup_vim() {
     local l_base_path=~/.vim/pack/themes/opt
     cd ${l_base_path}
 
-    local l_repo_git="tomasr/molokai"
-    if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+    local l_repo_name="molokai"
+    local l_repo_git="tomasr/${l_repo_name}"
+    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
         echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
@@ -164,8 +165,9 @@ function m_setup_vim() {
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
-    l_repo_git="dracula/vim"
-    if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+    l_repo_name="vim"
+    l_repo_git="dracula/${l_repo_name}"
+    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
         echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
@@ -178,8 +180,9 @@ function m_setup_vim() {
     l_base_path=~/.vim/pack/ui/opt
     cd ${l_base_path}
     
-    l_repo_git="vim-airline/vim-airline"
-    if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+    l_repo_name="vim-airline"
+    l_repo_git="vim-airline/${l_repo_name}"
+    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
         echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
@@ -189,8 +192,9 @@ function m_setup_vim() {
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
-    l_repo_git="vim-airline/vim-airline-themes"
-    if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+    l_repo_name="vim-airline-themes"
+    l_repo_git="vim-airline/${l_repo_name}"
+    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
         echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
@@ -200,8 +204,9 @@ function m_setup_vim() {
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
-    l_repo_git="preservim/nerdtree"
-    if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+    l_repo_name="nerdtree"
+    l_repo_git="preservim/${l_repo_name}"
+    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
         echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
@@ -211,8 +216,9 @@ function m_setup_vim() {
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
-    l_repo_git="christoomey/vim-tmux-navigator"
-    if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+    l_repo_name="vim-tmux-navigator"
+    l_repo_git="christoomey/${l_repo_name}"
+    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
         echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
@@ -222,8 +228,9 @@ function m_setup_vim() {
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
-    l_repo_git="junegunn/fzf"
-    if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+    l_repo_name="fzf"
+    l_repo_git="junegunn/${l_repo_name}"
+    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
         echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
@@ -233,8 +240,9 @@ function m_setup_vim() {
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
-    l_repo_git="junegunn/fzf.vim"
-    if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+    l_repo_name="fzf.vim"
+    l_repo_git="junegunn/${l_repo_name}"
+    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
         echo "...................................................."
         echo "Instalando el paquete VIM \"${l_repo_git}\""
         echo "...................................................."
@@ -249,8 +257,9 @@ function m_setup_vim() {
         l_base_path=~/.vim/pack/typing/opt
         cd ${l_base_path}
         
-        l_repo_git="tpope/vim-surround"
-        if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        l_repo_name="vim-surround"
+        l_repo_git="tpope/${l_repo_name}"
+        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
             echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
@@ -261,8 +270,9 @@ function m_setup_vim() {
         fi
     
         
-        l_repo_git="mg979/vim-visual-multi"
-        if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        l_repo_name="vim-visual-multi"
+        l_repo_git="mg979/${l_repo_name}"
+        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
             git clone https://github.com/${l_repo_git}.git
@@ -275,8 +285,9 @@ function m_setup_vim() {
         l_base_path=~/.vim/pack/ide/opt
         cd ${l_base_path}
         
-        l_repo_git="dense-analysis/ale"
-        if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        l_repo_name="ale"
+        l_repo_git="dense-analysis/${l_repo_name}"
+        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
             echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
@@ -286,8 +297,9 @@ function m_setup_vim() {
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
-        l_repo_git="neoclide/coc.nvim"
-        if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        l_repo_name="coc.nvim"
+        l_repo_git="neoclide/${l_repo_name}"
+        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
             echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
@@ -297,8 +309,9 @@ function m_setup_vim() {
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
-        l_repo_git="OmniSharp/omnisharp-vim"
-        if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        l_repo_name="omnisharp-vim"
+        l_repo_git="OmniSharp/${l_repo_name}"
+        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
             echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
@@ -308,8 +321,9 @@ function m_setup_vim() {
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
 
-        l_repo_git="SirVer/ultisnips"
-        if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        l_repo_name="ultisnips"
+        l_repo_git="SirVer/${l_repo_name}"
+        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
             echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
@@ -319,8 +333,9 @@ function m_setup_vim() {
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
-        l_repo_git="honza/vim-snippets"
-        if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        l_repo_name="vim-snippets"
+        l_repo_git="honza/${l_repo_name}"
+        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
             echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
@@ -330,8 +345,9 @@ function m_setup_vim() {
             echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
         fi
         
-        l_repo_git="nickspoons/vim-sharpenup"
-        if [ ! -d ${l_base_path}/${l_repo_git}/.git ]; then
+        l_repo_name="vim-sharpenup"
+        l_repo_git="nickspoons/${l_repo_name}"
+        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
             echo "...................................................."
             echo "Instalando el paquete VIM \"${l_repo_git}\""
             echo "...................................................."
@@ -348,10 +364,10 @@ function m_setup_vim() {
     echo "-------------------------------------------------------------------------------------------------"
     if [ $p_opcion -eq 1 ]; then
 
-        if [ ! -e ~/.vimrc ]; then
-            echo "Creando el enlace de ~/.vimrc"
-            ln -snf ~/.files/vim/vimrc_vm_linux_ide.vim ~/.vimrc
-        fi
+        #if [ ! -e ~/.vimrc ]; then
+        echo "Creando el enlace de ~/.vimrc"
+        ln -snf ~/.files/vim/vimrc_vm_linux_ide.vim ~/.vimrc
+        #fi
         echo "Complete la configuracion de VIM para IDE:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
         echo "  2> Configurar COC:"
@@ -361,10 +377,10 @@ function m_setup_vim() {
         echo "  3> Usar ALE para liting y no el por defecto de COC: \":CocConfig\""
         echo "     { \"diagnostic.displayByAle\": true }"
     else
-        if [ ! -e ~/.vimrc ]; then
-            echo "Creando el enlace de ~/.vimrc"
-            ln -snf ~/.files/vim/vimrc_vm_linux_basic.vim ~/.vimrc
-        fi
+        #if [ ! -e ~/.vimrc ]; then
+        echo "Creando el enlace de ~/.vimrc"
+        ln -snf ~/.files/vim/vimrc_vm_linux_basic.vim ~/.vimrc
+        #fi
         echo "Complete la configuracion de VIM para IDE:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
     fi
@@ -413,20 +429,56 @@ function m_setup() {
     echo "-------------------------------------------------------------------------------------------------"
     echo "- Creando los enlaces simbolicos"
     echo "-------------------------------------------------------------------------------------------------"
-    echo "Creando los enlaces simbolicos ~/.tmux.conf, ~/.gitconfig, ~/.ssh/config, ~/.bashrc"
 
     #Si es WSL (Ubuntu)
     if [ $g_os -eq 1 ]; then
-        if [ ! -e ~/.dircolors ]; then ln -snf ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf ~/.dircolors; fi
-        if [ ! -e ~/.tmux.conf ]; then ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf; fi
-        if [ ! -e ~/.gitconfig ]; then ln -snf ~/.files/git/wsl2_git.conf ~/.gitconfig; fi
-        if [ ! -e ~/.ssh/config ]; then ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config; fi
-        if [ ! -e ~/.bashrc ]; then ln -snf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc; fi
+
+        if [ ! -e ~/.dircolors ]; then
+           echo "Creando los enlaces simbolico de ~/.dircolors"
+           ln -snf ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf ~/.dircolors
+        fi
+
+        if [ ! -e ~/.tmux.conf ]; then
+           echo "Creando los enlaces simbolico de ~/.tmux.conf"
+           ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
+        fi
+
+        if [ ! -e ~/.gitconfig ]; then
+           echo "Creando los enlaces simbolico de ~/.gitconfig"
+           ln -snf ~/.files/git/wsl2_git.conf ~/.gitconfig
+        fi
+
+        if [ ! -e ~/.ssh/config ]; then
+           echo "Creando los enlaces simbolico de ~/.ssh/config"
+           ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config
+        fi
+
+        if [ ! -e ~/.bashrc ]; then
+           echo "Creando los enlaces simbolico de ~/.bashrc"
+           ln -snf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc
+        fi
+
     else
-        if [ ! -e ~/.tmux.conf ]; then ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf; fi
-        if [ ! -e ~/.gitconfig ]; then ln -snf ~/.files/git/vm_linux_git.conf ~/.gitconfig; fi
-        if [ ! -e ~/.ssh/config ]; then ln -snf ~/.files/ssh/vm_linux_ssh.conf ~/.ssh/config; fi
-        if [ ! -e ~/.bashrc ]; then ln -snf ~/.files/terminal/linux/profile/fedora_vm.bash ~/.bashrc; fi
+
+        if [ ! -e ~/.tmux.conf ]; then
+           echo "Creando los enlaces simbolico de ~/.tmux.conf"
+           ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
+        fi
+
+        if [ ! -e ~/.gitconfig ]; then
+           echo "Creando los enlaces simbolico de ~/.gitconfig"
+           ln -snf ~/.files/git/vm_linux_git.conf ~/.gitconfig
+        fi
+
+        if [ ! -e ~/.ssh/config ]; then
+           echo "Creando los enlaces simbolico de ~/.ssh/config"
+           ln -snf ~/.files/ssh/vm_linux_ssh.conf ~/.ssh/config
+        fi
+
+        if [ ! -e ~/.bashrc ]; then
+           echo "Creando los enlaces simbolico de ~/.bashrc"
+           ln -snf ~/.files/terminal/linux/profile/fedora_vm.bash ~/.bashrc
+        fi
     fi
 
     #5 Configuración: Instalar VIM
