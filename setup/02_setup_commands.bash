@@ -1,12 +1,6 @@
 #!/bin/bash
 
-#Definiciones globales, Inicialización {{{
-
-#Variable global pero solo se usar localmente en las funciones
-t_tmp=""
-
-#Variable global ruta de los binarios en Windows segun WSL2
-declare -r g_path_win_commands='/mnt/d/Tools/Cmds/Common'
+#Funciones de utilidad de Inicialización {{{
 
 #Determinar el tipo de SO. Devuelve:
 #  00 - 10: Si es Linux
@@ -15,43 +9,100 @@ declare -r g_path_win_commands='/mnt/d/Tools/Cmds/Common'
 #  11 - 20: Si es Unix
 #  21 - 30: si es MacOS
 #  31 - 40: Si es Windows
-function m_get_os() {
+function m_get_os_type() {
     local l_system=$(uname -s)
 
-    local l_os=0
+    local l_os_type=0
     local l_tmp=""
     case "$l_system" in
         Linux*)
             l_tmp=$(uname -r)
             if [[ "$l_tmp" == *WSL* ]]; then
-                l_os=1
+                l_os_type=1
             else
-                l_os=0
+                l_os_type=0
             fi
             ;;
-        Darwin*)  l_os=21;;
-        CYGWIN*)  l_os=31;;
-        MINGW*)   l_os=32;;
-        *)        l_os=99;;
+        Darwin*)  l_os_type=21;;
+        CYGWIN*)  l_os_type=31;;
+        MINGW*)   l_os_type=32;;
+        *)        l_os_type=99;;
     esac
 
-    return $l_os
+    return $l_os_type
 
 }
-m_get_os
-declare -r g_os=$?
 
-#TODO Mejorar
-#Determinar si es un Linux de la familia debian (por ejemplo Ubuntu), use 0
-declare -r g_os_description=$(cat /etc/lsb-release 2> /dev/null | grep 'DISTRIB_DESCRIPTION' | sed 's/DISTRIB_DESCRIPTION="\(.*\)"/\1/')
-g_is_debian_os=1
-if [[ "$g_os_description" == *Ubuntu* ]]; then
-    g_is_debian_os=0
+
+#Determinar el tipo de distribucion Linux. Devuelve:
+#  1) Retorna en un entero el tipo de distribucion Linux
+#     00 : Distribución de Linux desconocido
+#     01 : Ubuntu
+#     02 : Fedora
+#  2) Muestra en el flujo de salida la version de la distribucion Linux
+function m_get_linux_subtype() {
+
+    local l_info_distro=""
+    if ! l_info_distro=$(cat /etc/*-release 2> /dev/null); then
+        return 0
+    fi
+
+    # Ubuntu:
+    #   NAME="Ubuntu"
+    #   VERSION="22.04.1 LTS (Jammy Jellyfish)"
+    #
+    # Fedora:
+    #   NAME="Fedora Linux"
+    #   VERSION="36 (Workstation Edition)"
+    #
+    local l_tag_distro_type="NAME"
+    local l_distro_type=$(echo "$l_info_distro" | grep -e "^${l_tag_distro_type}=" | sed 's/'"$l_tag_distro_type"'="\(.*\)"/\1/')
+    if [ -z "$l_distro_type" ]; then
+        return 0
+    fi
+
+    local l_tag_distro_version="VERSION"
+    local l_distro_version=$(echo "$l_info_distro" | grep -e "^${l_tag_distro_version}=" | sed 's/'"$l_tag_distro_version"'="\(.*\)"/\1/')
+    echo $l_distro_version
+
+    local l_type=0
+    case "$l_distro_type" in
+        Ubuntu*)
+            l_type=1
+            ;;
+        Fedora*)
+            l_type=2
+            ;;
+        *)
+            l_type=0
+            ;;
+    esac
+
+    return $l_type
+
+}
+
+#}}}
+
+#Inicialización Global {{{
+
+#Variable global pero solo se usar localmente en las funciones
+t_tmp=""
+
+#Variable global ruta de los binarios en Windows segun WSL2
+declare -r g_path_win_commands='/mnt/d/Tools/Cmds/Common'
+
+#Determinar la clase del SO
+m_get_os_type
+declare -r g_os_type=$?
+
+#Deteriminar el tipo de distribución Linux
+if [ $g_os_type -le 10 ]; then
+    t_tmp=$(m_get_linux_subtype)
+    declare -r g_os_subtype=$?
+    declare -r g_os_subtype_version="$t_tmp"
 fi
 
-
-echo "OS Type        : ${g_os}"
-echo "OS Description : ${g_os_description}"
 
 #Determinar si es root
 g_is_root=1
@@ -394,7 +445,7 @@ function m_get_artifacts() {
             ;;
         delta)
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_is_debian_os -eq 0 ]; then
+                if [ $g_os_subtype -eq 1 ]; then
                     pna_artifact_names=("git-delta_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
                 else
@@ -408,7 +459,7 @@ function m_get_artifacts() {
             ;;
         ripgrep)
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_is_debian_os -eq 0 ]; then
+                if [ $g_os_subtype -eq 1 ]; then
                     pna_artifact_names=("ripgrep_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
                 else
@@ -422,7 +473,7 @@ function m_get_artifacts() {
             ;;
         bat)
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_is_debian_os -eq 0 ]; then
+                if [ $g_os_subtype -eq 1 ]; then
                     pna_artifact_names=("bat_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
                 else
@@ -445,7 +496,7 @@ function m_get_artifacts() {
             ;;
         fd)
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_is_debian_os -eq 0 ]; then
+                if [ $g_os_subtype -eq 1 ]; then
                     pna_artifact_names=("fd_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
                 else
@@ -1338,6 +1389,15 @@ function setup_commands() {
     fi
     
     #3. Determinar valores iniciales
+    echo "OS Type              : ${g_os_type}"
+    echo "OS Subtype - ID      : ${g_os_subtype}"
+    echo "OS Subtype - Versión : ${g_os_subtype_version}"
+
+    #Determinar el tipo de distribución Linux
+    if [ $g_os_type -gt 10 ]; then
+        echo "ERROR(21): El sistema operativo debe ser Linux"
+        return 21;
+    fi
 
     #4. Solicitar credenciales de administrador y almacenarlas temporalmente
     if [ $g_is_root -ne 0 -a $p_flag_sudo -eq 0 ]; then
@@ -1389,7 +1449,7 @@ function setup_commands() {
         #Personalizar la logica segun el repositorio
         case "$l_repo_id" in
             less)
-                if [ $g_os -eq 1 ]; then
+                if [ $g_os_type -eq 1 ]; then
                     echo "-------------------------------------------------------------------------------------------------"
                     echo "- Repositorio \"${l_repo_name_aux}\""
                     echo "-------------------------------------------------------------------------------------------------"
@@ -1402,7 +1462,7 @@ function setup_commands() {
             k0s)
 
                 #No instalar nunca en WSL2, debido a que es pesado y solo si el 1er-bit de la 'p_opciones' es 1                
-                if [ $g_os -ne 1 -a $l_repo_flag -eq 0 ]; then
+                if [ $g_os_type -ne 1 -a $l_repo_flag -eq 0 ]; then
 
                     #Validando si el servicio esta detenido si esta instalado                    
                     echo "-------------------------------------------------------------------------------------------------"
@@ -1412,7 +1472,7 @@ function setup_commands() {
                     if k0s status 2> /dev/null 1>&2; then
                        echo "el servicio k0s esta intalado y ejecutandose, debe detener para instalarlo. NO se instalara el repo."
                    else
-                        echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_description}\""
+                        echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_subtype}\""
                         m_setup_repository "$l_repo_id" "$l_repo_name" 1
                         printf "\n\n"
                     fi
@@ -1424,11 +1484,11 @@ function setup_commands() {
                 echo "- Repositorio \"${l_repo_name_aux}\""
                 echo "-------------------------------------------------------------------------------------------------"
                 
-                echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_description}\""
+                echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_subtype}\""
                 m_setup_repository "$l_repo_id" "$l_repo_name" 1
                 printf "\n\n"
 
-                if [ $g_os -eq 1 ]; then
+                if [ $g_os_type -eq 1 ]; then
                     echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en el Windows donde esta su WSL2"
                     m_setup_repository "$l_repo_id" "$l_repo_name" 0
                     printf "\n\n"

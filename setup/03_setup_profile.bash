@@ -1,12 +1,6 @@
 #!/bin/bash
 
-#Definiciones globales, Inicialización {{{
-
-#Determinar si es root
-g_is_root=1
-if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
-    g_is_root=0
-fi
+#Funciones de utilidad de Inicialización {{{
 
 #Determinar el tipo de SO. Devuelve:
 #  00 - 10: Si es Linux
@@ -15,31 +9,106 @@ fi
 #  11 - 20: Si es Unix
 #  21 - 30: si es MacOS
 #  31 - 40: Si es Windows
-function m_get_os() {
+function m_get_os_type() {
     local l_system=$(uname -s)
 
-    local l_os=0
+    local l_os_type=0
     local l_tmp=""
     case "$l_system" in
         Linux*)
             l_tmp=$(uname -r)
             if [[ "$l_tmp" == *WSL* ]]; then
-                l_os=1
+                l_os_type=1
             else
-                l_os=0
+                l_os_type=0
             fi
             ;;
-        Darwin*)  l_os=21;;
-        CYGWIN*)  l_os=31;;
-        MINGW*)   l_os=32;;
-        *)        l_os=99;;
+        Darwin*)  l_os_type=21;;
+        CYGWIN*)  l_os_type=31;;
+        MINGW*)   l_os_type=32;;
+        *)        l_os_type=99;;
     esac
 
-    return $l_os
+    return $l_os_type
 
 }
-m_get_os
-declare -r g_os=$?
+
+
+#Determinar el tipo de distribucion Linux. Devuelve:
+#  1) Retorna en un entero el tipo de distribucion Linux
+#     00 : Distribución de Linux desconocido
+#     01 : Ubuntu
+#     02 : Fedora
+#  2) Muestra en el flujo de salida la version de la distribucion Linux
+function m_get_linux_subtype() {
+
+    local l_info_distro=""
+    if ! l_info_distro=$(cat /etc/*-release 2> /dev/null); then
+        return 0
+    fi
+
+    # Ubuntu:
+    #   NAME="Ubuntu"
+    #   VERSION="22.04.1 LTS (Jammy Jellyfish)"
+    #
+    # Fedora:
+    #   NAME="Fedora Linux"
+    #   VERSION="36 (Workstation Edition)"
+    #
+    local l_tag_distro_type="NAME"
+    local l_distro_type=$(echo "$l_info_distro" | grep -e "^${l_tag_distro_type}=" | sed 's/'"$l_tag_distro_type"'="\(.*\)"/\1/')
+    if [ -z "$l_distro_type" ]; then
+        return 0
+    fi
+
+    local l_tag_distro_version="VERSION"
+    local l_distro_version=$(echo "$l_info_distro" | grep -e "^${l_tag_distro_version}=" | sed 's/'"$l_tag_distro_version"'="\(.*\)"/\1/')
+    echo $l_distro_version
+
+    local l_type=0
+    case "$l_distro_type" in
+        Ubuntu*)
+            l_type=1
+            ;;
+        Fedora*)
+            l_type=2
+            ;;
+        *)
+            l_type=0
+            ;;
+    esac
+
+    return $l_type
+
+}
+
+#}}}
+
+#Inicialización Global {{{
+
+#Variable global pero solo se usar localmente en las funciones
+t_tmp=""
+
+#Variable global ruta de los binarios en Windows segun WSL2
+declare -r g_path_win_commands='/mnt/d/Tools/Cmds/Common'
+
+#Determinar la clase del SO
+m_get_os_type
+declare -r g_os_type=$?
+
+#Determinar el tipo de distribución Linux
+if [ $g_os_type -le 10 ]; then
+    t_tmp=$(m_get_linux_subtype)
+    declare -r g_os_subtype=$?
+    declare -r g_os_subtype_version="$t_tmp"
+fi
+
+
+#Determinar si es root
+g_is_root=1
+if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
+    g_is_root=0
+fi
 
 #}}}
 
@@ -427,6 +496,16 @@ function m_setup() {
         return 0
     fi
     
+    echo "OS Type              : ${g_os_type}"
+    echo "OS Subtype - ID      : ${g_os_subtype}"
+    echo "OS Subtype - Versión : ${g_os_subtype_version}"
+
+    #Determinar el tipo de distribución Linux
+    if [ $g_os_type -gt 10 ]; then
+        echo "ERROR(21): El sistema operativo debe ser Linux"
+        return 21;
+    fi
+    
     #3. Solicitar credenciales de administrador y almacenarlas temporalmente
     if [ $g_is_root -ne 0 ]; then
 
@@ -439,23 +518,33 @@ function m_setup() {
         fi
     fi
     
-    echo "OS Type        : ${g_os}"
     #4 Configuracion: Crear enlaces simbolicos basicos
+
     #echo "-------------------------------------------------------------------------------------------------"
     #echo "- Creando los enlaces simbolicos"
     #echo "-------------------------------------------------------------------------------------------------"
 
-    #Si es WSL (Ubuntu)
-    if [ $g_os -eq 1 ]; then
+    #4.1 Creando enlaces simbolico dependiente de tipo de distribución Linux
+    
+    #case "$g_os_subtype" in
+    #    1)
+    #        #Distribución: Ubuntu
+    #        ;;
+    #    2)
+    #        #Distribución: Fedora
+    #        ;;
+    #    0)
+    #        echo "ERROR (22): No se identificado el tipo de Distribución Linux"
+    #        return 22;
+    #        ;;
+    #esac
+
+    #Si es Linux WSL
+    if [ $g_os_type -eq 1 ]; then
 
         if [ ! -e ~/.dircolors ]; then
            echo "Creando los enlaces simbolico de ~/.dircolors"
            ln -snf ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf ~/.dircolors
-        fi
-
-        if [ ! -e ~/.tmux.conf ]; then
-           echo "Creando los enlaces simbolico de ~/.tmux.conf"
-           ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
         fi
 
         if [ ! -e ~/.gitconfig ]; then
@@ -473,12 +562,8 @@ function m_setup() {
         ln -snf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc
         #fi
 
+    #Si es un Linux WSL 
     else
-
-        if [ ! -e ~/.tmux.conf ]; then
-           echo "Creando los enlaces simbolico de ~/.tmux.conf"
-           ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
-        fi
 
         if [ ! -e ~/.gitconfig ]; then
            echo "Creando los enlaces simbolico de ~/.gitconfig"
@@ -494,6 +579,22 @@ function m_setup() {
         echo "Creando los enlaces simbolico de ~/.bashrc"
         ln -snf ~/.files/terminal/linux/profile/fedora_vm.bash ~/.bashrc
         #fi
+    fi
+
+    #4.2 Creando enlaces simbolico independiente de tipo de Linux
+
+    if [ ! -e ~/.tmux.conf ]; then
+       echo "Creando los enlaces simbolico de ~/.tmux.conf"
+       ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
+    fi
+
+    #Si se usa VIM como IDE
+    if [ $p_opcion -eq 1 ]; then
+
+        if [ ! -e ~/.vim/coc-settings.json ]; then
+            echo "Creando los enlaces simbolico de ~/.vim/coc-settings.json"
+            ln -sfn ~/.files/vim/coc/coc-settings.json ~/.vim/coc-settings.json
+        fi
     fi
 
     #5 Configuración: Instalar VIM

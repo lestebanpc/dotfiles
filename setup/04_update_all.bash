@@ -1,7 +1,108 @@
 #!/bin/bash
 
+#Funciones de utilidad de Inicialización {{{
 
-#Definiciones globales, Inicialización {{{
+#Determinar el tipo de SO. Devuelve:
+#  00 - 10: Si es Linux
+#           00 - Si es Linux genrico
+#           01 - Si es WSL2
+#  11 - 20: Si es Unix
+#  21 - 30: si es MacOS
+#  31 - 40: Si es Windows
+function m_get_os_type() {
+    local l_system=$(uname -s)
+
+    local l_os_type=0
+    local l_tmp=""
+    case "$l_system" in
+        Linux*)
+            l_tmp=$(uname -r)
+            if [[ "$l_tmp" == *WSL* ]]; then
+                l_os_type=1
+            else
+                l_os_type=0
+            fi
+            ;;
+        Darwin*)  l_os_type=21;;
+        CYGWIN*)  l_os_type=31;;
+        MINGW*)   l_os_type=32;;
+        *)        l_os_type=99;;
+    esac
+
+    return $l_os_type
+
+}
+
+
+#Determinar el tipo de distribucion Linux. Devuelve:
+#  1) Retorna en un entero el tipo de distribucion Linux
+#     00 : Distribución de Linux desconocido
+#     01 : Ubuntu
+#     02 : Fedora
+#  2) Muestra en el flujo de salida la version de la distribucion Linux
+function m_get_linux_subtype() {
+
+    local l_info_distro=""
+    if ! l_info_distro=$(cat /etc/*-release 2> /dev/null); then
+        return 0
+    fi
+
+    # Ubuntu:
+    #   NAME="Ubuntu"
+    #   VERSION="22.04.1 LTS (Jammy Jellyfish)"
+    #
+    # Fedora:
+    #   NAME="Fedora Linux"
+    #   VERSION="36 (Workstation Edition)"
+    #
+    local l_tag_distro_type="NAME"
+    local l_distro_type=$(echo "$l_info_distro" | grep -e "^${l_tag_distro_type}=" | sed 's/'"$l_tag_distro_type"'="\(.*\)"/\1/')
+    if [ -z "$l_distro_type" ]; then
+        return 0
+    fi
+
+    local l_tag_distro_version="VERSION"
+    local l_distro_version=$(echo "$l_info_distro" | grep -e "^${l_tag_distro_version}=" | sed 's/'"$l_tag_distro_version"'="\(.*\)"/\1/')
+    echo $l_distro_version
+
+    local l_type=0
+    case "$l_distro_type" in
+        Ubuntu*)
+            l_type=1
+            ;;
+        Fedora*)
+            l_type=2
+            ;;
+        *)
+            l_type=0
+            ;;
+    esac
+
+    return $l_type
+
+}
+
+#}}}
+
+#Inicialización Global {{{
+
+#Variable global pero solo se usar localmente en las funciones
+t_tmp=""
+
+#Variable global ruta de los binarios en Windows segun WSL2
+declare -r g_path_win_commands='/mnt/d/Tools/Cmds/Common'
+
+#Determinar la clase del SO
+m_get_os_type
+declare -r g_os_type=$?
+
+#Deteriminar el tipo de distribución Linux
+if [ $g_os_type -le 10 ]; then
+    t_tmp=$(m_get_linux_subtype)
+    declare -r g_os_subtype=$?
+    declare -r g_os_subtype_version="$t_tmp"
+fi
+
 
 #Determinar si es root
 g_is_root=1
@@ -9,47 +110,9 @@ if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
     g_is_root=0
 fi
 
-#Determinar el tipo de SO. Devuelve:
-#  00 - 10: Si es Linux
-#           00 - Si es Linux genericos
-#           01 - Si es WSL2
-#  11 - 20: Si es Unix
-#  21 - 30: si es MacOS
-#  31 - 40: Si es Windows
-function m_get_os() {
-    local l_system=$(uname -s)
-
-    local l_os=0
-    local l_tmp=""
-    case "$l_system" in
-        Linux*)
-            l_tmp=$(uname -r)
-            if [[ "$l_tmp" == *WSL* ]]; then
-                l_os=1
-            else
-                l_os=0
-            fi
-
-            ;;
-        Darwin*)  l_os=21;;
-        CYGWIN*)  l_os=31;;
-        MINGW*)   l_os=32;;
-        *)        l_os=99;;
-    esac
-
-    return $l_os
-
-}
-m_get_os
-declare -r g_os=$?
-
-l_os_type=0
-l_tmp=$(cat /etc/lsb-release 2> /dev/null | grep 'DISTRIB_DESCRIPTION' | sed 's/DISTRIB_DESCRIPTION="\(.*\)"/\1/')
-if [[ "$l_tmp" == *Ubuntu* ]]; then
-    l_os_type=1
-fi
-
 #}}}
+
+
 
 function m_update_repository() {
 
@@ -146,6 +209,16 @@ function m_update_all() {
         return 0
     fi
     
+    echo "OS Type              : ${g_os_type}"
+    echo "OS Subtype - ID      : ${g_os_subtype}"
+    echo "OS Subtype - Versión : ${g_os_subtype_version}"
+
+    #Determinar el tipo de distribución Linux
+    if [ $g_os_type -gt 10 ]; then
+        echo "ERROR (21): El sistema operativo debe ser Linux"
+        return 21;
+    fi
+
     #3. Solicitar credenciales de administrador y almacenarlas temporalmente
     if [ $g_is_root -ne 0 ]; then
 
@@ -162,23 +235,32 @@ function m_update_all() {
     echo "-------------------------------------------------------------------------------------------------"
     echo "- Actualizar los paquetes del Repositorio del Linux"
     echo "-------------------------------------------------------------------------------------------------"
-
-    #De Ubuntu
-    if [ $l_os_type -eq 1 ]; then
-        if [ $g_is_root -eq 0 ]; then
-            apt-get update
-            apt-get upgrade
-        else
-            sudo apt-get update
-            sudo apt-get upgrade
-        fi
-    else
-        if [ $g_is_root -eq 0 ]; then
-            dnf upgrade
-        else
-            sudo dnf upgrade
-        fi
-    fi
+    
+    #Segun el tipo de distribución de Linux
+    case "$g_os_subtype" in
+        1)
+            #Distribución: Ubuntu
+            if [ $g_is_root -eq 0 ]; then
+                dnf upgrade
+            else
+                sudo dnf upgrade
+            fi
+            ;;
+        2)
+            #Distribución: Fedora
+            if [ $g_is_root -eq 0 ]; then
+                apt-get update
+                apt-get upgrade
+            else
+                sudo apt-get update
+                sudo apt-get upgrade
+            fi
+            ;;
+        0)
+            echo "ERROR (22): No se identificado el tipo de Distribución Linux"
+            return 22;
+            ;;
+    esac
 
     #5 Actualizar los comandos basicos
     ~/.files/setup/02_setup_commands.bash $p_opcion 1
