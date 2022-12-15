@@ -468,10 +468,10 @@ function m_setup() {
            ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config
         fi
 
-        if [ ! -e ~/.bashrc ]; then
-           echo "Creando los enlaces simbolico de ~/.bashrc"
-           ln -snf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc
-        fi
+        #if [ ! -e ~/.bashrc ]; then
+        echo "Creando los enlaces simbolico de ~/.bashrc"
+        ln -snf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc
+        #fi
 
     else
 
@@ -490,10 +490,10 @@ function m_setup() {
            ln -snf ~/.files/ssh/vm_linux_ssh.conf ~/.ssh/config
         fi
 
-        if [ ! -e ~/.bashrc ]; then
-           echo "Creando los enlaces simbolico de ~/.bashrc"
-           ln -snf ~/.files/terminal/linux/profile/fedora_vm.bash ~/.bashrc
-        fi
+        #if [ ! -e ~/.bashrc ]; then
+        echo "Creando los enlaces simbolico de ~/.bashrc"
+        ln -snf ~/.files/terminal/linux/profile/fedora_vm.bash ~/.bashrc
+        #fi
     fi
 
     #5 Configuración: Instalar VIM
