@@ -1441,7 +1441,7 @@ function setup_commands() {
 
     #6. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_is_root -ne 0 -a $p_flag_sudo -eq 0 ]; then
-        echo "Caducando el cache de temporal password de su 'sudo'"
+        echo $'\n'"Caducando el cache de temporal password de su 'sudo'"
         sudo -k
     fi
 
