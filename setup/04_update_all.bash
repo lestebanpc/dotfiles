@@ -123,10 +123,10 @@ function m_update_vim_package() {
 }
 
 
-# Argunentos:
-# - Repositorios opcionales que se se instalaran (flag en binario. entero que es suma de 2^n).
-#   Si es 0, no se instala ningun repositorio opcionales.
-# - 
+# Argumentos:
+# 1) Repositorios opcionales que se se instalaran (flag en binario. entero que es suma de 2^n).
+#    Si es 0, no se instala ningun repositorio opcionales.
+# 2) - 
 function m_update_all() {
 
     #1. Argumentos

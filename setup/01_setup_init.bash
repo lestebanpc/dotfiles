@@ -54,9 +54,10 @@ function m_setup() {
     
     
     echo "-------------------------------------------------------------------------------------------------"
-    echo "- Dar permiso a archivos basicos y folderes basicos"
+    echo "- Configuración basica: archivos y folderes basicos, VIM-Enhaced, NeoVIM"
     echo "-------------------------------------------------------------------------------------------------"
-    chmod u+x ~/.files/terminal/linux/tmux/oh-my-tmux.sh
+    echo "Permiso a archivos basicos y folderes basicos"
+    chmod u+x ~/.files/terminal/linux/tmux/oh-my-tmux.bash
     chmod u+x ~/.files/terminal/linux/complete/fzf.bash
     chmod u+x ~/.files/terminal/linux/keybindings/fzf.bash
     chmod u+x ~/.files/setup/*.bash
@@ -74,9 +75,13 @@ function m_setup() {
             sudo chown lucianoepc:lucianoepc /u01/userkeys
             mkdir -pm 755 /u01/userkeys/ssh
         fi
+        echo "Folder \"/u01/userkeys/ssh\" se ha creado"
     fi
     
     #Validar si esta instalado VIM-Enhaced
+    echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+    echo "- Instalación/Validación de VIM-Enhaced"
+    echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
     local l_version=""
     if ! l_version=$(vim --version 2> /dev/null); then
         echo "Se va instalar VIM-Enhaced"
@@ -91,6 +96,9 @@ function m_setup() {
     fi
     
     #Validar si esta instalado NeoVIM
+    echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+    echo "- Instalación/Validación de NeoVIM"
+    echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
     if ! l_version=$(nvim --version 2> /dev/null); then
         echo "Se va instalar NeoVIM"
         if [ $g_is_root -eq 0 ]; then
@@ -107,7 +115,7 @@ function m_setup() {
 
     #5. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_is_root -ne 0 ]; then
-        echo "Caducando el cache de temporal password de su 'sudo'"
+        echo $'\n'"Caducando el cache de temporal password de su 'sudo'"
         sudo -k
     fi
 
