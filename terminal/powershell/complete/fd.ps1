@@ -21,9 +21,10 @@ Register-ArgumentCompleter -Native -CommandName 'fd' -ScriptBlock {
 
     $completions = @(switch ($command) {
         'fd' {
+            [CompletionResult]::new('--and', 'and', [CompletionResultType]::ParameterName, 'Additional search patterns that need to be matched')
             [CompletionResult]::new('-d', 'd', [CompletionResultType]::ParameterName, 'Set maximum search depth (default: none)')
             [CompletionResult]::new('--max-depth', 'max-depth', [CompletionResultType]::ParameterName, 'Set maximum search depth (default: none)')
-            [CompletionResult]::new('--min-depth', 'min-depth', [CompletionResultType]::ParameterName, 'Only show search results starting at the given depth')
+            [CompletionResult]::new('--min-depth', 'min-depth', [CompletionResultType]::ParameterName, 'Only show search results starting at the given depth.')
             [CompletionResult]::new('--exact-depth', 'exact-depth', [CompletionResultType]::ParameterName, 'Only show search results at the exact given depth')
             [CompletionResult]::new('-E', 'E', [CompletionResultType]::ParameterName, 'Exclude entries that match the given glob pattern')
             [CompletionResult]::new('--exclude', 'exclude', [CompletionResultType]::ParameterName, 'Exclude entries that match the given glob pattern')
@@ -48,7 +49,7 @@ Register-ArgumentCompleter -Native -CommandName 'fd' -ScriptBlock {
             [CompletionResult]::new('-j', 'j', [CompletionResultType]::ParameterName, 'Set number of threads to use for searching & executing (default: number of available CPU cores)')
             [CompletionResult]::new('--threads', 'threads', [CompletionResultType]::ParameterName, 'Set number of threads to use for searching & executing (default: number of available CPU cores)')
             [CompletionResult]::new('--max-buffer-time', 'max-buffer-time', [CompletionResultType]::ParameterName, 'Milliseconds to buffer before streaming search results to console')
-            [CompletionResult]::new('--max-results', 'max-results', [CompletionResultType]::ParameterName, 'Limit number of search results')
+            [CompletionResult]::new('--max-results', 'max-results', [CompletionResultType]::ParameterName, 'Limit the number of search results')
             [CompletionResult]::new('--base-directory', 'base-directory', [CompletionResultType]::ParameterName, 'Change current working directory')
             [CompletionResult]::new('--path-separator', 'path-separator', [CompletionResultType]::ParameterName, 'Set path separator when printing file paths')
             [CompletionResult]::new('--search-path', 'search-path', [CompletionResultType]::ParameterName, 'Provides paths to search as an alternative to the positional <path> argument')
@@ -92,7 +93,7 @@ Register-ArgumentCompleter -Native -CommandName 'fd' -ScriptBlock {
             [CompletionResult]::new('--quiet', 'quiet', [CompletionResultType]::ParameterName, 'Print nothing, exit code 0 if match found, 1 otherwise')
             [CompletionResult]::new('--show-errors', 'show-errors', [CompletionResultType]::ParameterName, 'Show filesystem errors')
             [CompletionResult]::new('--strip-cwd-prefix', 'strip-cwd-prefix', [CompletionResultType]::ParameterName, 'By default, relative paths are prefixed with ''./'' when -x/--exec, -X/--exec-batch, or -0/--print0 are given, to reduce the risk of a path starting with ''-'' being treated as a command line option. Use this flag to disable this behaviour')
-            [CompletionResult]::new('--one-file-system', 'one-file-system', [CompletionResultType]::ParameterName, 'one-file-system')
+            [CompletionResult]::new('--one-file-system', 'one-file-system', [CompletionResultType]::ParameterName, 'By default, fd will traverse the file system tree as far as other options dictate. With this flag, fd ensures that it does not descend into a different file system than the one it started in. Comparable to the -mount or -xdev filters of find(1)')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help information (use `--help` for more detail)')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help information (use `--help` for more detail)')
             [CompletionResult]::new('-V', 'V', [CompletionResultType]::ParameterName, 'Print version information')
