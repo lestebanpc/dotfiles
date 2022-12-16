@@ -5,6 +5,28 @@
 #Funciones generales, determinar el tipo del SO y si es root
 . ~/.files/setup/basic_functions.bash
 
+#Variable global pero solo se usar localmente en las funciones
+t_tmp=""
+
+#Determinar la clase del SO
+m_get_os_type
+declare -r g_os_type=$?
+
+#Deteriminar el tipo de distribución Linux
+if [ $g_os_type -le 10 ]; then
+    t_tmp=$(m_get_linux_type_id)
+    declare -r g_os_subtype_id=$?
+    declare -r g_os_subtype_name="$t_tmp"
+    t_tmp=$(m_get_linux_type_version)
+    declare -r g_os_subtype_version="$t_tmp"
+fi
+
+#Determinar si es root
+g_is_root=1
+if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
+    g_is_root=0
+fi
+
 #}}}
 
 
@@ -55,24 +77,44 @@ function m_setup() {
     echo "-------------------------------------------------------------------------------------------------"
     echo "- Actualizar los paquetes del Repositorio del Linux"
     echo "-------------------------------------------------------------------------------------------------"
-    if [ $g_is_root -eq 0 ]; then
-        dnf upgrade
-    else
-        sudo dnf upgrade
-    fi
     
-    
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "- Configuración basica: archivos y folderes basicos, VIM-Enhaced, NeoVIM"
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "Permiso a archivos basicos y folderes basicos"
-    chmod u+x ~/.files/terminal/linux/tmux/oh-my-tmux.bash
-    chmod u+x ~/.files/terminal/linux/complete/fzf.bash
-    chmod u+x ~/.files/terminal/linux/keybindings/fzf.bash
-    chmod u+x ~/.files/setup/*.bash
-    
+    #Segun el tipo de distribución de Linux
+    case "$g_os_subtype_id" in
+        1)
+            #Distribución: Ubuntu
+            if [ $g_is_root -eq 0 ]; then
+                apt-get update
+                apt-get upgrade
+            else
+                sudo apt-get update
+                sudo apt-get upgrade
+            fi
+            ;;
+        2)
+            #Distribución: Fedora
+            if [ $g_is_root -eq 0 ]; then
+                dnf upgrade
+            else
+                sudo dnf upgrade
+            fi
+            ;;
+        0)
+            echo "ERROR (22): No se identificado el tipo de Distribución Linux"
+            return 22;
+            ;;
+    esac
     
     if [ ! -d /u01/userkeys/ssh ]; then
+
+        echo "-------------------------------------------------------------------------------------------------"
+        echo "- Configuración basica: archivos y folderes basicos, VIM-Enhaced, NeoVIM"
+        echo "-------------------------------------------------------------------------------------------------"
+        echo "Permiso a archivos basicos y folderes basicos"
+        chmod u+x ~/.files/terminal/linux/tmux/oh-my-tmux.bash
+        chmod u+x ~/.files/terminal/linux/complete/fzf.bash
+        chmod u+x ~/.files/terminal/linux/keybindings/fzf.bash
+        chmod u+x ~/.files/setup/*.bash
+    
         if [ $g_is_root -eq 0 ]; then
             mkdir -pm 755 /u01
             mkdir -pm 755 /u01/userkeys
