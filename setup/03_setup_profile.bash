@@ -396,6 +396,19 @@ function m_setup() {
     echo "OS Subtype - Name    : ${g_os_subtype_name}"
     echo "OS Subtype - Versión : ${g_os_subtype_version}"
 
+    case "$p_opcion" in
+        0)
+            echo "Configurando el profile basico: VIM en modo editor basico"
+            ;;
+        1)
+            echo "Configurando el profile developer: VIM en modo IDE"
+            ;;
+        *)
+            echo "ERROR(22): El tipo de profile \"${p_opcion}\" no esta permitido"
+            return 22;
+            ;;
+    esac    
+
     #Determinar el tipo de distribución Linux
     if [ $g_os_type -gt 10 ]; then
         echo "ERROR(21): El sistema operativo debe ser Linux"
