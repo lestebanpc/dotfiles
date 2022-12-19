@@ -1202,9 +1202,9 @@ declare -A gA_repositories=(
     )
 
 
-#Flag para instalar repositorios opcionales. Usar valores 2^n (1, 2, 4, 8, 16, ...)
+#Flag para instalar repositorios opcionales. Usar valores 2^n (4, 8, 16, ...)
 declare -A gA_optional_repositories=(
-        ['k0s']=1
+        ['k0s']=4
     )
 
 # Argunentos:
@@ -1257,7 +1257,7 @@ function setup_commands() {
     local l_repo_name
     local l_repo_flag=0
     local l_aux=0
-    local l_i=0
+    local l_opcion=0
     for l_repo_id in "${!gA_repositories[@]}"; do
 
 
@@ -1270,15 +1270,15 @@ function setup_commands() {
         fi
 
         #Flags para instalar los repositorios opcionales
-        l_i=${gA_optional_repositories[$l_repo_id]}
-        if [ -z "$l_i" ]; then
+        l_opcion=${gA_optional_repositories[$l_repo_id]}
+        if [ -z "$l_opcion" ]; then
             l_repo_flag=-1
-        elif [[ ! "$l_i" =~ ^[0-9]+$ ]]; then
+        elif [[ ! "$l_opcion" =~ ^[0-9]+$ ]]; then
             l_repo_flag=-1
         else
             #Suma binarios es igual al flag, se debe instalar el repo opcional
-            l_aux=$(( $p_opciones & $l_i ))
-            if [ $l_aux -eq $l_i ]; then
+            l_aux=$(( $p_opciones & $l_opcion ))
+            if [ $l_aux -eq $l_opcion ]; then
                 l_repo_flag=0
             else
                 l_repo_flag=1
@@ -1353,10 +1353,12 @@ function m_show_menu_core() {
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
     echo " (q) Salir del menu"
-    echo " (0) Instalar solo los repositorios obligatorios"
-    echo " ( ) Instalar los repositorios obligatorios y uno o mas repositorios opcionales."
-    echo "     Ingrese la suma de las siguientes opciones asociados a los repositorios opcionales:"
-    echo "       (1) Repositorio k0s"
+    echo " (a) Actualizar los binarios de los repositorios obligatorios"
+    echo " ( ) Actualizar las opciones que desea. Ingrese la suma de las opciones que desea instalar:"
+    echo "     (  0) Actualizar binarios de los repositorios obligatorios (siempre se realizara esta opción)"
+    #echo "    (  1) Actualizar xxx"
+    #echo "    (  2) Actualizar xxx"
+    echo "     (  4) Actualizar binarios del    repositorio  opcionales \"k0s\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
@@ -1383,12 +1385,17 @@ function m_main() {
         read l_opcion
 
         case "$l_opcion" in
+            a)
+                l_flag_continue=1
+                echo "#################################################################################################"$'\n'
+                setup_commands 0 0
+                ;;
+
             0)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                setup_commands $l_opcion 0
+                setup_commands 0 0
                 ;;
-
             q)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
@@ -1433,7 +1440,7 @@ else
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         gp_opciones=$1
     fi
-    setup_commands $gp_opciones $gp_is_direct_calling
+    setup_commands $gp_opciones 1
 fi
 
 

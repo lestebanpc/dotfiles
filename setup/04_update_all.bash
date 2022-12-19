@@ -109,9 +109,9 @@ function m_update_vim_package() {
 function m_update_all() {
 
     #1. Argumentos
-    local p_opcion=0
+    local p_opciones=0
     if [[ "$1" =~ ^[0-9]+$ ]]; then
-        p_opcion=$1
+        p_opciones=$1
     fi
 
     #2. Validar si fue descarga el repositorio git correspondiente
@@ -169,12 +169,20 @@ function m_update_all() {
             ;;
     esac
 
-    #5 Actualizar los comandos basicos
-    ~/.files/setup/02_setup_commands.bash $p_opcion 1
 
-    #6 Actualizar paquetes de VIM
-    m_update_vim_package
+    #5 Actualizar paquetes de VIM
+    l_opcion=1
+    l_flag=$(( $p_opciones & $l_opcion ))
+    if [ $l_flag -eq $l_opcion ]; then
+        m_update_vim_package
+    fi            
 
+    #6 Actualizar los comandos basicos
+    #l_opcion=1
+    #l_flag=$(( $p_opciones & $l_opcion ))
+    #if [ $l_flag -eq $l_opcion ]; then
+    ~/.files/setup/02_setup_commands.bash $p_opciones 1
+    #fi            
 
     #7. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_is_root -ne 0 ]; then
@@ -190,10 +198,13 @@ function m_show_menu_core() {
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
     echo " (q) Salir del menu"
-    echo " (0) Instalar solo los repositorios obligatorios"
-    echo " ( ) Instalar los repositorios obligatorios y uno o mas repositorios opcionales."
-    echo "     Ingrese la suma de las siguientes opciones asociados a los repositorios opcionales:"
-    echo "       (1) Repositorio k0s"
+    echo " (a) Actualizar solo los packetes VIM (no los binarios de los repositorios)"
+    echo " (b) Actualizar los packetes VIM y solo los binarios de los repositorios obligatorios"
+    echo " ( ) Actualizar las opciones que desea. Ingrese la suma de las opciones que desea instalar:"
+    echo "     (  0) Actualizar los paquetes del SO (siempre se realizara esta opción)"
+    echo "     (  1) Actualizar Paquetes VIM"
+    echo "     (  2) Actualizar binarios de los repositorios obligatorios"
+    echo "     (  4) Actualizar binarios del    repositorio  opcionales \"k0s\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
@@ -220,12 +231,17 @@ function m_main() {
         read l_opcion
 
         case "$l_opcion" in
-            0)
+            a)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                m_update_all
+                m_update_all 1
                 ;;
 
+            b)
+                l_flag_continue=1
+                echo "#################################################################################################"$'\n'
+                m_update_all 3
+                ;;
             q)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'

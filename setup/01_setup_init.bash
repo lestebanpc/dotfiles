@@ -172,5 +172,77 @@ function m_setup() {
 
 }
 
+function m_show_menu_core() {
+
+    echo "                                  Escoger la opción"
+    echo "-------------------------------------------------------------------------------------------------"
+    echo " (q) Salir del menu"
+    echo " (a) Actualizar los binarios de los repositorios obligatorios"
+    echo " ( ) Actualizar las opciones que desea. Ingrese la suma de las opciones que desea instalar:"
+    echo "     (  0) Actualizar binarios de los repositorios obligatorios (siempre se realizara esta opción)"
+    #echo "    (  1) Actualizar xxx"
+    #echo "    (  2) Actualizar xxx"
+    echo "     (  4) Actualizar binarios del    repositorio  opcionales \"k0s\""
+    echo "-------------------------------------------------------------------------------------------------"
+    printf "Opción : "
+
+}
+
+function m_main() {
+
+    echo "OS Type            : (${g_os_type})"
+    echo "OS Subtype (Distro): (${g_os_subtype_id}) ${g_os_subtype_name} - ${g_os_subtype_version}"$'\n'
+    
+    #Determinar el tipo de distribución Linux
+    if [ $g_os_type -gt 10 ]; then
+        echo "ERROR (21): El sistema operativo debe ser Linux"
+        return 21;
+    fi
+
+    
+    echo "#################################################################################################"
+
+    local l_flag_continue=0
+    local l_opcion=""
+    while [ $l_flag_continue -eq 0 ]; do
+
+        m_show_menu_core
+        read l_opcion
+
+        case "$l_opcion" in
+            0)
+                l_flag_continue=1
+                echo "#################################################################################################"$'\n'
+                m_setup
+                ;;
+
+            q)
+                l_flag_continue=1
+                echo "#################################################################################################"$'\n'
+                ;;
+
+            [1-9]*)
+                if [[ "$l_opcion" =~ ^[0-9]+$ ]]; then
+                    l_flag_continue=1
+                    echo "#################################################################################################"$'\n'
+                    m_setup $l_opcion
+                else
+                    l_flag_continue=0
+                    echo "Opción incorrecta"
+                    echo "-------------------------------------------------------------------------------------------------"
+                fi
+                ;;
+
+            *)
+                l_flag_continue=0
+                echo "Opción incorrecta"
+                echo "-------------------------------------------------------------------------------------------------"
+                ;;
+        esac
+        
+    done
+
+}
+
 m_setup $1
 
