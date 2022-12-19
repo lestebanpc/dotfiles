@@ -1282,7 +1282,7 @@ function setup_commands() {
         if [ -z "$l_repo_option" ]; then
 
             l_repo_is_optional=1
-            l_option=$(( $opciones & 2 ))
+            l_option=$(( $p_opciones & 2 ))
             if [ $l_option -eq 2 ]; then l_repo_must_install=0; fi
 
         else
