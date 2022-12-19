@@ -1313,9 +1313,9 @@ function setup_commands() {
                     if [ $g_os_type -eq 1 ]; then
                         echo "-------------------------------------------------------------------------------------------------"
                         if [ $l_repo_is_optional -eq 0 ]; then
-                            echo "- Repositorio Git basico \"${l_repo_name_aux}\""
+                            echo "- Repositorio Git opcional \"${l_repo_name_aux}\""                            
                         else
-                            echo "- Repositorio Git opcional \"${l_repo_name_aux}\""
+                            echo "- Repositorio Git basico \"${l_repo_name_aux}\""
                         fi
                         echo "-------------------------------------------------------------------------------------------------"
 
@@ -1332,9 +1332,9 @@ function setup_commands() {
                         #Validando si el servicio esta detenido si esta instalado                    
                         echo "-------------------------------------------------------------------------------------------------"
                         if [ $l_repo_is_optional -eq 0 ]; then
-                            echo "- Repositorio Git basico \"${l_repo_name_aux}\""
-                        else
                             echo "- Repositorio Git opcional \"${l_repo_name_aux}\""
+                        else
+                            echo "- Repositorio Git basico \"${l_repo_name_aux}\""
                         fi
                         echo "-------------------------------------------------------------------------------------------------"
 
@@ -1351,9 +1351,9 @@ function setup_commands() {
                 *)
                     echo "-------------------------------------------------------------------------------------------------"
                     if [ $l_repo_is_optional -eq 0 ]; then
-                        echo "- Repositorio Git basico \"${l_repo_name_aux}\""
-                    else
                         echo "- Repositorio Git opcional \"${l_repo_name_aux}\""
+                    else
+                        echo "- Repositorio Git basico \"${l_repo_name_aux}\""
                     fi
                     echo "-------------------------------------------------------------------------------------------------"
                     
