@@ -1279,7 +1279,7 @@ function setup_commands() {
         #Identificar el tipo de repositorios y si se debe intalar
         l_repo_option=${gA_optional_repositories[$l_repo_id]}
 
-        if [ -z "$l_option" ]; then
+        if [ -z "$l_repo_option" ]; then
 
             l_repo_is_optional=1
             l_option=$(( $opciones & 2 ))
@@ -1289,7 +1289,7 @@ function setup_commands() {
 
             l_repo_is_optional=0
 
-            if [[ ! "$l_option" =~ ^[0-9]+$ ]]; then
+            if [[ ! "$l_repo_eption" =~ ^[0-9]+$ ]]; then
                 l_repo_must_install=1
             else
                 if [ $l_repo_option -eq 0 ]; then
