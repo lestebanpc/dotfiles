@@ -124,7 +124,7 @@
         {
           "foreground": "#cd5e42",
           "style": "plain",
-          "template": "\ue3bf\u2800",
+          "template": "\ue3bf ",
           "type": "root"
         },
         {
