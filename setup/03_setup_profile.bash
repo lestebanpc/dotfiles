@@ -493,7 +493,7 @@ function m_setup() {
         ln -snf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc
         #fi
 
-    #Si es un Linux WSL 
+    #Si es un Linux generico (NO WSL)
     else
 
         if [ ! -e ~/.gitconfig ]; then
@@ -542,7 +542,69 @@ function m_setup() {
 
 }
 
-m_setup $1
+
+function m_show_menu_core() {
+
+    echo "                                  Escoger la opción"
+    echo "-------------------------------------------------------------------------------------------------"
+    echo " (q) Salir del menu"
+    echo " (0) Configurar un profile basico         (VIM como editor basico, ..)"
+    echo " (1) Configurar un profile como developer (VIM como IDE, ..)"
+    echo "-------------------------------------------------------------------------------------------------"
+    printf "Opción : "
+
+}
+
+function m_main() {
+
+    echo "OS Type            : (${g_os_type})"
+    echo "OS Subtype (Distro): (${g_os_subtype_id}) ${g_os_subtype_name} - ${g_os_subtype_version}"$'\n'
+    
+    #Determinar el tipo de distribución Linux
+    if [ $g_os_type -gt 10 ]; then
+        echo "ERROR (21): El sistema operativo debe ser Linux"
+        return 21;
+    fi
+
+    
+    echo "#################################################################################################"
+
+    local l_flag_continue=0
+    local l_opcion=""
+    while [ $l_flag_continue -eq 0 ]; do
+        m_show_menu_core
+        read l_opcion
+
+        case "$l_opcion" in
+            0)
+                l_flag_continue=1
+                echo "#################################################################################################"$'\n'
+                m_setup 0
+                ;;
+
+            q)
+                l_flag_continue=1
+                echo "#################################################################################################"$'\n'
+                ;;
+
+            1)
+                l_flag_continue=1
+                echo "#################################################################################################"$'\n'
+                m_setup 1
+                ;;
+
+            *)
+                l_flag_continue=0
+                echo "Opción incorrecta"
+                echo "-------------------------------------------------------------------------------------------------"
+                ;;
+        esac
+        
+    done
+
+}
+
+m_main
 
 
 
