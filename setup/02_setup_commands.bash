@@ -1245,7 +1245,7 @@ function setup_commands() {
     if [ $p_is_direct_calling -eq 0 ]; then
 
         #Solicitar credenciales de administrador y almacenarlas temporalmente
-        if [ $g_is_root -ne ]; then
+        if [ $g_is_root -ne 0 ]; then
 
             #echo "Se requiere alamcenar temporalmente su password"
             sudo -v

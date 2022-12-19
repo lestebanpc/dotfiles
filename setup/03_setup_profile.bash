@@ -548,8 +548,8 @@ function m_show_menu_core() {
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
     echo " (q) Salir del menu"
-    echo " (0) Configurar un profile basico         (VIM como editor basico, ..)"
-    echo " (1) Configurar un profile como developer (VIM como IDE, ..)"
+    echo " (b) Configurar un profile basico         (VIM como editor basico, ..)"
+    echo " (d) Configurar un profile como developer (VIM como IDE, ..)"
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
@@ -576,7 +576,7 @@ function m_main() {
         read l_opcion
 
         case "$l_opcion" in
-            0)
+            b)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
                 m_setup 0
