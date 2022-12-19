@@ -101,11 +101,11 @@ function m_update_vim_package() {
 
 }
 
-
+#
 # Argumentos:
-# 1) Repositorios opcionales que se se instalaran (flag en binario. entero que es suma de 2^n).
-#    Si es 0, no se instala ningun repositorio opcionales.
-# 2) - 
+# 1) Repositorios que se se instalaran basicos y opcionales (flag en binario. entero que es suma de 2^n).
+# 2) -
+#
 function m_update_all() {
 
     #1. Argumentos
@@ -180,9 +180,9 @@ function m_update_all() {
     #6 Actualizar los comandos basicos
     #l_opcion=1
     #l_flag=$(( $p_opciones & $l_opcion ))
-    #if [ $l_flag -eq $l_opcion ]; then
-    ~/.files/setup/02_setup_commands.bash $p_opciones 1
-    #fi            
+    if [ $p_opciones -ne 0 ]; then
+        ~/.files/setup/02_setup_commands.bash $p_opciones 1
+    fi            
 
     #7. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_is_root -ne 0 ]; then
@@ -227,6 +227,7 @@ function m_main() {
     local l_flag_continue=0
     local l_opcion=""
     while [ $l_flag_continue -eq 0 ]; do
+
         m_show_menu_core
         read l_opcion
 

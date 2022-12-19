@@ -4,7 +4,7 @@
 
 #Determinar el tipo de SO. Devuelve:
 #  00 - 10: Si es Linux
-#           00 - Si es Linux genrico
+#           00 - Si es Linux generico
 #           01 - Si es WSL2
 #  11 - 20: Si es Unix
 #  21 - 30: si es MacOS

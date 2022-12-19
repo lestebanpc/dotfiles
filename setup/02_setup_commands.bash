@@ -1187,6 +1187,7 @@ function m_setup_repository() {
 
 #Codigo principal del script {{{
 
+#Todos los repositorios que se pueden instalar
 declare -A gA_repositories=(
         ['bat']='sharkdp/bat'
         ['ripgrep']='BurntSushi/ripgrep'
@@ -1202,7 +1203,7 @@ declare -A gA_repositories=(
     )
 
 
-#Flag para instalar repositorios opcionales. Usar valores 2^n (4, 8, 16, ...)
+#Repositorios opcionales y su flag para configuración. Usar valores 2^n (4, 8, 16, ...)
 declare -A gA_optional_repositories=(
         ['k0s']=4
     )
@@ -1214,7 +1215,7 @@ declare -A gA_optional_repositories=(
 function setup_commands() {
     
     #1. Argumentos 
-    local p_opciones=0
+    local p_opciones=2
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_opciones=$1
     fi
@@ -1222,6 +1223,11 @@ function setup_commands() {
     local p_is_direct_calling=0
     if [[ "$2" =~ ^[0-9]+$ ]]; then
         p_is_direct_calling=$2
+    fi
+
+    if [ $p_opciones -eq 0 ]; then
+        echo "ERROR(23): Argumento de opciones \"${p_opciones}\" es incorrecta"
+        return 23;
     fi
 
     #2. Validar si fue descarga el repositorio git correspondiente
@@ -1255,11 +1261,12 @@ function setup_commands() {
     local l_repo_id
     local l_repo_name_aux
     local l_repo_name
-    local l_repo_flag=0
-    local l_aux=0
-    local l_opcion=0
-    for l_repo_id in "${!gA_repositories[@]}"; do
 
+    local l_repo_is_optional=1      #(1) repositorio basico, (0) repositorio opcional
+    local l_repo_must_install=1     #(1) No debe instalarse, (0) Debe instalarse
+    local l_repo_option=0
+    local l_option=0
+    for l_repo_id in "${!gA_repositories[@]}"; do
 
         #Nombre a mostrar el respositorio
         l_repo_name="${gA_repositories[$l_repo_id]}"
@@ -1269,73 +1276,100 @@ function setup_commands() {
             l_repo_name_aux="$l_repo_name"
         fi
 
-        #Flags para instalar los repositorios opcionales
-        l_opcion=${gA_optional_repositories[$l_repo_id]}
-        if [ -z "$l_opcion" ]; then
-            l_repo_flag=-1
-        elif [[ ! "$l_opcion" =~ ^[0-9]+$ ]]; then
-            l_repo_flag=-1
+        #Identificar el tipo de repositorios y si se debe intalar
+        l_repo_option=${gA_optional_repositories[$l_repo_id]}
+
+        if [ -z "$l_option" ]; then
+
+            l_repo_is_optional=1
+            l_option=$(( $opciones & 2 ))
+            if [ $l_option -eq 2 ]; then l_repo_must_install=0; fi
+
         else
-            #Suma binarios es igual al flag, se debe instalar el repo opcional
-            l_aux=$(( $p_opciones & $l_opcion ))
-            if [ $l_aux -eq $l_opcion ]; then
-                l_repo_flag=0
+
+            l_repo_is_optional=0
+
+            if [[ ! "$l_option" =~ ^[0-9]+$ ]]; then
+                l_repo_must_install=1
             else
-                l_repo_flag=1
-            fi            
+                if [ $l_repo_option -eq 0 ]; then
+                   l_repo_must_install=1
+                else
+                    #Suma binarios es igual al flag, se debe instalar el repo opcional
+                    l_option=$(( $p_opciones & $l_repo_option ))
+                    if [ $l_repo_option -eq $l_option ]; then l_repo_must_install=0; else l_repo_must_install=1; fi
+                fi 
+            fi
+
         fi
 
+        #Instalar los repositorios
+        if [ $l_repo_must_install -eq 0 ]; then
+       
+            #Personalizar la logica segun el repositorio
+            case "$l_repo_id" in
+                less)
+                    #Solo si es WSL2
+                    if [ $g_os_type -eq 1 ]; then
+                        echo "-------------------------------------------------------------------------------------------------"
+                        if [ $l_repo_is_optional -eq 0 ]; then
+                            echo "- Repositorio Git basico \"${l_repo_name_aux}\""
+                        else
+                            echo "- Repositorio Git opcional \"${l_repo_name_aux}\""
+                        fi
+                        echo "-------------------------------------------------------------------------------------------------"
 
-        #Personalizar la logica segun el repositorio
-        case "$l_repo_id" in
-            less)
-                if [ $g_os_type -eq 1 ]; then
-                    echo "-------------------------------------------------------------------------------------------------"
-                    echo "- Repositorio \"${l_repo_name_aux}\""
-                    echo "-------------------------------------------------------------------------------------------------"
-
-                    echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en el Windows donde esta su WSL2"
-                    m_setup_repository "$l_repo_id" "$l_repo_name" 0
-                    printf "\n\n"
-                fi
-                ;;
-            k0s)
-
-                #No instalar nunca en WSL2, debido a que es pesado y solo si el 1er-bit de la 'p_opciones' es 1                
-                if [ $g_os_type -ne 1 -a $l_repo_flag -eq 0 ]; then
-
-                    #Validando si el servicio esta detenido si esta instalado                    
-                    echo "-------------------------------------------------------------------------------------------------"
-                    echo "- Repositorio \"${l_repo_name_aux}\""
-                    echo "-------------------------------------------------------------------------------------------------"
-
-                    if k0s status 2> /dev/null 1>&2; then
-                       echo "el servicio k0s esta intalado y ejecutandose, debe detener para instalarlo. NO se instalara el repo."
-                   else
-                        echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_subtype_name}\""
-                        m_setup_repository "$l_repo_id" "$l_repo_name" 1
+                        echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en el Windows donde esta su WSL2"
+                        m_setup_repository "$l_repo_id" "$l_repo_name" 0
                         printf "\n\n"
                     fi
+                    ;;
+                k0s)
+
+                    #Solo si es Linux que no es WSL2                
+                    if [ $g_os_type -ne 1 ]; then
+
+                        #Validando si el servicio esta detenido si esta instalado                    
+                        echo "-------------------------------------------------------------------------------------------------"
+                        if [ $l_repo_is_optional -eq 0 ]; then
+                            echo "- Repositorio Git basico \"${l_repo_name_aux}\""
+                        else
+                            echo "- Repositorio Git opcional \"${l_repo_name_aux}\""
+                        fi
+                        echo "-------------------------------------------------------------------------------------------------"
+
+                        if k0s status 2> /dev/null 1>&2; then
+                           echo "el servicio k0s esta intalado y ejecutandose, debe detener para instalarlo. NO se instalara el repo."
+                       else
+                            echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_subtype_name}\""
+                            m_setup_repository "$l_repo_id" "$l_repo_name" 1
+                            printf "\n\n"
+                        fi
+                        
+                    fi
+                    ;;
+                *)
+                    echo "-------------------------------------------------------------------------------------------------"
+                    if [ $l_repo_is_optional -eq 0 ]; then
+                        echo "- Repositorio Git basico \"${l_repo_name_aux}\""
+                    else
+                        echo "- Repositorio Git opcional \"${l_repo_name_aux}\""
+                    fi
+                    echo "-------------------------------------------------------------------------------------------------"
                     
-                fi
-                ;;
-            *)
-                echo "-------------------------------------------------------------------------------------------------"
-                echo "- Repositorio \"${l_repo_name_aux}\""
-                echo "-------------------------------------------------------------------------------------------------"
-                
-                echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_subtype_name}\""
-                m_setup_repository "$l_repo_id" "$l_repo_name" 1
-                printf "\n\n"
-
-                if [ $g_os_type -eq 1 ]; then
-                    echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en el Windows donde esta su WSL2"
-                    m_setup_repository "$l_repo_id" "$l_repo_name" 0
+                    echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_subtype_name}\""
+                    m_setup_repository "$l_repo_id" "$l_repo_name" 1
                     printf "\n\n"
-                fi
-                ;;
-        esac
 
+                    if [ $g_os_type -eq 1 ]; then
+                        echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en el Windows donde esta su WSL2"
+                        m_setup_repository "$l_repo_id" "$l_repo_name" 0
+                        printf "\n\n"
+                    fi
+                    ;;
+            esac
+        
+        fi
         
     done; 
 
@@ -1353,11 +1387,11 @@ function m_show_menu_core() {
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
     echo " (q) Salir del menu"
-    echo " (a) Actualizar los binarios de los repositorios obligatorios"
+    echo " (a) Actualizar solo los binarios de los repositorios basicos"
     echo " ( ) Actualizar las opciones que desea. Ingrese la suma de las opciones que desea instalar:"
-    echo "     (  0) Actualizar binarios de los repositorios obligatorios (siempre se realizara esta opción)"
+    #echo "    (  0) Actualizar xxx (siempre se realizara esta opción)"
     #echo "    (  1) Actualizar xxx"
-    #echo "    (  2) Actualizar xxx"
+    echo "     (  2) Actualizar binarios de los repositorios basicos"
     echo "     (  4) Actualizar binarios del    repositorio  opcionales \"k0s\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
@@ -1388,17 +1422,19 @@ function m_main() {
             a)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                setup_commands 0 0
+                setup_commands 2 0
                 ;;
 
-            0)
-                l_flag_continue=1
-                echo "#################################################################################################"$'\n'
-                setup_commands 0 0
-                ;;
             q)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
+                ;;
+
+
+            [0-1])
+                l_flag_continue=0
+                echo "Opción incorrecta"
+                echo "-------------------------------------------------------------------------------------------------"
                 ;;
 
             [1-9]*)
