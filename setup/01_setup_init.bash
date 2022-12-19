@@ -50,11 +50,6 @@ function m_setup() {
         return 0
     fi
     
-    echo "OS Type              : ${g_os_type}"
-    echo "OS Subtype - ID      : ${g_os_subtype_id}"
-    echo "OS Subtype - Name    : ${g_os_subtype_name}"
-    echo "OS Subtype - Versión : ${g_os_subtype_version}"
-
     #Determinar el tipo de distribución Linux
     if [ $g_os_type -gt 10 ]; then
         echo "El sistema operativo debe ser Linux"
@@ -200,49 +195,51 @@ function m_main() {
     fi
 
     
-    echo "#################################################################################################"
+    m_setup
 
-    local l_flag_continue=0
-    local l_opcion=""
-    while [ $l_flag_continue -eq 0 ]; do
+    #echo "#################################################################################################"
 
-        m_show_menu_core
-        read l_opcion
+    #local l_flag_continue=0
+    #local l_opcion=""
+    #while [ $l_flag_continue -eq 0 ]; do
 
-        case "$l_opcion" in
-            0)
-                l_flag_continue=1
-                echo "#################################################################################################"$'\n'
-                m_setup
-                ;;
+    #    m_show_menu_core
+    #    read l_opcion
 
-            q)
-                l_flag_continue=1
-                echo "#################################################################################################"$'\n'
-                ;;
+    #    case "$l_opcion" in
+    #        0)
+    #            l_flag_continue=1
+    #            echo "#################################################################################################"$'\n'
+    #            m_setup
+    #            ;;
 
-            [1-9]*)
-                if [[ "$l_opcion" =~ ^[0-9]+$ ]]; then
-                    l_flag_continue=1
-                    echo "#################################################################################################"$'\n'
-                    m_setup $l_opcion
-                else
-                    l_flag_continue=0
-                    echo "Opción incorrecta"
-                    echo "-------------------------------------------------------------------------------------------------"
-                fi
-                ;;
+    #        q)
+    #            l_flag_continue=1
+    #            echo "#################################################################################################"$'\n'
+    #            ;;
 
-            *)
-                l_flag_continue=0
-                echo "Opción incorrecta"
-                echo "-------------------------------------------------------------------------------------------------"
-                ;;
-        esac
-        
-    done
+    #        [1-9]*)
+    #            if [[ "$l_opcion" =~ ^[0-9]+$ ]]; then
+    #                l_flag_continue=1
+    #                echo "#################################################################################################"$'\n'
+    #                m_setup $l_opcion
+    #            else
+    #                l_flag_continue=0
+    #                echo "Opción incorrecta"
+    #                echo "-------------------------------------------------------------------------------------------------"
+    #            fi
+    #            ;;
+
+    #        *)
+    #            l_flag_continue=0
+    #            echo "Opción incorrecta"
+    #            echo "-------------------------------------------------------------------------------------------------"
+    #            ;;
+    #    esac
+    #    
+    #done
 
 }
 
-m_setup $1
+m_main
 

@@ -413,11 +413,6 @@ function m_setup() {
         return 0
     fi
     
-    echo "OS Type              : ${g_os_type}"
-    echo "OS Subtype - ID      : ${g_os_subtype_id}"
-    echo "OS Subtype - Name    : ${g_os_subtype_name}"
-    echo "OS Subtype - Versión : ${g_os_subtype_version}"
-
     case "$p_opcion" in
         0)
             echo "Configurando el profile basico: VIM en modo editor basico"
