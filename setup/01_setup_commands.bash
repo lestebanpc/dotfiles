@@ -1317,27 +1317,40 @@ function setup_commands() {
 
         #Identificar el tipo de repositorios y si se debe instalar
         l_option=${gA_optional_repositories[$l_repo_id]}
-
+        l_repo_must_install=1
         if [ -z "$l_option" ]; then
 
+            #Es un repositorio opcional
             l_repo_is_optional=1
+
+            #Esta habilitado para instalarse
             l_flag=$(( $p_opciones & 2 ))
             if [ $l_flag -eq 2 ]; then l_repo_must_install=0; fi
 
         else
 
+            #Es un repositorio basico
             l_repo_is_optional=0
 
-            if [[ ! "$l_option" =~ ^[0-9]+$ ]]; then
-                l_repo_must_install=1
-            else
-                if [ $l_option -eq 0 ]; then
-                   l_repo_must_install=1
+            #Esta habilitado para instalar algun repositorio opcional
+            l_flag=$(( $p_opciones & 4 ))
+
+            if [ $l_flag -eq 4 ]; then
+
+                l_repo_must_install=0;
+                
+                #Esta habilitado para instalar el repositorio opcional
+                if [[ ! "$l_option" =~ ^[0-9]+$ ]]; then
+                    l_repo_must_install=1
                 else
-                    #Suma binarios es igual al flag, se debe instalar el repo opcional
-                    l_flag=$(( $p_opciones & $l_option ))
-                    if [ $l_option -eq $l_flag ]; then l_repo_must_install=0; else l_repo_must_install=1; fi
-                fi 
+                    if [ $l_option -eq 0 ]; then
+                       l_repo_must_install=1
+                    else
+                        #Suma binarios es igual al flag, se debe instalar el repo opcional
+                        l_flag=$(( $p_opciones & $l_option ))
+                        if [ $l_option -eq $l_flag ]; then l_repo_must_install=0; else l_repo_must_install=1; fi
+                    fi 
+                fi
             fi
 
         fi
