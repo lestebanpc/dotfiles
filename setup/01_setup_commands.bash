@@ -1231,19 +1231,24 @@ function setup_commands() {
 
     #2. Validar si fue descarga el repositorio git correspondiente
     if [ ! -d ~/.files/.git ]; then
-        echo "Debe obtener los archivos basicos:"
-        echo "   1> git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
-        echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
-        echo "   3> . ~/.files/setup/01_setup_init.bash"
-        echo "   4> . ~/.files/setup/02_setup_commands.bash (instala y actuliza comandos)"
-        echo "   5> . ~/.files/setup/03_setup_profile.bash"
+        echo "No existe los archivos necesarios, debera seguir los siguientes pasos:"
+        echo "   1> Descargar los archivos del repositorio:"
+        echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
+        echo "   2> Instalar comandos basicos:"
+        echo "      chmod u+x ~/.files/setup/01_setup_commands.bash"
+        echo "      ~/.files/setup/01_setup_commands.bash"
+        echo "   3> Configurar el profile del usuario:"
+        echo "      chmod u+x ~/.files/setup/02_setup_profile.bash"
+        echo "      ~/.files/setup/02_setup_profile.bash"
         return 0
     fi
     
-    #3. Otras validaciones
+    local l_option=0
+    local l_flag=0
+    #3. Inicializaciones cuando se invoca directamente el script
     if [ $p_is_direct_calling -eq 0 ]; then
 
-        #Solicitar credenciales de administrador y almacenarlas temporalmente
+        #3.1. Solicitar credenciales de administrador y almacenarlas temporalmente
         if [ $g_is_root -ne 0 ]; then
 
             #echo "Se requiere alamcenar temporalmente su password"
@@ -1254,6 +1259,43 @@ function setup_commands() {
                 return 20;
             fi
         fi
+
+        #3.2. Instalacion de paquetes del SO
+        l_option=1
+        l_flag=$(( $p_opciones & $l_option ))
+        if [ $l_option -eq $l_flag ]; then
+
+            echo "-------------------------------------------------------------------------------------------------"
+            echo "- Actualizar los paquetes de los repositorio del SO Linux"
+            echo "-------------------------------------------------------------------------------------------------"
+            
+            #Segun el tipo de distribución de Linux
+            case "$g_os_subtype_id" in
+                1)
+                    #Distribución: Ubuntu
+                    if [ $g_is_root -eq 0 ]; then
+                        apt-get update
+                        apt-get upgrade
+                    else
+                        sudo apt-get update
+                        sudo apt-get upgrade
+                    fi
+                    ;;
+                2)
+                    #Distribución: Fedora
+                    if [ $g_is_root -eq 0 ]; then
+                        dnf upgrade
+                    else
+                        sudo dnf upgrade
+                    fi
+                    ;;
+                0)
+                    echo "ERROR (22): No se identificado el tipo de Distribución Linux"
+                    return 22;
+                    ;;
+            esac
+
+        fi
     fi
 
     #5. Instalar los comandos de los diferentes repositorios
@@ -1263,8 +1305,6 @@ function setup_commands() {
 
     local l_repo_is_optional=1      #(1) repositorio basico, (0) repositorio opcional
     local l_repo_must_install=1     #(1) No debe instalarse, (0) Debe instalarse
-    local l_repo_option=0
-    local l_option=0
     for l_repo_id in "${!gA_repositories[@]}"; do
 
         #Nombre a mostrar el respositorio
@@ -1275,28 +1315,28 @@ function setup_commands() {
             l_repo_name_aux="$l_repo_name"
         fi
 
-        #Identificar el tipo de repositorios y si se debe intalar
-        l_repo_option=${gA_optional_repositories[$l_repo_id]}
+        #Identificar el tipo de repositorios y si se debe instalar
+        l_option=${gA_optional_repositories[$l_repo_id]}
 
-        if [ -z "$l_repo_option" ]; then
+        if [ -z "$l_option" ]; then
 
             l_repo_is_optional=1
-            l_option=$(( $p_opciones & 2 ))
-            if [ $l_option -eq 2 ]; then l_repo_must_install=0; fi
+            l_flag=$(( $p_opciones & 2 ))
+            if [ $l_flag -eq 2 ]; then l_repo_must_install=0; fi
 
         else
 
             l_repo_is_optional=0
 
-            if [[ ! "$l_repo_option" =~ ^[0-9]+$ ]]; then
+            if [[ ! "$l_option" =~ ^[0-9]+$ ]]; then
                 l_repo_must_install=1
             else
-                if [ $l_repo_option -eq 0 ]; then
+                if [ $l_option -eq 0 ]; then
                    l_repo_must_install=1
                 else
                     #Suma binarios es igual al flag, se debe instalar el repo opcional
-                    l_option=$(( $p_opciones & $l_repo_option ))
-                    if [ $l_repo_option -eq $l_option ]; then l_repo_must_install=0; else l_repo_must_install=1; fi
+                    l_flag=$(( $p_opciones & $l_option ))
+                    if [ $l_option -eq $l_flag ]; then l_repo_must_install=0; else l_repo_must_install=1; fi
                 fi 
             fi
 
@@ -1388,10 +1428,10 @@ function m_show_menu_core() {
     echo " (q) Salir del menu"
     echo " (a) Actualizar solo los binarios de los repositorios basicos"
     echo " ( ) Actualizar las opciones que desea. Ingrese la suma de las opciones que desea instalar:"
-    #echo "    (  0) Actualizar xxx (siempre se realizara esta opción)"
-    #echo "    (  1) Actualizar xxx"
-    echo "     (  2) Actualizar binarios de los repositorios basicos"
-    echo "     (  4) Actualizar binarios del    repositorio  opcionales \"k0s\""
+    #echo "    ( 0) Actualizar xxx (siempre se realizara esta opción)"
+    echo "     ( 1) Actualizar los paquetes del sistema operativo"   
+    echo "     ( 2) Actualizar binarios de los repositorios basicos"
+    echo "     ( 4) Actualizar binarios del    repositorio  opcionales \"k0s\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
@@ -1411,17 +1451,17 @@ function m_main() {
     echo "#################################################################################################"
 
     local l_flag_continue=0
-    local l_opcion=""
+    local l_opciones=""
     while [ $l_flag_continue -eq 0 ]; do
 
         m_show_menu_core
-        read l_opcion
+        read l_opciones
 
-        case "$l_opcion" in
+        case "$l_opciones" in
             a)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                setup_commands 2 0
+                setup_commands 3 0
                 ;;
 
             q)
@@ -1430,17 +1470,17 @@ function m_main() {
                 ;;
 
 
-            [0-1])
+            0)
                 l_flag_continue=0
                 echo "Opción incorrecta"
                 echo "-------------------------------------------------------------------------------------------------"
                 ;;
 
             [1-9]*)
-                if [[ "$l_opcion" =~ ^[0-9]+$ ]]; then
+                if [[ "$l_opciones" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
                     echo "#################################################################################################"$'\n'
-                    setup_commands $l_opcion 0
+                    setup_commands $l_opciones 0
                 else
                     l_flag_continue=0
                     echo "Opción incorrecta"

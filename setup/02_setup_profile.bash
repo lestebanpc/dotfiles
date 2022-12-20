@@ -49,7 +49,7 @@ function m_setup_neovim() {
 
     #Instalar los plugins
     echo "-------------------------------------------------------------------------------------------------"
-    echo "- NeoVIM: Instalar plugins"
+    echo "- Configuración de NeoVIM"
     echo "-------------------------------------------------------------------------------------------------"
     
     echo "Instalar el gestor de paquetes Vim-Plug"
@@ -74,9 +74,7 @@ function m_setup_neovim() {
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
     
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "- NeoVIM: Finalizando la configuración"
-    echo "-------------------------------------------------------------------------------------------------"
+    echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
     if [ ! -e ~/.config/nvim/lua ] || [ $p_overwrite_ln_flag -eq 0 ]; then
         echo "Creando el enlace de \"~/.config/nvim/lua\""
         mkdir -p ~/.config/nvim
@@ -119,7 +117,7 @@ function m_setup_vim() {
     
     #Instalar los plugins
     echo "-------------------------------------------------------------------------------------------------"
-    echo "- VIM: Instalar plugins"
+    echo "- Configuración de VIM-Enhanced"
     echo "-------------------------------------------------------------------------------------------------"
     echo "Instalar los paquetes usados por VIM"
     mkdir -p ~/.vim/pack/themes/start
@@ -348,9 +346,7 @@ function m_setup_vim() {
         
     fi
     
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "- VIM: Finalizando la configuración"
-    echo "-------------------------------------------------------------------------------------------------"
+    echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
     if [ $p_opcion -eq 1 ]; then
 
         #if [ ! -e ~/.vimrc ] || [ $p_overwrite_ln_flag -eq 0 ]; then
@@ -395,12 +391,15 @@ function m_setup() {
 
     #2. Validar si fue descarga el repositorio git correspondiente
     if [ ! -d ~/.files/.git ]; then
-        echo "Debe obtener los archivos basicos:"
-        echo "   1> git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
-        echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
-        echo "   3> . ~/.files/setup/01_setup_init.bash"
-        echo "   4> . ~/.files/setup/02_setup_commands.bash (instala y actuliza comandos)"
-        echo "   5> . ~/.files/setup/03_setup_profile.bash"
+        echo "No existe los archivos necesarios, debera seguir los siguientes pasos:"
+        echo "   1> Descargar los archivos del repositorio:"
+        echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
+        echo "   2> Instalar comandos basicos:"
+        echo "      chmod u+x ~/.files/setup/01_setup_commands.bash"
+        echo "      ~/.files/setup/01_setup_commands.bash"
+        echo "   3> Configurar el profile del usuario:"
+        echo "      chmod u+x ~/.files/setup/02_setup_profile.bash"
+        echo "      ~/.files/setup/02_setup_profile.bash"
         return 0
     fi
     
@@ -411,14 +410,14 @@ function m_setup() {
         sudo -v
 
         if [ $? -ne 0 ]; then
-            echo "ERROR(20): Se requiere \"sudo -v\" almacene temporalmente su credenciales de root"
+            echo "ERROR(20): Se requiere \"sudo -v\" almacenar temporalmente su credenciales de root"
             return 20;
         fi
     fi
     
-    #4. Actaulizar los paquetes de los repositorios
+    #4. Actualizar los paquetes de los repositorios
     echo "-------------------------------------------------------------------------------------------------"
-    echo "- Actualizar los paquetes del Repositorio del Linux"
+    echo "- Actualizar los paquetes de los repositorio del SO Linux"
     echo "-------------------------------------------------------------------------------------------------"
     
     #Segun el tipo de distribución de Linux
@@ -457,11 +456,15 @@ function m_setup() {
     if [ $l_flag -eq $l_option ]; then l_vim_flag=0; fi
 
     if [ $l_vim_flag -eq 0 ]; then
+
         echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-        echo "- Instalación/Validación de VIM-Enhaced"
-        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+
         if ! l_version=$(vim --version 2> /dev/null); then
+
+            echo "- Instalación de VIM-Enhaced"
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
             echo "Se va instalar VIM-Enhaced"
+
             if [ $g_is_root -eq 0 ]; then
                 dnf install vim-enhanced
             else
@@ -469,19 +472,24 @@ function m_setup() {
             fi
         else
             l_version=$(echo "$l_version" | head -n 1)
-            echo "VIM-Enhaced instalado: ${l_version}"
+            echo "VIM-Enhaced \"${l_version}\" ya esta instalado"
         fi
 
         #5.1 Instalacion requerida para VIM-Enhaced como develeper
         #Instalar Node.JS
         l_option=4
         l_flag=$(( $p_opciones & $l_option ))
+
         if [ $l_flag -eq $l_option ]; then
+
             echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-            echo "- VIM como IDE: Instalar Node JS"
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+
             if ! l_version=$(node -v 2> /dev/null); then
+
+                echo "- Instalación de Node JS (VIM como IDE)"
+                echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
                 echo "Se va instalar Node JS version 19.x"
+
                 if [ $g_is_root -eq 0 ]; then
                     curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
                     yum install -y nodejs
@@ -489,8 +497,9 @@ function m_setup() {
                     curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
                     sudo yum install -y nodejs
                 fi
+
             else
-                echo "Node.JS instalado: $l_version"
+                echo "Node.JS \"$l_version\" ya esta instalado"
             fi
         fi
     fi
@@ -502,11 +511,15 @@ function m_setup() {
     if [ $l_flag -eq $l_option ]; then l_nvim_flag=0; fi
 
     if [ $l_nvim_flag -eq 0 ]; then
+
         echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-        echo "- Instalación/Validación de NeoVIM"
-        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+
         if ! l_version=$(nvim --version 2> /dev/null); then
+
+            echo "- Instalación de NeoVIM"
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
             echo "Se va instalar NeoVIM"
+
             if [ $g_is_root -eq 0 ]; then
                 dnf install neovim
                 dnf install python3-neovim
@@ -514,9 +527,10 @@ function m_setup() {
                 sudo dnf install neovim
                 sudo dnf install python3-neovim
             fi
+
         else
             l_version=$(echo "$l_version" | head -n 1)
-            echo "NeoVIM instalado: ${l_version}"
+            echo "NeoVIM \"${l_version}\" ya esta instalado"
         fi
     fi
 
@@ -663,7 +677,7 @@ function m_show_menu_core() {
     echo "     ( 2) Instalar NeoVIM si no esta instalado"
     echo "     ( 4) Configurar VIM-Enhanced como Developer"
     echo "     ( 8) Configurar NeoVIM como Developer"
-    echo "     (16) Crear y/o Forzar el actualizacion de los enlaces simbolicos del profile"
+    echo "     (16) Crear y/o Forzar la actualizacion de los enlaces simbolicos del profile"
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 

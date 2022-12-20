@@ -116,12 +116,15 @@ function m_update_all() {
 
     #2. Validar si fue descarga el repositorio git correspondiente
     if [ ! -d ~/.files/.git ]; then
-        echo "Debe obtener los archivos basicos:"
-        echo "   1> git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
-        echo "   2> chmod u+x ~/.files/setup/01_setup_init.bash"
-        echo "   3> . ~/.files/setup/01_setup_init.bash"
-        echo "   4> . ~/.files/setup/02_setup_commands.bash (instala y actuliza comandos)"
-        echo "   5> . ~/.files/setup/03_setup_profile.bash"
+        echo "No existe los archivos necesarios, debera seguir los siguientes pasos:"
+        echo "   1> Descargar los archivos del repositorio:"
+        echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
+        echo "   2> Instalar comandos basicos:"
+        echo "      chmod u+x ~/.files/setup/01_setup_commands.bash"
+        echo "      ~/.files/setup/01_setup_commands.bash"
+        echo "   3> Configurar el profile del usuario:"
+        echo "      chmod u+x ~/.files/setup/02_setup_profile.bash"
+        echo "      ~/.files/setup/02_setup_profile.bash"
         return 0
     fi
     
@@ -140,7 +143,7 @@ function m_update_all() {
     
     #4. Instalacion
     echo "-------------------------------------------------------------------------------------------------"
-    echo "- Actualizar los paquetes del Repositorio del Linux"
+    echo "- Actualizar los paquetes de los repositorios del SO Linux"
     echo "-------------------------------------------------------------------------------------------------"
     
     #Segun el tipo de distribución de Linux
