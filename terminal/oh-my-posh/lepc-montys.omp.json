@@ -130,7 +130,7 @@
         {
           "foreground": "#239b5d",
           "style": "plain",
-          "template": "<#0b6a3c>\u26a1</>{{if .Root}}<#cd5e42>{{ .UserName }}</>{{else}}{{ .UserName }}{{end}} <#0b6a3c>\u276f</>",
+          "template": "<#0b6a3c>\u26a1</>{{if .Root}}<#cd5e42>{{.UserName}}</>{{else}}{{.UserName}}{{end}} <#0b6a3c>\u276f</>",
           "type": "text"
         }
       ],

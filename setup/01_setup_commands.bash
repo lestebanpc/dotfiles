@@ -1258,6 +1258,7 @@ function setup_commands() {
                 echo "ERROR(20): Se requiere \"sudo -v\" almacene temporalmente su credenciales de root"
                 return 20;
             fi
+            printf '\n\n'
         fi
 
         #3.2. Instalacion de paquetes del SO

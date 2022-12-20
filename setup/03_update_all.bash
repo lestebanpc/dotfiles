@@ -139,6 +139,7 @@ function m_update_all() {
             echo "ERROR(20): Se requiere \"sudo -v\" almacene temporalmente su credenciales de root"
             return 20;
         fi
+        printf '\n\n'
     fi
     
     #4. Instalacion
