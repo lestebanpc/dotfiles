@@ -1288,7 +1288,7 @@ function setup_commands() {
 
             l_repo_is_optional=0
 
-            if [[ ! "$l_repo_eption" =~ ^[0-9]+$ ]]; then
+            if [[ ! "$l_repo_option" =~ ^[0-9]+$ ]]; then
                 l_repo_must_install=1
             else
                 if [ $l_repo_option -eq 0 ]; then
