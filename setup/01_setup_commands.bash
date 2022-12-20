@@ -1210,8 +1210,7 @@ declare -A gA_optional_repositories=(
 
 # Argunentos:
 # - Repositorios opcionales que se se instalaran (flag en binario. entero que es suma de 2^n).
-#   Si es 0, no se instala ningun repositorio opcionales.
-# - Flag para solicitar las credenciales sudo. Solo si no es root y es 0, se solicita guardar credenciales de root
+# - Si es invocado desde otro script, su valor es 1 y no se solicita las credenciales sudo. Si el script se invoca directamente, es 0
 function setup_commands() {
     
     #1. Argumentos 

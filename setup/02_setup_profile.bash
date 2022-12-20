@@ -40,6 +40,11 @@ function m_setup_neovim() {
         p_opcion=$1
     fi
 
+    local p_overwrite_ln_flag=1
+    if [[ "$2" =~ ^[0-9]+$ ]]; then
+        p_overwrite_ln_flag=$2
+    fi
+
     local path_data=~/.local/share
 
     #Instalar los plugins
@@ -72,13 +77,13 @@ function m_setup_neovim() {
     echo "-------------------------------------------------------------------------------------------------"
     echo "- NeoVIM: Finalizando la configuración"
     echo "-------------------------------------------------------------------------------------------------"
-    if [ ! -e ~/.config/nvim/lua ]; then
+    if [ ! -e ~/.config/nvim/lua ] || [ $p_overwrite_ln_flag -eq 0 ]; then
         echo "Creando el enlace de \"~/.config/nvim/lua\""
         mkdir -p ~/.config/nvim
         ln -snf ~/.files/nvim/lua ~/.config/nvim/lua
     fi
 
-    if [ ! -e ~/.config/nvim/init.vim ]; then
+    if [ ! -e ~/.config/nvim/init.vim ] || [ $p_overwrite_ln_flag -eq 0 ]; then
         if [ $p_opcion -eq 1 ]; then
             echo "Creando el enlace de \"~/.config/nvim/init.vim\" para usarlo como IDE"
             ln -snf ~/.files/nvim/init_vm_linux_ide.vim ~/.config/nvim/init.vim
@@ -107,27 +112,10 @@ function m_setup_vim() {
         p_opcion=$1
     fi
 
-    #Instalar Node.JS
-    if [ $p_opcion -eq 1 ]; then
-        echo "-------------------------------------------------------------------------------------------------"
-        echo "- VIM como IDE: Instalar Node JS"
-        echo "-------------------------------------------------------------------------------------------------"
-        local l_version=""
-        if ! l_version=$(node -v 2> /dev/null); then
-            echo "Se va instalar Node JS version 19.x"
-            if [ $g_is_root -eq 0 ]; then
-                curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
-                yum install -y nodejs
-            else
-                curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
-                sudo yum install -y nodejs
-            fi
-        else
-            echo "Node.JS instalado: $l_version"
-        fi
+    local p_overwrite_ln_flag=1
+    if [[ "$2" =~ ^[0-9]+$ ]]; then
+        p_overwrite_ln_flag=$2
     fi
-
-    
     
     #Instalar los plugins
     echo "-------------------------------------------------------------------------------------------------"
@@ -365,7 +353,7 @@ function m_setup_vim() {
     echo "-------------------------------------------------------------------------------------------------"
     if [ $p_opcion -eq 1 ]; then
 
-        #if [ ! -e ~/.vimrc ]; then
+        #if [ ! -e ~/.vimrc ] || [ $p_overwrite_ln_flag -eq 0 ]; then
         echo "Creando el enlace de ~/.vimrc"
         ln -snf ~/.files/vim/vimrc_vm_linux_ide.vim ~/.vimrc
         #fi
@@ -378,7 +366,7 @@ function m_setup_vim() {
         echo "  3> Usar ALE para liting y no el por defecto de COC: \":CocConfig\""
         echo "     { \"diagnostic.displayByAle\": true }"
     else
-        #if [ ! -e ~/.vimrc ]; then
+        #if [ ! -e ~/.vimrc ] || [ $p_overwrite_ln_flag -eq 0 ]; then
         echo "Creando el enlace de ~/.vimrc"
         ln -snf ~/.files/vim/vimrc_vm_linux_basic.vim ~/.vimrc
         #fi
@@ -390,16 +378,19 @@ function m_setup_vim() {
 }
 
 
-#TODO Mejorar, solo esta escrito para WSL que sea Ubuntu y no WSL que sea fedora
 # Opciones:
-#    0 - Se configura VIM en modo basico (por defecto)
-#    1 - Se configura VIM en modo IDE
+#   ( 0) Actualizar los paquetes del SO y actualizar los enlaces simbolicos (siempre se ejecutara)"
+#   ( 1) Instalar VIM-Enhanced si no esta instalado"
+#   ( 2) Instalar NeoVIM si no esta instalado"
+#   ( 4) Configurar VIM-Enhanced como Developer"
+#   ( 8) Configurar NeoVIM como Developer"
+#   (16) Forzar el actualizado de los enlaces simbolicos del profile"
 function m_setup() {
 
     #1. Argumentos
-    local p_opcion=0
+    local p_opciones=3
     if [[ "$1" =~ ^[0-9]+$ ]]; then
-        p_opcion=$1
+        p_opciones=$1
     fi
 
     #2. Validar si fue descarga el repositorio git correspondiente
@@ -411,25 +402,6 @@ function m_setup() {
         echo "   4> . ~/.files/setup/02_setup_commands.bash (instala y actuliza comandos)"
         echo "   5> . ~/.files/setup/03_setup_profile.bash"
         return 0
-    fi
-    
-    case "$p_opcion" in
-        0)
-            echo "Configurando el profile basico: VIM en modo editor basico"
-            ;;
-        1)
-            echo "Configurando el profile developer: VIM en modo IDE"
-            ;;
-        *)
-            echo "ERROR(22): El tipo de profile \"${p_opcion}\" no esta permitido"
-            return 22;
-            ;;
-    esac    
-
-    #Determinar el tipo de distribución Linux
-    if [ $g_os_type -gt 10 ]; then
-        echo "ERROR(21): El sistema operativo debe ser Linux"
-        return 21;
     fi
     
     #3. Solicitar credenciales de administrador y almacenarlas temporalmente
@@ -444,13 +416,141 @@ function m_setup() {
         fi
     fi
     
-    #4 Configuracion: Crear enlaces simbolicos basicos
+    #4. Actaulizar los paquetes de los repositorios
+    echo "-------------------------------------------------------------------------------------------------"
+    echo "- Actualizar los paquetes del Repositorio del Linux"
+    echo "-------------------------------------------------------------------------------------------------"
+    
+    #Segun el tipo de distribución de Linux
+    case "$g_os_subtype_id" in
+        1)
+            #Distribución: Ubuntu
+            if [ $g_is_root -eq 0 ]; then
+                apt-get update
+                apt-get upgrade
+            else
+                sudo apt-get update
+                sudo apt-get upgrade
+            fi
+            ;;
+        2)
+            #Distribución: Fedora
+            if [ $g_is_root -eq 0 ]; then
+                dnf upgrade
+            else
+                sudo dnf upgrade
+            fi
+            ;;
+        0)
+            echo "ERROR (22): No se identificado el tipo de Distribución Linux"
+            return 22;
+            ;;
+    esac
+   
+    
+    #5. Instalando VIM-Enhaced
+    local l_version=""
 
-    #echo "-------------------------------------------------------------------------------------------------"
-    #echo "- Creando los enlaces simbolicos"
-    #echo "-------------------------------------------------------------------------------------------------"
+    local l_option=1
+    local l_flag=$(( $p_opciones & $l_option ))
+    local l_vim_flag=1
+    if [ $l_flag -eq $l_option ]; then l_vim_flag=0; fi
+
+    if [ $l_vim_flag -eq 0 ]; then
+        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        echo "- Instalación/Validación de VIM-Enhaced"
+        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        if ! l_version=$(vim --version 2> /dev/null); then
+            echo "Se va instalar VIM-Enhaced"
+            if [ $g_is_root -eq 0 ]; then
+                dnf install vim-enhanced
+            else
+                sudo dnf install vim-enhanced
+            fi
+        else
+            l_version=$(echo "$l_version" | head -n 1)
+            echo "VIM-Enhaced instalado: ${l_version}"
+        fi
+
+        #5.1 Instalacion requerida para VIM-Enhaced como develeper
+        #Instalar Node.JS
+        l_option=4
+        l_flag=$(( $p_opciones & $l_option ))
+        if [ $l_flag -eq $l_option ]; then
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            echo "- VIM como IDE: Instalar Node JS"
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            if ! l_version=$(node -v 2> /dev/null); then
+                echo "Se va instalar Node JS version 19.x"
+                if [ $g_is_root -eq 0 ]; then
+                    curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
+                    yum install -y nodejs
+                else
+                    curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
+                    sudo yum install -y nodejs
+                fi
+            else
+                echo "Node.JS instalado: $l_version"
+            fi
+        fi
+    fi
+    
+    #6. Instalando NeoVIM
+    l_option=2
+    l_flag=$(( $p_opciones & $l_option ))
+    local l_nvim_flag=1
+    if [ $l_flag -eq $l_option ]; then l_nvim_flag=0; fi
+
+    if [ $l_nvim_flag -eq 0 ]; then
+        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        echo "- Instalación/Validación de NeoVIM"
+        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        if ! l_version=$(nvim --version 2> /dev/null); then
+            echo "Se va instalar NeoVIM"
+            if [ $g_is_root -eq 0 ]; then
+                dnf install neovim
+                dnf install python3-neovim
+            else
+                sudo dnf install neovim
+                sudo dnf install python3-neovim
+            fi
+        else
+            l_version=$(echo "$l_version" | head -n 1)
+            echo "NeoVIM instalado: ${l_version}"
+        fi
+    fi
+
+    #4 Configuracion: Crear enlaces simbolicos y folderes basicos
+    echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+    #echo "- Creando los enlaces simbolicos y folderes basicos"
+    #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+    
+    if [ ! -d /u01/userkeys/ssh ]; then
+
+        echo "Permiso ejecucion de shell y los folderes basicos \"/u01/userkeys/ssh\""
+        chmod u+x ~/.files/terminal/linux/tmux/*.bash
+        chmod u+x ~/.files/terminal/linux/complete/*.bash
+        chmod u+x ~/.files/terminal/linux/keybindings/*.bash
+        chmod u+x ~/.files/setup/*.bash
+    
+        if [ $g_is_root -eq 0 ]; then
+            mkdir -pm 755 /u01
+            mkdir -pm 755 /u01/userkeys
+            mkdir -pm 755 /u01/userkeys/ssh
+            chown -R lucianoepc:lucianoepc /u01/userkeys
+        else
+            sudo mkdir -pm 755 /u01
+            sudo mkdir -pm 755 /u01/userkeys
+            sudo chown lucianoepc:lucianoepc /u01/userkeys
+            mkdir -pm 755 /u01/userkeys/ssh
+        fi
+    fi
 
     #4.1 Creando enlaces simbolico dependiente de tipo de distribución Linux
+    l_option=16
+    l_flag=$(( $p_opciones & $l_option ))
+    local l_overwrite_ln_flag=1
+    if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
     
     #case "$g_os_subtype_id" in
     #    1)
@@ -468,22 +568,22 @@ function m_setup() {
     #Si es Linux WSL
     if [ $g_os_type -eq 1 ]; then
 
-        if [ ! -e ~/.dircolors ]; then
+        if [ ! -e ~/.dircolors ] || [ $l_overwrite_ln_flag -eq 0 ]; then
            echo "Creando los enlaces simbolico de ~/.dircolors"
            ln -snf ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf ~/.dircolors
         fi
 
-        if [ ! -e ~/.gitconfig ]; then
+        if [ ! -e ~/.gitconfig ] || [ $l_overwrite_ln_flag -eq 0 ]; then
            echo "Creando los enlaces simbolico de ~/.gitconfig"
            ln -snf ~/.files/git/wsl2_git.conf ~/.gitconfig
         fi
 
-        if [ ! -e ~/.ssh/config ]; then
+        if [ ! -e ~/.ssh/config ] || [ $l_overwrite_ln_flag -eq 0 ]; then
            echo "Creando los enlaces simbolico de ~/.ssh/config"
            ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config
         fi
 
-        #if [ ! -e ~/.bashrc ]; then
+        #if [ ! -e ~/.bashrc ] || [ $l_overwrite_ln_option -eq $l_overwrite_ln_flag ]; then
         echo "Creando los enlaces simbolico de ~/.bashrc"
         ln -snf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc
         #fi
@@ -491,44 +591,56 @@ function m_setup() {
     #Si es un Linux generico (NO WSL)
     else
 
-        if [ ! -e ~/.gitconfig ]; then
+        if [ ! -e ~/.gitconfig ] || [ $l_overwrite_ln_flag -eq 0 ]; then
            echo "Creando los enlaces simbolico de ~/.gitconfig"
            ln -snf ~/.files/git/vm_linux_git.conf ~/.gitconfig
         fi
 
-        if [ ! -e ~/.ssh/config ]; then
+        if [ ! -e ~/.ssh/config ] || [ $l_overwrite_ln_flag -eq 0 ]; then
            echo "Creando los enlaces simbolico de ~/.ssh/config"
            ln -snf ~/.files/ssh/vm_linux_ssh.conf ~/.ssh/config
         fi
 
-        #if [ ! -e ~/.bashrc ]; then
+        #if [ ! -e ~/.bashrc ] || [ $l_overwrite_ln_option -eq $l_overwrite_ln_flag ]; then
         echo "Creando los enlaces simbolico de ~/.bashrc"
         ln -snf ~/.files/terminal/linux/profile/fedora_vm.bash ~/.bashrc
         #fi
     fi
 
     #4.2 Creando enlaces simbolico independiente de tipo de Linux
-
-    if [ ! -e ~/.tmux.conf ]; then
+    if [ ! -e ~/.tmux.conf ] || [ $l_overwrite_ln_flag -eq 0 ]; then
        echo "Creando los enlaces simbolico de ~/.tmux.conf"
        ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
     fi
 
-    #Si se usa VIM como IDE
-    if [ $p_opcion -eq 1 ]; then
+    #5. Si se usa VIM como IDE
+    if [ $l_vim_flag -eq 0 ]; then
+        l_option=4
+        l_flag=$(( $p_opciones & $l_option ))
+        if [ $l_flag -eq $l_option ]; then
 
-        if [ ! -e ~/.vim/coc-settings.json ]; then
-            echo "Creando los enlaces simbolico de ~/.vim/coc-settings.json"
-            ln -sfn ~/.files/vim/coc/coc-settings.json ~/.vim/coc-settings.json
+            if [ ! -e ~/.vim/coc-settings.json ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+                echo "Creando los enlaces simbolico de ~/.vim/coc-settings.json"
+                ln -sfn ~/.files/vim/coc/coc-settings.json ~/.vim/coc-settings.json
+            fi
+            m_setup_vim 1 $l_overwrite_ln_flag
+
+        else
+            m_setup_vim 0 $l_overwrite_ln_flag
         fi
     fi
 
-    #5 Configuración: Instalar VIM
-    m_setup_vim $p_opcion
+    #6. Si se usa Neo-VIM como IDE
+    if [ $l_nvim_flag -eq 0 ]; then
+        l_option=8
+        l_flag=$(( $p_opciones & $l_option ))
+        if [ $l_flag -eq $l_option ]; then
+            m_setup_neovim 1 $l_overwrite_ln_flag
+        else
+            m_setup_neovim 0 $l_overwrite_ln_flag
+        fi
+    fi
     
-    #6 Configuración: Instalar NeoVIM
-    m_setup_neovim $p_opcion
-      
     #7. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_is_root -ne 0 ]; then
         echo $'\n'"Caducando el cache de temporal password de su 'sudo'"
@@ -543,8 +655,15 @@ function m_show_menu_core() {
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
     echo " (q) Salir del menu"
-    echo " (b) Configurar un profile basico         (VIM como editor basico, ..)"
-    echo " (d) Configurar un profile como developer (VIM como IDE, ..)"
+    echo " (b) Configurar el profile basico (VIM como editor basico, ...)"
+    echo " (d) Configurar el profile como developer (VIM como IDE, ...)"
+    echo " ( ) Configurar segun una o mas opciones especificas. Ingrese la suma de las opciones que desea configurar:"
+    echo "     ( 0) Actualizar los paquetes del SO y actualizar los enlaces simbolicos (siempre se ejecutara)"
+    echo "     ( 1) Instalar VIM-Enhanced si no esta instalado"
+    echo "     ( 2) Instalar NeoVIM si no esta instalado"
+    echo "     ( 4) Configurar VIM-Enhanced como Developer"
+    echo "     ( 8) Configurar NeoVIM como Developer"
+    echo "     (16) Forzar el actualizado de los enlaces simbolicos del profile"
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
@@ -565,27 +684,40 @@ function m_main() {
     echo "#################################################################################################"
 
     local l_flag_continue=0
-    local l_opcion=""
+    local l_opciones=""
     while [ $l_flag_continue -eq 0 ]; do
-        m_show_menu_core
-        read l_opcion
 
-        case "$l_opcion" in
+        m_show_menu_core
+        read l_opciones
+
+        case "$l_opciones" in
             b)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                m_setup 0
+                m_setup 3
                 ;;
 
             d)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                m_setup 1
+                m_setup 15
                 ;;
 
             q)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
+                ;;
+
+            [1-9]*)
+                if [[ "$l_opciones" =~ ^[0-9]+$ ]]; then
+                    l_flag_continue=1
+                    echo "#################################################################################################"$'\n'
+                    m_setup $l_opciones
+                else
+                    l_flag_continue=0
+                    echo "Opción incorrecta"
+                    echo "-------------------------------------------------------------------------------------------------"
+                fi
                 ;;
 
             *)
