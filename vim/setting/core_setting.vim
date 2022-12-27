@@ -68,9 +68,9 @@ set fileformats=unix,dos,mac
 set backspace=indent,eol,start
 
 "Convertir el key <tab> en 4 espacio en blancos
-set tabstop=4
+set tabstop=3
+set shiftwidth=3
 set softtabstop=0
-set shiftwidth=4
 set expandtab
 
 

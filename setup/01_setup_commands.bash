@@ -39,7 +39,8 @@ function m_show_final_message() {
 
     #1. Argumentos
     local p_repo_id="$1"
-    local p_install_win_cmds=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1         #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                       #(0) Los binarios de los comandos se estan instalando en Linux
     if [ "$2" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
@@ -81,7 +82,8 @@ function m_get_repo_current_version() {
 
     #1. Argumentos
     local p_repo_id="$1"
-    local p_install_win_cmds=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1         #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                       #(0) Los binarios de los comandos se estan instalando en Linux
     if [ "$2" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
@@ -119,6 +121,16 @@ function m_get_repo_current_version() {
                 l_status=$?
             else
                 l_tmp=$(fzf --version 2> /dev/null)
+                l_status=$?
+            fi
+            ;;
+
+        helm)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${g_path_win_commands}/bin/helm.exe version --short 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(helm version --short 2> /dev/null)
                 l_status=$?
             fi
             ;;
@@ -202,6 +214,25 @@ function m_get_repo_current_version() {
                 fi
             fi
             ;;
+        kustomize)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${g_path_win_commands}/bin/kustomize.exe version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(kustomize version 2> /dev/null)
+                l_status=$?
+            fi
+            ;;
+
+        operator-sdk)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            else
+                l_tmp=$(operator-sdk version 2> /dev/null)
+                l_status=$?
+            fi
+            ;;
+
         k0s)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${g_path_win_commands}/bin/k0s.exe version 2> /dev/null)
@@ -253,7 +284,8 @@ function m_get_artifacts() {
     local p_repo_last_version="$2"
     declare -n pna_artifact_names=$3   #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
     declare -n pna_artifact_types=$4   #Parametro por referencia: Se devuelve un arreglo de los tipos de los artefactos
-    local p_install_win_cmds=1           #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1         #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                       #(0) Los binarios de los comandos se estan instalando en Linux
     if [ "$5" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
@@ -287,6 +319,15 @@ function m_get_artifacts() {
                 pna_artifact_types=(2)
             else
                 pna_artifact_names=("fzf-${p_repo_last_version}-windows_amd64.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+        helm)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("helm-v${p_repo_last_version}-linux-amd64.tar.gz")
+                pna_artifact_types=(2)
+            else
+                pna_artifact_names=("helm-v${p_repo_last_version}-windows-amd64.zip")
                 pna_artifact_types=(3)
             fi
             ;;
@@ -381,6 +422,23 @@ function m_get_artifacts() {
                 pna_artifact_types=(0)
             fi
             ;;
+        kustomize)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("kustomize_v${p_repo_last_version}_linux_amd64.tar.gz")
+                pna_artifact_types=(2)
+            else
+                pna_artifact_names=("kustomize_v${p_repo_last_version}_windows_amd64.tar.gz")
+                pna_artifact_types=(2)
+            fi
+            ;;
+        operator-sdk)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("operator-sdk_linux_amd64" "ansible-operator_linux_amd64" "helm-operator_linux_amd64")
+                pna_artifact_types=(0 0 0)
+            else
+                return 1
+            fi
+            ;;
        *)
            return 1
            ;;
@@ -395,15 +453,30 @@ function m_get_repo_latest_version() {
     #1. Argumentos
     local p_repo_id="$1"
     local p_repo_name="$2"
+    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                         #(0) Los binarios de los comandos se estan instalando en Linux
+    if [ "$3" -eq 0 2> /dev/null ]; then
+        p_install_win_cmds=0
+    fi
     
     #2. Obtener la version
     local l_repo_last_version=""
     local l_aux=""
+    #local l_status=0
     case "$p_repo_id" in
 
         kubectl)
             #El artefacto se obtiene del repositorio de Kubernates
             l_repo_last_version=$(curl -L -s https://dl.k8s.io/release/stable.txt)
+            ;;
+        
+        kustomize)
+            #La ultima version de Kustomize debe ser la version compatible con kubectl
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_repo_last_version=$(${g_path_win_commands}/bin/kubectl.exe version --client=true -o json | jq -r '.kustomizeVersion' 2> /dev/null)
+            else
+                l_repo_last_version=$(kubectl version --client=true -o json  | jq -r '.kustomizeVersion' 2> /dev/null)
+            fi
             ;;
 
         *)
@@ -431,7 +504,8 @@ function m_get_artifact_url() {
     local p_repo_name="$2"
     local p_repo_last_version="$3"
     local p_artifact_name="$4"
-    local p_install_win_cmds=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                         #(0) Los binarios de los comandos se estan instalando en Linux
     if [ "$5" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
@@ -447,6 +521,14 @@ function m_get_artifact_url() {
             else
                 l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/linux/amd64"
             fi
+            ;;
+
+        kustomize)
+            l_base_url="https://github.com/${p_repo_name}/releases/download/kustomize%2F${p_repo_last_version}"
+            ;;
+
+        helm)
+            l_base_url="https://get.helm.sh"
             ;;
             
         *)
@@ -469,7 +551,8 @@ function m_copy_artifact_files() {
     local p_artifact_index="$2"
     local p_subfolder="$3"
     local p_exe_name_without_ext="$4"
-    local p_install_win_cmds=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                         #(0) Los binarios de los comandos se estan instalando en Linux
     if [ "$5" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
@@ -900,6 +983,105 @@ function m_copy_artifact_files() {
             #echo "Copiando \"autocomplete/fd.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
             #cp "${l_path_temp}/autocomplete/fd.ps1" ~/.files/terminal/powershell/complete/fd.ps1
             ;;
+        
+        helm)
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                l_path_temp="${l_path_temp}/linux-amd64"
+                if [ $g_is_root -eq 0 ]; then
+                    cp "${l_path_temp}/helm" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/helm"
+                    #mkdir -pm 755 "${l_path_man}"
+                else
+                    sudo cp "${l_path_temp}/helm" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/helm"
+                    #sudo mkdir -pm 755 "${l_path_man}"
+                fi
+            else
+                l_path_temp="${l_path_temp}/windows-amd64"
+                cp "${l_path_temp}/helm.exe" "${l_path_bin}"
+                #mkdir -p "${l_path_man}"
+            fi
+            ;;
+
+        kustomize)
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                #l_path_temp="${l_path_temp}/kustomize"
+                if [ $g_is_root -eq 0 ]; then
+                    cp "${l_path_temp}/kustomize" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/kustomize"
+                    #mkdir -pm 755 "${l_path_man}"
+                else
+                    sudo cp "${l_path_temp}/kustomize" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/kustomize"
+                    #sudo mkdir -pm 755 "${l_path_man}"
+                fi
+            else
+                #l_path_temp="${l_path_temp}/kustomize"
+                cp "${l_path_temp}/kustomize.exe" "${l_path_bin}"
+                #mkdir -p "${l_path_man}"
+            fi
+            ;;
+
+
+        operator-sdk)
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                if [ $p_artifact_index -eq 0 ]; then
+
+                   mv "${l_path_temp}/operator-sdk_linux_amd64" "${l_path_temp}/operator-sdk"
+                   if [ $g_is_root -eq 0 ]; then
+                      cp "${l_path_temp}/operator-sdk" "${l_path_bin}"
+                      chmod +x "${l_path_bin}/operator-sdk"
+                      #mkdir -pm 755 "${l_path_man}"
+                   else
+                      sudo cp "${l_path_temp}/operator-sdk" "${l_path_bin}"
+                      sudo chmod +x "${l_path_bin}/operator-sdk"
+                      #sudo mkdir -pm 755 "${l_path_man}"
+                   fi
+
+                elif [ $p_artifact_index -eq 1 ]; then
+
+                   mv "${l_path_temp}/ansible-operator_linux_amd64" "${l_path_temp}/ansible-operator"
+                   if [ $g_is_root -eq 0 ]; then
+                      cp "${l_path_temp}/ansible-operator" "${l_path_bin}"
+                      chmod +x "${l_path_bin}/ansible-operator"
+                      #mkdir -pm 755 "${l_path_man}"
+                   else
+                      sudo cp "${l_path_temp}/ansible-operator" "${l_path_bin}"
+                      sudo chmod +x "${l_path_bin}/ansible-operator"
+                      #sudo mkdir -pm 755 "${l_path_man}"
+                   fi
+
+                else
+
+                   mv "${l_path_temp}/helm-operator_linux_amd64" "${l_path_temp}/helm-operator"
+                   if [ $g_is_root -eq 0 ]; then
+                      cp "${l_path_temp}/helm-operator" "${l_path_bin}"
+                      chmod +x "${l_path_bin}/helm-operator"
+                      #mkdir -pm 755 "${l_path_man}"
+                   else
+                      sudo cp "${l_path_temp}/helm-operator" "${l_path_bin}"
+                      sudo chmod +x "${l_path_bin}/helm-operator"
+                      #sudo mkdir -pm 755 "${l_path_man}"
+                   fi
+
+                fi
+
+            fi
+            ;;
+
 
         k0s)
             #Ruta local de los artefactos
@@ -968,21 +1150,22 @@ function m_download_artifacts() {
 
     mkdir -p "/tmp/${p_repo_id}"
 
-    for ((l_i=0; l_i < $l_n; l_i++)); do
+    for ((l_i=0; l_i<$l_n; l_i++)); do
 
         l_artifact_name="${pnra_artifact_names[$l_i]}"
         l_artifact_url=$(m_get_artifact_url "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$l_artifact_name" $p_install_win_cmds)
-        echo "Artefecto[${l_i}] a descargar - Name    : ${l_artifact_name}"
-        echo "Artefecto[${l_i}] a descargar - URL     : ${l_artifact_url}"
+        printf '\nArtefecto[%s] a descargar - Name    : %s\n' "${l_i}" "${l_artifact_name}"
+        printf 'Artefecto[%s] a descargar - URL     : %s\n' "${l_i}" "${l_artifact_url}"
+
         
         #Descargar la artefacto
         mkdir -p "/tmp/${p_repo_id}/${l_i}"
         curl -fLo "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" "$l_artifact_url"
         l_status=$?
         if [ $l_status -eq 0 ]; then
-            echo "Artefacto[${l_i}] descargado en         : \"/tmp/${p_repo_id}/${l_i}/${l_artifact_name}\""
+            printf 'Artefacto[%s] descargado en         : "/tmp/%s/%s/%s"\n\n' "${l_i}" "${p_repo_id}" "${l_i}" "${l_artifact_name}"
         else
-            echo "ERROR (${l_status}): Error en descargar el artefacto[${l_i}]"
+            printf 'Artefecto[%s] no se pudo descargar  : ERROR(%s)\n\n' "${l_i}" "${l_status}"
             return $l_status
         fi
 
@@ -991,14 +1174,15 @@ function m_download_artifacts() {
     return 0
 }
 
-function m_setup_artifacts() {
+function m_install_artifacts() {
 
     #1. Argumentos
     local p_repo_id="$1"
     local p_repo_name="$2"
     declare -nr pnra_artifact_names=$3   #Parametro por referencia: Arreglo de los nombres de los artefactos
     declare -nr pnra_artifact_types=$4   #Parametro por referencia: Arreglo de los tipos de los artefactos
-    local p_install_win_cmds=1            #Solo si es WSL2 y desea actualizar los comandos en Windows
+    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                         #(0) Los binarios de los comandos se estan instalando en Linux
     if [ "$5" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
@@ -1012,7 +1196,7 @@ function m_setup_artifacts() {
 
     mkdir -p "/tmp/${p_repo_id}"
 
-    for ((l_i=0; l_i < $l_n; l_i++)); do
+    for ((l_i=0; l_i<$l_n; l_i++)); do
 
         l_artifact_name="${pnra_artifact_names[$l_i]}"
         l_artifact_type="${pnra_artifact_types[$l_i]}"
@@ -1074,29 +1258,20 @@ function m_setup_artifacts() {
     return 0
 }
 
-function m_setup_repository() { 
+function m_intall_update_repository() { 
 
     #1. Argumentos
     local p_repo_id="$1"
     local p_repo_name="$2"
-    local p_install_win_cmds=1       #Solo si es WSL2 y desea actualizar los comandos en Windows
-    if [ "$3" -eq 0 2> /dev/null ]; then
+    local p_repo_current_version="$3"
+    local p_install_win_cmds=1            #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                          #(0) Los binarios de los comandos se estan instalando en Linux
+    if [ "$4" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
-    fi
-
-    if [ ! -z "$p_repo_name" ]; then
-        echo "Repositorio - Name           : \"${p_repo_name}\""
-    fi
-
-    if [ -z "$p_repo_id" ]; then
-        echo "ERROR (98): El argumento 2 (repository id) es obligatorio"
-        return 98
-    else
-        echo "Repositorio - ID             : \"${p_repo_id}\""
     fi
    
     #2. Obtener la ultima version del repositorio
-    local l_repo_last_version=$(m_get_repo_latest_version "$p_repo_id" "$p_repo_name")
+    local l_repo_last_version=$(m_get_repo_latest_version "$p_repo_id" "$p_repo_name" $p_install_win_cmds)
     local l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed 's/[^0-9]*\([0-9.]*\).*/\1/')
    
     if [ -z "$l_repo_last_version" ]; then
@@ -1106,36 +1281,21 @@ function m_setup_repository() {
     echo "Repositorio - Ultima Versión : \"${l_repo_last_version_pretty}\" (${l_repo_last_version})"
  
     #3. Validar si se debe instalar (ya esta instalado la ultima version)
-    t_tmp=$(m_get_repo_current_version "$p_repo_id" $p_install_win_cmds) 
-    local l_status=$?   #'$(..)' no es un comando, pero local es un comando, por eso se usa la variable global 't_tmp'
-    local l_repo_current_version="$t_tmp"
 
-    if [ $l_status -eq 1 ]; then
-        echo "Los artefactos del repositorio \"${p_repo_id}\" no esta instalado o la logica de obtener versión es incorrecta"
-        echo "Se continua con la instalación"
-    elif [ $l_status -eq 9 ]; then
-        echo "Los artefactos del repositorio \"${p_repo_id}\" no tiene implementado la logica obtener su versión actual"
-        echo "Se continua con la instalación"
-    elif [ $l_status -eq 2 ]; then
-        echo "Los artefactos del repositorio \"${p_repo_id}\" estan instalado pero no tiene una versión \"${l_repo_current_version}\" valida"
-        echo "Se continua con la instalación"
+    if [ -z "$p_repo_current_version" ]; then
+        echo "Se instalará el repositorio \"${p_repo_id}\""
     else
-        echo "Repositorio - Versión Actual : \"${l_repo_current_version}\""
-
         #Comparando las versiones
-        m_compare_version "${l_repo_current_version}" "${l_repo_last_version_pretty}"
+        m_compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
         l_status=$?
         if [ $l_status -eq 0 ]; then
-            echo "WARNING (80): Los artefactos del repositorio \"${p_repo_id}\" estan actualizados (Actual \"${l_repo_current_version}\" = Ultima \"${l_repo_last_version_pretty}\")"
-            echo "No se instalará este repositorio"
+            echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${p_repo_current_version}\" = Ultima Versión \"${l_repo_last_version_pretty}\")"
             return 80
         elif [ $l_status -eq 1 ]; then
-            echo "WARNING (80): Los artefactos del repositorio \"${p_repo_id}\" estan actualizados (Actual \"${l_repo_current_version}\" > Ultima \"${l_repo_last_version_pretty}\")"
-            echo "No se instalará este repositorio"
+            echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${p_repo_current_version}\" > Ultima Versión \"${l_repo_last_version_pretty}\")"
             return 81
         fi
-
-        echo "Los artefactos del repositorio \"${p_repo_id}\" requieren ser actualizado (Actual \"${l_repo_current_version}\" < Ultima \"${l_repo_last_version_pretty}\")"
+        echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${p_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
     fi
     
 
@@ -1171,7 +1331,7 @@ function m_setup_repository() {
     fi
 
     #6. Instalar segun el tipo de artefecto
-    if ! m_setup_artifacts "$p_repo_id" "$p_repo_name" la_artifact_names la_artifact_types $p_install_win_cmds; then
+    if ! m_install_artifacts "$p_repo_id" "$p_repo_name" la_artifact_names la_artifact_types $p_install_win_cmds; then
         echo "ERROR (24): No se ha podido instalar los artefecto de repositorio \"${p_repo_id}\""
         m_clean_temp "$p_repo_id"
         return 24
@@ -1199,6 +1359,9 @@ declare -A gA_repositories=(
         ['less']='jftuga/less-Windows'
         ['fd']='sharkdp/fd'
         ['oh-my-posh']='JanDeDobbeleer/oh-my-posh'
+        ['helm']='helm/helm'
+        ['kustomize']='kubernetes-sigs/kustomize'
+        ['operator-sdk']='operator-framework/operator-sdk'
         ['k0s']='k0sproject/k0s'
     )
 
@@ -1208,10 +1371,228 @@ declare -A gA_optional_repositories=(
         ['k0s']=4
     )
 
+
+function m_setup_repository() {
+
+    #1. Argumentos 
+    local p_repo_id="$1"
+
+    local p_opciones=2
+    if [[ "$2" =~ ^[0-9]+$ ]]; then
+        p_opciones=$2
+    fi
+
+    local l_repo_must_setup_lnx=1  #(1) No debe configurarse, (0) Debe configurarse (instalarse/actualizarse)
+
+    #1. Nombre a mostrar el respositorio
+    local l_repo_name_aux
+    local l_repo_name="${gA_repositories[$p_repo_id]}"
+    if [ -z "$l_repo_name" ]; then
+        l_repo_name_aux="$l_repo_id"
+    else
+        l_repo_name_aux="$l_repo_name"
+    fi
+
+    #2. El tipo de repositorios y deteminar si debe instalarse
+    local l_repo_is_optional=1     #(1) repositorio basico, (0) repositorio opcional
+    local l_option=${gA_optional_repositories[$p_repo_id]}
+    local l_flag=0
+    if [ -z "$l_option" ]; then
+
+        #Es un repositorio opcional
+        l_repo_is_optional=1
+
+        #Si es un repositorio opcional, permitir la instalación si de ingresa la opciones 4
+        l_flag=$(( $p_opciones & 4 ))
+        if [ $l_flag -eq 4 ]; then l_repo_must_setup_lnx=0; fi
+
+    else
+
+        #Es un repositorio basico
+        l_repo_is_optional=0
+
+        #Si es un repositorio basico, permitir la instalación si de ingresa la opciones 8
+        l_flag=$(( $p_opciones & 8 ))
+
+        if [ $l_flag -eq 8 ]; then
+
+            #Esta habilitado para instalar el repositorio opcional
+            if [[ "$l_option" =~ ^[0-9]+$ ]]; then
+                if [ $l_option -ne 0 ]; then
+                    #Suma binarios es igual al flag, se debe instalar el repo opcional
+                    l_flag=$(( $p_opciones & $l_option ))
+                    if [ $l_option -eq $l_flag ]; then l_repo_must_setup_lnx=0; fi
+                fi 
+            fi
+        fi
+
+    fi
+
+    #3. ¿Debe instalarse en Linux?
+    local l_repo_must_setup_win=$l_repo_must_setup_lnx  #El de instalación en windows debe iniciar igual
+
+    #Versión de repositorio instalado en Linux
+    t_tmp=$(m_get_repo_current_version "$p_repo_id" 1)
+    local l_repo_is_installed=$?    #(9) El repositorio unknown (no implementado la logica)
+                                    #(1) El repositorio no esta instalado 
+                                    #(0) El repositorio instalado, con version correcta
+                                    #(2) El repositorio instalado, con version incorrecta
+    local l_repo_current_version="$t_tmp"
+
+    #Si esta instalado, permitir su instalación si se ingresada la opcion 2
+    if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
+       l_flag=$(( $p_opciones & 2 ))
+       if [ $l_flag -eq 2 ]; then l_repo_must_setup_lnx=0; fi
+    fi
+
+    #Repositorios especiales que no deberia instalarse en Linux
+    if [ $l_repo_must_setup_lnx -eq 0 ]; then
+
+        case "$l_repo_id" in
+            less)
+                #Repositorio "less": Solo se instala si es WSL2 y en el windows asociado
+                if [ $g_os_type -eq 1 ]; then l_repo_must_setup_lnx=1; fi
+                ;;
+            k0s)
+                #Repositorio "k0s": Solo si es Linux que no es WSL2                
+                if [ $g_os_type -eq 1 ]; then l_repo_must_setup_lnx=1; fi
+                ;;
+        esac
+
+    fi
+
+    #4. Setup el repositorio en Linux
+    if [ $l_repo_must_setup_lnx -eq 0 ]; then
+        
+        echo "-------------------------------------------------------------------------------------------------"
+        printf '%s' "- Repositorio Git"
+
+        if [ $l_repo_is_optional -eq 0 ]; then
+            printf ' opcional "%s"' "${l_repo_name_aux}"
+        else
+            printf ' basico "%s"' "${l_repo_name_aux}"
+        fi
+
+        if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
+           printf " (UPDATE)\n"
+        elif [ $l_repo_is_optional -eq 1 ]; then
+           printf " (INSTALL)\n"
+        else
+           printf "\n"
+        fi
+        echo "-------------------------------------------------------------------------------------------------"
+
+        echo "Iniciando la configuración de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_subtype_name}\""
+        echo "Repositorio - Name           : \"${l_repo_name}\""
+        echo "Repositorio - ID             : \"${p_repo_id}\""
+
+        if [ $l_repo_is_installed -eq 9 ]; then
+            echo "Repositorio - Versión Actual : \"Unknown\""
+            echo "ERROR: Implemente la logica para determinar la version actual de repositorio instalado"
+        else
+            #Setup el repositorio en Linux
+            if [ $l_repo_is_installed -eq 1 ]; then
+                echo "Repositorio - Versión Actual : \"No instalado\""
+             elif [ $l_repo_is_installed -eq 2 ]; then
+                echo "Repositorio - Versión Actual : \"${l_repo_current_version}\" (formato invalido)"
+                l_repo_current_version=""
+            else
+                echo "Repositorio - Versión Actual : \"${l_repo_current_version}\""
+            fi
+            m_intall_update_repository "$l_repo_id" "$l_repo_name" "${l_repo_current_version}" 1
+        fi
+        printf "\n\n"
+       
+    fi
+
+    #5. ¿Debe instalarse en Windows?
+    if [ $g_os_type -eq 1 ]; then
+        #Versión de repositorio instalado en Linux
+        t_tmp=$(m_get_repo_current_version "$p_repo_id" 0)
+        l_repo_is_installed=$?          #(9) El repositorio unknown (no implementado la logica)
+                                        #(1) El repositorio no esta instalado 
+                                        #(0) El repositorio instalado, con version correcta
+                                        #(2) El repositorio instalado, con version incorrecta
+        l_repo_current_version="$t_tmp"
+
+        #Si esta instalado, permitir su instalación si se ingresada la opcion 2
+        if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
+           l_flag=$(( $p_opciones & 2 ))
+           if [ $l_flag -eq 2 ]; then l_repo_must_setup_win=0; fi
+        fi
+
+        #Repositorios especiales que no deberia instalarse en Windows
+        if [ $l_repo_must_setup_win -eq 0 ]; then
+
+            case "$l_repo_id" in
+                k0s)
+                    #Repositorio "k0s": Solo si es Linux que no es WSL2                
+                    l_repo_must_setup_win=1;
+                    ;;
+                operator-sdk)
+                    #Repositorio "operator-sdk": Solo si es Linux                
+                    l_repo_must_setup_win=1;
+                    ;;
+            esac
+
+        fi
+    else
+        l_repo_must_setup_win=1
+    fi
+
+    #6. Setup el repositorio en Windows
+    if [ $l_repo_must_setup_win -eq 0 ]; then
+        
+        if [ $l_repo_must_setup_lnx -ne 0 ]; then
+            echo "-------------------------------------------------------------------------------------------------"
+            printf '%s' "- Repositorio Git"
+
+            if [ $l_repo_is_optional -eq 0 ]; then
+                printf ' opcional "%s"' "${l_repo_name_aux}"
+            else
+                printf ' basico "%s"' "${l_repo_name_aux}"
+            fi
+
+            if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
+                printf " (UPDATE)\n"
+            elif [ $l_repo_is_optional -eq 1 ]; then
+                printf " (INSTALL)\n"
+            else
+                printf "\n"
+            fi
+            echo "-------------------------------------------------------------------------------------------------"
+        fi
+
+        echo "Iniciando la configuración de los artefactos del repositorio \"${l_repo_name_aux}\" en Windows (asociado al WSL \"${g_os_subtype_name}\")"
+        echo "Repositorio - Name           : \"${l_repo_name}\""
+        echo "Repositorio - ID             : \"${p_repo_id}\""
+
+        if [ $l_repo_is_installed -eq 9 ]; then
+            echo "Repositorio - Versión Actual : \"Unknown\""
+            echo "ERROR: Implemente la logica para determinar la version actual de repositorio instalado"
+        else
+            #Setup el repositorio en Linux
+            if [ $l_repo_is_installed -eq 1 ]; then
+                echo "Repositorio - Versión Actual : \"No instalado\""
+             elif [ $l_repo_is_installed -eq 2 ]; then
+                echo "Repositorio - Versión Actual : \"${l_repo_current_version}\" (formato invalido)"
+                l_repo_current_version=""
+            else
+                echo "Repositorio - Versión Actual : \"${l_repo_current_version}\""
+            fi
+            m_intall_update_repository "$l_repo_id" "$l_repo_name" "${l_repo_current_version}" 0
+        fi
+        printf "\n\n"
+       
+    fi
+
+}
+
+
 # Argunentos:
 # - Repositorios opcionales que se se instalaran (flag en binario. entero que es suma de 2^n).
 # - Si es invocado desde otro script, su valor es 1 y no se solicita las credenciales sudo. Si el script se invoca directamente, es 0
-function setup_commands() {
+function m_setup_repositories() {
     
     #1. Argumentos 
     local p_opciones=2
@@ -1243,8 +1624,6 @@ function setup_commands() {
         return 0
     fi
     
-    local l_option=0
-    local l_flag=0
     #3. Inicializaciones cuando se invoca directamente el script
     if [ $p_is_direct_calling -eq 0 ]; then
 
@@ -1262,8 +1641,8 @@ function setup_commands() {
         fi
 
         #3.2. Instalacion de paquetes del SO
-        l_option=1
-        l_flag=$(( $p_opciones & $l_option ))
+        local l_option=1
+        local l_flag=$(( $p_opciones & $l_option ))
         if [ $l_option -eq $l_flag ]; then
 
             echo "-------------------------------------------------------------------------------------------------"
@@ -1301,129 +1680,11 @@ function setup_commands() {
 
     #5. Instalar los comandos de los diferentes repositorios
     local l_repo_id
-    local l_repo_name_aux
-    local l_repo_name
-
-    local l_repo_is_optional=1      #(1) repositorio basico, (0) repositorio opcional
-    local l_repo_must_install=1     #(1) No debe instalarse, (0) Debe instalarse
     for l_repo_id in "${!gA_repositories[@]}"; do
 
-        #Nombre a mostrar el respositorio
-        l_repo_name="${gA_repositories[$l_repo_id]}"
-        if [ -z "$l_repo_name" ]; then
-            l_repo_name_aux="$l_repo_id"
-        else
-            l_repo_name_aux="$l_repo_name"
-        fi
+        #Instalar el repositorio
+        m_setup_repository "$l_repo_id" $p_opciones
 
-        #Identificar el tipo de repositorios y si se debe instalar
-        l_option=${gA_optional_repositories[$l_repo_id]}
-        l_repo_must_install=1
-        if [ -z "$l_option" ]; then
-
-            #Es un repositorio opcional
-            l_repo_is_optional=1
-
-            #Esta habilitado para instalarse
-            l_flag=$(( $p_opciones & 2 ))
-            if [ $l_flag -eq 2 ]; then l_repo_must_install=0; fi
-
-        else
-
-            #Es un repositorio basico
-            l_repo_is_optional=0
-
-            #Esta habilitado para instalar algun repositorio opcional
-            l_flag=$(( $p_opciones & 4 ))
-
-            if [ $l_flag -eq 4 ]; then
-
-                l_repo_must_install=0;
-                
-                #Esta habilitado para instalar el repositorio opcional
-                if [[ ! "$l_option" =~ ^[0-9]+$ ]]; then
-                    l_repo_must_install=1
-                else
-                    if [ $l_option -eq 0 ]; then
-                       l_repo_must_install=1
-                    else
-                        #Suma binarios es igual al flag, se debe instalar el repo opcional
-                        l_flag=$(( $p_opciones & $l_option ))
-                        if [ $l_option -eq $l_flag ]; then l_repo_must_install=0; else l_repo_must_install=1; fi
-                    fi 
-                fi
-            fi
-
-        fi
-
-        #Instalar los repositorios
-        if [ $l_repo_must_install -eq 0 ]; then
-       
-            #Personalizar la logica segun el repositorio
-            case "$l_repo_id" in
-                less)
-                    #Solo si es WSL2
-                    if [ $g_os_type -eq 1 ]; then
-                        echo "-------------------------------------------------------------------------------------------------"
-                        if [ $l_repo_is_optional -eq 0 ]; then
-                            echo "- Repositorio Git opcional \"${l_repo_name_aux}\""                            
-                        else
-                            echo "- Repositorio Git basico \"${l_repo_name_aux}\""
-                        fi
-                        echo "-------------------------------------------------------------------------------------------------"
-
-                        echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en el Windows donde esta su WSL2"
-                        m_setup_repository "$l_repo_id" "$l_repo_name" 0
-                        printf "\n\n"
-                    fi
-                    ;;
-                k0s)
-
-                    #Solo si es Linux que no es WSL2                
-                    if [ $g_os_type -ne 1 ]; then
-
-                        #Validando si el servicio esta detenido si esta instalado                    
-                        echo "-------------------------------------------------------------------------------------------------"
-                        if [ $l_repo_is_optional -eq 0 ]; then
-                            echo "- Repositorio Git opcional \"${l_repo_name_aux}\""
-                        else
-                            echo "- Repositorio Git basico \"${l_repo_name_aux}\""
-                        fi
-                        echo "-------------------------------------------------------------------------------------------------"
-
-                        if k0s status 2> /dev/null 1>&2; then
-                           echo "el servicio k0s esta intalado y ejecutandose, debe detener para instalarlo. NO se instalara el repo."
-                       else
-                            echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_subtype_name}\""
-                            m_setup_repository "$l_repo_id" "$l_repo_name" 1
-                            printf "\n\n"
-                        fi
-                        
-                    fi
-                    ;;
-                *)
-                    echo "-------------------------------------------------------------------------------------------------"
-                    if [ $l_repo_is_optional -eq 0 ]; then
-                        echo "- Repositorio Git opcional \"${l_repo_name_aux}\""
-                    else
-                        echo "- Repositorio Git basico \"${l_repo_name_aux}\""
-                    fi
-                    echo "-------------------------------------------------------------------------------------------------"
-                    
-                    echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_subtype_name}\""
-                    m_setup_repository "$l_repo_id" "$l_repo_name" 1
-                    printf "\n\n"
-
-                    if [ $g_os_type -eq 1 ]; then
-                        echo "Iniciando la instalación de los artefactos del repositorio \"${l_repo_name_aux}\" en el Windows donde esta su WSL2"
-                        m_setup_repository "$l_repo_id" "$l_repo_name" 0
-                        printf "\n\n"
-                    fi
-                    ;;
-            esac
-        
-        fi
-        
     done; 
 
     #6. Caducar las credecinales de root almacenadas temporalmente
@@ -1440,12 +1701,13 @@ function m_show_menu_core() {
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
     echo " (q) Salir del menu"
-    echo " (a) Actualizar solo los binarios de los repositorios basicos"
-    echo " ( ) Actualizar las opciones que desea. Ingrese la suma de las opciones que desea instalar:"
+    echo " (a) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes"
+    echo " ( ) Actualizar segun las opciones escogidas. Ingrese la suma de las opciones que desea instalar:"
     #echo "    ( 0) Actualizar xxx (siempre se realizara esta opción)"
-    echo "     ( 1) Actualizar los paquetes del sistema operativo"   
-    echo "     ( 2) Actualizar binarios de los repositorios basicos"
-    echo "     ( 4) Actualizar binarios del    repositorio  opcionales \"k0s\""
+    echo "     ( 1) Actualizar los paquetes existentes del sistema operativo"   
+    echo "     ( 2) Actualizar los binarios de los repositorios existentes"
+    echo "     ( 4) Instalar/Actualizar los binarios de los repositorios basicos"
+    echo "     ( 8) Instalar/Actualizar el binario del repositorio opcional \"k0s\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
@@ -1475,7 +1737,7 @@ function m_main() {
             a)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                setup_commands 3 0
+                m_setup_repositories 3 0
                 ;;
 
             q)
@@ -1494,7 +1756,7 @@ function m_main() {
                 if [[ "$l_opciones" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
                     echo "#################################################################################################"$'\n'
-                    setup_commands $l_opciones 0
+                    m_setup_repositories $l_opciones 0
                 else
                     l_flag_continue=0
                     echo "Opción incorrecta"
@@ -1529,7 +1791,7 @@ else
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         gp_opciones=$1
     fi
-    setup_commands $gp_opciones 1
+    m_setup_repositories $gp_opciones 1
 fi
 
 

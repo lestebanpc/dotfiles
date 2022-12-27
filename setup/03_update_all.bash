@@ -40,6 +40,7 @@ function m_update_repository() {
         echo "Folder \"${l_path}\" not exists"
         return 9
     else
+        printf '\n'
         echo "-------------------------------------------------------------------------------------------------"
         echo "- Repository Git para VIM: \"${l_path}\""
         echo "-------------------------------------------------------------------------------------------------"
@@ -202,13 +203,14 @@ function m_show_menu_core() {
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
     echo " (q) Salir del menu"
-    echo " (a) Actualizar solo los packetes VIM (no los binarios de los repositorios)"
-    echo " (b) Actualizar los packetes VIM y solo los binarios de los repositorios basicos"
+    echo " (a) Actualizar los artefactos existentes: paquetes del SO y paquetes VIM"
+    echo " (b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y paquetes VIM"
     echo " ( ) Actualizar las opciones que desea. Ingrese la suma de las opciones que desea instalar:"
-    echo "     (  0) Actualizar los paquetes del SO (siempre se realizara esta opción)"
-    echo "     (  1) Actualizar Paquetes VIM"
-    echo "     (  2) Actualizar binarios de los repositorios basicos"
-    echo "     (  4) Actualizar binarios del    repositorio  opcionales \"k0s\""
+    echo "     ( 0) Actualizar los paquetes del SO existentes (siempre se realizara esta opción)"
+    echo "     ( 1) Actualizar los paquetes VIM existentes"
+    echo "     ( 2) Actualizar los binarios de los repositorios existentes"
+    echo "     ( 4) Instalar/Actualizar los binarios de los repositorios basicos"
+    echo "     ( 8) Instalar/Actualizar el binario del repositorio opcional \"k0s\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
