@@ -51,18 +51,18 @@ function m_show_final_message() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "En Windows, debe homologar los plugins de \"FZF\" de VIM y NeoVim para tener soporte a powershell:"
                 echo "   1. Homologar el plugin \"FZF base\" tanto en VIM como NeoVim:"
-                echo '      Ultimo vs Fixed  > vim -d ${env:USERPROFILE}\.files\vim_packages\fzf\plugin\fzf.vim ${env:USERPROFILE}\.files\vim_packages\fixes\fzf\plugin\fzf.vim'
+                echo '      Ultimo vs Fixed  > vim -d ${env:USERPROFILE}\.files\vim\packages\fzf\plugin\fzf.vim ${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim'
                 echo '      Validar Soft-Link> dir ${env:USERPROFILE}\vimfiles\pack\ui\opt\'
-                echo '                       > MKLINK /D %USERPROFILE%\vimfiles\pack\ui\opt\fzf %USERPROFILE%\.files\vim_packages\fzf'
+                echo '                       > MKLINK /D %USERPROFILE%\vimfiles\pack\ui\opt\fzf %USERPROFILE%\.files\vim\packages\fzf'
                 echo '      Validar Soft-Link> dir ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\'
-                echo '                       > MKLINK /D %LOCALAPPDATA%\nvim-data\site\pack\ui\opt\fzf %USERPROFILE%\.files\vim_packages\fzf'
+                echo '                       > MKLINK /D %LOCALAPPDATA%\nvim-data\site\pack\ui\opt\fzf %USERPROFILE%\.files\vim\packages\fzf'
                 echo "   2. Homologar el plugin \"FZF vim\" para VIM:"
-                echo '      Obtener ultimo   > . ${env:USERPROFILE}\.files\setup\update_vim_packages.ps1'
+                echo '      Obtener ultimo   > . ${env:USERPROFILE}\.files\setup\03_update_all.ps1'
                 echo '                       > cd ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\'
                 echo '                       > git restore autoload/fzf/vim.vim'
-                echo '      Ultimo ->  Fixed > vim -d ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\.files\vim_packages\fixes\fzf.vim\autoload\fzf\vim.vim'
-                echo '      Fixed  ->  Vim   > cp ${env:USERPROFILE}\.files\vim_packages\fixes\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\vim.vim'
-                echo '      Fixed  ->  NeoVim> cp ${env:USERPROFILE}\.files\vim_packages\fixes\fzf.vim\autoload\fzf\vim.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\packer\opt\fzf.vim\autoload\fzf\vim.vim' 
+                echo '      Ultimo ->  Fixed > vim -d ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim'
+                echo '      Fixed  ->  Vim   > cp ${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\vim.vim'
+                echo '      Fixed  ->  NeoVim> cp ${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\packer\opt\fzf.vim\autoload\fzf\vim.vim' 
             fi
             ;;
         *)
@@ -750,16 +750,16 @@ function m_copy_artifact_files() {
                 fi
 
                 #Copiar los archivos requeridos por el plugin vim base "fzf"
-                mkdir -p ~/.files/vim_packages/fzf/doc
-                mkdir -p ~/.files/vim_packages/fzf/plugin
-                echo "Copiando \"git/doc/fzf.txt\" a \"~/.files/vim_packages/fzf/doc/\" ..."
-                cp "${l_path_temp}/git/doc/fzf.txt" ~/.files/vim_packages/fzf/doc/
-                echo "Copiando \"git/doc/fzf.vim\" a \"~/.files/vim_packages/fzf/plugin/\" ..."
-                cp "${l_path_temp}/git/plugin/fzf.vim" ~/.files/vim_packages/fzf/plugin/
+                mkdir -p ~/.files/vim/packages/fzf/doc
+                mkdir -p ~/.files/vim/packages/fzf/plugin
+                echo "Copiando \"git/doc/fzf.txt\" a \"~/.files/vim/packages/fzf/doc/\" ..."
+                cp "${l_path_temp}/git/doc/fzf.txt" ~/.files/vim/packages/fzf/doc/
+                echo "Copiando \"git/doc/fzf.vim\" a \"~/.files/vim/packages/fzf/plugin/\" ..."
+                cp "${l_path_temp}/git/plugin/fzf.vim" ~/.files/vim/packages/fzf/plugin/
 
                 #Copiar los archivos opcionales del plugin
-                echo "Copiando \"git/LICENSE\" en \"~/.files/vim_packages/fzf/\" .."
-                cp "${l_path_temp}/git/LICENSE" ~/.files/vim_packages/fzf/LICENSE
+                echo "Copiando \"git/LICENSE\" en \"~/.files/vim/packages/fzf/\" .."
+                cp "${l_path_temp}/git/LICENSE" ~/.files/vim/packages/fzf/LICENSE
             
                 #Copiar los script de completado
                 echo "Copiando \"git/shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."

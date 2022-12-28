@@ -98,6 +98,31 @@ function m_setup_neovim() {
     return 0
 }
 
+# Repositorios GIT donde estan los plugins VIM
+# Valores:
+#   (1) Perfil Basic - Tema
+#   (2) Perfil Basic - UI
+#   (3) Perfil Developer - Typing
+#   (4) Perfil Developer - IDE
+declare -A gA_repositories=(
+        ['tomasr/molokai']=1
+        ['dracula/vim']=1
+        ['vim-airline/vim-airline']=2
+        ['vim-airline/vim-airline-themes']=2
+        ['preservim/nerdtree']=2
+        ['christoomey/vim-tmux-navigator']=2
+        ['junegunn/fzf']=2
+        ['junegunn/fzf.vim']=2
+        ['tpope/vim-surround']=3
+        ['mg979/vim-visual-multi']=3
+        ['dense-analysis/ale']=4
+        ['neoclide/coc.nvim']=4
+        ['OmniSharp/omnisharp-vim']=4
+        ['SirVer/ultisnips']=4
+        ['honza/vim-snippets']=4
+        ['nickspoons/vim-sharpenup']=4
+        ['puremourning/vimspector']=4
+    )
 
 # Opciones:
 #    0 - Se configura VIM en modo basico (por defecto)
@@ -137,215 +162,79 @@ function m_setup_vim() {
         curl -fLo ~/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     fi
     
-    local l_base_path=~/.vim/pack/themes/opt
-    cd ${l_base_path}
+    local l_base_path
+    local l_repo_git
+    local l_repo_name
+    local l_repo_type=1
+    local l_repo_url
+    for l_repo_git in "${!gA_repositories[@]}"; do
 
-    local l_repo_name="molokai"
-    local l_repo_git="tomasr/${l_repo_name}"
-    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-        echo "...................................................."
-        echo "Instalando el paquete VIM \"${l_repo_git}\""
-        echo "...................................................."
-        git clone https://github.com/${l_repo_git}.git
-    else
-        #echo "...................................................."
-        echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-    fi
+        #Configurar el repositorio
+        l_repo_type=${gA_repositories[$l_repo_git]}
+        l_repo_name=${l_repo_git#*/}
 
-    l_repo_name="vim"
-    l_repo_git="dracula/${l_repo_name}"
-    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-        echo "...................................................."
-        echo "Instalando el paquete VIM \"${l_repo_git}\""
-        echo "...................................................."
-        git clone https://github.com/${l_repo_git}.git
-    else
-        #echo "...................................................."
-        echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-    fi
+        #Obtener la ruta base donde se clorara el paquete
+        l_base_path=""
+        case "$l_repo_type" in 
+            1)
+                l_base_path=~/.vim/pack/themes/opt
+                ;;
+            2)
+                l_base_path=~/.vim/pack/ui/opt
+                ;;
+            3)
+                l_base_path=~/.vim/pack/typing/opt
+                ;;
+            4)
+                l_base_path=~/.vim/pack/ide/opt
+                ;;
+            *)
+                
+                #echo "...................................................."
+                printf 'Paquete VIM (%s) "%s": No tiene tipo valido\n' "${l_repo_type}" "${l_repo_git}"
+                continue
+                ;;
+        esac
 
-    l_base_path=~/.vim/pack/ui/opt
-    cd ${l_base_path}
-    
-    l_repo_name="vim-airline"
-    l_repo_git="vim-airline/${l_repo_name}"
-    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-        echo "...................................................."
-        echo "Instalando el paquete VIM \"${l_repo_git}\""
-        echo "...................................................."
-        git clone https://github.com/${l_repo_git}.git
-    else
-        #echo "...................................................."
-        echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-    fi
+        #Si es un repositorio para perfil developer no debe instalarse en el perfil basico
+        if [ $p_opcion -eq 0 ] && [ $l_repo_type -eq 3 -o $l_repo_type -eq 4 ]; then
+            continue
+        fi
 
-    l_repo_name="vim-airline-themes"
-    l_repo_git="vim-airline/${l_repo_name}"
-    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-        echo "...................................................."
-        echo "Instalando el paquete VIM \"${l_repo_git}\""
-        echo "...................................................."
-        git clone https://github.com/${l_repo_git}.git
-    else
-        #echo "...................................................."
-        echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-    fi
+        #echo "${l_base_path}/${l_repo_name}/.git"
 
-    l_repo_name="nerdtree"
-    l_repo_git="preservim/${l_repo_name}"
-    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-        echo "...................................................."
-        echo "Instalando el paquete VIM \"${l_repo_git}\""
-        echo "...................................................."
-        git clone https://github.com/${l_repo_git}.git
-    else
-        #echo "...................................................."
-        echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-    fi
+        #Validar si el paquete ya esta instalado
+        if [ -d ${l_base_path}/${l_repo_name}/.git ]; then
+             #echo "...................................................."
+             printf 'Paquete VIM (%s) "%s": Ya esta instalado\n' "${l_repo_type}" "${l_repo_git}"
+             continue
+        fi
 
-    l_repo_name="vim-tmux-navigator"
-    l_repo_git="christoomey/${l_repo_name}"
-    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-        echo "...................................................."
-        echo "Instalando el paquete VIM \"${l_repo_git}\""
-        echo "...................................................."
-        git clone https://github.com/${l_repo_git}.git
-    else
-        #echo "...................................................."
-        echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-    fi
-
-    l_repo_name="fzf"
-    l_repo_git="junegunn/${l_repo_name}"
-    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-        echo "...................................................."
-        echo "Instalando el paquete VIM \"${l_repo_git}\""
-        echo "...................................................."
-        git clone --depth 1 https://github.com/${l_repo_git}.git
-    else
-        #echo "...................................................."
-        echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-    fi
-
-    l_repo_name="fzf.vim"
-    l_repo_git="junegunn/${l_repo_name}"
-    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-        echo "...................................................."
-        echo "Instalando el paquete VIM \"${l_repo_git}\""
-        echo "...................................................."
-        git clone https://github.com/${l_repo_git}.git
-    else
-        #echo "...................................................."
-        echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-    fi
-
-    if [ $p_opcion -eq 1 ]; then
-
-        l_base_path=~/.vim/pack/typing/opt
+        #Instalando el paquete
         cd ${l_base_path}
-        
-        l_repo_name="vim-surround"
-        l_repo_git="tpope/${l_repo_name}"
-        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-            echo "...................................................."
-            echo "Instalando el paquete VIM \"${l_repo_git}\""
-            echo "...................................................."
-            git clone https://github.com/${l_repo_git}.git
-        else
-            #echo "...................................................."
-            echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-        fi
+        printf '\n'
+        echo "...................................................."
+        printf 'Paquete VIM (%s) "%s": Se esta instalando\n' "${l_repo_type}" "${l_repo_git}"
+        echo "...................................................."
+        case "$l_repo_git" in 
+
+            "junegunn/fzf")
+                git clone --depth 1 https://github.com/${l_repo_git}.git
+                ;;
+
+            "neoclide/coc.nvim")
+                git clone --branch release --depth=1 https://github.com/${l_repo_git}.git
+                ;;
+            *)
+                git clone https://github.com/${l_repo_git}.git
+                ;;
+        esac
+        printf '\n'
+
+    done;
+
     
-        
-        l_repo_name="vim-visual-multi"
-        l_repo_git="mg979/${l_repo_name}"
-        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-            echo "Instalando el paquete VIM \"${l_repo_git}\""
-            echo "...................................................."
-            git clone https://github.com/${l_repo_git}.git
-        else
-            #echo "...................................................."
-            echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-        fi
-
-
-        l_base_path=~/.vim/pack/ide/opt
-        cd ${l_base_path}
-        
-        l_repo_name="ale"
-        l_repo_git="dense-analysis/${l_repo_name}"
-        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-            echo "...................................................."
-            echo "Instalando el paquete VIM \"${l_repo_git}\""
-            echo "...................................................."
-            git clone https://github.com/${l_repo_git}.git
-        else
-            #echo "...................................................."
-            echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-        fi
-        
-        l_repo_name="coc.nvim"
-        l_repo_git="neoclide/${l_repo_name}"
-        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-            echo "...................................................."
-            echo "Instalando el paquete VIM \"${l_repo_git}\""
-            echo "...................................................."
-            git clone --branch release --depth=1 https://github.com/${l_repo_git}.git
-        else
-            #echo "...................................................."
-            echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-        fi
-        
-        l_repo_name="omnisharp-vim"
-        l_repo_git="OmniSharp/${l_repo_name}"
-        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-            echo "...................................................."
-            echo "Instalando el paquete VIM \"${l_repo_git}\""
-            echo "...................................................."
-            git clone https://github.com/${l_repo_git}.git
-        else
-            #echo "...................................................."
-            echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-        fi
-
-        l_repo_name="ultisnips"
-        l_repo_git="SirVer/${l_repo_name}"
-        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-            echo "...................................................."
-            echo "Instalando el paquete VIM \"${l_repo_git}\""
-            echo "...................................................."
-            git clone https://github.com/${l_repo_git}.git
-        else
-            #echo "...................................................."
-            echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-        fi
-        
-        l_repo_name="vim-snippets"
-        l_repo_git="honza/${l_repo_name}"
-        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-            echo "...................................................."
-            echo "Instalando el paquete VIM \"${l_repo_git}\""
-            echo "...................................................."
-            git clone https://github.com/${l_repo_git}.git
-        else
-            #echo "...................................................."
-            echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-        fi
-        
-        l_repo_name="vim-sharpenup"
-        l_repo_git="nickspoons/${l_repo_name}"
-        if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-            echo "...................................................."
-            echo "Instalando el paquete VIM \"${l_repo_git}\""
-            echo "...................................................."
-            git clone https://github.com/${l_repo_git}.git
-        else
-            #echo "...................................................."
-            echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
-        fi
-        
-    fi
-    
+    printf '\n'
     echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
     if [ $p_opcion -eq 1 ]; then
 

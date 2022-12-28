@@ -36,6 +36,17 @@ if g:has_python3
     "Tipo de split para navegar al editar los snippets :UltiSnipsEdit
     let g:UltiSnipsEditSplit="vertical"
 
+"endif
+
+"###################################################################################
+" Settings> IDE > Package: Graphical Debugger
+"###################################################################################
+
+"if g:has_python3
+   
+    "xxx
+    let g:vimspector_enable_mappings = 'HUMAN' 
+
 endif
 
 "###################################################################################
@@ -114,7 +125,7 @@ augroup mygroup
 augroup end
 
 " Applying codeAction to the selected region.
-" Example: `<leader>aap` for current paragraph
+" Example : `<leader>aap` for current paragraph
 xmap <leader>a  <Plug>(coc-codeaction-selected)
 nmap <leader>a  <Plug>(coc-codeaction-selected)
 
@@ -161,7 +172,7 @@ command! -nargs=? Fold :call     CocAction('fold', <f-args>)
 command! -nargs=0 OR   :call     CocActionAsync('runCommand', 'editor.action.organizeImport')
 
 " Add (Neo)Vim's native statusline support.
-" NOTE: Please see `:h coc-status` for integrations with external plugins that
+" NOTE : Please see `:h coc-status` for integrations with external plugins that
 " provide custom statusline: lightline.vim, vim-airline.
 set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 

@@ -182,10 +182,10 @@ function m_update_all() {
         m_update_vim_package
     fi            
 
-    #6 Actualizar los comandos basicos
+    #6 Actualizar los comandos basicos (solo apartir de opcion 2, 4, 8, ... o una conbinación de estos)
     #l_opcion=1
     #l_flag=$(( $p_opciones & $l_opcion ))
-    if [ $p_opciones -ne 0 ]; then
+    if [ $p_opciones -ge 2 ]; then
         ~/.files/setup/01_setup_commands.bash $p_opciones 1
     fi            
 
@@ -223,7 +223,7 @@ function m_main() {
     
     #Determinar el tipo de distribución Linux
     if [ $g_os_type -gt 10 ]; then
-        echo "ERROR (21): El sistema operativo debe ser Linux"
+        echo "ERROR: El sistema operativo debe ser Linux"
         return 21;
     fi
 

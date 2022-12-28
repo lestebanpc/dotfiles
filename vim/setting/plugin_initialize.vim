@@ -115,6 +115,9 @@ if g:use_ide
             "Package UI> IDE> Core> UltiSnips: Implementacion de Snippet para diferentes lenguajes de programacion
             packadd vim-snippets
 
+            "Package UI> IDE> Core> Graphical Debugger
+            packadd vimspector
+
         endif
 
         "Package UI> IDE> Core> LSP Client, Complete (y muchos complementos de 3ros)

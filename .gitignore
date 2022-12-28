@@ -8,5 +8,5 @@
 terminal/oh-my-posh/themes/*
 
 #Archivos de configuracion de k8s usados por UC
-k8s/config/rhocp_uc_*.yaml
+k8s/config/*.yaml
 
