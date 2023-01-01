@@ -37,11 +37,18 @@ else
     let g:is_neovim = 0
 endif
 
-"Calcular si puede ejecutar ejecutar comandos Python3 (soporta plugins hechos en python)
+"Si esta compilado para soporte a Python3 (soporta plugins hechos en python)
 if has('python3')
     let g:has_python3 = 1
 else
     let g:has_python3 = 0
+endif
+
+"Si esta compilado para soporte Clipboard del sistema operativo
+if has('clipboard')
+    let g:has_clipboard = 1
+else
+    let g:has_clipboard = 0
 endif
 
 "Determinar si se usa TMUX
@@ -67,7 +74,7 @@ set fileformats=unix,dos,mac
 "Habilitar el key <backspace> en modo edicion
 set backspace=indent,eol,start
 
-"Convertir el key <tab> en 4 espacio en blancos
+"Convertir el key <tab> en 3 espacio en blancos
 set tabstop=3
 set shiftwidth=3
 set softtabstop=0
@@ -162,8 +169,9 @@ set cursorline
 "Better command line completion
 set wildmenu
 
-"Mouse support
+"Mouse support: Permite la selección usando el mouse
 set mouse=a
+"Mouse support:
 set mousemodel=popup
 
 
@@ -214,16 +222,29 @@ endif
 
 "----------------------------- Clipboard de SO         -----------------------------
 
-"Copia cualquier yank al portapales del SO
-if g:os == "Linux"
-    set clipboard=unnamedplus
-elseif g:os == "WSL"
+"Uso de los registros vinculados al portapales del SO
+if g:os == "WSL"
+
+    "Copia cualquier yank que esta en el registro " (por defecto) se copia al portapales del SO
     augroup Yank
     autocmd!
     autocmd TextYankPost * :call system('/mnt/c/windows/system32/clip.exe ',@")
     augroup END
-else
-    set clipboard=unnamed
+
+elseif g:has_clipboard
+
+    if g:os == "Linux"
+        "Usar como registro predeterminado a '+' (que apunta al portapales 'PRIMARY' del servidor X11)
+        "Para copiar el al portapales solo selecione el texto, 
+        "Para pegar del portapales use el boton central o boton secundario o 'SHFIT + INSERT'
+        set clipboard=unnamedplus
+    else
+        "Usar como registro predeterminado a '*' vinculado al portapales principal del SO 
+        "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
+        "Para copiar selecione y use "CTRL + c", para pegar use "CTRL + v"
+        set clipboard=unnamed
+    fi
+
 endif 
 
 
