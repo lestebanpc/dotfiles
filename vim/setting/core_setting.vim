@@ -243,7 +243,7 @@ elseif g:has_clipboard
         "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
         "Para copiar selecione y use "CTRL + c", para pegar use "CTRL + v"
         set clipboard=unnamed
-    fi
+     endif
 
 endif 
 
