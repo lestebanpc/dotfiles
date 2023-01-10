@@ -16,6 +16,54 @@ nnoremap <Leader>h :set cursorline!<CR>
 "Habilitar/Desabiliar el resaltado de la columna actual (v = vertical)
 nnoremap <Leader>v :set cursorcolumn!<CR>
 
+"----------------------------- Portapapeles            -----------------------------
+
+if g:os == "Linux"
+
+   nnoremap <leader>cy :silent :call system('xsel -ib', @0)
+   nnoremap <leader>cd :silent :call system('xsel -ib', @1)
+
+   "Accion para copiar todo el documento
+   "nnoremap <leader>cc :w !xsel -ib<CR>
+
+   "Comando para copiar un rango
+   "command -range cc :silent :<line1>,<line2>w !xsel -ib
+
+   "Accion para pegar todo el documento
+   nnoremap <leader>cp :r !xsel -ob<CR>
+
+   "Comando para pegar un rango
+   "command -range cv :silent :<line1>,<line2>r !xsel -ob
+
+"elseif g:os == "Windows"
+"
+"   "Accion para copiar todo el documento
+"   nnoremap <leader>cc :w !xsel -ib<CR>
+"
+"   "Comando para copiar un rango
+"   command -range cc :silent :<line1>,<line2>w !xsel -ib
+"
+"   "Accion para pegar todo el documento
+"   nnoremap <leader>cv :r !xsel -ob<CR>
+"
+"   "Comando para pegar un rango
+"   command -range cv :silent :<line1>,<line2>r !xsel -ob
+"
+"elseif g:os == "WSL"
+"
+"   "Accion para copiar todo el documento
+"   nnoremap <leader>cc :w !xsel -ib<CR>
+"
+"   "Comando para copiar un rango
+"   command -range cc :silent :<line1>,<line2>w !xsel -ib
+"
+"   "Accion para pegar todo el documento
+"   nnoremap <leader>cv :r !xsel -ob<CR>
+"
+"   "Comando para pegar un rango
+"   command -range cv :silent :<line1>,<line2>r !xsel -ob
+
+endif
 
 "----------------------------- Splits                  -----------------------------
 

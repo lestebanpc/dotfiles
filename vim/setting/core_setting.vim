@@ -178,7 +178,9 @@ set mousemodel=popup
 "Disable the blinking cursor.
 "set guicursor=a:blinkon0
 
-set scrolloff=3
+"Cuando se mueve entre paginas del buffer, siempre trata colocar la linea actual, 'n'
+"lineas por abajo/arriba de la primera/ultima linea de la pagina a moverse
+"set scrolloff=3
 
 "Use modeline overrides
 set modeline
@@ -232,18 +234,25 @@ if g:os == "WSL"
     augroup END
 
 elseif g:has_clipboard
+"elseif g:has_clipboard || g:is_gui_vim
 
-    if g:os == "Linux"
-        "Usar como registro predeterminado a '+' (que apunta al portapales 'PRIMARY' del servidor X11)
-        "Para copiar el al portapales solo selecione el texto, 
-        "Para pegar del portapales use el boton central o boton secundario o 'SHFIT + INSERT'
-        set clipboard=unnamedplus
-    else
-        "Usar como registro predeterminado a '*' vinculado al portapales principal del SO 
-        "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
-        "Para copiar selecione y use "CTRL + c", para pegar use "CTRL + v"
-        set clipboard=unnamed
-     endif
+    "Usar como registro predeterminado a '*' vinculado al portapales principal del SO 
+    "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
+    "Para copiar selecione y use "CTRL + c", para pegar use "CTRL + v"
+    set clipboard=unnamed
+
+    "if g:os == "Linux"
+    "    "Usar como registro predeterminado a '+' (que apunta al portapales 'PRIMARY' del servidor X11)
+    "    "Para copiar el al portapales solo selecione el texto, 
+    "    "Para pegar del portapales use el boton central o boton secundario o 'SHFIT + INSERT'
+    "    "Se esta usando esto en Linux porque es mas facil usar y mas eficiente en recursos
+    "    set clipboard=unnamedplus
+    "else        
+    "    "Usar como registro predeterminado a '*' vinculado al portapales principal del SO 
+    "    "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
+    "    "Para copiar selecione y use "CTRL + c", para pegar use "CTRL + v"
+    "    set clipboard=unnamed
+    "endif
 
 endif 
 
