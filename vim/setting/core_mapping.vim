@@ -18,50 +18,22 @@ nnoremap <Leader>v :set cursorcolumn!<CR>
 
 "----------------------------- Portapapeles            -----------------------------
 
-if g:os == "Linux"
+if (g:os == "Linux") || (g:os == "WSL")
 
-   nnoremap <leader>cy :silent :call system('xsel -ib', @0)
-   nnoremap <leader>cd :silent :call system('xsel -ib', @1)
+   "Copiar el ultimo yank realizado al portapapeles ('CLIPBOARD' selecction)
+   nnoremap <Leader>cy :<C-u>call system('xsel -ib', @0)<CR>
 
-   "Accion para copiar todo el documento
-   "nnoremap <leader>cc :w !xsel -ib<CR>
+   "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
+   nnoremap <Leader>cd :<C-u>call system('xsel -ib', @1)<CR>
 
-   "Comando para copiar un rango
-   "command -range cc :silent :<line1>,<line2>w !xsel -ib
+   "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
+   vnoremap <Leader>cc :w !xsel -ib<CR><CR>
 
-   "Accion para pegar todo el documento
-   nnoremap <leader>cp :r !xsel -ob<CR>
-
-   "Comando para pegar un rango
-   "command -range cv :silent :<line1>,<line2>r !xsel -ob
+   "Pegar en la siguiente linea el portapapeles ('CLIPBOARD' selecction)
+   nnoremap <Leader>cp :<C-u>r !xsel -ob<CR>
 
 "elseif g:os == "Windows"
-"
-"   "Accion para copiar todo el documento
-"   nnoremap <leader>cc :w !xsel -ib<CR>
-"
-"   "Comando para copiar un rango
-"   command -range cc :silent :<line1>,<line2>w !xsel -ib
-"
-"   "Accion para pegar todo el documento
-"   nnoremap <leader>cv :r !xsel -ob<CR>
-"
-"   "Comando para pegar un rango
-"   command -range cv :silent :<line1>,<line2>r !xsel -ob
-"
 "elseif g:os == "WSL"
-"
-"   "Accion para copiar todo el documento
-"   nnoremap <leader>cc :w !xsel -ib<CR>
-"
-"   "Comando para copiar un rango
-"   command -range cc :silent :<line1>,<line2>w !xsel -ib
-"
-"   "Accion para pegar todo el documento
-"   nnoremap <leader>cv :r !xsel -ob<CR>
-"
-"   "Comando para pegar un rango
-"   command -range cv :silent :<line1>,<line2>r !xsel -ob
 
 endif
 
