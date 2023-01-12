@@ -244,7 +244,7 @@ function m_setup_vim() {
         #fi
         echo "Complete la configuracion de VIM para IDE:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
-        echo "  2> Instalar extensiones de COC: \":CocInstall ...\""
+        echo "  2> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
         echo "     2.1> Lenguajes basicos: JS, Json, HTLML, CSS, Python"
         echo "         \":CocInstall coc-tsserver coc-json coc-html coc-css\""
         echo "         \":CocInstall coc-pyrigh\""
