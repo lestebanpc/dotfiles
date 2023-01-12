@@ -116,6 +116,9 @@ if g:use_ide
             packadd vim-snippets
 
             "Package UI> IDE> Core> Graphical Debugger
+            "Habilitar el tipo de key-mapping por defecto de tipo 'HUMAN'
+            let g:vimspector_enable_mappings = 'HUMAN'
+            "let g:vimspector_enable_mappings = 'VISUAL_STUDIO'
             packadd vimspector
 
         endif

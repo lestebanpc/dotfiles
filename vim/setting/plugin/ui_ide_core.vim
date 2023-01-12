@@ -44,8 +44,17 @@ if g:has_python3
 
 "if g:has_python3
    
-    "xxx
-    let g:vimspector_enable_mappings = 'HUMAN' 
+    "Key-mappings adicionales al por defecto (se usa 'HUMAM')
+    nnoremap <Leader><F4> :call vimspector#Reset()<CR>
+
+    "nnoremap <Leader>dd :call vimspector#Launch()<CR>
+    "nnoremap <Leader>dc :call vimspector#Continue()<CR>
+    "nnoremap <Leader>dt :call vimspector#ToggleBreakpoint()<CR>
+    "nnoremap <Leader>dT :call vimspector#ClearBreakpoints()<CR>
+    "nmap <Leader>dk <Plug>VimspectorRestart
+    "nmap <Leader>dh <Plug>VimspectorStepOut
+    "nmap <Leader>dl <Plug>VimspectorStepInto
+    "nmap <Leader>dj <Plug>VimspectorStepOver
 
 endif
 
