@@ -9,6 +9,12 @@
 t_tmp=""
 
 #Determinar la clase del SO
+#  00 - 10: Si es Linux
+#           00 - Si es Linux generico
+#           01 - Si es WSL2
+#  11 - 20: Si es Unix
+#  21 - 30: si es MacOS
+#  31 - 40: Si es Windows
 m_get_os_type
 declare -r g_os_type=$?
 
@@ -27,8 +33,14 @@ if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
     g_is_root=0
 fi
 
-#Variable global ruta de los binarios en Windows segun WSL2
-declare -r g_path_win_commands='/mnt/d/Tools/Cmds/Common'
+#Variable global de la ruta donde los programas se instalaran (complejos) 
+declare -r g_path_programs='/opt/tools'
+
+#Variable global ruta de los programas y/o binarios en Windows desde su WSL2
+if [ $g_os_type -eq 1 ]; then
+   declare -r g_path_win_programs='/mnt/d/Tools/Cmds'
+   declare -r g_path_win_commands="${g_path_win_programs}/Common"
+fi
 
 #}}}
 
@@ -96,6 +108,7 @@ function m_get_repo_current_version() {
     #El resultado sera la 1ra subcadena que inicie con enteros 0-9 y continue con . y luego continue con
     #cualquier caracter que solo sea 0-9 o un .
     local l_sustitution_regexp='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
+    local l_aux=""
     case "$p_repo_id" in
         jq)
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -245,6 +258,24 @@ function m_get_repo_current_version() {
                 l_tmp=$(echo "$l_tmp" | cut -d ' ' -f 2 | head -n 1)
             fi
             ;;
+
+        roslyn)
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_aux="${g_path_win_programs}/Omnisharp_Roslyn/OmniSharp.deps.json"
+
+            else
+                l_aux="${g_path_programs}/omnisharp_roslyn/OmniSharp.deps.json"
+            fi
+
+            if [ -f "$l_aux" ]; then
+                l_tmp=$(jq -r '.targets[][].dependencies."OmniSharp.Stdio"' "$l_aux" | grep -v "null" | head -n 1 2> /dev/null)
+                l_status=$?
+            else
+                l_status=1
+            fi
+            ;;
+
         *)
             return 9
             ;;
@@ -439,6 +470,15 @@ function m_get_artifacts() {
                 return 1
             fi
             ;;
+        roslyn)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_names=("omnisharp-win-x64-net6.0.zip")
+                pna_artifact_types=(3)
+            else
+                pna_artifact_names=("omnisharp-linux-x64-net6.0.tar.gz")
+                pna_artifact_types=(2)
+            fi
+            ;;
        *)
            return 1
            ;;
@@ -549,11 +589,10 @@ function m_copy_artifact_files() {
     #1. Argumentos
     local p_repo_id="$1"
     local p_artifact_index="$2"
-    local p_subfolder="$3"
-    local p_exe_name_without_ext="$4"
+    local p_artifact_name_woext="$3"
     local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                          #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$5" -eq 0 2> /dev/null ]; then
+    if [ "$4" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
 
@@ -568,12 +607,13 @@ function m_copy_artifact_files() {
         l_path_man="${g_path_win_commands}/man"
     fi
     local l_path_temp=""
+    local l_path_aux=""
 
     case "$p_repo_id" in
 
         bat)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_subfolder}"
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"bat\" a \"${l_path_bin}\" ..."
@@ -613,7 +653,7 @@ function m_copy_artifact_files() {
 
         ripgrep)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_subfolder}"
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"rg\" a \"${l_path_bin}\" ..."
@@ -653,7 +693,7 @@ function m_copy_artifact_files() {
 
         delta)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_subfolder}"
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"delta\" a \"${l_path_bin}\" ..."
@@ -696,7 +736,7 @@ function m_copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Ruta local de los artefactos
-                l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_subfolder}"
+                l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
                 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                 echo "Copiando \"less\" a \"${l_path_bin}\" ..."
@@ -910,7 +950,7 @@ function m_copy_artifact_files() {
 
         fd)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_subfolder}"
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
 
             #Copiando el binario en una ruta del path
             echo "Copiando \"fd\" en \"${l_path_bin}\" ..."
@@ -1090,8 +1130,8 @@ function m_copy_artifact_files() {
             #Renombrar el binario antes de copiarlo
             if [ $p_install_win_cmds -ne 0 ]; then
 
-                echo "Copiando \"${p_exe_name_without_ext}\" como \"${l_path_bin}/k0s\" ..."
-                mv "${l_path_temp}/${p_exe_name_without_ext}" "${l_path_temp}/k0s"
+                echo "Copiando \"${p_artifact_name_woext}\" como \"${l_path_bin}/k0s\" ..."
+                mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_temp}/k0s"
 
                 if [ $g_is_root -eq 0 ]; then
                     cp "${l_path_temp}/k0s" "${l_path_bin}"
@@ -1102,9 +1142,51 @@ function m_copy_artifact_files() {
                     #sudo mkdir -pm 755 "${l_path_man}"
                 fi
             else
-                echo "Copiando \"${p_exe_name_without_ext}.exe\" como \"${l_path_bin}/k0s.exe\" ..."
-                mv "${l_path_temp}/${p_exe_name_without_ext}.exe" "${l_path_temp}/k0s.exe"
+                echo "Copiando \"${p_artifact_name_woext}.exe\" como \"${l_path_bin}/k0s.exe\" ..."
+                mv "${l_path_temp}/${p_artifact_name_woext}.exe" "${l_path_temp}/k0s.exe"
                 cp "${l_path_temp}/k0s.exe" "${l_path_bin}"
+            fi
+            ;;
+
+        roslyn)
+            
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                l_path_aux="${g_path_programs}/omnisharp_roslyn"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_aux" ]; then
+                    mkdir -p $l_path_aux
+                    chmod g+rx,o+rx $l_path_aux
+                else
+                    #Limpieza
+                    rm -rf ${l_path_aux}/*
+                fi
+                    
+                #Mover todos archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_aux} \;
+
+            else
+                
+                l_path_aux="${g_path_win_programs}/Omnisharp_Roslyn"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_aux" ]; then
+                    mkdir -p $l_path_aux
+                else
+                    #Limpieza
+                    rm -rf ${l_path_aux}/*
+                fi
+                    
+                #Mover los archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_aux} \;
             fi
             ;;
 
@@ -1208,10 +1290,11 @@ function m_install_artifacts() {
             #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
             echo "Descomprimiendo el artefacto[${l_i}] \"${l_artifact_name}\" en \"/tmp/${p_repo_id}/${l_i}\" ..."
             tar -xvf "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -C "/tmp/${p_repo_id}/${l_i}"
+            rm "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.tar.gz}" "" $p_install_win_cmds
+            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.tar.gz}" $p_install_win_cmds
 
 
         elif [ $l_artifact_type -eq 3 ]; then
@@ -1219,18 +1302,19 @@ function m_install_artifacts() {
             #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
             echo "Descomprimiendo el artefacto[${l_i}] \"${l_artifact_name}\" en \"/tmp/${p_repo_id}/${l_i}\" ..."
             unzip "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -d "/tmp/${p_repo_id}/${l_i}"
+            rm "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.zip}" ""  $p_install_win_cmds
+            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.zip}" $p_install_win_cmds
 
         elif [ $l_artifact_type -eq 0 ]; then
 
             #Copiar los archivos necesarios
             if [ $p_install_win_cmds -eq 0 ]; then
-                m_copy_artifact_files "$p_repo_id" "$l_i" "" "${l_artifact_name%.exe}" $p_install_win_cmds
+                m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.exe}" $p_install_win_cmds
             else
-                m_copy_artifact_files "$p_repo_id" "$l_i" "" "$l_artifact_name" $p_install_win_cmds
+                m_copy_artifact_files "$p_repo_id" "$l_i" "$l_artifact_name" $p_install_win_cmds
             fi
 
         elif [ $l_artifact_type -eq 1 ]; then
@@ -1363,12 +1447,15 @@ declare -A gA_repositories=(
         ['kustomize']='kubernetes-sigs/kustomize'
         ['operator-sdk']='operator-framework/operator-sdk'
         ['k0s']='k0sproject/k0s'
+        ['roslyn']='OmniSharp/omnisharp-roslyn'
     )
 
 
 #Repositorios opcionales y su flag para configuración. Usar valores 2^n (4, 8, 16, ...)
+#Sus valores debera coincider con lo que se muestra en el menu "m_show_menu_core"
 declare -A gA_optional_repositories=(
-        ['k0s']=4
+        ['k0s']=8
+        ['roslyn']=16
     )
 
 
@@ -1399,31 +1486,25 @@ function m_setup_repository() {
     local l_flag=0
     if [ -z "$l_option" ]; then
 
-        #Es un repositorio opcional
+        #Es un repositorio basico
         l_repo_is_optional=1
 
-        #Si es un repositorio opcional, permitir la instalación si de ingresa la opciones 4
+        #Si es un repositorio basico, permitir la instalación si se ingresa la opciones 4
         l_flag=$(( $p_opciones & 4 ))
         if [ $l_flag -eq 4 ]; then l_repo_must_setup_lnx=0; fi
 
     else
 
-        #Es un repositorio basico
+        #Es un repositorio opcional
         l_repo_is_optional=0
 
-        #Si es un repositorio basico, permitir la instalación si de ingresa la opciones 8
-        l_flag=$(( $p_opciones & 8 ))
-
-        if [ $l_flag -eq 8 ]; then
-
-            #Esta habilitado para instalar el repositorio opcional
-            if [[ "$l_option" =~ ^[0-9]+$ ]]; then
-                if [ $l_option -ne 0 ]; then
-                    #Suma binarios es igual al flag, se debe instalar el repo opcional
-                    l_flag=$(( $p_opciones & $l_option ))
-                    if [ $l_option -eq $l_flag ]; then l_repo_must_setup_lnx=0; fi
-                fi 
-            fi
+        #Esta habilitado para instalar el repositorio opcional
+        if [[ "$l_option" =~ ^[0-9]+$ ]]; then
+            if [ $l_option -ne 0 ]; then
+                #Suma binarios es igual al flag, se debe instalar el repo opcional
+                l_flag=$(( $p_opciones & $l_option ))
+                if [ $l_option -eq $l_flag ]; then l_repo_must_setup_lnx=0; fi
+            fi 
         fi
 
     fi
@@ -1445,7 +1526,7 @@ function m_setup_repository() {
        if [ $l_flag -eq 2 ]; then l_repo_must_setup_lnx=0; fi
     fi
 
-    #Repositorios especiales que no deberia instalarse en Linux
+    #Repositorios especiales que no deberia instalarse, segun el tipo de Linux
     if [ $l_repo_must_setup_lnx -eq 0 ]; then
 
         case "$l_repo_id" in
@@ -1533,6 +1614,10 @@ function m_setup_repository() {
                     #Repositorio "operator-sdk": Solo si es Linux                
                     l_repo_must_setup_win=1;
                     ;;
+                #roslyn)
+                #    #Repositorio no es necesario en WSL2, debido a que se usara la su windows                
+                #    l_repo_must_setup_win=1;
+                #    ;;
             esac
 
         fi
@@ -1708,6 +1793,7 @@ function m_show_menu_core() {
     echo "     ( 2) Actualizar los binarios de los repositorios existentes"
     echo "     ( 4) Instalar/Actualizar los binarios de los repositorios basicos"
     echo "     ( 8) Instalar/Actualizar el binario del repositorio opcional \"k0s\""
+    echo "     (16) Instalar/Actualizar el binario del repositorio opcional \"OmniSharp/omnisharp-roslyn\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 

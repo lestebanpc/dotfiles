@@ -211,6 +211,7 @@ function m_show_menu_core() {
     echo "     ( 2) Actualizar los binarios de los repositorios existentes"
     echo "     ( 4) Instalar/Actualizar los binarios de los repositorios basicos"
     echo "     ( 8) Instalar/Actualizar el binario del repositorio opcional \"k0s\""
+    echo "     (16) Instalar/Actualizar el binario del repositorio opcional \"OmniSharp/omnisharp-roslyn\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
