@@ -1,3 +1,6 @@
+--------------------------------------------------------------------------------------------------
+--LSP Client> Configuracion del LSP cliente para C#
+--------------------------------------------------------------------------------------------------
 
 local pid = vim.fn.getpid()
 
@@ -7,5 +10,28 @@ require('lspconfig').omnisharp.setup({
     --cmd = { 'dotnet', '/mnt/d/Tools/Cmds/Windows/omnisharp-roslyn/OmniSharp.dll' },
 })
 
+
+--------------------------------------------------------------------------------------------------
+--DAP Client> Configuracion del DAP Client nVim.DAP
+--------------------------------------------------------------------------------------------------
+
+local dap = require('dap')
+
+dap.adapters.coreclr = {
+  type = 'executable',
+  command = '/opt/tools/dap_adapters/netcoredbg/netcoredbg',
+  args = {'--interpreter=vscode'}
+}
+
+dap.configurations.cs = {
+  {
+    type = "coreclr",
+    name = "launch - netcoredbg",
+    request = "launch",
+    program = function()
+        return vim.fn.input('Path to dll', vim.fn.getcwd() .. '/bin/Debug/', 'file')
+    end,
+  },
+}
 
 

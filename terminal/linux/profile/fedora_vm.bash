@@ -10,6 +10,12 @@ if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]
 then
     PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 fi
+
+
+# Rutas por defecto: Adicionando rutas de programas especificos
+PATH=$PATH:/opt/tools/neovim/bin
+
+# Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
 
 # Uncomment the following line if you don't like systemctl's auto-paging feature:
@@ -31,9 +37,6 @@ eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lep
 
 # Para tmux (usando la configuracion de "oh-my-tmux")
 export EDITOR=vim
-
-# Cliente de RH OCP
-export PATH=$PATH:/opt/tools/rh-ocp-cli
 
 # Opciones por defecto del comando fzf
 export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"

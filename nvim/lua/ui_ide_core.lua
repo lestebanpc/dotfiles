@@ -1,19 +1,19 @@
 --------------------------------------------------------------------------------------------------
---Configuracion de LSP client (LSPConfig)
+--LSP Client> Configuracion de LSP client (LSPConfig)
 --------------------------------------------------------------------------------------------------
 
---Extendiendo las capacidad de autocompletado de LSPConfig: Usando la fuente CMP para LSP 
-local lspconfig = require('lspconfig')
-local lsp_defaults = lspconfig.util.default_config
+--1. Extendiendo las capacidad de autocompletado de LSPConfig: Usando la fuente CMP para LSP 
+local lsp_config = require('lspconfig')
+local cmp_lsp = require('cmp_nvim_lsp')
 
-lsp_defaults.capabilities = vim.tbl_deep_extend(
+lsp_config.util.default_config.capabilities = vim.tbl_deep_extend(
     'force',
-    lsp_defaults.capabilities,
-    require('cmp_nvim_lsp').default_capabilities()
+    lsp_config.util.default_config.capabilities,
+    cmp_lsp.default_capabilities()
 )
 
---Establecer el key mapping mediante autocomando (Neovim > 0.7.2)
---  Si usa Neovim <= 0.7.2, debera implementar una funcion on_attach, por cada cliente LSP que configura 
+--2. Establecer el key mapping mediante autocomando (Neovim > 0.7.2)
+--   Si usa Neovim <= 0.7.2, debera implementar una funcion on_attach, por cada cliente LSP que configura 
 vim.api.nvim_create_autocmd('LspAttach', {
     desc = 'Acciones LSP',
     callback = function()
@@ -63,19 +63,19 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
 
 --------------------------------------------------------------------------------------------------
---Configuracion del Completado y los Snippets
+--Completado y Snippets> Configuración del Completado y su integración con los Snippets y el LSP Client
 --------------------------------------------------------------------------------------------------
+
+local cmp = require('cmp')
+local snippet = require('luasnip')
 
 --Cargar '.lazy_load()' las implementacion de snippet (por ejemplo 'friendly-snippets') que estan 'runtimepath'
 require('luasnip.loaders.from_vscode').lazy_load()
 
-local cmp = require('cmp')
-local luasnip = require('luasnip')
-
 --xxx
 local select_opts = {behavior = cmp.SelectBehavior.Select}
 
---Configurar el completado para todos los tipos de archivos
+--1. Configurar el completado para todos los tipos de archivos
 cmp.setup({
 
     --Configuracion de los Snippets
@@ -83,7 +83,7 @@ cmp.setup({
         --Expansion de un snippets
         expand = function(args)
                 --Usar los snippets registros por LuaSnip para expnadirlos
-                luasnip.lsp_expand(args.body)    
+                snippet.lsp_expand(args.body)    
             end
     },
 
@@ -142,8 +142,8 @@ cmp.setup({
         
         --Salta al proximo placeholder de un snippet
         ['<C-d>'] = cmp.mapping(function(fallback)
-                if luasnip.jumpable(1) then
-                    luasnip.jump(1)
+                if snippet.jumpable(1) then
+                    snippet.jump(1)
                 else
                     fallback()
                 end
@@ -151,8 +151,8 @@ cmp.setup({
 
         --Salta al placeholder anterior de snippet
         ['<C-b>'] = cmp.mapping(function(fallback)
-                if luasnip.jumpable(-1) then
-                    luasnip.jump(-1)
+                if snippet.jumpable(-1) then
+                    snippet.jump(-1)
                 else
                     fallback()
                 end
@@ -183,17 +183,17 @@ cmp.setup({
 })
 
 
---Configurar el completado para un tipos de archivo especifico
+--2. Configurar el completado para un tipos de archivo especifico
 --cmp.setup.filetype({ 'yourfiletype' }, {
 --   -- Options here
 --
 --})
 
 --------------------------------------------------------------------------------------------------
---Personalizacion adicionles
+--LSP Client> Personalización adicionales del LSP Client
 --------------------------------------------------------------------------------------------------
 
---Personalizando los iconos de diagnostivo (funcion VIM 'sing_define')
+--1. Personalizando los iconos de diagnostivo (funcion VIM 'sing_define')
 local sign = function(opts)
         vim.fn.sign_define(opts.name, {
             texthl = opts.name,
@@ -207,16 +207,18 @@ sign({name = 'DiagnosticSignWarn', text = '▲'})
 sign({name = 'DiagnosticSignHint', text = '⚑'})
 sign({name = 'DiagnosticSignInfo', text = ''})
 
---Configuración global de diagnósticos
+--2. Configuración global de diagnósticos
 vim.diagnostic.config({
     --Muestra mensaje de diagnóstico con un "texto virtual" al final de la línea.
     virtual_text = false,
-    --Mostrar un "signo" en la línea donde hay un diagnóstico presente.
+
+    ----Mostrar un "signo" en la línea donde hay un diagnóstico presente.
     --signs = true,
-    --Subrayar la localización de un diagnóstico.
+    ----Subrayar la localización de un diagnóstico.
     --underline = true,
-    --Actualizar los diagnósticos mientras se edita el documento en modo de inserción.
+    ----Actualizar los diagnósticos mientras se edita el documento en modo de inserción.
     --update_in_insert = false,
+
     --Ordenar los diagnósticos de acuerdo a su prioridad.
     severity_sort = true,
     --Habilitar ventanas flotantes para mostrar los mensajes de diagnósticos.
@@ -228,8 +230,8 @@ vim.diagnostic.config({
     },
 })
 
---Bordes en ventanas de ayuda:
---  Modificar la configuración del "handler" de 'vim.lsp.buf.hover()' que muestra ventana flotante
+--3. Bordes en ventanas de ayuda:
+--   Modificar la configuración del "handler" de 'vim.lsp.buf.hover()' que muestra ventana flotante
 vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(
     vim.lsp.handlers.hover,
     {border = 'rounded'}
@@ -240,6 +242,64 @@ vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(
     vim.lsp.handlers.signature_help,
     {border = 'rounded'}
 )
+
+--------------------------------------------------------------------------------------------------
+--DAP Client> Configuracion del DAP Client nVim.DAP
+--------------------------------------------------------------------------------------------------
+
+--Customize the signs
+--vim.highlight.create('DapBreakpoint', { ctermbg=0, guifg='#993939', guibg='#31353f' }, false)
+--vim.highlight.create('DapLogPoint', { ctermbg=0, guifg='#61afef', guibg='#31353f' }, false)
+--vim.highlight.create('DapStopped', { ctermbg=0, guifg='#98c379', guibg='#31353f' }, false)
+
+--vim.fn.sign_define('DapBreakpoint', { text='', texthl='DapBreakpoint', linehl='DapBreakpoint', numhl='DapBreakpoint' })
+--vim.fn.sign_define('DapBreakpointCondition', { text='ﳁ', texthl='DapBreakpoint', linehl='DapBreakpoint', numhl='DapBreakpoint' })
+--vim.fn.sign_define('DapBreakpointRejected', { text='', texthl='DapBreakpoint', linehl='DapBreakpoint', numhl= 'DapBreakpoint' })
+--vim.fn.sign_define('DapLogPoint', { text='', texthl='DapLogPoint', linehl='DapLogPoint', numhl= 'DapLogPoint' })
+--vim.fn.sign_define('DapStopped', { text='', texthl='DapStopped', linehl='DapStopped', numhl= 'DapStopped' })
+
+vim.fn.sign_define('DapBreakpoint', { text='', texthl='DapBreakpoint', linehl='', numhl='' })
+vim.fn.sign_define('DapBreakpointCondition', { text='ﳁ', texthl='DapBreakpoint', linehl='', numhl='' })
+vim.fn.sign_define('DapBreakpointRejected', { text='', texthl='DapBreakpoint', linehl='', numhl= '' })
+vim.fn.sign_define('DapLogPoint', { text='', texthl='DapLogPoint', linehl='', numhl= '' })
+vim.fn.sign_define('DapStopped', { text='', texthl='DapStopped', linehl='', numhl= '' })
+
+--------------------------------------------------------------------------------------------------
+--DAP Client> Mejoras del UI asociado a nVim.DAP
+--------------------------------------------------------------------------------------------------
+
+local dap=require("dap")
+local dap_ui=require("dapui")
+
+--1. Paquete 'nvim-dap-ui': Adicionar mejoras en el UI por defecto de nVim.DAP
+
+--Usar la configuración por defecto
+dap_ui.setup()
+
+dap.listeners.after.event_initialized["dapui_config"] = function()
+      dap_ui.open()
+   end
+
+dap.listeners.before.event_terminated["dapui_config"] = function()
+      dap_ui.close()
+   end
+
+dap.listeners.before.event_exited["dapui_config"] = function()
+      dap_ui.close()
+   end
+
+
+--2. Paquete 'telescope-dap.nvim': Integracion entre Telescope y nVim.DAP
+local telescope = require('telescope')
+telescope.load_extension('dap')
+
+
+--3. Paquete 'nvim-dap-virtual-text': Adicionar texto de ayuda en la depuracion
+local dap_virtual_text = require('nvim-dap-virtual-text')
+dap_virtual_text.setup ({
+    commented = true,              -- prefix virtual text with comment string
+})
+
 
 
 

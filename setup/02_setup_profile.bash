@@ -522,7 +522,7 @@ function m_setup() {
 
         #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
 
-        l_version=$(nvim --version 2> /dev/null)
+        l_version=$(/opt/tools/neovim/bin/nvim --version 2> /dev/null)
         l_status=$?
         if [ $l_status -ne 0 ]; then
 
@@ -530,22 +530,19 @@ function m_setup() {
             #echo "- Instalación de NeoVIM"
             echo "Se va instalar NeoVIM"
 
-            if [ $g_is_root -eq 0 ]; then
-                dnf install neovim
-                dnf install python3-neovim
-            else
-                sudo dnf install neovim
-                sudo dnf install python3-neovim
-            fi
+            #Valide que el flag asociado a Neovin sea el segundo parametro y sea un numero valido
+            ~/.files/setup/01_setup_commands.bash 2 8 "neovim"
 
-            #> Neovim python support
-		      #  pip install pynvim
-	         #> Neovim node support
-		      #  sudo npm i -g neovim
+            echo "Opcionalmente, revise:"
+            echo "    > Soporte de Plugins en Python  : pip install pynvim"
+	         echo "    > Soporte de Plugins en Node.JS : sudo npm i -g neovim"
+
         else
             l_version=$(echo "$l_version" | head -n 1)
             l_version=$(echo "$l_version" | sed "$l_version_regexp")
-            echo "NeoVIM \"${l_version}\" ya esta instalado"
+            echo "NeoVIM \"${l_version}\" esta instalado: "
+            echo "   > Revise si existe una nueva versión en 'https://github.com/neovim/neovim/releases/tag/stable'"
+            echo "   > Instale la ultima version usando '~/.files/setup/01_setup_commands.bash' o '~/.files/setup/03_update_all.bash'"
         fi
     fi
 

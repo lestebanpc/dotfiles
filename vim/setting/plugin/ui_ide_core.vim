@@ -1,6 +1,28 @@
 "Configuracion de NeoVim (usa el LSP nativo y como completado usa CMP)
 if g:is_neovim
     lua require('ui_ide_core')
+
+
+    "Settings> IDE > Package: DAP Client (Adaptadores de DAP clientes y el Graphical Debugger)
+    "
+    nnoremap <F5>          <Cmd>lua require('dap').continue()<CR>
+    nnoremap <Leader><F4>  <Cmd>lua require('dap').terminate()<CR>
+
+    nnoremap <F9>          <Cmd>lua require('dap').toggle_breakpoint()<CR>
+    nnoremap <Leader><F9>  <Cmd>lua require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>
+    "noremap <Leader>lp    <Cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>
+
+    "Continues execution to the current cursor.
+    nnoremap <Leader><F8>  <Cmd>lua require('dap').run_to_cursor()<CR>
+    nnoremap <F10>         <Cmd>lua require('dap').step_over()<CR>
+    nnoremap <F11>         <Cmd>lua require('dap').step_into()<CR>
+    nnoremap <F12>         <Cmd>lua require('dap').step_out()<CR>
+
+    "Open a REPL / Debug-console.
+    "nnoremap <Leader>dr <Cmd>lua require('dap').repl.open()<CR>
+    "Re-runs the last debug adapter / configuration that ran using
+    "nnoremap <Leader>dl <Cmd>lua require('dap').run_last()<CR>
+
     finish
 endif
 
@@ -21,7 +43,7 @@ let g:ale_sign_style_warning = '·'
 "let g:ale_fix_on_save = 1
 
 "###################################################################################
-" Settings> IDE > Package: UltiSinppets (Framework para snippets)
+" Settings> IDE > Package: UltiSnippets (Framework para snippets)
 "###################################################################################
 
 if g:has_python3
@@ -39,7 +61,7 @@ if g:has_python3
 "endif
 
 "###################################################################################
-" Settings> IDE > Package: Graphical Debugger
+" Settings> IDE > Package: DAP Client (Adaptadores de DAP clientes y el Graphical Debugger)
 "###################################################################################
 
 "if g:has_python3

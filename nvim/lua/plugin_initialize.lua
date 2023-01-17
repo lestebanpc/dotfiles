@@ -19,6 +19,9 @@ return require('packer').startup(function(use)
     --Package UI> CORE> Tema 'Tokyo Night'
     use 'folke/tokyonight.nvim'
 
+    --Package UI> CORE> Iconos requeridos por barra de estado y pestañas/buffer
+    use 'kyazdani42/nvim-web-devicons'
+
     --Package UI> CORE> Barra de estado
     use {
         'nvim-lualine/lualine.nvim',
@@ -128,9 +131,9 @@ return require('packer').startup(function(use)
     }
     
     -- Package UI> IDE> CORE> Depurador (Cliente DAP y los adaptadores depuracion)  
-    --use {
-    --    "mfussenegger/nvim-dap",
-    --    opt = true,
+    use {
+        "mfussenegger/nvim-dap",
+        opt = true,
     --    event = "BufReadPre",
     --    module = { "dap" },
     --    wants = { "nvim-dap-virtual-text", "DAPInstall.nvim", "nvim-dap-ui", "nvim-dap-python", "which-key.nvim" },
@@ -146,7 +149,29 @@ return require('packer').startup(function(use)
     --    config = function()
     --        require("config.dap").setup()
     --    end,
-    --}
+    }
+
+    -- Package UI> IDE> CORE> DAP> Mejora de UI para nVim-DAP
+    --  Texto que ayuda a ver los valores de las variables
+    use {
+        'theHamsta/nvim-dap-virtual-text',
+        opt=true
+    }
+
+    -- Package UI> IDE> CORE> DAP> Mejora de UI para nVim-DAP
+    --  Mejora algunos mejoras de iconos de nVim-DAP
+    use {
+        'rcarriga/nvim-dap-ui',
+        opt=true,
+        requires = { "mfussenegger/nvim-dap" }
+    }
+
+    -- Package UI> IDE> CORE> DAP> Mejora de UI para nVim-DAP
+    --  Integra Telescope con nVim-DAP
+    use {
+        'nvim-telescope/telescope-dap.nvim',
+        opt=true
+    }
 
     -- Package UI> IDE> CORE> Motor/Framework de Snippets
     --   Muestra los snippets cargados. Si elegimos un snippet lo expande.

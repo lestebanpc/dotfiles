@@ -108,10 +108,14 @@ if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
 
+# Rutas por defecto: Adicionando rutas de programas especificos
+PATH=$PATH:/opt/tools/neovim/bin:/opt/tools/rh-ocp-cli
+
+# Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
+export PATH
 
 # Tema por defecto de "Oh My Posh"
 eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lepc-montys.omp.json)"
-
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
@@ -126,9 +130,6 @@ fi
 
 # Para tmux (usando la configuracion de "oh-my-tmux")
 export EDITOR=vim
-
-# Cliente de RH OCP
-export PATH=$PATH:/opt/tools/rh-ocp-cli
 
 # Opciones por defecto del comando fzf
 export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"

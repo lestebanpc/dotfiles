@@ -19,6 +19,9 @@ m_get_os_type
 declare -r g_os_type=$?
 
 #Deteriminar el tipo de distribución Linux
+#  00 : Distribución de Linux desconocido
+#  01 : Ubuntu
+#  02 : Fedora
 if [ $g_os_type -le 10 ]; then
     t_tmp=$(m_get_linux_type_id)
     declare -r g_os_subtype_id=$?
@@ -34,13 +37,19 @@ if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
 fi
 
 #Variable global de la ruta donde los programas se instalaran (complejos) 
-declare -r g_path_programs='/opt/tools'
+declare -r g_path_lnx_programs='/opt/tools'
 
-#Variable global ruta de los programas y/o binarios en Windows desde su WSL2
+#Variable global ruta de los programas CLI y/o binarios en Windows desde su WSL2
 if [ $g_os_type -eq 1 ]; then
-   declare -r g_path_win_programs='/mnt/d/Tools/Cmds'
-   declare -r g_path_win_commands="${g_path_win_programs}/Common"
+   declare -r g_path_win_programs='/mnt/d/Tools/CLI'
+   declare -r g_path_win_commands="${g_path_win_programs}/Cmds"
 fi
+
+#Expresiones regulares de sustitucion mas usuadas para las versiones
+#Se extrae la 1ra subcadena que inicie con enteros 0-9 y continue con . y luego continue con cualquier caracter que solo sea 0-9 o . o -
+declare -r g_regexp_sust_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
+declare -r g_regexp_sust_version2='s/[^0-9]*\([0-9]\+\.[0-9.-]\+\).*/\1/'
+declare -r g_regexp_sust_version3='s/[^0-9]*\([0-9.]\+\).*/\1/'
 
 #}}}
 
@@ -81,7 +90,7 @@ function m_show_final_message() {
             ;;
     esac
     
-    echo "Los artefactos del repositorio \"${p_repo_id}\" fueron instalado sin problemas"
+    echo "Se ha concluido la configuración de los artefactos del repositorio \"${p_repo_id}\""
 
 }
 
@@ -100,60 +109,72 @@ function m_get_repo_current_version() {
         p_install_win_cmds=0
     fi
 
+    local p_path_file="$3"             #Ruta donde se obtendra el comando para obtener la versión
+
     #2. Obtener la version actual
+    local l_sustitution_regexp="$g_regexp_sust_version1"
     local l_repo_current_version=""
     local l_tmp=""
     local l_status=0
+    #local l_aux=""
 
-    #El resultado sera la 1ra subcadena que inicie con enteros 0-9 y continue con . y luego continue con
-    #cualquier caracter que solo sea 0-9 o un .
-    local l_sustitution_regexp='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
-    local l_aux=""
+    #Calcular la ruta de archivo/comando donde se obtiene la version (esta ruta termina en "/")
+    local l_path_file="" 
+    if [ -z "$p_path_file" ]; then
+        if [ $p_install_win_cmds -eq 0 ]; then
+            l_path_file="${g_path_win_commands}/bin/"
+        else
+            l_path_file=""
+        fi
+    else
+        l_path_file="${p_path_file}/"
+    fi
+
     case "$p_repo_id" in
         jq)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/jq.exe --version 2> /dev/null)
+                l_tmp=$(${l_path_file}jq.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(jq --version 2> /dev/null)
+                l_tmp=$(${l_path_file}jq --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
         yq)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/yq.exe --version 2> /dev/null)
+                l_tmp=$(${l_path_file}yq.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(yq --version 2> /dev/null)
+                l_tmp=$(${l_path_files}yq --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
         fzf)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/fzf.exe --version 2> /dev/null)
+                l_tmp=$(${l_path_file}fzf.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(fzf --version 2> /dev/null)
+                l_tmp=$(${l_path_file}fzf --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
 
         helm)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/helm.exe version --short 2> /dev/null)
+                l_tmp=$(${l_path_file}helm.exe version --short 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(helm version --short 2> /dev/null)
+                l_tmp=$(${l_path_file}helm version --short 2> /dev/null)
                 l_status=$?
             fi
             ;;
 
         delta)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/delta.exe --version 2> /dev/null)
+                l_tmp=$(${l_path_file}delta.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(delta --version 2> /dev/null)
+                l_tmp=$(${l_path_file}delta --version 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
@@ -163,10 +184,10 @@ function m_get_repo_current_version() {
             ;;
         ripgrep)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/rg.exe --version 2> /dev/null)
+                l_tmp=$(${l_path_file}rg.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(rg --version 2> /dev/null)
+                l_tmp=$(${l_path_file}rg --version 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
@@ -175,49 +196,49 @@ function m_get_repo_current_version() {
             ;;
         bat)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/bat.exe --version 2> /dev/null)
+                l_tmp=$(${l_path_file}bat.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(bat --version 2> /dev/null)
+                l_tmp=$(${l_path_file}bat --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
         oh-my-posh)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/oh-my-posh.exe --version 2> /dev/null)
+                l_tmp=$(${l_path_file}oh-my-posh.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(oh-my-posh --version 2> /dev/null)
+                l_tmp=$(${l_path_file}oh-my-posh --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
         fd)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/fd.exe --version 2> /dev/null)
+                l_tmp=$(${l_path_file}fd.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(fd --version 2> /dev/null)
+                l_tmp=$(${l_path_file}fd --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
         less)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/less.exe --version 2> /dev/null)
+                l_tmp=$(${l_path_file}less.exe --version 2> /dev/null)
                 l_status=$?
             else
                 return 9;
             fi
             if [ $l_status -eq 0 ]; then
                 l_tmp=$(echo "$l_tmp" | head -n 1)
-                l_sustitution_regexp='s/[^0-9]*\([0-9.]\+\).*/\1/'
+                l_sustitution_regexp="$g_regexp_sust_version3"
             fi
             ;;
         kubectl)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/kubectl.exe version --client=true -o json 2> /dev/null)
+                l_tmp=$(${l_path_file}kubectl.exe version --client=true -o json 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(kubectl version --client=true -o json 2> /dev/null)
+                l_tmp=$(${l_path_file}kubectl version --client=true -o json 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
@@ -229,10 +250,10 @@ function m_get_repo_current_version() {
             ;;
         kustomize)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/kustomize.exe version 2> /dev/null)
+                l_tmp=$(${l_path_file}kustomize.exe version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(kustomize version 2> /dev/null)
+                l_tmp=$(${l_path_file}kustomize version 2> /dev/null)
                 l_status=$?
             fi
             ;;
@@ -241,17 +262,17 @@ function m_get_repo_current_version() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
             else
-                l_tmp=$(operator-sdk version 2> /dev/null)
+                l_tmp=$(${l_path_file}operator-sdk version 2> /dev/null)
                 l_status=$?
             fi
             ;;
 
         k0s)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${g_path_win_commands}/bin/k0s.exe version 2> /dev/null)
+                l_tmp=$(${l_path_file}k0s.exe version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(k0s version 2> /dev/null)
+                l_tmp=$(${l_path_file}k0s version 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
@@ -261,18 +282,71 @@ function m_get_repo_current_version() {
 
         roslyn)
 
-            if [ $p_install_win_cmds -eq 0 ]; then
-                l_aux="${g_path_win_programs}/Omnisharp_Roslyn/OmniSharp.deps.json"
-
-            else
-                l_aux="${g_path_programs}/omnisharp_roslyn/OmniSharp.deps.json"
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_win_programs}/Omnisharp_Roslyn/"
+               else
+                  l_path_file="${g_path_lnx_programs}/omnisharp_roslyn/"
+               fi
             fi
 
-            if [ -f "$l_aux" ]; then
-                l_tmp=$(jq -r '.targets[][].dependencies."OmniSharp.Stdio"' "$l_aux" | grep -v "null" | head -n 1 2> /dev/null)
+            #Obtener la version
+            if [ -f "${l_path_file}OmniSharp.deps.json" ]; then
+                l_tmp=$(jq -r '.targets[][].dependencies."OmniSharp.Stdio"' "${l_path_file}OmniSharp.deps.json" | grep -v "null" | head -n 1 2> /dev/null)
                 l_status=$?
             else
                 l_status=1
+            fi
+            ;;
+
+        netcoredbg)
+            
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_win_programs}/DAP_Adapters/NetCoreDbg/"
+               else
+                  l_path_file="${g_path_lnx_programs}/dap_adapters/netcoredbg/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}netcoredbg.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}netcoredbg --version 2> /dev/null)
+                l_status=$?
+            fi
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_sustitution_regexp="$g_regexp_sust_version2"
+            fi
+            ;;
+
+        neovim)
+           
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_win_programs}/NeoVim/bin/"
+               else
+                  l_path_file="${g_path_lnx_programs}/neovim/bin/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}nvim.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}nvim --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
             fi
             ;;
 
@@ -308,7 +382,7 @@ function m_get_repo_current_version() {
 #    99 si no se define el artefacto para el prefijo
 #  - Argumento 3, un arreglo de nombre de los artectos a descargar
 #En el argumento 2 se debe pasar la version pura quitando, sin contener "v" u otras letras iniciales
-function m_get_artifacts() {
+function m_load_artifacts() {
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -364,7 +438,7 @@ function m_get_artifacts() {
             ;;
         delta)
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype -eq 1 ]; then
+                if [ $g_os_subtype_id -eq 1 ]; then
                     pna_artifact_names=("git-delta_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
                 else
@@ -378,7 +452,7 @@ function m_get_artifacts() {
             ;;
         ripgrep)
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype -eq 1 ]; then
+                if [ $g_os_subtype_id -eq 1 ]; then
                     pna_artifact_names=("ripgrep_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
                 else
@@ -392,7 +466,7 @@ function m_get_artifacts() {
             ;;
         bat)
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype -eq 1 ]; then
+                if [ $g_os_subtype_id -eq 1 ]; then
                     pna_artifact_names=("bat_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
                 else
@@ -415,7 +489,7 @@ function m_get_artifacts() {
             ;;
         fd)
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype -eq 1 ]; then
+                if [ $g_os_subtype_id -eq 1 ]; then
                     pna_artifact_names=("fd_${p_repo_last_version}_amd64.deb")
                     pna_artifact_types=(1)
                 else
@@ -479,6 +553,31 @@ function m_get_artifacts() {
                 pna_artifact_types=(2)
             fi
             ;;
+        netcoredbg)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_names=("netcoredbg-win64.zip")
+                pna_artifact_types=(3)
+            else
+                pna_artifact_names=("netcoredbg-linux-amd64.tar.gz")
+                pna_artifact_types=(2)
+            fi
+            ;;
+        neovim)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #pna_artifact_names=("nvim-linux64.deb")
+                    #pna_artifact_types=(1)
+                    pna_artifact_names=("nvim-linux64.tar.gz")
+                    pna_artifact_types=(2)
+                else
+                    pna_artifact_names=("nvim-linux64.tar.gz")
+                    pna_artifact_types=(2)
+                fi
+            else
+                pna_artifact_names=("nvim-win64.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
        *)
            return 1
            ;;
@@ -493,16 +592,14 @@ function m_get_repo_latest_version() {
     #1. Argumentos
     local p_repo_id="$1"
     local p_repo_name="$2"
-    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                         #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$3" -eq 0 2> /dev/null ]; then
-        p_install_win_cmds=0
-    fi
+    #local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+    #                                     #(0) Los binarios de los comandos se estan instalando en Linux
     
     #2. Obtener la version
     local l_repo_last_version=""
     local l_aux=""
     #local l_status=0
+
     case "$p_repo_id" in
 
         kubectl)
@@ -511,12 +608,7 @@ function m_get_repo_latest_version() {
             ;;
         
         kustomize)
-            #La ultima version de Kustomize debe ser la version compatible con kubectl
-            if [ $p_install_win_cmds -eq 0 ]; then
-                l_repo_last_version=$(${g_path_win_commands}/bin/kubectl.exe version --client=true -o json | jq -r '.kustomizeVersion' 2> /dev/null)
-            else
-                l_repo_last_version=$(kubectl version --client=true -o json  | jq -r '.kustomizeVersion' 2> /dev/null)
-            fi
+            l_repo_last_version=$(kubectl version --client=true -o json  | jq -r '.kustomizeVersion' 2> /dev/null)
             ;;
 
         *)
@@ -596,9 +688,13 @@ function m_copy_artifact_files() {
         p_install_win_cmds=0
     fi
 
+    local p_repo_current_version="$5"
+
     #3. Copiar loa archivos del artefacto segun el prefijo
-    local l_path_bin=""
+    local l_path_temp=""
+
     local l_path_man=""
+    local l_path_bin=""
     if [ $p_install_win_cmds -ne 0 ]; then
         l_path_bin='/usr/local/bin'
         l_path_man='/usr/local/man/man1'
@@ -606,8 +702,10 @@ function m_copy_artifact_files() {
         l_path_bin="${g_path_win_commands}/bin"
         l_path_man="${g_path_win_commands}/man"
     fi
-    local l_path_temp=""
-    local l_path_aux=""
+
+    local l_repo_download_version=""
+    local l_status=0
+    local l_flag_install=1
 
     case "$p_repo_id" in
 
@@ -1157,36 +1255,250 @@ function m_copy_artifact_files() {
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_aux="${g_path_programs}/omnisharp_roslyn"
+                l_path_bin="${g_path_lnx_programs}/omnisharp_roslyn"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_aux" ]; then
-                    mkdir -p $l_path_aux
-                    chmod g+rx,o+rx $l_path_aux
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                    chmod g+rx,o+rx $l_path_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_aux}/*
+                    rm -rf ${l_path_bin}/*
                 fi
                     
                 #Mover todos archivos
                 #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_aux} \;
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
 
             else
                 
-                l_path_aux="${g_path_win_programs}/Omnisharp_Roslyn"
+                l_path_bin="${g_path_win_programs}/Omnisharp_Roslyn"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_aux" ]; then
-                    mkdir -p $l_path_aux
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_aux}/*
+                    rm -rf ${l_path_bin}/*
                 fi
                     
                 #Mover los archivos
                 #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_aux} \;
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+            fi
+            ;;
+
+        netcoredbg)
+            
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/netcoredbg"
+            l_flag_install=0            
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                l_path_bin="${g_path_lnx_programs}/dap_adapters/netcoredbg"
+
+                #1. Comparando la version instalada con la version descargada
+                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                l_status=$?
+
+                if [ $l_status -ne 0 ]; then
+                    l_flag_install=1
+                else
+
+                    m_compare_version2 "${l_repo_current_version}" "${l_repo_download_version}"
+                    l_status=$?
+                    echo "Repositorio descargado - Versión: \"${l_repo_download_version}\""
+
+                    if [ $l_status -eq 0 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" = Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    elif [ $l_status -eq 1 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" > Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    else
+                        echo "Se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" < Versión Descargada \"${l_repo_download_version}\")"
+                    fi
+                fi
+
+                #2. Instalación
+                if [ $l_flag_install -eq 0 ]; then
+
+                    #2.1. Instalación: Limpieza del directorio del programa
+                    if  [ ! -d "$l_path_bin" ]; then
+                        mkdir -p $l_path_bin
+                        chmod g+rx,o+rx $l_path_bin
+                    else
+                        #Limpieza
+                        rm -rf ${l_path_bin}/*
+                    fi
+                        
+                    #2.2. Instalación: Mover todos archivos
+                    #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
+                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                fi
+
+
+            else
+                
+                l_path_bin="${g_path_win_programs}/DAP_Adapters/NetCoreDbg"
+
+                #1. Comparando la version instalada con la version descargada
+                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                l_status=$?
+
+                if [ $l_status -ne 0 ]; then
+                    l_flag_install=1
+                else
+
+                    m_compare_version2 "${l_repo_current_version}" "${l_repo_download_version}"
+                    l_status=$?
+                    echo "Repositorio descargado - Versión: \"${l_repo_download_version}\""
+
+                    if [ $l_status -eq 0 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" = Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    elif [ $l_status -eq 1 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" > Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    else
+                        echo "Se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" < Versión Descargada \"${l_repo_download_version}\")"
+                    fi
+                fi
+
+                #2. Instalación
+                if [ $l_flag_install -eq 0 ]; then
+
+                    #2.1. Instalación: Limpieza del directorio del programa
+                    if  [ ! -d "$l_path_bin" ]; then
+                        mkdir -p $l_path_bin
+                        #chmod g+rx,o+rx $l_path_bin
+                    else
+                        #Limpieza
+                        rm -rf ${l_path_bin}/*
+                    fi
+                        
+                    #2.2. Instalación: Mover todos archivos
+                    #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                fi
+
+            fi
+            ;;
+
+        neovim)
+            
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_flag_install=0            
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                l_path_bin="${g_path_lnx_programs}/neovim"
+
+                #1. Comparando la version instalada con la version descargada
+                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/bin")
+                l_status=$?
+
+                if [ $l_status -ne 0 ]; then
+                    l_flag_install=1
+                else
+
+                    m_compare_version2 "${l_repo_current_version}" "${l_repo_download_version}"
+                    l_status=$?
+                    echo "Repositorio descargado - Versión: \"${l_repo_download_version}\""
+
+                    if [ $l_status -eq 0 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" = Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    elif [ $l_status -eq 1 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" > Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    else
+                        echo "Se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" < Versión Descargada \"${l_repo_download_version}\")"
+                    fi
+                fi
+
+                #2. Instalación
+                if [ $l_flag_install -eq 0 ]; then
+
+                    #2.1. Instalación: Limpieza del directorio del programa
+                    if  [ ! -d "$l_path_bin" ]; then
+                        mkdir -p $l_path_bin
+                        chmod g+rx,o+rx $l_path_bin
+                    else
+                        #Limpieza
+                        rm -rf ${l_path_bin}/*
+                    fi
+                        
+                    #2.2. Instalación: Mover todos archivos
+                    #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
+                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                fi
+
+
+            else
+                
+                l_path_bin="${g_path_win_programs}/NeoVim"
+
+                #1. Comparando la version instalada con la version descargada
+                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/bin")
+                l_status=$?
+
+                if [ $l_status -ne 0 ]; then
+                    l_flag_install=1
+                else
+
+                    m_compare_version2 "${l_repo_current_version}" "${l_repo_download_version}"
+                    l_status=$?
+                    echo "Repositorio descargado - Versión: \"${l_repo_download_version}\""
+
+                    if [ $l_status -eq 0 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" = Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    elif [ $l_status -eq 1 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" > Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    else
+                        echo "Se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" < Versión Descargada \"${l_repo_download_version}\")"
+                    fi
+                fi
+
+                #2. Instalación
+                if [ $l_flag_install -eq 0 ]; then
+
+                    #2.1. Instalación: Limpieza del directorio del programa
+                    if  [ ! -d "$l_path_bin" ]; then
+                        mkdir -p $l_path_bin
+                        #chmod g+rx,o+rx $l_path_bin
+                    else
+                        #Limpieza
+                        rm -rf ${l_path_bin}/*
+                    fi
+                        
+                    #2.2. Instalación: Mover todos archivos
+                    #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                fi
+
             fi
             ;;
 
@@ -1269,6 +1581,8 @@ function m_install_artifacts() {
         p_install_win_cmds=0
     fi
 
+    local p_repo_current_version="$6"
+
     #2. Descargar los artectos del repositorio
     local l_n=${#pnra_artifact_names[@]}
 
@@ -1294,7 +1608,7 @@ function m_install_artifacts() {
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.tar.gz}" $p_install_win_cmds
+            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.tar.gz}" $p_install_win_cmds "$p_repo_current_version"
 
 
         elif [ $l_artifact_type -eq 3 ]; then
@@ -1306,15 +1620,15 @@ function m_install_artifacts() {
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.zip}" $p_install_win_cmds
+            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.zip}" $p_install_win_cmds "$p_repo_current_version"
 
         elif [ $l_artifact_type -eq 0 ]; then
 
             #Copiar los archivos necesarios
             if [ $p_install_win_cmds -eq 0 ]; then
-                m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.exe}" $p_install_win_cmds
+                m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.exe}" $p_install_win_cmds "$p_repo_current_version"
             else
-                m_copy_artifact_files "$p_repo_id" "$l_i" "$l_artifact_name" $p_install_win_cmds
+                m_copy_artifact_files "$p_repo_id" "$l_i" "$l_artifact_name" $p_install_win_cmds "$p_repo_current_version"
             fi
 
         elif [ $l_artifact_type -eq 1 ]; then
@@ -1342,51 +1656,24 @@ function m_install_artifacts() {
     return 0
 }
 
-function m_intall_update_repository() { 
+function m_intall_repository() { 
 
     #1. Argumentos
     local p_repo_id="$1"
     local p_repo_name="$2"
     local p_repo_current_version="$3"
+    local p_repo_last_version="$4"
+    local p_repo_last_version_pretty="$5"
     local p_install_win_cmds=1            #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                           #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$4" -eq 0 2> /dev/null ]; then
+    if [ "$6" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
-   
-    #2. Obtener la ultima version del repositorio
-    local l_repo_last_version=$(m_get_repo_latest_version "$p_repo_id" "$p_repo_name" $p_install_win_cmds)
-    local l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed 's/[^0-9]*\([0-9.]*\).*/\1/')
-   
-    if [ -z "$l_repo_last_version" ]; then
-        echo "ERROR (20): La ultima version del repositorio es invalido \"${l_repo_last_version}\""
-        return 20
-    fi
-    echo "Repositorio - Ultima Versión : \"${l_repo_last_version_pretty}\" (${l_repo_last_version})"
- 
-    #3. Validar si se debe instalar (ya esta instalado la ultima version)
-
-    if [ -z "$p_repo_current_version" ]; then
-        echo "Se instalará el repositorio \"${p_repo_id}\""
-    else
-        #Comparando las versiones
-        m_compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
-        l_status=$?
-        if [ $l_status -eq 0 ]; then
-            echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${p_repo_current_version}\" = Ultima Versión \"${l_repo_last_version_pretty}\")"
-            return 80
-        elif [ $l_status -eq 1 ]; then
-            echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${p_repo_current_version}\" > Ultima Versión \"${l_repo_last_version_pretty}\")"
-            return 81
-        fi
-        echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${p_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
-    fi
-    
 
     #4. Obtener el los artefacto que se instalaran del repositorio
     declare -a la_artifact_names
     declare -a la_artifact_types
-    m_get_artifacts "$p_repo_id" "$l_repo_last_version_pretty" la_artifact_names la_artifact_types $p_install_win_cmds
+    m_load_artifacts "$p_repo_id" "$p_repo_last_version_pretty" la_artifact_names la_artifact_types $p_install_win_cmds
     l_status=$?    
     if [ $l_status -ne 0 ]; then
         echo "ERROR (22): No esta configurado los artefactos para el repositorio \"${p_repo_id}\""
@@ -1408,14 +1695,14 @@ function m_intall_update_repository() {
     fi    
 
     #5. Descargar el artifacto en la carpeta
-    if ! m_download_artifacts "$p_repo_id" "$p_repo_name" "$l_repo_last_version" la_artifact_names; then
+    if ! m_download_artifacts "$p_repo_id" "$p_repo_name" "$p_repo_last_version" la_artifact_names; then
         echo "ERROR (23): No se ha podido descargar los artefactos del repositorio \"${p_repo_id}\""
         m_clean_temp "$p_repo_id"
         return 23
     fi
 
     #6. Instalar segun el tipo de artefecto
-    if ! m_install_artifacts "$p_repo_id" "$p_repo_name" la_artifact_names la_artifact_types $p_install_win_cmds; then
+    if ! m_install_artifacts "$p_repo_id" "$p_repo_name" la_artifact_names la_artifact_types $p_install_win_cmds "$p_repo_current_version"; then
         echo "ERROR (24): No se ha podido instalar los artefecto de repositorio \"${p_repo_id}\""
         m_clean_temp "$p_repo_id"
         return 24
@@ -1446,16 +1733,21 @@ declare -A gA_repositories=(
         ['helm']='helm/helm'
         ['kustomize']='kubernetes-sigs/kustomize'
         ['operator-sdk']='operator-framework/operator-sdk'
+        ['neovim']='neovim/neovim'
         ['k0s']='k0sproject/k0s'
         ['roslyn']='OmniSharp/omnisharp-roslyn'
+        ['netcoredbg']='Samsung/netcoredbg'
+        ['neovim']='neovim/neovim'
     )
 
 
 #Repositorios opcionales y su flag para configuración. Usar valores 2^n (4, 8, 16, ...)
 #Sus valores debera coincider con lo que se muestra en el menu "m_show_menu_core"
 declare -A gA_optional_repositories=(
-        ['k0s']=8
-        ['roslyn']=16
+        ['neovim']=8
+        ['k0s']=16
+        ['roslyn']=32
+        ['netcoredbg']=64
     )
 
 
@@ -1467,6 +1759,11 @@ function m_setup_repository() {
     local p_opciones=2
     if [[ "$2" =~ ^[0-9]+$ ]]; then
         p_opciones=$2
+    fi
+
+    local p_show_title=0
+    if [[ "$3" =~ ^[0-9]+$ ]]; then
+        p_show_title=$3
     fi
 
     local l_repo_must_setup_lnx=1  #(1) No debe configurarse, (0) Debe configurarse (instalarse/actualizarse)
@@ -1509,16 +1806,31 @@ function m_setup_repository() {
 
     fi
 
-    #3. ¿Debe instalarse en Linux?
+    #3. ¿Existe un repositorio valido de artectactos?
+    local l_repo_last_version=$(m_get_repo_latest_version "$p_repo_id" "$l_repo_name")
+    local l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed "$g_regexp_sust_version2")
+    if [[ ! "$l_repo_last_version_pretty" =~ ^[0-9] ]]; then
+        l_repo_last_version_pretty=""
+    fi
+       
+    if [ -z "$l_repo_last_version" ]; then
+        echo "ERROR: El repositorio \"$p_repo_id\" no es valido (no se puede obtener la ultima versión existente en el repo)"
+        l_repo_must_setup_lnx=1
+        return 80
+    fi
+    
+    #4. ¿Debe instalarse en Linux?
     local l_repo_must_setup_win=$l_repo_must_setup_lnx  #El de instalación en windows debe iniciar igual
+    local l_install_win_cmds=1
 
-    #Versión de repositorio instalado en Linux
-    t_tmp=$(m_get_repo_current_version "$p_repo_id" 1)
-    local l_repo_is_installed=$?    #(9) El repositorio unknown (no implementado la logica)
+    #Obtener la versión de repositorio instalado en Linux
+    local l_repo_current_version=""
+    local l_repo_is_installed=0
+    l_repo_current_version=$(m_get_repo_current_version "$p_repo_id" ${l_install_win_cmds} "")
+    l_repo_is_installed=$?          #(9) El repositorio unknown (no implementado la logica)
                                     #(1) El repositorio no esta instalado 
                                     #(0) El repositorio instalado, con version correcta
                                     #(2) El repositorio instalado, con version incorrecta
-    local l_repo_current_version="$t_tmp"
 
     #Si esta instalado, permitir su instalación si se ingresada la opcion 2
     if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
@@ -1542,36 +1854,43 @@ function m_setup_repository() {
 
     fi
 
-    #4. Setup el repositorio en Linux
+
+    #5. Setup el repositorio en Linux
     if [ $l_repo_must_setup_lnx -eq 0 ]; then
-        
-        echo "-------------------------------------------------------------------------------------------------"
-        printf '%s' "- Repositorio Git"
 
-        if [ $l_repo_is_optional -eq 0 ]; then
-            printf ' opcional "%s"' "${l_repo_name_aux}"
-        else
-            printf ' basico "%s"' "${l_repo_name_aux}"
-        fi
+        #5.1 Mostrar el titulo
+        if [ $p_show_title -eq 0 ]; then
+            echo "-------------------------------------------------------------------------------------------------"
+            printf '%s' "- Repositorio Git"
 
-        if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
-           printf " (UPDATE)\n"
-        elif [ $l_repo_is_optional -eq 1 ]; then
-           printf " (INSTALL)\n"
-        else
-           printf "\n"
+            if [ $l_repo_is_optional -eq 0 ]; then
+                printf ' opcional "%s"' "${l_repo_name_aux}"
+            else
+                printf ' basico "%s"' "${l_repo_name_aux}"
+            fi
+
+            if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
+               printf " (UPDATE)\n"
+            elif [ $l_repo_is_optional -eq 1 ]; then
+               printf " (INSTALL)\n"
+            else
+               printf "\n"
+            fi
+            echo "-------------------------------------------------------------------------------------------------"
         fi
-        echo "-------------------------------------------------------------------------------------------------"
 
         echo "Iniciando la configuración de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_subtype_name}\""
         echo "Repositorio - Name           : \"${l_repo_name}\""
         echo "Repositorio - ID             : \"${p_repo_id}\""
+        echo "Repositorio - Ultima Versión : \"${l_repo_last_version_pretty}\" (${l_repo_last_version})"
 
+        #5.2 Segun la version del repositorio actual, habilitar la instalación 
         if [ $l_repo_is_installed -eq 9 ]; then
             echo "Repositorio - Versión Actual : \"Unknown\""
             echo "ERROR: Implemente la logica para determinar la version actual de repositorio instalado"
+            l_repo_must_setup_lnx=1
         else
-            #Setup el repositorio en Linux
+            #Si se tiene implementado la logica para obtener la version actual
             if [ $l_repo_is_installed -eq 1 ]; then
                 echo "Repositorio - Versión Actual : \"No instalado\""
              elif [ $l_repo_is_installed -eq 2 ]; then
@@ -1580,21 +1899,53 @@ function m_setup_repository() {
             else
                 echo "Repositorio - Versión Actual : \"${l_repo_current_version}\""
             fi
-            m_intall_update_repository "$l_repo_id" "$l_repo_name" "${l_repo_current_version}" 1
         fi
+
+        #5.3 Comparando versiones y segun ello, habilitar la instalación
+        if [ $l_repo_must_setup_lnx -eq 0 ]; then
+   
+            #Comparando las versiones
+            if [ ! -z "$l_repo_last_version_pretty" ]; then
+                 
+                #m_compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
+                m_compare_version2 "${l_repo_current_version}" "${l_repo_last_version_pretty}"
+                l_status=$?
+
+                if [ $l_status -eq 0 ]; then
+                    echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" = Ultima Versión \"${l_repo_last_version_pretty}\")"
+                    l_repo_must_setup_lnx=1
+                elif [ $l_status -eq 1 ]; then
+                    echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" > Ultima Versión \"${l_repo_last_version_pretty}\")"
+                    l_repo_must_setup_lnx=1
+                fi
+                echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
+
+            else
+                echo "La ultima versión del repositorio \"${l_repo_last_version}\" no es una version comparable. Se iniciara la instalación del repositorio \"${p_repo_id}\""
+            fi
+             
+        fi
+    
+
+        #5.4 Instalar el repositorio
+        if [ $l_repo_must_setup_lnx -eq 0 ]; then
+            m_intall_repository "$l_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" $l_install_win_cmds 
+        fi
+
         printf "\n\n"
        
     fi
 
-    #5. ¿Debe instalarse en Windows?
+    #6. ¿Debe instalarse en Windows?
+    local l_install_win_cmds=0
     if [ $g_os_type -eq 1 ]; then
+
         #Versión de repositorio instalado en Linux
-        t_tmp=$(m_get_repo_current_version "$p_repo_id" 0)
+        l_repo_current_version=$(m_get_repo_current_version "$p_repo_id" ${l_install_win_cmds} "")
         l_repo_is_installed=$?          #(9) El repositorio unknown (no implementado la logica)
                                         #(1) El repositorio no esta instalado 
                                         #(0) El repositorio instalado, con version correcta
                                         #(2) El repositorio instalado, con version incorrecta
-        l_repo_current_version="$t_tmp"
 
         #Si esta instalado, permitir su instalación si se ingresada la opcion 2
         if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
@@ -1625,10 +1976,11 @@ function m_setup_repository() {
         l_repo_must_setup_win=1
     fi
 
-    #6. Setup el repositorio en Windows
+    #7. Setup el repositorio en Windows
     if [ $l_repo_must_setup_win -eq 0 ]; then
         
-        if [ $l_repo_must_setup_lnx -ne 0 ]; then
+        #7.1 Mostrar el titulo
+        if [ $l_repo_must_setup_lnx -ne 0 -a $p_show_title -eq 0 ]; then
             echo "-------------------------------------------------------------------------------------------------"
             printf '%s' "- Repositorio Git"
 
@@ -1651,12 +2003,15 @@ function m_setup_repository() {
         echo "Iniciando la configuración de los artefactos del repositorio \"${l_repo_name_aux}\" en Windows (asociado al WSL \"${g_os_subtype_name}\")"
         echo "Repositorio - Name           : \"${l_repo_name}\""
         echo "Repositorio - ID             : \"${p_repo_id}\""
+        echo "Repositorio - Ultima Versión : \"${l_repo_last_version_pretty}\" (${l_repo_last_version})"
 
+        #7.2 Segun la version del repositorio actual, habilitar la instalación 
         if [ $l_repo_is_installed -eq 9 ]; then
             echo "Repositorio - Versión Actual : \"Unknown\""
             echo "ERROR: Implemente la logica para determinar la version actual de repositorio instalado"
+            l_repo_must_setup_win=1
         else
-            #Setup el repositorio en Linux
+            #Si se tiene implementado la logica para obtener la version actual
             if [ $l_repo_is_installed -eq 1 ]; then
                 echo "Repositorio - Versión Actual : \"No instalado\""
              elif [ $l_repo_is_installed -eq 2 ]; then
@@ -1665,8 +2020,39 @@ function m_setup_repository() {
             else
                 echo "Repositorio - Versión Actual : \"${l_repo_current_version}\""
             fi
-            m_intall_update_repository "$l_repo_id" "$l_repo_name" "${l_repo_current_version}" 0
         fi
+
+        #7.3 Comparando versiones y segun ello, habilitar la instalación
+        if [ $l_repo_must_setup_win -eq 0 ]; then
+    
+            #Comparando las versiones
+            if [ ! -z "$l_repo_last_version_pretty" ]; then
+                 
+                #m_compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
+                m_compare_version2 "${l_repo_current_version}" "${l_repo_last_version_pretty}"
+                l_status=$?
+
+                if [ $l_status -eq 0 ]; then
+                    echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" = Ultima Versión \"${l_repo_last_version_pretty}\")"
+                    l_repo_must_setup_lnx=1
+                elif [ $l_status -eq 1 ]; then
+                    echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" > Ultima Versión \"${l_repo_last_version_pretty}\")"
+                    l_repo_must_setup_lnx=1
+                fi
+                echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
+
+            else
+                echo "La ultima versión del repositorio \"${l_repo_last_version}\" no es una version comparable. Se iniciara la instalación del repositorio \"${p_repo_id}\""
+            fi
+
+        fi
+
+        #7.4 Instalar el repositorio
+        if [ $l_repo_must_setup_win -eq 0 ]; then
+            #echo "Se instalará el repositorio \"${p_repo_id}\""
+            m_intall_repository "$l_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" $l_install_win_cmds 
+        fi
+
         printf "\n\n"
        
     fi
@@ -1788,12 +2174,14 @@ function m_show_menu_core() {
     echo " (q) Salir del menu"
     echo " (a) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes"
     echo " ( ) Actualizar segun las opciones escogidas. Ingrese la suma de las opciones que desea instalar:"
-    #echo "    ( 0) Actualizar xxx (siempre se realizara esta opción)"
-    echo "     ( 1) Actualizar los paquetes existentes del sistema operativo"   
-    echo "     ( 2) Actualizar los binarios de los repositorios existentes"
-    echo "     ( 4) Instalar/Actualizar los binarios de los repositorios basicos"
-    echo "     ( 8) Instalar/Actualizar el binario del repositorio opcional \"k0s\""
-    echo "     (16) Instalar/Actualizar el binario del repositorio opcional \"OmniSharp/omnisharp-roslyn\""
+    #echo "    (  0) Actualizar xxx (siempre se realizara esta opción)"
+    echo "     (  1) Actualizar los paquetes existentes del sistema operativo"   
+    echo "     (  2) Actualizar los binarios de los repositorios existentes"
+    echo "     (  4) Instalar/Actualizar los binarios de los repositorios basicos"
+    echo "     (  8) Instalar/Actualizar el binario del repositorio opcional \"NeoVim\""
+    echo "     ( 16) Instalar/Actualizar el binario del repositorio opcional \"k0s\""
+    echo "     ( 32) Instalar/Actualizar el binario del repositorio opcional \"OmniSharp/omnisharp-roslyn\""
+    echo "     ( 64) Instalar/Actualizar el binario del repositorio opcional \"Samsung/netcoredbg\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
@@ -1865,19 +2253,40 @@ function m_main() {
 #}}}
 
 #Argumentos 
-gp_is_direct_calling=0
-if [[ "$2" =~ ^[0-9]+$ ]]; then
-   gp_is_direct_calling=$2
+gp_type_calling=0       #(0) Es llamado directa, es decir se muestra el menu.
+                        #(1) Instalando un conjunto de respositorios
+                        #(2) Instalando solo un repository
+if [[ "$1" =~ ^[0-9]+$ ]]; then
+    gp_type_calling=$1
 fi
 
-if [ $gp_is_direct_calling -eq 0 ]; then
+if [ $gp_type_calling -eq 0 ]; then
+
     m_main
-else
+
+elif [ $gp_type_calling -eq 1 ]; then
+
     gp_opciones=0
-    if [[ "$1" =~ ^[0-9]+$ ]]; then
-        gp_opciones=$1
+    if [[ "$2" =~ ^[0-9]+$ ]]; then
+        gp_opciones=$2
     fi
     m_setup_repositories $gp_opciones 1
+
+else
+
+    gp_opciones=0
+    if [[ "$2" =~ ^[0-9]+$ ]]; then
+        gp_opciones=$2
+    fi
+
+    gp_repo_id="$3"
+    if [[ -z "$gp_repo_id" ]]; then
+       echo "Parametro (3) debe ser un ID de repositorio valido"
+       return 99
+    fi
+
+    m_setup_repository "$gp_repo_id" $gp_opciones 1
+
 fi
 
 

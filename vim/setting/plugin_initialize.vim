@@ -95,6 +95,18 @@ if g:use_ide
         "Package UI> IDE> Core> Fuente CMP: Snippet tipo LuaSnip
         packadd cmp_luasnip
 
+        "Package UI> IDE> CORE> Depurador (Cliente DAP y los adaptadores depuracion)
+        packadd nvim-dap
+
+        "Package UI> IDE> CORE> DAP> Mejora de UI para nVim-DAP
+        packadd nvim-dap-ui
+
+        "Package UI> IDE> CORE> DAP> Mejora de UI para nVim-DAP
+        packadd nvim-dap-virtual-text
+
+        "Package UI> IDE> CORE> DAP> Mejora de UI para nVim-DAP
+        packadd telescope-dap.nvim
+
     else
 
         "Package UI> IDE> Core> Linting y LSP Client para VIM

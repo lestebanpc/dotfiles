@@ -186,7 +186,7 @@ function m_update_all() {
     #l_opcion=1
     #l_flag=$(( $p_opciones & $l_opcion ))
     if [ $p_opciones -ge 2 ]; then
-        ~/.files/setup/01_setup_commands.bash $p_opciones 1
+        ~/.files/setup/01_setup_commands.bash 1 $p_opciones
     fi            
 
     #7. Caducar las credecinales de root almacenadas temporalmente
@@ -206,12 +206,14 @@ function m_show_menu_core() {
     echo " (a) Actualizar los artefactos existentes: paquetes del SO y paquetes VIM"
     echo " (b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y paquetes VIM"
     echo " ( ) Actualizar las opciones que desea. Ingrese la suma de las opciones que desea instalar:"
-    echo "     ( 0) Actualizar los paquetes del SO existentes (siempre se realizara esta opción)"
-    echo "     ( 1) Actualizar los paquetes VIM existentes"
-    echo "     ( 2) Actualizar los binarios de los repositorios existentes"
-    echo "     ( 4) Instalar/Actualizar los binarios de los repositorios basicos"
-    echo "     ( 8) Instalar/Actualizar el binario del repositorio opcional \"k0s\""
-    echo "     (16) Instalar/Actualizar el binario del repositorio opcional \"OmniSharp/omnisharp-roslyn\""
+    echo "     (  0) Actualizar los paquetes del SO existentes (siempre se realizara esta opción)"
+    echo "     (  1) Actualizar los paquetes VIM existentes"
+    echo "     (  2) Actualizar los binarios de los repositorios existentes"
+    echo "     (  4) Instalar/Actualizar los binarios de los repositorios basicos"
+    echo "     (  8) Instalar/Actualizar el binario del repositorio opcional \"NeoVim\""
+    echo "     ( 16) Instalar/Actualizar el binario del repositorio opcional \"k0s\""
+    echo "     ( 32) Instalar/Actualizar el binario del repositorio opcional \"OmniSharp/omnisharp-roslyn\""
+    echo "     ( 64) Instalar/Actualizar el binario del repositorio opcional \"Samsung/netcoredbg\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
