@@ -1676,34 +1676,34 @@ function m_intall_repository() {
     m_load_artifacts "$p_repo_id" "$p_repo_last_version_pretty" la_artifact_names la_artifact_types $p_install_win_cmds
     l_status=$?    
     if [ $l_status -ne 0 ]; then
-        echo "ERROR (22): No esta configurado los artefactos para el repositorio \"${p_repo_id}\""
+        echo "ERROR (40): No esta configurado los artefactos para el repositorio \"${p_repo_id}\""
         return 22
     fi
 
     #si el arreglo es vacio
     local l_n=${#la_artifact_names[@]}
     if [ $l_n -le 0 ]; then
-        echo "ERROR (98): No esta configurado los artefactos para el repositorio \"${p_repo_id}\""
+        echo "ERROR (41): No esta configurado los artefactos para el repositorio \"${p_repo_id}\""
         return 98
     fi
     echo "Repositorio - Nro Artefactos : \"${l_n}\""
 
     #si el tamano del los arrgelos no son iguales
     if [ $l_n -ne ${#la_artifact_types[@]} ]; then
-        echo "ERROR (97): No se ha definido todos los tipo de artefactos en el repositorio \"${p_repo_id}\""
+        echo "ERROR (42): No se ha definido todos los tipo de artefactos en el repositorio \"${p_repo_id}\""
         return 97
     fi    
 
     #5. Descargar el artifacto en la carpeta
     if ! m_download_artifacts "$p_repo_id" "$p_repo_name" "$p_repo_last_version" la_artifact_names; then
-        echo "ERROR (23): No se ha podido descargar los artefactos del repositorio \"${p_repo_id}\""
+        echo "ERROR (43): No se ha podido descargar los artefactos del repositorio \"${p_repo_id}\""
         m_clean_temp "$p_repo_id"
         return 23
     fi
 
     #6. Instalar segun el tipo de artefecto
     if ! m_install_artifacts "$p_repo_id" "$p_repo_name" la_artifact_names la_artifact_types $p_install_win_cmds "$p_repo_current_version"; then
-        echo "ERROR (24): No se ha podido instalar los artefecto de repositorio \"${p_repo_id}\""
+        echo "ERROR (44): No se ha podido instalar los artefecto de repositorio \"${p_repo_id}\""
         m_clean_temp "$p_repo_id"
         return 24
     fi
@@ -2141,7 +2141,7 @@ function m_setup_repositories() {
                     fi
                     ;;
                 0)
-                    echo "ERROR (22): No se identificado el tipo de Distribución Linux"
+                    echo "ERROR (30): No se identificado el tipo de Distribución Linux"
                     return 22;
                     ;;
             esac
@@ -2280,7 +2280,7 @@ else
     fi
 
     gp_repo_id="$3"
-    if [[ -z "$gp_repo_id" ]]; then
+    if [ -z "$gp_repo_id" ]; then
        echo "Parametro (3) debe ser un ID de repositorio valido"
        return 99
     fi
