@@ -92,7 +92,7 @@ function m_update_vim_package() {
 
     cd $l_base_path
     local l_folder
-    for l_folder  in $(find . -type d -name .git); do
+    for l_folder  in $(find . -mindepth 4 -maxdepth 4 -type d -name .git); do
         l_folder="${l_folder%/.git}"
         l_folder="${l_folder#./}"
         l_folder="${l_base_path}/${l_folder}"
