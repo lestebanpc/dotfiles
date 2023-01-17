@@ -845,7 +845,7 @@ function m_copy_artifact_files() {
                 fi
 
             else
-                echo "ERROR (40): El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
+                echo "ERROR (50): El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
                 return 40
             fi            
             ;;
@@ -1503,8 +1503,8 @@ function m_copy_artifact_files() {
             ;;
 
        *)
-           echo "ERROR (40): El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" no implementa logica de copiado de archivos"
-           return 40
+           echo "ERROR (50): El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" no implementa logica de copiado de archivos"
+           return 50
             
     esac
 
@@ -1929,7 +1929,7 @@ function m_setup_repository() {
 
         #5.4 Instalar el repositorio
         if [ $l_repo_must_setup_lnx -eq 0 ]; then
-            m_intall_repository "$l_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" $l_install_win_cmds 
+            m_intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" $l_install_win_cmds 
         fi
 
         printf "\n\n"
@@ -2050,7 +2050,7 @@ function m_setup_repository() {
         #7.4 Instalar el repositorio
         if [ $l_repo_must_setup_win -eq 0 ]; then
             #echo "Se instalará el repositorio \"${p_repo_id}\""
-            m_intall_repository "$l_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" $l_install_win_cmds 
+            m_intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" $l_install_win_cmds 
         fi
 
         printf "\n\n"
