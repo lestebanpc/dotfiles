@@ -51,6 +51,9 @@ declare -r g_regexp_sust_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
 declare -r g_regexp_sust_version2='s/[^0-9]*\([0-9]\+\.[0-9.-]\+\).*/\1/'
 declare -r g_regexp_sust_version3='s/[^0-9]*\([0-9.]\+\).*/\1/'
 
+#Cuando no se puede determinar la version actual (siempre se instalara)
+declare -r g_version_none='0.0.0'
+
 #}}}
 
 #Funciones especificas {{{
@@ -98,6 +101,7 @@ function m_show_final_message() {
 #  0 - Si existe y se obtiene un valor
 #  1 - El comando no existe o existe un error en el comando para obtener la versión
 #  2 - La version obtenida no tiene formato valido
+#  3 - No existe forma de calcular la version actual (siempre se instala y/o actualizar)
 #  9 - No esta implementado un metodo de obtener la version
 function m_get_repo_current_version() {
 
@@ -349,6 +353,11 @@ function m_get_repo_current_version() {
                 l_tmp=$(echo "$l_tmp" | head -n 1)
             fi
             ;;
+        nerd-fonts)
+            #Siempre se actualizara la fuentes, por ahora no se puede determinar la version instalada
+            echo "$g_version_none"
+            return 3
+            ;;
 
         *)
             return 9
@@ -577,6 +586,10 @@ function m_load_artifacts() {
                 pna_artifact_names=("nvim-win64.zip")
                 pna_artifact_types=(3)
             fi
+            ;;
+         nerd-fonts)
+            pna_artifact_names=("DroidSansMono.zip" "InconsolataLGC.zip" "UbuntuMono.zip")
+            pna_artifact_types=(3 3 3)
             ;;
        *)
            return 1
@@ -1502,6 +1515,70 @@ function m_copy_artifact_files() {
             fi
             ;;
 
+        nerd-fonts)
+            
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+
+            #Solo para Linux
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                #Copiando el binario en una ruta del path
+                l_path_bin="/usr/share/fonts/${p_artifact_name_woext}"
+
+                #Instalación de la fuente
+                if [ $g_is_root -eq 0 ]; then
+                    
+                    #Crear la carpeta de fuente, si no existe
+                    if  [ ! -d "$l_path_bin" ]; then
+                        mkdir -p $l_path_bin
+                        chmod g+rx,o+rx $l_path_bin
+                    fi
+
+                    #Copiar y/o sobrescribir archivos existente
+                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
+                         ! \( -name '*Windows Compatible.otf' -o -name '*Windows Compatible.ttf' \) \
+                         -exec cp '{}' ${l_path_bin} \;
+                    chmod g+r,o+r ${l_path_bin}/*
+
+                    #Actualizar el cache de fuentes del SO
+                    fc-cache -v
+
+                else
+                    
+                    #Crear la carpeta de fuente, si no existe
+                    if  [ ! -d "$l_path_bin" ]; then
+                        sudo mkdir -p ${l_path_bin}
+                        sudo chmod g+rx,o+rx $l_path_bin
+                    fi
+
+                    #Copiar y/o sobrescribir archivos existente
+                    sudo find "${l_path_temp}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
+                         ! \( -name '*Windows Compatible.otf' -o -name '*Windows Compatible.ttf' \) \
+                         -exec cp '{}' ${l_path_bin} \;
+                    sudo chmod g+r,o+r ${l_path_bin}/*
+
+                    #Actualizar el cache de fuentes del SO
+                    sudo fc-cache -v
+
+                fi
+                    
+                #Si es WSL2, copiar los archivos para instalarlo manualmente.
+                if [ $g_os_type -eq 1 ]; then
+                    
+                    l_path_bin="${g_path_win_programs}/NerdFonts"
+                    if  [ ! -d "$l_path_bin" ]; then
+                        mkdir -p ${l_path_bin}
+                    fi
+
+                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 \
+                         \( -name '*Windows Compatible.otf' -o -name '*Windows Compatible.ttf' \) \
+                         -exec cp '{}' ${l_path_bin} \;
+                fi
+
+            fi
+            ;;
+
        *)
            echo "ERROR (50): El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" no implementa logica de copiado de archivos"
            return 50
@@ -1575,6 +1652,7 @@ function m_install_artifacts() {
     local p_repo_name="$2"
     declare -nr pnra_artifact_names=$3   #Parametro por referencia: Arreglo de los nombres de los artefactos
     declare -nr pnra_artifact_types=$4   #Parametro por referencia: Arreglo de los tipos de los artefactos
+
     local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                          #(0) Los binarios de los comandos se estan instalando en Linux
     if [ "$5" -eq 0 2> /dev/null ]; then
@@ -1738,6 +1816,7 @@ declare -A gA_repositories=(
         ['roslyn']='OmniSharp/omnisharp-roslyn'
         ['netcoredbg']='Samsung/netcoredbg'
         ['neovim']='neovim/neovim'
+        ['nerd-fonts']='ryanoasis/nerd-fonts'
     )
 
 
@@ -1748,6 +1827,7 @@ declare -A gA_optional_repositories=(
         ['k0s']=16
         ['roslyn']=32
         ['netcoredbg']=64
+        ['nerd-fonts']=128
     )
 
 
@@ -1827,7 +1907,8 @@ function m_setup_repository() {
     local l_repo_current_version=""
     local l_repo_is_installed=0
     l_repo_current_version=$(m_get_repo_current_version "$p_repo_id" ${l_install_win_cmds} "")
-    l_repo_is_installed=$?          #(9) El repositorio unknown (no implementado la logica)
+    l_repo_is_installed=$?          #(9) El repositorio unknown porque no se implemento la logica
+                                    #(3) El repositorio unknown porque no se puede obtener (siempre instalarlo)
                                     #(1) El repositorio no esta instalado 
                                     #(0) El repositorio instalado, con version correcta
                                     #(2) El repositorio instalado, con version incorrecta
@@ -1886,16 +1967,18 @@ function m_setup_repository() {
 
         #5.2 Segun la version del repositorio actual, habilitar la instalación 
         if [ $l_repo_is_installed -eq 9 ]; then
-            echo "Repositorio - Versión Actual : \"Unknown\""
+            echo "Repositorio - Versión Actual : \"Unknown\" (No implementado)"
             echo "ERROR: Implemente la logica para determinar la version actual de repositorio instalado"
             l_repo_must_setup_lnx=1
         else
-            #Si se tiene implementado la logica para obtener la version actual
+            #Si se tiene implementado la logica para obtener la version actual o se debe instalar sin ella
             if [ $l_repo_is_installed -eq 1 ]; then
                 echo "Repositorio - Versión Actual : \"No instalado\""
-             elif [ $l_repo_is_installed -eq 2 ]; then
+            elif [ $l_repo_is_installed -eq 2 ]; then
                 echo "Repositorio - Versión Actual : \"${l_repo_current_version}\" (formato invalido)"
                 l_repo_current_version=""
+            elif [ $l_repo_is_installed -eq 3 ]; then
+                echo "Repositorio - Versión Actual : \"${l_repo_current_version}\" (No se puede calcular)"
             else
                 echo "Repositorio - Versión Actual : \"${l_repo_current_version}\""
             fi
@@ -1905,7 +1988,7 @@ function m_setup_repository() {
         if [ $l_repo_must_setup_lnx -eq 0 ]; then
    
             #Comparando las versiones
-            if [ ! -z "$l_repo_last_version_pretty" ]; then
+            if [ ! -z "$l_repo_last_version_pretty" ] && [ $l_repo_is_installed -ne 3 ]; then
                  
                 #m_compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
                 m_compare_version2 "${l_repo_current_version}" "${l_repo_last_version_pretty}"
@@ -1943,11 +2026,12 @@ function m_setup_repository() {
         #Versión de repositorio instalado en Linux
         l_repo_current_version=$(m_get_repo_current_version "$p_repo_id" ${l_install_win_cmds} "")
         l_repo_is_installed=$?          #(9) El repositorio unknown (no implementado la logica)
+                                        #(3) El repositorio unknown porque no se puede obtener (siempre instalarlo)
                                         #(1) El repositorio no esta instalado 
                                         #(0) El repositorio instalado, con version correcta
                                         #(2) El repositorio instalado, con version incorrecta
 
-        #Si esta instalado, permitir su instalación si se ingresada la opcion 2
+        #Si esta instalado, permitir su instalación si se ingresada la opcion 2 
         if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
            l_flag=$(( $p_opciones & 2 ))
            if [ $l_flag -eq 2 ]; then l_repo_must_setup_win=0; fi
@@ -1965,10 +2049,10 @@ function m_setup_repository() {
                     #Repositorio "operator-sdk": Solo si es Linux                
                     l_repo_must_setup_win=1;
                     ;;
-                #roslyn)
-                #    #Repositorio no es necesario en WSL2, debido a que se usara la su windows                
-                #    l_repo_must_setup_win=1;
-                #    ;;
+                nerd-fonts)
+                   #Las fuentes en Windows se instalan manualmente (requiere del registro de windows)                
+                    l_repo_must_setup_win=1;
+                    ;;
             esac
 
         fi
@@ -2007,7 +2091,7 @@ function m_setup_repository() {
 
         #7.2 Segun la version del repositorio actual, habilitar la instalación 
         if [ $l_repo_is_installed -eq 9 ]; then
-            echo "Repositorio - Versión Actual : \"Unknown\""
+            echo "Repositorio - Versión Actual : \"Unknown\" (No implementado)"
             echo "ERROR: Implemente la logica para determinar la version actual de repositorio instalado"
             l_repo_must_setup_win=1
         else
@@ -2017,6 +2101,8 @@ function m_setup_repository() {
              elif [ $l_repo_is_installed -eq 2 ]; then
                 echo "Repositorio - Versión Actual : \"${l_repo_current_version}\" (formato invalido)"
                 l_repo_current_version=""
+            elif [ $l_repo_is_installed -eq 3 ]; then
+                echo "Repositorio - Versión Actual : \"${l_repo_current_version}\" (No se puede calcular)"
             else
                 echo "Repositorio - Versión Actual : \"${l_repo_current_version}\""
             fi
@@ -2026,7 +2112,7 @@ function m_setup_repository() {
         if [ $l_repo_must_setup_win -eq 0 ]; then
     
             #Comparando las versiones
-            if [ ! -z "$l_repo_last_version_pretty" ]; then
+            if [ ! -z "$l_repo_last_version_pretty" ] && [ $l_repo_is_installed -ne 3 ]; then
                  
                 #m_compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
                 m_compare_version2 "${l_repo_current_version}" "${l_repo_last_version_pretty}"
@@ -2182,6 +2268,7 @@ function m_show_menu_core() {
     echo "     ( 16) Instalar/Actualizar el binario del repositorio opcional \"k0s\""
     echo "     ( 32) Instalar/Actualizar el binario del repositorio opcional \"OmniSharp/omnisharp-roslyn\""
     echo "     ( 64) Instalar/Actualizar el binario del repositorio opcional \"Samsung/netcoredbg\""
+    echo "     (128) (Re)Instalar algunas fuentes Nerd Fonts del repositorio \"ryanoasis/nerd-fonts\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
