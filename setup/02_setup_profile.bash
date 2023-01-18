@@ -681,15 +681,17 @@ function m_show_menu_core() {
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
     echo " (q) Salir del menu"
-    echo " (b) Configurar el profile basico (VIM como editor basico, ...)"
-    echo " (d) Configurar el profile como developer (VIM como IDE, ...)"
-    echo " ( ) Configurar segun una o mas opciones especificas. Ingrese la suma de las opciones que desea configurar:"
-    echo "     ( 0) Actualizar los paquetes del SO y crear los enlaces simbolicos si no existen (siempre se ejecutara)"
+    echo " (a) Configurar el profile basico (VIM como editor basico)"
+    echo " (b) Configurar el profile como developer (VIM como IDE)"
+    echo " (c) Configurar el profile basico (VIM como editor basico) y re-crear los enlaces simbolicos"
+    echo " (d) Configurar el profile como developer (VIM como IDE) y re-crear los enlaces simbolicos"
+    echo " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:"
+    echo "     ( 0) Actualizar los paquetes del SO y crear los enlaces simbolicos del profile"
     echo "     ( 1) Instalar VIM-Enhanced si no esta instalado"
     echo "     ( 2) Instalar NeoVIM si no esta instalado"
     echo "     ( 4) Configurar VIM-Enhanced como Developer"
     echo "     ( 8) Configurar NeoVIM como Developer"
-    echo "     (16) Crear y/o Forzar la actualizacion de los enlaces simbolicos del profile"
+    echo "     (16) Re-crear (crear y/o actualizar) los enlaces simbolicos del profile"
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
@@ -717,16 +719,28 @@ function m_main() {
         read l_opciones
 
         case "$l_opciones" in
-            b)
+            a)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
                 m_setup 3
                 ;;
 
-            d)
+            b)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
                 m_setup 15
+                ;;
+
+            c)
+                l_flag_continue=1
+                echo "#################################################################################################"$'\n'
+                m_setup 19
+                ;;
+
+            d)
+                l_flag_continue=1
+                echo "#################################################################################################"$'\n'
+                m_setup 31
                 ;;
 
             q)

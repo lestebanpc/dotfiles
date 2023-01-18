@@ -2173,7 +2173,7 @@ function m_show_menu_core() {
     echo "-------------------------------------------------------------------------------------------------"
     echo " (q) Salir del menu"
     echo " (a) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes"
-    echo " ( ) Actualizar segun las opciones escogidas. Ingrese la suma de las opciones que desea instalar:"
+    echo " ( ) Actualización personalizado. Ingrese la suma de las opciones que desea configurar:"
     #echo "    (  0) Actualizar xxx (siempre se realizara esta opción)"
     echo "     (  1) Actualizar los paquetes existentes del sistema operativo"   
     echo "     (  2) Actualizar los binarios de los repositorios existentes"

@@ -34,9 +34,10 @@ endif
 
 let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
 
-if g:os == "Windows"
-    let $FZF_DEFAULT_COMMAND="fd --type file"
-endif
+"Usar el comando fd (excluye lo indicado por '.gitignore') sin incluir los archivos ocultos
+"let $FZF_DEFAULT_COMMAND="fd --type file"
+"Usar el comando fd (excluye lo indicado por '.gitignore') incluyendo los archivos ocultos excepto '.git'
+let $FZF_DEFAULT_COMMAND="fd -H --type file --exclude .git"
 
 "Layout 
 "  > Border : rounded, sharp, horizontal, vertical, top, bottom, left, right
@@ -46,12 +47,14 @@ endif
 "if g:use_tmux
 "    let g:fzf_layout = { 'tmux': '-p90%,80%' }
 "else
-    if g:is_neovim
-        let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
-    else
-        let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'border': 'rounded' } }
-        "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
-    endif
+
+if g:is_neovim
+    let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
+else
+    let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'border': 'rounded' } }
+    "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
+endif
+
 "endif
 
 "Color : Permitir que se traduzca los temas de VIM de 'ANSI 256 color' a 24 bits (RGB Hex)
@@ -93,6 +96,8 @@ let g:fzf_colors =
 
 
 nnoremap <silent> <leader>f :Files<CR>
+nnoremap <silent> <leader>gf :GFiles<CR>
+nnoremap <silent> <leader>gs :GFiles?<CR>
 nnoremap <silent> <leader>b :Buffers<CR>
 nnoremap <silent> <leader>sa :Ag<CR>
 nnoremap <silent> <leader>sr :Rg<CR>

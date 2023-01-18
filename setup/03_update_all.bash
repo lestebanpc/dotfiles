@@ -205,7 +205,7 @@ function m_show_menu_core() {
     echo " (q) Salir del menu"
     echo " (a) Actualizar los artefactos existentes: paquetes del SO y paquetes VIM"
     echo " (b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y paquetes VIM"
-    echo " ( ) Actualizar las opciones que desea. Ingrese la suma de las opciones que desea instalar:"
+    echo " ( ) Actualización personalizado. Ingrese la suma de las opciones que desea configurar:"
     echo "     (  0) Actualizar los paquetes del SO existentes (siempre se realizara esta opción)"
     echo "     (  1) Actualizar los paquetes VIM existentes"
     echo "     (  2) Actualizar los binarios de los repositorios existentes"
