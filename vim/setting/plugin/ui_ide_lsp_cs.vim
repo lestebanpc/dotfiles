@@ -82,27 +82,26 @@ let g:OmniSharp_highlight_groups = {
 "Fuente de diagnostico para C# (OmniSharp se convierte en un Linter para C#)
 call extend(g:ale_linters, {'cs': ['OmniSharp'], })
 
-"###################################################################################
-" Settings> IDE > Plug-In: Vim-SharpenUp (Mappings, Code-actions para OmniSharp)
-"###################################################################################
-
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+" Vim-SharpenUp> Soporte a Code-actions para OmniSharp
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "Code actions: A flag is displayed in the sign column to indicate that one or more code actions are available.
-"Flag para habilitar esta opcion (0 es 'disable')
-let g:csharp_codeactions = 1
 
-if g:csharp_codeactions && exists('+signcolumn')
+"Flag para habilitar esta opcion (0 es 'disable')
+if !exists('+signcolumn')
+    let g:csharp_codeactions_enable = 0
+else
+    let g:csharp_codeactions_enable = 1
 
     "Lista separada de comas de las eventos (autocmd) que disparan las acciones de codigo.
     "Suggestions : CursorHold, CursorMoved, BufEnter,CursorMoved
     let g:csharp_codeactions_autocmd = 'CursorHold'
 
-    "Select the character to be used as the sign-column indicator
-    let g:csharp_codeactions_glyph = '💡'
-
     "'signcolumn' will be set to yes for .cs buffers
     let g:csharp_codeactions_set_signcolumn = 1
 
-    execute 'sign define csharp_CodeActions text=' . g:csharp_codeactions_glyph
+    "Definir un columna y el caracter a ser used as the sign-column indicator
+    sign define csharp_CodeActions text=💡
 
 endif
 

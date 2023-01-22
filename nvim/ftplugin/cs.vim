@@ -1,4 +1,4 @@
-
+"1. Inicialización
 if get(b:, 'csharp_ftplugin_loaded', 0) | finish | endif
 
 let b:undo_ftplugin = get(b:, 'undo_ftplugin', 'exe')
@@ -8,6 +8,7 @@ let b:undo_ftplugin .= '| unlet b:csharp_ftplugin_loaded'
 let s:save_cpo = &cpoptions
 set cpoptions&vim
 
+"2. Acciones personalizadas
 
 "The following commands are contextual, based on the cursor position.
 nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)
@@ -58,7 +59,8 @@ nmap <silent> <buffer> <Leader>rant <Plug>(omnisharp_run_tests_in_file_no_build)
 nmap <silent> <buffer> <Leader>rdt <Plug>(omnisharp_debug_test)
 nmap <silent> <buffer> <Leader>rdnt <Plug>(omnisharp_debug_test_no_build)
 
-if g:csharp_codeactions
+"3. Soporte a 'Code Actions'
+if exists("g:csharp_codeactions_enable") && g:csharp_codeactions_enable
 
     if g:csharp_codeactions_set_signcolumn
         setlocal signcolumn=yes
@@ -75,6 +77,7 @@ if g:csharp_codeactions
     let b:undo_ftplugin .= '| execute "autocmd! csharp_ftplugin * <buffer>"'
 endif
 
+"4. Finalización
 let &cpoptions = s:save_cpo
 unlet s:save_cpo
 
