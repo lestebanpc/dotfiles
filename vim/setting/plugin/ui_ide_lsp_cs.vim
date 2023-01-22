@@ -1,5 +1,5 @@
 "Para Neovim usar la configuracion con LSP nativo con Omnisharp Server
-if g:is_neovim
+if g:is_neovim && !g:use_coc_in_nvim
     lua require('ui_ide_lsp_cs')
     finish
 endif
@@ -17,10 +17,12 @@ let g:OmniSharp_server_path = g:lsp_server_cs_path
 "Roslyn Server (LSP Server para C#) - Si se usa WSL:
 "  - Usar el LSP server de Windows (no requiere instalar LSP server en WSL)
 "  - Las rutas de windows obtenidas de los archivo de solucion es traducida a la ruta de Linux
-if g:os == "WSL"
-	let g:OmniSharp_translate_cygwin_wsl = 1
-else
-	let g:OmniSharp_translate_cygwin_wsl = 0
+if g:os_type == 3
+    if g:wsl_cs_using_win_lsp_server
+	    let g:OmniSharp_translate_cygwin_wsl = 1
+    else
+	    let g:OmniSharp_translate_cygwin_wsl = 0
+    endif
 endif
 
 
@@ -84,6 +86,49 @@ call extend(g:ale_linters, {'cs': ['OmniSharp'], })
 " Settings> IDE > Plug-In: Vim-SharpenUp (Mappings, Code-actions para OmniSharp)
 "###################################################################################
 
-"Cambia del 'prefix' de los atajos de '\os' a ';' (os de OmniShrap)
-let g:sharpenup_map_prefix = ';'
+"Code actions: A flag is displayed in the sign column to indicate that one or more code actions are available.
+"Flag para habilitar esta opcion (0 es 'disable')
+let g:csharp_codeactions = 1
+
+if g:csharp_codeactions && exists('+signcolumn')
+
+    "Lista separada de comas de las eventos (autocmd) que disparan las acciones de codigo.
+    "Suggestions : CursorHold, CursorMoved, BufEnter,CursorMoved
+    let g:csharp_codeactions_autocmd = 'CursorHold'
+
+    "Select the character to be used as the sign-column indicator
+    let g:csharp_codeactions_glyph = '💡'
+
+    "'signcolumn' will be set to yes for .cs buffers
+    let g:csharp_codeactions_set_signcolumn = 1
+
+    execute 'sign define csharp_CodeActions text=' . g:csharp_codeactions_glyph
+
+endif
+
+"Code action: Funciones de utilidad
+let s:save_cpo = &cpoptions
+set cpoptions&vim
+
+function! ui_ide_lsp_cs#codeactions_count() abort
+  let opts = {
+  \ 'CallbackCount': function('s:CBReturnCount', [bufnr(), line('.')]),
+  \ 'CallbackCleanup': {-> execute('sign unplace * group=csharp_CodeActions')}
+  \}
+  call OmniSharp#actions#codeactions#Count(opts)
+endfunction
+
+function! s:CBReturnCount(bufnr, line, count) abort
+  if a:count
+    execute 'sign place 99'
+    \ 'line=' . a:line
+    \ 'name=csharp_CodeActions'
+    \ 'group=csharp_CodeActions'
+    \ 'file=' . bufname(a:bufnr)
+  endif
+endfunction
+
+let &cpoptions = s:save_cpo
+unlet s:save_cpo
+
 

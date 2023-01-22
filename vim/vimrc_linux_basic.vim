@@ -4,21 +4,18 @@
 let g:use_tabline = 1
 
 "Habilita el uso de IDE (En VIM, puede ser desabilitado si se cumple los requisitos minimos)
-let g:use_ide = 1
-
-"----------------------------- Basic Settings          -----------------------------
-source ~/.files/vim/setting/core_setting.vim
-source ~/.files/vim/setting/core_mapping.vim
+let g:use_ide = 0
 
 "----------------------------- Variables usados x IDE  -----------------------------
 
 "Habilitar Typing
-let g:use_typing_html_emmet = 1
-let g:use_typing_surround = 1
-let g:use_typing_visual_multi = 1
+let g:use_typing_html_emmet = 0
+let g:use_typing_surround = 0
+let g:use_typing_visual_multi = 0
 
-"IDE - Path de LSP Server C# (Roslyn)
-let g:lsp_server_cs_path = '/opt/tools/omnisharp_roslyn/OmniSharp'
+"----------------------------- Basic Settings          -----------------------------
+source ~/.files/vim/setting/core_setting.vim
+source ~/.files/vim/setting/core_mapping.vim
 
 "----------------------------- Plugins Initialize      -----------------------------
 "Registro de los plugin en los gestores de plugins Vim-Plug y de paquetes Packer
@@ -38,28 +35,6 @@ source ~/.files/vim/setting/plugin/ui_core.vim
 "Utilitarios basicos: FZF, NERDTree, ...
 source ~/.files/vim/setting/plugin/ui_extended.vim
 
-"----------------------------- Plugins IDE             -----------------------------
-if !g:use_ide
-    finish
-end
-
-"Setting Typing del IDE:
-source ~/.files/vim/setting/plugin/ui_ide_typing.vim
-
-"Setting IDE Core : Diagnostic (Linting y Fixing), LSP client, Completition, ...
-"En VIM se define:
-"   - Diagnostico : ALE
-"   - Interprese Lenguage Server (incluye LSP server) y Completition : CoC.nvim
-"   - Snippets : UltiSnippets
-source ~/.files/vim/setting/plugin/ui_ide_core.vim
-
-"Adaptadores de Lenguajes personalizados: C# (OmniSharp)
-"Implementa :
-"   - LSO cliente para LSP server Roslyn
-"   - Source para ALE linting (Linter para C#)
-"   - Source de autocompletado para Coc (y otros motores de autocompletado
-"   - Source para UltiSnippets
-source ~/.files/vim/setting/plugin/ui_ide_lsp_cs.vim
 
 
 

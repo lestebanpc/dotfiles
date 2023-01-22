@@ -2268,7 +2268,7 @@ function m_show_menu_core() {
     echo "     ( 16) Instalar/Actualizar el binario del repositorio opcional \"k0s\""
     echo "     ( 32) Instalar/Actualizar el binario del repositorio opcional \"OmniSharp/omnisharp-roslyn\""
     echo "     ( 64) Instalar/Actualizar el binario del repositorio opcional \"Samsung/netcoredbg\""
-    echo "     (128) (Re)Instalar algunas fuentes Nerd Fonts del repositorio \"ryanoasis/nerd-fonts\""
+    echo "     (128) (Re)Instalar en el servidor fuentes Nerd Fonts desde    \"ryanoasis/nerd-fonts\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 

@@ -74,7 +74,7 @@ endif
 "###################################################################################
 
 "NO ejecutar en Windows
-if g:os == "Windows"
+if g:os_type == 0
     finish
 endif
   

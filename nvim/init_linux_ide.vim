@@ -6,10 +6,6 @@ let g:use_tabline = 1
 "Habilita el uso de IDE (En VIM, puede ser desabilitado si se cumple los requisitos minimos)
 let g:use_ide = 1
 
-"----------------------------- Basic Settings          -----------------------------
-source ~/.files/vim/setting/core_setting.vim
-source ~/.files/vim/setting/core_mapping.vim
-
 "----------------------------- Variables usados x IDE  -----------------------------
 
 "Habilitar Typing
@@ -17,8 +13,12 @@ let g:use_typing_html_emmet = 1
 let g:use_typing_surround = 1
 let g:use_typing_visual_multi = 1
 
-"IDE - Path de LSP Server C# (Roslyn)
-let g:lsp_server_cs_path = '/opt/tools/omnisharp_roslyn/OmniSharp'
+"Solo para WSL: Si es 1, se re-usara el LSP Server C# (Roslyn) instalado en Windwos
+let g:wsl_cs_using_win_lsp_server = 0
+
+"----------------------------- Basic Settings          -----------------------------
+source ~/.files/vim/setting/core_setting.vim
+source ~/.files/vim/setting/core_mapping.vim
 
 "----------------------------- Plugins Initialize      -----------------------------
 "Registro de los plugin en los gestores de plugins Vim-Plug y de paquetes Packer
@@ -44,7 +44,7 @@ if !g:use_ide
 end
 
 "Setting Typing del IDE:
-source ~/.files/vim/setting/plugin/ui_ide_typing.vim
+source ~/.files/vim/setting/plugin/ui_ide_basic.vim
 
 "Setting IDE Core : Diagnostic (Linting y Fixing), LSP client, Completition, ...
 "En VIM se define:

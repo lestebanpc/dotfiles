@@ -4,19 +4,29 @@
 
 "----------------------------- Calcular de Variables  ------------------------------
 
-if !exists("g:os")
+"Tipos de sistemas operativos
+"  0 - Windows
+"  1 - MacOS
+"  2 - Linux
+"  3 - WSL
+"
+if !exists("g:os_type")
     if has("win64") || has("win32") || has("win16")
-        let g:os = "Windows"
+        "Es Windows
+        let g:os_type = 0
     else
         let s:kernelsys = system("uname -s")
         let s:kernelrel = system("uname -r")
 
         if (s:kernelsys =~ "Linux*") && (stridx(s:kernelrel,"WSL") > 0)
-            let g:os = "WSL"
+            "Es Linux WSL
+            let g:os_type = 3
         elseif s:kernelsys =~ "Darwin*"
-            let g:os = "MacOS"
+            "Es MacOS
+            let g:os_type = 1
         else
-            let g:os = "Linux"
+            "Es Linux
+            let g:os_type = 2
         endif
     endif
 endif
@@ -52,12 +62,35 @@ else
 endif
 
 "Determinar si se usa TMUX
-if (g:os != "Windows") && exists('$TMUX') 
+if (g:os_type != 0) && exists('$TMUX') 
     let g:use_tmux = 1
 else
     let g:use_tmux = 0
 endif
 
+"Path de LSP server de C# 'Omnisharp Roslyn'
+"Si es Linux
+if g:os_type == 3
+    let g:lsp_server_cs_path = '/opt/tools/omnisharp_roslyn/OmniSharp'
+"Si es WSL
+elseif g:os_type = 2
+    if g:wsl_cs_using_win_lsp_server
+        let g:lsp_server_cs_path = '/mnt/d/Tools/CLI/Omnisharp_Roslyn/OmniSharp.exe'
+    else
+        let g:lsp_server_cs_path = '/opt/tools/omnisharp_roslyn/OmniSharp'
+    endif
+"Si es Windows
+elseif g:os_type = 0
+    let g:lsp_server_cs_path = 'D:/Tools/CLI/Omnisharp_Roslyn/OmniSharp.exe'
+"Si es MacOS
+"elseif g:os_type = 1
+"    let g:lsp_server_cs_path = '/opt/tools/omnisharp_roslyn/OmniSharp'
+endif
+
+let g:use_coc_in_nvim = 0
+if g:is_neovim && $USE_COC != ""
+    let g:use_coc_in_nvim = 1
+endif
 
 "----------------------------- Validar los requisitos ------------------------------
 
@@ -75,8 +108,8 @@ set fileformats=unix,dos,mac
 set backspace=indent,eol,start
 
 "Convertir el key <tab> en 3 espacio en blancos
-set tabstop=3
-set shiftwidth=3
+set tabstop=4
+set shiftwidth=4
 set softtabstop=0
 set expandtab
 
@@ -111,8 +144,8 @@ set termguicolors
 "set t_Co=256
 
 "Establcer el tipo de terminal (pseudoterminal o pty)
-if (g:os == "Windows") && !g:is_neovim
-"if g:os == "Windows"
+if (g:os_type == 0) && !g:is_neovim
+"if g:os_type == 0
     "Si es Windows >= 10.1809, usar 'Windows Pseudo Console' (ConPTY)
 	set termwintype=conpty
     "Si es Windows <  10.1809, usar 'Windows Pseudo terminal' (WinPTY)
@@ -195,7 +228,8 @@ filetype indent on
 
 "----------------------------- Defualt Shell           -----------------------------
 "Usado para ejecutar 'system('cmd')' o usando ':!cmd'. No usado para terminales
-if g:os == "Windows"
+"Windows
+if g:os_type == 0
 
     "El plugin de FZF no tiene soporte a pwsh, se corrigio manualmente para ello
     set shell=pwsh
@@ -210,8 +244,8 @@ if g:os == "Windows"
         set shellquote =  
         set shellxquote = 
     endif
-
-elseif g:os == "Linux"
+"Linux incluyendo WSL
+elseif (g:os_type == 2) || (g:os_type ==3)
 
     if exists('$SHELL')
         set shell=$SHELL
@@ -225,7 +259,8 @@ endif
 "----------------------------- Clipboard de SO         -----------------------------
 
 "Uso de los registros vinculados al portapales del SO
-if g:os == "WSL"
+"Solo WSL
+if g:os_type == 3
 
     "Copia cualquier yank que esta en el registro " (por defecto) se copia al portapales del SO
     augroup Yank
@@ -241,12 +276,14 @@ elseif g:has_clipboard
     "Para copiar selecione y use "CTRL + c", para pegar use "CTRL + v"
     set clipboard=unnamed
 
-    "if g:os == "Linux"
+    ""Solo Linux
+    "if g:os_type == 2
     "    "Usar como registro predeterminado a '+' (que apunta al portapales 'PRIMARY' del servidor X11)
     "    "Para copiar el al portapales solo selecione el texto, 
     "    "Para pegar del portapales use el boton central o boton secundario o 'SHFIT + INSERT'
     "    "Se esta usando esto en Linux porque es mas facil usar y mas eficiente en recursos
     "    set clipboard=unnamedplus
+    ""No es Linux o WSL
     "else        
     "    "Usar como registro predeterminado a '*' vinculado al portapales principal del SO 
     "    "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
@@ -313,7 +350,7 @@ endif
 
 "----------------------------- Configuraciones de CoC   ----------------------------
 
-if !g:is_neovim && g:use_ide
+if g:use_ide && (!g:is_neovim || g:use_coc_in_nvim)
 
     "Some servers have issues with backup files
     "set nobackup

@@ -26,6 +26,7 @@ if !g:is_neovim
 
     "Adding to vim-airline's statusline
     let g:webdevicons_enable_airline_statusline = 1
+
 endif
 
 "###################################################################################
@@ -34,10 +35,15 @@ endif
 
 let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
 
-"Usar el comando fd (excluye lo indicado por '.gitignore') sin incluir los archivos ocultos
-"let $FZF_DEFAULT_COMMAND="fd --type file"
-"Usar el comando fd (excluye lo indicado por '.gitignore') incluyendo los archivos ocultos excepto '.git'
-let $FZF_DEFAULT_COMMAND="fd -H --type file --exclude .git"
+"Usar el comando 'fd' y no 'find' debido a que excluye de la busqueda lo especificado por '.gitignore'
+"Adicionalmente :
+"  > Solo incluir archivos '-t f' o '--type f'
+"  > Incluir los archivos ocultos '-H' o '--hidden'
+"  > Excluir de la busqueda '-E' o '--exclue'
+"    > La carpetas de git                    : '.git' 
+"    > Archivo de Swap o temporales de VIM   : '.swp'
+"    > Archivo de 'persistence undo' de VIM  : '.un~'
+let $FZF_DEFAULT_COMMAND="fd -H -t f -E '.git' -E '*.swp' -E '*.un~'"
 
 "Layout 
 "  > Border : rounded, sharp, horizontal, vertical, top, bottom, left, right

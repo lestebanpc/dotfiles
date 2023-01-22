@@ -2,6 +2,9 @@
 " Package Manager : Carga manual de Paquetes y su configuracion basica
 "###################################################################################
 
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"Editor> Mejorar la experiencia de usuario
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if g:is_neovim
 
     "El ESQUEMA DE COLOR del tema SIEMPRE debera configurarse antes de la carga de una UI
@@ -55,6 +58,9 @@ packadd fzf.vim
 
 if g:use_ide
 
+    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    "IDE> Basico
+    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     if g:use_typing_surround 
         "Package UI> IDE> TYPING> Encerrar/Modificar con (), {}, [] un texto
         packadd vim-surround
@@ -69,6 +75,51 @@ if g:use_ide
 
         "Package UI> IDE> Core> Resaltador de sintexis o semantica
         packadd nvim-treesitter
+
+    endif
+
+    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    "IDE> Completition, LSP Client, Snippets
+    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    
+    "Si es VIM siempre usar CoC.nVim, si es NeoVim solo si se habilita el flag    
+    if !g:is_neovim || (g:is_neovim && g:use_coc_in_nvim)
+
+        "Package UI> IDE> Core> Linting y LSP Client para VIM
+        "   Desabilitar LSP : Se usara Vim-LSP
+        let g:ale_disable_lsp = 1
+        "   Desabilitar Completition : Se usara CoC.nvim
+        let g:ale_completion_enabled = 0
+        packadd ale
+        "   No se cargaran todos los linter existes por lenguajes (se cargar segun lo que se requiera)
+        let g:ale_linters = {}
+
+        "Pacakege UtilSnips usa Python3
+        if g:has_python3
+
+            "Package UI> IDE> Core> UltiSnips: Motor/Framework de Snippets
+            packadd ultisnips
+
+            "Package UI> IDE> Core> UltiSnips: Implementacion de Snippet para diferentes lenguajes de programacion
+            packadd vim-snippets
+
+        endif
+
+        "Package UI> IDE> Core> LSP Client, Complete (y muchos complementos de 3ros)
+        "   El diganostico se enviara ALE (no se usara el del CoC)
+        "   Complementos que se sugiere instalar:
+        "     - Soporte a desarrollo web :CocInstall coc-tsserver coc-json coc-html coc-css
+        "     - Soporte a Python3 :CocInstall coc-pyright
+        "     - Soporte a UtilSnips :CocInstall coc-ultisnips
+        packadd coc.nvim
+    
+        "Package UI> IDE> Core> C#> LSP Cliente de Roslyn para C# y adaptadores para usar con otros plugins
+        packadd omnisharp-vim
+        
+        "Plug-In UI> IDE> Core> C#> Mappings, Code-actions para OmniSharp
+        "packadd vim-sharpenup
+
+    else
 
         "Package UI> IDE> Core> Linting, Fixing, LSP Client.. (nativo de NeoVim)
         packadd nvim-lspconfig
@@ -95,6 +146,13 @@ if g:use_ide
         "Package UI> IDE> Core> Fuente CMP: Snippet tipo LuaSnip
         packadd cmp_luasnip
 
+    endif
+
+    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    "IDE> Debuggers
+    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    if g:is_neovim
+
         "Package UI> IDE> CORE> Depurador (Cliente DAP y los adaptadores depuracion)
         packadd nvim-dap
 
@@ -107,49 +165,17 @@ if g:use_ide
         "Package UI> IDE> CORE> DAP> Mejora de UI para nVim-DAP
         packadd telescope-dap.nvim
 
-    else
+    elseif g:has_python3
 
-        "Package UI> IDE> Core> Linting y LSP Client para VIM
-        "   Desabilitar LSP : Se usara Vim-LSP
-        let g:ale_disable_lsp = 1
-        "   Desabilitar Completition : Se usara CoC.nvim
-        let g:ale_completion_enabled = 0
-        packadd ale
-        "   No se cargaran todos los linter existes por lenguajes (se cargar segun lo que se requiera)
-        let g:ale_linters = {}
-
-        "Pacakege UtilSnips usa Python3
-        if g:has_python3
-
-            "Package UI> IDE> Core> UltiSnips: Motor/Framework de Snippets
-            packadd ultisnips
-
-            "Package UI> IDE> Core> UltiSnips: Implementacion de Snippet para diferentes lenguajes de programacion
-            packadd vim-snippets
-
-            "Package UI> IDE> Core> Graphical Debugger
-            "Habilitar el tipo de key-mapping por defecto de tipo 'HUMAN'
-            let g:vimspector_enable_mappings = 'HUMAN'
-            "let g:vimspector_enable_mappings = 'VISUAL_STUDIO'
-            packadd vimspector
-
-        endif
-
-        "Package UI> IDE> Core> LSP Client, Complete (y muchos complementos de 3ros)
-        "   El diganostico se enviara ALE (no se usara el del CoC)
-        "   Complementos que se sugiere instalar:
-        "     - Soporte a desarrollo web :CocInstall coc-tsserver coc-json coc-html coc-css
-        "     - Soporte a Python3 :CocInstall coc-pyright
-        "     - Soporte a UtilSnips :CocInstall coc-ultisnips
-        packadd coc.nvim
-    
-        "Package UI> IDE> Core> C#> LSP Cliente de Roslyn para C# y adaptadores para usar con otros plugins
-        packadd omnisharp-vim
-        
-        "Plug-In UI> IDE> Core> C#> Mappings, Code-actions para OmniSharp
-        packadd vim-sharpenup
+        "Package UI> IDE> Core> Graphical Debugger
+        "Habilitar el tipo de key-mapping por defecto de tipo 'HUMAN'
+        let g:vimspector_enable_mappings = 'HUMAN'
+        "let g:vimspector_enable_mappings = 'VISUAL_STUDIO'
+        packadd vimspector
 
     endif
+
+
 
 endif
 
@@ -164,7 +190,8 @@ call plug#begin()
 
 "----------------------------- Plug-in Manager - LOAD  -----------------------------
 "Plug-In> UI> CORE> Crear paneles TMUX desde VIM (en Windows no existe TMUX)
-if g:os != "Windows"
+"Solo en Linux (incluyendo WSL, solo en Linux y MacOS)
+if g:os_type != 0
     Plug 'preservim/vimux'
 endif
 
@@ -191,12 +218,9 @@ call plug#end()
 "###################################################################################
 
 
-"Vim-DevIcons : Loading the plugin
-"Es requierdo aqui?
-"let g:webdevicons_enable = 1
-
 "Paquete UI> CORE> Permite navegar entre split VIM y paneles TMUX como el mismo comando
-if g:os != "Windows"
+"Solo en Linux (incluyendo WSL, solo en Linux y MacOS)
+if g:os_type != 0
     packadd vim-tmux-navigator
 endif
 

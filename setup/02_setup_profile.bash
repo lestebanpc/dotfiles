@@ -27,12 +27,16 @@ if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
     g_is_root=0
 fi
 
+#Expresion regular para extrear la versión de un programa
+declare -r g_regexp_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
+
 #}}}
 
-# Opciones:
+# Parametros:
+# > Opcion:
 #    0 - Se configura VIM en modo basico (por defecto)
 #    1 - Se configura VIM en modo IDE
-function m_setup_neovim() {
+function m_neovim_config_plugins() {
 
     #1. Argumentos
     local p_opcion=0
@@ -40,18 +44,9 @@ function m_setup_neovim() {
         p_opcion=$1
     fi
 
-    local p_overwrite_ln_flag=1
-    if [[ "$2" =~ ^[0-9]+$ ]]; then
-        p_overwrite_ln_flag=$2
-    fi
-
     local path_data=~/.local/share
 
     #Instalar los plugins
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "- Configuración de NeoVIM"
-    echo "-------------------------------------------------------------------------------------------------"
-    
     echo "Instalar el gestor de paquetes Vim-Plug"
     if [ ! -f ${path_data}/nvim/site/autoload/plug.vim ]; then
         mkdir -p ${path_data}/nvim/site/autoload
@@ -66,7 +61,7 @@ function m_setup_neovim() {
     local l_repo_git="wbthomason/${l_repo_name}"
     if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
         #echo "...................................................."
-        echo "Instalando el paquete VIM \"${l_repo_git}\""
+        echo "Instalando el paquete NeoVim \"${l_repo_git}\""
         #echo "...................................................."
         git clone --depth 1 https://github.com/${l_repo_git}.git
     else
@@ -74,28 +69,145 @@ function m_setup_neovim() {
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
     
-    echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-    if [ ! -e ~/.config/nvim/lua ] || [ $p_overwrite_ln_flag -eq 0 ]; then
-        echo "Creando el enlace de \"~/.config/nvim/lua\""
-        mkdir -p ~/.config/nvim
-        ln -snf ~/.files/nvim/lua ~/.config/nvim/lua
+
+    return 0
+}
+
+# Parametros:
+# > Opcion ingresada por el usuario.
+function m_neovim_setup() {
+
+    #1. Argumentos
+    local p_opciones=0
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_opciones=$1
     fi
 
-    if [ ! -e ~/.config/nvim/init.vim ] || [ $p_overwrite_ln_flag -eq 0 ]; then
-        if [ $p_opcion -eq 1 ]; then
-            echo "Creando el enlace de \"~/.config/nvim/init.vim\" para usarlo como IDE"
-            ln -snf ~/.files/nvim/init_vm_linux_ide.vim ~/.config/nvim/init.vim
+    #Sobrescribir los enlaces simbolicos
+    local l_option=64
+    local l_flag=$(( $p_opciones & $l_option ))
+    local l_overwrite_ln_flag=1
+    if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
+
+    #2. Determinando la version actual de NeoVim
+    local l_version=""
+    l_version=$(/opt/tools/neovim/bin/nvim --version 2> /dev/null)
+    local l_status=$?
+    local l_nvim_flag=1
+    if [ $l_status -eq 0 ]; then
+        l_version=$(echo "$l_version" | head -n 1)
+        l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+        l_nvim_flag=0
+    else
+        l_version=""
+    fi
+
+    #3. Instalando NeoVim
+    echo "-------------------------------------------------------------------------------------------------"
+    echo "> Configuración de NeoVIM"
+    echo "-------------------------------------------------------------------------------------------------"
+    
+    l_option=8
+    l_flag=$(( $p_opciones & $l_option ))
+
+    if [ $l_flag -eq $l_option ]; then
+
+        #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        if [ $l_nvim_flag -ne 0 ]; then
+
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            #echo "- Instalación de NeoVIM"
+            echo "Se va instalar NeoVIM"
+
+            #Valide que el flag asociado a Neovin sea el segundo parametro y sea un numero valido
+            ~/.files/setup/01_setup_commands.bash 2 8 "neovim"
+            l_nvim_flag=0
+
+            echo "Opcionalmente, revise:"
+            echo "    > Soporte de Plugins en Python  : pip install pynvim"
+	        echo "    > Soporte de Plugins en Node.JS : sudo npm i -g neovim"
+
         else
-            echo "Creando el enlace de \"~/.config/nvim/init.vim\" para usarlo como editor basico"
-            ln -snf ~/.files/nvim/init_vm_linux_basic.vim ~/.config/nvim/init.vim
+            echo "NeoVIM \"${l_version}\" esta instalado: "
+            echo "   > Revise si existe una nueva versión en 'https://github.com/neovim/neovim/releases/tag/stable'"
+            echo "   > Instale la ultima version usando '~/.files/setup/01_setup_commands.bash' o '~/.files/setup/03_update_all.bash'"
         fi
     fi
+
+
+    #4. Configurar NeoVim
+    if [ $l_nvim_flag -ne 0 ]; then
+        echo "Para configurar NeoVim debera instalar primero NeoVim"
+        return 0
+    fi
+
+    #Configurar NeoVim como IDE (Developer)
+    l_option=32
+    l_flag=$(( $p_opciones & $l_option ))
+    if [ $l_flag -eq $l_option ]; then
+
+        #Instalando paquetes
+        m_neovim_config_plugins 1
+
+        #Creando enlaces simbolicos
+        printf '\n'
+        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+
+        mkdir -p ~/.config/nvim/
+
+        if [ ! -e ~/.config/nvim/coc-settings.json ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "Creando los enlaces simbolico de ~/.config/nvim/coc-settings.json"
+            ln -sfn ~/.files/nvim/coc/coc-settings.json ~/.config/nvim/coc-settings.json
+        fi
+
+        if [ ! -e ~/.config/nvim/init.vim ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "Creando el enlace de \"~/.config/nvim/init.vim\" para usarlo como IDE"
+            ln -snf ~/.files/nvim/init_linux_ide.vim ~/.config/nvim/init.vim
+        fi
+
+        if [ ! -e ~/.config/nvim/ftplugin ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "Creando el enlace de \"~/.config/nvim/ftplugin\" para usarlo como IDE"
+            ln -snf ~/.files/nvim/ftplugin/ ~/.config/nvim/ftplugin
+        fi
+
+        if [ ! -e ~/.config/nvim/lua ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "Creando el enlace de \"~/.config/nvim/lua\""
+            ln -snf ~/.files/nvim/lua ~/.config/nvim/lua
+        fi
+
+    fi
+
+    #Configurar NeoVim como Editor basico 
+    l_option=16
+    l_flag=$(( $p_opciones & $l_option ))
+    if [ $l_flag -eq $l_option ]; then
+
+        #Instalando paquetes
+        m_neovim_config_plugins 0
+
+        #Creando enlaces simbolicos
+        printf '\n'
+        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+
+        mkdir -p ~/.config/nvim/
+
+        if [ ! -e ~/.config/nvim/init.vim ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "Creando el enlace de \"~/.config/nvim/init.vim\" para usarlo como editor basico"
+            ln -snf ~/.files/nvim/init_linux_basic.vim ~/.config/nvim/init.vim
+        fi
+        
+        if [ ! -e ~/.config/nvim/lua ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "Creando el enlace de \"~/.config/nvim/lua\""
+            ln -snf ~/.files/nvim/lua ~/.config/nvim/lua
+        fi
+
+    fi
+
 
     echo "Complete la configuracion de los plugins en NeoVIM"
     echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
     echo "  2> Instalar los plugins de VIM-Plug: \":PackerUpdate\""
 
-    return 0
 }
 
 # Repositorios GIT donde estan los plugins VIM
@@ -120,14 +232,15 @@ declare -A gA_repositories=(
         ['OmniSharp/omnisharp-vim']=4
         ['SirVer/ultisnips']=4
         ['honza/vim-snippets']=4
-        ['nickspoons/vim-sharpenup']=4
+        #['nickspoons/vim-sharpenup']=4
         ['puremourning/vimspector']=4
     )
 
-# Opciones:
+# Parametros:
+# > Opcion:
 #    0 - Se configura VIM en modo basico (por defecto)
 #    1 - Se configura VIM en modo IDE
-function m_setup_vim() {
+function m_vim_config_plugins() {
 
     #1. Argumentos
     local p_opcion=0
@@ -135,15 +248,7 @@ function m_setup_vim() {
         p_opcion=$1
     fi
 
-    local p_overwrite_ln_flag=1
-    if [[ "$2" =~ ^[0-9]+$ ]]; then
-        p_overwrite_ln_flag=$2
-    fi
-    
     #Instalar los plugins
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "- Configuración de VIM-Enhanced"
-    echo "-------------------------------------------------------------------------------------------------"
     echo "Instalar los paquetes usados por VIM"
     mkdir -p ~/.vim/pack/themes/start
     mkdir -p ~/.vim/pack/themes/opt
@@ -233,202 +338,50 @@ function m_setup_vim() {
 
     done;
 
-    
-    printf '\n'
-    echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-    if [ $p_opcion -eq 1 ]; then
-
-        #if [ ! -e ~/.vimrc ] || [ $p_overwrite_ln_flag -eq 0 ]; then
-        echo "Creando el enlace de ~/.vimrc"
-        ln -snf ~/.files/vim/vimrc_vm_linux_ide.vim ~/.vimrc
-        #fi
-        echo "Complete la configuracion de VIM para IDE:"
-        echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
-        echo "  2> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
-        echo "     2.1> Lenguajes basicos: JS, Json, HTLML, CSS, Python"
-        echo "         \":CocInstall coc-tsserver coc-json coc-html coc-css\""
-        echo "         \":CocInstall coc-pyrigh\""
-        echo "     2.2> Lenguajes basicos para Linux: Bash"
-        echo "         \":CocInstall coc-sh\""
-        echo "     2.3> Motor de snippets"
-        echo "         \":CocInstall coc-ultisnips\""
-        echo "  3> Configuracion de COC: \":CocConfig\""
-        echo "     3.1> Usar ALE como motor de Lighting"
-        echo "          { \"diagnostic.displayByAle\": true }"
-    else
-        #if [ ! -e ~/.vimrc ] || [ $p_overwrite_ln_flag -eq 0 ]; then
-        echo "Creando el enlace de ~/.vimrc"
-        ln -snf ~/.files/vim/vimrc_vm_linux_basic.vim ~/.vimrc
-        #fi
-        echo "Complete la configuracion de VIM como editor basico:"
-        echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
-    fi
-
     return 0
 }
 
-
-# Opciones:
-#   ( 0) Actualizar los paquetes del SO y actualizar los enlaces simbolicos (siempre se ejecutara)"
-#   ( 1) Instalar VIM-Enhanced si no esta instalado"
-#   ( 2) Instalar NeoVIM si no esta instalado"
-#   ( 4) Configurar VIM-Enhanced como Developer"
-#   ( 8) Configurar NeoVIM como Developer"
-#   (16) Forzar el actualizado de los enlaces simbolicos del profile"
-function m_setup() {
+# Parametros:
+# > Opcion ingresada por el usuario.
+function m_vim_setup() {
 
     #1. Argumentos
-    local p_opciones=3
+    local p_opciones=0
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_opciones=$1
     fi
 
-    #2. Validar si fue descarga el repositorio git correspondiente
-    if [ ! -d ~/.files/.git ]; then
-        echo "No existe los archivos necesarios, debera seguir los siguientes pasos:"
-        echo "   1> Descargar los archivos del repositorio:"
-        echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
-        echo "   2> Instalar comandos basicos:"
-        echo "      chmod u+x ~/.files/setup/01_setup_commands.bash"
-        echo "      ~/.files/setup/01_setup_commands.bash"
-        echo "   3> Configurar el profile del usuario:"
-        echo "      chmod u+x ~/.files/setup/02_setup_profile.bash"
-        echo "      ~/.files/setup/02_setup_profile.bash"
-        return 0
-    fi
-    
-    #3. Solicitar credenciales de administrador y almacenarlas temporalmente
-    if [ $g_is_root -ne 0 ]; then
-
-        #echo "Se requiere alamcenar temporalmente su password"
-        sudo -v
-
-        if [ $? -ne 0 ]; then
-            echo "ERROR(20): Se requiere \"sudo -v\" almacenar temporalmente su credenciales de root"
-            return 20;
-        fi
-        printf '\n\n'
-    fi
-    
-    #4. Actualizar los paquetes de los repositorios
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "- Actualizar los paquetes de los repositorio del SO Linux"
-    echo "-------------------------------------------------------------------------------------------------"
-    
-    #Segun el tipo de distribución de Linux
-    case "$g_os_subtype_id" in
-        1)
-            #Distribución: Ubuntu
-            if [ $g_is_root -eq 0 ]; then
-                apt-get update
-                apt-get upgrade
-            else
-                sudo apt-get update
-                sudo apt-get upgrade
-            fi
-            ;;
-        2)
-            #Distribución: Fedora
-            if [ $g_is_root -eq 0 ]; then
-                dnf upgrade
-            else
-                sudo dnf upgrade
-            fi
-            ;;
-        0)
-            echo "ERROR (22): No se identificado el tipo de Distribución Linux"
-            return 22;
-            ;;
-    esac
-   
-    
-    #5. Instalando comandos basicos
-    local l_version=""
-    local l_status=0
-    local l_version_regexp='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
-
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "Verificando comandos/programas basicos requeridos ..."
-
-    #5.1 Instalando XClip utilitarios para gestion de "clipbboard" (X11 Selection)
-    #    Por algun motivo la version se muestra el flujo estandar de errores 
-    l_version=$(xclip -version 2>&1 1> /dev/null)
-    l_status=$?
-    if [ $l_status -ne 0 ]; then
-
-        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-        #echo "- Instalación de XClip"
-        echo "Se va instalar XClip"
-
-        case "$g_os_subtype_id" in
-            1)
-               #Distribución: Ubuntu
-               if [ $g_is_root -eq 0 ]; then
-                  apt-get install xclip
-               else
-                  sudo apt-get install xclip
-               fi
-               ;;
-            2)
-               #Distribución: Fedora
-               if [ $g_is_root -eq 0 ]; then
-                  dnf install xclip
-               else
-                  sudo dnf install xclip
-               fi
-               ;;
-        esac
-    else
-        l_version=$(echo "$l_version" | head -n 1 )
-        l_version=$(echo "$l_version" | sed "$l_version_regexp")
-        echo "XClip \"${l_version}\" ya esta instalado"
-    fi
-
-    #5.1 Instalando XSel utilitarios para gestion de "clipbboard" (X11 Selection)
-    l_version=$(xsel --version 2> /dev/null)
-    l_status=$?
-    if [ $l_status -ne 0 ]; then
-
-        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-        #echo "- Instalación de XSel"
-        echo "Se va instalar XSel"
-
-        case "$g_os_subtype_id" in
-            1)
-               #Distribución: Ubuntu
-               if [ $g_is_root -eq 0 ]; then
-                  apt-get install xsel
-               else
-                  sudo apt-get install xsel
-               fi
-               ;;
-            2)
-               #Distribución: Fedora
-               if [ $g_is_root -eq 0 ]; then
-                  dnf install xsel
-               else
-                  sudo dnf install xsel
-               fi
-               ;;
-        esac
-    else
-        l_version=$(echo "$l_version" | head -n 1 )
-        l_version=$(echo "$l_version" | sed "$l_version_regexp")
-        echo "XSel \"${l_version}\" ya esta instalado"
-    fi
-
-    #6. Instalando VIM-Enhaced
-    local l_option=1
+    #Sobrescribir los enlaces simbolicos
+    local l_option=64
     local l_flag=$(( $p_opciones & $l_option ))
-    local l_vim_flag=1
-    if [ $l_flag -eq $l_option ]; then l_vim_flag=0; fi
+    local l_overwrite_ln_flag=1
+    if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
 
-    if [ $l_vim_flag -eq 0 ]; then
+    #2. Determinando la version actual de VIM
+    local l_version=""
+    l_version=$(vim --version 2> /dev/null)
+    local l_status=$?
+    local l_vim_flag=1
+    if [ $l_status -eq 0 ]; then
+        l_version=$(echo "$l_version" | head -n 1)
+        l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+        l_vim_flag=0
+    else
+        l_version=""
+    fi
+
+    #3, Instalando VIM-Enhaced
+    echo "-------------------------------------------------------------------------------------------------"
+    echo "> Configuración de VIM-Enhanced"
+    echo "-------------------------------------------------------------------------------------------------"
+    
+    l_option=1
+    l_flag=$(( $p_opciones & $l_option ))
+
+    if [ $l_flag -eq $l_option ]; then
 
         #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-        l_version=$(vim --version 2> /dev/null)
-        l_status=$?
-        if [ $l_status -ne 0 ]; then
+        if [ $l_vim_flag -ne 0 ]; then
 
             echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
             #echo "- Instalación de VIM-Enhaced"
@@ -452,103 +405,253 @@ function m_setup() {
                    fi
                    ;;
             esac
+            l_vim_flag=0
         else
-            l_version=$(echo "$l_version" | head -n 1)
-            l_version=$(echo "$l_version" | sed "$l_version_regexp")
             echo "VIM-Enhaced \"${l_version}\" ya esta instalado"
         fi
 
-        #6.1 Instalacion requerida para VIM-Enhaced como develeper
-        #    Instalar Node.JS
-        l_option=4
-        l_flag=$(( $p_opciones & $l_option ))
-
-        if [ $l_flag -eq $l_option ]; then
-
-            #6.1.1 Instalación de Node JS (VIM como IDE)
-            #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-            l_version=$(node -v 2> /dev/null)
-            l_status=$?
-            if [ $l_status -ne 0 ]; then
-
-                echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-                echo "Se va instalar Node JS version 19.x (VIM como IDE)"
-
-                if [ $g_is_root -eq 0 ]; then
-                    curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
-                    yum install -y nodejs
-                else
-                    curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
-                    sudo yum install -y nodejs
-                fi
-
-
-            else
-                l_version=$(echo "$l_version" | sed "$l_version_regexp")
-                echo "Node.JS \"$l_version\" ya esta instalado"
-            fi
-
-            #6.1.2 Instalación de Python3
-            l_version=$(python3 --version 2> /dev/null)
-            l_status=$?
-            if [ $l_status -ne 0 ]; then
-
-                echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-                echo "Se va instalar Python3 (VIM como IDE)"
-
-                #if [ $g_is_root -eq 0 ]; then
-                #    curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
-                #    yum install -y nodejs
-                #else
-                #    curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
-                #    sudo yum install -y nodejs
-                #fi
-
-            else
-                l_version=$(echo "$l_version" | sed "$l_version_regexp")
-                echo "Python3 \"$l_version\" ya esta instalado"
-            fi
-
-        fi
     fi
-    
-    #7. Instalando NeoVIM
+
+    #4. Configurar VIM
+    if [ $l_vim_flag -ne 0 ]; then
+        echo "Para configurar VIM debera instalar primero VIM"
+        return 0
+    fi
+
+    #Configurar VIM como IDE (Developer)
+    l_option=4
+    l_flag=$(( $p_opciones & $l_option ))
+    if [ $l_flag -eq $l_option ]; then
+
+        #Instalar los plugins
+        m_vim_config_plugins 1
+
+        #Creando enlaces simbolicos
+        printf '\n'
+        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+
+        if [ ! -e ~/.vim/coc-settings.json ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "Creando los enlaces simbolico de ~/.vim/coc-settings.json"
+            mkdir -p ~/.vim/
+            ln -sfn ~/.files/vim/coc/coc-settings.json ~/.vim/coc-settings.json
+        fi
+        
+        if [ ! -e ~/.vim/ftplugin ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "Creando el enlace de \"~/.vim/ftplugin\" para usarlo como IDE"
+            ln -snf ~/.files/vim/ftplugin/ ~/.vim/ftplugin
+        fi
+
+        #if [ ! -e ~/.vimrc ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+        echo "Creando el enlace de ~/.vimrc"
+        ln -snf ~/.files/vim/vimrc_linux_ide.vim ~/.vimrc
+        #fi
+        echo "Complete la configuracion de VIM para IDE:"
+        echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
+        echo "  2> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
+        echo "     2.1> Lenguajes basicos: JS, Json, HTLML, CSS, Python"
+        echo "         \":CocInstall coc-tsserver coc-json coc-html coc-css\""
+        echo "         \":CocInstall coc-pyrigh\""
+        echo "     2.2> Lenguajes basicos para Linux: Bash"
+        echo "         \":CocInstall coc-sh\""
+        echo "     2.3> Motor de snippets"
+        echo "         \":CocInstall coc-ultisnips\""
+        echo "  3> Configuracion de COC: \":CocConfig\""
+        #echo "     3.1> Usar ALE como motor de Lighting"
+        #echo "          { \"diagnostic.displayByAle\": true }"
+
+    fi
+
+    #Configurar VIM como Editor basico
     l_option=2
     l_flag=$(( $p_opciones & $l_option ))
-    local l_nvim_flag=1
-    if [ $l_flag -eq $l_option ]; then l_nvim_flag=0; fi
+    if [ $l_flag -eq $l_option ]; then
 
-    if [ $l_nvim_flag -eq 0 ]; then
 
+        #Instalar los plugins
+        m_vim_config_plugins 0
+        
+        #Creando enlaces simbolicos
+        printf '\n'
+        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+
+        #if [ ! -e ~/.vimrc ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+        echo "Creando el enlace de ~/.vimrc"
+        ln -snf ~/.files/vim/vimrc_linux_basic.vim ~/.vimrc
+        #fi
+        echo "Complete la configuracion de VIM como editor basico:"
+        echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
+
+    fi
+
+}
+
+# Parametros:
+# > Opcion ingresada por el usuario.
+function m_commands_setup() {
+
+    #1. Argumentos
+    local p_opciones=0
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_opciones=$1
+    fi
+
+    #Sobrescribir los enlaces simbolicos
+    local l_option=64
+    local l_flag=$(( $p_opciones & $l_option ))
+    local l_overwrite_ln_flag=1
+    if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
+    
+    echo "-------------------------------------------------------------------------------------------------"
+    echo "> Instalando los comandos/programas basicos requeridos ..."
+
+    #2. Instalando XClip utilitarios para gestion de "clipbboard" (X11 Selection)
+    #   Por algun motivo la version se muestra el flujo estandar de errores 
+    local l_version=""
+    l_version=$(xclip -version 2>&1 1> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ]; then
+
+        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        #echo "- Instalación de XClip"
+        echo "Se va instalar comando XClip"
+
+        case "$g_os_subtype_id" in
+            1)
+               #Distribución: Ubuntu
+               if [ $g_is_root -eq 0 ]; then
+                  apt-get install xclip
+               else
+                  sudo apt-get install xclip
+               fi
+               ;;
+            2)
+               #Distribución: Fedora
+               if [ $g_is_root -eq 0 ]; then
+                  dnf install xclip
+               else
+                  sudo dnf install xclip
+               fi
+               ;;
+        esac
+    else
+        l_version=$(echo "$l_version" | head -n 1 )
+        l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+        echo "XClip \"${l_version}\" ya esta instalado"
+    fi
+
+    #3. Instalando XSel utilitarios para gestion de "clipbboard" (X11 Selection)
+    l_version=$(xsel --version 2> /dev/null)
+    l_status=$?
+    if [ $l_status -ne 0 ]; then
+
+        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        #echo "- Instalación de XSel"
+        echo "Se va instalar comando XSel"
+
+        case "$g_os_subtype_id" in
+            1)
+               #Distribución: Ubuntu
+               if [ $g_is_root -eq 0 ]; then
+                  apt-get install xsel
+               else
+                  sudo apt-get install xsel
+               fi
+               ;;
+            2)
+               #Distribución: Fedora
+               if [ $g_is_root -eq 0 ]; then
+                  dnf install xsel
+               else
+                  sudo dnf install xsel
+               fi
+               ;;
+        esac
+    else
+        l_version=$(echo "$l_version" | head -n 1 )
+        l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+        echo "XSel \"${l_version}\" ya esta instalado"
+    fi
+
+    #4. Instalación de RTEs requerida para Vim (y/o NeoVim) como develeper
+    l_option=4
+    l_flag=$(( $p_opciones & $l_option ))
+    if [ $l_flag -ne $l_option ]; then
+        l_option=32
+        l_flag=$(( $p_opciones & $l_option ))
+    fi
+
+    if [ $l_flag -eq $l_option ]; then
+
+        #4.1 Instalación de Node JS (VIM como IDE)
         #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-
-        l_version=$(/opt/tools/neovim/bin/nvim --version 2> /dev/null)
+        l_version=$(node -v 2> /dev/null)
         l_status=$?
         if [ $l_status -ne 0 ]; then
 
             echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-            #echo "- Instalación de NeoVIM"
-            echo "Se va instalar NeoVIM"
+            echo "Se va instalar RTE Node JS version 19.x (VIM como IDE)"
 
-            #Valide que el flag asociado a Neovin sea el segundo parametro y sea un numero valido
-            ~/.files/setup/01_setup_commands.bash 2 8 "neovim"
+            #TODO ¿Como obtener la ultima version?
 
-            echo "Opcionalmente, revise:"
-            echo "    > Soporte de Plugins en Python  : pip install pynvim"
-	         echo "    > Soporte de Plugins en Node.JS : sudo npm i -g neovim"
+            if [ $g_is_root -eq 0 ]; then
+                curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
+                yum install -y nodejs
+            else
+                curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
+                sudo yum install -y nodejs
+            fi
+
 
         else
-            l_version=$(echo "$l_version" | head -n 1)
-            l_version=$(echo "$l_version" | sed "$l_version_regexp")
-            echo "NeoVIM \"${l_version}\" esta instalado: "
-            echo "   > Revise si existe una nueva versión en 'https://github.com/neovim/neovim/releases/tag/stable'"
-            echo "   > Instale la ultima version usando '~/.files/setup/01_setup_commands.bash' o '~/.files/setup/03_update_all.bash'"
+            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+            echo "Node.JS \"$l_version\" ya esta instalado"
         fi
+
+        #4.2 Instalación de Python3
+        l_version=$(python3 --version 2> /dev/null)
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            echo "Se va instalar RTE Python3 (VIM como IDE)"
+
+            #TODO ¿Como instalar la ultima versión?
+
+            #if [ $g_is_root -eq 0 ]; then
+            #    curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
+            #    yum install -y nodejs
+            #else
+            #    curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
+            #    sudo yum install -y nodejs
+            #fi
+
+        else
+            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+            echo "Python3 \"$l_version\" ya esta instalado"
+        fi
+
     fi
 
-    #8. Configuracion: Crear enlaces simbolicos y folderes basicos
+}
+
+# Parametros:
+# > Opcion ingresada por el usuario.
+function m_profile_setup() {
+
+    #1. Argumentos
+    local p_opciones=0
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_opciones=$1
+    fi
+
+    #Sobrescribir los enlaces simbolicos
+    local l_option=64
+    local l_flag=$(( $p_opciones & $l_option ))
+    local l_overwrite_ln_flag=1
+    if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
+
     echo "-------------------------------------------------------------------------------------------------"
-    #echo "- Creando los enlaces simbolicos y folderes basicos"
+    echo "> Creando los enlaces simbolicos y folderes del profile shell ..."
     #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
     
     if [ ! -d /u01/userkeys/ssh ]; then
@@ -573,10 +676,6 @@ function m_setup() {
     fi
 
     #8.1 Creando enlaces simbolico dependiente de tipo de distribución Linux
-    l_option=16
-    l_flag=$(( $p_opciones & $l_option ))
-    local l_overwrite_ln_flag=1
-    if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
     
     #case "$g_os_subtype_id" in
     #    1)
@@ -639,35 +738,96 @@ function m_setup() {
        ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
     fi
 
-    #9. Si se usa VIM como IDE
-    if [ $l_vim_flag -eq 0 ]; then
-        l_option=4
-        l_flag=$(( $p_opciones & $l_option ))
-        if [ $l_flag -eq $l_option ]; then
+}
 
-            if [ ! -e ~/.vim/coc-settings.json ] || [ $l_overwrite_ln_flag -eq 0 ]; then
-                echo "Creando los enlaces simbolico de ~/.vim/coc-settings.json"
-                ln -sfn ~/.files/vim/coc/coc-settings.json ~/.vim/coc-settings.json
-            fi
-            m_setup_vim 1 $l_overwrite_ln_flag
+# Opciones:
+#   ( 0) Actualizar los paquetes del SO y actualizar los enlaces simbolicos (siempre se ejecutara)"
+#   ( 1) Instalar VIM-Enhanced si no esta instalado"
+#   ( 2) Instalar NeoVIM si no esta instalado"
+#   ( 4) Configurar VIM-Enhanced como Developer"
+#   ( 8) Configurar NeoVIM como Developer"
+#   (16) Forzar el actualizado de los enlaces simbolicos del profile"
+function m_setup() {
 
-        else
-            m_setup_vim 0 $l_overwrite_ln_flag
-        fi
+    #01. Argumentos
+    local p_opciones=0
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_opciones=$1
     fi
 
-    #10. Si se usa Neo-VIM como IDE
-    if [ $l_nvim_flag -eq 0 ]; then
-        l_option=8
-        l_flag=$(( $p_opciones & $l_option ))
-        if [ $l_flag -eq $l_option ]; then
-            m_setup_neovim 1 $l_overwrite_ln_flag
-        else
-            m_setup_neovim 0 $l_overwrite_ln_flag
-        fi
+    #02. Validar si fue descarga el repositorio git correspondiente
+    if [ ! -d ~/.files/.git ]; then
+        echo "No existe los archivos necesarios, debera seguir los siguientes pasos:"
+        echo "   1> Descargar los archivos del repositorio:"
+        echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
+        echo "   2> Instalar comandos basicos:"
+        echo "      chmod u+x ~/.files/setup/01_setup_commands.bash"
+        echo "      ~/.files/setup/01_setup_commands.bash"
+        echo "   3> Configurar el profile del usuario:"
+        echo "      chmod u+x ~/.files/setup/02_setup_profile.bash"
+        echo "      ~/.files/setup/02_setup_profile.bash"
+        return 0
     fi
     
-    #11. Caducar las credecinales de root almacenadas temporalmente
+    #03. Solicitar credenciales de administrador y almacenarlas temporalmente
+    if [ $g_is_root -ne 0 ]; then
+
+        #echo "Se requiere alamcenar temporalmente su password"
+        sudo -v
+
+        if [ $? -ne 0 ]; then
+            echo "ERROR(20): Se requiere \"sudo -v\" almacenar temporalmente su credenciales de root"
+            return 20;
+        fi
+        printf '\n\n'
+    fi
+    
+    #04. Actualizar los paquetes de los repositorios
+    echo "-------------------------------------------------------------------------------------------------"
+    echo "> Actualizar los paquetes de los repositorio del SO Linux"
+    echo "-------------------------------------------------------------------------------------------------"
+    
+    #Segun el tipo de distribución de Linux
+    case "$g_os_subtype_id" in
+        1)
+            #Distribución: Ubuntu
+            if [ $g_is_root -eq 0 ]; then
+                apt-get update
+                apt-get upgrade
+            else
+                sudo apt-get update
+                sudo apt-get upgrade
+            fi
+            ;;
+        2)
+            #Distribución: Fedora
+            if [ $g_is_root -eq 0 ]; then
+                dnf upgrade
+            else
+                sudo dnf upgrade
+            fi
+            ;;
+        0)
+            echo "ERROR (22): No se identificado el tipo de Distribución Linux"
+            return 22;
+            ;;
+    esac
+   
+    
+    #05. Instalando comandos y programas basicos
+    m_commands_setup $p_opciones
+
+    #06. Instalando VIM-Enhaced
+    m_vim_setup $p_opciones
+    
+    #07. Instalando NeoVim
+    m_neovim_setup $p_opciones
+    
+
+    #08. Configuracion el SO: Crear enlaces simbolicos y folderes basicos
+    m_profile_setup $p_opciones
+
+    #09. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_is_root -ne 0 ]; then
         echo $'\n'"Caducando el cache de temporal password de su 'sudo'"
         sudo -k
@@ -681,17 +841,19 @@ function m_show_menu_core() {
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
     echo " (q) Salir del menu"
-    echo " (a) Configurar el profile basico (VIM como editor basico)"
-    echo " (b) Configurar el profile como developer (VIM como IDE)"
-    echo " (c) Configurar el profile basico (VIM como editor basico) y re-crear los enlaces simbolicos"
-    echo " (d) Configurar el profile como developer (VIM como IDE) y re-crear los enlaces simbolicos"
+    echo " (a) Configurar el profile basico (Vim/NeoVim como editor basico)"
+    echo " (b) Configurar el profile como developer (Vim/NeoVim como IDE)"
+    echo " (c) Configurar el profile basico (Vim/Neovim como editor basico) y re-crear los enlaces simbolicos"
+    echo " (d) Configurar el profile como developer (Vim/NeoVim como IDE) y re-crear los enlaces simbolicos"
     echo " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:"
     echo "     ( 0) Actualizar los paquetes del SO y crear los enlaces simbolicos del profile"
-    echo "     ( 1) Instalar VIM-Enhanced si no esta instalado"
-    echo "     ( 2) Instalar NeoVIM si no esta instalado"
-    echo "     ( 4) Configurar VIM-Enhanced como Developer"
-    echo "     ( 8) Configurar NeoVIM como Developer"
-    echo "     (16) Re-crear (crear y/o actualizar) los enlaces simbolicos del profile"
+    echo "     ( 1) VIM-Enhanced - Instalar si no esta instalado"
+    echo "     ( 2) VIM-Enhanced - Configurar como Editor (Basico)"
+    echo "     ( 4) VIM-Enhanced - Configurar como IDE (Developer)"
+    echo "     ( 8) NeoVim - Instalar si no esta instalado"
+    echo "     (16) NeoVim - Configurar como Editor (Basico)"
+    echo "     (32) NeoVim - Configurar como IDE (Developer)"
+    echo "     (64) Re-crear (crear y/o actualizar) los enlaces simbolicos del profile"
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
@@ -722,25 +884,29 @@ function m_main() {
             a)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                m_setup 3
+                #1 + 2 + 8 + 16
+                m_setup 27
                 ;;
 
             b)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                m_setup 15
+                #1 + 4 + 8 + 32
+                m_setup 45
                 ;;
 
             c)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                m_setup 19
+                #1 + 2 + 8 + 16 + 64 
+                m_setup 91
                 ;;
 
             d)
                 l_flag_continue=1
+                #1 + 4 + 8 + 32 + 64
                 echo "#################################################################################################"$'\n'
-                m_setup 31
+                m_setup 109
                 ;;
 
             q)

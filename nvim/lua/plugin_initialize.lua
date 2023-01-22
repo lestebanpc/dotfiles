@@ -16,6 +16,10 @@ return require('packer').startup(function(use)
     --Package CORE> Packer can manage itself
     use 'wbthomason/packer.nvim'
     
+    ---------------------------------------------------------------------------------
+    --Editor: Mejora de la exeriencia de usuario (Exclusivo para Neovim)
+    ---------------------------------------------------------------------------------
+    
     --Package UI> CORE> Tema 'Tokyo Night'
     use 'folke/tokyonight.nvim'
 
@@ -56,7 +60,7 @@ return require('packer').startup(function(use)
     }
 
     --En Windows esta plugin sera un enlace symbolic a '~/.files/vim_packages/fzf'
-    if (vim.g.os ~= "Windows") then
+    if (vim.g.os ~= 0) then
         -- Package UI> EXTENDED> FZF - Plugin de funciones basicas
         use {
             'junegunn/fzf',
@@ -80,6 +84,10 @@ return require('packer').startup(function(use)
         tag = 'nightly'
     }
 
+    ---------------------------------------------------------------------------------
+    --IDE: Basico (Exclusivo para Neovim)
+    ---------------------------------------------------------------------------------
+
     -- Package UI> IDE> TYPING> Vim-Surround (completar (), [], {})
     use {
         'tpope/vim-surround',
@@ -98,6 +106,10 @@ return require('packer').startup(function(use)
         'mg979/vim-visual-multi',
         opt = true
     }
+
+    ---------------------------------------------------------------------------------
+    --IDE: Completition, LSP Client, Snippets (Exclusivo para Neovim)
+    ---------------------------------------------------------------------------------
 
     -- Package UI> IDE> CORE> Modulo de configuracion del LSP cliente nativo de Noevim
     --    Permite LSP Client, Ligting, Fixing, ...
@@ -130,12 +142,73 @@ return require('packer').startup(function(use)
         opt = true
     }
     
+    -- Package UI> IDE> CORE> Motor/Framework de Snippets
+    --   Muestra los snippets cargados. Si elegimos un snippet lo expande.
+    use {
+        'L3MON4D3/LuaSnip',
+        opt = true,
+        tag = "v<CurrentMajor>.*"
+    }
+
+    -- Package UI> IDE> CORE> Implementacion de Snippet para LuaSnip
+    use {
+        'rafamadriz/friendly-snippets',
+        opt = true
+    }
+
+    -- Package UI> IDE> CORE> CMP Source: Snippet LuaSnip
+    use {
+        'saadparwaiz1/cmp_luasnip',
+        opt = true
+    }
+
+    ---------------------------------------------------------------------------------
+    --IDE: Completition, LSP Client, Snippets (Tambien lo usa Vim)
+    ---------------------------------------------------------------------------------
+
+    -- Package UI> IDE> CORE> Ligting (Diagnostico)
+    use {
+        'dense-analysis/ale',
+        opt = true
+    }
+
+    -- Package UI> IDE> CORE> Motor/Framework de Snippets
+    --   Muestra los snippets cargados. Si elegimos un snippet lo expande.
+    use {
+        'SirVer/ultisnips',
+        opt = true
+    }
+
+    -- Package UI> IDE> CORE> Implementacion de Snippet para diferentes lenguajes de programación
+    use {
+        'honza/vim-snippets',
+        opt = true
+    }
+
+    -- Package UI> IDE> CORE> Completado, LSP cliente, ..
+    use {
+        'neoclide/coc.nvim',
+        opt = true,
+        branch = 'release'
+    }
+    
+    -- Package UI> IDE> CORE> C#> LSP Client, Adaptador para LSP Server 'OmniSharp Roslyn'
+    -- Snippet para C#
+    use {
+        'OmniSharp/omnisharp-vim',
+        opt = true
+    }
+
+    ---------------------------------------------------------------------------------
+    --IDE: Debugger (Exclusivo para Noevim)
+    ---------------------------------------------------------------------------------
+
     -- Package UI> IDE> CORE> Depurador (Cliente DAP y los adaptadores depuracion)  
     use {
         "mfussenegger/nvim-dap",
         opt = true,
     --    event = "BufReadPre",
-    --    module = { "dap" },
+    --    module = { "dap" }
     --    wants = { "nvim-dap-virtual-text", "DAPInstall.nvim", "nvim-dap-ui", "nvim-dap-python", "which-key.nvim" },
     --    requires = {
     --        "Pocco81/DAPInstall.nvim",
@@ -173,25 +246,6 @@ return require('packer').startup(function(use)
         opt=true
     }
 
-    -- Package UI> IDE> CORE> Motor/Framework de Snippets
-    --   Muestra los snippets cargados. Si elegimos un snippet lo expande.
-    use {
-        'L3MON4D3/LuaSnip',
-        opt = true,
-        tag = "v<CurrentMajor>.*"
-    }
-
-    -- Package UI> IDE> CORE> Implementacion de Snippet para LuaSnip
-    use {
-        'rafamadriz/friendly-snippets',
-        opt = true
-    }
-
-    -- Package UI> IDE> CORE> CMP Source: Snippet LuaSnip
-    use {
-        'saadparwaiz1/cmp_luasnip',
-        opt = true
-    }
 
 end)
 

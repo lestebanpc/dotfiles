@@ -2,8 +2,12 @@
 " Mappings> General
 "###################################################################################
 
+"Usando como Key Leader
 let mapleader=','
 
+"Usando como Key Local Leader: '\', '[SPACE]'
+let maplocalleader = "\\"
+"let maplocalleader = "\<Space>"
 
 "Search mappings: These will make it so that going to the next one in a search will center on the line it's found in.
 nnoremap n nzzzv
@@ -12,13 +16,15 @@ nnoremap N Nzzzv
 "----------------------------- Apariencia              -----------------------------
 
 "Habilitar/Desabiliar el resaltado de la fila actual (h = horizontal)
-nnoremap <Leader>h :set cursorline!<CR>
+nnoremap <Leader>lh :set cursorline!<CR>
+
 "Habilitar/Desabiliar el resaltado de la columna actual (v = vertical)
-nnoremap <Leader>v :set cursorcolumn!<CR>
+nnoremap <Leader>lv :set cursorcolumn!<CR>
 
-"----------------------------- Portapapeles            -----------------------------
+"----------------------------- Portapapeles            -----------------------------"
 
-if (g:os == "Linux") || (g:os == "WSL")
+"Si es Linux incluyendo WSL
+if (g:os_type == 2) || (g:os_type == 3)
 
    "Copiar el ultimo yank realizado al portapapeles ('CLIPBOARD' selecction)
    nnoremap <Leader>cy :<C-u>call system('xsel -ib', @0)<CR>
@@ -32,8 +38,8 @@ if (g:os == "Linux") || (g:os == "WSL")
    "Pegar en la siguiente linea el portapapeles ('CLIPBOARD' selecction)
    nnoremap <Leader>cp :<C-u>r !xsel -ob<CR>
 
-"elseif g:os == "Windows"
-"elseif g:os == "WSL"
+"elseif g:os_type == 0
+"elseif g:os_type == 3
 
 endif
 
