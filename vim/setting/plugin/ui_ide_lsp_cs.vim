@@ -5,7 +5,7 @@ if g:is_neovim && !g:use_coc_in_nvim
 endif
 
 "###################################################################################
-" Settings> IDE > Package: omnisharp-vim (Pluing del Client LSP para Roslyn)
+" Settings> IDE > Package: Omnisharp-Vim (Pluing del Client LSP para Roslyn)
 "###################################################################################
 
 "Roslyn Server (LSP Server para C#) - Type (default: 1, stdio version)
@@ -83,7 +83,7 @@ let g:OmniSharp_highlight_groups = {
 call extend(g:ale_linters, {'cs': ['OmniSharp'], })
 
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-" Vim-SharpenUp> Soporte a Code-actions para OmniSharp
+" OmniSharp-Vim> Soporte a Code-actions para OmniSharp
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "Code actions: A flag is displayed in the sign column to indicate that one or more code actions are available.
 
@@ -106,9 +106,6 @@ else
 endif
 
 "Code action: Funciones de utilidad
-let s:save_cpo = &cpoptions
-set cpoptions&vim
-
 function! ui_ide_lsp_cs#codeactions_count() abort
   let opts = {
   \ 'CallbackCount': function('s:CBReturnCount', [bufnr(), line('.')]),
@@ -126,8 +123,5 @@ function! s:CBReturnCount(bufnr, line, count) abort
     \ 'file=' . bufname(a:bufnr)
   endif
 endfunction
-
-let &cpoptions = s:save_cpo
-unlet s:save_cpo
 
 
