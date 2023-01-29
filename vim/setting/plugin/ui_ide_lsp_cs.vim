@@ -8,7 +8,9 @@ endif
 " Settings> IDE > Package: Omnisharp-Vim (Pluing del Client LSP para Roslyn)
 "###################################################################################
 
-"Roslyn Server (LSP Server para C#) - Type (default: 1, stdio version)
+"Roslyn Server (LSP Server para C#)
+" - (1) 'Stdio Version' (default, es la versión recomendada).
+" - ( ) 'HTTP Version'  (versión antigua)  
 "let g:OmniSharp_server_stdio = 1
 
 "Roslyn Server (LSP Server para C#) - Path (Cambiar la ubicacion real)
@@ -35,10 +37,10 @@ let g:OmniSharp_selector_ui = 'fzf'
 "Herramienta que se usara en 'Find Symbols'
 let g:OmniSharp_selector_findusages = 'fzf'
 
-"Popup - position
+"Popup Windows - position
 let g:OmniSharp_popup_position = 'peek'
 
-"Popup - Border del popup para VIM (por defecto no tiene borde)
+"Popup Windows - Border del popup para VIM (por defecto no tiene borde)
 if g:is_neovim
     let g:OmniSharp_popup_options = {
         \ 'winblend': 30,
@@ -50,15 +52,13 @@ else
         \ 'highlight': 'Normal',
         \ 'padding': [0],
         \ 'border': [1],
-        \ 'borderchars': ['─', ' ', '─', ' ', '╭', '╮', '╯', '╰'],
+        \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
         \ 'borderhighlight': ['ModeMsg']
         \}
 endif
 
 "Popup - Personalizar el algunos key mappings que se usaran cuando aparezca un popup
 let g:OmniSharp_popup_mappings = {
-\ 'sigNext': '<C-n>',
-\ 'sigPrev': '<C-p>',
 \ 'pageDown': ['<C-f>', '<PageDown>'],
 \ 'pageUp': ['<C-b>', '<PageUp>']
 \}
@@ -79,8 +79,6 @@ let g:OmniSharp_highlight_groups = {
 \ 'ExcludedCode': 'NonText'
 \}
 
-"Fuente de diagnostico para C# (OmniSharp se convierte en un Linter para C#)
-call extend(g:ale_linters, {'cs': ['OmniSharp'], })
 
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 " OmniSharp-Vim> Soporte a Code-actions para OmniSharp

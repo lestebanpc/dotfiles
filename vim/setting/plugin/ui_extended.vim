@@ -101,13 +101,14 @@ let g:fzf_colors =
   \ 'header':     ['fg', 'Comment'] }
 
 
-nnoremap <silent> <leader>f :Files<CR>
+nnoremap <silent> <leader>ff :Files<CR>
 nnoremap <silent> <leader>gf :GFiles<CR>
 nnoremap <silent> <leader>gs :GFiles?<CR>
-nnoremap <silent> <leader>b :Buffers<CR>
+nnoremap <silent> <leader>bb :Buffers<CR>
 nnoremap <silent> <leader>sa :Ag<CR>
 nnoremap <silent> <leader>sr :Rg<CR>
-nnoremap <leader>c :History:<CR>
+"Ejecutar un comando VIM anteriormente ejecutado
+nnoremap <leader>fc :History:<CR>
 "cnoremap <C-P> <C-R>=expand("%:p:h") . "/" <CR>
 "Recovery commands from history through FZF
 

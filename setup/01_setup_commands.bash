@@ -588,8 +588,8 @@ function m_load_artifacts() {
             fi
             ;;
          nerd-fonts)
-            pna_artifact_names=("DroidSansMono.zip" "InconsolataLGC.zip" "UbuntuMono.zip")
-            pna_artifact_types=(3 3 3)
+            pna_artifact_names=("JetBrainsMono.zip" "DroidSansMono.zip" "InconsolataLGC.zip" "UbuntuMono.zip" "3270.zip")
+            pna_artifact_types=(3 3 3 3 3)
             ;;
        *)
            return 1
@@ -702,6 +702,7 @@ function m_copy_artifact_files() {
     fi
 
     local p_repo_current_version="$5"
+    local p_artifact_is_last=$6
 
     #3. Copiar loa archivos del artefacto segun el prefijo
     local l_path_temp=""
@@ -1542,7 +1543,9 @@ function m_copy_artifact_files() {
                     chmod g+r,o+r ${l_path_bin}/*
 
                     #Actualizar el cache de fuentes del SO
-                    fc-cache -v
+                    if [ $p_artifact_is_last -eq 0 ]; then
+                        fc-cache -v
+                    fi
 
                 else
                     
@@ -1559,7 +1562,9 @@ function m_copy_artifact_files() {
                     sudo chmod g+r,o+r ${l_path_bin}/*
 
                     #Actualizar el cache de fuentes del SO
-                    sudo fc-cache -v
+                    if [ $p_artifact_is_last -eq 0 ]; then
+                        sudo fc-cache -v
+                    fi
 
                 fi
                     
@@ -1668,6 +1673,8 @@ function m_install_artifacts() {
     local l_artifact_type
     local l_i=0
 
+    #3. Instalación de los artectactos
+    local l_is_last=1
     mkdir -p "/tmp/${p_repo_id}"
 
     for ((l_i=0; l_i<$l_n; l_i++)); do
@@ -1676,6 +1683,9 @@ function m_install_artifacts() {
         l_artifact_type="${pnra_artifact_types[$l_i]}"
         echo "Artefecto[${l_i}] a configurar - Name   : ${l_artifact_name}"
         echo "Artefecto[${l_i}] a configurar - Type   : ${l_artifact_type}"
+        if [ $l_i -eq l_n ]; then
+            l_is_last=0
+        fi
 
         if [ $l_artifact_type -eq 2 ]; then
 
@@ -1686,8 +1696,8 @@ function m_install_artifacts() {
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.tar.gz}" $p_install_win_cmds "$p_repo_current_version"
-
+            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.tar.gz}" $p_install_win_cmds "$p_repo_current_version" $l_is_last
+            #l_status=0
 
         elif [ $l_artifact_type -eq 3 ]; then
 
@@ -1698,16 +1708,18 @@ function m_install_artifacts() {
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.zip}" $p_install_win_cmds "$p_repo_current_version"
+            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.zip}" $p_install_win_cmds "$p_repo_current_version" $l_is_last
+            #l_status=0
 
         elif [ $l_artifact_type -eq 0 ]; then
 
             #Copiar los archivos necesarios
             if [ $p_install_win_cmds -eq 0 ]; then
-                m_copy_artifact_files "$p_repo_id" "$l_i" "${l_artifact_name%.exe}" $p_install_win_cmds "$p_repo_current_version"
+                m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.exe}" $p_install_win_cmds "$p_repo_current_version" $l_is_last
             else
-                m_copy_artifact_files "$p_repo_id" "$l_i" "$l_artifact_name" $p_install_win_cmds "$p_repo_current_version"
+                m_copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" $p_install_win_cmds "$p_repo_current_version" $l_is_last
             fi
+            #l_status=0
 
         elif [ $l_artifact_type -eq 1 ]; then
 
@@ -1723,6 +1735,7 @@ function m_install_artifacts() {
             else
                 sudo dpkg -i "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
             fi
+            #l_status=0
 
         else
             echo "ERROR (21): Configure la logica del tipo de artefacto \"${l_artifact_type}\" para que puede ser configurado"

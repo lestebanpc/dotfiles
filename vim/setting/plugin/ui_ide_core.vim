@@ -32,17 +32,21 @@ endif
 " Settings> IDE > Package: ALE (Diagnostic: Linting y Fixing)
 "###################################################################################
 
-
-let g:ale_sign_error = '•'
-let g:ale_sign_warning = '•'
+"Signos que se mostraran cuando se realizo el diagnostico:
+let g:ale_sign_error = ''
+"let g:ale_sign_error = '•'
+let g:ale_sign_warning = ''
+"let g:ale_sign_warning = '•'
 let g:ale_sign_info = '·'
-let g:ale_sign_style_error = '·'
-let g:ale_sign_style_warning = '·'
+"let g:ale_sign_info = '·'
+let g:ale_sign_style_error = ''
+"let g:ale_sign_style_error = '·'
+let g:ale_sign_style_warning = ''
+"let g:ale_sign_style_warning = '·'
 
-"xxxx
-"let g:ale_linters_explicit = 1
-"xxxx
-"let g:ale_fix_on_save = 1
+"Ejecutar el fixers cuando se guarda el documento (incluye el formateador de codigo 'Prettier'
+"si este esta configurado para el lenguaje (es corrige errores y/o mejora formato de codigo)
+let g:ale_fix_on_save = 1
 
 "###################################################################################
 " Settings> IDE > Package: UltiSnippets (Framework para snippets)
@@ -50,15 +54,18 @@ let g:ale_sign_style_warning = '·'
 
 if g:has_python3
     
-    "Expandir el snippets (por defecto es <TAB> y entre en conflicto con el autocompletado)
-    let g:UltiSnipsExpandTrigger="<C-e>"
+    "Expandir el snippet (por defecto es <TAB> y entre en conflicto con el autocompletado)
+    let g:UltiSnipsExpandTrigger="<C-s>"
 
-    "Navegar entre los snippets
-    let g:UltiSnipsJumpForwardTrigger="<C-b>"
+    "Navegar por cada fragmento del snippet expandido.
+    "Saltar hacia adelante y salte hacia atrás dentro de un fragmento.
+    let g:UltiSnipsJumpForwardTrigger="<C-a>"
     let g:UltiSnipsJumpBackwardTrigger="<C-z>"
 
     "Tipo de split para navegar al editar los snippets :UltiSnipsEdit
     let g:UltiSnipsEditSplit="vertical"
+
+    "let g:UltiSnipsListSnippets="<C-tab>"
 
 "endif
 
@@ -83,13 +90,12 @@ if g:has_python3
 endif
 
 "###################################################################################
-" Settings> IDE > Package: CoC > Completition
+" Settings> IDE > Package: CoC > Popup Windows 
 "###################################################################################
 
 "-----------------------------------------------------------------------------------
-" CoC> Completition> Generic Popup Windows
+" CoC> Built-in Popup Windows> Completition Popup Windows (modo inserción)
 "-----------------------------------------------------------------------------------
-"Definir acciones personalizadas VIM para mostrar y navegar el popup generico de completado
 
 "Funciones usado para navegación siguente
 function! CheckBackspace() abort
@@ -97,49 +103,90 @@ function! CheckBackspace() abort
     return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
-"Usar '[TAB]' para nevegar hacie adelente el popup generico de completado
-" Siempre hay un elemento completo seleccionado de forma predeterminada. Si desea que no se
-" selecione uno por defecto configurar '"suggest.noselect": true' en el archivo de configuración
+"Abrir el popup automaticamente: En modo edicion escribir por lo menos un caracter visible
+"Abrir el popup manualmente: '[CRTL] + [SPACE]'
+if g:is_neovim
+    inoremap <silent><expr> <c-space> coc#refresh()
+else
+    "En VIM puede existir problemas en el  key-mapping usando '<c-space>',
+    "debido a que muchos terminales espera que despues CRTL exista un caracter
+    "visible, para evitar ello use '@', ello hara que vim lo trare como tecla '<space>'
+    inoremap <silent><expr> <c-@> coc#refresh()
+endif
+
+"Navegación hacia adelente: '[TAB]', '[CTRL] + n'
+" > '<Tab>' abrira el popup si no existe uno abierto (siempre que exista una palabra anteponiendo al  prompt)
+" > '<C-n>' es la accion estandar (este no puede abrir un popup)
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
       \ CheckBackspace() ? "\<Tab>" :
       \ coc#refresh()
 
-"Usar '[SHIFT] + [TAB]' para nevegar hacie adelente el popup generico de completado.
+"Navegación hacia atras: '[SHIFT] + [TAB]', '[CTRL] + p'
+" > '<C-p>' es la accion estandar.
 inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 
-"Usar '<CR>' ('[ENTER]') para aceptar el item selecionado en popup o notificar 'Coc.nVim'
-" para formatear '<C-g>u' e interrumpe el deshacer actual, haga su propia elección. 
+"Aceptar un item seleccionado: '[ENTER]', '[CTRL] + y'
+" > Ello permite completar el texto de la palabra actual del prompt y cerrar el popup
+" > '<CR>' y '<C-y>' son acciones estandar
+" > CoC recomienda el uso de '<CR>' que permite tambien formatear '<C-g>u' e interrumpe el deshacer actual. 
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
                               \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 
+"Cancelar el popup y permanecar el modo inserción: '[CTRL] + e', '←', '→', '↑', '↓', 'BACKSPACE'
+" > Cierra el  popup y si la palabra cambio por alguna acción de navegación este se anula
 
-"Use '[CRTL] + [SPACE]' para iniciar el popup de completado. 
-if has('nvim')
-    inoremap <silent><expr> <c-space> coc#refresh()
-else
-    inoremap <silent><expr> <c-@> coc#refresh()
-endif
-
+"Cancelar el popup y salir al modo edición: '[ESC]'
+" > Cierra el  popup y si la palabra cambio por alguna acción de navegación este se anula
+" > '<esc>' es la accion estandar
 
 "-----------------------------------------------------------------------------------
-" CoC> Completition> Signature-help Popup Windows (Float Popup Windows)
+" CoC> Custom Popup Windows> Signature-help Popup, Documentation Popup, etc.
 "-----------------------------------------------------------------------------------
-"Definir acciones personalizadas VIM para mostrar y navegar el popup flotante donde se muestra
-"información como parametros o argumentos de funciones.
 "Requiere nVim > '0.4.0' y Vim >= 8.3 u 8.2 con parche 'patch-8.2.0750'
 
-"Remapear '[CTRL] + f' para navegar el siguiente, para mejorar la navegacion
+"Navegar a la siguiente pagina: '[CTRL] + f' (solo si existe scrool en el popup)
 nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
 inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
 vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
 
-"Remapear '[CTRL] + b' para navegar el anterior, para mejorar la navegacion
+"Navegar a la siguiente anterior: '[CTRL] + f' (solo si existe scrool en el popup)
 nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
 inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
 vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
 
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"Signature-help Popup (modo inserción)
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+" > Abrir automaticamente el popup: Cuando acepta el completado de un metodo
+" > Abrir manualmente el popup: Escribir ( despues del nombre de una funcion, escribir ',' dentro de ()
+" > Cerrar el popup: Si se mueva fuera de () o use '↑', '↓' 
 
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"Documentation Popup (modo normal)
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"Muesta la documentación definida para un simbolo (definicion, variable, ...).
+"Si no se define una documentación, se muestra solo como de define el simbolo.
+
+" > Abrir manualmente el popup:
+function! ShowDocumentation()
+  if CocAction('hasProvider', 'hover')
+    call CocActionAsync('doHover')
+  else
+    call feedkeys('K', 'in')
+  endif
+endfunction
+
+nnoremap <silent> K :call ShowDocumentation()<CR>
+
+" > Cerrar manualmente el popup: '←', '→', '↑', '↓'
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"Preview Popup (modo normal)
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"Mustra parte de la definicion o implementation de un simbolo.
+"CoC no implementa este popup.
 
 "###################################################################################
 " Settings> IDE > Package: CoC > LSP Client
@@ -163,19 +210,34 @@ command! -nargs=0 OR     :call CocActionAsync('runCommand', 'editor.action.organ
 " CoC> Acciones personalizadas de VIM> Navegación
 "-----------------------------------------------------------------------------------
 
-"GoTo code navigation.
+"
+"Navegación> Desde el simbolo actual hacia su ...
+"
+" > ¿?
 nmap <silent> gd <Plug>(coc-definition)
+
+" > ¿?
 nmap <silent> gy <Plug>(coc-type-definition)
+
+" > ¿?
 nmap <silent> gi <Plug>(coc-implementation)
+
+" > ¿?
 nmap <silent> gr <Plug>(coc-references)
 
 
+"Find symbol of current document.
+nnoremap <silent><nowait> <space>o  :<C-u>CocList outline<cr>
+
+"Search workspace symbols.
+nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
+
 "-----------------------------------------------------------------------------------
-" CoC> Acciones personalizadas de VIM> Seleccionar y mostrar información
+" CoC> Acciones personalizadas de VIM> Seleccionar
 "-----------------------------------------------------------------------------------
+"NOTE : Requires 'textDocument.documentSymbol' support from the language server.
 
 "Seleccion de una funcion o clase
-"NOTE : Requires 'textDocument.documentSymbol' support from the language server.
 xmap if <Plug>(coc-funcobj-i)
 omap if <Plug>(coc-funcobj-i)
 
@@ -194,16 +256,6 @@ omap ac <Plug>(coc-classobj-a)
 nmap <silent> <C-s> <Plug>(coc-range-select)
 xmap <silent> <C-s> <Plug>(coc-range-select)
 
-"Use K to show documentation in preview window.
-function! ShowDocumentation()
-  if CocAction('hasProvider', 'hover')
-    call CocActionAsync('doHover')
-  else
-    call feedkeys('K', 'in')
-  endif
-endfunction
-
-nnoremap <silent> K :call ShowDocumentation()<CR>
 
 
 "-----------------------------------------------------------------------------------
@@ -289,11 +341,6 @@ nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
 "Show commands.
 nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
 
-"Find symbol of current document.
-nnoremap <silent><nowait> <space>o  :<C-u>CocList outline<cr>
-
-"Search workspace symbols.
-nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
 
 "Do default action for next item.
 nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
@@ -311,8 +358,6 @@ nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 
 "NOTE : See  `:h coc-status` for integrations con statusline: lightline.vim, vim-airline.
 set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
-
-
 
 
 

@@ -51,16 +51,19 @@ else
 
 endif
 
-"Plug-In> UI> EXTENDED> FZF ("FuZzy Finder") - Funciones basicas
+"Plug-In> UI> EXTENDED> FZF ("FuZzy Finder") - Funciones basicas para integrar usar el cmd
 packadd fzf
-"Plug-In> UI> EXTENDED> FZF ("FuZzy Finder") - Plugins para VIM
+"Plug-In> UI> EXTENDED> FZF ("FuZzy Finder") - Comanfos VIM para usar mejor FzF
 packadd fzf.vim
+
+
 
 if g:use_ide
 
-    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    "IDE> Basico
-    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"IDE> Basico
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     if g:use_typing_surround 
         "Package UI> IDE> TYPING> Encerrar/Modificar con (), {}, [] un texto
         packadd vim-surround
@@ -78,23 +81,34 @@ if g:use_ide
 
     endif
 
-    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    "IDE> Completition, LSP Client, Snippets
-    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"IDE> Completition, LSP Client, Snippets
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     
     "Si es VIM siempre usar CoC.nVim, si es NeoVim solo si se habilita el flag    
     if !g:is_neovim || (g:is_neovim && g:use_coc_in_nvim)
 
-        "Package UI> IDE> Core> Linting y LSP Client para VIM
-        "   Desabilitar LSP : Se usara Vim-LSP
+        "Package UI> IDE> Core> Linting (analisis y diagnostico sin compilar)
+        "   Desabilitar LSP : Se usara CoC o Vim-LSP.
         let g:ale_disable_lsp = 1
-        "   Desabilitar Completition : Se usara CoC.nvim
+        "   Desabilitar 'Completition' : Se usara CoC o comp-nvim.
         let g:ale_completion_enabled = 0
-        packadd ale
-        "   No se cargaran todos los linter existes por lenguajes (se cargar segun lo que se requiera)
-        let g:ale_linters = {}
 
-        "Pacakege UtilSnips usa Python3
+        "   Cargar el paquete
+        packadd ale
+
+        "   Por defecto se cargan todos los linter que existe de los diferentes lenguajes soportados por ALE
+        "   Para evitar advertencia/errores innecesarios y tener un mayor control, se cargaran manualmente.
+        "   No se cargaran todos los linter existes por lenguajes (se cargar segun lo que se requiera).
+        let g:ale_linters_explicit = 1
+
+        "   Recomendamos evitar de definir los linter o fixers como variable global. Recomienda usar estos 
+        "   segun la demanda, por ello usar las variable de buffer de los archivos 'filetype' del folder ftplugin.
+        "   Es decir usar las variable 'b:ale_fixers' o 'g:ale_linters'
+        let g:ale_linters = {}
+        let g:ale_fixers  = {}
+
+        "Pacakege UI> IDE> Core> Motor de Snippets
         if g:has_python3
 
             "Package UI> IDE> Core> UltiSnips: Motor/Framework de Snippets
@@ -105,12 +119,11 @@ if g:use_ide
 
         endif
 
-        "Package UI> IDE> Core> LSP Client, Complete (y muchos complementos de 3ros)
-        "   El diganostico se enviara ALE (no se usara el del CoC)
-        "   Complementos que se sugiere instalar:
-        "     - Soporte a desarrollo web :CocInstall coc-tsserver coc-json coc-html coc-css
-        "     - Soporte a Python3 :CocInstall coc-pyright
-        "     - Soporte a UtilSnips :CocInstall coc-ultisnips
+        "Package UI> IDE> Core> Completado, LSP Client (y otros complementos de 3ros)
+        "   El diganostico se enviara ALE (no se usara el integrado de CoC).
+        "   El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')
+        "   Se deberá instalar los adaptadores a los diferentes servidores LSP.
+        "   Se integrará con el motor de snippets 'UtilSnips' (no usara el por defecto)
         packadd coc.nvim
     
         "Package UI> IDE> Core> C#> LSP Cliente de Roslyn para C# y adaptadores para usar con otros plugins
@@ -148,9 +161,10 @@ if g:use_ide
 
     endif
 
-    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    "IDE> Debuggers
-    "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"IDE> Debuggers
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     if g:is_neovim
 
         "Package UI> IDE> CORE> Depurador (Cliente DAP y los adaptadores depuracion)
@@ -174,8 +188,6 @@ if g:use_ide
         packadd vimspector
 
     endif
-
-
 
 endif
 
@@ -216,7 +228,6 @@ call plug#end()
 "###################################################################################
 " Package Manager : Carga manual paquetes y configuracion basica
 "###################################################################################
-
 
 "Paquete UI> CORE> Permite navegar entre split VIM y paneles TMUX como el mismo comando
 "Solo en Linux (incluyendo WSL, solo en Linux y MacOS)

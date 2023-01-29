@@ -68,28 +68,57 @@ else
     let g:use_tmux = 0
 endif
 
-"Path de LSP server de C# 'Omnisharp Roslyn'
-"Si es Linux
-if g:os_type == 3
-    let g:lsp_server_cs_path = '/opt/tools/omnisharp_roslyn/OmniSharp'
-"Si es WSL
-elseif g:os_type = 2
-    if g:wsl_cs_using_win_lsp_server
-        let g:lsp_server_cs_path = '/mnt/d/Tools/CLI/Omnisharp_Roslyn/OmniSharp.exe'
-    else
-        let g:lsp_server_cs_path = '/opt/tools/omnisharp_roslyn/OmniSharp'
-    endif
-"Si es Windows
-elseif g:os_type = 0
-    let g:lsp_server_cs_path = 'D:/Tools/CLI/Omnisharp_Roslyn/OmniSharp.exe'
-"Si es MacOS
-"elseif g:os_type = 1
-"    let g:lsp_server_cs_path = '/opt/tools/omnisharp_roslyn/OmniSharp'
+"Determinar automaticamente si esta configurado como IDE
+"let g:use_ide = 1
+
+if g:use_ide && $USE_EDITOR != ""
+    let g:use_ide = 0
 endif
 
-let g:use_coc_in_nvim = 0
-if g:is_neovim && $USE_COC != ""
-    let g:use_coc_in_nvim = 1
+"Path del home del usuario (siempre se usara como separador de carpetas es '/')
+"Si es Windows
+if g:os_type == 0
+    let g:home_path=substitute($USERPROFILE,"\\","/","g")
+else
+    let g:home_path=$HOME
+endif
+
+"Calcular variables que solo se usan en un IDE
+if g:use_ide
+
+    "Path de LSP server de C# 'Omnisharp Roslyn'
+    "Si es Linux
+    if g:os_type == 3
+        let g:lsp_server_cs_path = '/opt/tools/omnisharp_roslyn/OmniSharp'
+    "Si es WSL
+    elseif g:os_type == 2
+        if g:wsl_cs_using_win_lsp_server
+            let g:lsp_server_cs_path = '/mnt/d/Tools/CLI/Omnisharp_Roslyn/OmniSharp.exe'
+        else
+            let g:lsp_server_cs_path = '/opt/tools/omnisharp_roslyn/OmniSharp'
+        endif
+    "Si es Windows
+    elseif g:os_type == 0
+        let g:lsp_server_cs_path = 'D:/Tools/CLI/Omnisharp_Roslyn/OmniSharp.exe'
+    "Si es MacOS
+    "elseif g:os_type == 1
+    "    let g:lsp_server_cs_path = '/opt/tools/omnisharp_roslyn/OmniSharp'
+    endif
+    
+    "Si es NeoVim, el IDE puede usar CoC o el LSP interno
+    "  > Usar '~/.config/nvim/ftplugin' solo para 'file types' comunes para el IDE CoC/No-CoC
+    "  > Usar '~/.config/nvim/runtime_coc/ftplugin' solo para 'file types' del IDE CoC
+    "  > Usar '~/.config/nvim/runtime_nococ/ftplugin' solo para 'file types' del IDE No-CoC
+    if g:is_neovim
+        if $USE_COC != ""
+            let g:use_coc_in_nvim = 1
+            let &runtimepath.=',' .. g:home_path .. '/.config/nvim/runtime_coc'
+        else
+            let g:use_coc_in_nvim = 0
+            let &runtimepath.=',' .. g:home_path .. '/.config/nvim/runtime_nococ'        
+         endif
+    endif
+	
 endif
 
 "----------------------------- Validar los requisitos ------------------------------

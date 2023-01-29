@@ -156,24 +156,63 @@ function m_neovim_setup() {
         mkdir -p ~/.config/nvim/
 
         if [ ! -e ~/.config/nvim/coc-settings.json ] || [ $l_overwrite_ln_flag -eq 0 ]; then
-            echo "Creando los enlaces simbolico de ~/.config/nvim/coc-settings.json"
-            ln -sfn ~/.files/nvim/coc/coc-settings.json ~/.config/nvim/coc-settings.json
+            echo "IDE con CoC> Creando los enlaces simbolico del archivo de Configuración de CoC \"~/.config/nvim/coc-settings.json\""
+            ln -sfn ~/.files/nvim/ide_coc/coc-settings.json ~/.config/nvim/coc-settings.json
         fi
 
         if [ ! -e ~/.config/nvim/init.vim ] || [ $l_overwrite_ln_flag -eq 0 ]; then
-            echo "Creando el enlace de \"~/.config/nvim/init.vim\" para usarlo como IDE"
+            echo "IDE (CoC y No-CoC)> Creando el enlace del script de inicio \"~/.config/nvim/init.vim\" para usarlos como IDE"
             ln -snf ~/.files/nvim/init_linux_ide.vim ~/.config/nvim/init.vim
         fi
 
-        if [ ! -e ~/.config/nvim/ftplugin ] || [ $l_overwrite_ln_flag -eq 0 ]; then
-            echo "Creando el enlace de \"~/.config/nvim/ftplugin\" para usarlo como IDE"
-            ln -snf ~/.files/nvim/ftplugin/ ~/.config/nvim/ftplugin
-        fi
-
         if [ ! -e ~/.config/nvim/lua ] || [ $l_overwrite_ln_flag -eq 0 ]; then
-            echo "Creando el enlace de \"~/.config/nvim/lua\""
+            echo "Editor o IDE> Creando el enlace de la carpeta \"~/.config/nvim/lua\" por defecto de scripts LUA del usuario"
             ln -snf ~/.files/nvim/lua ~/.config/nvim/lua
         fi
+
+        if [ ! -e ~/.config/nvim/ftplugin ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "IDE (CoC y No-CoC)> Creando el enlace de \"~/.config/nvim/ftplugin\" para el codigo open/close asociado a los 'file types'"
+            ln -snf ~/.files/nvim/ide_commom/ftplugin/ ~/.config/nvim/ftplugin
+        fi
+
+        if [ ! -d ~/.config/nvim/runtime_coc ]; then
+            echo "IDE con CoC> Creando la carpeta \"~/.config/nvim/runtime_coc\" para colocar archivos/folderes especificos de un runtime para CoC"
+            mkdir -p ~/.config/nvim/runtime_coc
+        fi
+
+        if [ ! -e ~/.config/nvim/runtime_coc/ftplugin ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "IDE con CoC> Creando el enlace de \"~/.config/nvim/runtime_coc/ftplugin\" para el codigo open/close asociado a los 'file types' de CoC"
+            ln -snf ~/.files/vim/ide_coc/ftplugin/ ~/.config/nvim/runtime_coc/ftplugin
+        fi
+
+        if [ ! -d ~/.config/nvim/runtime_nococ ]; then
+            echo "IDE No-CoC> Creando la carpeta \"~/.config/nvim/runtime_nococ\" para colocar archivos/folderes especificos de un runtime que no sean CoC"
+            mkdir -p ~/.config/nvim/runtime_nococ
+        fi
+
+        if [ ! -e ~/.config/nvim/runtime_nococ/ftplugin ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "IDE No-CoC> Creando el enlace de \"~/.config/nvim/runtime_nococ/ftplugin\" para el codigo open/close asociado a los 'file types' que no sean CoC"
+            ln -snf ~/.files/nvim/ide_nococ/ftplugin/ ~/.config/nvim/runtime_nococ/ftplugin
+        fi
+
+        echo "Complete la configuracion de los plugins en NeoVIM"
+        echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
+        echo "  2> Instalar los plugins de VIM-Plug: \":PackerUpdate\""
+
+        echo "Si require usar CoC como IDE realize/valide las siguientes configuraciones:"
+        echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
+        echo "  2> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
+        echo "     2.1> Adaptador de LSP server basicos: JS, Json, HTLML, CSS, Python, Bash:"
+        echo "         \":CocInstall coc-tsserver coc-json coc-html coc-css\""
+        echo "         \":CocInstall coc-pyrigh\""
+        echo "         \":CocInstall coc-sh\""
+        echo "     2.2> Motor de snippets 'UtilSips' (no usar el builtin/nativo de CoC):"
+        echo "         \":CocInstall coc-ultisnips\""
+        echo "  3> Revisar la Configuracion de COC: \":CocConfig\""
+        echo "     3.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+        echo "          { \"diagnostic.displayByAle\": true }"
+        echo "     3.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+        echo "          Si esta instalado esta extension, desintalarlo"
 
     fi
 
@@ -192,21 +231,26 @@ function m_neovim_setup() {
         mkdir -p ~/.config/nvim/
 
         if [ ! -e ~/.config/nvim/init.vim ] || [ $l_overwrite_ln_flag -eq 0 ]; then
-            echo "Creando el enlace de \"~/.config/nvim/init.vim\" para usarlo como editor basico"
+            echo "Editor> Creando el enlace del script de inicio \"~/.config/nvim/init.vim\" para usarlo como editor basico"
             ln -snf ~/.files/nvim/init_linux_basic.vim ~/.config/nvim/init.vim
         fi
         
         if [ ! -e ~/.config/nvim/lua ] || [ $l_overwrite_ln_flag -eq 0 ]; then
-            echo "Creando el enlace de \"~/.config/nvim/lua\""
+            echo "Editor o IDE> Creando el enlace de la carpeta \"~/.config/nvim/lua\" por defecto de scripts LUA del usuario"
             ln -snf ~/.files/nvim/lua ~/.config/nvim/lua
         fi
 
+        if [ ! -e ~/.config/nvim/ftplugin ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "Editor> Creando el enlace de \"~/.config/nvim/ftplugin\" para el codigo open/close asociado a los 'file types' como Editor"
+            ln -snf ~/.files/nvim/editor/ftplugin/ ~/.config/nvim/ftplugin
+        fi
+        
+        echo "Complete la configuracion de los plugins en NeoVIM"
+        echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
+        echo "  2> Instalar los plugins de VIM-Plug: \":PackerUpdate\""
+
     fi
 
-
-    echo "Complete la configuracion de los plugins en NeoVIM"
-    echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
-    echo "  2> Instalar los plugins de VIM-Plug: \":PackerUpdate\""
 
 }
 
@@ -429,35 +473,36 @@ function m_vim_setup() {
         #Creando enlaces simbolicos
         printf '\n'
         echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        mkdir -p ~/.vim/
 
         if [ ! -e ~/.vim/coc-settings.json ] || [ $l_overwrite_ln_flag -eq 0 ]; then
-            echo "Creando los enlaces simbolico de ~/.vim/coc-settings.json"
-            mkdir -p ~/.vim/
-            ln -sfn ~/.files/vim/coc/coc-settings.json ~/.vim/coc-settings.json
+            echo "IDE (CoC)> Creando los enlaces simbolico del archivo de Configuración de CoC \"~/.vim/coc-settings.json\""
+            ln -sfn ~/.files/vim/ide_coc/coc-settings.json ~/.vim/coc-settings.json
         fi
         
         if [ ! -e ~/.vim/ftplugin ] || [ $l_overwrite_ln_flag -eq 0 ]; then
-            echo "Creando el enlace de \"~/.vim/ftplugin\" para usarlo como IDE"
-            ln -snf ~/.files/vim/ftplugin/ ~/.vim/ftplugin
+            echo "IDE (CoC)> Creando el enlace de \"~/.vim/ftplugin\" para el codigo open/close asociado a los 'file types'"
+            ln -snf ~/.files/vim/ide_coc/ftplugin/ ~/.vim/ftplugin
         fi
 
         #if [ ! -e ~/.vimrc ] || [ $l_overwrite_ln_flag -eq 0 ]; then
-        echo "Creando el enlace de ~/.vimrc"
+        echo "IDE (CoC)> Creando el enlace del script de inicio \"~/.vimrc\" para usarlos como IDE"
         ln -snf ~/.files/vim/vimrc_linux_ide.vim ~/.vimrc
         #fi
-        echo "Complete la configuracion de VIM para IDE:"
+        echo "Complete la configuracion de VIM para IDE usando CoC:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
         echo "  2> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
-        echo "     2.1> Lenguajes basicos: JS, Json, HTLML, CSS, Python"
+        echo "     2.1> Adaptador de LSP server basicos: JS, Json, HTLML, CSS, Python, Bash:"
         echo "         \":CocInstall coc-tsserver coc-json coc-html coc-css\""
         echo "         \":CocInstall coc-pyrigh\""
-        echo "     2.2> Lenguajes basicos para Linux: Bash"
         echo "         \":CocInstall coc-sh\""
-        echo "     2.3> Motor de snippets"
+        echo "     2.2> Motor de snippets 'UtilSips' (no usar el builtin/nativo de CoC):"
         echo "         \":CocInstall coc-ultisnips\""
-        echo "  3> Configuracion de COC: \":CocConfig\""
-        #echo "     3.1> Usar ALE como motor de Lighting"
-        #echo "          { \"diagnostic.displayByAle\": true }"
+        echo "  3> Revisar la Configuracion de COC: \":CocConfig\""
+        echo "     3.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+        echo "          { \"diagnostic.displayByAle\": true }"
+        echo "     3.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+        echo "          Si esta instalado esta extension, desintalarlo"
 
     fi
 
@@ -473,11 +518,18 @@ function m_vim_setup() {
         #Creando enlaces simbolicos
         printf '\n'
         echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        mkdir -p ~/.vim/
 
         #if [ ! -e ~/.vimrc ] || [ $l_overwrite_ln_flag -eq 0 ]; then
-        echo "Creando el enlace de ~/.vimrc"
+        echo "Editor> Creando el enlace del script de inicio \"~/.vimrc\" para usarlo como editor basico"
         ln -snf ~/.files/vim/vimrc_linux_basic.vim ~/.vimrc
         #fi
+
+        if [ ! -e ~/.vim/ftplugin ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+            echo "Editor> Creando el enlace de \"~/.vim/ftplugin\" para el codigo open/close asociado a los 'file types' como Editor"
+            ln -snf ~/.files/vim/editor/ftplugin/ ~/.vim/ftplugin
+        fi
+
         echo "Complete la configuracion de VIM como editor basico:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
 

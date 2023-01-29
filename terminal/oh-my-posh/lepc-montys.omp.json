@@ -76,14 +76,38 @@
           "type": "git"
         },
         {
-          "background": "#4b6043",
+          "background": "#3b3b3b",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "style": "powerline",
+          "template": " <#ffffff>\ue626</> {{ .Full }}",
+          "type": "go"
+        },
+        {
+          "background": "#3b3b3b",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "style": "powerline",
+          "template": " <#ffffff>\ue77f</> {{ .Full }}",
+          "type": "dotnet"
+        },
+        {
+          "background": "#3b3b3b",
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
           "template": " <#ffffff>\ue718</> {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }} ",
           "type": "node"
         },
-	{
+        {
+          "background": "#3b3b3b",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "style": "powerline",
+          "template": " <#ffffff>\ue235</> {{ if .Venv }}{{ .Venv }}<#000>\uf054</>{{ end }}{{ .Full }} ",
+          "type": "python"
+        },
+        {
           "background": "#626262",
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",
@@ -91,7 +115,7 @@
           "template": " <#ffffff>\ufd31</> {{if .Namespace}}{{.Namespace}}{{else}}default{{end}} ",
           "type": "kubectl"
         },
-	{
+        {
           "background": "#3b3b3b",
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",

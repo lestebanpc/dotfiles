@@ -4,6 +4,9 @@
 #VIM - Archivos de 'persistence undo' (formato '.filename.un~')
 **/*.un~
 
+#Log generados por: TMUX, ..
+*.log
+
 #Archivos de temas de oh-my-posh
 terminal/oh-my-posh/themes/*
 
