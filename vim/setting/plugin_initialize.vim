@@ -97,16 +97,6 @@ if g:use_ide
         "   Cargar el paquete
         packadd ale
 
-        "   Por defecto se cargan todos los linter que existe de los diferentes lenguajes soportados por ALE
-        "   Para evitar advertencia/errores innecesarios y tener un mayor control, se cargaran manualmente.
-        "   No se cargaran todos los linter existes por lenguajes (se cargar segun lo que se requiera).
-        let g:ale_linters_explicit = 1
-
-        "   Recomendamos evitar de definir los linter o fixers como variable global. Recomienda usar estos 
-        "   segun la demanda, por ello usar las variable de buffer de los archivos 'filetype' del folder ftplugin.
-        "   Es decir usar las variable 'b:ale_fixers' o 'g:ale_linters'
-        let g:ale_linters = {}
-        let g:ale_fixers  = {}
 
         "Pacakege UI> IDE> Core> Motor de Snippets
         if g:has_python3

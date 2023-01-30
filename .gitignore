@@ -15,3 +15,6 @@ k8s/config/*.yaml
 
 #Archivos internos de GIT
 .git/*
+
+#Paquetes locales de NodeJS (binarios de NodeJs)
+node_modules/*

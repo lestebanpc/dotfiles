@@ -123,6 +123,7 @@ function m_neovim_setup() {
             ~/.files/setup/01_setup_commands.bash 2 8 "neovim"
             l_nvim_flag=0
 
+            #TODO Instalar paquetes globales de NodeJS o .. de Python
             echo "Opcionalmente, revise:"
             echo "    > Soporte de Plugins en Python  : pip install pynvim"
 	        echo "    > Soporte de Plugins en Node.JS : sudo npm i -g neovim"
@@ -634,14 +635,14 @@ function m_commands_setup() {
 
     if [ $l_flag -eq $l_option ]; then
 
-        #4.1 Instalación de Node JS (VIM como IDE)
+        #4.1 Instalación de Node.JS (el gestor de paquetes npm esta incluido)
         #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
         l_version=$(node -v 2> /dev/null)
         l_status=$?
         if [ $l_status -ne 0 ]; then
 
             echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-            echo "Se va instalar RTE Node JS version 19.x (VIM como IDE)"
+            echo "Vim/NeoVim como IDE> Se va instalar RTE Node JS version 19.x"
 
             #TODO ¿Como obtener la ultima version?
 
@@ -659,13 +660,13 @@ function m_commands_setup() {
             echo "Node.JS \"$l_version\" ya esta instalado"
         fi
 
-        #4.2 Instalación de Python3
+        #4.2 Instalación de Python3 y el modulo 'pip' (gestor de paquetes)
         l_version=$(python3 --version 2> /dev/null)
         l_status=$?
         if [ $l_status -ne 0 ]; then
 
             echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-            echo "Se va instalar RTE Python3 (VIM como IDE)"
+            echo "Vim/NeoVim como IDE> Se va instalar RTE Python3"
 
             #TODO ¿Como instalar la ultima versión?
 

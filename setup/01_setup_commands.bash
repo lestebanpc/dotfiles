@@ -1683,7 +1683,7 @@ function m_install_artifacts() {
         l_artifact_type="${pnra_artifact_types[$l_i]}"
         echo "Artefecto[${l_i}] a configurar - Name   : ${l_artifact_name}"
         echo "Artefecto[${l_i}] a configurar - Type   : ${l_artifact_type}"
-        if [ $l_i -eq l_n ]; then
+        if [ $l_i -eq $l_n ]; then
             l_is_last=0
         fi
 

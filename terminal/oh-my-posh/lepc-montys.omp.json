@@ -125,16 +125,14 @@
         },
         {
           "background": "#0b6a3c",
-          "background_templates": [
-            "{{ if gt .Code 0 }}red{{ end }}"
-          ],
+          "background_templates": ["{{ if gt .Code 0 }}red{{ end }}"],
           "foreground": "#ffffff",
           "properties": {
             "always_enabled": true
           },
           "powerline_symbol": "\ue0b0",
           "style": "diamond",
-          "template": " {{ if gt .Code 0 }}\uf467{{ else }}\uf42e{{ end }}",		  
+          "template": " {{ if gt .Code 0 }}\uf467{{ else }}\uf42e{{ end }}",
           "trailing_diamond": "\ue0b4",
           "type": "exit"
         }

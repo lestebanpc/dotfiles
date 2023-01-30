@@ -44,9 +44,23 @@ let g:ale_sign_style_error = ''
 let g:ale_sign_style_warning = ''
 "let g:ale_sign_style_warning = '·'
 
+"   Por defecto se cargan todos los linter que existe de los diferentes lenguajes soportados por ALE
+"   Para evitar advertencia/errores innecesarios y tener un mayor control, se cargaran manualmente.
+"   No se cargaran todos los linter existes por lenguajes (se cargar segun lo que se requiera).
+let g:ale_linters_explicit = 1
+
+"   Recomendamos evitar de definir los linter o fixers como variable global. Recomienda usar estos 
+"   segun la demanda, por ello usar las variable de buffer de los archivos 'filetype' del folder ftplugin.
+"   Es decir usar las variable 'b:ale_fixers' o 'g:ale_linters'
+"let g:ale_linters = {}
+"let g:ale_fixers  = {}
+
 "Ejecutar el fixers cuando se guarda el documento (incluye el formateador de codigo 'Prettier'
 "si este esta configurado para el lenguaje (es corrige errores y/o mejora formato de codigo)
 let g:ale_fix_on_save = 1
+
+"keep the sign gutter open at all times
+let g:ale_sign_column_always = 1
 
 "###################################################################################
 " Settings> IDE > Package: UltiSnippets (Framework para snippets)
@@ -90,8 +104,9 @@ if g:has_python3
 endif
 
 "###################################################################################
-" Settings> IDE > Package: CoC > Popup Windows 
+" Settings> IDE > Package: CoC (Conquer Of Completion)
 "###################################################################################
+
 
 "-----------------------------------------------------------------------------------
 " CoC> Built-in Popup Windows> Completition Popup Windows (modo inserción)
@@ -140,6 +155,7 @@ inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
 " > Cierra el  popup y si la palabra cambio por alguna acción de navegación este se anula
 " > '<esc>' es la accion estandar
 
+
 "-----------------------------------------------------------------------------------
 " CoC> Custom Popup Windows> Signature-help Popup, Documentation Popup, etc.
 "-----------------------------------------------------------------------------------
@@ -156,16 +172,16 @@ inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float
 vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-"Signature-help Popup (modo inserción)
-" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"1. Signature-help Popup (modo inserción)
+"
 " > Abrir automaticamente el popup: Cuando acepta el completado de un metodo
 " > Abrir manualmente el popup: Escribir ( despues del nombre de una funcion, escribir ',' dentro de ()
 " > Cerrar el popup: Si se mueva fuera de () o use '↑', '↓' 
 
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-"Documentation Popup (modo normal)
-" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"2. Documentation Popup (modo normal)
+"
 "Muesta la documentación definida para un simbolo (definicion, variable, ...).
 "Si no se define una documentación, se muestra solo como de define el simbolo.
 
@@ -183,70 +199,63 @@ nnoremap <silent> K :call ShowDocumentation()<CR>
 " > Cerrar manualmente el popup: '←', '→', '↑', '↓'
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-"Preview Popup (modo normal)
-" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"3. Preview Popup (modo normal)
+"
 "Mustra parte de la definicion o implementation de un simbolo.
 "CoC no implementa este popup.
 
-"###################################################################################
-" Settings> IDE > Package: CoC > LSP Client
-"###################################################################################
-
-"-----------------------------------------------------------------------------------
-" CoC> Comandos personalizados de VIM
-"-----------------------------------------------------------------------------------
-
-"Add `:Format` command to format current buffer.
-command! -nargs=0 Format :call CocActionAsync('format')
-
-"Add `:Fold` command to fold current buffer.
-command! -nargs=? Fold   :call CocAction('fold', <f-args>)
-
-"Add `:OR` command for organize imports of the current buffer.
-command! -nargs=0 OR     :call CocActionAsync('runCommand', 'editor.action.organizeImport')
 
 
 "-----------------------------------------------------------------------------------
-" CoC> Acciones personalizadas de VIM> Navegación
+" CoC> LSP Client> Navegación (Acciones personalizadas de VIM)
 "-----------------------------------------------------------------------------------
 
+"1. Navegación> Desde el simbolo actual hacia su ...
 "
-"Navegación> Desde el simbolo actual hacia su ...
-"
-" > ¿?
+" > Ir a la definición del simbolo actual
 nmap <silent> gd <Plug>(coc-definition)
 
-" > ¿?
+" > Ir al tipo de definición del simbolo actual
 nmap <silent> gy <Plug>(coc-type-definition)
 
-" > ¿?
+" > Ir a la implementación del simbolo actual
 nmap <silent> gi <Plug>(coc-implementation)
 
-" > ¿?
+" > Ir a la referencias/usos del simbolo actual
 nmap <silent> gr <Plug>(coc-references)
 
 
-"Find symbol of current document.
-nnoremap <silent><nowait> <space>o  :<C-u>CocList outline<cr>
+"2. Busqueda, Selección e Ir
+"
+" > Listar, buscar e ir a un 'symbol' en el documento.
+nnoremap <silent><nowait> <Leader>fs :<C-u>CocList outline<cr>
 
-"Search workspace symbols.
+" > Listar, buscar e ir a un 'symbol' del workspace.
 nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
 
+
 "-----------------------------------------------------------------------------------
-" CoC> Acciones personalizadas de VIM> Seleccionar
+" CoC> LSP Client> Selección (Acciones personalizadas de VIM)
 "-----------------------------------------------------------------------------------
 "NOTE : Requires 'textDocument.documentSymbol' support from the language server.
 
-"Seleccion de una funcion o clase
+"1. Selección de una funcion
+"
+" > Selección la parte interior del metodo.
 xmap if <Plug>(coc-funcobj-i)
 omap if <Plug>(coc-funcobj-i)
 
+" > Selección de todo el metodo.
 xmap af <Plug>(coc-funcobj-a)
 omap af <Plug>(coc-funcobj-a)
 
+"2. Selección de una funcion
+"
+" > Selección la parte interior del clase.
 xmap ic <Plug>(coc-classobj-i)
 omap ic <Plug>(coc-classobj-i)
 
+" > Selección de todo el clase.
 xmap ac <Plug>(coc-classobj-a)
 omap ac <Plug>(coc-classobj-a)
 
@@ -257,9 +266,35 @@ nmap <silent> <C-s> <Plug>(coc-range-select)
 xmap <silent> <C-s> <Plug>(coc-range-select)
 
 
+"-----------------------------------------------------------------------------------
+" CoC> LSP Client> Formateo de Codigo ("Code Formatting")
+"-----------------------------------------------------------------------------------
+
+"1. Formateo de una selección/buffer (Acciones personalizadas VIM)
+xmap <leader>cf  <Plug>(coc-format-selected)
+nmap <leader>cf  <Plug>(coc-format-selected)
+
+
+"2. Formateo del buffer ':Format' (Comando personalizado de VIM)
+command! -nargs=0 Format :call CocActionAsync('format')
+
 
 "-----------------------------------------------------------------------------------
-" CoC> Acciones personalizadas de VIM> Code Actions
+" CoC> LSP Client> Diagnostico (incluyendo Ligting)
+"-----------------------------------------------------------------------------------
+"¿Usar los metodos de navegación de ALE o solo de CoC?
+
+"1. Listar, buscar e ir a un error y/o warning del workspace.
+"   En CoC, se inica su popup 'Fuzzy' (no es un panel vim), la cual se cierra usando '[ESC]'.
+nnoremap <silent><nowait> <Leader>fd  :<C-u>CocList diagnostics<cr>
+
+"2. Navegar en por el los diagnostico del workspace
+nmap <silent> [d <Plug>(coc-diagnostic-prev)
+nmap <silent> ]d <Plug>(coc-diagnostic-next)
+
+
+"-----------------------------------------------------------------------------------
+" CoC> LSP Client> Acciones de Codigo ('Code Actions')
 "-----------------------------------------------------------------------------------
 
 "Applying codeAction to the selected region.
@@ -275,24 +310,28 @@ nmap <leader>qf  <Plug>(coc-fix-current)
 "Run the Code Lens action on the current line.
 nmap <leader>cl  <Plug>(coc-codelens-action)
 
+"Do default action for next item.
+nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
+
+"Do default action for previous item.
+nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
+
 
 "-----------------------------------------------------------------------------------
-" CoC> Acciones personalizadas de VIM> Otros
+" CoC> LSP Client> Refactoring
 "-----------------------------------------------------------------------------------
 
-"Symbol renaming.
+"1. Renombrar un simbolo.
 nmap <leader>rn <Plug>(coc-rename)
 
-"Formatting selected code.
-xmap <leader>cf  <Plug>(coc-format-selected)
-nmap <leader>cf  <Plug>(coc-format-selected)
-
 
 
 "-----------------------------------------------------------------------------------
-" Autocomandos (ejecutar comandos autocomandos cuando ocurre cierto tipo de evento)
+" CoC> LSP Client> Autocomandos 
 "-----------------------------------------------------------------------------------
+"Ejecutar comandos autocomandos cuando ocurre cierto tipo de evento
 
+"
 augroup mygroup
 
     autocmd!
@@ -310,28 +349,29 @@ augroup end
 autocmd CursorHold * silent call CocActionAsync('highlight')
 
 
-"###################################################################################
-" Settings> IDE > Package: CoC > Otros
-"###################################################################################
-
 "-----------------------------------------------------------------------------------
-" CoC> Autodiagnostico (Ligting)
+" CoC> LSP Client> Otros 
 "-----------------------------------------------------------------------------------
 
-"Definir acciones personalizadas VIM para navegar y listar los diganosticos
-"El motor de diagnostico es ALE (no se usara el existente de CoC)
+"1. Comandos personalizados de VIM
+"Add `:Fold` command to fold current buffer.
+command! -nargs=? Fold   :call CocAction('fold', <f-args>)
 
-"Use `[g` and `]g` to navigate diagnostics
-"Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
-nmap <silent> [g <Plug>(coc-diagnostic-prev)
-nmap <silent> ]g <Plug>(coc-diagnostic-next)
+"Add `:OR` command for organize imports of the current buffer.
+command! -nargs=0 OR     :call CocActionAsync('runCommand', 'editor.action.organizeImport')
 
-" Show all diagnostics.
-nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
 
 
 "-----------------------------------------------------------------------------------
-" CoC> Listado de algunos opciones
+" CoC> IDE>  Integración con barra de estado (Status Line)
+"-----------------------------------------------------------------------------------
+
+"NOTE : See  `:h coc-status` for integrations con statusline: lightline.vim, vim-airline.
+set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
+
+
+"-----------------------------------------------------------------------------------
+" CoC> IDE> Variados
 "-----------------------------------------------------------------------------------
 
 "Mappings for CoCList
@@ -342,22 +382,11 @@ nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
 nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
 
 
-"Do default action for next item.
-nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
-
-"Do default action for previous item.
-nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 
 "Resume latest coc list.
 nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 
 
-"-----------------------------------------------------------------------------------
-" CoC> Integración con barra de estado (Status Line)
-"-----------------------------------------------------------------------------------
-
-"NOTE : See  `:h coc-status` for integrations con statusline: lightline.vim, vim-airline.
-set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 
 
 

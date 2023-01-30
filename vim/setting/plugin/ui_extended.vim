@@ -40,10 +40,11 @@ let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
 "  > Solo incluir archivos '-t f' o '--type f'
 "  > Incluir los archivos ocultos '-H' o '--hidden'
 "  > Excluir de la busqueda '-E' o '--exclue'
-"    > La carpetas de git                    : '.git' 
-"    > Archivo de Swap o temporales de VIM   : '.swp'
-"    > Archivo de 'persistence undo' de VIM  : '.un~'
-let $FZF_DEFAULT_COMMAND="fd -H -t f -E '.git' -E '*.swp' -E '*.un~'"
+"    > La carpetas de git                        : '.git' 
+"    > Paquetes ('binario' del Node.JS) locales  : 'node_modules'
+"    > Archivo de Swap o temporales de VIM       : '.swp'
+"    > Archivo de 'persistence undo' de VIM      : '.un~'
+let $FZF_DEFAULT_COMMAND="fd -H -t f -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
 
 "Layout 
 "  > Border : rounded, sharp, horizontal, vertical, top, bottom, left, right
