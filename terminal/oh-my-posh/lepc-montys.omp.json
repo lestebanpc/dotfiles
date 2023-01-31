@@ -60,7 +60,7 @@
             "{{ if .Staging.Changed }}#3f0001{{ end }}",
             "{{ if and (gt .Ahead 0) (gt .Behind 0) }}#ff9248{{ end }}",
             "{{ if gt .Ahead 0 }}#235284{{ end }}",
-            "{{ if gt .Behind 0 }}#222222{{ end }}"
+            "{{ if gt .Behind 0 }}#84791b{{ end }}"
           ],
           "foreground": "#b1b1b1",
           "leading_diamond": "\ue0b6",
