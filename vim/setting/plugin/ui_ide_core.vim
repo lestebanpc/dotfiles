@@ -34,15 +34,17 @@ endif
 
 "Signos que se mostraran cuando se realizo el diagnostico:
 let g:ale_sign_error = ''
-"let g:ale_sign_error = '•'
 let g:ale_sign_warning = ''
-"let g:ale_sign_warning = '•'
 let g:ale_sign_info = '·'
-"let g:ale_sign_info = '·'
 let g:ale_sign_style_error = ''
-"let g:ale_sign_style_error = '·'
 let g:ale_sign_style_warning = ''
+
+"let g:ale_sign_error = '•'
+"let g:ale_sign_warning = '•'
+"let g:ale_sign_info = '·'
+"let g:ale_sign_style_error = '·'
 "let g:ale_sign_style_warning = '·'
+
 
 "Por defecto se cargan todos los linter que existe de los diferentes lenguajes soportados por ALE
 "Para evitar advertencia/errores innecesarios y tener un mayor control, se cargaran manualmente.

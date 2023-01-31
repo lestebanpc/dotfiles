@@ -54,14 +54,15 @@
           "type": "path"
         },
         {
-          "background": "#fffb38",
+          "background": "#002800",
           "background_templates": [
-            "{{ if or (.Working.Changed) (.Staging.Changed) }}#FF9248{{ end }}",
-            "{{ if and (gt .Ahead 0) (gt .Behind 0) }}#ff4500{{ end }}",
-            "{{ if gt .Ahead 0 }}#B388FF{{ end }}",
-            "{{ if gt .Behind 0 }}#B388FF{{ end }}"
+            "{{ if .Working.Changed }}#973d46{{ end }}",
+            "{{ if .Staging.Changed }}#3f0001{{ end }}",
+            "{{ if and (gt .Ahead 0) (gt .Behind 0) }}#ff9248{{ end }}",
+            "{{ if gt .Ahead 0 }}#222222{{ end }}",
+            "{{ if gt .Behind 0 }}#235284{{ end }}"
           ],
-          "foreground": "#193549",
+          "foreground": "#b1b1b1",
           "leading_diamond": "\ue0b6",
           "powerline_symbol": "\ue0b0",
           "properties": {
@@ -76,7 +77,7 @@
           "type": "git"
         },
         {
-          "background": "#3b3b3b",
+          "background": "#7ca25c",
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
@@ -84,7 +85,7 @@
           "type": "go"
         },
         {
-          "background": "#3b3b3b",
+          "background": "#406182",
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
@@ -92,7 +93,7 @@
           "type": "dotnet"
         },
         {
-          "background": "#3b3b3b",
+          "background": "#4d807f",
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
@@ -100,7 +101,7 @@
           "type": "node"
         },
         {
-          "background": "#3b3b3b",
+          "background": "#744e6d",
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
