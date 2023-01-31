@@ -123,10 +123,6 @@ function m_neovim_setup() {
             ~/.files/setup/01_setup_commands.bash 2 8 "neovim"
             l_nvim_flag=0
 
-            #TODO Instalar paquetes globales de NodeJS o .. de Python
-            echo "Opcionalmente, revise:"
-            echo "    > Soporte de Plugins en Python  : pip install pynvim"
-	        echo "    > Soporte de Plugins en Node.JS : sudo npm i -g neovim"
 
         else
             echo "NeoVIM \"${l_version}\" esta instalado: "
@@ -136,21 +132,63 @@ function m_neovim_setup() {
     fi
 
 
-    #4. Configurar NeoVim
+    #Configurar NeoVim solo si esta instalado (no todos los opciones instalan VIM y plugins)
     if [ $l_nvim_flag -ne 0 ]; then
         echo "Para configurar NeoVim debera instalar primero NeoVim"
         return 0
     fi
 
-    #Configurar NeoVim como IDE (Developer)
+    
+    #5. Configurar NeoVim como IDE (Developer)
     l_option=32
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then
 
-        #Instalando paquetes
+        #5.1 Instalando paquete requeridos para usar plugins de Node.JS
+        l_version=$(npm list -g --depth=0 | grep neovim 2> /dev/null)
+        l_status=$?
+        if [ $l_status -ne 0 ] && [ -z "$l_version" ]; then
+
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            echo "Instalando el paquete 'neovim' de Node.JS para soporte de plugins en dicho RTE"
+
+            if [ $g_is_root -eq 0 ]; then
+               npm install -g neovim
+            else
+               sudo npm install -g neovim
+            fi
+
+        else
+            l_version=$(echo "$l_version" | head -n 1 )
+            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+            echo "Paquete de Node.JS 'neovim' ya esta instalado: versión \"${l_version}\""
+        fi
+
+        #5.2 Instalando paquete requeridos para usar plugins de Python3
+        l_version=$(python3 -m pip list | grep pynvim 2> /dev/null)
+        l_status=$?
+        if [ $l_status -ne 0 ] && [ -z "$l_version" ]; then
+
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            echo "Instalando el paquete 'pynvim' de Python3 para soporte de plugins en dicho RTE"
+
+            if [ $g_is_root -eq 0 ]; then
+               python3 -m pip install pynvim
+            else
+               #sudo python3 -m pip install pynvim
+               python3 -m pip install pynvim
+            fi
+
+        else
+            l_version=$(echo "$l_version" | head -n 1 )
+            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+            echo "Paquete de Python3 'pynvim' ya esta instalado: versión \"${l_version}\""
+        fi
+
+        #5.3 Instalando paquetes
         m_neovim_config_plugins 1
 
-        #Creando enlaces simbolicos
+        #5.4 Creando enlaces simbolicos
         printf '\n'
         echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
 
@@ -196,28 +234,25 @@ function m_neovim_setup() {
             ln -snf ~/.files/nvim/ide_nococ/ftplugin/ ~/.config/nvim/runtime_nococ/ftplugin
         fi
 
-        echo "Complete la configuracion de los plugins en NeoVIM"
+        echo "Complete la configuración de NeoVIM como IDE:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
-        echo "  2> Instalar los plugins de VIM-Plug: \":PackerUpdate\""
-
-        echo "Si require usar CoC como IDE realize/valide las siguientes configuraciones:"
-        echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
-        echo "  2> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
-        echo "     2.1> Adaptador de LSP server basicos: JS, Json, HTLML, CSS, Python, Bash:"
+        echo "  2> Instalar los plugins de Packer  : \":PackerUpdate\""
+        echo "  3> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
+        echo "     3.1> Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash:"
         echo "         \":CocInstall coc-tsserver coc-json coc-html coc-css\""
         echo "         \":CocInstall coc-pyrigh\""
         echo "         \":CocInstall coc-sh\""
-        echo "     2.2> Motor de snippets 'UtilSips' (no usar el builtin/nativo de CoC):"
+        echo "     3.2> Motor de snippets 'UtilSips' (no usar el builtin/nativo de CoC):"
         echo "         \":CocInstall coc-ultisnips\""
-        echo "  3> Revisar la Configuracion de COC: \":CocConfig\""
-        echo "     3.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+        echo "  4> Revisar la Configuracion de COC \":CocConfig\":"
+        echo "     4.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
         echo "          { \"diagnostic.displayByAle\": true }"
-        echo "     3.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-        echo "          Si esta instalado esta extension, desintalarlo"
+        echo "     4.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+        echo "          Si esta instalado esta extension, desintalarlo."
 
     fi
 
-    #Configurar NeoVim como Editor basico 
+    #6. Configurar NeoVim como Editor basico 
     l_option=16
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then
@@ -246,7 +281,7 @@ function m_neovim_setup() {
             ln -snf ~/.files/nvim/editor/ftplugin/ ~/.config/nvim/ftplugin
         fi
         
-        echo "Complete la configuracion de los plugins en NeoVIM"
+        echo "Complete la configuración de los plugins en NeoVIM como Editor:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
         echo "  2> Instalar los plugins de VIM-Plug: \":PackerUpdate\""
 
@@ -531,7 +566,7 @@ function m_vim_setup() {
             ln -snf ~/.files/vim/editor/ftplugin/ ~/.vim/ftplugin
         fi
 
-        echo "Complete la configuracion de VIM como editor basico:"
+        echo "Complete la configuración de VIM como editor basico:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
 
     fi
@@ -644,15 +679,45 @@ function m_commands_setup() {
             echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
             echo "Vim/NeoVim como IDE> Se va instalar RTE Node JS version 19.x"
 
-            #TODO ¿Como obtener la ultima version?
+            case "$g_os_subtype_id" in
+                1)
+                    #Distribución: Ubuntu
 
-            if [ $g_is_root -eq 0 ]; then
-                curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
-                yum install -y nodejs
-            else
-                curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
-                sudo yum install -y nodejs
-            fi
+                    #A. Registrar el repositorio de paquetes si no lo esta.
+                    #   TODO Instale manualmente el repositorio (vease: 'https://github.com/nodesource/distributions')
+                    if [ $g_is_root -eq 0 ]; then
+                        curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
+                    else
+                        curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
+                    fi
+
+                    #B. Instalar el paquete
+                    if [ $g_is_root -eq 0 ]; then
+                        apt-get install -y nodejs
+                    else
+                        sudo apt-get install -y nodejs
+                    fi
+                    ;;
+
+                2)
+                    #Distribución: Fedora
+
+                    #A. Registrar el repositorio de paquetes si no lo esta.
+                    #   TODO Instale manualmente el repositorio (vease: 'https://github.com/nodesource/distributions')
+                    if [ $g_is_root -eq 0 ]; then
+                        curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
+                    else
+                        curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
+                    fi
+
+                    #B. Instalar el paquete
+                    if [ $g_is_root -eq 0 ]; then
+                        dnf install nodejs
+                    else
+                        sudo dnf install nodejs
+                    fi
+                    ;;
+            esac
 
 
         else
@@ -668,20 +733,91 @@ function m_commands_setup() {
             echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
             echo "Vim/NeoVim como IDE> Se va instalar RTE Python3"
 
-            #TODO ¿Como instalar la ultima versión?
 
-            #if [ $g_is_root -eq 0 ]; then
-            #    curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
-            #    yum install -y nodejs
-            #else
-            #    curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
-            #    sudo yum install -y nodejs
-            #fi
+            case "$g_os_subtype_id" in
+                1)
+                    #Distribución: Ubuntu
+
+                    #A. Registrar el repositorio de paquetes si no lo esta (usar el por defecto o terceros como 'deadsnakes')
+                    #if [ $g_is_root -eq 0 ]; then
+                    #    add-apt-repository ppa:deadsnakes/ppa
+                    #    apt-get update
+                    #else
+                    #    sudo add-apt-repository ppa:deadsnakes/ppa
+                    #    sudo apt-get update
+                    #fi
+
+                    #B. Instalar el paquete
+                    if [ $g_is_root -eq 0 ]; then
+                        apt-get install python3
+                        apt-get install python3-pip
+                    else
+                        sudo apt-get install python3
+                        sudo apt-get install python3-pip
+                    fi
+                    ;;
+
+                2)
+                    #Distribución: Fedora
+
+                    #A. Registrar el repositorio de paquetes si no lo esta (usar el por defecto o terceros como 'deadsnakes')
+                    #if [ $g_is_root -eq 0 ]; then
+                    #    add-apt-repository ppa:deadsnakes/ppa
+                    #    apt-get update
+                    #else
+                    #    sudo add-apt-repository ppa:deadsnakes/ppa
+                    #    sudo apt-get update
+                    #fi
+
+                    #B. Instalar el paquete
+                    if [ $g_is_root -eq 0 ]; then
+                        dnf install python3
+                        dnf install python3-pip
+                    else
+                        sudo dnf install python3
+                        sudo dnf install python3-pip
+                    fi
+                    ;;
+            esac
 
         else
             l_version=$(echo "$l_version" | sed "$g_regexp_version1")
             echo "Python3 \"$l_version\" ya esta instalado"
         fi
+
+        #4.3 Instalación del modulo Python3: 'pip' (gestor de paquetes)
+        l_version=$(python3 -m pip --version 2> /dev/null)
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            echo "Vim/NeoVim como IDE> Se va instalar el modulo 'pip' de Python3"
+
+            case "$g_os_subtype_id" in
+                1)
+                    #Distribución: Ubuntu
+                    if [ $g_is_root -eq 0 ]; then
+                        apt-get install python3-pip
+                    else
+                        sudo apt-get install python3-pip
+                    fi
+                    ;;
+
+                2)
+                    #Distribución: Fedora
+                    if [ $g_is_root -eq 0 ]; then
+                        dnf install python3-pip
+                    else
+                        sudo dnf install python3-pip
+                    fi
+                    ;;
+            esac
+
+        else
+            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+            echo "Python3> Modulo pip \"$l_version\" ya esta instalado"
+        fi
+
 
     fi
 

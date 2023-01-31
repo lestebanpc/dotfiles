@@ -8,7 +8,6 @@ Se puede tener varios escenarios:
 
 ## 1. Configuración en Linux
 
-Pendiente actualizar
 Se tiene los siguientes pasos:
 
 ```shell
