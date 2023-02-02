@@ -1,6 +1,6 @@
 "Para Neovim usar la configuracion con LSP nativo con Omnisharp Server
 if g:is_neovim && !g:use_coc_in_nvim
-    lua require('ui_ide_lsp_cs')
+    "lua require('ui_ide_lsp_cs')
     finish
 endif
 

@@ -302,6 +302,7 @@ declare -A gA_repositories=(
         ['vim-airline/vim-airline']=2
         ['vim-airline/vim-airline-themes']=2
         ['preservim/nerdtree']=2
+        ['ryanoasis/vim-devicons']=2
         ['christoomey/vim-tmux-navigator']=2
         ['junegunn/fzf']=2
         ['junegunn/fzf.vim']=2
@@ -1037,8 +1038,8 @@ function m_show_menu_core() {
     echo " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:"
     echo "     ( 0) Actualizar los paquetes del SO y crear los enlaces simbolicos del profile"
     echo "     ( 1) VIM-Enhanced - Instalar si no esta instalado"
-    echo "     ( 2) VIM-Enhanced - Configurar como Editor (Basico)"
-    echo "     ( 4) VIM-Enhanced - Configurar como IDE (Developer)"
+    echo "     ( 2) VIM-Enhanced - Configurar como Editor, incluyendo paquetes VIM (Basico)"
+    echo "     ( 4) VIM-Enhanced - Configurar como IDE, incluyendo paquetes VIM (Developer)"
     echo "     ( 8) NeoVim - Instalar si no esta instalado"
     echo "     (16) NeoVim - Configurar como Editor (Basico)"
     echo "     (32) NeoVim - Configurar como IDE (Developer)"

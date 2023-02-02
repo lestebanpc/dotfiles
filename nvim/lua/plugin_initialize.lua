@@ -107,20 +107,54 @@ return require('packer').startup(function(use)
         opt = true
     }
 
+
     ---------------------------------------------------------------------------------
-    --IDE: Completition, LSP Client, Snippets (Exclusivo para Neovim)
+    --IDE: Ligting, Code Formatting por servidores NO-LSP  (Exclusivo para Neovim)
+    ---------------------------------------------------------------------------------
+
+    -- Package UI> IDE> Ligting, Code Formatting (incluyendo los 'Fixers') por servidores
+    -- No-LSP (Ejemplo: EsLint, Prettier, ...). Genera wrappers de servidores No-LSP, para
+    -- hacerlos pasar como servidores LSP, usando todos los objetos LSP proveido por Neovim.
+    use {
+        'jose-elias-alvarez/null-ls.nvim',
+        opt = true
+    }
+
+    ---------------------------------------------------------------------------------
+    --IDE: Soporte de configuración LSP Client (Exclusivo para Neovim)
     ---------------------------------------------------------------------------------
 
     -- Package UI> IDE> CORE> Modulo de configuracion del LSP cliente nativo de Noevim
-    --    Permite LSP Client, Ligting, Fixing, ...
     use {
         'neovim/nvim-lspconfig',
         opt = true
     }
     
+    -- Package UI> IDE> CORE> Wizard para instalar adaptadores LSP 
+    use {
+        'williamboman/mason.nvim',
+        opt = true
+    }
+
+    -- Package UI> IDE> CORE> Wizard para instalar adaptadores LSP (soporte nvim-lspconfig)
+    use {
+        'williamboman/mason-lspconfig.nvim',
+        opt = true
+    }
+
+    ---------------------------------------------------------------------------------
+    --IDE: Completition (Exclusivo para Neovim)
+    ---------------------------------------------------------------------------------
+
     -- Package UI> IDE> CORE> CMP (Autocompletion framework)
     use {
         'hrsh7th/nvim-cmp',
+        opt = true
+    }
+    
+    -- Package UI> IDE> CORE> Mejor soporte a popup 'signature-help' en el completado de un metodo
+    use {
+        'hrsh7th/cmp-nvim-lsp-signature-help',
         opt = true
     }
     
@@ -142,6 +176,10 @@ return require('packer').startup(function(use)
         opt = true
     }
     
+    ---------------------------------------------------------------------------------
+    --IDE: Snippets (Exclusivo para Neovim)
+    ---------------------------------------------------------------------------------
+
     -- Package UI> IDE> CORE> Motor/Framework de Snippets
     --   Muestra los snippets cargados. Si elegimos un snippet lo expande.
     use {
@@ -159,6 +197,20 @@ return require('packer').startup(function(use)
     -- Package UI> IDE> CORE> CMP Source: Snippet LuaSnip
     use {
         'saadparwaiz1/cmp_luasnip',
+        opt = true
+    }
+
+    ---------------------------------------------------------------------------------
+    --IDE: Otros (Exclusivo para Neovim)
+    ---------------------------------------------------------------------------------
+
+    -- Package UI> IDE> CORE> LightBulb para Code Actions
+    use {
+        'kosayoda/nvim-lightbulb',
+        --Para corregir un error (solucionado en la versión ...)
+        --requires = {
+        --    'antoinemadec/FixCursorHold.nvim',
+        --},
         opt = true
     }
 

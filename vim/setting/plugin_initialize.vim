@@ -49,6 +49,9 @@ else
     "Plug-In> UI> EXTENDED> Explorador de archivos (deben cargarse antes de 'Vim-DevIcons')
     packadd nerdtree
 
+    "Plug-In> UI> Iconos para NERDTree y AirLine
+    packadd vim-devicons
+
 endif
 
 "Plug-In> UI> EXTENDED> FZF ("FuZzy Finder") - Funciones basicas para integrar usar el cmd
@@ -124,11 +127,14 @@ if g:use_ide
 
     else
 
-        "Package UI> IDE> Core> Linting, Fixing, LSP Client.. (nativo de NeoVim)
+        "Package UI> IDE> Core> LSP Client (nativo de NeoVim)
         packadd nvim-lspconfig
         
         "Package UI> IDE> Core> CMP (Framework de autocompletado)
         packadd nvim-cmp
+
+        "Package UI> IDE> CORE> Mejor soporte a popup 'signature-help' en el completado de un metodo
+        packadd cmp-nvim-lsp-signature-help
 
         "Package UI> IDE> Core> Fuente CMP: Cliente LSP
         packadd cmp-nvim-lsp
@@ -148,6 +154,16 @@ if g:use_ide
 
         "Package UI> IDE> Core> Fuente CMP: Snippet tipo LuaSnip
         packadd cmp_luasnip
+        
+        "Package UI> IDE> Core> Linting, Code Formatting (Fixing) de servidores No-LSP
+        packadd null-ls.nvim
+
+        "Package UI> IDE> Core> Lightbulb para Code Actions 
+        packadd nvim-lightbulb
+
+        "Package UI> IDE> Core> Wizard para instalar adaptadores LSP y de depuracion 
+        packadd mason.nvim
+        packadd mason-lspconfig.nvim
 
     endif
 
@@ -197,12 +213,6 @@ if g:os_type != 0
     Plug 'preservim/vimux'
 endif
 
-
-"ONLY VIM : Iconos, para Neovim se usa la version lua
-if !g:is_neovim
-    "Plug-In> UI> Iconos para NERDTree y AirLine
-    Plug 'ryanoasis/vim-devicons'
-endif
 
 if g:use_typing_html_emmet
     "Plug-In> UI> IDE> TYPING> Crear elementos HTML por comandos

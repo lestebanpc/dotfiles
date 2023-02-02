@@ -62,7 +62,7 @@ let g:ale_linters_explicit = 1
 let g:ale_fix_on_save = 1
 
 "keep the sign gutter open at all times
-let g:ale_sign_column_always = 1
+"let g:ale_sign_column_always = 1
 
 "###################################################################################
 " Settings> IDE > Package: UltiSnippets (Framework para snippets)

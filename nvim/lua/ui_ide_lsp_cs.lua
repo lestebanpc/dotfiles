@@ -17,7 +17,7 @@ require('lspconfig').omnisharp.setup({
 
 local dap = require('dap')
 
-dap.adapters.coreclr = {
+dap.adapters.netcoredbg = {
   type = 'executable',
   command = '/opt/tools/dap_adapters/netcoredbg/netcoredbg',
   args = {'--interpreter=vscode'}
@@ -25,7 +25,7 @@ dap.adapters.coreclr = {
 
 --dap.configurations.cs = {
 --  {
---    type = "coreclr",
+--    type = "netcoredbg",
 --    name = "launch - netcoredbg",
 --    request = "launch",
 --    program = function()

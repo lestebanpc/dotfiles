@@ -73,6 +73,7 @@ endif
 
 if g:use_ide && $USE_EDITOR != ""
     let g:use_ide = 0
+    "TODO remover del runtimepath el ftplugin
 endif
 
 "Path del home del usuario (siempre se usara como separador de carpetas es '/')

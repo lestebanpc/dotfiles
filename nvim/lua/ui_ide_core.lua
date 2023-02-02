@@ -1,5 +1,58 @@
 --------------------------------------------------------------------------------------------------
---LSP Client> Configuracion de LSP client (LSPConfig)
+--No-LSP> Ligting, Code Formatting (incluyendo Fixers) de servidores No-LSP
+--------------------------------------------------------------------------------------------------
+
+local null_ls = require("null-ls")
+
+null_ls.setup({
+    sources = {
+        null_ls.builtins.formatting.prettier,
+        null_ls.builtins.diagnostics.eslint,
+        --null_ls.builtins.completion.spell,
+        --null_ls.builtins.formatting.shfmt,        -- shell script formatting
+        --null_ls.builtins.diagnostics.shellcheck,  -- shell script diagnostics
+        --null_ls.builtins.code_actions.shellcheck, -- shell script code actions
+    },
+})
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Configuracion del protocolo LSP
+--------------------------------------------------------------------------------------------------
+
+--local protocol = require('vim.lsp.protocol')
+
+--No esta funcionando ¿cuando se usa estos simbolos si no es el completado?
+--protocol.CompletionItemKind = {
+--  '', -- Text
+--  '', -- Method
+--  '', -- Function
+--  '', -- Constructor
+--  '', -- Field
+--  '', -- Variable
+--  '', -- Class
+--  'ﰮ', -- Interface
+--  '', -- Module
+--  '', -- Property
+--  '', -- Unit
+--  '', -- Value
+--  '', -- Enum
+--  '', -- Keyword
+--  '﬌', -- Snippet
+--  '', -- Color
+--  '', -- File
+--  '', -- Reference
+--  '', -- Folder
+--  '', -- EnumMember
+--  '', -- Constant
+--  '', -- Struct
+--  '', -- Event
+--  'ﬦ', -- Operator
+--  '', -- TypeParameter
+--}
+
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Configuracion de LSPConfig
 --------------------------------------------------------------------------------------------------
 
 --1. Extendiendo las capacidad de autocompletado de LSPConfig: Usando la fuente CMP para LSP 
@@ -12,55 +65,131 @@ lsp_config.util.default_config.capabilities = vim.tbl_deep_extend(
     cmp_lsp.default_capabilities()
 )
 
---2. Establecer el key mapping mediante autocomando (Neovim > 0.7.2)
---   Si usa Neovim <= 0.7.2, debera implementar una funcion on_attach, por cada cliente LSP que configura 
+--2. Logica que se ejecuta cuando el cliente LSP se vincula al servidor LSP.
+--   > En Neovim > 0.7.2, se usa autocomando.
+--   > Si usa Neovim <= 0.7.2, debera especificar en la configuración de cada LSP cliente,
+--     especificando 'lspconfig.LSP_CLIENT.setup({ on_attach = .., capabilities = ..., settings = {...}})'
+--     Donde:
+--     > Una funcion 'on_attach' se debera especificar la logica que se ejecuta un cliente LSP
+--       cuando se vincula a un servidor LSP.
+--       local on_attach = function(client, bufnr)
+--          ...
+--       end
+--     > Colección 'capabilities' donde se especifica las capacidades que debera soportar el servidor LSP
+--       --Las capacidades de completado + por defecto de cliente LSP ('vim.lsp.protocol.make_client_capabilities()')
+--       local capabilities = require('cmp_nvim_lsp').default_capabilities()
+--
 vim.api.nvim_create_autocmd('LspAttach', {
     desc = 'Acciones LSP',
     callback = function()
-            local bufmap = function(mode, lhs, rhs)
-            local opts = {buffer = true}
+
+        local bufmap = function(mode, lhs, rhs)
+            local opts = { buffer = true, noremap = true }
             vim.keymap.set(mode, lhs, rhs, opts)
         end
 
-    -- Muestra información sobre símbolo debajo del cursor
-    bufmap('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>')
+        -- Muestra información sobre símbolo debajo/arriba del prompt actual
+        bufmap('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>')
 
-    -- Saltar a definición
-    bufmap('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>')
+        -- Saltar a definición
+        bufmap('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>')
 
-    -- Saltar a declaración
-    bufmap('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>')
+        -- Saltar a declaración
+        bufmap('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>')
 
-    -- Mostrar implementaciones
-    bufmap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>')
+        -- Mostrar implementaciones
+        bufmap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>')
 
-    -- Saltar a definición de tipo
-    bufmap('n', 'go', '<cmd>lua vim.lsp.buf.type_definition()<cr>')
+        -- Saltar a definición de tipo
+        bufmap('n', 'go', '<cmd>lua vim.lsp.buf.type_definition()<cr>')
 
-    -- Listar referencias
-    bufmap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>')
+        -- Listar referencias
+        bufmap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>')
 
-    -- Mostrar argumentos de función
-    bufmap('n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<cr>')
+        -- Listar Simbolos, buscar e ir
+        bufmap('n', 'gs', '<cmd>lua vim.lsp.buf.document_symbol()<cr>')
 
-    -- Renombrar símbolo
-    bufmap('n', '<F2>', '<cmd>lua vim.lsp.buf.rename()<cr>')
+        -- Mostrar argumentos de función
+        bufmap('n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<cr>')
+        bufmap('i', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<cr>')
 
-    -- Listar "code actions" disponibles en la posición del cursor
-    bufmap('n', '<F4>', '<cmd>lua vim.lsp.buf.code_action()<cr>')
-    bufmap('x', '<F4>', '<cmd>lua vim.lsp.buf.range_code_action()<cr>')
+        -- Renombrar símbolo
+        bufmap('n', '<Leader>rn', '<cmd>lua vim.lsp.buf.rename()<cr>')
 
-    -- Mostrar diagnósticos de la línea actual
-    bufmap('n', 'gl', '<cmd>lua vim.diagnostic.open_float()<cr>')
+        -- Listar "code actions" disponibles en la posición del cursor
+        bufmap('n', '<Leader>fa', '<cmd>lua vim.lsp.buf.code_action()<cr>')
+        bufmap('x', '<Leader>fa', '<cmd>lua vim.lsp.buf.range_code_action()<cr>')
 
-    -- Saltar al diagnóstico anterior
-    bufmap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<cr>')
+        -- Listar el diagnistico usando Telescope
+        bufmap('n', 'fd', '<cmd>Telescope diagnostics<CR>')
 
-    -- Saltar al siguiente diagnóstico
-    bufmap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<cr>')
+        -- Mostrar diagnósticos de la línea actual
+        bufmap('n', 'gl', '<cmd>lua vim.diagnostic.open_float()<cr>')
+
+        -- Saltar al diagnóstico anterior
+        bufmap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<cr>')
+
+        -- Saltar al siguiente diagnóstico
+        bufmap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<cr>')
+
+        -- Acciones relacionados al 'Workspace' (projecto)
+        bufmap('n', '<Leader>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>')
+        bufmap('n', '<Leader>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>')
+        
+        -- Formateo del codigo
+        bufmap('n', '<Leader>cf', '<cmd>lua vim.lsp.buf.formatting()<cr>')
+        --Neovim 0.7 - timeout 2 segundos
+        --bufmap('n', '<Leader>cf', '<cmd>lua vim.lsp.buf.formatting_sync(nil, 2000)<cr>')
+        --Neovim 0.8 - timeout 2 segundos
+        --bufmap('n', '<Leader>cf', '<cmd>lua vim.lsp.buf.format({ timeout_ms = 2000 })<cr>')
+
+        -- Formateo del codigo de rango
+        bufmap('x', '<Leader>crg', '<cmd>lua vim.lsp.buf.range_formatting()<CR>')
+
+        --LspInfo
+        
+        -- Resaltado de palabras similaras al actual (Highlight symbol under the prompt)
+        -- TODO client es parametro de on_attach, ¿como obtengo este valor?
+        --if client.resolved_capabilities.documentHighlightProvider then
+        --    vim.cmd [[
+        --        hi! LspReferenceRead cterm=bold ctermbg=235 guibg=LightYellow
+        --        hi! LspReferenceText cterm=bold ctermbg=235 guibg=LightYellow
+        --        hi! LspReferenceWrite cterm=bold ctermbg=235 guibg=LightYellow
+        --    ]]
+        --    vim.api.nvim_create_augroup('lsp_document_highlight', {})
+        --    vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+        --        group = 'lsp_document_highlight',
+        --        buffer = 0,
+        --        callback = vim.lsp.buf.document_highlight,
+        --    })
+        --    vim.api.nvim_create_autocmd('CursorMoved', {
+        --        group = 'lsp_document_highlight',
+        --        buffer = 0,
+        --        callback = vim.lsp.buf.clear_references,
+        --    })
+        --end
+
+        -- Evento: Mostar el popup de diagnostics de la linea actual cuando el prompt
+        --         esta sobre la palabra con error de diagnóstico.
+        -- TODO client es parametro de bufnr, ¿como obtengo este valor?
+        --vim.api.nvim_create_autocmd("CursorHold", {
+        --    buffer = bufnr,
+        --    callback = function()
+        --        local opts_ = {
+        --            focusable = false,
+        --            close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+        --            border = 'rounded',
+        --            source = 'always',
+        --            prefix = ' ',
+        --            scope = 'cursor',
+        --        }
+        --        vim.diagnostic.open_float(nil, opts_)
+        --    end
+        --})
+
+
   end
 })
-
 
 --------------------------------------------------------------------------------------------------
 --Completado y Snippets> Configuración del Completado y su integración con los Snippets y el LSP Client
@@ -92,12 +221,13 @@ cmp.setup({
     --  'keyword_length': cantidad de caracteres necesarios realizar la busqueda en la fuente y mostrar el popup
     --  'trigger_characters': si esta antes de un caracter espcial, el lenght(keyword) = 0, pero  mostrar el popup
     sources = {
-        {name = 'path'},
-        {name = 'nvim_lsp'},
-        --{name = 'nvim_lsp', keyword_length = 3, trigger_characters = { '.', '[' }},
-        --{name = 'nvim_lsp', keyword_length = 3},
-        {name = 'buffer', keyword_length = 3},
-        {name = 'luasnip', keyword_length = 2},
+        { name = 'path' },
+        { name = 'nvim_lsp' },
+        --{ name = 'nvim_lsp', keyword_length = 3, trigger_characters = { '.', '[' } },
+        --{ name = 'nvim_lsp', keyword_length = 3 },
+        { name = 'nvim_lsp_signature_help' },
+        { name = 'buffer', keyword_length = 3 },
+        { name = 'luasnip', keyword_length = 2 },
     },
 
     --Controla la apariencia de la ventana donde se muestra la documentación: usar bordes
@@ -105,23 +235,64 @@ cmp.setup({
         documentation = cmp.config.window.bordered()
     },
 
-    --xxx
+    --Formateo de cada elemento del popup de completado
     formatting = {
         --Controla el orden en el que aparecen los elementos de un item.
         fields = {'menu', 'abbr', 'kind'},
         --Determina el formado del item
         format = function(entry, item)
-                --Asignarles icono a field 'menu'
-                local menu_icon = {
+                --Iconos de tipo de item
+                local kind_icons = {
+                    Class = "ﴯ",
+                    Color = "",
+                    Constant = "",
+                    Constructor = "",
+                    Enum = "",
+                    EnumMember = "",
+                    Event = "",
+                    Field = "",
+                    File = "",
+                    Folder = "",
+                    Function = "",
+                    Interface = "",
+                    Keyword = "",
+                    Method = "",
+                    Module = "",
+                    Operator = "",
+                    Property = "ﰠ",
+                    Reference = "",
+                    Snippet = "",
+                    Struct = "",
+                    Text = "",
+                    TypeParameter = "",
+                    Unit = "",
+                    Value = "",
+                    Variable = "",
+                }
+                
+                --Mostrar tipo de elemento con su icono antepuesto (concetenadolo)
+                item.kind = string.format("%s %s", kind_icons[item.kind], item.kind)
+
+                --Icono por cada fuente de completado (los que no se encuentra, se mostraran en vacio)
+                local menu_icons = {
                     nvim_lsp = 'λ',
                     luasnip = '⋗',
                     buffer = 'Ω',
-                    path = '🖫'
+                    path = '',
+                    nvim_lsp_signature_help = '',                
                 }
-                item.menu = menu_icon[entry.source.name]
+
+                --Mostrar solo el icono (no se concatena el icono con el nombre)
+                item.menu = menu_icons[entry.source.name]
                 return item
-            end,
+        end,
     },
+
+    --Reglas de busqueda con la que se encuentra un item del popup de completado
+    --matching = {
+    --    --Por defecto la busqueda es difusa y no una busqueda exacta.
+    --    disallow_fuzzy_matching = false,
+    --},
 
     --Atajos de teclado usado en el completado
     mapping = {
@@ -190,58 +361,129 @@ cmp.setup({
 --})
 
 --------------------------------------------------------------------------------------------------
---LSP Client> Personalización adicionales del LSP Client
+--LSP Client> Diagnostico 
 --------------------------------------------------------------------------------------------------
 
---1. Personalizando los iconos de diagnostivo (funcion VIM 'sing_define')
-local sign = function(opts)
-        vim.fn.sign_define(opts.name, {
-            texthl = opts.name,
-            text = opts.text,
-            numhl = ''
-        })
-    end
-
-sign({name = 'DiagnosticSignError', text = '✘'})
-sign({name = 'DiagnosticSignWarn', text = '▲'})
-sign({name = 'DiagnosticSignHint', text = '⚑'})
-sign({name = 'DiagnosticSignInfo', text = ''})
+--1. Signos (iconos/simbolos) usuados para el diagnostivo
+vim.fn.sign_define('DiagnosticSignError', { text = '✘', texthl = 'DiagnosticSignError', numhl = '' })
+vim.fn.sign_define('DiagnosticSignWarn',  { text = '▲', texthl = 'DiagnosticSignWarn', numhl = '' })
+--vim.fn.sign_define('DiagnosticSignHint',  { text = '⚑', texthl = 'DiagnosticSignHint', numhl = '' })
+vim.fn.sign_define('DiagnosticSignHint',  { text = '', texthl = 'DiagnosticSignHint', numhl = '' })
+vim.fn.sign_define('DiagnosticSignInfo',  { text = '', texthl = 'DiagnosticSignInfo', numhl = '' })
+--vim.fn.sign_define('DiagnosticSignInfo',  { text = '', texthl = 'DiagnosticSignInfo', numhl = '' })
+--vim.fn.sign_define('DiagnosticSignInfo',  { text = 'כֿ', texthl = 'DiagnosticSignInfo', numhl = '' })
 
 --2. Configuración global de diagnósticos
 vim.diagnostic.config({
-    --Muestra mensaje de diagnóstico con un "texto virtual" al final de la línea.
-    virtual_text = false,
 
-    ----Mostrar un "signo" en la línea donde hay un diagnóstico presente.
-    --signs = true,
-    ----Subrayar la localización de un diagnóstico.
-    --underline = true,
-    ----Actualizar los diagnósticos mientras se edita el documento en modo de inserción.
-    --update_in_insert = false,
+    --Muestra mensaje de diagnóstico con un "texto virtual" al final de la línea.
+    virtual_text = {
+        source = 'always',     --Si es 'always' siempre se muestra la fuente de diagnóstico 'always'
+                               --Si es 'if_many' solo se muestra la fuente si existe mas de uno.
+        prefix = '●',          --Establece el carácter que precede al texto virtual
+    },
+
+    --Mostrar un "signo" en la línea donde hay un diagnóstico presente.
+    signs = true,
+    
+    --Subrayar la localización de un diagnóstico.
+    underline = true,
+
+    --Actualizar los diagnósticos mientras se edita el documento en modo de inserción.
+    update_in_insert = false,
 
     --Ordenar los diagnósticos de acuerdo a su prioridad.
     severity_sort = true,
+
     --Habilitar ventanas flotantes para mostrar los mensajes de diagnósticos.
     float = {
         border = 'rounded',
-        source = 'always',
-        header = '',
-        prefix = '',
+        source = 'always',     -- 'always' o 'if_many'
+        --header = '',
+        --prefix = '',
     },
 })
 
---3. Bordes en ventanas de ayuda:
+--3. Mostar el popup de diagnostics de la linea actual cuando el prompt esta sobre la palabra con error de diagnóstico.
+--   ¿No usarlo, usar mejor lo definido a nivel cuando se vincula al LSP server?
+--vim.cmd [[autocmd! CursorHold,CursorHoldI * lua vim.diagnostic.open_float(nil, {focus=false})]]
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Personalización adicionales del LSP Client
+--------------------------------------------------------------------------------------------------
+
+--1. Bordes en ventanas de ayuda:
 --   Modificar la configuración del "handler" de 'vim.lsp.buf.hover()' que muestra ventana flotante
 vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(
     vim.lsp.handlers.hover,
-    {border = 'rounded'}
+    { border = 'rounded' }
 )
 
 --  Modificar la configuración del "handler" de 'vim.lsp.buf.signature_help()' que muestra ventana flotante
 vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(
     vim.lsp.handlers.signature_help,
-    {border = 'rounded'}
+    { border = 'rounded' }
 )
+
+
+--2. Configurar Lightbulb (kosayoda/nvim-lightbulb)
+require('nvim-lightbulb').setup({
+    -- LSP client names to ignore
+    -- Example: {"sumneko_lua", "null-ls"}
+    ignore = {},
+    sign = {
+        enabled = true,
+        -- Priority of the gutter sign
+        priority = 10,
+    },
+    float = {
+        enabled = false,
+        -- Text to show in the popup float
+        text = "💡",
+        -- Available keys for window options:
+        -- - height     of floating window
+        -- - width      of floating window
+        -- - wrap_at    character to wrap at for computing height
+        -- - max_width  maximal width of floating window
+        -- - max_height maximal height of floating window
+        -- - pad_left   number of columns to pad contents at left
+        -- - pad_right  number of columns to pad contents at right
+        -- - pad_top    number of lines to pad contents at top
+        -- - pad_bottom number of lines to pad contents at bottom
+        -- - offset_x   x-axis offset of the floating window
+        -- - offset_y   y-axis offset of the floating window
+        -- - anchor     corner of float to place at the cursor (NW, NE, SW, SE)
+        -- - winblend   transparency of the window (0-100)
+        win_opts = {},
+    },
+    virtual_text = {
+        enabled = false,
+        -- Text to show at virtual text
+        text = "💡",
+        -- highlight mode to use for virtual text (replace, combine, blend), see :help nvim_buf_set_extmark() for reference
+        hl_mode = "replace",
+    },
+    status_text = {
+        enabled = false,
+        -- Text to provide when code actions are available
+        text = "💡",
+        -- Text to provide when no actions are available
+        text_unavailable = ""
+    },
+    autocmd = {
+        enabled = false,
+        -- see :help autocmd-pattern
+        pattern = {"*"},
+        -- see :help autocmd-events
+        events = {"CursorHold", "CursorHoldI"}
+    }
+})
+
+--3. Mostrar el Lightbulb cuando ocurre el evento (autocomando): el prompt esta en la palabra 
+--   cuando existe un 'Code Action'
+--TODO se configura para todos los 'file type', se puede especificar solo para algunos lenguajes?
+vim.cmd [[autocmd CursorHold,CursorHoldI * lua require('nvim-lightbulb').update_lightbulb()]]
+
 
 --------------------------------------------------------------------------------------------------
 --DAP Client> Configuracion del DAP Client nVim.DAP
@@ -379,6 +621,18 @@ local dap_virtual_text = require('nvim-dap-virtual-text')
 dap_virtual_text.setup ({
     commented = true,              -- prefix virtual text with comment string
 })
+
+
+--------------------------------------------------------------------------------------------------
+--Mason Wizard> Wizard de configuración de adaptadores LSP, adaptadores de depuración
+--------------------------------------------------------------------------------------------------
+
+--1. Configuración
+require("mason").setup()
+require("mason-lspconfig").setup()
+
+
+
 
 
 
