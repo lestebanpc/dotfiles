@@ -130,18 +130,6 @@ return require('packer').startup(function(use)
         opt = true
     }
     
-    -- Package UI> IDE> CORE> Wizard para instalar adaptadores LSP 
-    use {
-        'williamboman/mason.nvim',
-        opt = true
-    }
-
-    -- Package UI> IDE> CORE> Wizard para instalar adaptadores LSP (soporte nvim-lspconfig)
-    use {
-        'williamboman/mason-lspconfig.nvim',
-        opt = true
-    }
-
     ---------------------------------------------------------------------------------
     --IDE: Completition (Exclusivo para Neovim)
     ---------------------------------------------------------------------------------
@@ -154,7 +142,7 @@ return require('packer').startup(function(use)
     
     -- Package UI> IDE> CORE> Mejor soporte a popup 'signature-help' en el completado de un metodo
     use {
-        'hrsh7th/cmp-nvim-lsp-signature-help',
+        'ray-x/lsp_signature.nvim',
         opt = true
     }
     
@@ -199,6 +187,29 @@ return require('packer').startup(function(use)
         'saadparwaiz1/cmp_luasnip',
         opt = true
     }
+
+    
+    ---------------------------------------------------------------------------------
+    --IDE: Wizard para instalar/configurar adaptadores LSP/DAP (Exclusivo para Neovim)
+    ---------------------------------------------------------------------------------
+
+    ---- Package UI> IDE> CORE> Wizard para instalar adaptadores LSP 
+    --use {
+    --    'williamboman/mason.nvim',
+    --    opt = true
+    --}
+
+    ---- Package UI> IDE> CORE> Configurar adaptadores LSP usando ' nvim-lspconfig'
+    --use {
+    --    'williamboman/mason-lspconfig.nvim',
+    --    opt = true
+    --}
+
+    ---- Package UI> IDE> CORE> Configurar adaptadores DAP usando ' nvim-dap'
+    --use {
+    --    'jay-babu/mason-nvim-dap.nvim',
+    --    opt = true
+    --}
 
     ---------------------------------------------------------------------------------
     --IDE: Otros (Exclusivo para Neovim)

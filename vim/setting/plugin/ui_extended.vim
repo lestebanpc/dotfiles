@@ -2,10 +2,14 @@
 " PSettings> UI> File Explorer> Package: Vim-DevIcons
 "###################################################################################
 
-"ONLY VIM : Neovim usa otro tipo de plugins
-if !g:is_neovim
+if g:is_neovim
+    
+    "Configurar el explorador de archivos ('nvim-tree'):
+    lua require('ui.extended')
 
-    "xxx
+else
+
+    "Configurar el explorador de archivos:
     let g:WebDevIconsUnicodeDecorateFileNodesDefaultSymbol='x'
 
     "NERDTree : Adding the flags to NERDTree
@@ -30,7 +34,7 @@ if !g:is_neovim
 endif
 
 "###################################################################################
-" Settings> UI> Search Files> Plug-In: FZF (FuZzy Finder")
+" Settings> UI> Search Files> Plug-In: FZF (FuZzy Finder)
 "###################################################################################
 
 let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
@@ -86,7 +90,7 @@ let g:fzf_force_24_bit_colors = 1
 "   pointer                   Pointer to the current line (>)
 "
 let g:fzf_colors =
-\ { 'fg':         ['fg', 'Normal'],
+  \ { 'fg':         ['fg', 'Normal'],
   \ 'bg':         ['bg', 'Normal'],
   \ 'preview-bg': ['bg', 'NormalFloat'],
   \ 'hl':         ['fg', 'Comment'],

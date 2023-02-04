@@ -134,7 +134,8 @@ if g:use_ide
         packadd nvim-cmp
 
         "Package UI> IDE> CORE> Mejor soporte a popup 'signature-help' en el completado de un metodo
-        packadd cmp-nvim-lsp-signature-help
+        "packadd cmp-nvim-lsp-signature-help
+        packadd lsp_signature.nvim
 
         "Package UI> IDE> Core> Fuente CMP: Cliente LSP
         packadd cmp-nvim-lsp
@@ -162,8 +163,10 @@ if g:use_ide
         packadd nvim-lightbulb
 
         "Package UI> IDE> Core> Wizard para instalar adaptadores LSP y de depuracion 
-        packadd mason.nvim
-        packadd mason-lspconfig.nvim
+        "packadd mason.nvim
+        
+        "Package UI> IDE> Core> Permite configurar adaptadores LSP usando 'nvim-lspconfig' usando Mason
+        "packadd mason-lspconfig.nvim
 
     endif
 
@@ -184,6 +187,13 @@ if g:use_ide
 
         "Package UI> IDE> CORE> DAP> Mejora de UI para nVim-DAP
         packadd telescope-dap.nvim
+
+        "if !g:use_coc_in_nvim
+
+            "Package UI> IDE> Core> Permite configurar adaptadores depuracion 'nvim-dap' usando Mason
+            "packadd mason-nvim-dap.nvim
+
+        "endif
 
     elseif g:has_python3
 

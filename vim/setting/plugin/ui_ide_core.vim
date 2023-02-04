@@ -1,8 +1,13 @@
 "Configuracion de NeoVim (usa el LSP nativo y como completado usa CMP)
 if g:is_neovim && !g:use_coc_in_nvim
 
-    lua require('ui_ide_core')
-
+    lua require('ide.lsp')
+    lua require('ide.completition')
+    lua require('ide.diagnostic')
+    lua require('ide.dap')
+    "lua require('ide.others')
+    lua require('ide.lsp_adapters')
+    lua require('ide.dap_adapters')
 
     "Settings> IDE > Package: DAP Client (Adaptadores de DAP clientes y el Graphical Debugger)
     "
@@ -31,11 +36,12 @@ endif
 "###################################################################################
 " Settings> IDE > Package: ALE (Diagnostic: Linting y Fixing)
 "###################################################################################
+"https://github.com/dense-analysis/ale/blob/master/doc/ale.txt
 
 "Signos que se mostraran cuando se realizo el diagnostico:
-let g:ale_sign_error = ''
-let g:ale_sign_warning = ''
-let g:ale_sign_info = '·'
+let g:ale_sign_error = '✘'
+let g:ale_sign_warning = '▲'
+let g:ale_sign_info = ''
 let g:ale_sign_style_error = ''
 let g:ale_sign_style_warning = ''
 
@@ -64,10 +70,24 @@ let g:ale_fix_on_save = 1
 "keep the sign gutter open at all times
 "let g:ale_sign_column_always = 1
 
+"Habilitar el uso del 'Virtual Text' para mostrar el diagnostico (solo a partir Vim >= 9.XX o NeoVim)
+" 2 ('all    ) - Muestra el diagnostico de todas las lineas de texto.
+" 1 ('current) - Muestra el diagnostico de la linea de texto actual.
+" 0 ('disable) - No muestra diagnostico en 'Virtual Text'
+let g:ale_virtualtext_cursor = 2
+
+"Permitir que el diagnostico en 'Virtual Text' solo se muestre un tiempo determinado
+"en milisegundos (por defecto es 10 milisegundos). 
+let g:ale_virtualtext_delay = 0
+
+"Prefijo que aparece en el diagnostico en 'Virtual Text'
+"'%type%' es 'E' para error, 'W' para Warning, 'I' para Info.
+"let g:ale_virtualtext_prefix = '%comment% %type%: '
+
 "###################################################################################
 " Settings> IDE > Package: UltiSnippets (Framework para snippets)
 "###################################################################################
-
+"Los snippet son usuados en el modo edición
 if g:has_python3
     
     "Expandir el snippet (por defecto es <TAB> y entre en conflicto con el autocompletado)
@@ -76,7 +96,7 @@ if g:has_python3
     "Navegar por cada fragmento del snippet expandido.
     "Saltar hacia adelante y salte hacia atrás dentro de un fragmento.
     let g:UltiSnipsJumpForwardTrigger="<C-a>"
-    let g:UltiSnipsJumpBackwardTrigger="<C-z>"
+    let g:UltiSnipsJumpBackwardTrigger="<C-b>"
 
     "Tipo de split para navegar al editar los snippets :UltiSnipsEdit
     let g:UltiSnipsEditSplit="vertical"

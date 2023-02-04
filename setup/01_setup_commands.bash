@@ -289,9 +289,9 @@ function m_get_repo_current_version() {
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
-                  l_path_file="${g_path_win_programs}/Omnisharp_Roslyn/"
+                  l_path_file="${g_path_win_programs}/LSP_Servers/Omnisharp_Roslyn/"
                else
-                  l_path_file="${g_path_lnx_programs}/omnisharp_roslyn/"
+                  l_path_file="${g_path_lnx_programs}/lsp_servers/omnisharp_roslyn/"
                fi
             fi
 
@@ -309,9 +309,9 @@ function m_get_repo_current_version() {
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
-                  l_path_file="${g_path_win_programs}/DAP_Adapters/NetCoreDbg/"
+                  l_path_file="${g_path_win_programs}/DAP_Servers/NetCoreDbg/"
                else
-                  l_path_file="${g_path_lnx_programs}/dap_adapters/netcoredbg/"
+                  l_path_file="${g_path_lnx_programs}/dap_servers/netcoredbg/"
                fi
             fi
 
@@ -1269,7 +1269,7 @@ function m_copy_artifact_files() {
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_lnx_programs}/omnisharp_roslyn"
+                l_path_bin="${g_path_lnx_programs}/lsp_servers/omnisharp_roslyn"
 
                 #Limpieza del directorio del programa
                 if  [ ! -d "$l_path_bin" ]; then
@@ -1286,7 +1286,7 @@ function m_copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_win_programs}/Omnisharp_Roslyn"
+                l_path_bin="${g_path_win_programs}/LSP_Servers/Omnisharp_Roslyn"
 
                 #Limpieza del directorio del programa
                 if  [ ! -d "$l_path_bin" ]; then
@@ -1311,7 +1311,7 @@ function m_copy_artifact_files() {
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_lnx_programs}/dap_adapters/netcoredbg"
+                l_path_bin="${g_path_lnx_programs}/dap_servers/netcoredbg"
 
                 #1. Comparando la version instalada con la version descargada
                 l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
@@ -1360,7 +1360,7 @@ function m_copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_win_programs}/DAP_Adapters/NetCoreDbg"
+                l_path_bin="${g_path_win_programs}/DAP_Servers/NetCoreDbg"
 
                 #1. Comparando la version instalada con la version descargada
                 l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")

@@ -31,11 +31,8 @@ nmap <silent> <buffer> K <Plug>(omnisharp_documentation)
 nmap <silent> <buffer> <Leader>pd <Plug>(omnisharp_preview_definition)
 nmap <silent> <buffer> <Leader>pi <Plug>(omnisharp_preview_implementations)
 
-
 "
-"Popup de Vista Previa (Preview Popup)
-"
-" > Mostrar el 'Preview Popup'
+" > Mostrar el 'Signature Help'
 nmap <silent> <buffer> <C-\> <Plug>(omnisharp_signature_help)
 imap <silent> <buffer> <C-\> <Plug>(omnisharp_signature_help)
 

@@ -1,6 +1,5 @@
 "Para Neovim usar la configuracion con LSP nativo con Omnisharp Server
 if g:is_neovim && !g:use_coc_in_nvim
-    "lua require('ui_ide_lsp_cs')
     finish
 endif
 
@@ -14,7 +13,25 @@ endif
 "let g:OmniSharp_server_stdio = 1
 
 "Roslyn Server (LSP Server para C#) - Path (Cambiar la ubicacion real)
-let g:OmniSharp_server_path = g:lsp_server_cs_path 
+if g:os_type == 3
+    "Si es Linux
+    let lsp_server_cs_path = g:home_path_lsp_server_lnx .. '/omnisharp_roslyn/OmniSharp'
+elseif g:os_type == 2
+    "Si es WSL
+    if g:wsl_cs_using_win_lsp_server
+        let lsp_server_cs_path = g:home_path_lsp_server_win .. '/Omnisharp_Roslyn/OmniSharp.exe'
+    else
+        let lsp_server_cs_path = g:home_path_lsp_server_wsl .. '/omnisharp_roslyn/OmniSharp'
+    endif
+elseif g:os_type == 0
+    "Si es Windows
+    let lsp_server_cs_path = g:home_path_lsp_server_win .. '/Omnisharp_Roslyn/OmniSharp.exe'
+"elseif g:os_type == 1
+     "Si es MacOS
+     "let lsp_server_cs_path = g:home_path_lsp_server_lnx .. '/omnisharp_roslyn/OmniSharp'
+endif
+
+let g:OmniSharp_server_path = lsp_server_cs_path 
 
 "Roslyn Server (LSP Server para C#) - Si se usa WSL:
 "  - Usar el LSP server de Windows (no requiere instalar LSP server en WSL)
@@ -30,12 +47,6 @@ endif
 
 "Roslyn Server (LSP Server para C#) - Si se usa la version desarollado en .NET 6 (anteriormente se usaba Mono)
 let g:OmniSharp_server_use_net6 = 1
-
-"Herramienta que se usara en 'Code Actions'
-let g:OmniSharp_selector_ui = 'fzf' 
-
-"Herramienta que se usara en 'Find Symbols'
-let g:OmniSharp_selector_findusages = 'fzf'
 
 "Popup Windows - position
 let g:OmniSharp_popup_position = 'peek'
@@ -57,7 +68,22 @@ else
         \}
 endif
 
-"Popup - Personalizar el algunos key mappings que se usaran cuando aparezca un popup
+"Personalizar los key mappings en modo 'popup' (las  que se usaran cuando aparezca un popup). Las teclas
+"usadas en este modo son diferentes a los definidos en el modo edición/.. por lo que puede usarlos sin
+"afectar a las teclas definidas en este modo. 
+"Los identificadores y los valores por defecto son:
+"  > 'close'        : 'gq'
+"  > 'pageDown'     : '<C-f>'
+"  > 'pageUp'       : '<C-b>'
+"  > 'lineDown'     : '<C-e>'
+"  > 'lineUp'       : '<C-y>'
+"  > 'halfPageDown' : '<C-d>'
+"  > 'halfPageUp'   : '<C-u>'
+"Los identificadores y valores por defecto que solo son para el popup de 'Signature help':
+"  > 'sigNext'      : '<C-j>'
+"  > 'sigPrev'      : '<C-k>'
+"  > 'sigParamNext' : '<C-l>'
+"  > 'sigParamPrev' : '<C-h>'
 let g:OmniSharp_popup_mappings = {
 \ 'pageDown': ['<C-f>', '<PageDown>'],
 \ 'pageUp': ['<C-b>', '<PageUp>']
@@ -78,6 +104,13 @@ endif
 let g:OmniSharp_highlight_groups = {
 \ 'ExcludedCode': 'NonText'
 \}
+
+"Herramienta que se usara en 'Code Actions'
+let g:OmniSharp_selector_ui = 'fzf' 
+
+"Herramienta que se usara en 'Find Symbols'
+let g:OmniSharp_selector_findusages = 'fzf'
+
 
 
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
