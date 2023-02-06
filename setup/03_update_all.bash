@@ -186,7 +186,7 @@ function m_update_all() {
     #l_opcion=1
     #l_flag=$(( $p_opciones & $l_opcion ))
     if [ $p_opciones -ge 2 ]; then
-        ~/.files/setup/01_setup_commands.bash 1 $p_opciones
+        ~/.files/setup/01_setup_cli_programs.bash 1 $p_opciones
     fi            
 
     #7. Caducar las credecinales de root almacenadas temporalmente

@@ -36,7 +36,7 @@ if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
     g_is_root=0
 fi
 
-#Variable global de la ruta donde los programas se instalaran (complejos) 
+#Variable global de la ruta donde se instalaran los programas CLI (mas complejos que un simple comando).
 declare -r g_path_lnx_programs='/opt/tools'
 
 #Variable global ruta de los programas CLI y/o binarios en Windows desde su WSL2
@@ -2277,11 +2277,11 @@ function m_show_menu_core() {
     echo "     (  1) Actualizar los paquetes existentes del sistema operativo"   
     echo "     (  2) Actualizar los binarios de los repositorios existentes"
     echo "     (  4) Instalar/Actualizar los binarios de los repositorios basicos"
-    echo "     (  8) Instalar/Actualizar el binario del repositorio opcional \"NeoVim\""
-    echo "     ( 16) Instalar/Actualizar el binario del repositorio opcional \"k0s\""
-    echo "     ( 32) Instalar/Actualizar el binario del repositorio opcional \"OmniSharp/omnisharp-roslyn\""
-    echo "     ( 64) Instalar/Actualizar el binario del repositorio opcional \"Samsung/netcoredbg\""
-    echo "     (128) (Re)Instalar en el servidor fuentes Nerd Fonts desde    \"ryanoasis/nerd-fonts\""
+    echo "     (  8) Instalar/Actualizar el editor: \"NeoVim\""
+    echo "     ( 16) Instalar/Actualizar la implementación de Kubernates: \"k0s\""
+    echo "     ( 32) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
+    echo "     ( 64) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""
+    echo "     (128) (Re)Instalar en el servidor fuentes Nerd Fonts desde \"ryanoasis/nerd-fonts\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 

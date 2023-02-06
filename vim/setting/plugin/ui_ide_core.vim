@@ -9,21 +9,6 @@ if g:is_neovim && !g:use_coc_in_nvim
     lua require('ide.lsp_adapters')
     lua require('ide.dap_adapters')
 
-    "Settings> IDE > Package: DAP Client (Adaptadores de DAP clientes y el Graphical Debugger)
-    "
-    nnoremap <F5>          <Cmd>lua require('dap').continue()<CR>
-    nnoremap <Leader><F4>  <Cmd>lua require('dap').terminate()<CR>
-
-    nnoremap <F9>          <Cmd>lua require('dap').toggle_breakpoint()<CR>
-    nnoremap <Leader><F9>  <Cmd>lua require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>
-    "noremap <Leader>lp    <Cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>
-
-    "Continues execution to the current cursor.
-    nnoremap <Leader><F8>  <Cmd>lua require('dap').run_to_cursor()<CR>
-    nnoremap <F10>         <Cmd>lua require('dap').step_over()<CR>
-    nnoremap <F11>         <Cmd>lua require('dap').step_into()<CR>
-    nnoremap <F12>         <Cmd>lua require('dap').step_out()<CR>
-
     "Open a REPL / Debug-console.
     "nnoremap <Leader>dr <Cmd>lua require('dap').repl.open()<CR>
     "Re-runs the last debug adapter / configuration that ran using
@@ -77,8 +62,8 @@ let g:ale_fix_on_save = 1
 let g:ale_virtualtext_cursor = 2
 
 "Permitir que el diagnostico en 'Virtual Text' solo se muestre un tiempo determinado
-"en milisegundos (por defecto es 10 milisegundos). 
-let g:ale_virtualtext_delay = 0
+"en ¿milisegundos? (por defecto es 10 ¿milisegundos?). 0 si se muestra siempre. 
+let g:ale_virtualtext_delay = 10
 
 "Prefijo que aparece en el diagnostico en 'Virtual Text'
 "'%type%' es 'E' para error, 'W' para Warning, 'I' para Info.

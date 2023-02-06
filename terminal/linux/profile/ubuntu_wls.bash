@@ -114,7 +114,7 @@ PATH=$PATH:/opt/tools/neovim/bin:/opt/tools/rh-ocp-cli
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
 
-# Tema por defecto de "Oh My Posh"
+# "Oh My Posh" - Usando el profile
 eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lepc-montys.omp.json)"
 
 # enable programmable completion features (you don't need to enable
@@ -128,13 +128,18 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# Para tmux (usando la configuracion de "oh-my-tmux")
+# TMUX - Usando "oh-my-tmux", especificando el editor VIM
 export EDITOR=vim
 
-# Opciones por defecto del comando fzf
+# FZF - Opciones por defecto del comando
 export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"
 source ~/.files/terminal/linux/complete/fzf.bash
 source ~/.files/terminal/linux/keybindings/fzf.bash
+
+# Node.Js (nvm) - Usando varias Node.JS
+export NVM_DIR="/opt/tools/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+#[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 #Funciones basicas
 source ~/.files/terminal/linux/functions/func_basic.bash

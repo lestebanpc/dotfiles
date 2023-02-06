@@ -7,6 +7,10 @@ endif
 " Settings> IDE > Package: Omnisharp-Vim (Pluing del Client LSP para Roslyn)
 "###################################################################################
 
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+" OmniSharp-Vim> Configuración del servidor LSP
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"
 "Roslyn Server (LSP Server para C#)
 " - (1) 'Stdio Version' (default, es la versión recomendada).
 " - ( ) 'HTTP Version'  (versión antigua)  
@@ -48,7 +52,18 @@ endif
 "Roslyn Server (LSP Server para C#) - Si se usa la version desarollado en .NET 6 (anteriormente se usaba Mono)
 let g:OmniSharp_server_use_net6 = 1
 
-"Popup Windows - position
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+" OmniSharp-Vim> Popup 'Preview', 'Documentation' y 'Signature-Help' 
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"
+"
+"let g:OmniSharp_popup = 1
+
+"Popup Windows - position (no incluye los popups 'Signature-help' y 'Documentation')
+"Valores :
+"  > 'atcursor' : xxx
+"  > 'peek'     : xxx
+"  > 'center'   : xxx
 let g:OmniSharp_popup_position = 'peek'
 
 "Popup Windows - Border del popup para VIM (por defecto no tiene borde)
@@ -89,32 +104,110 @@ let g:OmniSharp_popup_mappings = {
 \ 'pageUp': ['<C-b>', '<PageUp>']
 \}
 
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+" OmniSharp-Vim> Diagnostico y Highlighting
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"
+"When using ALE for displaying diagnostics, OmniSharp-vim can listen for diagnostics sent 
+"asynchronously by the OmniSharp-roslyn server, and continue to update ALE as these are received.
+"  0> Do not listen for diagnostics.
+"  1> Listen to the first diagnostic received for each buffer.
+"  2> Listen for diagnostics and update ALE (default).
+"let g:OmniSharp_diagnostic_listen = 2
+
+"let g:OmniSharp_diagnostic_showid = 1
+
+"let g:OmniSharp_diagnostic_overrides = {
+"    \ 'IDE0010': {'type': 'I'},
+"    \ 'IDE0055': {'type': 'W', 'subtype': 'Style'},
+"    \ 'CS8019': {'type': 'None'},
+"    \ 'RemoveUnnecessaryImportsFixable': {'type': 'None'}
+"    \}
+
+"Rutas de analisis a excluir cuando se realiza un analisis y diagnostico global (del workspace)
+"usando ':OmniSharpGlobalCodeCheck'
+let g:OmniSharp_diagnostic_exclude_paths = [
+    \ 'obj\\',
+    \ '[Tt]emp\\',
+    \ '\.nuget\\',
+    \ '\<AssemblyInfo\.cs\>'
+    \]
+
 "Resaltado Sintaxico/Semantico (Semantic Highlighting). Default = 1
 "  (0) No hay resaltado,
 "  (1) Resaltado nuevos solo se dan cuando se pasa de modo edit a normal (por defecto),
 "  (3) Resaltado siempre se da, aun cuando el texto aun en modo insert
 "let g:OmniSharp_highlighting = 1
 
-"Fuente de snippets para UltiSnips: OmniSharp
-if g:has_python3
-    let g:OmniSharp_want_snippet = 1
-endif
 
 "xxx
 let g:OmniSharp_highlight_groups = {
 \ 'ExcludedCode': 'NonText'
 \}
 
-"Herramienta que se usara en 'Code Actions'
-let g:OmniSharp_selector_ui = 'fzf' 
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+" OmniSharp-Vim> Integración con otras componenetes externas
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"
+"Por defecto para selección y/o busqueda se usa el panel vim llamado 'QuickFix' (no es un popup, 
+"como por ejemplo un popup basado en fzf). El panel vim se puede cerrar selecionado el panel y
+"usando el comando ':close'.
+"A diferencia de popup, ese va al lugar y no cierra el panel automaticamente, por lo cual puede
+"reusar.
+"let g:OmniSharp_open_quickfix = 1
 
-"Herramienta que se usara en 'Find Symbols'
+"Especificar la herramienta que se usara como selector alternativo a 'QuickFix'.
+"Si 'fzf', se mostrará dentro de un popup, por lo que tiene key-mappings independiente de los 
+"otros modos y para salir puede usar '<ESC>'.
+let g:OmniSharp_selector_ui = 'fzf'
+
+"Personalizar las opciones de fzf
+"let g:OmniSharp_fzf_options = { 'right': '50%' }
+
+"Usar popup basado en fzf para 'Find Symbols'.
 let g:OmniSharp_selector_findusages = 'fzf'
 
+"Usar popup basado en fzf para 'Find Members'.
+let g:OmniSharp_selector_findmembers = 'fzf'
 
+"Si es '1', el completado es de un nombre de un simbolo (funcion, variable, ...) y es aceptado,
+"se tratara de ejecutar el snippets por defecto asociado a este.
+let g:OmniSharp_want_snippet = 0
+
+"Si se usa un fuente de completado CoC y 'g:OmniSharp_want_snippet = 1', si el completado es un
+"nombre de un simbolo y es aceptado, se ejecuta el snippets por defecto.
+let g:OmniSharp_coc_snippet = 0
+
+"Si es '1', cuando el completado es de un metodo, no se muestra los argumentos y por ende no se
+"muestra una solo metodo por metodo sobrecargado. El 'g:OmniSharp_want_snippet = 0' para que
+"esto esta habilitado.
+let g:OmniSharp_completion_without_overloads = 1
 
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-" OmniSharp-Vim> Soporte a Code-actions para OmniSharp
+" OmniSharp-Vim> Otros 
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"
+"Normalizar el path de los archivos enviados por LSP server, para usar la convención de vim
+"(vease 'filename-modifiers').
+"let g:OmniSharp_filename_modifiers = ':.'
+"let g:OmniSharp_filename_modifiers = ':p:~'
+"let g:OmniSharp_filename_modifiers = 'relative'
+
+"Busqueda la metadata de assemblies (binarios) si no se encuentra el archivo de codigo.
+"Usado en ':OmniSharpGotoDefinition' y ':OmniSharpPreviewDefinition'
+let g:OmniSharp_lookup_metadata = 1
+
+"Cuando busca el tipo de un variable ('Type Lookup') es por defecto se muestra en un el status bar.
+"Si desde mostrar en un popup preview establesca en 1
+"let g:OmniSharp_typeLookupInPreview = 0
+
+"Obtener y mostrar la documentación completa del servidor LSP cuando se lista los item del completado. 
+"Por temas de performance, solo se pide la documentación completa cuando se seleciona un simbolo
+"determinado (un tipo o metodo).
+"let g:omnicomplete_fetch_full_documentation = 1
+
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+" OmniSharp-Vim> Soporte a Code-actions
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "Code actions: A flag is displayed in the sign column to indicate that one or more code actions are available.
 

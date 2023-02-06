@@ -111,6 +111,7 @@ dap_ui.setup({
 
 })
 
+--2. Mostrar y cerrar UI segun los eventos del DAP
 dap.listeners.after.event_initialized["dapui_config"] = function()
       dap_ui.open()
    end
@@ -123,13 +124,29 @@ dap.listeners.before.event_exited["dapui_config"] = function()
       dap_ui.close()
    end
 
+--3. Key-Mappings
+local opts = { noremap = true, silent = true }
 
---2. Paquete 'telescope-dap.nvim': Integracion entre Telescope y nVim.DAP
+vim.keymap.set("n", "<F5>", "<cmd>lua require('dap').continue()<CR>", opts)
+vim.keymap.set("n", "<Leader><F4>", "<cmd>lua require('dap').terminate()<CR>", opts)
+
+vim.keymap.set("n", "<F9>", "<cmd>lua require('dap').toggle_breakpoint()<CR>", opts)
+vim.keymap.set("n", "<Leader><F9>", "<cmd>lua require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>", opts)
+--vim.keymap.set("n", "<Leader><F9>", "<cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>", opts)
+
+vim.keymap.set("n", "<Leader><F8>", "<cmd>lua require('dap').run_to_cursor()<CR>", opts)
+vim.keymap.set("n", "<Leader><F10>", "<cmd>lua require('dap').step_over()<CR>", opts)
+vim.keymap.set("n", "<Leader><F11>", "<cmd>lua require('dap').step_into()<CR>", opts)
+vim.keymap.set("n", "<Leader><F12>", "<cmd>lua require('dap').step_out()<CR>", opts)
+
+--vim.keymap.set("n", "<Leader>dh", "<cmd>lua require('dapui').eval()<CR>", opts)
+
+--4. Paquete 'telescope-dap.nvim': Integracion entre Telescope y nVim.DAP
 local telescope = require('telescope')
 telescope.load_extension('dap')
 
 
---3. Paquete 'nvim-dap-virtual-text': Adicionar texto de ayuda en la depuracion
+--5. Paquete 'nvim-dap-virtual-text': Adicionar texto de ayuda en la depuracion
 local dap_virtual_text = require('nvim-dap-virtual-text')
 dap_virtual_text.setup ({
     commented = true,              -- prefix virtual text with comment string

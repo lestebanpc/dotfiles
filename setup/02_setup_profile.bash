@@ -30,6 +30,9 @@ fi
 #Expresion regular para extrear la versión de un programa
 declare -r g_regexp_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
 
+#Variable global de la ruta donde se instalaran los programas CLI (mas complejos que un simple comando).
+declare -r g_path_lnx_programs='/opt/tools'
+
 #}}}
 
 # Parametros:
@@ -140,49 +143,77 @@ function m_neovim_setup() {
 
     
     #5. Configurar NeoVim como IDE (Developer)
+    local l_temp=""
     l_option=32
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then
 
         #5.1 Instalando paquete requeridos para usar plugins de Node.JS
-        l_version=$(npm list -g --depth=0 | grep neovim 2> /dev/null)
+        l_temp=$(npm list -g --depth=0 2> /dev/null) 
         l_status=$?
-        if [ $l_status -ne 0 ] && [ -z "$l_version" ]; then
+        if [ $l_status -ne 0 ]; then           
+           echo "ERROR: No esta instalado correctamente 'npm', se requiere que este configurado correctamente."
+        else
 
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-            echo "Instalando el paquete 'neovim' de Node.JS para soporte de plugins en dicho RTE"
-
-            if [ $g_is_root -eq 0 ]; then
-               npm install -g neovim
+            #Obtener la version
+            if [ -z "$l_temp" ]; then
+                l_version="" 
             else
-               sudo npm install -g neovim
+                l_version=$(echo "$l_temp" | grep neovim)
             fi
 
-        else
-            l_version=$(echo "$l_version" | head -n 1 )
-            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
-            echo "Paquete de Node.JS 'neovim' ya esta instalado: versión \"${l_version}\""
+            #Instalando si no se obtiene la versión
+            if [ -z "$l_version" ]; then
+
+                echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+                echo "Instalando el paquete 'neovim' de Node.JS para soporte de plugins en dicho RTE"
+
+                if [ $g_is_root -eq 0 ]; then
+                    npm install -g neovim
+                else
+                    #sudo npm install -g neovim
+                    npm install -g neovim
+                fi
+
+            else
+                l_version=$(echo "$l_version" | head -n 1 )
+                l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+                echo "Paquete de Node.JS 'neovim' ya esta instalado: versión \"${l_version}\""
+            fi
         fi
 
         #5.2 Instalando paquete requeridos para usar plugins de Python3
-        l_version=$(python3 -m pip list | grep pynvim 2> /dev/null)
+        l_temp=$(python3 -m pip list 2> /dev/null)
         l_status=$?
-        if [ $l_status -ne 0 ] && [ -z "$l_version" ]; then
-
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-            echo "Instalando el paquete 'pynvim' de Python3 para soporte de plugins en dicho RTE"
-
-            if [ $g_is_root -eq 0 ]; then
-               python3 -m pip install pynvim
+        if [ $l_status -ne 0 ]; then           
+           echo "ERROR: No esta instalado correctamente 'pip', se requiere que este configurado correctamente."
+        else
+            
+            #Obtener la version
+            if [ -z "$l_temp" ]; then
+                l_version="" 
             else
-               #sudo python3 -m pip install pynvim
-               python3 -m pip install pynvim
+                l_version=$(echo "$l_temp" | grep pynvim)
             fi
 
-        else
-            l_version=$(echo "$l_version" | head -n 1 )
-            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
-            echo "Paquete de Python3 'pynvim' ya esta instalado: versión \"${l_version}\""
+            #Instalando si no se obtiene la versión
+            if [ -z "$l_version" ]; then
+
+                echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+                echo "Instalando el paquete 'pynvim' de Python3 para soporte de plugins en dicho RTE"
+
+                if [ $g_is_root -eq 0 ]; then
+                    python3 -m pip install pynvim
+                else
+                    sudo python3 -m pip install pynvim
+                    #python3 -m pip install pynvim
+                fi
+
+            else
+                l_version=$(echo "$l_version" | head -n 1 )
+                l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+                echo "Paquete de Python3 'pynvim' ya esta instalado: versión \"${l_version}\""
+            fi
         fi
 
         #5.3 Instalando paquetes
@@ -669,6 +700,7 @@ function m_commands_setup() {
         l_flag=$(( $p_opciones & $l_option ))
     fi
 
+    local l_temp=""
     if [ $l_flag -eq $l_option ]; then
 
         #4.1 Instalación de Node.JS (el gestor de paquetes npm esta incluido)
@@ -678,48 +710,46 @@ function m_commands_setup() {
         if [ $l_status -ne 0 ]; then
 
             echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-            echo "Vim/NeoVim como IDE> Se va instalar RTE Node JS version 19.x"
+            echo "Vim/NeoVim como IDE> Se va instalar el scripts NVM y con ello se instalar RTE Node.JS"
 
-            case "$g_os_subtype_id" in
-                1)
-                    #Distribución: Ubuntu
+            #Instalar los scripts de NVM
+            if [ ! -f "${g_path_lnx_programs}/nvm/nvm.sh" ]; then
 
-                    #A. Registrar el repositorio de paquetes si no lo esta.
-                    #   TODO Instale manualmente el repositorio (vease: 'https://github.com/nodesource/distributions')
-                    if [ $g_is_root -eq 0 ]; then
-                        curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
-                    else
-                        curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
-                    fi
+                if [ -d "${g_path_lnx_programs}/nvm" ]; then
+                    rm -rf "${g_path_lnx_programs}/nvm" 
+                fi
 
-                    #B. Instalar el paquete
-                    if [ $g_is_root -eq 0 ]; then
-                        apt-get install -y nodejs
-                    else
-                        sudo apt-get install -y nodejs
-                    fi
-                    ;;
+                #Instalar los script desde el repositorio 'nvm-sh/nvm.gi'
+                echo "Instalar el repositorio 'nvm-sh/nvm.git' de script para nvm"
+                git clone https://github.com/nvm-sh/nvm.git ${g_path_lnx_programs}/nvm
+                cd ${g_path_lnx_programs}/nvm
+                git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
+                . ${g_path_lnx_programs}/nvm/nvm.sh
+            else
+                
+                #Actualizar los script desde el repositorio 'nvm-sh/nvm.gi'
+                echo "Actualizar el repositorio 'nvm-sh/nvm.git' de script para nvm"
+                cd ${g_path_lnx_programs}/nvm
+                git fetch --tags origin
+                git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
 
-                2)
-                    #Distribución: Fedora
+            fi
 
-                    #A. Registrar el repositorio de paquetes si no lo esta.
-                    #   TODO Instale manualmente el repositorio (vease: 'https://github.com/nodesource/distributions')
-                    if [ $g_is_root -eq 0 ]; then
-                        curl -fsSL https://rpm.nodesource.com/setup_19.x | bash -
-                    else
-                        curl -fsSL https://rpm.nodesource.com/setup_19.x | sudo bash -
-                    fi
+            l_temp=$(nvm --version 2> /dev/null)
+            l_status=$?
+            if [ $l_status -eq 0 ]; then
+                
+                echo "Usando 'nvm' (versión '${l_temp}') para instalar la ultima versión de Node.JS: 'nvm install node'"
+                nvm install node
 
-                    #B. Instalar el paquete
-                    if [ $g_is_root -eq 0 ]; then
-                        dnf install nodejs
-                    else
-                        sudo dnf install nodejs
-                    fi
-                    ;;
-            esac
-
+            else
+                echo "No se puede determinar la versión de 'nvm'."
+                echo "Revise su shell profile y la instalación en '${g_path_lnx_programs}/nvm/':"
+                echo "    export NVM_DIR=\"${g_path_lnx_programs}/nvm\""
+                echo "    [ -s \"$NVM_DIR/nvm.sh\" ] && \. \"$NVM_DIR/nvm.sh\""
+                echo "    [ -s \"$NVM_DIR/bash_completion\" ] && \. \"$NVM_DIR/bash_completion\""
+                #return 10
+            fi
 
         else
             l_version=$(echo "$l_version" | sed "$g_regexp_version1")
