@@ -1,5 +1,6 @@
 {
     "diagnostic.displayByAle": true,
+    "codeLens.enable": true,
     "python.pythonPath": "python3",
     "suggest.completionItemKindLabels": {
         "method": "  ",

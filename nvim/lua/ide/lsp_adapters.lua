@@ -22,22 +22,11 @@ null_ls.setup({
 --LSP Adapters> C# (Adaptador para OmniSharp Roslyn)
 --------------------------------------------------------------------------------------------------
 
-if (vim.g.os_type == 3) then
-    --Si es Linux
-    lsp_server_path = vim.g.home_path_lsp_server_lnx .. '/omnisharp_roslyn/OmniSharp'
-elseif (vim.g.os_type == 2) then
-    --Si es WSL
-    if (vim.g.wsl_cs_using_win_lsp_server) then
-        lsp_server_path = vim.g.home_path_lsp_server_win .. '/Omnisharp_Roslyn/OmniSharp.exe'
-    else
-        lsp_server_path = vim.g.home_path_lsp_server_wsl .. '/omnisharp_roslyn/OmniSharp'
-    end
-elseif (vim.g.os_type == 0) then
+if (vim.g.os_type == 0) then
     --Si es Windows
-    lsp_server_path = vim.g.home_path_lsp_server_win .. '/Omnisharp_Roslyn/OmniSharp.exe'
---elseif (vim.g.os_type == 1) then
-    --Si es MacOS
-    --lsp_server_path = vim.g.home_path_lsp_server_lnx .. '/omnisharp_roslyn/OmniSharp'
+    lsp_server_path = vim.g.home_path_lsp_server .. '/Omnisharp_Roslyn/OmniSharp.exe'
+else
+    lsp_server_path = vim.g.home_path_lsp_server .. '/omnisharp_roslyn/OmniSharp'
 end
 
 --local pid = vim.fn.getpid()

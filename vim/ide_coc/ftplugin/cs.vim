@@ -1,6 +1,7 @@
 "--------------------------------------------------------------------------------
 "1. Inicialización
 "--------------------------------------------------------------------------------
+if !g:use_ide | finish | endif
 if get(b:, 'csharp_ftplugin_loaded', 0) | finish | endif
 
 let b:undo_ftplugin = get(b:, 'undo_ftplugin', 'exe')
@@ -23,7 +24,6 @@ set cpoptions&vim
 " > Mostrar el 'Documentation Popup'
 nmap <silent> <buffer> K <Plug>(omnisharp_documentation)
 
-
 "
 "Popup de Vista Previa (Preview Popup)
 "
@@ -40,18 +40,27 @@ imap <silent> <buffer> <C-\> <Plug>(omnisharp_signature_help)
 "2.2. Asociados a mostrar información (sin usar popup)
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "
-" > Mostar el tipo del simbolo en la 'Barra de estado'
+" > Mostrar el tipo del simbolo en la 'Barra de estado'
 nmap <silent> <buffer> <Leader>ty <Plug>(omnisharp_type_lookup)
 
 "¿?
-nmap <silent> <buffer> <Leader>hi <Plug>(omnisharp_highlight_type)
+"nmap <silent> <buffer> <Leader>hi <Plug>(omnisharp_highlight_type)
 
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-"2.3. Asociados a la Navegación ('Navegation')
+"2.3. Asociados a la Navegación ('Navegation'): Ir a un 'Location' especifico.
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "
-"Navegación desde el simbolo actual:
+
+"1. 'Location' especifico dentro del buffer:
+"
+" > Nevegar el inicio del anterior metodo (method/property/field) o clase
+map <silent> <buffer> [[ <Plug>(omnisharp_navigate_up)
+
+" > Nevegar el inicio del siguiente metodo (method/property/field) o clase
+map <silent> <buffer> ]] <Plug>(omnisharp_navigate_down)
+
+"2. 'Location' (dentro de todo el 'workspace') basado en el simbolo actual:
 "
 " > Ir a la definición del simbolo actual (donde esta el prompt)
 nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)
@@ -60,29 +69,20 @@ nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)
 nmap <silent> <buffer> gi <Plug>(omnisharp_find_implementations)
 
 " > Ir a la referencias o uso del simbolo actual (donde esta el prompt)
-nmap <silent> <buffer> gr <Plug>(omnisharp_find_usages)
+nmap <silent> <buffer> gu <Plug>(omnisharp_find_usages)
 
-"
-"Navegación dentro del buffer:
-"
-" > Nevegar el inicio del anterior method/property/field
-map <silent> <buffer> [[ <Plug>(omnisharp_navigate_up)
+" > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el proyecto
+nmap <silent> <buffer> <Leader>ls <Plug>(omnisharp_find_symbol)
 
-" > Nevegar el inicio del siguiente method/property/field
-map <silent> <buffer> ]] <Plug>(omnisharp_navigate_down)
+" > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'type' en el proyecto
+nmap <silent> <buffer> <Leader>lt <Plug>(omnisharp_find_type)
 
-"
-"Busqueda, Seleccionar e Ir:
-"
-" > Listar, buscar e ir a un 'symbol' en el proyecto
-nmap <silent> <buffer> <Leader>fs <Plug>(omnisharp_find_symbol)
+" > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'members' de las clases asociados al buffer actual
+nmap <silent> <buffer> <Leader>lm <Plug>(omnisharp_find_members)
 
-" > Listar, buscar e ir a un 'type' en el proyecto
-nmap <silent> <buffer> <Leader>ft <Plug>(omnisharp_find_type)
-
-" > Listar, buscar e ir a un error y/o warning en el proyecto ('Diagnostic')
+" > Listar, Selecionar e Ir a un error y/o warning en el proyecto ('Diagnostic')
 "   Muestra un panel vim 'QuickFix' la cual se puede cerrar usando ':close'
-nmap <silent> <buffer> <Leader>fd <Plug>(omnisharp_global_code_check)
+nmap <silent> <buffer> <Leader>ld <Plug>(omnisharp_global_code_check)
 
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -99,44 +99,58 @@ nmap <silent> <buffer> <Leader>cf <Plug>(omnisharp_code_format)
 " > Renombrar un simbolo
 nmap <silent> <buffer> <Leader>rn <Plug>(omnisharp_rename)
 
-" > 'Code Fix' > Eliminar las refencias de namespace no usados
-nmap <silent> <buffer> <Leader>fx <Plug>(omnisharp_fix_usings)
-
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-"2.6. Asociados al 'Code Actions' (o 'Quick Actions')
+"2.6. Asociados al 'Code Actions'
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "
-"Busqueda, Seleccionar e Ir:
-" > Listar, buscar e ir a un 'symbol' en el proyecto
-"   Muestra un panel vim 'Code Actions' la cual se puede cerrar usando ':close'
-nmap <silent> <buffer> <Leader>fa <Plug>(omnisharp_code_actions)
-xmap <silent> <buffer> <Leader>fa <Plug>(omnisharp_code_actions)
+"1. Code Actions > All (Listar, seleccionar y ejecutar)
+"   Muestra un popup fzf la cual se puede cerrar usando '[ESC]'
 
-"Repetir el ultima 'Code Actions' ejecutado
-nmap <silent> <buffer> <Leader>. <Plug>(omnisharp_code_action_repeat)
-xmap <silent> <buffer> <Leader>. <Plug>(omnisharp_code_action_repeat)
+"   > Listar, seleccionar y ejecutar un 'Code Actions' existentes en la linea actual.
+nmap <silent> <buffer> <Leader>al <Plug>(omnisharp_code_actions)
+
+"   > Listar, seleccionar y ejecutar un 'Code Actions' existentes que aplican a un rango de codigo selecionado.
+xmap <silent> <buffer> <Leader>ar <Plug>(omnisharp_code_actions)
+
+"   > Repetir el ultima 'Code Actions' ejecutado
+nmap <silent> <buffer> <Leader>a. <Plug>(omnisharp_code_action_repeat)
+xmap <silent> <buffer> <Leader>a. <Plug>(omnisharp_code_action_repeat)
+
+"3. Code Actions > Ejecutar un 'Code Fix'
+"   > Acción de reparación:  Organización y/o reparar las refencias de importaciones usadas por el archivo
+nmap <silent> <buffer> <Leader>fi <Plug>(omnisharp_fix_usings)
+
 
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "2.7. Asociados al 'LSP Server'
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-"
-nmap <silent> <buffer> <Leader>re <Plug>(omnisharp_restart_server)
-nmap <silent> <buffer> <Leader>st <Plug>(omnisharp_start_server)
-nmap <silent> <buffer> <Leader>sp <Plug>(omnisharp_stop_server)
+
+"Restart server (Omnisharp/Roslyn)
+nmap <silent> <buffer> <Leader>or <Plug>(omnisharp_restart_server)
+"Start server (Omnisharp/Roslyn)
+nmap <silent> <buffer> <Leader>os <Plug>(omnisharp_start_server)
+"Stop/Down server (Omnisharp/Roslyn)
+nmap <silent> <buffer> <Leader>od <Plug>(omnisharp_stop_server)
 
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "2.8. Asociados al 'Unit Test'
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "
-nmap <silent> <buffer> <Leader>re <Plug>(omnisharp_run_test)
-nmap <silent> <buffer> <Leader>rnt <Plug>(omnisharp_run_test_no_build)
-nmap <silent> <buffer> <Leader>rat <Plug>(omnisharp_run_tests_in_file)
-nmap <silent> <buffer> <Leader>rant <Plug>(omnisharp_run_tests_in_file_no_build)
-nmap <silent> <buffer> <Leader>rdt <Plug>(omnisharp_debug_test)
-nmap <silent> <buffer> <Leader>rdnt <Plug>(omnisharp_debug_test_no_build)
+"Unit test : Build en Debug, Run en Debug hasta el prompt actual.
+nmap <silent> <buffer> <Leader>dbp <Plug>(omnisharp_debug_test)
+"Unit test : Run en Debug el hasta el prompt actual.
+nmap <silent> <buffer> <Leader>drp <Plug>(omnisharp_debug_test_no_build)
+"Unit test : Build en Release, Run en Release hasta el prompt actual.
+nmap <silent> <buffer> <Leader>rbp <Plug>(omnisharp_run_test)
+"Unit test : Run en Release hasta el prompt actual.
+nmap <silent> <buffer> <Leader>rrp <Plug>(omnisharp_run_test_no_build)
+"Unit test : Build en Release, Run en Release del File actual.
+nmap <silent> <buffer> <Leader>rbf <Plug>(omnisharp_run_tests_in_file)
+"Unit test : Run en Release del File actual.
+nmap <silent> <buffer> <Leader>rrf <Plug>(omnisharp_run_tests_in_file_no_build)
 
 "--------------------------------------------------------------------------------
 "3. Fuente de diagnostico para ALE

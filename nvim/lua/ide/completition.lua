@@ -111,42 +111,33 @@ cmp.setup({
     --    disallow_fuzzy_matching = false,
     --},
 
-    --Atajos de teclado usado en el completado
+    --Atajos de teclado usado en el popup de completado
     mapping = {
-        --Navegar entre las sugerencias
+
+        -- ----------------------------------------------------------------------------------
+        -- Popup de completado
+        -- ----------------------------------------------------------------------------------
+        
+        --Navegar entre los item (sugerencias) de completado mostrado en el popup
         ['<Up>'] = cmp.mapping.select_prev_item(select_opts),
         ['<Down>'] = cmp.mapping.select_next_item(select_opts),
 
         ['<C-p>'] = cmp.mapping.select_prev_item(select_opts),
         ['<C-n>'] = cmp.mapping.select_next_item(select_opts),
        
-        --Desplazar el texto de la ventada de navegacion
-        ['<C-u>'] = cmp.mapping.scroll_docs(-4),
-        ['<C-f>'] = cmp.mapping.scroll_docs(4),
+        --Desplazar el texto en el popup de documentación o preview
+        ['<PageDown>'] = cmp.mapping.scroll_docs(-4),
+        ['<PageUp>'] = cmp.mapping.scroll_docs(4),
 
-        --Cancelar el completado
+        --Cancelar el completado (Cerrar el popup de completado)
         ['<C-e>'] = cmp.mapping.abort(),
-        ['<CR>'] = cmp.mapping.confirm({select = false}),
         
-        --Salta al proximo placeholder de un snippet
-        ['<C-d>'] = cmp.mapping(function(fallback)
-                if snippet.jumpable(1) then
-                    snippet.jump(1)
-                else
-                    fallback()
-                end
-            end, {'i', 's'}),
+        --Aceptar el completado
+        ['<CR>'] = cmp.mapping.confirm({select = false}),
+        ['<C-y>'] = cmp.mapping.confirm({select = false}),
+        
 
-        --Salta al placeholder anterior de snippet
-        ['<C-b>'] = cmp.mapping(function(fallback)
-                if snippet.jumpable(-1) then
-                    snippet.jump(-1)
-                else
-                    fallback()
-                end
-            end, {'i', 's'}),
-
-        --Autocmpletado con 'Tab' (si la linea es vacia, no se autocompleta y escribe 'Tab')
+        --Si se muestra el popup de completado (si la esta en un espacio, no se realiza el completado y escribe 'Tab')
         ['<Tab>'] = cmp.mapping(function(fallback)
                 local col = vim.fn.col('.') - 1
 
@@ -159,7 +150,7 @@ cmp.setup({
                 end
             end, {'i', 's'}),
 
-        --Si la lista de sugerencias es visible, navega al item anterior
+        --Si se muestra el popup de completado, navega al item anterior
         ['<S-Tab>'] = cmp.mapping(function(fallback)
                 if cmp.visible() then
                     cmp.select_prev_item(select_opts)
@@ -167,6 +158,30 @@ cmp.setup({
                     fallback()
                 end
             end, {'i', 's'}),
+        
+        -- ----------------------------------------------------------------------------------
+        -- Snippets
+        -- ----------------------------------------------------------------------------------
+
+        --Salta al siguente fragmento de snippet expnadido
+        ['<C-f>'] = cmp.mapping(function(fallback)
+                if snippet.jumpable(1) then
+                    snippet.jump(1)
+                else
+                    fallback()
+                end
+            end, {'i', 's'}),
+
+        --Salta al anterior fragmento de snippet expnadido
+        ['<C-b>'] = cmp.mapping(function(fallback)
+                if snippet.jumpable(-1) then
+                    snippet.jump(-1)
+                else
+                    fallback()
+                end
+            end, {'i', 's'}),
+
+        
     },
 })
 

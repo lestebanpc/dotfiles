@@ -87,15 +87,6 @@ endif
 "Calcular variables que solo se usan en un IDE
 if g:use_ide
 
-    "Ruta base para los servidores LSP y DAP
-    let g:home_path_lsp_server_lnx = '/opt/tools/lsp_servers'
-    let g:home_path_lsp_server_win = 'D:/Tools/CLI/LSP_Servers'
-    let g:home_path_lsp_server_wsl = '/mnt/d/Tools/CLI/LSP_Servers'
-
-    let g:home_path_dap_server_lnx = '/opt/tools/dap_servers'
-    let g:home_path_dap_server_win = 'D:/Tools/CLI/DAP_Servers'
-    let g:home_path_dap_server_wsl = '/mnt/d/Tools/CLI/DAP_Servers'
-
     "Si es NeoVim, el IDE puede usar CoC o el LSP interno
     "  > Usar '~/.config/nvim/ftplugin' solo para 'file types' comunes para el IDE CoC/No-CoC
     "  > Usar '~/.config/nvim/runtime_coc/ftplugin' solo para 'file types' del IDE CoC

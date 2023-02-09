@@ -13,8 +13,9 @@ let g:use_typing_html_emmet = 1
 let g:use_typing_surround = 1
 let g:use_typing_visual_multi = 1
 
-"Solo para WSL: Si es 1, se re-usara el LSP Server C# (Roslyn) instalado en Windwos
-let g:wsl_cs_using_win_lsp_server = 0
+"Ruta base para los servidores LSP y DAP
+let g:home_path_dap_server = 'D:/Tools/CLI/DAP_Servers'
+let g:home_path_lsp_server = 'D:/Tools/CLI/LSP_Servers'
 
 "----------------------------- Basic Settings          -----------------------------
 source C:/Users/LucianoWin/.files/vim/setting/core_setting.vim
@@ -41,10 +42,10 @@ source C:/Users/LucianoWin/.files/vim/setting/plugin/ui_extended.vim
 "----------------------------- Plugins IDE             -----------------------------
 if !g:use_ide
     finish
-end
+endif
 
 "Setting Typing del IDE:
-source C:/Users/LucianoWin/.files/vim/setting/plugin/ui_ide_basic.vim
+source C:/Users/LucianoWin/.files/vim/setting/plugin/ui_ide_typing.vim
 
 "Setting IDE Core : Diagnostic (Linting y Fixing), LSP client, Completition, ...
 "En VIM se define:

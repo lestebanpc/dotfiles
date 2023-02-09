@@ -69,24 +69,44 @@ let g:ale_virtualtext_delay = 10
 "'%type%' es 'E' para error, 'W' para Warning, 'I' para Info.
 "let g:ale_virtualtext_prefix = '%comment% %type%: '
 
+"Navegar entre los diganosticos del buffer actual
+" > Ir al siguiente diagnostico desde la posicion actual y dentro del buffer
+nmap <silent> ]d <Plug>(ale_next)
+" > Ir a la anterior diagnostico desde la posicion actual y dentro del buffer
+nmap <silent> [d <Plug>(ale_previous)
+
+"Habilitar o desabilitar el diagnostico del buffer
+"nmap <silent> <Leader>dd <Plug>(ale_toggle_buffer)
+
 "###################################################################################
 " Settings> IDE > Package: UltiSnippets (Framework para snippets)
 "###################################################################################
 "Los snippet son usuados en el modo edición
 if g:has_python3
     
-    "Expandir el snippet (por defecto es <TAB> y entre en conflicto con el autocompletado)
+    "Expandir el snippet manualmente :
+    " > La mayoria de los 'Completion', cuando se acepta un item de tipo snippet, automaticamente
+    "   el snippet se expande.
+    " > Cuando se tiene un texto, al apreta <C-s>, se busca el primer snippets que coincide,
+    "   si se encuentra, se expande.
     let g:UltiSnipsExpandTrigger="<C-s>"
 
-    "Navegar por cada fragmento del snippet expandido.
-    "Saltar hacia adelante y salte hacia atrás dentro de un fragmento.
-    let g:UltiSnipsJumpForwardTrigger="<C-a>"
+    "Navegar por cada fragmento del snippet expandido. 
+    " > Algunos fragmentos pasan desde el modo 'Insert' al modo 'Select' selecionando el fragmento
+    "   (similar al modo visual, pero la seleccion es remplazada automaticamente cuando se escribre).
+    " > Algunos fragmentos se mantiene en el modo 'Insert'.
+    "
+    "Ir al siguiente fragmento del Snippets ('f' de 'follow').
+    let g:UltiSnipsJumpForwardTrigger="<C-f>"
+    "
+    "Ir al siguiente fragmento del Snippets ('b' de 'before').
     let g:UltiSnipsJumpBackwardTrigger="<C-b>"
 
     "Tipo de split para navegar al editar los snippets :UltiSnipsEdit
     let g:UltiSnipsEditSplit="vertical"
 
-    "let g:UltiSnipsListSnippets="<C-tab>"
+    "Listar los snippets existentes para el 'filetype'.
+    let g:UltiSnipsListSnippets="<C-;>"
 
 "endif
 
@@ -214,47 +234,76 @@ nnoremap <silent> K :call ShowDocumentation()<CR>
 
 
 "-----------------------------------------------------------------------------------
-" CoC> LSP Client> Navegación (Acciones personalizadas de VIM)
+" CoC> LSP Client> Navegación o Ir a un 'Location' especifico.
 "-----------------------------------------------------------------------------------
 
-"1. Navegación> Desde el simbolo actual hacia su ...
+"1. 'Location' especifico dentro del buffer:
 "
-" > Ir a la definición del simbolo actual
+
+
+"2. 'Location' (dentro de todo el 'workspace') basado en el simbolo actual:
+"
+" > Ir a la definición del simbolo actual (donde esta el prompt)
 nmap <silent> gd <Plug>(coc-definition)
 
-" > Ir al tipo de definición del simbolo actual
+" > Ir al tipo de definición del simbolo actual (donde esta el prompt)
 nmap <silent> gy <Plug>(coc-type-definition)
 
-" > Ir a la implementación del simbolo actual
+" > Ir a la implementación del simbolo actual (donde esta el prompt)
+nmap <silent> gc <Plug>(coc-declaration)
+
+" > Ir a la implementación del simbolo actual (donde esta el prompt)
 nmap <silent> gi <Plug>(coc-implementation)
 
-" > Ir a la referencias/usos del simbolo actual
+" > Ir a la referencias/usos del simbolo actual (donde esta el prompt)
+"   Excluyendo los declaraciones del simbolo.
 nmap <silent> gr <Plug>(coc-references)
 
+" > Ir a la referencias o uso del simbolo actual (donde esta el prompt)
+"   Excluyendo los declaraciones del simbolo.
+nmap <silent> gu <Plug>(coc-references-used)
 
-"2. Busqueda, Selección e Ir
+
+" > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el buffer
+nnoremap <silent><nowait> <Leader>ls :<C-u>CocList outline<cr>
+
+" > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el workspace
+nnoremap <silent><nowait> <Leader>lw  :<C-u>CocList -I symbols<cr>
+
+" > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'type' en el proyecto
+"nmap <silent> <buffer> <Leader>lt <Plug>(omnisharp_find_type)
+
+" > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'members' de las clases asociados al buffer actual
+"nmap <silent> <buffer> <Leader>lm <Plug>(omnisharp_find_members)
+
+
+" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+" > Diagnostico: Un error y/o warning en el proyecto
 "
-" > Listar, buscar e ir a un 'symbol' en el documento.
-nnoremap <silent><nowait> <Leader>fs :<C-u>CocList outline<cr>
+" > Listar, Selecionar e Ir a un error y/o warning del workspace.
+"   En CoC, se inica su popup 'Fuzzy' (no es un panel vim), la cual se cierra usando '[ESC]'.
+nnoremap <silent><nowait> <Leader>ld  :<C-u>CocList diagnostics<cr>
 
-" > Listar, buscar e ir a un 'symbol' del workspace.
-nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
+" > Navegar en por el los diagnostico del workspace
+"   Usar solos los de definidos en ALE?
+"nmap <silent> [d <Plug>(coc-diagnostic-prev)
+"nmap <silent> ]d <Plug>(coc-diagnostic-next)
 
 
 "-----------------------------------------------------------------------------------
-" CoC> LSP Client> Selección (Acciones personalizadas de VIM)
+" CoC> LSP Client> Selección
 "-----------------------------------------------------------------------------------
 "NOTE : Requires 'textDocument.documentSymbol' support from the language server.
 
 "1. Selección de una funcion
 "
 " > Selección la parte interior del metodo.
-xmap if <Plug>(coc-funcobj-i)
-omap if <Plug>(coc-funcobj-i)
+xmap im <Plug>(coc-funcobj-i)
+omap im <Plug>(coc-funcobj-i)
 
 " > Selección de todo el metodo.
-xmap af <Plug>(coc-funcobj-a)
-omap af <Plug>(coc-funcobj-a)
+xmap am <Plug>(coc-funcobj-a)
+omap am <Plug>(coc-funcobj-a)
 
 "2. Selección de una funcion
 "
@@ -266,11 +315,16 @@ omap ic <Plug>(coc-classobj-i)
 xmap ac <Plug>(coc-classobj-a)
 omap ac <Plug>(coc-classobj-a)
 
+"3. Selection inteligente ('Selection Range' o 'Smart Selecction')
+"   NOTE : Requires 'textDocument/selectionRange' support of language server.
 
-"Use '[CTRL] + s' for selections ranges.
-"NOTE : Requires 'textDocument/selectionRange' support of language server.
-nmap <silent> <C-s> <Plug>(coc-range-select)
-xmap <silent> <C-s> <Plug>(coc-range-select)
+"Select range forward (Expand Selection)
+nmap <silent> <Leader>se <Plug>(coc-range-select)
+xmap <silent> <Leader>se <Plug>(coc-range-select)
+
+"Select range backward (Shrink Selection)
+nmap <silent> <Leader>ss <Plug>(coc-range-select)
+xmap <silent> <Leader>ss <Plug>(coc-range-select)
 
 
 "-----------------------------------------------------------------------------------
@@ -278,50 +332,59 @@ xmap <silent> <C-s> <Plug>(coc-range-select)
 "-----------------------------------------------------------------------------------
 
 "1. Formateo de una selección/buffer (Acciones personalizadas VIM)
-xmap <leader>cf  <Plug>(coc-format-selected)
-nmap <leader>cf  <Plug>(coc-format-selected)
+xmap <Leader>cf  <Plug>(coc-format-selected)
+nmap <Leader>cf  <Plug>(coc-format-selected)
 
 
 "2. Formateo del buffer ':Format' (Comando personalizado de VIM)
 command! -nargs=0 Format :call CocActionAsync('format')
 
 
-"-----------------------------------------------------------------------------------
-" CoC> LSP Client> Diagnostico (incluyendo Ligting)
-"-----------------------------------------------------------------------------------
-"¿Usar los metodos de navegación de ALE o solo de CoC?
-
-"1. Listar, buscar e ir a un error y/o warning del workspace.
-"   En CoC, se inica su popup 'Fuzzy' (no es un panel vim), la cual se cierra usando '[ESC]'.
-nnoremap <silent><nowait> <Leader>fd  :<C-u>CocList diagnostics<cr>
-
-"2. Navegar en por el los diagnostico del workspace
-nmap <silent> [d <Plug>(coc-diagnostic-prev)
-nmap <silent> ]d <Plug>(coc-diagnostic-next)
-
 
 "-----------------------------------------------------------------------------------
 " CoC> LSP Client> Acciones de Codigo ('Code Actions')
 "-----------------------------------------------------------------------------------
 
-"Applying codeAction to the selected region.
-xmap <leader>as  <Plug>(coc-codeaction-selected)
-nmap <leader>as  <Plug>(coc-codeaction-selected)
+"1. Code Actions > All (Listar, seleccionar y ejecutar)
+"   >  Listar, seleccionar y ejecutar un 'Code Actions' existentes en del buffer actual.
+nmap <Leader>ab  <Plug>(coc-codeaction)
 
-"Remap keys for applying codeAction to the current buffer.
-nmap <leader>ac  <Plug>(coc-codeaction)
+"   > Listar, seleccionar y ejecutar un 'Code Actions' existentes en la linea actual.
+nmap <Leader>al  <Plug>(coc-codeaction-line)
 
-"Apply AutoFix to problem on the current line.
-nmap <leader>qf  <Plug>(coc-fix-current)
+"   > Listar, seleccionar y ejecutar un 'Code Actions' existente en el prompt actual.
+nmap <Leader>ap  <Plug>(coc-codeaction-cursor)
 
-"Run the Code Lens action on the current line.
-nmap <leader>cl  <Plug>(coc-codelens-action)
+"   > Listar, seleccionar y ejecutar un 'Code Actions' existente que pueden aplicar a todo una region/selección actual.
+xmap <Leader>ar  <Plug>(coc-codeaction-selected)
+nmap <Leader>ar  <Plug>(coc-codeaction-selected)
+
+
+"2. Code Actions > Refactoring (Listar, seleccionar y ejecutar)
+"   > Listar, seleccionar y ejecutar un 'Refactoring' de existente en el prompt actual.
+nmap <Leader>rp  <Plug>(coc-codeaction-refactor)
+
+"  > Listar, seleccionar y ejecutar un 'Refactoring' existente que puede aplicar a todo un rango selecionado.
+xmap <Leader>rr  <Plug>(coc-codeaction-refactor-selected)
+nmap <Leader>rr  <Plug>(coc-codeaction-refactor-selected)
+
+"  > Listar,  seleccionar y ejecutar un 'Refactoring' de todo el archivo (buffer).
+nmap <Leader>rb  <Plug>(coc-codeaction-source)
+
+
+"3. Code Actions > Ejecutar un 'Code Fix'
+"   > Acción de reparación: Organización y/o reparar las refencias de importaciones usadas por el archivo
+nnoremap <silent> fi :call CocAction('organizeImport')<CR>
+
+"   > Acción de reparación: Acción de repación rapida
+nmap <Leader>fx  <Plug>(coc-fix-current)
+
 
 "Do default action for next item.
-nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
+"nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
 
 "Do default action for previous item.
-nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
+"nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 
 
 "-----------------------------------------------------------------------------------
@@ -329,7 +392,7 @@ nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 "-----------------------------------------------------------------------------------
 
 "1. Renombrar un simbolo.
-nmap <leader>rn <Plug>(coc-rename)
+nmap <Leader>rn <Plug>(coc-rename)
 
 
 
@@ -344,7 +407,7 @@ augroup mygroup
     autocmd!
 
     "Setup formatexpr specified filetype(s).
-    autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+    "autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
 
     "Update signature help on jump placeholder.
     autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
@@ -367,7 +430,11 @@ command! -nargs=? Fold   :call CocAction('fold', <f-args>)
 "Add `:OR` command for organize imports of the current buffer.
 command! -nargs=0 OR     :call CocActionAsync('runCommand', 'editor.action.organizeImport')
 
+"2. Open link under cursor
+nmap <Leader>ol <Plug>(coc-openlink)
 
+"3. CodeLens: Listas, Selecionar y Ejecutar acciones personalizadas asociadas a una linea:
+nmap <Leader>cl <Plug>(coc-codelens-action)
 
 "-----------------------------------------------------------------------------------
 " CoC> IDE>  Integración con barra de estado (Status Line)
@@ -388,10 +455,8 @@ nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
 "Show commands.
 nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
 
-
-
 "Resume latest coc list.
-nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
+"nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 
 
 

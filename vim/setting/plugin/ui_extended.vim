@@ -1,5 +1,5 @@
 "###################################################################################
-" PSettings> UI> File Explorer> Package: Vim-DevIcons
+" Settings> UI> File Explorer> Package: Vim-DevIcons
 "###################################################################################
 
 if g:is_neovim
@@ -22,8 +22,10 @@ else
     let g:WebDevIconsUnicodeDecorateFolderNodes = 1
     let g:DevIconsEnableFoldersOpenClose = 1
 
-    let g:DevIconsDefaultFolderOpenSymbol='' " symbol for open folder (f07c)
-    let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol='' " symbol for closed folder (f07b)
+    "Symbol for open folder (f07c)
+    let g:DevIconsDefaultFolderOpenSymbol=''
+    "Symbol for closed folder (f07b)
+    let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol='' 
 
     "Adding to vim-airline's tabline
     let g:webdevicons_enable_airline_tabline = 1
@@ -90,7 +92,7 @@ let g:fzf_force_24_bit_colors = 1
 "   pointer                   Pointer to the current line (>)
 "
 let g:fzf_colors =
-  \ { 'fg':         ['fg', 'Normal'],
+\ { 'fg':         ['fg', 'Normal'],
   \ 'bg':         ['bg', 'Normal'],
   \ 'preview-bg': ['bg', 'NormalFloat'],
   \ 'hl':         ['fg', 'Comment'],
@@ -105,20 +107,26 @@ let g:fzf_colors =
   \ 'spinner':    ['fg', 'Label'],
   \ 'header':     ['fg', 'Comment'] }
 
+"Listar archivos del proyecto, Seleccionar/Examinar e Ir
+nnoremap <silent> <leader>ll :Files<CR>
+"Listar archivos del 'Git Files', Seleccionar/Examinar e Ir
+nnoremap <silent> <leader>lg :GFiles<CR>
+"Listar archivos del 'Git Status Files', Seleccionar/Examinar e Ir
+nnoremap <silent> <leader>ls :GFiles?<CR>
+"Listar comandos VIM, seleccionar y ejecutar
+nnoremap <silent> <leader>lc :History:<CR>
 
-nnoremap <silent> <leader>ff :Files<CR>
-nnoremap <silent> <leader>gf :GFiles<CR>
-nnoremap <silent> <leader>gs :GFiles?<CR>
+"Listar, Selexionar/Examinar e Ir al buffer
 nnoremap <silent> <leader>bb :Buffers<CR>
-nnoremap <silent> <leader>sa :Ag<CR>
-nnoremap <silent> <leader>sr :Rg<CR>
-"Ejecutar un comando VIM anteriormente ejecutado
-nnoremap <leader>fc :History:<CR>
-"cnoremap <C-P> <C-R>=expand("%:p:h") . "/" <CR>
-"Recovery commands from history through FZF
+
+"Busqueda de archivos del proyecto usando busqueda difuso 'Ag'.
+nnoremap <silent> <leader>fa :Ag<CR>
+"Busqueda de archivos del proyecto usando busqueda difuso 'Rg'.
+nnoremap <silent> <leader>fr :Rg<CR>
+
 
 "###################################################################################
-" PSettings> UI> File Explorer> Package: NerdTree
+" Settings> UI> File Explorer> Package: NerdTree
 "###################################################################################
 
 
@@ -131,6 +139,7 @@ let g:NERDTreeWinSize = 50
 "set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*.pyc,*.db,*.sqlite,*node_modules/
 
 "nnoremap <leader><C-f> :NERDTreeFind<CR>
-nnoremap <leader><C-n> :NERDTreeToggle<CR>
+nnoremap <leader>of :NERDTreeToggle<CR>
+
 
 

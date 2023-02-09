@@ -16,36 +16,29 @@ endif
 " - ( ) 'HTTP Version'  (versión antigua)  
 "let g:OmniSharp_server_stdio = 1
 
-"Roslyn Server (LSP Server para C#) - Path (Cambiar la ubicacion real)
-if g:os_type == 3
-    "Si es Linux
-    let lsp_server_cs_path = g:home_path_lsp_server_lnx .. '/omnisharp_roslyn/OmniSharp'
-elseif g:os_type == 2
-    "Si es WSL
-    if g:wsl_cs_using_win_lsp_server
-        let lsp_server_cs_path = g:home_path_lsp_server_win .. '/Omnisharp_Roslyn/OmniSharp.exe'
-    else
-        let lsp_server_cs_path = g:home_path_lsp_server_wsl .. '/omnisharp_roslyn/OmniSharp'
-    endif
-elseif g:os_type == 0
+" > 'OmniSharp_translate_cygwin_wsl' se usa en WSL. Si es '1' implica :
+"    - Usar el LSP server de Windows (no requiere instalar LSP server en WSL).
+"    - Las rutas de windows obtenidas de los archivo de solucion es traducida a la ruta de Linux.
+" > 'OmniSharp_server_path' es el Path del servidor LSP.
+"
+let g:OmniSharp_translate_cygwin_wsl = 0
+
+if g:os_type == 0
+
     "Si es Windows
-    let lsp_server_cs_path = g:home_path_lsp_server_win .. '/Omnisharp_Roslyn/OmniSharp.exe'
-"elseif g:os_type == 1
-     "Si es MacOS
-     "let lsp_server_cs_path = g:home_path_lsp_server_lnx .. '/omnisharp_roslyn/OmniSharp'
-endif
+    let g:OmniSharp_server_path = g:home_path_lsp_server .. '/Omnisharp_Roslyn/OmniSharp.exe'
 
-let g:OmniSharp_server_path = lsp_server_cs_path 
+elseif (g:os_type == 3) && g:using_lsp_server_cs_win
 
-"Roslyn Server (LSP Server para C#) - Si se usa WSL:
-"  - Usar el LSP server de Windows (no requiere instalar LSP server en WSL)
-"  - Las rutas de windows obtenidas de los archivo de solucion es traducida a la ruta de Linux
-if g:os_type == 3
-    if g:wsl_cs_using_win_lsp_server
-	    let g:OmniSharp_translate_cygwin_wsl = 1
-    else
-	    let g:OmniSharp_translate_cygwin_wsl = 0
-    endif
+    "Si es WSL y es se debe usar el servidor LSP de Windows
+	let g:OmniSharp_translate_cygwin_wsl = 1
+    let g:OmniSharp_server_path = g:home_path_lsp_server_win .. '/Omnisharp_Roslyn/OmniSharp.exe'
+
+else
+
+    "Si es Linux (2) o MacOS (1) o WSL sin reusar su servidor LSP
+    let g:OmniSharp_server_path = g:home_path_lsp_server .. '/omnisharp_roslyn/OmniSharp'
+
 endif
 
 
@@ -113,7 +106,7 @@ let g:OmniSharp_popup_mappings = {
 "  0> Do not listen for diagnostics.
 "  1> Listen to the first diagnostic received for each buffer.
 "  2> Listen for diagnostics and update ALE (default).
-"let g:OmniSharp_diagnostic_listen = 2
+let g:OmniSharp_diagnostic_listen = 2
 
 "let g:OmniSharp_diagnostic_showid = 1
 

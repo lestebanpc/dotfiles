@@ -5,18 +5,12 @@ local dap_server_path = ""
 --DAP Adapters> C# - 'netcoredbg' de Samsung
 --------------------------------------------------------------------------------------------------
 
-if (vim.g.os_type == 3) then
-    --Si es Linux
-    dap_server_path = vim.g.home_path_dap_server_lnx .. '/netcoredbg/netcoredbg'
-elseif (vim.g.os_type == 2) then
-    --Si es WSL
-    dap_server_path = vim.g.home_path_dap_server_wsl .. '/netcoredbg/netcoredbg'
-elseif (vim.g.os_type == 0) then
+if (vim.g.os_type == 0) then
     --Si es Windows
-    dap_server_path = vim.g.home_path_dap_server_win .. '/NetCoreDbg/netcoredbg.exe'
---elseif (vim.g.os_type == 1) then
-    --Si es MacOS
-    --dap_server_path = vim.g.home_path_dap_server_lnx .. '/netcoredbg/netcoredbg'
+    dap_server_path = vim.g.home_path_dap_server .. '/NetCoreDbg/netcoredbg.exe'
+else
+    --Otros casos
+    dap_server_path = vim.g.home_path_dap_server .. '/netcoredbg/netcoredbg'
 end
 
 dap.adapters.netcoredbg = {

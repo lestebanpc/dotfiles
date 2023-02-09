@@ -446,6 +446,10 @@ function m_vim_config_plugins() {
                 git clone https://github.com/${l_repo_git}.git
                 ;;
         esac
+
+        #TODO Actualizar la documentación de VIM
+        #vim -c 'helptags ~/.vim/pack/coc/start/doc | q'
+
         printf '\n'
 
     done;
