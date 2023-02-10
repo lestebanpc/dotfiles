@@ -42,15 +42,17 @@ else
     colorscheme molokai
     "let g:molokai_original = 1
 
-    "Plug-In> UI> CORE> Barra de estado AirLine (incluye 'SatusLine' y 'TabLine'. Debe cargarse antes de 'Vim-DevIcos')
+    "Plug-In> UI> CORE> Barra de estado AirLine (incluye 'SatusLine' y 'TabLine')
+    "Segun la documentación oficial, se deben cargarse antes de 'Vim-DevIcons'.
     packadd vim-airline
     packadd vim-airline-themes
-    
-    "Plug-In> UI> EXTENDED> Explorador de archivos (deben cargarse antes de 'Vim-DevIcons')
-    packadd nerdtree
 
     "Plug-In> UI> Iconos para NERDTree y AirLine
     packadd vim-devicons
+    
+    "Plug-In> UI> EXTENDED> Explorador de archivos.
+    "Segun la documentación oficial, se deben cargarse antes de 'Vim-DevIcons', pero no esta funcionado.
+    packadd nerdtree
 
 endif
 

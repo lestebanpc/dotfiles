@@ -20,9 +20,9 @@ else
 
     "NERDTree : Personalizar los folderes para abrir y cerrar
     let g:WebDevIconsUnicodeDecorateFolderNodes = 1
-    let g:DevIconsEnableFoldersOpenClose = 1
 
     "Symbol for open folder (f07c)
+    let g:DevIconsEnableFoldersOpenClose = 1
     let g:DevIconsDefaultFolderOpenSymbol=''
     "Symbol for closed folder (f07b)
     let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol='' 
@@ -32,6 +32,11 @@ else
 
     "Adding to vim-airline's statusline
     let g:webdevicons_enable_airline_statusline = 1
+
+    "Permiter refrescar el tree, del re-sourcing del .vimrc
+    if exists("g:loaded_webdevicons")
+        call webdevicons#refresh()
+    endif
 
 endif
 
@@ -129,17 +134,19 @@ nnoremap <silent> <leader>fr :Rg<CR>
 " Settings> UI> File Explorer> Package: NerdTree
 "###################################################################################
 
+if !g:is_neovim
 
-let g:NERDTreeChDirMode=2
-"let g:NERDTreeIgnore=['node_modules','\.rbc$', '\~$', '\.pyc$', '\.db$', '\.sqlite$', '__pycache__']
-"let g:NERDTreeSortOrder=['^__\.py$', '\/$', '*', '\.swp$', '\.bak$', '\~$']
-let g:NERDTreeShowBookmarks=1
-let g:NERDTreeMapOpenInTabSilent = '<RightMouse>'
-let g:NERDTreeWinSize = 50
-"set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*.pyc,*.db,*.sqlite,*node_modules/
+    let g:NERDTreeChDirMode=2
+    "let g:NERDTreeIgnore=['node_modules','\.rbc$', '\~$', '\.pyc$', '\.db$', '\.sqlite$', '__pycache__']
+    "let g:NERDTreeSortOrder=['^__\.py$', '\/$', '*', '\.swp$', '\.bak$', '\~$']
+    let g:NERDTreeShowBookmarks=1
+    let g:NERDTreeMapOpenInTabSilent = '<RightMouse>'
+    let g:NERDTreeWinSize = 50
+    "set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*.pyc,*.db,*.sqlite,*node_modules/
 
-"nnoremap <leader><C-f> :NERDTreeFind<CR>
-nnoremap <leader>of :NERDTreeToggle<CR>
+    "nnoremap <leader><C-f> :NERDTreeFind<CR>
+    nnoremap <leader>ee :NERDTreeToggle<CR>
 
+endif
 
 
