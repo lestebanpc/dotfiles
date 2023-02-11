@@ -37,12 +37,12 @@ if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
 fi
 
 #Variable global de la ruta donde se instalaran los programas CLI (mas complejos que un simple comando).
-declare -r g_path_lnx_programs='/opt/tools'
+declare -r g_path_programs_lnx='/opt/tools'
 
 #Variable global ruta de los programas CLI y/o binarios en Windows desde su WSL2
 if [ $g_os_type -eq 1 ]; then
-   declare -r g_path_win_programs='/mnt/d/Tools/CLI'
-   declare -r g_path_win_commands="${g_path_win_programs}/Cmds"
+   declare -r g_path_programs_win='/mnt/d/CLI'
+   declare -r g_path_commands_win="${g_path_programs_win}/Cmds"
 fi
 
 #Expresiones regulares de sustitucion mas usuadas para las versiones
@@ -107,13 +107,14 @@ function m_get_repo_current_version() {
 
     #1. Argumentos
     local p_repo_id="$1"
-    local p_install_win_cmds=1         #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                       #(0) Los binarios de los comandos se estan instalando en Linux
+    local p_install_win_cmds=1          #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                        #(0) Los binarios de los comandos se estan instalando en Linux
     if [ "$2" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
 
-    local p_path_file="$3"             #Ruta donde se obtendra el comando para obtener la versión
+    local p_path_file="$3"              #Ruta donde se obtendra el comando para obtener la versión
+                                        #es usado para programas que deben ser descargados para recien obtener la ultima versión.
 
     #2. Obtener la version actual
     local l_sustitution_regexp="$g_regexp_sust_version1"
@@ -126,7 +127,7 @@ function m_get_repo_current_version() {
     local l_path_file="" 
     if [ -z "$p_path_file" ]; then
         if [ $p_install_win_cmds -eq 0 ]; then
-            l_path_file="${g_path_win_commands}/bin/"
+            l_path_file="${g_path_commands_win}/bin/"
         else
             l_path_file=""
         fi
@@ -289,9 +290,9 @@ function m_get_repo_current_version() {
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
-                  l_path_file="${g_path_win_programs}/LSP_Servers/Omnisharp_Roslyn/"
+                  l_path_file="${g_path_programs_win}/LSP_Servers/Omnisharp_Roslyn/"
                else
-                  l_path_file="${g_path_lnx_programs}/lsp_servers/omnisharp_roslyn/"
+                  l_path_file="${g_path_programs_lnx}/lsp_servers/omnisharp_roslyn/"
                fi
             fi
 
@@ -309,9 +310,9 @@ function m_get_repo_current_version() {
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
-                  l_path_file="${g_path_win_programs}/DAP_Servers/NetCoreDbg/"
+                  l_path_file="${g_path_programs_win}/DAP_Servers/NetCoreDbg/"
                else
-                  l_path_file="${g_path_lnx_programs}/dap_servers/netcoredbg/"
+                  l_path_file="${g_path_programs_lnx}/dap_servers/netcoredbg/"
                fi
             fi
 
@@ -334,9 +335,9 @@ function m_get_repo_current_version() {
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
-                  l_path_file="${g_path_win_programs}/NeoVim/bin/"
+                  l_path_file="${g_path_programs_win}/NeoVim/bin/"
                else
-                  l_path_file="${g_path_lnx_programs}/neovim/bin/"
+                  l_path_file="${g_path_programs_lnx}/neovim/bin/"
                fi
             fi
 
@@ -353,10 +354,36 @@ function m_get_repo_current_version() {
                 l_tmp=$(echo "$l_tmp" | head -n 1)
             fi
             ;;
+
         nerd-fonts)
             #Siempre se actualizara la fuentes, por ahora no se puede determinar la version instalada
             echo "$g_version_none"
             return 3
+            ;;
+
+        go)
+
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_programs_win}/Go/bin/"
+               else
+                  l_path_file="${g_path_programs_lnx}/go/bin/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}go.exe version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}go version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
             ;;
 
         *)
@@ -587,11 +614,22 @@ function m_load_artifacts() {
                 pna_artifact_types=(3)
             fi
             ;;
-         nerd-fonts)
+        nerd-fonts)
             pna_artifact_names=("JetBrainsMono.zip" "DroidSansMono.zip" "InconsolataLGC.zip" "UbuntuMono.zip" "3270.zip")
             pna_artifact_types=(3 3 3 3 3)
             ;;
-       *)
+
+        go)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("go${p_repo_last_version}.linux-amd64.tar.gz")
+                pna_artifact_types=(2)
+            else
+                pna_artifact_names=("go${p_repo_last_version}.windows-amd64.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+
+        *)
            return 1
            ;;
     esac
@@ -624,14 +662,22 @@ function m_get_repo_latest_version() {
             l_repo_last_version=$(kubectl version --client=true -o json  | jq -r '.kustomizeVersion' 2> /dev/null)
             ;;
 
+        go)
+            l_aux=$(curl -Ls -H 'Accept: application/json' "https://go.dev/dl/?mode=json" | jq -r '.[0].version')
+            if [ $? -eq 0 ]; then
+                l_repo_last_version=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
+            else
+                l_repo_last_version=""
+            fi
+            ;;
         *)
             #Artefecto se obtiene de un repository GitHub
             l_aux=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest")
             #Si no esta instalado 'jq' usar expresiones regulares
             if ! command -v jq &> /dev/null; then
-                l_repo_last_version=$(echo $l_aux | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+                l_repo_last_version=$(echo "$l_aux" | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
             else
-                l_repo_last_version=$(echo $l_aux | jq -r .tag_name)
+                l_repo_last_version=$(echo "$l_aux" | jq -r .tag_name)
             fi
             ;;
     esac
@@ -675,6 +721,10 @@ function m_get_artifact_url() {
         helm)
             l_base_url="https://get.helm.sh"
             ;;
+
+        go)
+            l_base_url="https://storage.googleapis.com/${p_repo_name}"
+            ;;
             
         *)
             l_base_url="https://github.com/${p_repo_name}/releases/download/${p_repo_last_version}"
@@ -713,8 +763,8 @@ function m_copy_artifact_files() {
         l_path_bin='/usr/local/bin'
         l_path_man='/usr/local/man/man1'
     else
-        l_path_bin="${g_path_win_commands}/bin"
-        l_path_man="${g_path_win_commands}/man"
+        l_path_bin="${g_path_commands_win}/bin"
+        l_path_man="${g_path_commands_win}/man"
     fi
 
     local l_repo_download_version=""
@@ -1054,8 +1104,8 @@ function m_copy_artifact_files() {
                     mkdir -p ~/.files/terminal/oh-my-posh/themes
                     cp -f ${l_path_temp}/*.json ~/.files/terminal/oh-my-posh/themes
                 else
-                    mkdir -p "${g_path_win_commands}/etc/oh-my-posh/themes"
-                    cp -f ${l_path_temp}/*.json "${g_path_win_commands}/etc/oh-my-posh/themes"
+                    mkdir -p "${g_path_commands_win}/etc/oh-my-posh/themes"
+                    cp -f ${l_path_temp}/*.json "${g_path_commands_win}/etc/oh-my-posh/themes"
                 fi
             fi
             ;;
@@ -1269,7 +1319,7 @@ function m_copy_artifact_files() {
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_lnx_programs}/lsp_servers/omnisharp_roslyn"
+                l_path_bin="${g_path_programs_lnx}/lsp_servers/omnisharp_roslyn"
 
                 #Limpieza del directorio del programa
                 if  [ ! -d "$l_path_bin" ]; then
@@ -1286,7 +1336,7 @@ function m_copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_win_programs}/LSP_Servers/Omnisharp_Roslyn"
+                l_path_bin="${g_path_programs_win}/LSP_Servers/Omnisharp_Roslyn"
 
                 #Limpieza del directorio del programa
                 if  [ ! -d "$l_path_bin" ]; then
@@ -1311,7 +1361,7 @@ function m_copy_artifact_files() {
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_lnx_programs}/dap_servers/netcoredbg"
+                l_path_bin="${g_path_programs_lnx}/dap_servers/netcoredbg"
 
                 #1. Comparando la version instalada con la version descargada
                 l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
@@ -1360,7 +1410,7 @@ function m_copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_win_programs}/DAP_Servers/NetCoreDbg"
+                l_path_bin="${g_path_programs_win}/DAP_Servers/NetCoreDbg"
 
                 #1. Comparando la version instalada con la version descargada
                 l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
@@ -1418,7 +1468,7 @@ function m_copy_artifact_files() {
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_lnx_programs}/neovim"
+                l_path_bin="${g_path_programs_lnx}/neovim"
 
                 #1. Comparando la version instalada con la version descargada
                 l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/bin")
@@ -1467,7 +1517,7 @@ function m_copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_win_programs}/NeoVim"
+                l_path_bin="${g_path_programs_win}/NeoVim"
 
                 #1. Comparando la version instalada con la version descargada
                 l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/bin")
@@ -1571,7 +1621,7 @@ function m_copy_artifact_files() {
                 #Si es WSL2, copiar los archivos para instalarlo manualmente.
                 if [ $g_os_type -eq 1 ]; then
                     
-                    l_path_bin="${g_path_win_programs}/NerdFonts"
+                    l_path_bin="${g_path_programs_win}/NerdFonts"
                     if  [ ! -d "$l_path_bin" ]; then
                         mkdir -p ${l_path_bin}
                     fi
@@ -1584,7 +1634,49 @@ function m_copy_artifact_files() {
             fi
             ;;
 
-       *)
+        go)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/go"
+            
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                l_path_bin="${g_path_programs_lnx}/go"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                    chmod g+rx,o+rx $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover todos archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+
+            else
+                
+                l_path_bin="${g_path_programs_win}/Go"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover los archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+            fi
+            ;;
+
+        *)
            echo "ERROR (50): El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" no implementa logica de copiado de archivos"
            return 50
             
@@ -1826,10 +1918,11 @@ declare -A gA_repositories=(
         ['operator-sdk']='operator-framework/operator-sdk'
         ['neovim']='neovim/neovim'
         ['k0s']='k0sproject/k0s'
+        ['nerd-fonts']='ryanoasis/nerd-fonts'
         ['roslyn']='OmniSharp/omnisharp-roslyn'
         ['netcoredbg']='Samsung/netcoredbg'
         ['neovim']='neovim/neovim'
-        ['nerd-fonts']='ryanoasis/nerd-fonts'
+        ['go']='golang'
     )
 
 
@@ -1838,9 +1931,10 @@ declare -A gA_repositories=(
 declare -A gA_optional_repositories=(
         ['neovim']=8
         ['k0s']=16
-        ['roslyn']=32
-        ['netcoredbg']=64
-        ['nerd-fonts']=128
+        ['nerd-fonts']=32
+        ['roslyn']=64
+        ['netcoredbg']=128
+        ['go']=256
     )
 
 
@@ -2013,8 +2107,9 @@ function m_setup_repository() {
                 elif [ $l_status -eq 1 ]; then
                     echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" > Ultima Versión \"${l_repo_last_version_pretty}\")"
                     l_repo_must_setup_lnx=1
+                else
+                    echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
                 fi
-                echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
 
             else
                 echo "La ultima versión del repositorio \"${l_repo_last_version}\" no es una version comparable. Se iniciara la instalación del repositorio \"${p_repo_id}\""
@@ -2111,7 +2206,7 @@ function m_setup_repository() {
             #Si se tiene implementado la logica para obtener la version actual
             if [ $l_repo_is_installed -eq 1 ]; then
                 echo "Repositorio - Versión Actual : \"No instalado\""
-             elif [ $l_repo_is_installed -eq 2 ]; then
+            elif [ $l_repo_is_installed -eq 2 ]; then
                 echo "Repositorio - Versión Actual : \"${l_repo_current_version}\" (formato invalido)"
                 l_repo_current_version=""
             elif [ $l_repo_is_installed -eq 3 ]; then
@@ -2133,12 +2228,13 @@ function m_setup_repository() {
 
                 if [ $l_status -eq 0 ]; then
                     echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" = Ultima Versión \"${l_repo_last_version_pretty}\")"
-                    l_repo_must_setup_lnx=1
+                    l_repo_must_setup_win=1
                 elif [ $l_status -eq 1 ]; then
                     echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" > Ultima Versión \"${l_repo_last_version_pretty}\")"
-                    l_repo_must_setup_lnx=1
+                    l_repo_must_setup_win=1
+                else
+                    echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
                 fi
-                echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
 
             else
                 echo "La ultima versión del repositorio \"${l_repo_last_version}\" no es una version comparable. Se iniciara la instalación del repositorio \"${p_repo_id}\""
@@ -2279,9 +2375,10 @@ function m_show_menu_core() {
     echo "     (  4) Instalar/Actualizar los binarios de los repositorios basicos"
     echo "     (  8) Instalar/Actualizar el editor: \"NeoVim\""
     echo "     ( 16) Instalar/Actualizar la implementación de Kubernates: \"k0s\""
-    echo "     ( 32) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
-    echo "     ( 64) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""
-    echo "     (128) (Re)Instalar en el servidor fuentes Nerd Fonts desde \"ryanoasis/nerd-fonts\""
+    echo "     ( 32) (Re)Instalar en el servidor fuentes Nerd Fonts desde \"ryanoasis/nerd-fonts\""
+    echo "     ( 64) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
+    echo "     (128) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""
+    echo "     (256) Instalar/Actualizar RTE de \"Go\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
@@ -2352,7 +2449,7 @@ function m_main() {
 
 #}}}
 
-#Argumentos 
+#Argumentos del script 
 gp_type_calling=0       #(0) Es llamado directa, es decir se muestra el menu.
                         #(1) Instalando un conjunto de respositorios
                         #(2) Instalando solo un repository
@@ -2360,6 +2457,15 @@ if [[ "$1" =~ ^[0-9]+$ ]]; then
     gp_type_calling=$1
 fi
 
+
+gp_install_all_user=0   #(0) Se instala/configura para ser usuado por todos los usuarios (si es factible).
+                        #    Requiere ejecutar con privilegios de administrador.
+                        #(1) Solo se instala/configura para el usuario actual (no requiere ser administrador).
+if [[ "$2" =~ ^[0-9]+$ ]]; then
+    gp_type_calling=$2
+fi
+
+#Logica principal del script
 if [ $gp_type_calling -eq 0 ]; then
 
     m_main

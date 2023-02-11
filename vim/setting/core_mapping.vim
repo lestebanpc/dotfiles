@@ -15,13 +15,13 @@ nnoremap N Nzzzv
 
 "----------------------------- Apariencia              -----------------------------
 
-"Habilitar/Desabiliar el resaltado de la fila actual (h = horizontal)
-nnoremap <Leader>lh :set cursorline!<CR>
+"Habilitar/Desabiliar la linea de resaltado ('Highlight Line') Horizonal
+nnoremap <Leader>hh :set cursorline!<CR>
 
-"Habilitar/Desabiliar el resaltado de la columna actual (v = vertical)
-nnoremap <Leader>lv :set cursorcolumn!<CR>
+"Habilitar/Desabiliar la linea de resaltado ('Highlight Line') Vertical
+nnoremap <Leader>vv :set cursorcolumn!<CR>
 
-"----------------------------- Portapapeles            -----------------------------"
+"----------------------------- Portapapeles            -----------------------------
 
 "Si es Linux incluyendo WSL
 if (g:os_type == 2) || (g:os_type == 3)
@@ -35,7 +35,7 @@ if (g:os_type == 2) || (g:os_type == 3)
    "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
    vnoremap <Leader>cc :w !xsel -ib<CR><CR>
 
-   "Pegar en la siguiente linea el portapapeles ('CLIPBOARD' selecction)
+   "Pegar del portapapeles ('CLIPBOARD' selecction) en nuevas lineas siguientes
    nnoremap <Leader>cp :<C-u>r !xsel -ob<CR>
 
 "elseif g:os_type == 0
@@ -45,7 +45,7 @@ endif
 
 "----------------------------- Splits                  -----------------------------
 
-"COMENTAR su usa Plug-In 'vim-tmux-navigator'. Teclas de navegacion entre split de un tab (similar a las que se usaran para navegar paneles tmux)
+"Navegación stre splits (no es necesario especificar, lo define el Plug-In 'vim-tmux-navigator').
 "noremap <C-j> <C-w>j
 "noremap <C-k> <C-w>k
 "noremap <C-l> <C-w>l

@@ -14,6 +14,8 @@ fi
 
 # Rutas por defecto: Adicionando rutas de programas especificos
 PATH=$PATH:/opt/tools/neovim/bin
+[ -d "/opt/tools/rh-ocp-cli" ] && PATH=$PATH:/opt/tools/rh-ocp-cli
+[ -d "/opt/tools/go/bin" ] && PATH=$PATH:/opt/tools/go/bin
 
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
@@ -42,6 +44,11 @@ export EDITOR=vim
 export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"
 source ~/.files/terminal/linux/complete/fzf.bash
 source ~/.files/terminal/linux/keybindings/fzf.bash
+
+# Node.Js (nvm) - Usando varias Node.JS
+export NVM_DIR="/opt/tools/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+#[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 #Funciones basicas
 source ~/.files/terminal/linux/functions/func_basic.bash

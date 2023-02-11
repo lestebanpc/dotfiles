@@ -68,11 +68,11 @@ unset color_prompt force_color_prompt
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
-xterm*|rxvt*)
-    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-    ;;
-*)
-    ;;
+    xterm*|rxvt*)
+        PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+        ;;
+    *)
+        ;;
 esac
 
 # enable color support of ls and also add handy aliases
@@ -109,7 +109,9 @@ if [ -f ~/.bash_aliases ]; then
 fi
 
 # Rutas por defecto: Adicionando rutas de programas especificos
-PATH=$PATH:/opt/tools/neovim/bin:/opt/tools/rh-ocp-cli
+PATH=$PATH:/opt/tools/neovim/bin
+[ -d "/opt/tools/rh-ocp-cli" ] && PATH=$PATH:/opt/tools/rh-ocp-cli
+[ -d "/opt/tools/go/bin" ] && PATH=$PATH:/opt/tools/go/bin
 
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH

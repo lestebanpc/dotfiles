@@ -72,8 +72,9 @@ endif
 "let g:use_ide = 1
 
 if g:use_ide && $USE_EDITOR != ""
+    "Para no remover la carpeta de 'ftplugin' del runtimepath en VIM instalado para
+    "en cada 'file type' se validara esta variable antes de que se carge.
     let g:use_ide = 0
-    "TODO remover del runtimepath el ftplugin
 endif
 
 "Path del home del usuario (siempre se usara como separador de carpetas es '/')
