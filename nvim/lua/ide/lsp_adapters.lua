@@ -1,4 +1,5 @@
 local lsp_config = require('lspconfig')
+local lsp_config_util = require('lspconfig/util')
 local lsp_server_path = ""
 
 --------------------------------------------------------------------------------------------------
@@ -35,5 +36,35 @@ lsp_config.omnisharp.setup({
     --cmd = { vim.g.lsp_server_path, "--languageserver" , "--hostPID", tostring(pid) },
 })
 
+
+--------------------------------------------------------------------------------------------------
+--LSP Adapters> GoLang (Adaptador para GoPls de Go)
+--------------------------------------------------------------------------------------------------
+
+lsp_config.gopls.setup {
+    --Ajuste las opciones del comando 'gopls' segun lo que se requiera
+    cmd = {"gopls", "serve"},
+    filetypes = {"go", "gomod"},
+    root_dir = lsp_config_util.root_pattern("go.work", "go.mod", ".git"),
+    settings = {
+        gopls = {
+            analyses = {
+                unusedparams = true,
+            },
+            staticcheck = true,
+        },
+    },
+}
+
+--Autocomandos: 
+--
+--Evento al guardar un archivo .go, organizar sus importaciones al guardar usando la lógica de 'goimports'
+--requiere Neovim >= 0.7.0
+--vim.api.nvim_create_autocmd('BufWritePre', {
+--    pattern = '*.go',
+--    callback = function()
+--        vim.lsp.buf.code_action({ context = { only = { 'source.organizeImports' } }, apply = true })
+--    end
+--})
 
 

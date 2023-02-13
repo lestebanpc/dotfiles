@@ -16,6 +16,7 @@ fi
 PATH=$PATH:/opt/tools/neovim/bin
 [ -d "/opt/tools/rh-ocp-cli" ] && PATH=$PATH:/opt/tools/rh-ocp-cli
 [ -d "/opt/tools/go/bin" ] && PATH=$PATH:/opt/tools/go/bin
+[ -d ~/go/bin ] && PATH=$PATH:~/go/bin
 
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
