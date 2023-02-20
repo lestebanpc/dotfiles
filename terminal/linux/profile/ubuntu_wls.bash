@@ -111,6 +111,8 @@ fi
 # Rutas por defecto: Adicionando rutas de programas especificos
 PATH=$PATH:/opt/tools/neovim/bin
 [ -d "/opt/tools/rh-ocp-cli" ] && PATH=$PATH:/opt/tools/rh-ocp-cli
+[ -d "/opt/tools/cmake" ] && PATH=$PATH:/opt/tools/cmake/bin
+[ -d "/opt/tools/clangd" ] && PATH=$PATH:/opt/tools/clangd/bin
 [ -d "/opt/tools/go/bin" ] && PATH=$PATH:/opt/tools/go/bin
 [ -d ~/go/bin ] && PATH=$PATH:~/go/bin
 
@@ -148,5 +150,5 @@ export NVM_DIR="/opt/tools/nvm"
 source ~/.files/terminal/linux/functions/func_basic.bash
 
 # Para corregir el error en diseño al inicio del promt 'Oh My Posh'
-clear
+#clear
 

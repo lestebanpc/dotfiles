@@ -386,6 +386,72 @@ function m_get_repo_current_version() {
             fi
             ;;
 
+        clangd)
+
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_programs_win}/CLangD/bin/"
+               else
+                  l_path_file="${g_path_programs_lnx}/clangd/bin/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}clangd.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}clangd --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+        cmake)
+
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_programs_win}/CMake/bin/"
+               else
+                  l_path_file="${g_path_programs_lnx}/cmake/bin/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}cmake.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}cmake --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+        ninja)
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}ninja.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}ninja --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
         *)
             return 9
             ;;
@@ -423,11 +489,12 @@ function m_load_artifacts() {
     #1. Argumentos
     local p_repo_id="$1"
     local p_repo_last_version="$2"
-    declare -n pna_artifact_names=$3   #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
-    declare -n pna_artifact_types=$4   #Parametro por referencia: Se devuelve un arreglo de los tipos de los artefactos
+    local p_repo_last_version_pretty="$3"
+    declare -n pna_artifact_names=$4   #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
+    declare -n pna_artifact_types=$5   #Parametro por referencia: Se devuelve un arreglo de los tipos de los artefactos
     local p_install_win_cmds=1         #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                        #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$5" -eq 0 2> /dev/null ]; then
+    if [ "$6" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
     
@@ -456,61 +523,61 @@ function m_load_artifacts() {
             ;;
         fzf)
             if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("fzf-${p_repo_last_version}-linux_amd64.tar.gz")
+                pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_amd64.tar.gz")
                 pna_artifact_types=(2)
             else
-                pna_artifact_names=("fzf-${p_repo_last_version}-windows_amd64.zip")
+                pna_artifact_names=("fzf-${p_repo_last_version_pretty}-windows_amd64.zip")
                 pna_artifact_types=(3)
             fi
             ;;
         helm)
             if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("helm-v${p_repo_last_version}-linux-amd64.tar.gz")
+                pna_artifact_names=("helm-v${p_repo_last_version_pretty}-linux-amd64.tar.gz")
                 pna_artifact_types=(2)
             else
-                pna_artifact_names=("helm-v${p_repo_last_version}-windows-amd64.zip")
+                pna_artifact_names=("helm-v${p_repo_last_version_pretty}-windows-amd64.zip")
                 pna_artifact_types=(3)
             fi
             ;;
         delta)
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
-                    pna_artifact_names=("git-delta_${p_repo_last_version}_amd64.deb")
+                    pna_artifact_names=("git-delta_${p_repo_last_version_pretty}_amd64.deb")
                     pna_artifact_types=(1)
                 else
-                    pna_artifact_names=("delta-${p_repo_last_version}-x86_64-unknown-linux-gnu.tar.gz")
+                    pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
                     pna_artifact_types=(2)
                 fi
             else
-                pna_artifact_names=("delta-${p_repo_last_version}-x86_64-pc-windows-msvc.zip")
+                pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(3)
             fi
             ;;
         ripgrep)
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
-                    pna_artifact_names=("ripgrep_${p_repo_last_version}_amd64.deb")
+                    pna_artifact_names=("ripgrep_${p_repo_last_version_pretty}_amd64.deb")
                     pna_artifact_types=(1)
                 else
-                    pna_artifact_names=("ripgrep-${p_repo_last_version}-x86_64-unknown-linux-musl.tar.gz")
+                    pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
                     pna_artifact_types=(2)
                 fi
             else
-                pna_artifact_names=("ripgrep-${p_repo_last_version}-x86_64-pc-windows-msvc.zip")
+                pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(3)
             fi
             ;;
         bat)
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
-                    pna_artifact_names=("bat_${p_repo_last_version}_amd64.deb")
+                    pna_artifact_names=("bat_${p_repo_last_version_pretty}_amd64.deb")
                     pna_artifact_types=(1)
                 else
-                    pna_artifact_names=("bat-v${p_repo_last_version}-x86_64-unknown-linux-gnu.tar.gz")
+                    pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
                     pna_artifact_types=(2)
                 fi
             else
-                pna_artifact_names=("bat-v${p_repo_last_version}-x86_64-pc-windows-msvc.zip")
+                pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(3)
             fi
             ;;
@@ -526,14 +593,14 @@ function m_load_artifacts() {
         fd)
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
-                    pna_artifact_names=("fd_${p_repo_last_version}_amd64.deb")
+                    pna_artifact_names=("fd_${p_repo_last_version_pretty}_amd64.deb")
                     pna_artifact_types=(1)
                 else
-                    pna_artifact_names=("fd-v${p_repo_last_version}-x86_64-unknown-linux-gnu.tar.gz")
+                    pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
                     pna_artifact_types=(2)
                 fi
             else
-                pna_artifact_names=("fd-v${p_repo_last_version}-x86_64-pc-windows-msvc.zip")
+                pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(3)
             fi
             ;;
@@ -556,19 +623,19 @@ function m_load_artifacts() {
             ;;
         k0s)
             if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("k0s-v${p_repo_last_version}+k0s.0-amd64")
+                pna_artifact_names=("k0s-v${p_repo_last_version_pretty}+k0s.0-amd64")
                 pna_artifact_types=(0)
             else
-                pna_artifact_names=("k0s-v${p_repo_last_version}+k0s.0-amd64.exe")
+                pna_artifact_names=("k0s-v${p_repo_last_version_pretty}+k0s.0-amd64.exe")
                 pna_artifact_types=(0)
             fi
             ;;
         kustomize)
             if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("kustomize_v${p_repo_last_version}_linux_amd64.tar.gz")
+                pna_artifact_names=("kustomize_v${p_repo_last_version_pretty}_linux_amd64.tar.gz")
                 pna_artifact_types=(2)
             else
-                pna_artifact_names=("kustomize_v${p_repo_last_version}_windows_amd64.tar.gz")
+                pna_artifact_names=("kustomize_v${p_repo_last_version_pretty}_windows_amd64.tar.gz")
                 pna_artifact_types=(2)
             fi
             ;;
@@ -621,10 +688,40 @@ function m_load_artifacts() {
 
         go)
             if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("go${p_repo_last_version}.linux-amd64.tar.gz")
+                pna_artifact_names=("go${p_repo_last_version_pretty}.linux-amd64.tar.gz")
                 pna_artifact_types=(2)
             else
-                pna_artifact_names=("go${p_repo_last_version}.windows-amd64.zip")
+                pna_artifact_names=("go${p_repo_last_version_pretty}.windows-amd64.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+
+        clangd)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("clangd-linux-${p_repo_last_version_pretty}.zip")
+                pna_artifact_types=(3)
+            else
+                pna_artifact_names=("clangd-windows-${p_repo_last_version_pretty}.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+
+        cmake)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("cmake-${p_repo_last_version#v}-linux-x86_64.tar.gz")
+                pna_artifact_types=(2)
+            else
+                pna_artifact_names=("cmake-${p_repo_last_version#v}-windows-x86_64.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+
+        ninja)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("ninja-linux.zip")
+                pna_artifact_types=(3)
+            else
+                pna_artifact_names=("ninja-win.zip")
                 pna_artifact_types=(3)
             fi
             ;;
@@ -752,7 +849,8 @@ function m_copy_artifact_files() {
     fi
 
     local p_repo_current_version="$5"
-    local p_artifact_is_last=$6
+    local p_repo_last_version="$6"
+    local p_artifact_is_last=$7
 
     #3. Copiar loa archivos del artefacto segun el prefijo
     local l_path_temp=""
@@ -1634,6 +1732,48 @@ function m_copy_artifact_files() {
             fi
             ;;
 
+        clangd)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/clangd_${p_repo_last_version}"
+            
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                l_path_bin="${g_path_programs_lnx}/clangd"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                    chmod g+rx,o+rx $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover todos archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+
+            else
+                
+                l_path_bin="${g_path_programs_win}/CLangD"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover los archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+            fi
+            ;;
+
         go)
 
             #Ruta local de los artefactos
@@ -1675,6 +1815,82 @@ function m_copy_artifact_files() {
                 find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
             fi
             ;;
+
+
+        cmake)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                l_path_bin="${g_path_programs_lnx}/cmake"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                    chmod g+rx,o+rx $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+
+                #Copiando los archivos de ayuda
+                #./man/man1/*.1
+                #./man/man1/*.7
+
+                #Copiando los script para el autocompletado
+                #bash-completion/completions/cmake
+                #bash-completion/completions/cpack
+                #bash-completion/completions/ctest
+                    
+                #Mover todos archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+
+            else
+                
+                l_path_bin="${g_path_programs_win}/CMake"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover los archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+            fi
+            ;;
+
+
+        ninja)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_is_root -eq 0 ]; then
+                    cp "${l_path_temp}/ninja" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/ninja"
+                    #mkdir -pm 755 "${l_path_man}"
+                else
+                    sudo cp "${l_path_temp}/ninja" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/ninja"
+                    #sudo mkdir -pm 755 "${l_path_man}"
+                fi
+            else
+                cp "${l_path_temp}/ninja.exe" "${l_path_bin}"
+                #mkdir -p "${l_path_man}"
+            fi
+            ;;
+
 
         *)
            echo "ERROR (50): El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" no implementa logica de copiado de archivos"
@@ -1757,6 +1973,8 @@ function m_install_artifacts() {
     fi
 
     local p_repo_current_version="$6"
+    local p_repo_last_version="$7"
+    #echo "p_repo_current_version = ${p_repo_current_version}"
 
     #2. Descargar los artectos del repositorio
     local l_n=${#pnra_artifact_names[@]}
@@ -1788,7 +2006,7 @@ function m_install_artifacts() {
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.tar.gz}" $p_install_win_cmds "$p_repo_current_version" $l_is_last
+            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.tar.gz}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" $l_is_last
             #l_status=0
 
         elif [ $l_artifact_type -eq 3 ]; then
@@ -1800,16 +2018,16 @@ function m_install_artifacts() {
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.zip}" $p_install_win_cmds "$p_repo_current_version" $l_is_last
+            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.zip}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" $l_is_last
             #l_status=0
 
         elif [ $l_artifact_type -eq 0 ]; then
 
             #Copiar los archivos necesarios
             if [ $p_install_win_cmds -eq 0 ]; then
-                m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.exe}" $p_install_win_cmds "$p_repo_current_version" $l_is_last
+                m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.exe}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" $l_is_last
             else
-                m_copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" $p_install_win_cmds "$p_repo_current_version" $l_is_last
+                m_copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" $l_is_last
             fi
             #l_status=0
 
@@ -1852,11 +2070,12 @@ function m_intall_repository() {
     if [ "$6" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
+    #echo "p_repo_current_version = ${p_repo_current_version}"
 
     #4. Obtener el los artefacto que se instalaran del repositorio
     declare -a la_artifact_names
     declare -a la_artifact_types
-    m_load_artifacts "$p_repo_id" "$p_repo_last_version_pretty" la_artifact_names la_artifact_types $p_install_win_cmds
+    m_load_artifacts "$p_repo_id" "$p_repo_last_version" "$p_repo_last_version_pretty" la_artifact_names la_artifact_types $p_install_win_cmds
     l_status=$?    
     if [ $l_status -ne 0 ]; then
         echo "ERROR (40): No esta configurado los artefactos para el repositorio \"${p_repo_id}\""
@@ -1885,7 +2104,7 @@ function m_intall_repository() {
     fi
 
     #6. Instalar segun el tipo de artefecto
-    if ! m_install_artifacts "$p_repo_id" "$p_repo_name" la_artifact_names la_artifact_types $p_install_win_cmds "$p_repo_current_version"; then
+    if ! m_install_artifacts "${p_repo_id}" "${p_repo_name}" la_artifact_names la_artifact_types $p_install_win_cmds "${p_repo_current_version}" "${p_repo_last_version}"; then
         echo "ERROR (44): No se ha podido instalar los artefecto de repositorio \"${p_repo_id}\""
         m_clean_temp "$p_repo_id"
         return 24
@@ -1923,6 +2142,9 @@ declare -A gA_repositories=(
         ['netcoredbg']='Samsung/netcoredbg'
         ['neovim']='neovim/neovim'
         ['go']='golang'
+        ['cmake']='Kitware/CMake'
+        ['ninja']='ninja-build/ninja'
+        ['clangd']='clangd/clangd'
     )
 
 
@@ -1935,6 +2157,9 @@ declare -A gA_optional_repositories=(
         ['roslyn']=64
         ['netcoredbg']=128
         ['go']=256
+        ['cmake']=512
+        ['ninja']=1024
+        ['clangd']=2048
     )
 
 
@@ -2108,7 +2333,11 @@ function m_setup_repository() {
                     echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" > Ultima Versión \"${l_repo_last_version_pretty}\")"
                     l_repo_must_setup_lnx=1
                 else
-                    echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
+                    if [ -z "${l_repo_current_version}" ]; then
+                        echo "Se instalara el repositorio \"${p_repo_id}\" (Versión \"${l_repo_last_version_pretty}\")"
+                    else
+                        echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
+                    fi
                 fi
 
             else
@@ -2120,6 +2349,7 @@ function m_setup_repository() {
 
         #5.4 Instalar el repositorio
         if [ $l_repo_must_setup_lnx -eq 0 ]; then
+            #echo "l_repo_current_version = ${l_repo_current_version}"
             m_intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" $l_install_win_cmds 
         fi
 
@@ -2233,7 +2463,11 @@ function m_setup_repository() {
                     echo "NO se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" > Ultima Versión \"${l_repo_last_version_pretty}\")"
                     l_repo_must_setup_win=1
                 else
-                    echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
+                    if [ -z "${l_repo_current_version}" ]; then
+                        echo "Se instalara el repositorio \"${p_repo_id}\" (Versión \"${l_repo_last_version_pretty}\")"
+                    else
+                        echo "Se actualizará este repositorio \"${p_repo_id}\" (Versión Actual \"${l_repo_current_version}\" < Ultima Versión \"${l_repo_last_version_pretty}\")"
+                    fi
                 fi
 
             else
@@ -2245,6 +2479,7 @@ function m_setup_repository() {
         #7.4 Instalar el repositorio
         if [ $l_repo_must_setup_win -eq 0 ]; then
             #echo "Se instalará el repositorio \"${p_repo_id}\""
+            #echo "l_repo_current_version = ${l_repo_current_version}"
             m_intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" $l_install_win_cmds 
         fi
 
@@ -2369,16 +2604,19 @@ function m_show_menu_core() {
     echo " (q) Salir del menu"
     echo " (a) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes"
     echo " ( ) Actualización personalizado. Ingrese la suma de las opciones que desea configurar:"
-    #echo "    (  0) Actualizar xxx (siempre se realizara esta opción)"
-    echo "     (  1) Actualizar los paquetes existentes del sistema operativo"   
-    echo "     (  2) Actualizar los binarios de los repositorios existentes"
-    echo "     (  4) Instalar/Actualizar los binarios de los repositorios basicos"
-    echo "     (  8) Instalar/Actualizar el editor: \"NeoVim\""
-    echo "     ( 16) Instalar/Actualizar la implementación de Kubernates: \"k0s\""
-    echo "     ( 32) (Re)Instalar en el servidor fuentes Nerd Fonts desde \"ryanoasis/nerd-fonts\""
-    echo "     ( 64) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
-    echo "     (128) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""
-    echo "     (256) Instalar/Actualizar RTE de \"Go\""
+    #echo "    (   0) Actualizar xxx (siempre se realizara esta opción)"
+    echo "     (   1) Actualizar los paquetes existentes del sistema operativo"   
+    echo "     (   2) Actualizar los binarios de los repositorios existentes"
+    echo "     (   4) Instalar/Actualizar los binarios de los repositorios basicos"
+    echo "     (   8) Instalar/Actualizar el editor: \"NeoVim\""
+    echo "     (  16) Instalar/Actualizar la implementación de Kubernates: \"k0s\""
+    echo "     (  32) (Re)Instalar en el servidor fuentes Nerd Fonts desde \"ryanoasis/nerd-fonts\""
+    echo "     (  64) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
+    echo "     ( 128) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""
+    echo "     ( 256) Instalar/Actualizar RTE de \"Go\""
+    echo "     ( 512) Instalar/Actualizar el Build Generator C/C++ \"Kitware/CMake\""
+    echo "     (1024) Instalar/Actualizar el Build Tool C/C++ \"ninja-build/ninja\""
+    echo "     (2048) Instalar/Actualizar el LSP Server de C/C++: \"clangd/clangd\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 
