@@ -2,6 +2,7 @@
     "diagnostic.displayByAle": true,
     "codeLens.enable": true,
     "python.pythonPath": "python3",
+    "powershell.integratedConsole.showOnStartup": false,
     "languageserver": {
         "golang": {
             "command": "gopls",
