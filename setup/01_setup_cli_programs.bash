@@ -46,13 +46,16 @@ if [ $g_os_type -eq 1 ]; then
 fi
 
 #Expresiones regulares de sustitucion mas usuadas para las versiones
-#Se extrae la 1ra subcadena que inicie con enteros 0-9 y continue con . y luego continue con cualquier caracter que solo sea 0-9 o . o -
+#Se extrae la 1ra subcadena que inicie con enteros 0-9 y continue con . y luego continue con cualquier caracter que solo sea 0-9 o .
 declare -r g_regexp_sust_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
+#Se extrae la 1ra subcadena que inicie con enteros 0-9 y continue con . y luego continue con cualquier caracter que solo sea 0-9 o . o -
 declare -r g_regexp_sust_version2='s/[^0-9]*\([0-9]\+\.[0-9.-]\+\).*/\1/'
 declare -r g_regexp_sust_version3='s/[^0-9]*\([0-9.]\+\).*/\1/'
 
 #Cuando no se puede determinar la version actual (siempre se instalara)
 declare -r g_version_none='0.0.0'
+
+declare g_java_version=19
 
 #}}}
 
@@ -391,9 +394,9 @@ function m_get_repo_current_version() {
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
-                  l_path_file="${g_path_programs_win}/CLangD/bin/"
+                  l_path_file="${g_path_programs_win}/LSP_Servers/CLangD/bin/"
                else
-                  l_path_file="${g_path_programs_lnx}/clangd/bin/"
+                  l_path_file="${g_path_programs_lnx}/lsp_servers/clangd/bin/"
                fi
             fi
 
@@ -452,6 +455,91 @@ function m_get_repo_current_version() {
             fi
             ;;
 
+        powershell)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}pwsh --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+        rust-analyzer)
+
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_programs_win}/LSP_Servers/Rust_Analyzer/"
+               else
+                  l_path_file="${g_path_programs_lnx}/lsp_servers/rust_analyzer/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}rust-analyzer.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}rust-analyzer --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+        graalvm)
+
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_programs_win}/GraalVM/bin/"
+               else
+                  l_path_file="${g_path_programs_lnx}/graalvm/bin/"
+               fi
+            fi
+
+            #Obtener la version (no usar la opcion '-version' pues este envia la info al flujo de error estandar)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}java.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}java --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | grep GraalVM | head -n 1)
+            fi
+            ;;
+
+        jdtls)
+
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_programs_win}/LSP_Servers/jdtls/"
+               else
+                  l_path_file="${g_path_programs_lnx}/lsp_servers/jdtls/"
+               fi
+            fi
+
+            #Obtener la version
+            l_tmp=$(find ${l_path_file} -maxdepth 1 -mindepth 1 -name 'jdt-language-server*.jar' -printf "%T@ %Tc %p\n" | sort -nr | head -n 1 | cut -d ' ' -f 7-15)
+            l_status=$?
+
+            if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+                l_tmp=$(echo "$l_tmp" | sed "$g_regexp_sust_version1")
+            fi
+            ;;
+
         *)
             return 9
             ;;
@@ -480,8 +568,12 @@ function m_get_repo_current_version() {
 
 #Devuelve un arreglo de artefectos, usando los argumentos 3 y 4 como de referencia:
 #  - Argumento 4, un arreglo de tipo de artefacto donde cada item puede ser:
-#    0 si es binario, 1 si es package, 2 si es un tar.gz, 3 si es un zip
-#    99 si no se define el artefacto para el prefijo
+#       >  0 si es binario
+#       >  1 si es package
+#       >  2 si es un tar.gz
+#       >  3 si es un zip
+#       >  4 si es un .gz
+#       > 99 si no se define el artefacto para el prefijo
 #  - Argumento 3, un arreglo de nombre de los artectos a descargar
 #En el argumento 2 se debe pasar la version pura quitando, sin contener "v" u otras letras iniciales
 function m_load_artifacts() {
@@ -725,6 +817,44 @@ function m_load_artifacts() {
                 pna_artifact_types=(3)
             fi
             ;;
+        powershell)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    pna_artifact_names=("powershell_${p_repo_last_version_pretty}-1.deb_amd64.deb")
+                    pna_artifact_types=(1)
+                else
+                    pna_artifact_names=("powershell-${p_repo_last_version_pretty}-1.rh.x86_64.rpm")
+                    pna_artifact_types=(1)
+                fi
+            else
+                #No se instala nada en Windows
+                return 1
+            fi
+            ;;
+
+        rust-analyzer)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("rust-analyzer-x86_64-unknown-linux-gnu.gz")
+                pna_artifact_types=(4)
+            else
+                pna_artifact_names=("rust-analyzer-x86_64-pc-windows-msvc.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+
+        graalvm)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("graalvm-ce-java${g_java_version}-linux-amd64-${p_repo_last_version_pretty}.tar.gz" 
+                                    "native-image-installable-svm-java${g_java_version}-linux-amd64-${p_repo_last_version_pretty}.jar"
+                                    "visualvm-installable-ce-java${g_java_version}-linux-amd64-${p_repo_last_version_pretty}.jar")
+                pna_artifact_types=(2 0 0)
+            else
+                pna_artifact_names=("graalvm-ce-java${g_java_version}-windows-amd64-${p_repo_last_version_pretty}.zip"
+                                    "native-image-installable-svm-java${g_java_version}-windows-amd64-${p_repo_last_version_pretty}.jar"
+                                    "visualvm-installable-ce-java${g_java_version}-windows-amd64-${p_repo_last_version_pretty}.jar")
+                pna_artifact_types=(3 0 0)
+            fi
+            ;;
 
         *)
            return 1
@@ -850,7 +980,8 @@ function m_copy_artifact_files() {
 
     local p_repo_current_version="$5"
     local p_repo_last_version="$6"
-    local p_artifact_is_last=$7
+    local p_repo_last_version_pretty="$7"
+    local p_artifact_is_last=$8
 
     #3. Copiar loa archivos del artefacto segun el prefijo
     local l_path_temp=""
@@ -1469,7 +1600,7 @@ function m_copy_artifact_files() {
                     l_flag_install=1
                 else
 
-                    m_compare_version2 "${l_repo_current_version}" "${l_repo_download_version}"
+                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
                     l_status=$?
                     echo "Repositorio descargado - Versión: \"${l_repo_download_version}\""
 
@@ -1518,7 +1649,7 @@ function m_copy_artifact_files() {
                     l_flag_install=1
                 else
 
-                    m_compare_version2 "${l_repo_current_version}" "${l_repo_download_version}"
+                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
                     l_status=$?
                     echo "Repositorio descargado - Versión: \"${l_repo_download_version}\""
 
@@ -1576,7 +1707,7 @@ function m_copy_artifact_files() {
                     l_flag_install=1
                 else
 
-                    m_compare_version2 "${l_repo_current_version}" "${l_repo_download_version}"
+                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
                     l_status=$?
                     echo "Repositorio descargado - Versión: \"${l_repo_download_version}\""
 
@@ -1625,7 +1756,7 @@ function m_copy_artifact_files() {
                     l_flag_install=1
                 else
 
-                    m_compare_version2 "${l_repo_current_version}" "${l_repo_download_version}"
+                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
                     l_status=$?
                     echo "Repositorio descargado - Versión: \"${l_repo_download_version}\""
 
@@ -1741,7 +1872,7 @@ function m_copy_artifact_files() {
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_programs_lnx}/clangd"
+                l_path_bin="${g_path_programs_lnx}/lsp_servers/clangd"
 
                 #Limpieza del directorio del programa
                 if  [ ! -d "$l_path_bin" ]; then
@@ -1758,7 +1889,7 @@ function m_copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_programs_win}/CLangD"
+                l_path_bin="${g_path_programs_win}/LSP_Servers/CLangD"
 
                 #Limpieza del directorio del programa
                 if  [ ! -d "$l_path_bin" ]; then
@@ -1892,6 +2023,234 @@ function m_copy_artifact_files() {
             ;;
 
 
+        rust-analyzer)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_flag_install=0
+            
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+               
+                echo "Renombrando \"${l_path_temp}/${p_artifact_name_woext}\" a \"${l_path_temp}/rust-analyzer\""
+                #ls -la ${l_path_temp}
+                mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_temp}/rust-analyzer"
+                #ls -la ${l_path_temp}
+                #id
+                chmod u+x "${l_path_temp}/rust-analyzer"
+                
+                #1. Comparando la version instalada con la version descargada
+                #${l_path_temp}/rust-analyzer --version
+                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                l_status=$?
+
+                if [ $l_status -ne 0 ]; then
+                    echo "Error al obtener la versión actual (Status = ${l_status})"
+                    l_flag_install=1
+                else
+
+                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
+                    l_status=$?
+                    echo "Repositorio descargado - Versión: \"${l_repo_download_version}\""
+
+                    if [ $l_status -eq 0 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" = Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    elif [ $l_status -eq 1 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" > Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    else
+                        echo "Se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" < Versión Descargada \"${l_repo_download_version}\")"
+                    fi
+                fi
+
+                #2. Instalación
+                if [ $l_flag_install -eq 0 ]; then
+                    l_path_bin="${g_path_programs_lnx}/lsp_servers/rust_analyzer"
+                    mkdir -p "${l_path_bin}"
+
+                    echo "Copiando \"${l_path_temp}/rust-analyzer\" a \"${l_path_bin}/\""
+                    cp "${l_path_temp}/rust-analyzer" "${l_path_bin}/"
+                    chmod +x "${l_path_bin}/rust-analyzer"
+                    #mkdir -pm 755 "${l_path_man}"
+                fi
+
+            else
+
+                #1. Comparando la version instalada con la version descargada
+                #chmod +x "${l_path_temp}/rust-analyzer.exe"
+                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                l_status=$?
+
+                if [ $l_status -ne 0 ]; then
+                    echo "Error al obtener la versión actual (Status = ${l_status})"
+                    l_flag_install=1
+                else
+
+                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
+                    l_status=$?
+                    echo "Repositorio descargado - Versión: \"${l_repo_download_version}\""
+
+                    if [ $l_status -eq 0 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" = Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    elif [ $l_status -eq 1 ]; then
+
+                        echo "NO se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" > Versión Descargada \"${l_repo_download_version}\")"
+                        l_flag_install=1
+
+                    else
+                        echo "Se actualizará este repositorio (Versión Actual \"${l_repo_current_version}\" < Versión Descargada \"${l_repo_download_version}\")"
+                    fi
+                fi
+
+                #2. Instalación
+                if [ $l_flag_install -eq 0 ]; then
+                    l_path_bin="${g_path_programs_win}/LSP_Servers/Rust_Analyzer"
+                    mkdir -p "${l_path_bin}"
+
+                    echo "Copiando \"${l_path_temp}/rust-analyzer.exe\" a \"${l_path_bin}\""
+                    cp "${l_path_temp}/rust-analyzer.exe" "${l_path_bin}"
+                    echo "Copiando \"${l_path_temp}/rust-analyzer.pdb\" a \"${l_path_bin}\""
+                    cp "${l_path_temp}/rust-analyzer.pdb" "${l_path_bin}"
+                    #mkdir -p "${l_path_man}"
+                fi
+            fi
+            ;;
+
+
+        graalvm)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+
+            #Por ahora se instala solo las herramientas:
+            # Native Image
+            # VisualVM
+            #No eso se instalaran los soportes a los demans lenguajes (use 'gu install [tool-name]'):
+            # LLVM
+            # JavaScript (GraalJS)
+            # Node.js
+            # Python (GraalPy)
+            # Ruby (TruffleRuby)
+            # R (FastR)
+            # WebAssembly (Wasm)
+            # Java on Truffle (Espresso)
+            
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                l_path_bin="${g_path_programs_lnx}/graalvm"
+
+                #Instalación de GraalVM (Core)
+                if [ $p_artifact_index -eq 0 ]; then
+
+                    l_path_temp="${l_path_temp}/graalvm-ce-java${g_java_version}-${p_repo_last_version_pretty}"
+
+                    #Limpieza del directorio del programa
+                    if  [ ! -d "$l_path_bin" ]; then
+                        mkdir -p $l_path_bin
+                        chmod g+rx,o+rx $l_path_bin
+                    else
+                        #Limpieza
+                        rm -rf ${l_path_bin}/*
+                    fi
+                    
+                    #Mover todos archivos
+                    #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
+                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+
+                #Descargar el instalador del tool 'Native Image'
+                elif [ $p_install_win_cmds -eq 1 ]; then
+
+                    l_path_bin="${l_path_bin}/installers"
+                    mkdir -p "$l_path_bin"
+
+                    #mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_temp}/native-image"
+                    #cp "${l_path_temp}/native-image" "${l_path_bin}/"
+                    echo "Copiando el instalador \"${l_path_temp}/${p_artifact_name_woext}\" en \"${l_path_bin}/\""
+                    mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_bin}/"
+                    echo "Para instalar 'Native Image' usando una de las siguientes alternativas:"
+                    echo " > gu install native-image"
+                    echo " > cd ${l_path_bin}"
+                    echo "   gu -L install ${p_artifact_name_woext}"
+
+                #Descargar el instalador de tool 'VisualVM'
+                else
+
+                    l_path_bin="${l_path_bin}/installers"
+                    mkdir -p "$l_path_bin"
+
+                    echo "Copiando el instalador \"${l_path_temp}/${p_artifact_name_woext}\" en \"${l_path_bin}/\""
+                    mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_bin}/"
+                    echo "Para instalar 'Native Image' usando una de las siguientes alternativas:"
+                    echo " > gu install jvisualvm"
+                    echo " > cd ${l_path_bin}"
+                    echo "   gu -L install ${p_artifact_name_woext}"
+
+                fi
+
+            else
+                
+                l_path_bin="${g_path_programs_win}/GraalVM"
+
+                #Instalación de GraalVM (Core)
+                if [ $p_artifact_index -eq 0 ]; then
+                    
+                    l_path_temp="${l_path_temp}/graalvm-ce-java${g_java_version}-${p_repo_last_version_pretty}"
+
+                    #Limpieza del directorio del programa
+                    if  [ ! -d "$l_path_bin" ]; then
+                        mkdir -p $l_path_bin
+                    else
+                        #Limpieza
+                        rm -rf ${l_path_bin}/*
+                    fi
+                    
+                    #Mover los archivos
+                    #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                
+                #Descargar el instalador del tool 'Native Image'
+                elif [ $p_install_win_cmds -eq 1 ]; then
+
+                    l_path_bin="${l_path_bin}/installers"
+                    mkdir -p "$l_path_bin"
+
+                    #mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_temp}/native-image"
+                    #cp "${l_path_temp}/native-image" "${l_path_bin}/"
+                    echo "Copiando el instalador \"${l_path_temp}/${p_artifact_name_woext}\" en \"${l_path_bin}/\""
+                    mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_bin}/"
+                    echo "Instalar 'Native Image' usando una de las siguientes alternativas:"
+                    echo " > gu install native-image"
+                    echo " > cd ${l_path_bin}"
+                    echo "   gu -L install ${p_artifact_name_woext}"
+
+                #Descargar el instalador de tool 'VisualVM'
+                else
+
+                    l_path_bin="${l_path_bin}/installers"
+                    mkdir -p "$l_path_bin"
+
+                    echo "Copiando el instalador \"${l_path_temp}/${p_artifact_name_woext}\" en \"${l_path_bin}/\""
+                    mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_bin}/"
+                    echo "Instalar 'Native Image' usando una de las siguientes alternativas:"
+                    echo " > gu install jvisualvm"
+                    printf " > cd "
+                    wslpath -w "${l_path_bin}"
+                    echo "   gu -L install ${p_artifact_name_woext}"
+
+                fi
+            fi
+            ;;
+
+
         *)
            echo "ERROR (50): El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" no implementa logica de copiado de archivos"
            return 50
@@ -1974,7 +2333,7 @@ function m_install_artifacts() {
 
     local p_repo_current_version="$6"
     local p_repo_last_version="$7"
-    #echo "p_repo_current_version = ${p_repo_current_version}"
+    local p_repo_last_version_pretty="$8"
 
     #2. Descargar los artectos del repositorio
     local l_n=${#pnra_artifact_names[@]}
@@ -1985,6 +2344,7 @@ function m_install_artifacts() {
 
     #3. Instalación de los artectactos
     local l_is_last=1
+    local l_tmp=""
     mkdir -p "/tmp/${p_repo_id}"
 
     for ((l_i=0; l_i<$l_n; l_i++)); do
@@ -2006,7 +2366,20 @@ function m_install_artifacts() {
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.tar.gz}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" $l_is_last
+            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.tar.gz}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last
+            #l_status=0
+
+        elif [ $l_artifact_type -eq 4 ]; then
+
+            #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+            l_tmp="${l_artifact_name%.gz}"
+            echo "Descomprimiendo el artefacto[${l_i}] \"${l_artifact_name}\" como archivo \"/tmp/${p_repo_id}/${l_i}/${l_tmp}\" ..."
+            gunzip "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
+            #rm -f "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
+            chmod u+rw /tmp/${p_repo_id}/${l_i}/*
+
+            #Copiar los archivos necesarios
+            m_copy_artifact_files "$p_repo_id" $l_i "${l_tmp}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last
             #l_status=0
 
         elif [ $l_artifact_type -eq 3 ]; then
@@ -2018,16 +2391,16 @@ function m_install_artifacts() {
             chmod u+rw /tmp/${p_repo_id}/${l_i}/*
 
             #Copiar los archivos necesarios
-            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.zip}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" $l_is_last
+            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.zip}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last
             #l_status=0
 
         elif [ $l_artifact_type -eq 0 ]; then
 
             #Copiar los archivos necesarios
             if [ $p_install_win_cmds -eq 0 ]; then
-                m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.exe}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" $l_is_last
+                m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.exe}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last
             else
-                m_copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" $l_is_last
+                m_copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last
             fi
             #l_status=0
 
@@ -2104,7 +2477,7 @@ function m_intall_repository() {
     fi
 
     #6. Instalar segun el tipo de artefecto
-    if ! m_install_artifacts "${p_repo_id}" "${p_repo_name}" la_artifact_names la_artifact_types $p_install_win_cmds "${p_repo_current_version}" "${p_repo_last_version}"; then
+    if ! m_install_artifacts "${p_repo_id}" "${p_repo_name}" la_artifact_names la_artifact_types $p_install_win_cmds "${p_repo_current_version}" "${p_repo_last_version}" "$p_repo_last_version_pretty"; then
         echo "ERROR (44): No se ha podido instalar los artefecto de repositorio \"${p_repo_id}\""
         m_clean_temp "$p_repo_id"
         return 24
@@ -2138,6 +2511,7 @@ declare -A gA_repositories=(
         ['neovim']='neovim/neovim'
         ['k0s']='k0sproject/k0s'
         ['nerd-fonts']='ryanoasis/nerd-fonts'
+        ['powershell']='PowerShell/PowerShell'
         ['roslyn']='OmniSharp/omnisharp-roslyn'
         ['netcoredbg']='Samsung/netcoredbg'
         ['neovim']='neovim/neovim'
@@ -2145,6 +2519,9 @@ declare -A gA_repositories=(
         ['cmake']='Kitware/CMake'
         ['ninja']='ninja-build/ninja'
         ['clangd']='clangd/clangd'
+        ['rust-analyzer']='rust-lang/rust-analyzer'
+        ['graalvm']='graalvm/graalvm-ce-builds'
+        #['jdtls']='jdtls/snapshots'
     )
 
 
@@ -2154,14 +2531,37 @@ declare -A gA_optional_repositories=(
         ['neovim']=8
         ['k0s']=16
         ['nerd-fonts']=32
-        ['roslyn']=64
-        ['netcoredbg']=128
-        ['go']=256
-        ['cmake']=512
-        ['ninja']=1024
-        ['clangd']=2048
+        ['powershell']=64
+        ['roslyn']=128
+        ['netcoredbg']=256
+        ['go']=512
+        ['cmake']=1024
+        ['ninja']=2048
+        ['clangd']=4096
+        ['rust-analyzer']=8192
+        ['graalvm']=16384
+        #['jdtls']=32768
     )
 
+
+function m_get_pretty_version() { 
+
+    #1. Argumentos
+    local p_repo_id="$1"
+    local p_repo_version="$2"
+
+    #Obtener la versión
+    local l_regexp=""
+
+    case "$p_repo_id" in
+        *)
+            l_regexp="$g_regexp_sust_version2";
+            ;;
+    esac
+
+    local l_version_pretty=$(echo "$p_repo_version" | sed "$l_regexp")
+    echo "$l_version_pretty"
+}
 
 function m_setup_repository() {
 
@@ -2218,9 +2618,13 @@ function m_setup_repository() {
 
     fi
 
+    if [ $l_repo_must_setup_lnx -ne 0 ]; then
+        return 79
+    fi
+
     #3. ¿Existe un repositorio valido de artectactos?
     local l_repo_last_version=$(m_get_repo_latest_version "$p_repo_id" "$l_repo_name")
-    local l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed "$g_regexp_sust_version2")
+    local l_repo_last_version_pretty=$(m_get_pretty_version "$p_repo_id" "$l_repo_last_version")
     if [[ ! "$l_repo_last_version_pretty" =~ ^[0-9] ]]; then
         l_repo_last_version_pretty=""
     fi
@@ -2300,7 +2704,7 @@ function m_setup_repository() {
         #5.2 Segun la version del repositorio actual, habilitar la instalación 
         if [ $l_repo_is_installed -eq 9 ]; then
             echo "Repositorio - Versión Actual : \"Unknown\" (No implementado)"
-            echo "ERROR: Implemente la logica para determinar la version actual de repositorio instalado"
+            echo "ERROR: Debe implementar la logica para determinar la version actual de repositorio instalado"
             l_repo_must_setup_lnx=1
         else
             #Si se tiene implementado la logica para obtener la version actual o se debe instalar sin ella
@@ -2323,7 +2727,7 @@ function m_setup_repository() {
             if [ ! -z "$l_repo_last_version_pretty" ] && [ $l_repo_is_installed -ne 3 ]; then
                  
                 #m_compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
-                m_compare_version2 "${l_repo_current_version}" "${l_repo_last_version_pretty}"
+                m_compare_version "${l_repo_current_version}" "${l_repo_last_version_pretty}"
                 l_status=$?
 
                 if [ $l_status -eq 0 ]; then
@@ -2388,7 +2792,11 @@ function m_setup_repository() {
                     l_repo_must_setup_win=1;
                     ;;
                 nerd-fonts)
-                   #Las fuentes en Windows se instalan manualmente (requiere del registro de windows)                
+                    #Las fuentes en Windows se instalan manualmente (requiere del registro de windows)                
+                    l_repo_must_setup_win=1;
+                    ;;
+                powershell)
+                    #En windows se instala manualmente y luego solicita Actualización cada vez que existe nueva versión
                     l_repo_must_setup_win=1;
                     ;;
             esac
@@ -2430,7 +2838,7 @@ function m_setup_repository() {
         #7.2 Segun la version del repositorio actual, habilitar la instalación 
         if [ $l_repo_is_installed -eq 9 ]; then
             echo "Repositorio - Versión Actual : \"Unknown\" (No implementado)"
-            echo "ERROR: Implemente la logica para determinar la version actual de repositorio instalado"
+            echo "ERROR: Debe implementar la logica para determinar la version actual de repositorio instalado"
             l_repo_must_setup_win=1
         else
             #Si se tiene implementado la logica para obtener la version actual
@@ -2453,7 +2861,7 @@ function m_setup_repository() {
             if [ ! -z "$l_repo_last_version_pretty" ] && [ $l_repo_is_installed -ne 3 ]; then
                  
                 #m_compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
-                m_compare_version2 "${l_repo_current_version}" "${l_repo_last_version_pretty}"
+                m_compare_version "${l_repo_current_version}" "${l_repo_last_version_pretty}"
                 l_status=$?
 
                 if [ $l_status -eq 0 ]; then
@@ -2604,19 +3012,23 @@ function m_show_menu_core() {
     echo " (q) Salir del menu"
     echo " (a) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes"
     echo " ( ) Actualización personalizado. Ingrese la suma de las opciones que desea configurar:"
-    #echo "    (   0) Actualizar xxx (siempre se realizara esta opción)"
-    echo "     (   1) Actualizar los paquetes existentes del sistema operativo"   
-    echo "     (   2) Actualizar los binarios de los repositorios existentes"
-    echo "     (   4) Instalar/Actualizar los binarios de los repositorios basicos"
-    echo "     (   8) Instalar/Actualizar el editor: \"NeoVim\""
-    echo "     (  16) Instalar/Actualizar la implementación de Kubernates: \"k0s\""
-    echo "     (  32) (Re)Instalar en el servidor fuentes Nerd Fonts desde \"ryanoasis/nerd-fonts\""
-    echo "     (  64) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
-    echo "     ( 128) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""
-    echo "     ( 256) Instalar/Actualizar RTE de \"Go\""
-    echo "     ( 512) Instalar/Actualizar el Build Generator C/C++ \"Kitware/CMake\""
-    echo "     (1024) Instalar/Actualizar el Build Tool C/C++ \"ninja-build/ninja\""
-    echo "     (2048) Instalar/Actualizar el LSP Server de C/C++: \"clangd/clangd\""
+    #echo "    (    0) Actualizar xxx (siempre se realizara esta opción)"
+    echo "     (    1) Actualizar los paquetes existentes del sistema operativo"   
+    echo "     (    2) Actualizar los binarios de los repositorios existentes"
+    echo "     (    4) Instalar/Actualizar los binarios de los repositorios basicos"
+    echo "     (    8) Instalar/Actualizar el editor: \"NeoVim\""
+    echo "     (   16) Instalar/Actualizar la implementación de Kubernates: \"k0s\""
+    echo "     (   32) (Re)Instalar en el servidor fuentes Nerd Fonts desde \"ryanoasis/nerd-fonts\""
+    echo "     (   64) Instalar/Actualizar 'Powershell Core' \"PowerShell/PowerShell\""
+    echo "     (  128) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
+    echo "     (  256) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""
+    echo "     (  512) Instalar/Actualizar RTE de \"Go\""
+    echo "     ( 1024) Instalar/Actualizar el Build Generator C/C++ \"Kitware/CMake\""
+    echo "     ( 2048) Instalar/Actualizar el Build Tool C/C++ \"ninja-build/ninja\""
+    echo "     ( 4096) Instalar/Actualizar el LSP Server de C/C++: \"clangd/clangd\""
+    echo "     ( 8192) Instalar/Actualizar el LSP Server de Rust: \"rust-lang/rust-analyzer\""
+    echo "     (16384) Instalar/Actualizar el RTE GraalVM CE (Java ${g_java_version}): \"graalvm/graalvm-ce-builds\""
+    #echo "     (32768) Instalar/Actualizar el LSP de Java 'JDT LS': \"eclipse/eclipse.jdt.ls\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 

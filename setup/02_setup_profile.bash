@@ -932,6 +932,12 @@ function m_profile_setup() {
            ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config
         fi
 
+        if [ ! -e ~/.config/powershell/Microsoft.PowerShell_profile.ps1 ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+           echo "Creando los enlaces simbolico de ~/.config/powershell/Microsoft.PowerShell_profile.ps1"
+           mkdir -p ~/.config/powershell/
+           ln -sfn ~/.files/terminal/powershell/profile/ubuntu_wsl.ps1 ~/.config/powershell/Microsoft.PowerShell_profile.ps1
+        fi
+
         #if [ ! -e ~/.bashrc ] || [ $l_overwrite_ln_option -eq $l_overwrite_ln_flag ]; then
         echo "Creando los enlaces simbolico de ~/.bashrc"
         ln -snf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc
@@ -948,6 +954,12 @@ function m_profile_setup() {
         if [ ! -e ~/.ssh/config ] || [ $l_overwrite_ln_flag -eq 0 ]; then
            echo "Creando los enlaces simbolico de ~/.ssh/config"
            ln -snf ~/.files/ssh/vm_linux_ssh.conf ~/.ssh/config
+        fi
+
+        if [ ! -e ~/.config/powershell/Microsoft.PowerShell_profile.ps1 ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+           echo "Creando los enlaces simbolico de ~/.config/powershell/Microsoft.PowerShell_profile.ps1"
+           mkdir -p ~/.config/powershell/
+           ln -sfn ~/.files/terminal/powershell/profile/fedora_vm.ps1 ~/.config/powershell/Microsoft.PowerShell_profile.ps1
         fi
 
         #if [ ! -e ~/.bashrc ] || [ $l_overwrite_ln_option -eq $l_overwrite_ln_flag ]; then

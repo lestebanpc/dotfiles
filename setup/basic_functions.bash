@@ -114,7 +114,7 @@ function m_get_linux_type_version() {
 
 #Funciones de utilidad genericas {{{
 
-#Compara 2 versiones cuyo separador es '.'
+#Compara 2 versiones cuyo separador es '.' o '-'
 #Retorna:
 #   0 si es =
 #   1 si es >
@@ -122,8 +122,10 @@ function m_get_linux_type_version() {
 function m_compare_version() {
 
     #1. Argumentos
-    local p_operating_1="$1"
-    local p_operating_2="$2"
+    #local p_operating_1="$1"
+    #local p_operating_2="$2"
+    local p_operating_1="${1//-/.}"
+    local p_operating_2="${2//-/.}"
 
     #2. Si son textos iguales retornar 0
     if [[ "$p_operating_1" == "$p_operating_2" ]]; then
@@ -159,23 +161,6 @@ function m_compare_version() {
     done
 
     return 0
-}
-
-#Compara 2 versiones cuyo separador es '.' o '-'
-#Retorna:
-#   0 si es =
-#   1 si es >
-#   2 si es <
-function m_compare_version2() {
-
-    #1. Argumentos
-    local p_operating_1="${1//-/.}"
-    local p_operating_2="${2//-/.}"
-
-    #2. Remplazar el '-' por el '.'
-    m_compare_version "$p_operating_1" "$p_operating_2"
-    local status=$?
-    return $status
 }
 
 

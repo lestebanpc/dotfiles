@@ -108,13 +108,21 @@ if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
 
+# GraalVM (rutas)
+GRAALVM_HOME=/opt/tools/graalvm
+JAVA_HOME=${GRAALVM_HOME}
+export GRAALVM_HOME JAVA_HOME
+
 # Rutas por defecto: Adicionando rutas de programas especificos
 PATH=$PATH:/opt/tools/neovim/bin
 [ -d "/opt/tools/rh-ocp-cli" ] && PATH=$PATH:/opt/tools/rh-ocp-cli
 [ -d "/opt/tools/cmake" ] && PATH=$PATH:/opt/tools/cmake/bin
-[ -d "/opt/tools/clangd" ] && PATH=$PATH:/opt/tools/clangd/bin
 [ -d "/opt/tools/go/bin" ] && PATH=$PATH:/opt/tools/go/bin
 [ -d ~/go/bin ] && PATH=$PATH:~/go/bin
+[ -d ~/.cargo/bin ] && PATH=$PATH:~/.cargo/bin
+[ -d "${JAVA_HOME}/bin" ] && PATH=$PATH:${JAVA_HOME}/bin
+[ -d "/opt/tools/lsp_servers/rust_analyzer" ] && PATH=$PATH:/opt/tools/lsp_servers/rust_analyzer
+[ -d "/opt/tools/lsp_servers/clangd" ] && PATH=$PATH:/opt/tools/lsp_servers/clangd/bin
 
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
