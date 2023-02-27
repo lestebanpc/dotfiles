@@ -1,13 +1,13 @@
 
 function m_update_repository($p_path) 
 {
-    if(Test-Path $p_path) {
-        Write-Host "Folder \"${p_path}\" not exists"
+    if(!(Test-Path $p_path)) {
+        Write-Host "Folder `"${p_path}`" not exists"
         return 9
     }
 
     Write-Host "-------------------------------------------------------------------------------------------------"
-    Write-Host "- Repository Git para VIM: \"${p_path}\""
+    Write-Host "- Repository Git para VIM: `"${p_path}`""
     Write-Host "-------------------------------------------------------------------------------------------------"
 
     cd $p_path
@@ -23,21 +23,21 @@ function m_update_repository($p_path)
 
     $l_local_branch="$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)"
     $l_remote="$(git config branch.${l_local_branch}.remote)"
-    $l_remote_branch="$(git rev-parse --abbrev-ref --symbolic-full-name @{u})"
+    $l_remote_branch="$(git rev-parse --abbrev-ref --symbolic-full-name `@`{u`})"
 
-    Write-Host "Fetching from remote repository \"${l_remote}\"..."
+    Write-Host "> Fetching from remote repository `"${l_remote}`"..."
     git fetch $l_remote
 
-    Write-Host "Updating local branch \"${l_local_branch}\"..."
-
+    Write-Host "> Updating local branch `"${l_local_branch}`"..."
     git merge-base --is-ancestor ${l_remote_branch} HEAD
     if (! $?) {
-        Write-Host 'Fast-forward not possible. Rebasing...'
-        git rebase --preserve-merges --stat ${l_remote_branch}
+        Write-Host '> Fast-forward not possible. Rebasing...'
+        #git rebase --preserve-merges --stat ${l_remote_branch}
+        git rebase --rebase-merges --stat ${l_remote_branch}
         return 2
     }
 
-    Write-Host 'Fast-forward possible. Merging...'
+    Write-Host '> Fast-forward possible. Merging...'
     git merge --ff-only --stat ${l_remote_branch}
     return 0   
 
@@ -45,11 +45,20 @@ function m_update_repository($p_path)
 
 function m_update_vim_repository()
 {
-    $folders = Get-ChildItem .\vimfiles\pack\ -Attributes Directory+Hidden -ErrorAction SilentlyContinue -Filter ".git" -Recurse | Select-Object "FullName"
+    $folders = Get-ChildItem ~\vimfiles\pack\ -Attributes Directory+Hidden -ErrorAction SilentlyContinue -Filter ".git" -Recurse | Select-Object "FullName"
     foreach ( $folder in $folders ) {
         $repo_path = Split-Path -Parent $folder.FullName
         m_update_repository $repo_path
     }
 
+    #Si se actualizo de paquete de fzf seguir los siguientes pasos en Vim y NeoVim
+    #en fzf descargar el repositorio temporalmente y traer los archivos, comprararlo y actualizar ~/files/vim/plugin/fzf
+    
+    #~\vimfiles\pack\ui\opt\fzf.vim
+    #Restaurar el archivo 
+    #comprar con lo que se tiene en y actualizar el repo 
+
 }
+
+m_update_vim_repository
 
