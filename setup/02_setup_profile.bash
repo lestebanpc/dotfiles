@@ -929,6 +929,7 @@ function m_profile_setup() {
 
         if [ ! -e ~/.ssh/config ] || [ $l_overwrite_ln_flag -eq 0 ]; then
            echo "Creando los enlaces simbolico de ~/.ssh/config"
+           mkdir -p ~/.ssh
            ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config
         fi
 

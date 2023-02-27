@@ -72,29 +72,13 @@ function m_show_final_message() {
         p_install_win_cmds=0
     fi
 
-    case "$p_repo_id" in
-        fzf)
+    #case "$p_repo_id" in
+    #    fzf)
 
-            if [ $p_install_win_cmds -eq 0 ]; then
-                echo "En Windows, debe homologar los plugins de \"FZF\" de VIM y NeoVim para tener soporte a powershell:"
-                echo "   1. Homologar el plugin \"FZF base\" tanto en VIM como NeoVim:"
-                echo '      Ultimo vs Fixed  > vim -d ${env:USERPROFILE}\.files\vim\packages\fzf\plugin\fzf.vim ${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim'
-                echo '      Validar Soft-Link> dir ${env:USERPROFILE}\vimfiles\pack\ui\opt\'
-                echo '                       > MKLINK /D %USERPROFILE%\vimfiles\pack\ui\opt\fzf %USERPROFILE%\.files\vim\packages\fzf'
-                echo '      Validar Soft-Link> dir ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\'
-                echo '                       > MKLINK /D %LOCALAPPDATA%\nvim-data\site\pack\ui\opt\fzf %USERPROFILE%\.files\vim\packages\fzf'
-                echo "   2. Homologar el plugin \"FZF vim\" para VIM:"
-                echo '      Obtener ultimo   > . ${env:USERPROFILE}\.files\setup\03_update_all.ps1'
-                echo '                       > cd ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\'
-                echo '                       > git restore autoload/fzf/vim.vim'
-                echo '      Ultimo ->  Fixed > vim -d ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim'
-                echo '      Fixed  ->  Vim   > cp ${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\vim.vim'
-                echo '      Fixed  ->  NeoVim> cp ${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\packer\opt\fzf.vim\autoload\fzf\vim.vim' 
-            fi
-            ;;
-        *)
-            ;;
-    esac
+    #        ;;
+    #    *)
+    #        ;;
+    #esac
     
     echo "Se ha concluido la configuración de los artefactos del repositorio \"${p_repo_id}\""
 

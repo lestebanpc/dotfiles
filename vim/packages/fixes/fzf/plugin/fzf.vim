@@ -512,7 +512,8 @@ try
     let height = s:calc_size(&lines, dict.down, dict)
     let optstr .= ' --height='.height
   endif
-  let optstr .= s:border_opt(get(dict, 'window', 0))
+  " Respect --border option given in 'options'
+  let optstr = join([s:border_opt(get(dict, 'window', 0)), optstr])
   let prev_default_command = $FZF_DEFAULT_COMMAND
   if len(source_command)
     let $FZF_DEFAULT_COMMAND = source_command
