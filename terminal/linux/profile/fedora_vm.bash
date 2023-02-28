@@ -18,14 +18,31 @@ export GRAALVM_HOME JAVA_HOME
 
 # Rutas por defecto: Adicionando rutas de programas especificos
 PATH=$PATH:/opt/tools/neovim/bin
+
+#RH-OCP - CLI
 [ -d "/opt/tools/rh-ocp-cli" ] && PATH=$PATH:/opt/tools/rh-ocp-cli
+
+#CMake - Sistema de contrucción para C/C++ y otros
 [ -d "/opt/tools/cmake" ] && PATH=$PATH:/opt/tools/cmake/bin
+
+#Go - Tools estandar para desarrollo
 [ -d "/opt/tools/go/bin" ] && PATH=$PATH:/opt/tools/go/bin
+
+#Go - Tools adicionales
 [ -d ~/go/bin ] && PATH=$PATH:~/go/bin
+
+#Rust - Tools para desarrollo
 [ -d ~/.cargo/bin ] && PATH=$PATH:~/.cargo/bin
+
+#GraalVM - RTE y Herramientas de desarrollo para Java y otros
 [ -d "${JAVA_HOME}/bin" ] && PATH=$PATH:${JAVA_HOME}/bin
-[ -d "/opt/tools/lsp_servers/rust_analyzer" ] && PATH=$PATH:/opt/tools/lsp_servers/rust_analyzer
+
+#Rust - LSP server
+#[ -d "/opt/tools/lsp_servers/rust_analyzer" ] && PATH=$PATH:/opt/tools/lsp_servers/rust_analyzer
+
+#LLVM/ClangD - LSP server
 [ -d "/opt/tools/lsp_servers/clangd" ] && PATH=$PATH:/opt/tools/lsp_servers/clangd/bin
+
 
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH

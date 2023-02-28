@@ -227,7 +227,7 @@ function m_neovim_setup() {
 
         if [ ! -e ~/.config/nvim/coc-settings.json ] || [ $l_overwrite_ln_flag -eq 0 ]; then
             echo "IDE con CoC> Creando los enlaces simbolico del archivo de Configuración de CoC \"~/.config/nvim/coc-settings.json\""
-            ln -sfn ~/.files/nvim/ide_coc/coc-settings.json ~/.config/nvim/coc-settings.json
+            ln -sfn ~/.files/nvim/ide_coc/coc-settings_lnx.json ~/.config/nvim/coc-settings.json
         fi
 
         if [ ! -e ~/.config/nvim/init.vim ] || [ $l_overwrite_ln_flag -eq 0 ]; then
@@ -549,7 +549,7 @@ function m_vim_setup() {
 
         if [ ! -e ~/.vim/coc-settings.json ] || [ $l_overwrite_ln_flag -eq 0 ]; then
             echo "IDE (CoC)> Creando los enlaces simbolico del archivo de Configuración de CoC \"~/.vim/coc-settings.json\""
-            ln -sfn ~/.files/vim/ide_coc/coc-settings.json ~/.vim/coc-settings.json
+            ln -sfn ~/.files/vim/ide_coc/coc-settings_lnx.json ~/.vim/coc-settings.json
         fi
         
         if [ ! -e ~/.vim/ftplugin ] || [ $l_overwrite_ln_flag -eq 0 ]; then

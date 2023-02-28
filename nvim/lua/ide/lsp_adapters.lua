@@ -41,7 +41,7 @@ lsp_config.omnisharp.setup({
 --LSP Adapters> GoLang (Adaptador para GoPls de Go)
 --------------------------------------------------------------------------------------------------
 
-lsp_config.gopls.setup {
+lsp_config.gopls.setup({
     --Ajuste las opciones del comando 'gopls' segun lo que se requiera
     cmd = {"gopls", "serve"},
     filetypes = {"go", "gomod"},
@@ -54,7 +54,7 @@ lsp_config.gopls.setup {
             staticcheck = true,
         },
     },
-}
+})
 
 --Autocomandos: 
 --
@@ -66,5 +66,19 @@ lsp_config.gopls.setup {
 --        vim.lsp.buf.code_action({ context = { only = { 'source.organizeImports' } }, apply = true })
 --    end
 --})
+
+
+--------------------------------------------------------------------------------------------------
+--LSP Adapters> CLang (Adaptador para Clang de C++)
+--------------------------------------------------------------------------------------------------
+
+lsp_config.clangd.setup({
+    cmd = {"clangd"},
+    --filetypes = {"c", "cpp", "objc", "objcpp", "cuda", "proto"},
+    filetypes = {"c", "cpp", "objc", "objcpp"},
+    --root_dir = lsp_config_util.root_pattern('.clangd', '.clang-tidy','.clang-format', 'compile_commands.json', 'compile_flags.txt', 'configure.ac', '.git'),
+    root_dir = lsp_config_util.root_pattern('.clangd', '.clang-tidy','.clang-format', '.git'),
+})
+
 
 
