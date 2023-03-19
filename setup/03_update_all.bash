@@ -173,7 +173,7 @@ function m_update_all() {
             return 22;
             ;;
     esac
-
+    echo ""
 
     #5 Actualizar paquetes de VIM
     l_opcion=1
@@ -182,7 +182,7 @@ function m_update_all() {
         m_update_vim_package
     fi            
 
-    #6 Actualizar los comandos basicos (solo apartir de opcion 2, 4, 8, ... o una conbinación de estos)
+    #6 Actualizar los repositorios indicados por las opciones indicadas (solo si la opcion ingresada es >= 2)
     #l_opcion=1
     #l_flag=$(( $p_opciones & $l_opcion ))
     if [ $p_opciones -ge 2 ]; then
@@ -206,14 +206,23 @@ function m_show_menu_core() {
     echo " (a) Actualizar los artefactos existentes: paquetes del SO y paquetes VIM"
     echo " (b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y paquetes VIM"
     echo " ( ) Actualización personalizado. Ingrese la suma de las opciones que desea configurar:"
-    echo "     (  0) Actualizar los paquetes del SO existentes (siempre se realizara esta opción)"
-    echo "     (  1) Actualizar los paquetes VIM existentes"
-    echo "     (  2) Actualizar los binarios de los repositorios existentes"
-    echo "     (  4) Instalar/Actualizar los binarios de los repositorios basicos"
-    echo "     (  8) Instalar/Actualizar el binario (del repositorio opcional): \"NeoVim\""
-    echo "     ( 16) Instalar/Actualizar el binario (del repositorio opcional): \"k0s\""
-    echo "     ( 32) Instalar/Actualizar el binario (del repositorio opcional): \"OmniSharp/omnisharp-roslyn\""
-    echo "     ( 64) Instalar/Actualizar el binario (del repositorio opcional): \"Samsung/netcoredbg\""
+    echo "     (    0) Actualizar los paquetes del SO existentes (siempre se realizara esta opción)"
+    echo "     (    1) Actualizar los paquetes VIM existentes"
+    echo "     (    2) Actualizar los binarios de los repositorios existentes"
+    echo "     (    4) Instalar/Actualizar los binarios de los repositorios basicos"
+    echo "     (    8) Instalar/Actualizar el editor: \"NeoVim\""
+    echo "     (   16) Instalar/Actualizar la implementación de Kubernates: \"k0s\""
+    echo "     (   32) (Re)Instalar en el servidor fuentes Nerd Fonts desde \"ryanoasis/nerd-fonts\""
+    echo "     (   64) Instalar/Actualizar 'Powershell Core' \"PowerShell/PowerShell\""
+    echo "     (  128) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
+    echo "     (  256) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""
+    echo "     (  512) Instalar/Actualizar RTE de \"Go\""
+    echo "     ( 1024) Instalar/Actualizar el Build Generator C/C++ \"Kitware/CMake\""
+    echo "     ( 2048) Instalar/Actualizar el Build Tool C/C++ \"ninja-build/ninja\""
+    echo "     ( 4096) Instalar/Actualizar el LSP Server de C/C++: \"clangd/clangd\""
+    echo "     ( 8192) Instalar/Actualizar el LSP Server de Rust: \"rust-lang/rust-analyzer\""
+    echo "     (16384) Instalar/Actualizar el RTE GraalVM CE: \"graalvm/graalvm-ce-builds\""
+    echo "     (32768) Instalar/Actualizar el LSP de Java 'JDT LS': \"eclipse/eclipse.jdt.ls\""
     echo "-------------------------------------------------------------------------------------------------"
     printf "Opción : "
 

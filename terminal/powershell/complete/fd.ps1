@@ -62,6 +62,8 @@ Register-ArgumentCompleter -Native -CommandName 'fd' -ScriptBlock {
             [CompletionResult]::new('--ignore', 'ignore', [CompletionResultType]::ParameterName, 'Overrides --no-ignore')
             [CompletionResult]::new('--no-ignore-vcs', 'no-ignore-vcs', [CompletionResultType]::ParameterName, 'Do not respect .gitignore files')
             [CompletionResult]::new('--ignore-vcs', 'ignore-vcs', [CompletionResultType]::ParameterName, 'Overrides --no-ignore-vcs')
+            [CompletionResult]::new('--no-require-git', 'no-require-git', [CompletionResultType]::ParameterName, 'Do not require a git repository to respect gitignores. By default, fd will only respect global gitignore rules, .gitignore rules, and local exclude rules if fd detects that you are searching inside a git repository. This flag allows you to relax this restriction such that fd will respect all git related ignore rules regardless of whether you''re searching in a git repository or not')
+            [CompletionResult]::new('--require-git', 'require-git', [CompletionResultType]::ParameterName, 'Overrides --no-require-git')
             [CompletionResult]::new('--no-ignore-parent', 'no-ignore-parent', [CompletionResultType]::ParameterName, 'Do not respect .(git|fd)ignore files in parent directories')
             [CompletionResult]::new('--no-global-ignore-file', 'no-global-ignore-file', [CompletionResultType]::ParameterName, 'Do not respect the global ignore file')
             [CompletionResult]::new('-u', 'u', [CompletionResultType]::ParameterName, 'Unrestricted search, alias for ''--no-ignore --hidden''')
@@ -94,10 +96,10 @@ Register-ArgumentCompleter -Native -CommandName 'fd' -ScriptBlock {
             [CompletionResult]::new('--show-errors', 'show-errors', [CompletionResultType]::ParameterName, 'Show filesystem errors')
             [CompletionResult]::new('--strip-cwd-prefix', 'strip-cwd-prefix', [CompletionResultType]::ParameterName, 'By default, relative paths are prefixed with ''./'' when -x/--exec, -X/--exec-batch, or -0/--print0 are given, to reduce the risk of a path starting with ''-'' being treated as a command line option. Use this flag to disable this behaviour')
             [CompletionResult]::new('--one-file-system', 'one-file-system', [CompletionResultType]::ParameterName, 'By default, fd will traverse the file system tree as far as other options dictate. With this flag, fd ensures that it does not descend into a different file system than the one it started in. Comparable to the -mount or -xdev filters of find(1)')
-            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help information (use `--help` for more detail)')
-            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help information (use `--help` for more detail)')
-            [CompletionResult]::new('-V', 'V', [CompletionResultType]::ParameterName, 'Print version information')
-            [CompletionResult]::new('--version', 'version', [CompletionResultType]::ParameterName, 'Print version information')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
+            [CompletionResult]::new('-V', 'V', [CompletionResultType]::ParameterName, 'Print version')
+            [CompletionResult]::new('--version', 'version', [CompletionResultType]::ParameterName, 'Print version')
             break
         }
     })

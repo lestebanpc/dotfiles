@@ -140,6 +140,10 @@ PATH=$PATH:/opt/tools/neovim/bin
 #LLVM/ClangD - LSP server
 [ -d "/opt/tools/lsp_servers/clangd" ] && PATH=$PATH:/opt/tools/lsp_servers/clangd/bin
 
+#Ruta del builder Apache Maven
+[ -d "/opt/tools/maven/bin" ] && PATH=/opt/tools/maven/bin:$PATH
+
+
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
 
