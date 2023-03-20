@@ -81,7 +81,7 @@ export NVM_DIR="/opt/tools/nvm"
 #[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 #Funciones basicas
-source ~/.files/terminal/linux/functions/func_basic.bash
+source ~/.files/terminal/linux/functions/func_custom.bash
 
 
 

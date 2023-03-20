@@ -22,7 +22,7 @@ $env:FZF_DEFAULT_OPTS = "--height=80% --layout=reverse --info=inline --border --
 #Funciones basicas
 #------------------------------------------------------------------------------------------------
 
-. ~/.files/terminal/powershell/functions/func_basic_linux.ps1
+. ~/.files/terminal/powershell/functions/func_custom_lnx.ps1
 
 
 

@@ -3,7 +3,7 @@
 #Inicialización Global {{{
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ~/.files/setup/basic_functions.bash
+. ~/.files/terminal/linux/functions/func_utility.bash
 
 #Variable global pero solo se usar localmente en las funciones
 t_tmp=""
