@@ -29,24 +29,98 @@ fi
 
 #}}}
 
+function m_after_update_repository() {
+
+    #1. Argumentos
+    local p_repo_path="$1"
+    local p_repo_type="$2"
+    local p_repo_name="$3"
+
+    #Los plugins VIM que no tiene documentación, no requieren indexar
+    if [ "$p_repo_name" = "molokai" ]; then return 0; fi
+
+    #Indexar la documentación de plugins
+    echo "Indexar la documentación del plugin \"${p_repo_path}/doc\""
+    vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    
+    #case "$p_repo_name" in
+
+    #    vim-visual-multi)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    vim-surround)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+
+
+    #    vimspector)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    omnisharp-vim)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    ultisnips)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    ale)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    coc.nvim)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    vim-snippets)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+
+
+    #    fzf)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    fzf.vim)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    vim-devicons)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    vim-tmux-navigator)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    vim-airline)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    vim-airline-themes)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+    #    nerdtree)
+    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    #        ;;
+
+    #esac
+    
+    return 0
+
+
+}
 
 function m_update_repository() {
 
     #1. Argumentos
-    local l_path="$1"
+    local p_repo_path="$1"
+    local p_repo_type="$2"
+    local p_repo_name="$3"
 
     #Validar si existe directorio
-    if [ ! -d $l_path ]; then
-        echo "Folder \"${l_path}\" not exists"
+    if [ ! -d $p_repo_path ]; then
+        echo "Folder \"${p_repo_path}\" not exists"
         return 9
     else
         printf '\n'
         echo "-------------------------------------------------------------------------------------------------"
-        echo "- Repository Git para VIM: \"${l_path}\""
+        echo "- Repository Git para VIM: \"${p_repo_path}\""
         echo "-------------------------------------------------------------------------------------------------"
     fi
 
-    cd $l_path
+    cd $p_repo_path
 
     #Obtener el directorio .git pero no imprimir su valor ni los errores. Si no es un repositorio valido salir     
     if ! git rev-parse --git-dir > /dev/null 2>&1; then
@@ -70,6 +144,9 @@ function m_update_repository() {
         if git merge-base --is-ancestor HEAD ${l_remote_branch}; then
             echo 'Fast-forward possible. Merging...'
             git merge --ff-only --stat ${l_remote_branch}
+
+            #Realizando algunas operaciones adicionales
+            m_after_update_repository "$p_repo_path" "$p_repo_type" "$p_repo_name"
             return 0
         else
             echo 'Fast-forward not possible. Rebasing...'
@@ -92,11 +169,15 @@ function m_update_vim_package() {
 
     cd $l_base_path
     local l_folder
+    local l_repo_type
+    local l_repo_name
     for l_folder  in $(find . -mindepth 4 -maxdepth 4 -type d -name .git); do
         l_folder="${l_folder%/.git}"
         l_folder="${l_folder#./}"
+        l_repo_name="${l_folder##*/}"
+        l_repo_type="${l_folder%%/*}"
         l_folder="${l_base_path}/${l_folder}"
-        m_update_repository "$l_folder"
+        m_update_repository "$l_folder" "$l_repo_name" "$l_repo_type"
     done
     return 0
 
@@ -212,7 +293,7 @@ function m_show_menu_core() {
     echo "     (    4) Instalar/Actualizar los binarios de los repositorios basicos"
     echo "     (    8) Instalar/Actualizar el editor: \"NeoVim\""
     echo "     (   16) Instalar/Actualizar la implementación de Kubernates: \"k0s\""
-    echo "     (   32) (Re)Instalar en el servidor fuentes Nerd Fonts desde \"ryanoasis/nerd-fonts\""
+    echo "     (   32) Instalar/Actualizar en el server fuentes Nerd Fonts: \"ryanoasis/nerd-fonts\""
     echo "     (   64) Instalar/Actualizar 'Powershell Core' \"PowerShell/PowerShell\""
     echo "     (  128) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
     echo "     (  256) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""

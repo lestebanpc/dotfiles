@@ -360,7 +360,7 @@ function m_vim_config_plugins() {
         p_opcion=$1
     fi
 
-    #Instalar los plugins
+    #2. Crear las carpetas de basicas
     echo "Instalar los paquetes usados por VIM"
     mkdir -p ~/.vim/pack/themes/start
     mkdir -p ~/.vim/pack/themes/opt
@@ -372,13 +372,15 @@ function m_vim_config_plugins() {
         mkdir -p ~/.vim/pack/ide/start
         mkdir -p ~/.vim/pack/ide/opt
     fi
-    
+   
+    #3. Instalar el gestor de paquetes 
     if [ ! -f ~/.vim/autoload/plug.vim ]; then
         echo "Instalar el gestor de paquetes Vim-Plug"
         mkdir -p ~/.vim/autoload
         curl -fLo ~/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     fi
     
+    #4. Instalar el plugins que se instalan manualmente
     local l_base_path
     local l_repo_git
     local l_repo_name
@@ -386,11 +388,11 @@ function m_vim_config_plugins() {
     local l_repo_url
     for l_repo_git in "${!gA_repositories[@]}"; do
 
-        #Configurar el repositorio
+        #4.1 Configurar el repositorio
         l_repo_type=${gA_repositories[$l_repo_git]}
         l_repo_name=${l_repo_git#*/}
 
-        #Obtener la ruta base donde se clorara el paquete
+        #4.2 Obtener la ruta base donde se clorara el paquete
         l_base_path=""
         case "$l_repo_type" in 
             1)
@@ -420,14 +422,14 @@ function m_vim_config_plugins() {
 
         #echo "${l_base_path}/${l_repo_name}/.git"
 
-        #Validar si el paquete ya esta instalado
+        #4.3 Validar si el paquete ya esta instalado
         if [ -d ${l_base_path}/${l_repo_name}/.git ]; then
              #echo "...................................................."
              printf 'Paquete VIM (%s) "%s": Ya esta instalado\n' "${l_repo_type}" "${l_repo_git}"
              continue
         fi
 
-        #Instalando el paquete
+        #4.5 Instalando el paquete
         cd ${l_base_path}
         printf '\n'
         echo "...................................................."
@@ -447,8 +449,17 @@ function m_vim_config_plugins() {
                 ;;
         esac
 
-        #TODO Actualizar la documentación de VIM
-        #vim -c 'helptags ~/.vim/pack/coc/start/doc | q'
+        #4.6 Actualizar la documentación de VIM
+
+        #Los plugins VIM que no tiene documentación, no requieren indexar
+        if [ "$l_repo_name" = "molokai" ]; then
+            printf '\n'
+            continue
+        fi
+        
+        #Indexar la documentación de plugins
+        echo "Indexar la documentación del plugin \"${l_base_path}/${l_repo_name}/doc\""
+        vim -u NONE -c "helptags ${l_base_path}/${l_repo_name}/doc" -c q    
 
         printf '\n'
 

@@ -373,9 +373,23 @@ function m_get_repo_current_version() {
             ;;
 
         nerd-fonts)
-            #Siempre se actualizara la fuentes, por ahora no se puede determinar la version instalada
-            echo "$g_version_none"
-            return 3
+            if [ $p_install_win_cmds -eq 0 ]; then
+                if [ -f "${g_path_programs_win}/nerd-fonts.info" ]; then
+                    l_tmp=$(cat "${g_path_programs_win}/nerd-fonts.info" | head -n 1)
+                else
+                    #Siempre se actualizara la fuentes, por ahora no se puede determinar la version instalada
+                    echo "$g_version_none"
+                    return 3
+                fi
+            else
+                if [ -f "${g_path_programs_lnx}/nerd-fonts.info" ]; then
+                    l_tmp=$(cat "${g_path_programs_lnx}/nerd-fonts.info" | head -n 1)
+                else
+                    #Siempre se actualizara la fuentes, por ahora no se puede determinar la version instalada
+                    echo "$g_version_none"
+                    return 3
+                fi
+            fi
             ;;
 
         go)
@@ -807,8 +821,8 @@ function m_load_artifacts() {
             fi
             ;;
         nerd-fonts)
-            pna_artifact_names=("JetBrainsMono.zip" "DroidSansMono.zip" "InconsolataLGC.zip" "UbuntuMono.zip" "3270.zip")
-            pna_artifact_types=(3 3 3 3 3)
+            pna_artifact_names=("JetBrainsMono.zip" "CascadiaCode.zip" "DroidSansMono.zip" "InconsolataLGC.zip" "UbuntuMono.zip" "3270.zip")
+            pna_artifact_types=(3 3 3 3 3 3)
             ;;
 
         go)
@@ -1038,7 +1052,7 @@ function m_get_repo_latest_version() {
             #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
             #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.tag_name')
             
-            if [[ "$p_repo_id" == "netcoredbg" ]]; then
+            if [ "$p_repo_id" = "netcoredbg" ]; then
                 l_aux="${l_repo_last_version//-/.}"
             else
                 l_aux="$l_repo_last_version"
@@ -2003,7 +2017,7 @@ function m_copy_artifact_files() {
 
                     #Copiar y/o sobrescribir archivos existente
                     find "${l_path_temp}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
-                         ! \( -name '*Windows Compatible.otf' -o -name '*Windows Compatible.ttf' \) \
+                         ! \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
                          -exec cp '{}' ${l_path_bin} \;
                     chmod g+r,o+r ${l_path_bin}/*
 
@@ -2022,7 +2036,7 @@ function m_copy_artifact_files() {
 
                     #Copiar y/o sobrescribir archivos existente
                     sudo find "${l_path_temp}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
-                         ! \( -name '*Windows Compatible.otf' -o -name '*Windows Compatible.ttf' \) \
+                         ! \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
                          -exec cp '{}' ${l_path_bin} \;
                     sudo chmod g+r,o+r ${l_path_bin}/*
 
@@ -2031,6 +2045,8 @@ function m_copy_artifact_files() {
                         sudo fc-cache -v
                     fi
 
+                    #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                    echo "$p_repo_last_version_pretty" > "${g_path_programs_lnx}/nerd-fonts.info" 
                 fi
                     
                 #Si es WSL2, copiar los archivos para instalarlo manualmente.
@@ -2042,8 +2058,14 @@ function m_copy_artifact_files() {
                     fi
 
                     find "${l_path_temp}" -maxdepth 1 -mindepth 1 \
-                         \( -name '*Windows Compatible.otf' -o -name '*Windows Compatible.ttf' \) \
+                         \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
                          -exec cp '{}' ${l_path_bin} \;
+                    
+                    #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                    echo "$p_repo_last_version_pretty" > "${g_path_programs_lnx}/nerd-fonts.info" 
+
+                    #Notas
+                    echo "Debera instalar (copiar) manualmente los archivos de '${l_path_bin}' en 'C:/Windows/Fonts'"
                 fi
 
             fi
@@ -3397,7 +3419,7 @@ function m_show_menu_core() {
     echo "     (    4) Instalar/Actualizar los binarios de los repositorios basicos"
     echo "     (    8) Instalar/Actualizar el editor: \"NeoVim\""
     echo "     (   16) Instalar/Actualizar la implementación de Kubernates: \"k0s\""
-    echo "     (   32) (Re)Instalar en el servidor fuentes Nerd Fonts desde \"ryanoasis/nerd-fonts\""
+    echo "     (   32) Instalar/Actualizar en el server fuentes Nerd Fonts: \"ryanoasis/nerd-fonts\""
     echo "     (   64) Instalar/Actualizar 'Powershell Core' \"PowerShell/PowerShell\""
     echo "     (  128) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
     echo "     (  256) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""
