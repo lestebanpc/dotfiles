@@ -2247,34 +2247,33 @@ function m_copy_artifact_files() {
                 chmod u+x "${l_path_temp}/rust-analyzer"
                 
                 #1. Comparando la version instalada con la version descargada
-                #${l_path_temp}/rust-analyzer --version
-                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
-                l_status=$?
+                #l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                #l_status=$?
 
-                if [ $l_status -ne 0 ]; then
-                    echo "Error al obtener la versión actual (Status = ${l_status})"
-                    l_flag_install=1
-                else
+                #if [ $l_status -ne 0 ]; then
+                #    echo "Error al obtener la versión actual (Status = ${l_status})"
+                #    l_flag_install=1
+                #else
 
-                    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
-                        "$l_repo_id" "$l_repo_download_version"
-                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
-                    l_status=$?
+                #    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
+                #        "$l_repo_id" "$l_repo_download_version"
+                #    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
+                #    l_status=$?
 
-                    if [ $l_status -eq 0 ]; then
+                #    if [ $l_status -eq 0 ]; then
 
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (= "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
+                #        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (= "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
+                #        l_flag_install=1
 
-                    elif [ $l_status -eq 1 ]; then
+                #    elif [ $l_status -eq 1 ]; then
 
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (> "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
+                #        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (> "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
+                #        l_flag_install=1
 
-                    else
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Se actualizará a la versión "%s"\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                    fi
-                fi
+                #    else
+                #        printf 'Repositorio "%s[%s]" (Versión Actual): Se actualizará a la versión "%s"\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
+                #    fi
+                #fi
 
                 #2. Instalación
                 if [ $l_flag_install -eq 0 ]; then
@@ -2293,34 +2292,33 @@ function m_copy_artifact_files() {
             else
 
                 #1. Comparando la version instalada con la version descargada
-                #chmod +x "${l_path_temp}/rust-analyzer.exe"
                 l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
                 l_status=$?
 
-                if [ $l_status -ne 0 ]; then
-                    echo "Error al obtener la versión actual (Status = ${l_status})"
-                    l_flag_install=1
-                else
+                #if [ $l_status -ne 0 ]; then
+                #    echo "Error al obtener la versión actual (Status = ${l_status})"
+                #    l_flag_install=1
+                #else
 
-                    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
-                        "$l_repo_id" "$l_repo_download_version"
-                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
-                    l_status=$?
+                #    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
+                #        "$l_repo_id" "$l_repo_download_version"
+                #    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
+                #    l_status=$?
 
-                    if [ $l_status -eq 0 ]; then
+                #    if [ $l_status -eq 0 ]; then
 
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (= "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
+                #        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (= "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
+                #        l_flag_install=1
 
-                    elif [ $l_status -eq 1 ]; then
+                #    elif [ $l_status -eq 1 ]; then
 
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (> "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
+                #        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (> "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
+                #        l_flag_install=1
 
-                    else
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Se actualizará a la versión "%s"\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                    fi
-                fi
+                #    else
+                #        printf 'Repositorio "%s[%s]" (Versión Actual): Se actualizará a la versión "%s"\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
+                #    fi
+                #fi
 
                 #2. Instalación
                 if [ $l_flag_install -eq 0 ]; then

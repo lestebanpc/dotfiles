@@ -171,14 +171,20 @@ m_list_objects() {
 #  3 > n de la opcion '--tail=n' (mostrar las ultimas n lineas mostrados de los logs).
 #      Si es <=0, no se especifica
 #  4 > Nombre del pod
-#  . > Namespace (si se especifica inicia con "-n=")
+#  . > Namespace  (si se especifica inicia con "-n=")
 #  . > Contenedor (si se especifica inicia con "-c=")
-#
+#  . > Ruta de los archivo de datos (si se ingresa se debe eliminarlo)
 m_show_log() {
 
     #1. Calcular los argumentos del comando y mostrar el mensaje de bienvenida
-    printf 'Log of "\x1b[33m%s\x1b[0m"' "$4"
+    local l_color_1="\x1b[33m"
+    local l_color_2="\x1b[95m"
+    #local l_color_opaque="\x1b[90m"
+    local l_color_reset="\x1b[0m"
+
+    printf 'Pod       : "%b%s%b"\n' "$l_color_1" "$4" "$l_color_reset"
     local l_options="$4"
+    local l_data_file
 
     #Follow el log
     if [ $1 -eq 0 ]; then
@@ -199,30 +205,43 @@ m_show_log() {
     if [ ! -z "$5" ]; then
 
         if [[ "$5" == -n=* ]]; then
-            printf ' (Namespace: "\x1b[95m%s\x1b[0m")' "${5#-n=}"
+            printf 'Namespace : "%b%s%b"\n' "$l_color_2" "${5#-n=}" "$l_color_reset"
             l_options="${5} ${l_options}"
 
             if [ ! -z "$6" ] && [[ "$6" == -c=* ]]; then
-                printf ' (Container: "\x1b[95m%s\x1b[0m")' "${6#-c=}"
+                printf 'Container : "%b%s%b"\n' "$l_color_2" "${6#-c=}" "$l_color_reset"
                 l_options="${6} ${l_options}"
+                if [ ! -z "$7" ]; then
+                    l_data_file="$7"
+                fi
             fi
 
         elif [[ "$5" == -c=* ]]; then
-            printf ' (Container: "\x1b[95m%s\x1b[0m")' "$5"
+            printf 'Container : "%b%s%b"\n' "$l_color_2" "$5" "$l_color_reset"
             l_options="${5} ${l_options}"
+            if [ ! -z "$6" ]; then
+                l_data_file="$6"
+            fi
         fi
     fi
 
-    printf '\n\n'
+    printf 'Commnad   : "%bkubectl logs %s%b"\n' "$l_color_2" "${l_options}" "$l_color_reset"
+    printf '\n'
 
     #2. Ejecutar el comando
-    oc logs ${l_options}
+    kubectl logs ${l_options}
+
+    #3. Limpiar la data temporal (solo si se pasa este valor)
+    if [ ! -z "$l_data_file" ]; then
+        rm -f $l_data_file
+    fi
+
     return 0
 
 }
 
 #Parametros (argumentos y opciones):
-#  1 > La ruta del archivo donde obtiene la data
+#  1 > La ruta del archivo de datos
 #  2 > El nombre deployment
 #  3 > El nombre namespace
 m_show_object_yaml() {
@@ -244,7 +263,7 @@ m_show_object_yaml() {
 }
 
 #Parametros (argumentos y opciones):
-#  1 > La ruta del archivo donde obtiene la data
+#  1 > La ruta del archivo de datos
 #  2 > El nombre deployment
 #  3 > El nombre namespace
 #  4 > Las etiquetas para busqueda de pods
@@ -367,7 +386,7 @@ m_show_deploy_info() {
 
 
 #Parametros (argumentos y opciones):
-#  1 > La ruta del archivo donde obtiene la data
+#  1 > La ruta del archivo de datos
 #  2 > El nombre del pod
 #  3 > El nombre namespace
 #  4 > El nonbre del contenedor 
@@ -382,11 +401,16 @@ m_show_container_info() {
         return 1
     fi
 
+    local l_color_title="\x1b[32m"
+    local l_color_subtitle="\x1b[36m"
+    local l_color_opaque="\x1b[90m"
+    local l_color_reset="\x1b[0m"
+
     #1. Información especifica del contenedor
-    printf 'Container  : %s\n' "$4"
-    printf 'Pod        : %s\n' "$2"
-    printf 'Namespace  : %s\n' "$3"
-    printf 'Containers Log    : oc logs pod/%s -n %s -c %s --tail=500 -f\n' "$2" "$3" "$4"
+    printf '%bContainer  :%b %s\n' "$l_color_subtitle" "$l_color_reset" "$4"
+    printf '%bPod        :%b %s\n' "$l_color_subtitle" "$l_color_reset" "$2"
+    printf '%bNamespace  :%b %s\n' "$l_color_subtitle" "$l_color_reset" "$3"
+    #printf '%bContainers Log    :%b oc logs pod/%s -n %s -c %s --tail=500 -f\n' "$l_color_subtitle" "$l_color_reset" "$2" "$3" "$4"
 
     local l_data_subobject_json=""
     l_jq_query='{ spec: ( .spec.containers[] | select(.name == $objName)), status: (.status.containerStatuses[]? | select(.name == $objName))}'
@@ -397,273 +421,348 @@ m_show_container_info() {
         return 2
     fi
 
+    printf '%bInformación adicional:%b\n' "$l_color_subtitle" "$l_color_reset"
+    l_jq_query='{ Image: .spec.image, ImageID: .status.imageID, ContainerID: .status.containerID, Ready: .status.ready, Started: .status.started, RestartCount: .status.restartCount, Command: ((.spec.command//[]) | join(" ")), Arguments: ((.spec.args//[]) | join(" ")), ImagePullPolicy: .spec.imagePullPolicy } | to_entries[] | "\t\(.key)\t: \(.value)"'
+    echo "$l_data_subobject_json" | jq -r "$l_jq_query"
 
-    printf '\nVariables  :\n'
+
+    printf '\n%bVariables:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[.spec.env[]? | { VARIABLE: .name, TYPE: (if .value? != null then "VALUE" elif .valueFrom?.fieldRef != null then "FROM-FIELDREF" elif .valueFrom?.secretKeyRef != null then "FROM-SECRET-REF" else "UNKNOWN" end), VALUE: (if .value? != null then .value? elif .valueFrom?.fieldRef != null then .valueFrom?.fieldRef.fieldPath elif .valueFrom?.secretKeyRef != null then "\(.valueFrom?.secretKeyRef.key) [SecretName: \(.valueFrom?.secretKeyRef.name)]" else "..." end) }]'
     
     l_data=$(echo "$l_data_subobject_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
     
-    printf '\nVolumenes montados:\n'
-    l_jq_query='[.spec.volumeMounts[]? | { NAME: .name, MOUNT_PATH: .mountPath, READONLY: .readOnly? }]'
-    
-    l_data=$(echo "$l_data_subobject_json" | jq "$l_jq_query")
-    if [ $? -eq 0 ]; then
-        if [ "$l_data" = "[]" ]; then
-            echo "No data found"
-        else
-            echo "$l_data" | jtbl -n
-        fi
-    else
-        echo "Error in getting data"
-    fi
-
-
-    
-    printf '\nPuertos:\n'
+    printf '\n%bPuertos:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[.spec.ports[]? | { NAME: .name, "PORT-HOST": .hostPort, "PORT-CONTAINER": .containerPort, "PROTOCOL": .protocol }]'
     
     l_data=$(echo "$l_data_subobject_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
 
-    printf '\nResources:\n'
-    l_jq_query='[.spec.resources | ({ TYPE: "Requests", CPU: .requests?.cpu, MEMORY: .requests?.memory }, { TYPE: "Limits", CPU: .limits?.cpu, MEMORY: .limits?.memory })]'
+    printf '\n%bVolumenes montados:%b\n' "$l_color_subtitle" "$l_color_reset"
+    l_jq_query='[.spec.volumeMounts[]? | { NAME: .name, MOUNT_PATH: .mountPath, READONLY: .readOnly? }]'
     
     l_data=$(echo "$l_data_subobject_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
 
-    printf '\nInformación adicional del contenedor:\n'
-    l_jq_query='{ Image: .spec.image, ImageID: .status.imageID, ContainerID: .status.containerID, Ready: .status.ready, Started: .status.started, RestartCount: .status.restartCount, Command: (if .spec.command == null then null else (.spec.command | join(" ")) end), Arguments: (if .spec.command == null then null else ( .spec.args | join(" ")) end), ImagePullPolicy: .spec.imagePullPolicy } | to_entries[] | "\t\(.key)\t: \(.value)"'
-    echo "$l_data_subobject_json" | jq -r "$l_jq_query"
+    
+    printf '\n%bResources:%b\n' "$l_color_subtitle" "$l_color_reset"
+    l_jq_query='[.spec.resources? | ({ TYPE: "Requests", CPU: .requests?.cpu, MEMORY: .requests?.memory }, { TYPE: "Limits", CPU: .limits?.cpu, MEMORY: .limits?.memory })]'
+    
+    l_data=$(echo "$l_data_subobject_json" | jq "$l_jq_query")
+    if [ $? -eq 0 ]; then
+        if [ "$l_data" = "[]" ]; then
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
+        else
+            echo "$l_data" | jtbl -n
+        fi
+    else
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
+    fi
 
 
-    printf '\nStatus:\n'
+    printf '\n%bStatus:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[.status | .containerID as $id | (((.state? | to_entries[]) + {type: "Current"}), ((.lastState? | to_entries[]) + { type: "Previous"})) | { POSITION: .type, TYPE: .key, "STARTED-AT": .value?.startedAt, "FINISHED-AT": .value?.finishedAt, "CONTAINER-ID": (if .type == "Current" then $id else .value?.containerID end), "REASON": .value?.reason, "EXITCODE": .value?.exitCode, "MESSAGE": .value?.message }]'  
 
     l_data=$(echo "$l_data_subobject_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
     
 
     #2. Informacion general del Pod
-    printf '\n\n########################################################################################\n'
-    printf 'ADDITIONAL INFO ABOUT POD:\n'
-    printf '########################################################################################\n'
+    printf '\n\n%b########################################################################################\n' "$l_color_opaque" 
+    printf '%bADDITIONAL INFO ABOUT POD%b\n' "$l_color_title" "$l_color_opaque"
+    printf '########################################################################################%b\n' "$l_color_reset"
 
-    printf '\nInformacion general de Pod:\n'
+    printf '\n%bInformacion general de Pod:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='{ UID: .metadata.uid, Phase: .status.phase, PodIP: .status.podIP, NodeName: .spec.nodeName, QoSClass: .status.qosClass, StartTime: .status.startTime, DnsPolicy: .spec.dnsPolicy, RestartPolicy: .spec.restartPolicy, SchedulerName: .spec.schedulerName, Priority: .spec.priority, ServiceAccount: .spec.serviceAccount, ServiceAccountName: .spec.serviceAccountName, TerminationGracePeriodSeconds:  .spec.terminationGracePeriodSeconds, ImagePullSecrets: ([.spec.imagePullSecrets[]?.name] | join(", ")), ActiveDeadlineSeconds: .spec.activeDeadlineSeconds } | to_entries[] | "\t\(.key)\t: \(.value)"'
     
     echo "$l_data_object_json" | jq -r "$l_jq_query"
 
 
-    printf '\nOnwers del pod:\n'
+    printf '\n%bOnwers del pod:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[ .metadata.ownerReferences[]? | { NAME: .name, KIND: .kind, CONTROLLER: .controller, UID: .uid }]'
     
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
     
-    printf '\nContenedores principales:\n'
+    printf '\n%bContenedores principales:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[ .spec.containers[] | { NAME: .name, PORTS: ( [ (.ports[]? | "\(.containerPort)/\(.protocol)") ] | join(", ")), IMAGE: .image } ]'
     echo "$l_data_object_json" | jq "$l_jq_query" | jtbl -n
 
 
 
-    printf '\nContenedores de inicialización:\n'
+    printf '\n%bContenedores de inicialización:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[ .spec.initContainers[]? | { NAME: .name, PORTS: ( [ .ports[]?.containerPort ] | join(", ")), IMAGE: .image } ]'
     
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
 
 
-    printf '\nVariables de contenedores principales:\n'
+    printf '\n%bVariables de contenedores principales:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[.spec.containers[] | { name: .name, env: .env[]? } | { CONTAINER: .name, VARIABLE: .env.name, TYPE: (if .env.value? != null then "VALUE" elif .env.valueFrom?.fieldRef != null then "FROM-FIELDREF" elif .env.valueFrom?.secretKeyRef != null then "FROM-SECRET-REF" else "UNKNOWN" end), VALUE: (if .env.value? != null then .env.value? elif .env.valueFrom?.fieldRef != null then .env.valueFrom?.fieldRef.fieldPath elif .env.valueFrom?.secretKeyRef != null then "\(.env.valueFrom?.secretKeyRef.key) [SecretName: \(.env.valueFrom?.secretKeyRef.name)]" else "..." end) }]'
     
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
     
-    printf '\nVolumenes montados por los contenedores:\n'
+    printf '\n%bVolumenes montados por los contenedores:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[.spec.containers[] | { name: .name, volumeMounts: .volumeMounts[]? } | { CONTAINER: .name, VOLUMEN: .volumeMounts.name, MOUNT_PATH: .volumeMounts.mountPath, READONLY: .volumeMounts.readOnly? }]'
     
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
     
 
-    printf '\nVolumenes definidos por el Deployment:\n'
+    printf '\n%bVolumenes definidos por el Deployment:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[.spec.volumes[]? | { VOLUMEN: .name, TYPE: (if .persistentVolumeClaim?.claimName != null then "PVC" elif .configMap?.name then "CONFIG-MAP" elif .secret?.secretName then "SECRET" elif .emptyDir? != null then "EMPTY-DIR" elif .downwardAPI?.items != null then "DONWWARD-API" elif .projected?.sources != null then "PROJECTED" else "UNKNOWN" end), VALUE: (if .persistentVolumeClaim?.claimName != null then .persistentVolumeClaim?.claimName elif .configMap?.name then .configMap?.name elif .secret?.secretName then .secret?.secretName elif .emptyDir? != null then "..." elif .downwardAPI?.items != null then "..." elif .projected?.sources != null then "..." else "???" end)}]'
     
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
     
 
-    printf '\nEtiquetas del pod:\n'
+    printf '\n%bEtiquetas del pod:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[.metadata.labels | to_entries[] | { KEY: .key, VALUE: .value }]'
     
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
     
     
-    printf '\nStatus del pod (Contitions):\n'
+    printf '\n%bStatus del pod (Contitions):%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[.status.conditions[]? | { TYPE: .type, STATUS: .status, TIME: .lastTransitionTime, REASON: .reason, MESSAGGE: .message }]'
     
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
     
 
-    printf '\nStatus de los contenedores del pod:\n'
+    printf '\n%bStatus de los contenedores del pod:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[.status.containerStatuses[]? | .containerID as $id | .name as $name | (((.state? | to_entries[]) + {type: "Current"}), ((.lastState? | to_entries[]) + { type: "Previous"})) | { CONTAINER: $name, POSITION: .type, TYPE: .key, "STARTED-AT": .value?.startedAt, "FINISHED-AT": .value?.finishedAt, "CONTAINER-ID": (if .type == "Current" then $id else .value?.containerID end), "REASON": .value?.reason, "EXITCODE": .value?.exitCode, "MESSAGE": .value?.message }]'
     
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
     
 
-    printf '\nTolerancias del pod:\n'
+    printf '\n%bTolerancias del pod:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='[.spec.tolerations[]? | {KEY: .key, OPERATOR: .operator, VALUE: .value, EFFECT: .effect, SECONDS: .tolerationSeconds }]'
     
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            echo "No data found"
+            printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        echo "Error in getting data"
+        printf '%bError in getting data%b\n' "$l_color_opaque" "$l_color_reset"
     fi
 
 
 
-    printf '\nNode Selector usados por el pods:\n'
+    printf '\n%bNode Selector usados por el pods:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='.spec.nodeSelector | to_entries[] | "\t\(.key)\t: \(.value)"'
     echo "$l_data_object_json" | jq -r "$l_jq_query"
 
 
-    printf '\nPod Affinity:\n'
+    printf '\n%bPod Affinity:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='.spec.affinity?.podAffinity'
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ -z "$l_data" ] || [ "$ldata" != "null" ]; then
-        echo "No data found"
+        printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
     else
         echo "$l_data" | yq -p json -o yaml
     fi
 
-    printf '\nPod Anti-Affinity:\n'
+    printf '\n%bPod Anti-Affinity:%b\n' "$l_color_subtitle" "$l_color_reset"
     l_jq_query='.spec.affinity?.podAntiAffinity'
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ -z "$l_data" ] || [ "$ldata" != "null" ]; then
-        echo "No data found"
+        printf '%bNo data found%b\n' "$l_color_opaque" "$l_color_reset"
     else
         echo "$l_data" | yq -p json -o yaml
     fi
 
 
+}
 
+#Parametros (argumentos y opciones):
+#  1 > El nombre del pod
+#  2 > El nombre namespace
+#  3 > El nonbre del contenedor 
+#  4 > Puertos TCP del contenedor 
+#  . > La ruta del archivo de datos
+m_port_forward_pod() {
+
+    #1. Valores iniciales
+    local l_color_1="\x1b[33m"
+    local l_color_2="\x1b[95m"
+    local l_color_opaque="\x1b[90m"
+    local l_color_reset="\x1b[0m"
+
+    printf 'Pod       : %b%s%b\n' "$l_color_1" "$1" "$l_color_reset"
+    printf 'Namespace : %b%s%b\n' "$l_color_2" "$2" "$l_color_reset"
+    printf 'Container : %b%s%b\n' "$l_color_2" "$3" "$l_color_reset"
+
+    if [ -z "$4" ] || [ "$4" == "-" ]; then
+        printf "No existe puertos TCP expuestos por el contenedor '%s'.\n" "$3"
+        return 1
+    fi
+
+    #printf 'Container : %b%s%b\n' "$l_color_2" "$3" "$l_color_reset"
+    local IFS=','
+    local la_container_ports=($4)
+
+
+    #2. Leer datos requieridos para los puertos del contenedor que desea forwarding
+    IFS=$' \t\n'
+    local l_port
+    local l_i=0
+    #local la_local_ports=()
+    local l_availables_ports=0
+    local l_input
+    local l_option_ports=""
+
+    printf "Local's Ports %b(que se vinculararn los puertos del contenedor)%b:\n" "$l_color_opaque" "$l_color_reset"
+    printf '\t%bNota: Especifica un entero positivo, caso contrario el puerto no se tomara en cuenta en el port-forwarding.%b\n' "$l_color_opaque" "$l_color_reset"
+
+    for ((l_i=0; l_i < ${#la_container_ports[@]}; l_i++)); do
+
+        printf "\tLocal's port (Container's port %b%s%b) : " "$l_color_1" "${la_container_ports[$l_i]}" "$l_color_reset"
+        read -r l_input
+
+        if [[ "$l_input" =~ ^[1-9][0-9]+$ ]]; then
+            ((l_availables_ports++))
+            if [ -z "$l_option_ports" ]; then
+                l_option_ports="${l_input}:${la_container_ports[$l_i]}"
+            else
+                l_option_ports="${l_option_ports} ${l_input}:${la_container_ports[$l_i]}"
+            fi
+            #la_local_ports[$l_i]=$l_input
+        #else
+            #la_local_ports[$l_i]=0
+        fi
+    done
+
+    if [ $l_availables_ports -le 0 ]; then 
+        printf 'No se ha especificado los puertos locales a vincularse.\n'
+        return 2
+    fi
+
+    #3. Limpiar la data temporal (solo si se pasa este valor)
+    #if [ ! -z "$5" ]; then
+    #    rm -f $5
+    #fi
+
+    #4. Ejecutar el comando
+    printf 'Command   : %bkubectl port-forward pod/%s -n=%s %s%b\n' "$l_color_2" "$1" "$2" "$l_option_ports" "$l_color_reset"
+    kubectl port-forward pod/${1} -n=${2} ${l_option_ports}
+
+
+    return 0
+        
 }
 
 #Los parametros debe ser la funcion y los parametros

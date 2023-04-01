@@ -21,7 +21,7 @@ if [ -d "$_g_fzf_cache_path" ]; then
 fi
 
 #Identificador de una session interactiva (usuario y id por sesion)
-if [ -z "_g_uid" ]; then
+if [ -z "$_g_uid" ]; then
     #ID del proceso del interprete shell actual (pueder ser bash o no)
     _g_uid="$$"
 fi
@@ -289,39 +289,8 @@ gi_eachref() {
 
 
 ################################################################################################
-# K8S Functions (RHOCP 'oc')
+# K8S Functions (Se usara 'kubectl' por defecto, opcionalmente se usara 'oc' de RHOCP)
 ################################################################################################
-
-
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
-# Utilidades generales
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
-
-_fzf_oc_get_context_info() {
-    local l_data=$(kubectl config current-context)
-    local l_tmp="${l_data//// }"
-    local l_items=($l_tmp)
-    local l_n=${#l_items[@]}
-    if [ $l_n -lt 3 ]; then
-        echo "$l_data"
-    else
-        printf "User: '\x1b[91m%s\x1b[m', Server: '\x1b[33m%s\x1b[m'" "${l_items[2]}" "${l_items[1]}"
-        #printf "User: '\x1b[91m%s\x1b[m', Default Namespace: '\x1b[92m%s\x1b[m', Server: '\x1b[33m%s\x1b[m'" "${l_items[2]}" "${l_items[0]}" "${l_items[1]}"
-        #echo "User: '${l_items[2]}', Default Namespace: '${l_items[0]}', Server: '${l_items[1]}'"
-    fi
-}
-
-#Plantilla que representa el nombre del recurso usando en las acciones FZF. Formatos
-#  "resource-type/{n}"           : El nombre del recurso se va obtener del campo 9.
-#  "resource-type/resource-name" : El nombre del recurso se especifica.
-_g_fzf_oc_object=""
-
-#Plantilla que representa la opcion de namespace usado en las acciones FZF. Formatos
-# "-n=namespace" : El nombre del namespace se especifica
-# "-n={n}"       : El nombre del namespace se va obtener del campo 9
-# ""             : Se usara el namespace por defecto (el actual)
-_g_fzf_oc_opc_namespace=""
-
 
 #Resources short-names:
 #componentstatuses = cs
@@ -356,16 +325,51 @@ _g_fzf_oc_opc_namespace=""
 #priorityclasses = pc
 #storageclasses = sc
 
+
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+# Utilidades generales
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+
+_fzf_kc_get_context_info() {
+
+    #TODO mejorar para obtener la URL del servidor, nombre del usuario, ...
+    local l_data=$(kubectl config current-context)
+    local l_tmp="${l_data//// }"
+    local l_items=($l_tmp)
+    local l_n=${#l_items[@]}
+    
+    local l_color_1="\x1b[91m"
+    local l_color_2="\x1b[33m"
+    #local l_color_opaque="\x1b[90m"
+    local l_color_reset="\x1b[0m"
+
+    if [ $l_n -lt 3 ]; then
+        printf "Context: '%b%s%b'" "$l_color_1" "${l_data}" "$l_color_reset" 
+    else
+        printf "User: '%b%s%b', Server: '%b%s%b'" "$l_color_1" "${l_items[2]}" "$l_color_reset" "$l_color_2" "${l_items[1]}" "$l_color_reset"
+        #printf "User: '\x1b[91m%s\x1b[m', Default Namespace: '\x1b[92m%s\x1b[m', Server: '\x1b[33m%s\x1b[m'" "${l_items[2]}" "${l_items[0]}" "${l_items[1]}"
+    fi
+}
+
+#Plantilla de opciones usando en las acciones FZF, cuyo formato es "resource-type/[resource-name] -n=[namespace]"
+#  > "[resource-name]" puede ser el nombre del recurso o "{n}" donde n es el numero de campo donde se obtendra.
+#  > "[namespace]" puede ser el nombre del namespace o "{n}" donde n es el numero de campo donde se obtendra.
+_g_fzf_kc_options=""
+
+#Nombre del archivo de dato
+_g_fzf_kc_data_file=""
+
+
 #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
 # Funciones
 #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
 
-oc_resources() {
+kc_resources() {
 
     #1. Inicializar variables requeridas para fzf y awk
     local l_resource_name="$1"
     local l_awk_template="{print \"${l_resource_name}/\"\$1}"
-    _g_fzf_oc_object="${l_resource_name}/{1}"
+    _g_fzf_kc_options="${l_resource_name}/{1}"
 
     #2. Procesar los argumentos y modificar las variables segun ello
 
@@ -375,8 +379,8 @@ oc_resources() {
         return 1
     elif [ "$1" = "--help" ]; then
         echo "Usar: "
-        echo "     oc_resources RESOURCE-KIND NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     oc_resources --help" 
+        echo "     kc_resources RESOURCE-KIND NAMESPACE FILTER-LABELS FILTER-FIELDS"
+        echo "     kc_resources --help" 
         echo "> Use '.' si desea no ingresar valor para el argumento."
         echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
         echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
@@ -388,20 +392,18 @@ oc_resources() {
     fi 
     
     #Resource KIND o Name
-    local l_cmd="oc get $1"
+    local l_cmd="kubectl get $1"
 
     #Namespace
     if [ ! -z "$2" ] && [ "$2" != "." ]; then
         if [ "$2" = "--all" ]; then
             l_cmd="${l_cmd} --all-namespaces"
             l_awk_template="{print \"${l_resource_name}/\"\$2\" -n \"\$1}"
-            _g_fzf_oc_object="${l_resource_name}/{2}"
-            _g_fzf_oc_opc_namespace='-n={1}'
+            _g_fzf_kc_options="${l_resource_name}/{2} -n={1}"
         else
             l_cmd="${l_cmd} -n $2"
             l_awk_template="{print \"${l_resource_name}/\"\$1\" -n $2\"}"
-            _g_fzf_oc_object="${l_resource_name}/{1}"
-            _g_fzf_oc_opc_namespace="-n=$2"
+            _g_fzf_kc_options="${l_resource_name}/{1} -n=$2"
         fi
     fi
     
@@ -422,28 +424,28 @@ oc_resources() {
     FZF_DEFAULT_COMMAND="$l_cmd" \
     fzf --info=inline --layout=reverse --header-lines=1 -m \
         --prompt "${l_resource_name}> " \
-        --header "$(_fzf_oc_get_context_info)"$'\nCTRL-r (reload), CTRL-a (View yaml)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(oc get ${_g_fzf_oc_object} ${_g_fzf_oc_opc_namespace} -o yaml) > /dev/tty" \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-r (reload), CTRL-a (View yaml)\n' \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(oc get ${_g_fzf_kc_options} -o yaml) > /dev/tty" \
         --bind 'ctrl-r:reload:$FZF_DEFAULT_COMMAND' |
     awk "$l_awk_template"
 
 }
 
 
-oc_pods() {
+kc_pods() {
 
     #1. Inicializar variables requeridas para fzf y awk
     local l_awk_template='{print "pod/"$1}'
-    local l_cmd="oc get pods -o wide"
-    _g_fzf_oc_object='pod/{1}'
+    local l_cmd="kubectl get pods -o wide"
+    _g_fzf_kc_options='pod/{1}'
 
     #2. Procesar los argumentos y modificar las variables segun ello
     
     #Ayuda
     if [ "$1" = "--help" ]; then
         echo "Usar: "
-        echo "     oc_pods NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     oc_pods --help" 
+        echo "     kc_pods NAMESPACE FILTER-LABELS FILTER-FIELDS"
+        echo "     kc_pods --help" 
         echo "> Use '.' si desea no ingresar valor para el argumento."
         echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
         echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
@@ -459,13 +461,11 @@ oc_pods() {
         if [ "$1" = "--all" ]; then
             l_cmd="${l_cmd} --all-namespaces"
             l_awk_template='{print "pod/"$2" -n "$1}'
-            _g_fzf_oc_object='pod/{2}'
-            _g_fzf_oc_opc_namespace='-n={1}'
+            _g_fzf_kc_options='pod/{2} -n={1}'
         else
             l_cmd="${l_cmd} -n $1"
             l_awk_template="{print \"pod/\"\$1\" -n $1\"}"
-            _g_fzf_oc_object='pod/{1}'
-            _g_fzf_oc_opc_namespace="-n=$1"
+            _g_fzf_kc_options="pod/{1} -n=$1"
         fi
     fi
 
@@ -488,14 +488,14 @@ oc_pods() {
     FZF_DEFAULT_COMMAND="$l_cmd" \
     fzf --info=inline --layout=reverse --header-lines=1 -m \
         --prompt "Pods> " \
-        --header "$(_fzf_oc_get_context_info)"$'\nCTRL-r (reload), CTRL-a (View yaml), CTRL-t (Bash Terminal), CTRL-b (View logs), CTRL-x (Exit & follow logs)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(oc get ${_g_fzf_oc_object} ${_g_fzf_oc_opc_namespace} -o yaml) > /dev/tty" \
-        --bind "ctrl-t:execute:oc exec -it ${_g_fzf_oc_object} ${_g_fzf_oc_opc_namespace} -- bash > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain  <(oc logs ${_g_fzf_oc_object} ${_g_fzf_oc_opc_namespace} --tail=10000) > /dev/tty" \
-        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" m_show_log 0 0 200 ${_g_fzf_oc_object} ${_g_fzf_oc_opc_namespace} > /dev/tty)" \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-r (reload), CTRL-a (View yaml), CTRL-t (Bash Terminal), CTRL-b (View logs), CTRL-x (Exit & follow logs)\n' \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(oc get ${_g_fzf_kc_options} -o yaml) > /dev/tty" \
+        --bind "ctrl-t:execute:oc exec -it ${_g_fzf_kc_options} -- bash > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain  <(oc logs ${_g_fzf_kc_options} --tail=10000) > /dev/tty" \
+        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" m_show_log 0 0 200 ${_g_fzf_kc_options} > /dev/tty)" \
         --bind 'ctrl-r:reload:$FZF_DEFAULT_COMMAND' |
     awk "$l_awk_template"
-        #--bind "ctrl-b:execute:vim <(oc logs ${_g_fzf_oc_object} ${_g_fzf_oc_opc_namespace} --tail=10000) > /dev/tty" \
+        #--bind "ctrl-b:execute:vim <(oc logs ${_g_fzf_kc_options} ${_g_fzf_oc_opc_namespace} --tail=10000) > /dev/tty" \
         #--bind "ctrl-x:become(oc logs ${_g_fzf_oc_pod_path} -f --tail=1000 > /dev/tty)" \
         #--preview-window up:follow \
         #--preview 'kubectl logs --follow --all-containers --tail=10000 --namespace {1} {2}' "$@"
@@ -506,20 +506,20 @@ oc_pods() {
 }
 
 
-oc_containers() {
+kc_containers() {
 
     #1. Inicializar variables requeridas para fzf y awk
     local l_awk_template='{print "pod/"$1" -n "$2" -c "$3}'
     local l_cmd_options="get pod -o json"
-    _g_fzf_oc_object='pod/{1}'
+    _g_fzf_kc_data_file="${_g_fzf_cache_path}/containers_${_g_uid}.json"
 
     #2. Procesar los argumentos y modificar las variables segun ello
     
     #Ayuda
     if [ "$1" = "--help" ]; then
         echo "Usar: "
-        echo "     oc_containers NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     oc_containers --help" 
+        echo "     kc_containers NAMESPACE FILTER-LABELS FILTER-FIELDS"
+        echo "     kc_containers --help" 
         echo "> Use '.' si desea no ingresar valor para el argumento."
         echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
         echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
@@ -534,12 +534,8 @@ oc_containers() {
     if [ ! -z "$1" ] && [ "$1" != "." ]; then
         if [ "$1" = "--all" ]; then
             l_cmd_options="${l_cmd_options} --all-namespaces"
-            _g_fzf_oc_object='deployment/{1}'
-            _g_fzf_oc_opc_namespace='-n={2}'
         else
             l_cmd_options="${l_cmd_options} -n $1"
-            _g_fzf_oc_object='deployment/{1}'
-            _g_fzf_oc_opc_namespace="-n=$1"
         fi
     fi
 
@@ -557,19 +553,18 @@ oc_containers() {
     #echo "$l_cmd_options"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    oc $l_cmd_options > ${_g_fzf_cache_path}/containers_${_g_uid}.json
+    kubectl $l_cmd_options > $_g_fzf_kc_data_file
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
     fi
 
     #4. Generar el reporte deseado con la data ingresada
-    #TODO mostrar puertos TCP y ejecutar port-forward con el mismo puerto
     local l_data=""
-    local l_jq_query='[.items[] | (.spec.containers | length) as $allcont | { podName: .metadata.name, podNamespace: .metadata.namespace, podStatus: .status.phase, podStartTime: .status.startTime, podIP: .status.podIP, nodeName: .spec.nodeName, container: .spec.containers[], containerStatuses: .status.containerStatuses } | .container.name as $name | { podName: .podName, podNamespace: .podNamespace, podCntNbr: $allcont, podCntReady: ([.containerStatuses[].ready | select(. == true)] | length), podStartTime: .podStartTime, podIP: .podIP, nodeName: .nodeName, name: .container.name, image: .container.image, status: (.containerStatuses[] | select(.name == $name)) } | (.status.state | to_entries[0]) as $st | { "POD-NAME": .podName, "POD-NAMESPACE": .podNamespace, CONTAINER: .name, "STATE": $st.key, READY: .status.ready, "STARTED": .status.started, "STARTED-AT": $st.value.startedAt, "POD-READY": ("\(.podCntReady)/\(.podCntNbr)" + (if .podCntReady == .podCntNbr then "" else " [\(.podCntNbr - .podCntReady) OBS]" end)), "RESTART": .status.restartCount,  "FINISHED-AT": $st.value.finishedAt, REASON: $st.value.reason, "EXIT-CODE": $st.value.exitCode, "POD-IP": .podIP, "POD-STARTED-AT": .podStartTime, "NODE-NAME": .nodeName }]'
+    local l_jq_query='[.items[] | (.spec.containers | length) as $allcont | { podName: .metadata.name, podNamespace: .metadata.namespace, podStatus: .status.phase, podStartTime: .status.startTime, podIP: .status.podIP, nodeName: .spec.nodeName, container: .spec.containers[], containerStatuses: .status.containerStatuses } | .container.name as $name | { podName: .podName, podNamespace: .podNamespace, podCntNbr: $allcont, podCntReady: ([.containerStatuses[].ready | select(. == true)] | length), podStartTime: .podStartTime, podIP: .podIP, nodeName: .nodeName, name: .container.name, image: .container.image, ports: ([.container.ports[]? | select(.protocol == "TCP") | .containerPort] | join(",")), status: (.containerStatuses[] | select(.name == $name)) } | (.status.state | to_entries[0]) as $st | { "POD-NAME": .podName, "POD-NAMESPACE": .podNamespace, CONTAINER: .name, "STATE": $st.key, READY: .status.ready, "POD-READY": ("\(.podCntReady)/\(.podCntNbr)" + (if .podCntReady == .podCntNbr then "" else "(OBS=\(.podCntNbr - .podCntReady))" end)), "TCP-PORTS": (if .ports == "" then "-" else .ports end), "RESTART": .status.restartCount, "STARTED": .status.started, "STARTED-AT": $st.value.startedAt,  "FINISHED-AT": $st.value.finishedAt, REASON: $st.value.reason, "EXIT-CODE": $st.value.exitCode, "POD-STARTED-AT": .podStartTime, "POD-IP": .podIP, "NODE-NAME": .nodeName }]'
 
     #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
-    l_data=$(jq "$l_jq_query" ${_g_fzf_cache_path}/containers_${_g_uid}.json)
+    l_data=$(jq "$l_jq_query" $_g_fzf_kc_data_file)
     if [ $? -ne 0 ]; then
         echo "Error en el fitro usado"
         return 2
@@ -582,37 +577,38 @@ oc_containers() {
     
     #5. Mostrar el reporte
     echo "$l_data" | jtbl -n |
-    fzf --info=inline --layout=reverse --header-lines=2 -m \
+    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Container> " \
-        --header "$(_fzf_oc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (Preview in full-screen), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-x (Exit & follow logs)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} m_show_object_yaml '${_g_fzf_cache_path}/containers_${_g_uid}.json' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} m_show_container_info '${_g_fzf_cache_path}/containers_${_g_uid}.json' '{1}' '{2}' '{3}') > /dev/tty" \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (Preview in full-screen), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Port-Forward), CTRL-x (Exit & follow logs)\n' \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} m_show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} m_show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}') > /dev/tty" \
         --bind "ctrl-t:execute:oc exec -it {1} -n={2} -c={3} -- bash > /dev/tty" \
-        --bind "ctrl-l:execute:$_g_fzf_bat --paging always --style plain  <(oc logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
-        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" m_show_log 0 0 200 '{1}' '-n={2}' '-c={3}' > /dev/tty)" \
+        --bind "ctrl-l:execute:$_g_fzf_bat --paging always --style plain  <(kubectl logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
+        --bind "ctrl-p:become(bash \"${_g_fzf_script_cmd}\" m_port_forward_pod '{1}' '{2}' '{3}' '{7}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" m_show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
         --preview-window down,border-top,70% \
-        --preview "bash ${_g_fzf_script_cmd} m_show_container_info '${_g_fzf_cache_path}/containers_${_g_uid}.json' '{1}' '{2}' '{3}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_fzf_script_cmd} m_show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
-    rm -f ${_g_fzf_cache_path}/containers_${_g_uid}.json
+    rm -f $_g_fzf_kc_data_file
 }
 
 
-oc_deployments() {
+kc_deployments() {
 
     #1. Inicializar variables requeridas para fzf y awk
     #local l_awk_template='{print "deployment/"$1" -n "$2" | pod -n "$2"-l "$7}'
     local l_awk_template='{print "deployment/"$1" -n "$2}'
     local l_cmd_options="get deployment -o json"
-    _g_fzf_oc_object='deployment/{1}'
+    _g_fzf_kc_data_file="${_g_fzf_cache_path}/deployments_${_g_uid}.json"
 
     #2. Procesar los argumentos y modificar las variables segun ello
     
     #Ayuda
     if [ "$1" = "--help" ]; then
         echo "Usar: "
-        echo "     oc_deployments NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     oc_deployments --help" 
+        echo "     kc_deployments NAMESPACE FILTER-LABELS FILTER-FIELDS"
+        echo "     kc_deployments --help" 
         echo "> Use '.' si desea no ingresar valor para el argumento."
         echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
         echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
@@ -627,12 +623,8 @@ oc_deployments() {
     if [ ! -z "$1" ] && [ "$1" != "." ]; then
         if [ "$1" = "--all" ]; then
             l_cmd_options="${l_cmd_options} --all-namespaces"
-            _g_fzf_oc_object='deployment/{1}'
-            _g_fzf_oc_opc_namespace='-n={2}'
         else
             l_cmd_options="${l_cmd_options} -n $1"
-            _g_fzf_oc_object='deployment/{1}'
-            _g_fzf_oc_opc_namespace="-n=$1"
         fi
     fi
 
@@ -650,7 +642,7 @@ oc_deployments() {
     #echo "$l_cmd_options"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    oc $l_cmd_options > ${_g_fzf_cache_path}/deployments_${_g_uid}.json
+    kubectl $l_cmd_options > $_g_fzf_kc_data_file 
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
@@ -661,7 +653,7 @@ oc_deployments() {
     local l_jq_query='[.items[] | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, replicas: .status.replicas, readyReplicas: .status.readyReplicas, availableReplicas: .status.availableReplicas, updatedReplicas: .status.updatedReplicas, lastTransitionTime: (.status.conditions[] | select(.type=="Progressing") | .lastTransitionTime) } | { NAME: .name, NAMESPACE: .namespace, READY: "\(.replicas)/\(.readyReplicas)", "UP-TO-DATE": .updatedReplicas, AVAILABLE: .availableReplicas, INITIAL: .lastTransitionTime, "SELECTOR-MATCH-LABELS": $labels }]'
 
     #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
-    l_data=$(jq "$l_jq_query" ${_g_fzf_cache_path}/deployments_${_g_uid}.json)
+    l_data=$(jq "$l_jq_query" ${_g_fzf_kc_data_file})
     if [ $? -ne 0 ]; then
         echo "Error en el fitro usado"
         return 2
@@ -674,16 +666,16 @@ oc_deployments() {
     
     #5. Mostrar el reporte
     echo "$l_data" | jtbl -n |
-    fzf --info=inline --layout=reverse --header-lines=2 -m \
+    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Deployment> " \
-        --header "$(_fzf_oc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} m_show_object_yaml '${_g_fzf_cache_path}/deployments_${_g_uid}.json' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} m_show_deploy_info '${_g_fzf_cache_path}/deployments_${_g_uid}.json' '{1}' '{2}' '{7}') > /dev/tty" \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen)\n' \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} m_show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} m_show_deploy_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}') > /dev/tty" \
         --preview-window down,border-top,70% \
-        --preview "bash ${_g_fzf_script_cmd} m_show_deploy_info '${_g_fzf_cache_path}/deployments_${_g_uid}.json' '{1}' '{2}' '{7}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_fzf_script_cmd} m_show_deploy_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
-    rm -f ${_g_fzf_cache_path}/deployments_${_g_uid}.json
+    rm -f ${_g_fzf_kc_data_file}
 
 }
 
