@@ -6,19 +6,19 @@
 . ~/.files/terminal/linux/functions/func_utility.bash
 
 #Variable global pero solo se usar localmente en las funciones
-t_tmp=""
+_g_tmp=""
 
 #Determinar la clase del SO
-m_get_os_type
+get_os_type
 declare -r g_os_type=$?
 
 #Deteriminar el tipo de distribución Linux
 if [ $g_os_type -le 10 ]; then
-    t_tmp=$(m_get_linux_type_id)
+    _g_tmp=$(get_linux_type_id)
     declare -r g_os_subtype_id=$?
-    declare -r g_os_subtype_name="$t_tmp"
-    t_tmp=$(m_get_linux_type_version)
-    declare -r g_os_subtype_version="$t_tmp"
+    declare -r g_os_subtype_name="$_g_tmp"
+    _g_tmp=$(get_linux_type_version)
+    declare -r g_os_subtype_version="$_g_tmp"
 fi
 
 #Determinar si es root
@@ -29,7 +29,7 @@ fi
 
 #}}}
 
-function m_after_update_repository() {
+function _after_update_repository() {
 
     #1. Argumentos
     local p_repo_path="$1"
@@ -102,7 +102,7 @@ function m_after_update_repository() {
 
 }
 
-function m_update_repository() {
+function _update_repository() {
 
     #1. Argumentos
     local p_repo_path="$1"
@@ -146,7 +146,7 @@ function m_update_repository() {
             git merge --ff-only --stat ${l_remote_branch}
 
             #Realizando algunas operaciones adicionales
-            m_after_update_repository "$p_repo_path" "$p_repo_type" "$p_repo_name"
+            _after_update_repository "$p_repo_path" "$p_repo_type" "$p_repo_name"
             return 0
         else
             echo 'Fast-forward not possible. Rebasing...'
@@ -156,7 +156,7 @@ function m_update_repository() {
     fi
 }
 
-function m_update_vim_package() {
+function _update_vim_package() {
 
     #
     local l_base_path=~/.vim/pack
@@ -177,7 +177,7 @@ function m_update_vim_package() {
         l_repo_name="${l_folder##*/}"
         l_repo_type="${l_folder%%/*}"
         l_folder="${l_base_path}/${l_folder}"
-        m_update_repository "$l_folder" "$l_repo_name" "$l_repo_type"
+        _update_repository "$l_folder" "$l_repo_name" "$l_repo_type"
     done
     return 0
 
@@ -188,7 +188,7 @@ function m_update_vim_package() {
 # 1) Repositorios que se se instalaran basicos y opcionales (flag en binario. entero que es suma de 2^n).
 # 2) -
 #
-function m_update_all() {
+function _update_all() {
 
     #1. Argumentos
     local p_opciones=0
@@ -260,7 +260,7 @@ function m_update_all() {
     l_opcion=1
     l_flag=$(( $p_opciones & $l_opcion ))
     if [ $l_flag -eq $l_opcion ]; then
-        m_update_vim_package
+        _update_vim_package
     fi            
 
     #6 Actualizar los repositorios indicados por las opciones indicadas (solo si la opcion ingresada es >= 2)
@@ -279,7 +279,7 @@ function m_update_all() {
 }
 
 
-function m_show_menu_core() {
+function _show_menu_core() {
 
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
@@ -309,7 +309,7 @@ function m_show_menu_core() {
 
 }
 
-function m_main() {
+function i_main() {
 
     echo "OS Type            : (${g_os_type})"
     echo "OS Subtype (Distro): (${g_os_subtype_id}) ${g_os_subtype_name} - ${g_os_subtype_version}"$'\n'
@@ -327,26 +327,26 @@ function m_main() {
     local l_opcion=""
     while [ $l_flag_continue -eq 0 ]; do
 
-        m_show_menu_core
+        _show_menu_core
         read l_opcion
 
         case "$l_opcion" in
             a)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                m_update_all 1
+                _update_all 1
                 ;;
 
             b)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                m_update_all 3
+                _update_all 3
                 ;;
 
             0)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                m_update_all 0
+                _update_all 0
                 ;;
 
             q)
@@ -358,7 +358,7 @@ function m_main() {
                 if [[ "$l_opcion" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
                     echo "#################################################################################################"$'\n'
-                    m_update_all $l_opcion
+                    _update_all $l_opcion
                 else
                     l_flag_continue=0
                     echo "Opción incorrecta"
@@ -377,7 +377,7 @@ function m_main() {
 
 }
 
-m_main
+i_main
 
 
 

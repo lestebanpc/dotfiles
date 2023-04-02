@@ -6,7 +6,7 @@
 . ~/.files/terminal/linux/functions/func_utility.bash
 
 #Variable global pero solo se usar localmente en las funciones
-t_tmp=""
+_g_tmp=""
 
 #Determinar la clase del SO
 #  00 - 10: Si es Linux
@@ -15,7 +15,7 @@ t_tmp=""
 #  11 - 20: Si es Unix
 #  21 - 30: si es MacOS
 #  31 - 40: Si es Windows
-m_get_os_type
+get_os_type
 declare -r g_os_type=$?
 
 #Deteriminar el tipo de distribución Linux
@@ -23,11 +23,11 @@ declare -r g_os_type=$?
 #  01 : Ubuntu
 #  02 : Fedora
 if [ $g_os_type -le 10 ]; then
-    t_tmp=$(m_get_linux_type_id)
+    _g_tmp=$(get_linux_type_id)
     declare -r g_os_subtype_id=$?
-    declare -r g_os_subtype_name="$t_tmp"
-    t_tmp=$(m_get_linux_type_version)
-    declare -r g_os_subtype_version="$t_tmp"
+    declare -r g_os_subtype_name="$_g_tmp"
+    _g_tmp=$(get_linux_type_version)
+    declare -r g_os_subtype_version="$_g_tmp"
 fi
 
 #Determinar si es root
@@ -62,7 +62,7 @@ declare -r g_version_none='0.0.0'
 #Funciones especificas {{{
 
 #Solo se invoca cuando se instala con exito un repositorio y sus artefactos
-function m_show_final_message() {
+function _show_final_message() {
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -103,7 +103,7 @@ function m_show_final_message() {
 #  2 - La version obtenida no tiene formato valido
 #  3 - No existe forma de calcular la version actual (siempre se instala y/o actualizar)
 #  9 - No esta implementado un metodo de obtener la version
-function m_get_repo_current_version() {
+function _get_repo_current_version() {
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -611,7 +611,7 @@ function m_get_repo_current_version() {
 #       > 99 si no se define el artefacto para el prefijo
 #  - Argumento 3, un arreglo de nombre de los artectos a descargar
 #En el argumento 2 se debe pasar la version pura quitando, sin contener "v" u otras letras iniciales
-function m_load_artifacts() {
+function _load_artifacts() {
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -928,7 +928,7 @@ function m_load_artifacts() {
 #          Debera iniciar por la ultima versión. No existe.
 # > Los valores de retorno es 0 si es OK, caso contrario ocurrio un error. Los errores devueltos son
 #   1    - Se requiere tener habilitado el comando jq
-function m_get_repo_latest_version() {
+function _get_repo_latest_version() {
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -1063,14 +1063,14 @@ function m_get_repo_latest_version() {
     esac
 
     #Codificar en base64
-    l_aux=$(m_url_encode "$l_repo_last_version")
+    l_aux=$(url_encode "$l_repo_last_version")
     pna_repo_versions=("$l_aux" "$l_repo_last_version_pretty")
     pna_arti_versions=(${l_arti_versions})
     return 0
 }
 
 
-function m_get_last_repo_url() {
+function _get_last_repo_url() {
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -1122,7 +1122,7 @@ function m_get_last_repo_url() {
 }
 
 
-function m_copy_artifact_files() {
+function _copy_artifact_files() {
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -1783,7 +1783,7 @@ function m_copy_artifact_files() {
                 l_path_bin="${g_path_programs_lnx}/dap_servers/netcoredbg"
 
                 #1. Comparando la version instalada con la version descargada
-                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
                 l_status=$?
 
                 if [ $l_status -ne 0 ]; then
@@ -1792,7 +1792,7 @@ function m_copy_artifact_files() {
 
                     printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
                         "$l_repo_id" "$l_repo_download_version"
-                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
+                    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
                     l_status=$?
 
                     if [ $l_status -eq 0 ]; then
@@ -1836,7 +1836,7 @@ function m_copy_artifact_files() {
                 l_path_bin="${g_path_programs_win}/DAP_Servers/NetCoreDbg"
 
                 #1. Comparando la version instalada con la version descargada
-                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
                 l_status=$?
 
                 if [ $l_status -ne 0 ]; then
@@ -1845,7 +1845,7 @@ function m_copy_artifact_files() {
 
                     printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
                         "$l_repo_id" "$l_repo_download_version"
-                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
+                    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
                     l_status=$?
 
                     if [ $l_status -eq 0 ]; then
@@ -1898,7 +1898,7 @@ function m_copy_artifact_files() {
                 l_path_bin="${g_path_programs_lnx}/neovim"
 
                 #1. Comparando la version instalada con la version descargada
-                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/bin")
+                l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/bin")
                 l_status=$?
 
                 if [ $l_status -ne 0 ]; then
@@ -1907,7 +1907,7 @@ function m_copy_artifact_files() {
 
                     printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
                         "$l_repo_id" "$l_repo_download_version"
-                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
+                    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
                     l_status=$?
 
                     if [ $l_status -eq 0 ]; then
@@ -1948,7 +1948,7 @@ function m_copy_artifact_files() {
                 l_path_bin="${g_path_programs_win}/NeoVim"
 
                 #1. Comparando la version instalada con la version descargada
-                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/bin")
+                l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/bin")
                 l_status=$?
 
                 if [ $l_status -ne 0 ]; then
@@ -1957,7 +1957,7 @@ function m_copy_artifact_files() {
 
                     printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
                         "$l_repo_id" "$l_repo_download_version"
-                    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
+                    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
                     l_status=$?
 
                     if [ $l_status -eq 0 ]; then
@@ -2247,7 +2247,7 @@ function m_copy_artifact_files() {
                 chmod u+x "${l_path_temp}/rust-analyzer"
                 
                 #1. Comparando la version instalada con la version descargada
-                #l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                #l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
                 #l_status=$?
 
                 #if [ $l_status -ne 0 ]; then
@@ -2257,7 +2257,7 @@ function m_copy_artifact_files() {
 
                 #    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
                 #        "$l_repo_id" "$l_repo_download_version"
-                #    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
+                #    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
                 #    l_status=$?
 
                 #    if [ $l_status -eq 0 ]; then
@@ -2292,7 +2292,7 @@ function m_copy_artifact_files() {
             else
 
                 #1. Comparando la version instalada con la version descargada
-                l_repo_download_version=$(m_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
                 l_status=$?
 
                 #if [ $l_status -ne 0 ]; then
@@ -2302,7 +2302,7 @@ function m_copy_artifact_files() {
 
                 #    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
                 #        "$l_repo_id" "$l_repo_download_version"
-                #    m_compare_version "${l_repo_current_version}" "${l_repo_download_version}"
+                #    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
                 #    l_status=$?
 
                 #    if [ $l_status -eq 0 ]; then
@@ -2523,7 +2523,7 @@ function m_copy_artifact_files() {
 
 #Funciones genericas {{{
 
-function m_clean_temp() {
+function _clean_temp() {
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -2533,7 +2533,7 @@ function m_clean_temp() {
     rm -rf "/tmp/${p_repo_id}"
 }
 
-function m_download_artifacts() {
+function _download_artifacts() {
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -2563,7 +2563,7 @@ function m_download_artifacts() {
     for ((l_i=0; l_i<$l_n; l_i++)); do
 
         l_artifact_name="${pnra_artifact_names[$l_i]}"
-        l_base_url=$(m_get_last_repo_url "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$l_artifact_name" $p_install_win_cmds)
+        l_base_url=$(_get_last_repo_url "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$l_artifact_name" $p_install_win_cmds)
         l_artifact_url="${l_base_url}/${l_artifact_name}"
         printf '\nArtefacto "%s[%s]" a descargar - Name    : %s\n' "$l_tag" "${l_i}" "${l_artifact_name}"
         printf 'Artefacto "%s[%s]" a descargar - URL     : %s\n' "$l_tag" "${l_i}" "${l_artifact_url}"
@@ -2585,7 +2585,7 @@ function m_download_artifacts() {
     return 0
 }
 
-function m_install_artifacts() {
+function _install_artifacts() {
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -2649,7 +2649,7 @@ function m_install_artifacts() {
 
             #Copiar los archivos necesarios
             printf 'Copiando los archivos de artefacto "%s[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.tar.gz}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
+            _copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.tar.gz}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
                 "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
             #l_status=0
             printf 'Artefacto "%s[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
@@ -2666,7 +2666,7 @@ function m_install_artifacts() {
 
             #Copiar los archivos necesarios
             printf 'Copiando los archivos de artefacto "%s[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-            m_copy_artifact_files "$p_repo_id" $l_i "${l_tmp}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
+            _copy_artifact_files "$p_repo_id" $l_i "${l_tmp}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
                 "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
             #l_status=0
             printf 'Artefacto "%s[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
@@ -2682,7 +2682,7 @@ function m_install_artifacts() {
 
             #Copiar los archivos necesarios
             printf 'Copiando los archivos de artefacto "%s[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-            m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.zip}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
+            _copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.zip}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
                 "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
             #l_status=0
             printf 'Artefacto "%s[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
@@ -2692,10 +2692,10 @@ function m_install_artifacts() {
             #Copiar los archivos necesarios
             printf 'Copiando los archivos de artefacto "%s[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
             if [ $p_install_win_cmds -eq 0 ]; then
-                m_copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.exe}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
+                _copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.exe}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
                     "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
             else
-                m_copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
+                _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
                     "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
             fi
             #l_status=0
@@ -2728,7 +2728,7 @@ function m_install_artifacts() {
     return 0
 }
 
-function m_intall_repository() { 
+function _intall_repository() { 
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -2758,7 +2758,7 @@ function m_intall_repository() {
     
     declare -a la_artifact_names
     declare -a la_artifact_types
-    m_load_artifacts "$p_repo_id" "$p_repo_last_version" "$p_repo_last_version_pretty" la_artifact_names la_artifact_types "$p_arti_version" $p_install_win_cmds
+    _load_artifacts "$p_repo_id" "$p_repo_last_version" "$p_repo_last_version_pretty" la_artifact_names la_artifact_types "$p_arti_version" $p_install_win_cmds
     l_status=$?    
     if [ $l_status -ne 0 ]; then
         echo "ERROR (40): No esta configurado los artefactos para el repositorio \"${l_tag}\""
@@ -2780,22 +2780,22 @@ function m_intall_repository() {
     fi    
 
     #5. Descargar el artifacto en la carpeta
-    if ! m_download_artifacts "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$p_repo_last_version_pretty" la_artifact_names "$p_arti_version"; then
+    if ! _download_artifacts "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$p_repo_last_version_pretty" la_artifact_names "$p_arti_version"; then
         echo "ERROR (43): No se ha podido descargar los artefactos del repositorio \"${l_tag}\""
-        m_clean_temp "$p_repo_id"
+        _clean_temp "$p_repo_id"
         return 23
     fi
 
     #6. Instalar segun el tipo de artefecto
-    if ! m_install_artifacts "${p_repo_id}" "${p_repo_name}" la_artifact_names la_artifact_types "${p_repo_current_version}" "${p_repo_last_version}" \
+    if ! _install_artifacts "${p_repo_id}" "${p_repo_name}" la_artifact_names la_artifact_types "${p_repo_current_version}" "${p_repo_last_version}" \
         "$p_repo_last_version_pretty" "$p_arti_version" $p_arti_index $p_install_win_cmds; then
         echo "ERROR (44): No se ha podido instalar los artefecto de repositorio \"${l_tag}\""
-        m_clean_temp "$p_repo_id"
+        _clean_temp "$p_repo_id"
         return 24
     fi
 
-    m_show_final_message "$p_repo_id" "$p_repo_last_version_pretty" "$p_arti_version" $p_install_win_cmds
-    m_clean_temp "$p_repo_id"
+    _show_final_message "$p_repo_id" "$p_repo_last_version_pretty" "$p_arti_version" $p_install_win_cmds
+    _clean_temp "$p_repo_id"
     return 0
 
 }
@@ -2838,7 +2838,7 @@ declare -A gA_repositories=(
 
 
 #Repositorios opcionales y su flag para configuración. Usar valores 2^n (4, 8, 16, ...)
-#Sus valores debera coincider con lo que se muestra en el menu "m_show_menu_core"
+#Sus valores debera coincider con lo que se muestra en el menu "_show_menu_core"
 declare -A gA_optional_repositories=(
         ['neovim']=8
         ['k0s']=16
@@ -2856,7 +2856,7 @@ declare -A gA_optional_repositories=(
     )
 
 
-function m_setup_repository() {
+function i_setup_repository() {
 
     #1. Argumentos 
     local p_repo_id="$1"
@@ -2896,7 +2896,7 @@ function m_setup_repository() {
     #3. Obtneer la ultima version del repositorio
     declare -a la_repo_versions
     declare -a la_arti_versions
-    m_get_repo_latest_version "$p_repo_id" "$l_repo_name" la_repo_versions la_arti_versions
+    _get_repo_latest_version "$p_repo_id" "$l_repo_name" la_repo_versions la_arti_versions
     l_status=$?
     #echo "Subversiones: ${la_arti_versions[@]}"
 
@@ -2954,7 +2954,7 @@ function m_setup_repository() {
     #Obtener la versión de repositorio instalado en Linux
     local l_repo_current_version=""
     local l_repo_is_installed=0
-    l_repo_current_version=$(m_get_repo_current_version "$p_repo_id" ${l_install_win_cmds} "")
+    l_repo_current_version=$(_get_repo_current_version "$p_repo_id" ${l_install_win_cmds} "")
     l_repo_is_installed=$?          #(9) El repositorio unknown porque no se implemento la logica
                                     #(3) El repositorio unknown porque no se puede obtener (siempre instalarlo)
                                     #(1) El repositorio no esta instalado 
@@ -3051,8 +3051,8 @@ function m_setup_repository() {
             #Comparando las versiones
             if [ ! -z "$l_repo_last_version_pretty" ] && [ $l_repo_is_installed -ne 3 ]; then
                  
-                #m_compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
-                m_compare_version "${l_repo_current_version}" "${l_repo_last_version_pretty}"
+                #compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
+                compare_version "${l_repo_current_version}" "${l_repo_last_version_pretty}"
                 l_status=$?
 
                 if [ $l_status -eq 0 ]; then
@@ -3081,12 +3081,12 @@ function m_setup_repository() {
 
             if [ $l_arti_versions_nbr -eq 0 ]; then
                 printf "\nSe iniciara la configuración de los artefactos del repositorio \"${l_tag}\" ...\n"
-                m_intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" "" 0 $l_install_win_cmds
+                _intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" "" 0 $l_install_win_cmds
             else
                 for ((l_n=0; l_n<${l_arti_versions_nbr}; l_n++)); do
                     l_aux="${l_tag}[${la_arti_versions[${l_n}]}]"
                     printf "\n\nSe iniciara la configuración de los artefactos del repositorio \"${l_aux}\" ...\n"
-                    m_intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" \
+                    _intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" \
                         "${la_arti_versions[${l_n}]}" ${l_n} $l_install_win_cmds
                 done
             fi
@@ -3105,7 +3105,7 @@ function m_setup_repository() {
     fi
 
     #Obtener la versión de repositorio instalado en Windows
-    l_repo_current_version=$(m_get_repo_current_version "$p_repo_id" ${l_install_win_cmds} "")
+    l_repo_current_version=$(_get_repo_current_version "$p_repo_id" ${l_install_win_cmds} "")
     l_repo_is_installed=$?          #(9) El repositorio unknown (no implementado la logica)
                                     #(3) El repositorio unknown porque no se puede obtener (siempre instalarlo)
                                     #(1) El repositorio no esta instalado 
@@ -3211,8 +3211,8 @@ function m_setup_repository() {
             #Comparando las versiones
             if [ ! -z "$l_repo_last_version_pretty" ] && [ $l_repo_is_installed -ne 3 ]; then
                  
-                #m_compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
-                m_compare_version "${l_repo_current_version}" "${l_repo_last_version_pretty}"
+                #compare_version "${p_repo_current_version}" "${l_repo_last_version_pretty}"
+                compare_version "${l_repo_current_version}" "${l_repo_last_version_pretty}"
                 l_status=$?
 
                 if [ $l_status -eq 0 ]; then
@@ -3240,12 +3240,12 @@ function m_setup_repository() {
 
             if [ $l_arti_versions_nbr -eq 0 ]; then
                 printf '\nSe iniciara la configuración de los artefactos del repositorio "%s" ...\n' "${l_tag}"
-                m_intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" "" 0 $l_install_win_cmds
+                _intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" "" 0 $l_install_win_cmds
             else
                 for ((l_n=0; l_n<${l_arti_versions_nbr}; l_n++)); do
                     l_aux="${l_tag}[${la_arti_versions[${l_n}]}]"
                     printf '\n\nSe iniciara la configuración de los artefactos del repositorio "%s" ...\n' "${l_aux}"
-                    m_intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" \
+                    _intall_repository "$p_repo_id" "$l_repo_name" "${l_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" \
                         "${la_arti_versions[${l_n}]}" ${l_n} $l_install_win_cmds
                 done
             fi
@@ -3262,7 +3262,7 @@ function m_setup_repository() {
 # Argunentos:
 # - Repositorios opcionales que se se instalaran (flag en binario. entero que es suma de 2^n).
 # - Si es invocado desde otro script, su valor es 1 y no se solicita las credenciales sudo. Si el script se invoca directamente, es 0
-function m_setup_repositories() {
+function i_setup_repositories() {
     
     #1. Argumentos 
     local p_opciones=2
@@ -3391,7 +3391,7 @@ function m_setup_repositories() {
         fi
 
         #5.2 Instalar el repositorio
-        m_setup_repository "$l_repo_id" $l_repo_can_setup $l_must_update_all_installed_repo
+        i_setup_repository "$l_repo_id" $l_repo_can_setup $l_must_update_all_installed_repo
 
     done; 
 
@@ -3404,7 +3404,7 @@ function m_setup_repositories() {
 }
 
 
-function m_show_menu_core() {
+function _show_menu_core() {
 
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
@@ -3433,7 +3433,7 @@ function m_show_menu_core() {
 
 }
 
-function m_main() {
+function i_main() {
 
     echo "OS Type            : (${g_os_type})"
     echo "OS Subtype (Distro): (${g_os_subtype_id}) ${g_os_subtype_name} - ${g_os_subtype_version}"$'\n'
@@ -3450,14 +3450,14 @@ function m_main() {
     local l_opciones=""
     while [ $l_flag_continue -eq 0 ]; do
 
-        m_show_menu_core
+        _show_menu_core
         read l_opciones
 
         case "$l_opciones" in
             a)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
-                m_setup_repositories 3 0
+                i_setup_repositories 3 0
                 ;;
 
             q)
@@ -3476,7 +3476,7 @@ function m_main() {
                 if [[ "$l_opciones" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
                     echo "#################################################################################################"$'\n'
-                    m_setup_repositories $l_opciones 0
+                    i_setup_repositories $l_opciones 0
                 else
                     l_flag_continue=0
                     echo "Opción incorrecta"
@@ -3518,7 +3518,7 @@ gp_install_all_user=0   #(0) Se instala/configura para ser usuado por todos los 
 #0. Por defecto, mostrar el menu para escoger lo que se va instalar
 if [ $gp_type_calling -eq 0 ]; then
 
-    m_main
+    i_main
 
 #1. Instalando los repositorios especificados por las opciones indicas en '$2'
 elif [ $gp_type_calling -eq 1 ]; then
@@ -3529,7 +3529,7 @@ elif [ $gp_type_calling -eq 1 ]; then
     else
         exit 98
     fi
-    m_setup_repositories $gp_opciones 1
+    i_setup_repositories $gp_opciones 1
 
 #3. Instalando un solo repostorio del ID indicao por '$2'
 else
@@ -3540,7 +3540,7 @@ else
        exit 99
     fi
 
-    m_setup_repository "$gp_repo_id" 0 0 1
+    i_setup_repository "$gp_repo_id" 0 0 1
 
 fi
 

@@ -160,7 +160,7 @@ gi_files() {
         --prompt '📄 Files> ' \
         --header $'CTRL-o (open in browser) ╱ ALT-e (open in editor)\n\n' \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd m_git_open_url 4 {-1}" \
+        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 4 {-1}" \
         --bind "alt-e:execute:${EDITOR:-vim} {-1} > /dev/tty" \
         --preview "git diff --color=always -- {-1} | delta; $_g_fzf_bat --style=numbers,header-filename,grid {-1}" "$@" |
     cut -c4- | sed 's/.* -> //'
@@ -171,7 +171,7 @@ gi_branches() {
 
     _fzf_git_check || return
 
-    bash "$_g_fzf_script_cmd" m_list_objects branches |
+    bash "$_g_fzf_script_cmd" list_objects branches |
     _fzf_git_fzf --ansi \
         --prompt '🌲 Branches> ' \
         --header-lines 2 \
@@ -180,8 +180,8 @@ gi_branches() {
         --color hl:underline,hl+:underline \
         --no-hscroll \
         --bind 'ctrl-/:change-preview-window(down,70%|hidden|)' \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd m_git_open_url 2 {}" \
-        --bind "alt-a:change-prompt(🌳 All branches> )+reload:bash \"$_g_fzf_script_cmd\" m_list_objects all-branches" \
+        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 2 {}" \
+        --bind "alt-a:change-prompt(🌳 All branches> )+reload:bash \"$_g_fzf_script_cmd\" list_objects all-branches" \
         --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" $(sed s/^..// <<< {} | cut -d" " -f1)' "$@" |
     sed 's/^..//' | cut -d' ' -f1
 }
@@ -195,7 +195,7 @@ gi_tags() {
     _fzf_git_fzf --preview-window right,70% \
         --prompt '📛 Tags> ' \
         --header $'CTRL-o (Open in browser)\n\n' \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd m_git_open_url 5 {}" \
+        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 5 {}" \
         --preview 'git show --color=always {} | delta' "$@"
 }
 
@@ -208,7 +208,7 @@ gi_hashes() {
         --prompt '🍡 Hashes> ' \
         --header $'CTRL-o (Open in browser), CTRL-d (Diff), CTRL-s (Toggle sort)\n\n' \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd m_git_open_url 1 {}" \
+        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 1 {}" \
         --bind 'ctrl-d:execute:grep -o "[a-f0-9]\{7,\}" <<< {} | head -n 1 | xargs git diff | delta > /dev/tty' \
         --color hl:underline,hl+:underline \
         --preview 'grep -o "[a-f0-9]\{7,\}" <<< {} | head -n 1 | xargs git show --color=always | delta' "$@" |
@@ -247,7 +247,7 @@ gi_remotes() {
         --prompt '📡 Remotes> ' \
         --header $'CTRL-o (Open in browser)\n\n' \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd m_git_open_url 3 {1}" \
+        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 3 {1}" \
         --preview-window right,70% \
         --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" {1}/"$(git rev-parse --abbrev-ref HEAD)"' "$@" |
     cut -d$'\t' -f1
@@ -269,7 +269,7 @@ gi_stashes() {
 gi_eachref() {
     _fzf_git_check || return
 
-    bash "$_g_fzf_script_cmd" m_list_objects refs | _fzf_git_fzf --ansi \
+    bash "$_g_fzf_script_cmd" list_objects refs | _fzf_git_fzf --ansi \
         --nth 2,2.. \
         --tiebreak begin \
         --prompt '☘️  Each ref> ' \
@@ -278,10 +278,10 @@ gi_eachref() {
         --color hl:underline,hl+:underline \
         --no-hscroll \
         --bind 'ctrl-/:change-preview-window(down,70%|hidden|)' \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd m_git_open_url 2 {2}" \
+        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 2 {2}" \
         --bind "ctrl-s:execute:git show {2} | delta > /dev/tty" \
         --bind "ctrl-d:execute:git diff {2} | delta > /dev/tty" \
-        --bind "alt-a:change-prompt(🍀 Every ref> )+reload:bash \"$_g_fzf_script_cmd\" m_list_objects all-refs" \
+        --bind "alt-a:change-prompt(🍀 Every ref> )+reload:bash \"$_g_fzf_script_cmd\" list_objects all-refs" \
         --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" {2}' "$@" |
     awk '{print $2}'
     #--bind "alt-e:execute:${EDITOR:-vim} <(git show {2}) > /dev/tty" \
@@ -492,7 +492,7 @@ kc_pods() {
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(oc get ${_g_fzf_kc_options} -o yaml) > /dev/tty" \
         --bind "ctrl-t:execute:oc exec -it ${_g_fzf_kc_options} -- bash > /dev/tty" \
         --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain  <(oc logs ${_g_fzf_kc_options} --tail=10000) > /dev/tty" \
-        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" m_show_log 0 0 200 ${_g_fzf_kc_options} > /dev/tty)" \
+        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log 0 0 200 ${_g_fzf_kc_options} > /dev/tty)" \
         --bind 'ctrl-r:reload:$FZF_DEFAULT_COMMAND' |
     awk "$l_awk_template"
         #--bind "ctrl-b:execute:vim <(oc logs ${_g_fzf_kc_options} ${_g_fzf_oc_opc_namespace} --tail=10000) > /dev/tty" \
@@ -580,14 +580,14 @@ kc_containers() {
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Container> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (Preview in full-screen), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Port-Forward), CTRL-x (Exit & follow logs)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} m_show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} m_show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}') > /dev/tty" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}') > /dev/tty" \
         --bind "ctrl-t:execute:oc exec -it {1} -n={2} -c={3} -- bash > /dev/tty" \
         --bind "ctrl-l:execute:$_g_fzf_bat --paging always --style plain  <(kubectl logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
-        --bind "ctrl-p:become(bash \"${_g_fzf_script_cmd}\" m_port_forward_pod '{1}' '{2}' '{3}' '{7}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
-        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" m_show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "ctrl-p:become(bash \"${_g_fzf_script_cmd}\" port_forward_pod '{1}' '{2}' '{3}' '{7}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
         --preview-window down,border-top,70% \
-        --preview "bash ${_g_fzf_script_cmd} m_show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_fzf_script_cmd} show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
     rm -f $_g_fzf_kc_data_file
@@ -669,10 +669,10 @@ kc_deployments() {
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Deployment> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} m_show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} m_show_deploy_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}') > /dev/tty" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_deploy_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}') > /dev/tty" \
         --preview-window down,border-top,70% \
-        --preview "bash ${_g_fzf_script_cmd} m_show_deploy_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_fzf_script_cmd} show_deploy_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
     rm -f ${_g_fzf_kc_data_file}

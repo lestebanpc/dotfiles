@@ -9,7 +9,7 @@
 #  11 - 20: Si es Unix
 #  21 - 30: si es MacOS
 #  31 - 40: Si es Windows
-function m_get_os_type() {
+function get_os_type() {
     local l_system=$(uname -s)
 
     local l_os_type=0
@@ -40,7 +40,7 @@ function m_get_os_type() {
 #     01 : Ubuntu
 #     02 : Fedora
 #  2) En el flujo de salida, se muestra la nombre de distribucion Linux
-function m_get_linux_type_id() {
+function get_linux_type_id() {
 
     if [ -z "$g_info_distro" ]; then
         if ! g_info_distro=$(cat /etc/*-release 2> /dev/null); then
@@ -83,7 +83,7 @@ function m_get_linux_type_id() {
 #Determinar la version de una disstribucion Linux. Devuelve:
 #  1) Retorna si obtuvo una versionde distribucion: 0 si es ok, otro valor si no se pudo obtener la version
 #  2) En el flujo de salida se muestra la version de la distribucion Linux
-function m_get_linux_type_version() {
+function get_linux_type_version() {
 
     if [ -z "$g_info_distro" ]; then
         if ! g_info_distro=$(cat /etc/*-release 2> /dev/null); then
@@ -119,7 +119,7 @@ function m_get_linux_type_version() {
 #   0 si es =
 #   1 si es >
 #   2 si es <
-function m_compare_version() {
+function compare_version() {
 
     #1. Argumentos
     #local p_operating_1="$1"
@@ -164,7 +164,7 @@ function m_compare_version() {
 }
 
 
-function m_url_encode() {
+function url_encode() {
     #set -x
     local l_string="${1}"
     local l_n=${#l_string}

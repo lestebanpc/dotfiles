@@ -6,19 +6,19 @@
 . ~/.files/terminal/linux/functions/func_utility.bash
 
 #Variable global pero solo se usar localmente en las funciones
-t_tmp=""
+_g_tmp=""
 
 #Determinar la clase del SO
-m_get_os_type
+get_os_type
 declare -r g_os_type=$?
 
 #Deteriminar el tipo de distribución Linux
 if [ $g_os_type -le 10 ]; then
-    t_tmp=$(m_get_linux_type_id)
+    _g_tmp=$(get_linux_type_id)
     declare -r g_os_subtype_id=$?
-    declare -r g_os_subtype_name="$t_tmp"
-    t_tmp=$(m_get_linux_type_version)
-    declare -r g_os_subtype_version="$t_tmp"
+    declare -r g_os_subtype_name="$_g_tmp"
+    _g_tmp=$(get_linux_type_version)
+    declare -r g_os_subtype_version="$_g_tmp"
 fi
 
 #Determinar si es root
@@ -39,7 +39,7 @@ declare -r g_path_lnx_programs='/opt/tools'
 # > Opcion:
 #    0 - Se configura VIM en modo basico (por defecto)
 #    1 - Se configura VIM en modo IDE
-function m_neovim_config_plugins() {
+function _neovim_config_plugins() {
 
     #1. Argumentos
     local p_opcion=0
@@ -78,7 +78,7 @@ function m_neovim_config_plugins() {
 
 # Parametros:
 # > Opcion ingresada por el usuario.
-function m_neovim_setup() {
+function _neovim_setup() {
 
     #1. Argumentos
     local p_opciones=0
@@ -217,7 +217,7 @@ function m_neovim_setup() {
         fi
 
         #5.3 Instalando paquetes
-        m_neovim_config_plugins 1
+        _neovim_config_plugins 1
 
         #5.4 Creando enlaces simbolicos
         printf '\n'
@@ -289,7 +289,7 @@ function m_neovim_setup() {
     if [ $l_flag -eq $l_option ]; then
 
         #Instalando paquetes
-        m_neovim_config_plugins 0
+        _neovim_config_plugins 0
 
         #Creando enlaces simbolicos
         printf '\n'
@@ -352,7 +352,7 @@ declare -A gA_repositories=(
 # > Opcion:
 #    0 - Se configura VIM en modo basico (por defecto)
 #    1 - Se configura VIM en modo IDE
-function m_vim_config_plugins() {
+function _vim_config_plugins() {
 
     #1. Argumentos
     local p_opcion=0
@@ -470,7 +470,7 @@ function m_vim_config_plugins() {
 
 # Parametros:
 # > Opcion ingresada por el usuario.
-function m_vim_setup() {
+function _vim_setup() {
 
     #1. Argumentos
     local p_opciones=0
@@ -551,7 +551,7 @@ function m_vim_setup() {
     if [ $l_flag -eq $l_option ]; then
 
         #Instalar los plugins
-        m_vim_config_plugins 1
+        _vim_config_plugins 1
 
         #Creando enlaces simbolicos
         printf '\n'
@@ -596,7 +596,7 @@ function m_vim_setup() {
 
 
         #Instalar los plugins
-        m_vim_config_plugins 0
+        _vim_config_plugins 0
         
         #Creando enlaces simbolicos
         printf '\n'
@@ -622,7 +622,7 @@ function m_vim_setup() {
 
 # Parametros:
 # > Opcion ingresada por el usuario.
-function m_commands_setup() {
+function _commands_setup() {
 
     #1. Argumentos
     local p_opciones=0
@@ -871,7 +871,7 @@ function m_commands_setup() {
 
 # Parametros:
 # > Opcion ingresada por el usuario.
-function m_profile_setup() {
+function _profile_setup() {
 
     #1. Argumentos
     local p_opciones=0
@@ -995,7 +995,7 @@ function m_profile_setup() {
 #   ( 4) Configurar VIM-Enhanced como Developer"
 #   ( 8) Configurar NeoVIM como Developer"
 #   (16) Forzar el actualizado de los enlaces simbolicos del profile"
-function m_setup() {
+function _setup() {
 
     #01. Argumentos
     local p_opciones=0
@@ -1063,17 +1063,17 @@ function m_setup() {
    
     
     #05. Instalando comandos y programas basicos
-    m_commands_setup $p_opciones
+    _commands_setup $p_opciones
 
     #06. Instalando VIM-Enhaced
-    m_vim_setup $p_opciones
+    _vim_setup $p_opciones
     
     #07. Instalando NeoVim
-    m_neovim_setup $p_opciones
+    _neovim_setup $p_opciones
     
 
     #08. Configuracion el SO: Crear enlaces simbolicos y folderes basicos
-    m_profile_setup $p_opciones
+    _profile_setup $p_opciones
 
     #09. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_is_root -ne 0 ]; then
@@ -1084,7 +1084,7 @@ function m_setup() {
 }
 
 
-function m_show_menu_core() {
+function _show_menu_core() {
 
     echo "                                  Escoger la opción"
     echo "-------------------------------------------------------------------------------------------------"
@@ -1107,7 +1107,7 @@ function m_show_menu_core() {
 
 }
 
-function m_main() {
+function i_main() {
 
     echo "OS Type            : (${g_os_type})"
     echo "OS Subtype (Distro): (${g_os_subtype_id}) ${g_os_subtype_name} - ${g_os_subtype_version}"$'\n'
@@ -1125,7 +1125,7 @@ function m_main() {
     local l_opciones=""
     while [ $l_flag_continue -eq 0 ]; do
 
-        m_show_menu_core
+        _show_menu_core
         read l_opciones
 
         case "$l_opciones" in
@@ -1133,28 +1133,28 @@ function m_main() {
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
                 #1 + 2 + 8 + 16
-                m_setup 27
+                _setup 27
                 ;;
 
             b)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
                 #1 + 4 + 8 + 32
-                m_setup 45
+                _setup 45
                 ;;
 
             c)
                 l_flag_continue=1
                 echo "#################################################################################################"$'\n'
                 #1 + 2 + 8 + 16 + 64 
-                m_setup 91
+                _setup 91
                 ;;
 
             d)
                 l_flag_continue=1
                 #1 + 4 + 8 + 32 + 64
                 echo "#################################################################################################"$'\n'
-                m_setup 109
+                _setup 109
                 ;;
 
             q)
@@ -1166,7 +1166,7 @@ function m_main() {
                 if [[ "$l_opciones" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
                     echo "#################################################################################################"$'\n'
-                    m_setup $l_opciones
+                    _setup $l_opciones
                 else
                     l_flag_continue=0
                     echo "Opción incorrecta"
@@ -1185,7 +1185,7 @@ function m_main() {
 
 }
 
-m_main
+i_main
 
 
 
