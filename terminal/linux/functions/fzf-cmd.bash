@@ -336,7 +336,7 @@ _show_pod_info() {
 
     
     printf '\n%bVolumenes montados por los contenedores:%b\n' "$g_color_subtitle" "$g_color_reset"
-    l_jq_query='[ '"${l_root}"'spec.volumes as $vols | .spec.containers[] | {name: .name, volumeMount: .volumeMounts[]? } | .volumeMount.name as $volName | { name: .name, volumeMount: .volumeMount, volume: ($vols[]? | select(.name == $volName))} | { CONTAINER: .name, "VOL-NAME": .volumeMount.name, "VOL-TYPE": (if .volume.persistentVolumeClaim?.claimName != null then "PVC" elif .volume.configMap?.name then "CONFIG-MAP" elif .volume.secret?.secretName then "SECRET" elif .volume.hostPath?.path != null then "HOST-PATH" elif .volume.emptyDir? != null then "EMPTY-DIR" elif .volume.downwardAPI?.items != null then "DONWWARD-API" elif .volume.projected?.sources != null then "PROJECTED" else "UNKNOWN" end), "MOUNT-PATH": .volumeMount.mountPath, READONLY: .volumeMount.readOnly?, "VOL-VALUE": (if .volume.persistentVolumeClaim?.claimName != null then .volume.persistentVolumeClaim?.claimName elif .volume.configMap?.name then .volume.configMap?.name elif .volume.secret?.secretName then .volume.secret?.secretName elif .volume.hostPath?.path != null then .volume.hostPath?.path elif .volume.emptyDir? != null then "..." elif .volume.downwardAPI?.items != null then "..." elif .volume.projected?.sources != null then "..." else "???" end) }]'
+    l_jq_query='[ '"${l_root}"'spec.volumes as $vols | '"${l_root}"'spec.containers[] | {name: .name, volumeMount: .volumeMounts[]? } | .volumeMount.name as $volName | { name: .name, volumeMount: .volumeMount, volume: ($vols[]? | select(.name == $volName))} | { CONTAINER: .name, "VOL-NAME": .volumeMount.name, "VOL-TYPE": (if .volume.persistentVolumeClaim?.claimName != null then "PVC" elif .volume.configMap?.name then "CONFIG-MAP" elif .volume.secret?.secretName then "SECRET" elif .volume.hostPath?.path != null then "HOST-PATH" elif .volume.emptyDir? != null then "EMPTY-DIR" elif .volume.downwardAPI?.items != null then "DONWWARD-API" elif .volume.projected?.sources != null then "PROJECTED" else "UNKNOWN" end), "MOUNT-PATH": .volumeMount.mountPath, READONLY: .volumeMount.readOnly?, "VOL-VALUE": (if .volume.persistentVolumeClaim?.claimName != null then .volume.persistentVolumeClaim?.claimName elif .volume.configMap?.name then .volume.configMap?.name elif .volume.secret?.secretName then .volume.secret?.secretName elif .volume.hostPath?.path != null then .volume.hostPath?.path elif .volume.emptyDir? != null then "..." elif .volume.downwardAPI?.items != null then "..." elif .volume.projected?.sources != null then "..." else "???" end) }]'
     
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
@@ -416,14 +416,19 @@ _show_pod_info() {
 
 
     printf '\n%bNode Selector usados por el pods:%b\n' "$g_color_subtitle" "$g_color_reset"
-    l_jq_query="${l_root}"'spec.nodeSelector | to_entries[] | "\t\(.key)\t: \(.value)"'
-    echo "$_g_data_object_json" | jq -r "$l_jq_query"
+    l_jq_query='if '"${l_root}"'spec.nodeSelector == null then null else ('"${l_root}"'spec.nodeSelector | to_entries[] | "\t\(.key)\t: \(.value)") end'
+    l_data=$(echo "$_g_data_object_json" | jq -r "$l_jq_query")
+    if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
+        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+    else
+        echo "$l_data"
+    fi
 
 
     printf '\n%bPod Affinity:%b\n' "$g_color_subtitle" "$g_color_reset"
     l_jq_query="${l_root}"'spec.affinity?.podAffinity'
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
-    if [ -z "$l_data" ] || [ "$ldata" != "null" ]; then
+    if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
         printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
     else
         echo "$l_data" | yq -p json -o yaml
@@ -432,7 +437,7 @@ _show_pod_info() {
     printf '\n%bPod Anti-Affinity:%b\n' "$g_color_subtitle" "$g_color_reset"
     l_jq_query="${l_root}"'spec.affinity?.podAntiAffinity'
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
-    if [ -z "$l_data" ] || [ "$ldata" != "null" ]; then
+    if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
         printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
     else
         echo "$l_data" | yq -p json -o yaml
@@ -446,7 +451,7 @@ _show_pod_info() {
 #  2 > El nombre deployment
 #  3 > El nombre namespace
 #  4 > Las etiquetas para busqueda de pods
-show_deploy_info() {
+show_deployment_info() {
 
     local l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS)'
     #local l_data_object_json=""
@@ -465,23 +470,80 @@ show_deploy_info() {
     
 
     printf '%bInformación adicional:%b\n' "$g_color_subtitle" "$g_color_reset"
-    l_jq_query='{ UID: .metadata.uid, Owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), Revision: .metadata.annotations."deployment.kubernetes.io/revision", Generation: .metadata.generation, Replicas: .spec.replicas, ReadyReplicas: "\(.status.readyReplicas)/\(.spec.replicas)", CurrentReplicas: .status.replicas, UpdatedReplicas: .status.updatedReplicas, AvailableReplicas: .status.availableReplicas, ObservedGeneration: .status.observedGeneration, RevisionHistoryLimit: .spec.revisionHistoryLimit, ProgressDeadlineSeconds: .spec.progressDeadlineSeconds } | to_entries[] | "\t\(.key)\t: \(.value)"'
+    l_jq_query='{ UID: .metadata.uid, Owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), Revision: .metadata.annotations."deployment.kubernetes.io/revision", Generation: .metadata.generation, DesiredReplicas: .spec.replicas, ReadyReplicas: .status.readyReplicas, CurrentReplicas: .status.replicas, UpdatedReplicas: .status.updatedReplicas, AvailableReplicas: .status.availableReplicas, ObservedGeneration: .status.observedGeneration, RevisionHistoryLimit: .spec.revisionHistoryLimit, ProgressDeadlineSeconds: .spec.progressDeadlineSeconds } | to_entries[] | "\t\(.key)\t: \(.value)"'
     echo "$_g_data_object_json" | jq -r "$l_jq_query"
 
 
     printf '\n%bEstrategias del Deployment:%b\n' "$g_color_subtitle" "$g_color_reset"
-    #l_jq_query='[ .metadata.ownerReferences[]? | { NAME: .name, KIND: .kind, CONTROLLER: .controller, UID: .uid }]'
+    l_jq_query='.spec.strategy?'
     
-    # l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
-    # if [ $? -eq 0 ]; then
-    #     if [ "$l_data" = "[]" ]; then
-    #         printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
-    #     else
-    #         echo "$l_data" | jtbl -n
-    #     fi
-    # else
-    #     printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
-    # fi
+    l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
+    if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
+        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+    else
+        echo "$l_data" | yq -p json -o yaml
+    fi
+
+
+    printf '\n%bSelector de pods usados:%b\n' "$g_color_subtitle" "$g_color_reset"
+    l_jq_query='.spec.selector.matchLabels | to_entries[] | "\t\(.key)\t: \(.value)"'
+    echo "$_g_data_object_json" | jq -r "$l_jq_query"
+
+
+
+    printf '\n%bStatus del Deployment (Contitions):%b\n' "$g_color_subtitle" "$g_color_reset"
+    l_jq_query='[.status.conditions[]? | { TYPE: .type, STATUS: .status, "TRANSITION-TIME": .lastTransitionTime, "UPDATE-TIME": .lastUpdateTime , REASON: .reason, MESSAGGE: .message }]'
+    
+    l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
+    if [ $? -eq 0 ]; then
+        if [ "$l_data" = "[]" ]; then
+            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+        else
+            echo "$l_data" | jtbl -n
+        fi
+    else
+        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+    fi
+
+    
+
+    #2. Informacion general del Pod
+    printf '\n\n%b########################################################################################\n' "$g_color_opaque" 
+    printf '%bPOD TEMPLATE INFO%b\n' "$g_color_title" "$g_color_opaque"
+    printf '########################################################################################%b\n' "$g_color_reset"
+
+    _show_pod_info 0
+
+
+}
+
+#Parametros (argumentos y opciones):
+#  1 > La ruta del archivo de datos
+#  2 > El nombre deployment
+#  3 > El nombre namespace
+#  4 > Las etiquetas para busqueda de pods
+show_replicaset_info() {
+
+    local l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS)'
+    #local l_data_object_json=""
+    local l_data=""
+
+    _g_data_object_json=$(jq --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+
+    #1. Información especifica del contenedor
+    printf '%bDeployment :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$2"
+    printf '%bNamespace  :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$3"
+    printf '%bList pods  :%b oc get pod -n %s -l %s\n' "$g_color_subtitle" "$g_color_reset" "$3" "$4"
+    
+
+    printf '%bInformación adicional:%b\n' "$g_color_subtitle" "$g_color_reset"
+    l_jq_query='{ UID: .metadata.uid, Owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), DesiredReplicas: .spec.replicas, ReadyReplicas: .status.readyReplicas, CurrentReplicas: .status.replicas, AvailableReplicas: .status.availableReplicas, FullyLabeledReplicas: .status.fullyLabeledReplicas, DeploymentRevision: .metadata.annotations."deployment.kubernetes.io/revision", DeploymentMaxReplicas: .metadata.annotations."deployment.kubernetes.io/max-replicas", DeploymentDesiredReplicas: .metadata.annotations."deployment.kubernetes.io/desired-replicas" } | to_entries[] | "\t\(.key)\t: \(.value)"'
+    echo "$_g_data_object_json" | jq -r "$l_jq_query"
+
 
 
     printf '\n%bSelector de pods usados:%b\n' "$g_color_subtitle" "$g_color_reset"

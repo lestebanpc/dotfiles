@@ -650,7 +650,7 @@ kc_deployments() {
 
     #4. Generar el reporte deseado con la data ingresada
     local l_data=""
-    local l_jq_query='[.items[] | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, replicas: .status.replicas, readyReplicas: .status.readyReplicas, availableReplicas: .status.availableReplicas, updatedReplicas: .status.updatedReplicas, lastTransitionTime: (.status.conditions[] | select(.type=="Progressing") | .lastTransitionTime) } | { NAME: .name, NAMESPACE: .namespace, READY: "\(.replicas)/\(.readyReplicas)", "UP-TO-DATE": .updatedReplicas, AVAILABLE: .availableReplicas, INITIAL: .lastTransitionTime, "SELECTOR-MATCH-LABELS": $labels }]'
+    local l_jq_query='[.items[] | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: .status.readyReplicas, availableReplicas: .status.availableReplicas, updatedReplicas: .status.updatedReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), lastTransitionTime: (.status.conditions[] | select(.type=="Progressing") | .lastTransitionTime) } | { NAME: .name, NAMESPACE: .namespace, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", "UP-TO-DATE": .updatedReplicas, AVAILABLE: .availableReplicas, INITIAL: .lastTransitionTime, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels, OWNERS: .owners}]'
 
     #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
     l_data=$(jq "$l_jq_query" ${_g_fzf_kc_data_file})
@@ -670,14 +670,106 @@ kc_deployments() {
         --prompt "Deployment> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_deploy_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}') > /dev/tty" \
         --preview-window down,border-top,70% \
-        --preview "bash ${_g_fzf_script_cmd} show_deploy_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_fzf_script_cmd} show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
     rm -f ${_g_fzf_kc_data_file}
 
 }
+
+
+
+kc_replicasets() {
+
+    #1. Inicializar variables requeridas para fzf y awk
+    #local l_awk_template='{print "replicaset/"$1" -n "$2" | pod -n "$2"-l "$7}'
+    local l_awk_template='{print "replicaset/"$1" -n "$2}'
+    local l_cmd_options="get replicaset -o json"
+    _g_fzf_kc_data_file="${_g_fzf_cache_path}/replicaset_${_g_uid}.json"
+
+    #2. Procesar los argumentos y modificar las variables segun ello
+    
+    #Ayuda
+    if [ "$1" = "--help" ]; then
+        echo "Usar: "
+        echo "     kc_replicasets NAMESPACE FILTER-LABELS FILTER-FIELDS"
+        echo "     kc_replicasets --help" 
+        echo "> Use '.' si desea no ingresar valor para el argumento."
+        echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
+        echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
+        echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
+        echo "  Ejemplo 'label1=value1,label2=value2'"
+        echo "> Argumento 'FILTER-FIELDS': Coloque el listado de los campos deseado (igual al valor de '--field-selector' de kubectl)."
+        echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
+        return 0
+    fi
+    
+    #Namespace
+    if [ ! -z "$1" ] && [ "$1" != "." ]; then
+        if [ "$1" = "--all" ]; then
+            l_cmd_options="${l_cmd_options} --all-namespaces"
+        else
+            l_cmd_options="${l_cmd_options} -n $1"
+        fi
+    fi
+
+    
+    #Labels
+    if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
+        l_cmd_options="${l_cmd_options} -l $2"
+    fi
+
+    #Filed Selectors
+    if [ ! -z "$3" ] &&  [ "$3" != "." ]; then
+        l_cmd_options="${l_cmd_options} --field-selector $3"
+    fi
+
+    #echo "$l_cmd_options"
+
+    #3. Obtener la data del cluster y almacenarlo en un archivo temporal
+    kubectl $l_cmd_options > $_g_fzf_kc_data_file 
+    if [ $? -ne 0 ]; then
+        echo "Check the connection to k8s cluster"
+        return 1
+    fi
+
+    #4. Generar el reporte deseado con la data ingresada
+    local l_data=""
+    local l_jq_query='[.items[] | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: (.status.readyReplicas//0), availableReplicas: (.status.availableReplicas//0), fullyLabeledReplicas: .status.fullyLabeledReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), time:  .metadata.creationTimestamp} | { NAME: .name, NAMESPACE: .namespace, OWNERS: .owners, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", AVAILABLE: .availableReplicas, INITIAL: .time, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels}]'
+
+    #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
+    l_data=$(jq "$l_jq_query" ${_g_fzf_kc_data_file})
+    if [ $? -ne 0 ]; then
+        echo "Error en el fitro usado"
+        return 2
+    fi
+
+    if [ "$l_data" = "[]" ]; then
+        echo "No data found"
+        return 3
+    fi
+    
+    #5. Mostrar el reporte
+    echo "$l_data" | jtbl -n |
+    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
+        --prompt "ReplicaSet> " \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen)\n' \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
+        --preview-window down,border-top,70% \
+        --preview "bash ${_g_fzf_script_cmd} show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | $_g_fzf_bat --style plain" |
+    awk "$l_awk_template"
+
+    rm -f ${_g_fzf_kc_data_file}
+
+}
+
+
+
+
+
 
 
 

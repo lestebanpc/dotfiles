@@ -707,7 +707,7 @@ function _commands_setup() {
         echo "XSel \"${l_version}\" ya esta instalado"
     fi
 
-    #4. Instalación de RTEs requerida para Vim (y/o NeoVim) como develeper
+    #4. Instalación de comandos para el desarrollador: RTEs requerida para Vim (y/o NeoVim), Otros
     l_option=4
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -ne $l_option ]; then
@@ -864,7 +864,60 @@ function _commands_setup() {
             echo "Python3> Modulo pip \"$l_version\" ya esta instalado"
         fi
 
+        #4.4 Instalación de Skopeo: Permite inspeccionar contenedores de registros remotos
+        #                           sin requerir container engine y no hacer pull de ccontenedor
+        l_version=$(skopeo -v 2> /dev/null)
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
 
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            echo "Tools> Skopeo para examinar, copiar, eliminar contenedores de registros remotos."
+
+            case "$g_os_subtype_id" in
+                1)
+                    #Distribución: Ubuntu
+                    if [ $g_is_root -eq 0 ]; then
+                        apt-get install skopeo
+                    else
+                        sudo apt-get install skopeo
+                    fi
+                    ;;
+
+                2)
+                    #Distribución: Fedora
+                    if [ $g_is_root -eq 0 ]; then
+                        dnf install skopeo
+                    else
+                        sudo dnf install skopeo
+                    fi
+                    ;;
+            esac
+
+        else
+            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+            echo "Tools> Skopeo \"$l_version\" ya esta instalado"
+        fi
+
+        #4.5 Instalación de Herramienta para mostrar arreglo json al formato tabular
+        l_version=$(jtbl -v 2> /dev/null)
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            echo "Tools> Jtbl para transformar arreglos json en formato tabular."
+            
+            if [ $g_is_root -eq 0 ]; then
+                pip3 install jtbl
+            else
+                pip3 install jtbl
+                #sudo pip3 install jtbl
+            fi
+            ;;
+
+        else
+            l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_version1")
+            echo "Tools> Skopeo \"$l_version\" ya esta instalado"
+        fi
     fi
 
 }
