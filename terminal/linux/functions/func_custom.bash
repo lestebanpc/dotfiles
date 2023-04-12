@@ -686,12 +686,13 @@ kc_deployments() {
     echo "$l_data" | jtbl -n |
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Deployment> " \
-        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions)\n' \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions), CTRL-w (Watch pods)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
         --bind "ctrl-d:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_dply_revision1 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${_g_fzf_script_cmd} show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_fzf_script_cmd} show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
     rm -f ${_g_fzf_kc_data_file}
@@ -774,12 +775,13 @@ kc_replicasets() {
     echo "$l_data" |
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Active ReplicaSet> " \
-        --header "$(_fzf_kc_get_context_info)"$'\nALT-a (View all rs), ATL-b (View rs with pods), CTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions)\n' \
+        --header "$(_fzf_kc_get_context_info)"$'\nALT-a (View all rs), ATL-b (View rs with pods), CTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions), CTRL-w (Watch pods)\n' \
         --bind "alt-a:change-prompt(All Replicaset> )+reload:bash \"${_g_fzf_script_cmd}\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 1" \
 		--bind "alt-b:change-prompt(Active Replicaset> )+reload:bash \"${_g_fzf_script_cmd}\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 0" \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
         --bind "ctrl-d:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_dply_revision2 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
         --preview "bash ${_g_fzf_script_cmd} show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
