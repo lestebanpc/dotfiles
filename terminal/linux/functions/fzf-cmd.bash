@@ -385,7 +385,7 @@ _show_log() {
     if [ ! -z "$3" ]; then
         if [ "$3" = "--all" ]; then
             printf 'Container : "%b%s%b"\n' "$l_color_2" "All pod's containers" "$g_color_reset"
-            l_options="---all-containers ${l_options}"
+            l_options="--all-containers ${l_options}"
         else
             printf 'Container : "%b%s%b"\n' "$l_color_2" "$3" "$g_color_reset"
             l_options="-c=${3} ${l_options}"
@@ -474,7 +474,7 @@ _choose_and_show_logs() {
         printf "> Choose the container %bthe following table%b:\n\n" "$g_color_opaque" "$g_color_reset"
 
         #Mostrando la tabla con los contenodores
-        l_jq_query='[. | to_entries[] | { ID: .key, NAME: .value.name, PORTS: (if .value.ports == null then "" else ([.value.ports[] | select(.protocol == "TCP") | .containerPort] | join(",")) end), IMAGE: .value.image }]'        
+        l_jq_query='[. | to_entries[] | { IDX: .key, NAME: .value.name, PORTS: (if .value.ports == null then "" else ([.value.ports[] | select(.protocol == "TCP") | .containerPort] | join(",")) end), IMAGE: .value.image }]'        
         l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
         if [ $? -ne 0 ]; then
             printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
@@ -494,7 +494,8 @@ _choose_and_show_logs() {
         while [ $l_i -lt 0  ]; do
             
             #
-            printf "  Choose ID container %b(Ingrese un entero desde 0 hasta %s)%b: " "$g_color_opaque" "$((l_n - 1))" "$g_color_reset"
+            printf "  Choose %bContainer IDX%b (de 0 hasta %s asociado a un contenedor)%b or Enter %b'--all'%b (para seleccionar todos los contenedores)%b: " \
+                   "$g_color_subtitle" "$g_color_opaque" "$((l_n - 1))" "$g_color_reset" "$g_color_subtitle" "$g_color_opaque" "$g_color_reset"
             read -r l_in_option
             
             if [[ "$l_in_option" =~ ^[0-9]+$ ]]; then
@@ -506,8 +507,13 @@ _choose_and_show_logs() {
                 fi
 
             else
-                printf "  %bIngrese un entero desde 0 hasta %s inclusive%b\n" "$g_color_opaque" "$((l_n - 1))" "$g_color_reset"
+
                 l_i=-1
+                if [ "$l_in_option" = "--all" ]; then
+                    break
+                else
+                    printf "  %bIngrese un entero desde 0 hasta %s inclusive o ingrese '--all'%b\n" "$g_color_opaque" "$((l_n - 1))" "$g_color_reset"
+                fi
             fi
 
         done
@@ -517,8 +523,11 @@ _choose_and_show_logs() {
     fi
 
     #Contenedor elegido
-    l_container=${la_containers[${l_i}]}
-
+    if [ $l_i -ge 0 ]; then
+        l_container=${la_containers[${l_i}]}
+    else
+        l_container='--all'
+    fi
 
     #2.3. Leer el flag show timestamp
     local l_show_timestamp=0
@@ -1632,6 +1641,13 @@ _show_compare_revision() {
         l_revision_flag='(*)'
         printf '\n%bActual revisión%s :%b %s %b(ReplicaSet "%s" creado el "%s")%b\n' "$g_color_subtitle" "${l_revision_flag}" \
                "$g_color_reset" "${la_rev_nbrs[$l_idx_revision]}" "$g_color_opaque" "$l_name" "$l_date" "$g_color_reset"
+
+        l_date="${la_rev_dates[0]}"
+        l_name="${la_rev_names[0]}"
+        l_revision_flag='   '
+        printf '%bUltima revisión%s :%b %s %b(ReplicaSet "%s" creado el "%s")%b\n' "$g_color_subtitle" "${l_revision_flag}" \
+               "$g_color_reset" "${la_rev_nbrs[0]}" "$g_color_opaque" "$l_name" "$l_date" "$g_color_reset"
+
     else
 
         l_date="${la_rev_dates[0]}"
@@ -1782,6 +1798,37 @@ show_dply_revision2() {
 
 }
 
+
+
+#Parametros (argumentos y opciones):
+#  1 > La ruta del archivo de datos de los replicaset.
+#  2 > Flag '0' para mostrar solo las replicaset con pods, caso contrario muestra todos.
+show_replicasets_table() {
+
+    #Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
+    local l_jq_query='[.items[] | '
+
+    if [ "$2" = "0" ]; then
+        l_jq_query="${l_jq_query}"'select(.spec.replicas > 0) | '
+    fi
+
+    l_jq_query="${l_jq_query}"'(reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: (.status.readyReplicas//0), availableReplicas: (.status.availableReplicas//0), fullyLabeledReplicas: .status.fullyLabeledReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), time:  .metadata.creationTimestamp} | { NAME: .name, NAMESPACE: .namespace, OWNERS: .owners, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", AVAILABLE: .availableReplicas, INITIAL: .time, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels}]'
+
+    local l_data=""
+    l_data=$(jq "$l_jq_query" "${1}" 2> /dev/null)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+    #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
+    if [ -z "$l_data" ] || [ "$l_data" = "[]" ]; then
+        return 2
+    fi
+
+    echo "$l_data" | jtbl -n
+    return 0
+
+}
 
 #Los parametros debe ser la funcion y los parametros
 "$@"

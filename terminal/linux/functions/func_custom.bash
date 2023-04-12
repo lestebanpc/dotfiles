@@ -758,26 +758,25 @@ kc_replicasets() {
     fi
 
     #4. Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
-    local l_data=""
-    local l_jq_query='[.items[] | select(.spec.replicas > 0) | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: (.status.readyReplicas//0), availableReplicas: (.status.availableReplicas//0), fullyLabeledReplicas: .status.fullyLabeledReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), time:  .metadata.creationTimestamp} | { NAME: .name, NAMESPACE: .namespace, OWNERS: .owners, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", AVAILABLE: .availableReplicas, INITIAL: .time, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels}]'
+    local l_data
+    l_data=$(bash "${_g_fzf_script_cmd}" show_replicasets_table "${_g_fzf_kc_data_file}" 0)
+    l_status=$?
 
-    #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
-    l_data=$(jq "$l_jq_query" ${_g_fzf_kc_data_file})
-    if [ $? -ne 0 ]; then
+    if [ $l_status -eq 1 ]; then
         echo "Error en el fitro usado"
         return 2
-    fi
-
-    if [ "$l_data" = "[]" ]; then
+    elif [ $l_status -ne 0 ]; then
         echo "No data found"
         return 3
     fi
     
     #5. Mostrar el reporte
-    echo "$l_data" | jtbl -n |
+    echo "$l_data" |
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
-        --prompt "ReplicaSet> " \
-        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions)\n' \
+        --prompt "Active ReplicaSet> " \
+        --header "$(_fzf_kc_get_context_info)"$'\nALT-a (View all rs), ATL-b (View rs with pods), CTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions)\n' \
+        --bind "alt-a:change-prompt(All Replicaset> )+reload:bash \"${_g_fzf_script_cmd}\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 1" \
+		--bind "alt-b:change-prompt(Active Replicaset> )+reload:bash \"${_g_fzf_script_cmd}\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 0" \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
         --bind "ctrl-d:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_dply_revision2 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
