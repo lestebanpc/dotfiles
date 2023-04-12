@@ -16,7 +16,7 @@ _g_fzf_script_cmd=~/.files/terminal/linux/functions/fzf-cmd.bash
 
 #Carpetas de archivos temporales
 _g_fzf_cache_path="/tmp/fzf"
-if [ -d "$_g_fzf_cache_path" ]; then
+if [ ! -d "$_g_fzf_cache_path" ]; then
     mkdir -p $_g_fzf_cache_path
 fi
 
@@ -435,9 +435,9 @@ kc_resources() {
 kc_pods() {
 
     #1. Inicializar variables requeridas para fzf y awk
-    local l_awk_template='{print "pod/"$1}'
-    local l_cmd="kubectl get pods -o wide"
-    _g_fzf_kc_options='pod/{1}'
+    local l_awk_template='{print "pod/"$1" -n "$2}'
+    local l_cmd_options="get pod -o json"
+    _g_fzf_kc_data_file="${_g_fzf_cache_path}/pods_${_g_uid}.json"
 
     #2. Procesar los argumentos y modificar las variables segun ello
     
@@ -459,51 +459,66 @@ kc_pods() {
     #Namespace
     if [ ! -z "$1" ] && [ "$1" != "." ]; then
         if [ "$1" = "--all" ]; then
-            l_cmd="${l_cmd} --all-namespaces"
-            l_awk_template='{print "pod/"$2" -n "$1}'
-            _g_fzf_kc_options='pod/{2} -n={1}'
+            l_cmd_options="${l_cmd_options} --all-namespaces"
         else
-            l_cmd="${l_cmd} -n $1"
-            l_awk_template="{print \"pod/\"\$1\" -n $1\"}"
-            _g_fzf_kc_options="pod/{1} -n=$1"
+            l_cmd_options="${l_cmd_options} -n $1"
         fi
     fi
-
     
     #Labels
     if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
-        l_cmd="${l_cmd} -l $2"
+        l_cmd_options="${l_cmd_options} -l $2"
     fi
 
     #Filed Selectors
     if [ ! -z "$3" ] &&  [ "$3" != "." ]; then
-        l_cmd="${l_cmd} --field-selector $3"
+        l_cmd_options="${l_cmd_options} --field-selector $3"
     fi
 
     #echo "$l_cmd_options"
-    #echo "$_g_fzf_oc_pod_path"
-    #echo "$l_awk_template"
 
-    #3. Generar el reporte deseado con la data ingresada
-    FZF_DEFAULT_COMMAND="$l_cmd" \
-    fzf --info=inline --layout=reverse --header-lines=1 -m \
-        --prompt "Pods> " \
-        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-r (reload), CTRL-a (View yaml), CTRL-t (Bash Terminal), CTRL-b (View logs), CTRL-x (Exit & follow logs)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(oc get ${_g_fzf_kc_options} -o yaml) > /dev/tty" \
-        --bind "ctrl-t:execute:oc exec -it ${_g_fzf_kc_options} -- bash > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain  <(oc logs ${_g_fzf_kc_options} --tail=10000) > /dev/tty" \
-        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log 0 0 200 ${_g_fzf_kc_options} > /dev/tty)" \
-        --bind 'ctrl-r:reload:$FZF_DEFAULT_COMMAND' |
+    #3. Obtener la data del cluster y almacenarlo en un archivo temporal
+    kubectl $l_cmd_options > $_g_fzf_kc_data_file
+    if [ $? -ne 0 ]; then
+        echo "Check the connection to k8s cluster"
+        return 1
+    fi
+
+    #4. Generar el reporte deseado con la data ingresada
+    local l_data=""
+    local l_jq_query='[.items[] | { name: .metadata.name, namespace: .metadata.namespace, status: .status.phase, startTime: .status.startTime, ip: .status.podIP, nodeName: .spec.nodeName, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(",")), ready: (first(.status.conditions[]? | select(.type == "Ready"))), cntNbr: (.spec.containers | length), cntNbrPorts: ([.spec.containers[].ports[]? | select(.protocol == "TCP") | .containerPort] | length), cntNbrReadys: ([.status.containerStatuses[]? | select(.ready)] | length), cntNbrRestarts: ([.status.containerStatuses[]? | .restartCount] | add), cnt: ([.spec.containers[]?.name] | join(",")) } | { "POD-NAME": .name, "POD-NAMESPACE": .namespace, STATE: .status, READY: ("\(.cntNbrReadys)/\(.cntNbr)" + (if .cntNbrReadys == .cntNbr then "" elif  .ready?.status == "False" then "" else "(OB=\(.cntNbr - .cntNbrReadys))" end)), RESTARTS: .cntNbrRestarts, "START-TIME": .startTime, "READY-TIME": (if .ready?.status == "True" then .ready?.lastTransitionTime else "-" end), "FINISHED-TIME": (if .ready?.status == "False" then .ready?.lastTransitionTime else "-" end), "PORTS-NBR": .cntNbrPorts, OWNERS: (if .owners == "" then "-" else .owners end), "NODE-NAME": .nodeName, "POD-IP": .ip, CONTAINERS: .cnt}]'
+
+    #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
+    l_data=$(jq "$l_jq_query" $_g_fzf_kc_data_file)
+    if [ $? -ne 0 ]; then
+        echo "Error en el fitro usado"
+        return 2
+    fi
+
+    if [ "$l_data" = "[]" ]; then
+        echo "No data found"
+        return 3
+    fi
+    
+    #5. Mostrar el reporte
+    echo "$l_data" | jtbl -n |
+    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
+        --prompt "Container> " \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (Preview in full-screen), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs)\n' \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-t:execute:bash \"${_g_fzf_script_cmd}\" open_terminal '{1}' '{2}' 'bash' '${_g_fzf_kc_data_file}'  > /dev/tty" \
+        --bind "ctrl-l:execute(bash \"${_g_fzf_script_cmd}\" show_log_pod '{1}' '{2}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "ctrl-p:become(bash \"${_g_fzf_script_cmd}\" port_forward_pod '{1}' '{2}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log_pod '{1}' '{2}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --preview-window "down,border-top,70%" \
+        --preview "bash ${_g_fzf_script_cmd} show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
-        #--bind "ctrl-b:execute:vim <(oc logs ${_g_fzf_kc_options} ${_g_fzf_oc_opc_namespace} --tail=10000) > /dev/tty" \
-        #--bind "ctrl-x:become(oc logs ${_g_fzf_oc_pod_path} -f --tail=1000 > /dev/tty)" \
-        #--preview-window up:follow \
-        #--preview 'kubectl logs --follow --all-containers --tail=10000 --namespace {1} {2}' "$@"
-        #--bind 'ctrl-/:change-preview-window(80%,border-bottom|hidden|)' \
-        #--bind 'enter:execute:kubectl exec -it --namespace {1} {2} -- bash > /dev/tty' \
-        #--bind 'ctrl-o:execute:${EDITOR:-vim} <(kubectl logs --all-containers --namespace {1} {2}) > /dev/tty' \
+
+    rm -f $_g_fzf_kc_data_file
 
 }
+
 
 
 kc_containers() {
@@ -538,7 +553,6 @@ kc_containers() {
             l_cmd_options="${l_cmd_options} -n $1"
         fi
     fi
-
     
     #Labels
     if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
@@ -561,7 +575,7 @@ kc_containers() {
 
     #4. Generar el reporte deseado con la data ingresada
     local l_data=""
-    local l_jq_query='[.items[] | (.spec.containers | length) as $allcont | { podName: .metadata.name, podNamespace: .metadata.namespace, podStatus: .status.phase, podStartTime: .status.startTime, podIP: .status.podIP, nodeName: .spec.nodeName, container: .spec.containers[], containerStatuses: .status.containerStatuses } | .container.name as $name | { podName: .podName, podNamespace: .podNamespace, podCntNbr: $allcont, podCntReady: ([.containerStatuses[].ready | select(. == true)] | length), podStartTime: .podStartTime, podIP: .podIP, nodeName: .nodeName, name: .container.name, image: .container.image, ports: ([.container.ports[]? | select(.protocol == "TCP") | .containerPort] | join(",")), status: (.containerStatuses[] | select(.name == $name)) } | (.status.state | to_entries[0]) as $st | { "POD-NAME": .podName, "POD-NAMESPACE": .podNamespace, CONTAINER: .name, "STATE": $st.key, READY: .status.ready, "POD-READY": ("\(.podCntReady)/\(.podCntNbr)" + (if .podCntReady == .podCntNbr then "" else "(OBS=\(.podCntNbr - .podCntReady))" end)), "TCP-PORTS": (if .ports == "" then "-" else .ports end), "RESTART": .status.restartCount, "STARTED": .status.started, "STARTED-AT": $st.value.startedAt,  "FINISHED-AT": $st.value.finishedAt, REASON: $st.value.reason, "EXIT-CODE": $st.value.exitCode, "POD-STARTED-AT": .podStartTime, "POD-IP": .podIP, "NODE-NAME": .nodeName }]'
+    local l_jq_query='[.items[] | (.spec.containers | length) as $allcont | { podName: .metadata.name, podNamespace: .metadata.namespace, podStatus: .status.phase, podStartTime: .status.startTime, podIP: .status.podIP, nodeName: .spec.nodeName, container: .spec.containers[], containerStatuses: .status.containerStatuses } | .container.name as $name | { podName: .podName, podNamespace: .podNamespace, podCntNbr: $allcont, podCntReady: ([.containerStatuses[].ready | select(. == true)] | length), podStartTime: .podStartTime, podIP: .podIP, nodeName: .nodeName, name: .container.name, image: .container.image, ports: ([.container.ports[]? | select(.protocol == "TCP") | .containerPort] | join(",")), status: (.containerStatuses[] | select(.name == $name)) } | (.status.state | to_entries[0]) as $st | { "POD-NAME": .podName, "POD-NAMESPACE": .podNamespace, CONTAINER: .name, "STATE": $st.key, READY: .status.ready, "POD-READY": ("\(.podCntReady)/\(.podCntNbr)" + (if .podCntReady == .podCntNbr then "" else "(OB=\(.podCntNbr - .podCntReady))" end)), "TCP-PORTS": (if .ports == "" then "-" else .ports end), "RESTART": .status.restartCount, "STARTED": (.status.started//"-"), "STARTED-AT": ($st.value.startedAt//"-"),  "FINISHED-AT": ($st.value.finishedAt//"-"), REASON: ($st.value.reason//"-"), "EXIT-CODE": ($st.value.exitCode//"-"), "POD-STARTED-AT": .podStartTime, "POD-IP": .podIP, "NODE-NAME": .nodeName }]'
 
     #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
     l_data=$(jq "$l_jq_query" $_g_fzf_kc_data_file)
@@ -579,18 +593,22 @@ kc_containers() {
     echo "$l_data" | jtbl -n |
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Container> " \
-        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (Preview in full-screen), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Port-Forward), CTRL-x (Exit & follow logs)\n' \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (Preview in full-screen), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}') > /dev/tty" \
         --bind "ctrl-t:execute:oc exec -it {1} -n={2} -c={3} -- bash > /dev/tty" \
-        --bind "ctrl-l:execute:$_g_fzf_bat --paging always --style plain  <(kubectl logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
-        --bind "ctrl-p:become(bash \"${_g_fzf_script_cmd}\" port_forward_pod '{1}' '{2}' '{3}' '{7}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
-        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
-        --preview-window down,border-top,70% \
+        --bind "ctrl-l:execute(bash \"${_g_fzf_script_cmd}\" show_log_container '{1}' '{2}' '{3}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "ctrl-p:become(bash \"${_g_fzf_script_cmd}\" port_forward_container '{1}' '{2}' '{3}' '{7}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log_container '{1}' '{2}' '{3}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --preview-window "down,border-top,70%" \
         --preview "bash ${_g_fzf_script_cmd} show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
+    #    --bind "ctrl-l:execute:$_g_fzf_bat --paging always --style plain  <(kubectl logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
+    #    --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
+
     rm -f $_g_fzf_kc_data_file
+
 }
 
 
@@ -642,7 +660,7 @@ kc_deployments() {
     #echo "$l_cmd_options"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    kubectl $l_cmd_options > $_g_fzf_kc_data_file 
+    kubectl $l_cmd_options > "$_g_fzf_kc_data_file"
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
@@ -650,7 +668,7 @@ kc_deployments() {
 
     #4. Generar el reporte deseado con la data ingresada
     local l_data=""
-    local l_jq_query='[.items[] | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: .status.readyReplicas, availableReplicas: .status.availableReplicas, updatedReplicas: .status.updatedReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), lastTransitionTime: (.status.conditions[] | select(.type=="Progressing") | .lastTransitionTime) } | { NAME: .name, NAMESPACE: .namespace, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", "UP-TO-DATE": .updatedReplicas, AVAILABLE: .availableReplicas, INITIAL: .lastTransitionTime, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels, OWNERS: .owners}]'
+    local l_jq_query='[.items[] | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: .status.readyReplicas, availableReplicas: .status.availableReplicas, updatedReplicas: .status.updatedReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), lastTransitionTime: (.status.conditions[] | select(.type=="Progressing") | .lastTransitionTime) } | { NAME: .name, NAMESPACE: .namespace, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", "UP-TO-DATE": .updatedReplicas, AVAILABLE: .availableReplicas, INITIAL: .lastTransitionTime, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels, OWNERS: (if .owners == "" then "-" else .owners end)}]'
 
     #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
     l_data=$(jq "$l_jq_query" ${_g_fzf_kc_data_file})
@@ -668,15 +686,19 @@ kc_deployments() {
     echo "$l_data" | jtbl -n |
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Deployment> " \
-        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen)\n' \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}') > /dev/tty" \
-        --preview-window down,border-top,70% \
+        --bind "ctrl-d:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_dply_revision1 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --preview-window "down,border-top,70%" \
         --preview "bash ${_g_fzf_script_cmd} show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{7}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
     rm -f ${_g_fzf_kc_data_file}
 
+    #    --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions), CTRL-l (View logs), CTRL-x (Exit & follow logs)\n' \
+    #    --bind "ctrl-l:execute(bash \"${_g_fzf_script_cmd}\" show_log_dply '{1}' '{2}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+    #    --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log_dply '{1}' '{2}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
 }
 
 
@@ -735,9 +757,9 @@ kc_replicasets() {
         return 1
     fi
 
-    #4. Generar el reporte deseado con la data ingresada
+    #4. Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
     local l_data=""
-    local l_jq_query='[.items[] | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: (.status.readyReplicas//0), availableReplicas: (.status.availableReplicas//0), fullyLabeledReplicas: .status.fullyLabeledReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), time:  .metadata.creationTimestamp} | { NAME: .name, NAMESPACE: .namespace, OWNERS: .owners, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", AVAILABLE: .availableReplicas, INITIAL: .time, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels}]'
+    local l_jq_query='[.items[] | select(.spec.replicas > 0) | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: (.status.readyReplicas//0), availableReplicas: (.status.availableReplicas//0), fullyLabeledReplicas: .status.fullyLabeledReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), time:  .metadata.creationTimestamp} | { NAME: .name, NAMESPACE: .namespace, OWNERS: .owners, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", AVAILABLE: .availableReplicas, INITIAL: .time, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels}]'
 
     #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
     l_data=$(jq "$l_jq_query" ${_g_fzf_kc_data_file})
@@ -755,10 +777,11 @@ kc_replicasets() {
     echo "$l_data" | jtbl -n |
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "ReplicaSet> " \
-        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen)\n' \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
-        --preview-window down,border-top,70% \
+        --bind "ctrl-d:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_dply_revision2 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --preview-window "down,border-top,70%" \
         --preview "bash ${_g_fzf_script_cmd} show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 

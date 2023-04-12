@@ -2327,8 +2327,8 @@ function _copy_artifact_files() {
 
                     echo "Copiando \"${l_path_temp}/rust-analyzer.exe\" a \"${l_path_bin}\""
                     cp "${l_path_temp}/rust-analyzer.exe" "${l_path_bin}"
-                    echo "Copiando \"${l_path_temp}/rust-analyzer.pdb\" a \"${l_path_bin}\""
-                    cp "${l_path_temp}/rust-analyzer.pdb" "${l_path_bin}"
+                    #echo "Copiando \"${l_path_temp}/rust-analyzer.pdb\" a \"${l_path_bin}\""
+                    #cp "${l_path_temp}/rust-analyzer.pdb" "${l_path_bin}"
                     #mkdir -p "${l_path_man}"
                     
                     #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando

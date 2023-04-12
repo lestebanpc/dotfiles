@@ -734,7 +734,7 @@ function _commands_setup() {
                     rm -rf "${g_path_lnx_programs}/nvm" 
                 fi
 
-                #Instalar los script desde el repositorio 'nvm-sh/nvm.gi'
+                #Instalar los script desde el repositorio 'nvm-sh/nvm.git'
                 echo "Instalar el repositorio 'nvm-sh/nvm.git' de script para nvm"
                 git clone https://github.com/nvm-sh/nvm.git ${g_path_lnx_programs}/nvm
                 cd ${g_path_lnx_programs}/nvm
@@ -742,7 +742,7 @@ function _commands_setup() {
                 . ${g_path_lnx_programs}/nvm/nvm.sh
             else
                 
-                #Actualizar los script desde el repositorio 'nvm-sh/nvm.gi'
+                #Actualizar los script desde el repositorio 'nvm-sh/nvm.git'
                 echo "Actualizar el repositorio 'nvm-sh/nvm.git' de script para nvm"
                 cd ${g_path_lnx_programs}/nvm
                 git fetch --tags origin
@@ -796,10 +796,8 @@ function _commands_setup() {
                     #B. Instalar el paquete
                     if [ $g_is_root -eq 0 ]; then
                         apt-get install python3
-                        apt-get install python3-pip
                     else
                         sudo apt-get install python3
-                        sudo apt-get install python3-pip
                     fi
                     ;;
 
@@ -818,10 +816,8 @@ function _commands_setup() {
                     #B. Instalar el paquete
                     if [ $g_is_root -eq 0 ]; then
                         dnf install python3
-                        dnf install python3-pip
                     else
                         sudo dnf install python3
-                        sudo dnf install python3-pip
                     fi
                     ;;
             esac
@@ -837,7 +833,7 @@ function _commands_setup() {
         if [ $l_status -ne 0 ]; then
 
             echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-            echo "Vim/NeoVim como IDE> Se va instalar el modulo 'pip' de Python3"
+            echo "Instalando el comando 'pip' (modulo python) para  instalar paquetes python."
 
             case "$g_os_subtype_id" in
                 1)
@@ -861,7 +857,7 @@ function _commands_setup() {
 
         else
             l_version=$(echo "$l_version" | sed "$g_regexp_version1")
-            echo "Python3> Modulo pip \"$l_version\" ya esta instalado"
+            echo "Comando 'pip' (modulo python) \"$l_version\" ya esta instalado"
         fi
 
         #4.4 Instalación de Skopeo: Permite inspeccionar contenedores de registros remotos
@@ -871,7 +867,7 @@ function _commands_setup() {
         if [ $l_status -ne 0 ]; then
 
             echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-            echo "Tools> Skopeo para examinar, copiar, eliminar contenedores de registros remotos."
+            echo "Instalando el comando 'skopeo' para examinar, copiar, eliminar contenedores de registros remotos."
 
             case "$g_os_subtype_id" in
                 1)
@@ -895,16 +891,18 @@ function _commands_setup() {
 
         else
             l_version=$(echo "$l_version" | sed "$g_regexp_version1")
-            echo "Tools> Skopeo \"$l_version\" ya esta instalado"
+            echo "Comando 'skopeo' \"$l_version\" ya esta instalado"
         fi
 
         #4.5 Instalación de Herramienta para mostrar arreglo json al formato tabular
-        l_version=$(jtbl -v 2> /dev/null)
+        l_version=$(pip3 list | grep jtbl 2> /dev/null)
+        #l_version=$(jtbl -v 2> /dev/null)
         l_status=$?
-        if [ $l_status -ne 0 ]; then
+        #if [ $l_status -ne 0 ]; then
+        if [ -z "$l_version" ]; then
 
             echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
-            echo "Tools> Jtbl para transformar arreglos json en formato tabular."
+            echo "Instalando el comando 'jtbl' (modulo python) para mostrar arreglos json en una consola en formato tabular."
             
             if [ $g_is_root -eq 0 ]; then
                 pip3 install jtbl
@@ -912,12 +910,81 @@ function _commands_setup() {
                 pip3 install jtbl
                 #sudo pip3 install jtbl
             fi
-            ;;
 
         else
             l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_version1")
-            echo "Tools> Skopeo \"$l_version\" ya esta instalado"
+            echo "Comando 'jtbl' (modulo python) \"$l_version\" ya esta instalado"
         fi
+
+        #4.6 Instalación de Herramienta para generar la base de compilacion de Clang desde un make file
+        l_version=$(pip3 list | grep compiledb 2> /dev/null)
+        #l_version=$(compiledb -h 2> /dev/null)
+        l_status=$?
+        #if [ $l_status -ne 0 ] || [ -z "$l_version"]; then
+        if [ -z "$l_version" ]; then
+
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            echo "Instalando el comando 'compiledb' (modulo python) para generar una base de datos de compilacion Clang desde un make file."
+            
+            if [ $g_is_root -eq 0 ]; then
+                pip3 install compiledb
+            else
+                pip3 install compiledb
+                #sudo pip3 install jtbl
+            fi
+
+        else
+            l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_version1")
+            echo "Comando 'compiladb' (modulo python) \"$l_version\" ya esta instalado"
+            #echo "Tools> 'compiledb' ya esta instalado"
+        fi
+
+        #4.7 Instalación de la libreria de refactorización de Python (https://github.com/python-rope/rope)
+        l_version=$(pip3 list | grep rope 2> /dev/null)
+        l_status=$?
+        if [ -z "$l_version" ]; then
+
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            echo "Instalando la libreria python 'rope' para refactorización de Python (https://github.com/python-rope/rope)."
+            
+            if [ $g_is_root -eq 0 ]; then
+                pip3 install rope
+            else
+                pip3 install rope
+                #sudo pip3 install rope
+            fi
+
+        else
+            l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_version1")
+            echo "Libreria 'rope' (modulo python) \"$l_version\" ya esta instalado"
+            #echo "Tools> 'compiledb' ya esta instalado"
+        fi
+
+        #4.8 Instalación de Herramienta Prettier para formateo de archivos como json, yaml, js, ...
+        l_version=$(prettier --version 2> /dev/null)
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+
+            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            echo "Instlando el comando 'prettier' (como paquete global Node.JS)  para formatear archivos json, yaml, js, ..."
+            
+            if [ $g_is_root -eq 0 ]; then
+                npm install -g --save-dev prettier
+            else
+                npm install -g --save-dev prettier
+                #sudo npm install -g --save-dev prettier
+            fi
+
+        else
+            l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_version1")
+            echo "Comando 'prettier' (paquete global Node.JS) \"$l_version\" ya esta instalado"
+            echo "    Si usa JS o TS, se recomienda instalar de manera local los paquetes Node.JS para Linter EsLint:"
+            echo "    > npm install --save-dev eslint"
+            echo "    > npm install --save-dev eslint-plugin-prettier"
+        fi
+
+
+
     fi
 
 }

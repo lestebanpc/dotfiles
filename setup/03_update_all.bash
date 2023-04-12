@@ -224,7 +224,7 @@ function _update_all() {
         printf '\n\n'
     fi
     
-    #4. Instalacion
+    #4. Actualizar los paquetes instalados desde los repositorios SO
     echo "-------------------------------------------------------------------------------------------------"
     echo "- Actualizar los paquetes de los repositorios del SO Linux"
     echo "-------------------------------------------------------------------------------------------------"
@@ -256,21 +256,26 @@ function _update_all() {
     esac
     echo ""
 
-    #5 Actualizar paquetes de VIM
+    #5. Actualizar paquetes VIM instalados
     l_opcion=1
     l_flag=$(( $p_opciones & $l_opcion ))
     if [ $l_flag -eq $l_opcion ]; then
         _update_vim_package
-    fi            
+    fi
 
-    #6 Actualizar los repositorios indicados por las opciones indicadas (solo si la opcion ingresada es >= 2)
+    #6. Si es desarrallador: Actualizar los modulos Python
+    
+
+    #7. Si es desarrollador: Actualizar los paquetes globales Node.JS istalados
+
+    #8. Actualizar los binarios de otros repositorios que no sean del SO (solo si la opcion ingresada es >= 2)
     #l_opcion=1
     #l_flag=$(( $p_opciones & $l_opcion ))
     if [ $p_opciones -ge 2 ]; then
         ~/.files/setup/01_setup_cli_programs.bash 1 $p_opciones
     fi            
 
-    #7. Caducar las credecinales de root almacenadas temporalmente
+    #9. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_is_root -ne 0 ]; then
         echo $'\n'"Caducando el cache de temporal password de su 'sudo'"
         sudo -k
