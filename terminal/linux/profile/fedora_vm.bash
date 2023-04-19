@@ -50,6 +50,11 @@ PATH=$PATH:/opt/tools/neovim/bin
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
 
+
+# Alias
+alias kc='kubectl'
+
+
 # Uncomment the following line if you don't like systemctl's auto-paging feature:
 # export SYSTEMD_PAGER=
 
@@ -63,6 +68,7 @@ if [ -d ~/.bashrc.d ]; then
 fi
 
 unset rc
+
 
 # Tema por defecto de "Oh My Posh"
 eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lepc-montys.omp.json)"

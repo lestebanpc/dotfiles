@@ -10,6 +10,9 @@
 #Archivos de temas de oh-my-posh
 terminal/oh-my-posh/themes/*
 
+#Archivos de instalacion de un programa/comando especificico
+setup/programs/*
+
 #Archivos de configuracion de k8s usados por UC
 k8s/config/*.yaml
 
@@ -18,3 +21,5 @@ k8s/config/*.yaml
 
 #Paquetes locales de NodeJS (binarios de NodeJs)
 node_modules/*
+
+

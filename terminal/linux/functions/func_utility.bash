@@ -191,3 +191,122 @@ function url_encode() {
 
 
 
+# > Argumentos:
+#   1> URL del del repositorio remoto
+# > Valor de retorno
+#    0 - Repositorio GitHub
+#    1 - Repositorio GitLab
+#   99 - Repositorio desconocido
+get_http_url_of_gitrepo() {
+
+    #Ejemplos de input:
+    #Caso Github:
+    # > HTTPS         : https://github.com/dense-analysis/ale.git
+    # > SSH           : git@githuh.com:lestebanpc/dotfiles.git
+    # > SSH con alias : ghub-writer:lestebanpc/dotfiles.git
+    #Caso GitLab:
+    # > HTTPS         : https://gitlab.com/uc-cau/orbital/usaproject/ctacorrientes.git
+    # > SSH           : git@gitlab.com:uc-cau/orbital/usaproject/ctacorrientes.git
+    # > SSH con alias : glab-lestebanpc:uc-cau/orbital/usaproject/ctacorrientes.git
+
+    #Parametros
+    local l_remote_url=$1
+
+
+    #Obtener el host de la URL
+    local l_status=0
+    local l_tmp=${l_remote_url%.git}
+    local l_host
+    local l_path
+    local l_host_alias
+
+    #Si usa HTTPS
+    if [[ $l_remote_url =~ ^http ]]; then
+
+        l_tmp=${l_tmp#https://}
+        l_host=${l_tmp%%/*}
+        l_path=${l_tmp#*/}
+
+    #Si usa SSH
+    else
+
+        #Si no usa SSH alias
+        if [[ $l_remote_url =~ ^git@ ]]; then
+
+            l_tmp=${l_tmp#git@}
+            l_host=${l_tmp%:*}
+            l_path=${l_tmp#*:}
+
+        #Si usa un SSH alias
+        else
+
+            l_host_alias=${l_tmp%:*}
+            l_path=${l_tmp#*:}
+
+            l_host=$(ssh -G $l_host_alias | awk '$1 == "hostname" { print $2 }' 2> /dev/null)
+            if [ $? -ne 0 ]; then
+                l_status=99
+                l_host="$l_host_alias"
+            fi
+
+        fi
+    fi
+
+
+    #Determinar el tipo de repositorio segun el host
+    case "$l_host" in
+
+        github*)
+            l_status=0
+            ;;
+
+        gitlab*)
+            l_status=1
+            ;;
+
+    esac
+
+    #Mostar la URL HTTP
+    echo "https://${l_host}/${l_path}"
+    return $l_status
+}
+
+
+
+g_color_reset="\x1b[0m"
+
+#Parametros de entrada:
+#  1 > caracter de la cual esta formada la linea
+#  2 > Tamaño de caracteres la linea
+#  3 > Color de la linea
+print_line() {
+
+    printf '%b' "$3"
+    #Usar -- para no se interprete como linea de comandos y puede crearse lienas con - (usado en opcion de un comando)
+    printf -- "${1}%.0s" $(seq $2)
+    printf '%b\n' "$g_color_reset" 
+
+}
+
+#Parametros de entrada:
+#  1 > Texto a colocar el en centro
+#  2 > Tamaño de caracteres la linea
+#  3 > Color del texto
+print_text_in_center() {
+
+    local l_n=${#1}
+
+    if [ $l_n -ge $2 ]; then
+        printf '%b%s%b\n' "$3" "$1" "$g_color_reset"
+    else
+        local l_m=$(((${2} - ${l_n})/2))
+        printf " %.0s" $(seq ${l_m})
+        printf '%b%s%b\n' "$3" "$1" "$g_color_reset"
+    fi
+
+}
+
+
+
+
+

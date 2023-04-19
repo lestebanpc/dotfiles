@@ -15,7 +15,7 @@ _g_tmp=""
 #  11 - 20: Si es Unix
 #  21 - 30: si es MacOS
 #  31 - 40: Si es Windows
-get_os_type
+get_os_type 
 declare -r g_os_type=$?
 
 #Deteriminar el tipo de distribución Linux
@@ -56,10 +56,127 @@ declare -r g_regexp_sust_version4='s/[^0-9]*\([0-9]\+\).*/\1/'
 #Cuando no se puede determinar la version actual (siempre se instalara)
 declare -r g_version_none='0.0.0'
 
+#Colores principales usados para presentar información (menu,...)
+g_color_opaque="\x1b[90m"
+g_color_reset="\x1b[0m"
+g_color_title="\x1b[32m"
+g_color_subtitle="\x1b[36m"
+
+#ID de los repositorios y sus rutas bases
+declare -A gA_repositories=(
+        ['bat']='sharkdp/bat'
+        ['ripgrep']='BurntSushi/ripgrep'
+        ['xsv']='BurntSushi/xsv'
+        ['delta']='dandavison/delta'
+        ['fzf']='junegunn/fzf'
+        ['jq']='stedolan/jq'
+        ['yq']='mikefarah/yq'
+        ['less']='jftuga/less-Windows'
+        ['fd']='sharkdp/fd'
+        ['oh-my-posh']='JanDeDobbeleer/oh-my-posh'
+        ['kubectl']=''
+        ['helm']='helm/helm'
+        ['kustomize']='kubernetes-sigs/kustomize'
+        ['operator-sdk']='operator-framework/operator-sdk'
+        ['neovim']='neovim/neovim'
+        ['k0s']='k0sproject/k0s'
+        ['nerd-fonts']='ryanoasis/nerd-fonts'
+        ['powershell']='PowerShell/PowerShell'
+        ['roslyn']='OmniSharp/omnisharp-roslyn'
+        ['netcoredbg']='Samsung/netcoredbg'
+        ['go']='golang'
+        ['cmake']='Kitware/CMake'
+        ['ninja']='ninja-build/ninja'
+        ['clangd']='clangd/clangd'
+        ['rust-analyzer']='rust-lang/rust-analyzer'
+        ['graalvm']='graalvm/graalvm-ce-builds'
+        ['jdtls']='jdtls'
+        ['runc']='opencontainers/runc'
+        ['cni-plugins']='containernetworking/plugins'
+        ['rootlesskit']='rootless-containers/rootlesskit'
+        ['slirp4netns']='rootless-containers/slirp4netns'
+        ['containerd']='containerd/containerd'
+        ['buildkit']='moby/buildkit'
+        ['nerdctl']='containerd/nerdctl'
+        ['dive']='wagoodman/dive'
+    )
+
+#Opciones de configuración de los repositorio 
+# > Por defecto los repositorios son instalados en todo los permitido (valor por defecto es 11)
+# > Las opciones puede ser uno o la suma de los siguientes valores:
+#   1 (00001) Linux que no WSL2
+#   2 (00010) Linux WSL2
+#   8 (00100) Windows vinculado al Linux WSL2
+#
+declare -A gA_repo_config=(
+        ['less']=8
+        ['k0s']=1
+        ['operator-sdk']=3
+        ['nerd-fonts']=3
+        ['powershell']=3
+        ['runc']=3
+        ['cni-plugins']=3
+        ['rootlesskit']=3
+        ['slirp4netns']=3
+        ['containerd']=3
+        ['buildkit']=3
+        ['nerdctl']=3
+        ['dive']=3
+    )
+
+#Descripción de las opciones del menu.
+declare -a ga_options_display=(
+    "Actualizar los paquetes existentes del sistema operativo"
+    "Actualizar solo ya repositorios instalados"
+    "Los repositorios basicos"
+    "El editor 'NeoVim'"
+    "Las fuentes 'Nerd Fonts'"
+    "Shell 'Powershell Core'"
+    "Container Runtime 'ContainerD' y su CLI 'NerdCtl'"
+    "Tool de Contenedores"
+    "Tool de Kubernates"
+    "Implementación de Kubernates 'K0S'"
+    "RTE de 'Go'"
+    "RTE 'GraalVM CE'"
+    "LSP y DAP server de .Net"
+    "LSP y building tools de C/C++"
+    "LSP server de Rust"
+    "LSP y DAP server de Java"
+    )
+
+#Descripción de las opciones del menu y los ID de repositorios implicados
+declare -a ga_options_repo=(
+    "-"
+    "-"
+    "bat,ripgrep,xsv,delta,fzf,jq,yq,less,fd,oh-my-posh"
+    "neovim"
+    "nerd-fonts"
+    "powershell"
+    "runc,cni-plugins,rootlesskit,slirp4netns,containerd,buildkit,nerdctl"
+    "dive"
+    "kubectl,kustomize,helm,operator-sdk"
+    "k0s"
+    "go"
+    "graalvm"
+    "roslyn,netcoredbg"
+    "clangd,cmake,ninja"
+    "rust-analyzer"
+    "jdtls"
+    )
+
+#Valores de la opcion especiales del menu (no estan vinculado a un repositorio especifico):
+# > Actualizar todos paquetes del sistema operativo (Opción 1 del arreglo del menu)
+g_opt_update_installed_pckg=$((1 << 0))
+# > Actualizar todos los repositorios instalados (Opción 2 del arreglo del menu)
+g_opt_update_installed_repo=$((1 << 1))
+
+#Tamaño de la linea del menu
+g_max_length_line=130
 
 #}}}
 
 #Funciones especificas {{{
+
 
 #Solo se invoca cuando se instala con exito un repositorio y sus artefactos
 function _show_final_message() {
@@ -575,6 +692,143 @@ function _get_repo_current_version() {
             fi
             ;;
 
+        runc)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}runc --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
+        cni-plugins)
+            
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            if [ -f "${g_path_programs_lnx}/cni-plugins.info" ]; then
+                l_tmp=$(cat "${g_path_programs_lnx}/cni-plugins.info" | head -n 1)
+            else
+
+                #CNI vlan plugin v1.2.0
+                l_tmp=$(${l_path_file}vlan --version 2> /dev/null)
+                l_status=$?
+            
+                if [ $l_status -eq 0 ]; then
+                    l_tmp=$(echo "$l_tmp" | head -n 1)
+                fi            
+            fi
+            ;;
+
+
+        slirp4netns)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}slirp4netns --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
+        rootlesskit)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}rootlesskit --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
+        containerd)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            #containerd github.com/containerd/containerd v1.6.20 2806fc1057397dbaeefbea0e4e17bddfbd388f38
+            l_tmp=$(${l_path_file}containerd --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
+        nerdctl)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            #nerdctl version 1.3.1
+            l_tmp=$(${l_path_file}nerdctl --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
+        buildkit)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            #buildctl github.com/moby/buildkit v0.11.5 252ae63bcf2a9b62777add4838df5a257b86e991
+            l_tmp=$(${l_path_file}buildctl --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
+        dive)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            #dive 0.10.0
+            l_tmp=$(${l_path_file}dive --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
         *)
             return 9
             ;;
@@ -605,9 +859,10 @@ function _get_repo_current_version() {
 #  - Argumento 4, un arreglo de tipo de artefacto donde cada item puede ser:
 #       >  0 si es binario
 #       >  1 si es package
-#       >  2 si es un tar.gz
-#       >  3 si es un zip
+#       >  2 si es un .tar.gz
+#       >  3 si es un .zip
 #       >  4 si es un .gz
+#       >  5 si es un .tgz
 #       > 99 si no se define el artefacto para el prefijo
 #  - Argumento 3, un arreglo de nombre de los artectos a descargar
 #En el argumento 2 se debe pasar la version pura quitando, sin contener "v" u otras letras iniciales
@@ -908,6 +1163,82 @@ function _load_artifacts() {
             pna_artifact_names=("jdt-language-server-${p_repo_last_version}.tar.gz")
             pna_artifact_types=(2)
             ;;
+
+        runc)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            pna_artifact_names=("runc.amd64")
+            pna_artifact_types=(0)
+            ;;
+
+
+        cni-plugins)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            pna_artifact_names=("cni-plugins-linux-amd64-${p_repo_last_version}.tgz")
+            pna_artifact_types=(5)
+            ;;
+
+        slirp4netns)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            pna_artifact_names=("slirp4netns-x86_64")
+            pna_artifact_types=(0)
+            ;;
+
+        rootlesskit)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            pna_artifact_names=("rootlesskit-x86_64.tar.gz")
+            pna_artifact_types=(2)
+            ;;
+
+        containerd)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            pna_artifact_names=("containerd-${p_repo_last_version_pretty}-linux-amd64.tar.gz")
+            pna_artifact_types=(2)
+            ;;
+
+        buildkit)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            pna_artifact_names=("buildkit-${p_repo_last_version}.linux-amd64.tar.gz")
+            pna_artifact_types=(2)
+            ;;
+
+        nerdctl)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            pna_artifact_names=("nerdctl-${p_repo_last_version_pretty}-linux-amd64.tar.gz")
+            pna_artifact_types=(2)
+            ;;
+
+
+        dive)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            pna_artifact_names=("dive_${p_repo_last_version_pretty}_linux_amd64.tar.gz")
+            pna_artifact_types=(2)
+            ;;
+
+
 
         *)
            return 1
@@ -2070,6 +2401,7 @@ function _copy_artifact_files() {
 
             fi
             ;;
+        
 
         clangd)
 
@@ -2112,6 +2444,7 @@ function _copy_artifact_files() {
                 find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
             fi
             ;;
+
 
         go)
 
@@ -2469,6 +2802,7 @@ function _copy_artifact_files() {
             fi
             ;;
 
+
         jdtls)
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
@@ -2508,6 +2842,345 @@ function _copy_artifact_files() {
                 find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
             fi
             ;;
+
+
+        runc)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                return 40
+            fi
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Renombrando \"${l_path_temp}/runc.amd64\" a \"${l_path_temp}/runc\""
+            mv "${l_path_temp}/runc.amd64" "${l_path_temp}/runc"
+
+            echo "Copiando \"runc\" a \"${l_path_bin}\" ..."
+            if [ $g_is_root -eq 0 ]; then
+                cp "${l_path_temp}/runc" "${l_path_bin}"
+                chmod +x "${l_path_bin}/runc"
+            else
+                sudo cp "${l_path_temp}/runc" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/runc"
+            fi
+            ;;
+
+
+
+        slirp4netns)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Renombrando \"${l_path_temp}/slirp4netns-x86_64\" a \"${l_path_temp}/slirp4netns\""
+            mv "${l_path_temp}/slirp4netns-x86_64" "${l_path_temp}/slirp4netns"
+
+            echo "Copiando \"${l_path_temp}/slirp4netns\" a \"${l_path_bin}\" ..."
+            if [ $g_is_root -eq 0 ]; then
+                cp "${l_path_temp}/slirp4netns" "${l_path_bin}"
+                chmod +x "${l_path_bin}/slirp4netns"
+            else
+                sudo cp "${l_path_temp}/slirp4netns" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/slirp4netns"
+            fi
+            ;;
+
+
+        rootlesskit)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $g_is_root -eq 0 ]; then
+
+                echo "Copiando \"${l_path_temp}/rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/rootlesskit-docker-proxy" "${l_path_bin}"
+                chmod +x "${l_path_bin}/rootlesskit-docker-proxy"
+
+                echo "Copiando \"${l_path_temp}/rootlesskit\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/rootlesskit" "${l_path_bin}"
+                chmod +x "${l_path_bin}/rootlesskit"
+
+                echo "Copiando \"${l_path_temp}/rootlessctl\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/rootlessctl" "${l_path_bin}"
+                chmod +x "${l_path_bin}/rootlessctl"
+
+            else
+
+                echo "Copiando \"${l_path_temp}/rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/rootlesskit-docker-proxy" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/rootlesskit-docker-proxy"
+
+                echo "Copiando \"${l_path_temp}/rootlesskit\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/rootlesskit" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/rootlesskit"
+
+                echo "Copiando \"${l_path_temp}/rootlessctl\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/rootlessctl" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/rootlessctl"
+
+            fi
+            ;;
+
+
+
+        cni-plugins)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_bin='/opt/cni/bin'
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+            
+            #Si no existe el directorio
+            if  [ ! -d "$l_path_bin" ]; then
+
+                #Crear las carpeta
+                echo "Creando la carpeta \"${l_path_bin}\" ..."
+                if [ $g_is_root -eq 0 ]; then
+                    mkdir -m 755 /opt/cni
+                    mkdir -m 755 /opt/cni/bin
+                else
+                    sudo mkdir -m 755 /opt/cni
+                    sudo mkdir -m 755 /opt/cni/bin
+                fi
+
+                #Copiando los binarios
+                echo "Copiando los binarios de \"${l_path_temp}\" a \"${l_path_bin}\" ..."
+                if [ $g_is_root -eq 0 ]; then
+                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_bin} \;
+                    chmod +x ${l_path_bin}/*
+                else
+                    sudo find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_bin} \;
+                    sudo chmod +x ${l_path_bin}/*
+                fi
+
+            #Si existe el directorio: actualizar
+            else
+
+                #Elimimiando los binarios
+                echo "Eliminando los binarios de \"${l_path_bin}\" ..."
+                if [ $g_is_root -eq 0 ]; then
+                    rm ${l_path_bin}/*
+                else
+                    sudo rm ${l_path_bin}/*
+                fi
+
+                #Copiando los binarios
+                echo "Copiando los nuevos binarios de \"${l_path_temp}\" a \"${l_path_bin}\" ..."
+                if [ $g_is_root -eq 0 ]; then
+                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_bin} \;
+                    chmod +x ${l_path_bin}/*
+                else
+                    sudo find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_bin} \;
+                    sudo chmod +x ${l_path_bin}/*
+                fi
+
+            fi
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            echo "$p_repo_last_version_pretty" > "${g_path_programs_lnx}/cni-plugins.info" 
+            ;;
+
+
+        containerd)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/bin"
+            
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $g_is_root -eq 0 ]; then
+
+                echo "Copiando \"${l_path_temp}/containerd-shim\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/containerd-shim" "${l_path_bin}"
+                chmod +x "${l_path_bin}/containerd-shim"
+
+                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v1\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/containerd-shim-runc-v1" "${l_path_bin}"
+                chmod +x "${l_path_bin}/containerd-shim-runc-v1"
+
+                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v2\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/containerd-shim-runc-v2" "${l_path_bin}"
+                chmod +x "${l_path_bin}/containerd-shim-runc-v2"
+
+                echo "Copiando \"${l_path_temp}/containerd-stress\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/containerd-stress" "${l_path_bin}"
+                chmod +x "${l_path_bin}/containerd-stress"
+
+                echo "Copiando \"${l_path_temp}/ctr\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/ctr" "${l_path_bin}"
+                chmod +x "${l_path_bin}/ctr"
+
+                echo "Copiando \"${l_path_temp}/containerd\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/containerd" "${l_path_bin}"
+                chmod +x "${l_path_bin}/containerd"
+
+            else
+
+                echo "Copiando \"${l_path_temp}/containerd-shim\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/containerd-shim" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/containerd-shim"
+
+                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v1\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/containerd-shim-runc-v1" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/containerd-shim-runc-v1"
+
+                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v2\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/containerd-shim-runc-v2" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/containerd-shim-runc-v2"
+
+                echo "Copiando \"${l_path_temp}/containerd-stress\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/containerd-stress" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/containerd-stress"
+
+                echo "Copiando \"${l_path_temp}/ctr\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/ctr" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/ctr"
+
+                echo "Copiando \"${l_path_temp}/containerd\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/containerd" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/containerd"
+
+            fi
+            ;;
+
+
+        buildkit)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/bin"
+            
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $g_is_root -eq 0 ]; then
+
+                echo "Copiando \"${l_path_temp}/buildkit-runc\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/buildkit-runc" "${l_path_bin}"
+                chmod +x "${l_path_bin}/buildkit-runc"
+
+                echo "Copiando \"${l_path_temp}/buildkitd\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/buildkitd" "${l_path_bin}"
+                chmod +x "${l_path_bin}/buildkitd"
+
+                echo "Copiando \"${l_path_temp}/buildkit-qemu-*\" a \"${l_path_bin}\" ..."
+                cp ${l_path_temp}/buildkit-qemu-* "${l_path_bin}"
+                chmod +x ${l_path_bin}/buildkit-qemu-*
+
+                echo "Copiando \"${l_path_temp}/buildctl\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/buildctl" "${l_path_bin}"
+                chmod +x "${l_path_bin}/buildctl"
+
+            else
+
+                echo "Copiando \"${l_path_temp}/buildkit-runc\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/buildkit-runc" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/buildkit-runc"
+
+                echo "Copiando \"${l_path_temp}/buildkitd\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/buildkitd" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/buildkitd"
+
+                echo "Copiando \"${l_path_temp}/buildkit-qemu-*\" a \"${l_path_bin}\" ..."
+                sudo cp ${l_path_temp}/buildkit-qemu-* "${l_path_bin}"
+                sudo chmod +x ${l_path_bin}/buildkit-qemu-*
+
+                echo "Copiando \"${l_path_temp}/buildctl\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/buildctl" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/buildctl"
+
+            fi
+            ;;
+
+
+        nerdctl)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            mkdir -p ~/.files/setup/programs/nerdctl
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $g_is_root -eq 0 ]; then
+
+                echo "Copiando \"${l_path_temp}/nerdctl\" a \"\" ..."
+                cp "${l_path_temp}/nerdctl" "${l_path_bin}"
+                chmod +x "${l_path_bin}/nerdctl"
+
+            else
+
+                echo "Copiando \"${l_path_temp}/nerdctl\" a \"\" ..."
+                sudo cp "${l_path_temp}/nerdctl" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/nerdctl"
+
+            fi
+
+            echo "Copiando \"${l_path_temp}/containerd-rootless.sh\" a \"~/.files/setup/programs/nerdctl\" ..."
+            cp "${l_path_temp}/containerd-rootless.sh" ~/.files/setup/programs/nerdctl
+            chmod u+x ~/.files/setup/programs/nerdctl/containerd-rootless.sh
+
+            echo "Copiando \"${l_path_temp}/containerd-rootless-setuptool.sh\" a \"~/.files/setup/programs/nerdctl\" ..."
+            cp "${l_path_temp}/containerd-rootless-setuptool.sh" ~/.files/setup/programs/nerdctl
+            chmod u+x ~/.files/setup/programs/nerdctl/containerd-rootless-setuptool.sh
+
+            #printf 'Si no esta instalado, realize los siguientes pasos:\n'
+            #printf '  > '
+            ;;
+
+
+        dive)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Copiando \"${l_path_temp}/dive\" a \"${l_path_bin}\" ..."
+            if [ $g_is_root -eq 0 ]; then
+                cp "${l_path_temp}/dive" "${l_path_bin}"
+                chmod +x "${l_path_bin}/dive"
+            else
+                sudo cp "${l_path_temp}/dive" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/dive"
+            fi
+            ;;
+
+
 
         *)
            printf 'ERROR (50): No esta definido logica para el repositorio "%s" para procesar el artefacto "%s"\n' "$p_repo_id" "$l_tag"
@@ -2650,6 +3323,22 @@ function _install_artifacts() {
             #Copiar los archivos necesarios
             printf 'Copiando los archivos de artefacto "%s[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
             _copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.tar.gz}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
+                "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
+            #l_status=0
+            printf 'Artefacto "%s[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
+
+        elif [ $l_artifact_type -eq 5 ]; then
+
+            #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+            printf 'Descomprimiendo el artefacto "%s[%s]" ("%s") en "%s" ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}" "/tmp/${p_repo_id}/${l_i}"
+            #tar -xvf "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -C "/tmp/${p_repo_id}/${l_i}"
+            tar -xf "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -C "/tmp/${p_repo_id}/${l_i}"
+            rm "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
+            chmod u+rw /tmp/${p_repo_id}/${l_i}/*
+
+            #Copiar los archivos necesarios
+            printf 'Copiando los archivos de artefacto "%s[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
+            _copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.tgz}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
                 "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
             #l_status=0
             printf 'Artefacto "%s[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
@@ -2802,58 +3491,10 @@ function _intall_repository() {
 
 #}}}
 
+
+
+
 #Codigo principal del script {{{
-
-#Todos los repositorios que se pueden instalar
-declare -A gA_repositories=(
-        ['bat']='sharkdp/bat'
-        ['ripgrep']='BurntSushi/ripgrep'
-        ['xsv']='BurntSushi/xsv'
-        ['delta']='dandavison/delta'
-        ['fzf']='junegunn/fzf'
-        ['jq']='stedolan/jq'
-        ['yq']='mikefarah/yq'
-        ['kubectl']=''
-        ['less']='jftuga/less-Windows'
-        ['fd']='sharkdp/fd'
-        ['oh-my-posh']='JanDeDobbeleer/oh-my-posh'
-        ['helm']='helm/helm'
-        ['kustomize']='kubernetes-sigs/kustomize'
-        ['operator-sdk']='operator-framework/operator-sdk'
-        ['neovim']='neovim/neovim'
-        ['k0s']='k0sproject/k0s'
-        ['nerd-fonts']='ryanoasis/nerd-fonts'
-        ['powershell']='PowerShell/PowerShell'
-        ['roslyn']='OmniSharp/omnisharp-roslyn'
-        ['netcoredbg']='Samsung/netcoredbg'
-        ['neovim']='neovim/neovim'
-        ['go']='golang'
-        ['cmake']='Kitware/CMake'
-        ['ninja']='ninja-build/ninja'
-        ['clangd']='clangd/clangd'
-        ['rust-analyzer']='rust-lang/rust-analyzer'
-        ['graalvm']='graalvm/graalvm-ce-builds'
-        ['jdtls']='jdtls'
-    )
-
-
-#Repositorios opcionales y su flag para configuración. Usar valores 2^n (4, 8, 16, ...)
-#Sus valores debera coincider con lo que se muestra en el menu "_show_menu_core"
-declare -A gA_optional_repositories=(
-        ['neovim']=8
-        ['k0s']=16
-        ['nerd-fonts']=32
-        ['powershell']=64
-        ['roslyn']=128
-        ['netcoredbg']=256
-        ['go']=512
-        ['cmake']=1024
-        ['ninja']=2048
-        ['clangd']=4096
-        ['rust-analyzer']=8192
-        ['graalvm']=16384
-        ['jdtls']=32768
-    )
 
 
 function i_setup_repository() {
@@ -2862,19 +3503,21 @@ function i_setup_repository() {
     local p_repo_id="$1"
 
     local p_repo_can_setup=1
-    if [[ "$2" =~ ^[0-9]+$ ]]; then
-        p_repo_can_setup=$2
+    if [ "$2" = "0" ]; then
+        p_repo_can_setup=0
     fi
 
     local p_must_update_all_installed_repo=1
-    if [[ "$3" =~ ^[0-9]+$ ]]; then
-        p_must_update_all_installed_repo=$3
+    if [ "$3" = "0" ]; then
+        p_must_update_all_installed_repo=0
     fi
 
-    local p_show_title=0
+    local p_option_idx=-1
     if [[ "$4" =~ ^[0-9]+$ ]]; then
-        p_show_title=$4
+        p_option_idx=$4
     fi
+
+    local p_option_repo_tag="$5"
 
     #1. Validaciones iniciales
     local l_status=0
@@ -2888,7 +3531,7 @@ function i_setup_repository() {
     local l_repo_name_aux
     local l_repo_name="${gA_repositories[$p_repo_id]}"
     if [ -z "$l_repo_name" ]; then
-        l_repo_name_aux="$l_repo_id"
+        l_repo_name_aux="$p_repo_id"
     else
         l_repo_name_aux="$l_repo_name"
     fi
@@ -2964,7 +3607,7 @@ function i_setup_repository() {
     #Obtener el valor inicial del flag que indica si se debe configurar el paquete
     local l_repo_must_setup_lnx=1  #(1) No debe configurarse, (0) Debe configurarse (instalarse/actualizarse)
 
-    if [ $l_repo_can_setup -ne 0 ]; then
+    if [ $p_repo_can_setup -ne 0 ]; then
        #Si no se puede configurar, pero el flag de actualización de un repo existente esta habilitado: instalarlo
        if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ] && [ $p_must_update_all_installed_repo -eq 0 ]; then
            l_repo_must_setup_lnx=0
@@ -2975,45 +3618,75 @@ function i_setup_repository() {
        l_repo_must_setup_lnx=0
     fi
 
+    #Obtener las opciones de configuración del repositorio. 
+    #  > Puede ser uno o la suma de los siguientes valores:
+    #    1 (00001) Linux No-WSL2 (que no WSL2)
+    #    2 (00010) Linux WSL2
+    #    8 (00100) Windows vinculado al Linux WSL2
+    #  > Si no se especifica, su valor es 11 (se instala en todo lo permitido.
+    local l_repo_config=${gA_repo_config[${p_repo_id}]}
+    if [ -z "$l_repo_config" ]; then
+        l_repo_config=11
+    fi
+
     #Repositorios especiales que no deberia instalarse segun el tipo de distribución Linux
+    local l_flag
     if [ $l_repo_must_setup_lnx -eq 0 ]; then
 
-        case "$l_repo_id" in
-            less)
-                #Repositorio "less": Solo se instala si es WSL2 y en el windows asociado
-                if [ $g_os_type -eq 1 ]; then l_repo_must_setup_lnx=1; fi
-                ;;
-            k0s)
-                #Repositorio "k0s": Solo si es Linux que no es WSL2                
-                if [ $g_os_type -eq 1 ]; then l_repo_must_setup_lnx=1; fi
-                ;;
-        esac
+        #Si es Linux
+        if [ $g_os_type -ge 0 ] && [ $g_os_type -le 10 ]; then
+
+            #Si es Linux WSL2
+            if [ $g_os_type -eq 1 ]; then
+
+                #Si no se usa el flag '2' (Linux WSL2), no configurarlo
+                l_flag=$(($l_repo_config & 2))
+                if [ $l_flag -ne 2 ]; then
+                    l_repo_must_setup_lnx=1
+                fi
+
+            #Si es Linux No-WSL2
+            else
+
+                #Si no se usa el flag '1' (Linux No-WSL2), no configurarlo
+                l_flag=$(($l_repo_config & 1))
+                if [ $l_flag -ne 1 ]; then
+                    l_repo_must_setup_lnx=1
+                fi
+            fi
+            
+        #Si no es Linux: No configurar
+        else
+            l_repo_must_setup_lnx=1
+        fi
 
     fi
 
     #5. Setup el repositorio en Linux
     local l_aux=''
+    local l_title_is_showed=1
     if [ $l_repo_must_setup_lnx -eq 0 ]; then
 
         #5.1 Mostrar el titulo
-        if [ $p_show_title -eq 0 ]; then
-            echo "-------------------------------------------------------------------------------------------------"
-            printf '%s' "- Repositorio Git"
+        if [ $p_option_idx -ge 0 ]; then
 
-            if [ $l_repo_is_optional -eq 0 ]; then
-                printf ' opcional "%s"' "${l_repo_name_aux}"
-            else
-                printf ' basico "%s"' "${l_repo_name_aux}"
-            fi
+            print_line '-' $g_max_length_line  "$g_color_opaque"
+            l_aux="$((1 << ${p_option_idx}))"
 
             if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
-               printf " (UPDATE)\n"
-            elif [ $l_repo_is_optional -eq 1 ]; then
-               printf " (INSTALL)\n"
+                printf "> Actaulizando el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
+            elif [ $l_repo_is_installed -eq 1 ]; then
+                printf "> Instalando el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
             else
-               printf "\n"
+                printf "> Configurar el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
             fi
-            echo "-------------------------------------------------------------------------------------------------"
+
+            print_line '-' $g_max_length_line  "$g_color_opaque"
+            l_title_is_showed=0
+
         fi
 
         echo "Iniciando la configuración de los artefactos del repositorio \"${l_repo_name_aux}\" en Linux \"${g_os_subtype_name}\""
@@ -3115,7 +3788,7 @@ function i_setup_repository() {
     #Obtener el valor inicial del flag que indica si se debe configurar el paquete
     local l_repo_must_setup_win=1  #(1) No debe configurarse, (0) Debe configurarse (instalarse/actualizarse)
 
-    if [ $l_repo_can_setup -ne 0 ]; then
+    if [ $p_repo_can_setup -ne 0 ]; then
        #Si no se puede configurar, pero el flag de actualización de un repo existente esta habilitado: instalarlo
        if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ] && [ $p_must_update_all_installed_repo -eq 0 ]; then
            l_repo_must_setup_win=0
@@ -3127,27 +3800,22 @@ function i_setup_repository() {
     fi
 
 
-    #Repositorios especiales que no deberia instalarse en Windows
+    #Repositorios especiales que no deberia instalarse en Windows (siempre vinculado a un Linux WSL2)
     if [ $l_repo_must_setup_win -eq 0 ]; then
 
-        case "$l_repo_id" in
-            k0s)
-                #Repositorio "k0s": Solo si es Linux que no es WSL2                
-                l_repo_must_setup_win=1;
-                ;;
-            operator-sdk)
-                #Repositorio "operator-sdk": Solo si es Linux                
-                l_repo_must_setup_win=1;
-                ;;
-            nerd-fonts)
-                #Las fuentes en Windows se instalan manualmente (requiere del registro de windows)                
-                l_repo_must_setup_win=1;
-                ;;
-            powershell)
-                #En windows se instala manualmente y luego solicita Actualización cada vez que existe nueva versión
-                l_repo_must_setup_win=1;
-                ;;
-        esac
+        #Si es Linux WSL2
+        if [ $g_os_type -eq 1 ]; then
+
+            #Si no se usa el flag '8' (Windows vinculado al Linux WSL2), no configurarlo
+            l_flag=$(($l_repo_config & 8))
+            if [ $l_flag -ne 8 ]; then
+                l_repo_must_setup_win=1
+            fi
+
+        #Si es Linux No-WSL2, no se configura
+        else
+            l_repo_must_setup_win=1
+        fi
 
     fi
 
@@ -3155,24 +3823,24 @@ function i_setup_repository() {
     if [ $l_repo_must_setup_win -eq 0 ]; then
         
         #7.1 Mostrar el titulo
-        if [ $l_repo_must_setup_lnx -ne 0 -a $p_show_title -eq 0 ]; then
-            echo "-------------------------------------------------------------------------------------------------"
-            printf '%s' "- Repositorio Git"
+        if [ $l_title_is_showed -ne 0 ] && [ $p_option_idx -ge 0 ]; then
 
-            if [ $l_repo_is_optional -eq 0 ]; then
-                printf ' opcional "%s"' "${l_repo_name_aux}"
-            else
-                printf ' basico "%s"' "${l_repo_name_aux}"
-            fi
+            print_line '-' $g_max_length_line  "$g_color_opaque"
+            l_aux="$((1 << ${p_option_idx}))"
 
             if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
-                printf " (UPDATE)\n"
-            elif [ $l_repo_is_optional -eq 1 ]; then
-                printf " (INSTALL)\n"
+                printf "> Actualizando el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
+            elif [ $l_repo_is_installed -eq 1 ]; then
+                printf "> Instalando el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
             else
-                printf "\n"
+                printf "> Configurar el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
             fi
-            echo "-------------------------------------------------------------------------------------------------"
+
+            print_line '-' $g_max_length_line  "$g_color_opaque"
+
         fi
 
         echo "Iniciando la configuración de los artefactos del repositorio \"${l_repo_name_aux}\" en Windows (asociado al WSL \"${g_os_subtype_name}\")"
@@ -3295,7 +3963,6 @@ function i_setup_repositories() {
     fi
     
     #3. Inicializaciones cuando se invoca directamente el script
-    local l_option=1
     local l_flag=0
     if [ $p_is_direct_calling -eq 0 ]; then
 
@@ -3313,13 +3980,12 @@ function i_setup_repositories() {
         fi
 
         #3.2. Instalacion de paquetes del SO
-        l_option=1
-        l_flag=$(( $p_opciones & $l_option ))
-        if [ $l_option -eq $l_flag ]; then
+        l_flag=$(( $p_opciones & $g_opt_update_installed_pckg ))
+        if [ $g_opt_update_installed_pckg -eq $l_flag ]; then
 
-            echo "-------------------------------------------------------------------------------------------------"
+            print_line '-' $g_max_length_line "$g_color_opaque" 
             echo "- Actualizar los paquetes de los repositorio del SO Linux"
-            echo "-------------------------------------------------------------------------------------------------"
+            print_line '-' $g_max_length_line "$g_color_opaque" 
             
             #Segun el tipo de distribución de Linux
             case "$g_os_subtype_id" in
@@ -3352,48 +4018,62 @@ function i_setup_repositories() {
 
     #5. Configurar (Instalar o Actualizar) los diferentes repositorios
     
-    #Si un repositorio esta instalado, debe actualizarse
+    #Determinar si si se requiere actualizar todos los  repositorio instalados.
     local l_must_update_all_installed_repo=1
-    l_flag=$(( $p_opciones & 2 ))
-    if [ $l_flag -eq 2 ]; then l_must_update_all_installed_repo=0; fi
+    l_flag=$(( $p_opciones & $g_opt_update_installed_repo ))
+    if [ $l_flag -eq $g_opt_update_installed_repo ]; then l_must_update_all_installed_repo=0; fi
 
-    local l_repo_id=''
-    local l_repo_can_setup=1
-    local l_repo_is_optional=1       #(1) repositorio basico, (0) repositorio opcional
-    for l_repo_id in "${!gA_repositories[@]}"; do
+    #Validar que opciones del menu seleccionó el usuario y los repositorios que deben configurarse
+    local l_i=0
+    local l_j=0
+    local l_n
+    local l_aux
+    local l_option
+    local l_option_is_selected
+    local IFS=','
+    local la_repos
+    for((l_i=0; l_i < ${#ga_options_repo[@]}; l_i++)); do
 
-        #5.1 Deteminar si el repositorio debe instalarse y su tipo
-        l_option=${gA_optional_repositories[$l_repo_id]}
-        l_repo_can_setup=1 #Por defecto no debe confugurarse
+        #Por defecto la opcion es la selecionada para configurarse
+        l_option_is_selected=1
 
-        #Es un repositorio basico
-        if [ -z "$l_option" ]; then
+        #Si no tiene repositorios a instalar, omitirlos
+        l_aux="${ga_options_repo[$l_i]}"
+        if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
+            continue
+        fi
 
-            l_repo_is_optional=1
+        #La opción actual se debe instalar?
+        l_option=$((1 << ${l_i}))
+        l_flag=$(( $p_opciones & $l_option ))
 
-            #Si es un repositorio basico, permitir la configuración si se ingresa la opciones 4
-            l_flag=$(( $p_opciones & 4 ))
-            if [ $l_flag -eq 4 ]; then l_repo_can_setup=0; fi
-
-        #Es un repositorio opcional
+        if [ $l_option -eq $l_flag ]; then 
+            l_option_is_selected=0; 
         else
-
-            l_repo_is_optional=0
-
-            #Esta habilitado para instalar el repositorio opcional
-            if [[ "$l_option" =~ ^[0-9]+$ ]]; then
-                if [ $l_option -ne 0 ]; then
-                    #Suma binarios es igual al flag, se debe instalar el repo opcional
-                    l_flag=$(( $p_opciones & $l_option ))
-                    if [ $l_option -eq $l_flag ]; then l_repo_can_setup=0; fi
-                fi 
+            #Si no se solicita instalar repositorios instalados, continuar
+            if [ $l_must_update_all_installed_repo -ne 0 ]; then
+                continue
             fi
         fi
 
-        #5.2 Instalar el repositorio
-        i_setup_repository "$l_repo_id" $l_repo_can_setup $l_must_update_all_installed_repo
+        #Obtener los repositorios a configurar
+        IFS=','
+        la_repos=(${l_aux})
+        IFS=$' \t\n'
 
-    done; 
+        l_n=${#la_repos[@]}
+        if [ $l_n -le 0 ]; then
+            continue
+        fi
+
+        for((l_j=0; l_j < ${l_n}; l_j++)); do
+
+            #Instalar el repositorio
+            i_setup_repository "${la_repos[$l_j]}" $l_option_is_selected $l_must_update_all_installed_repo $l_i "$((l_j + 1))/${l_n}"
+        done
+
+    done
+
 
     #6. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_is_root -ne 0 -a $p_is_direct_calling -eq 0 ]; then
@@ -3406,30 +4086,77 @@ function i_setup_repositories() {
 
 function _show_menu_core() {
 
-    echo "                                  Escoger la opción"
-    echo "-------------------------------------------------------------------------------------------------"
-    echo " (q) Salir del menu"
-    echo " (a) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes"
-    echo " ( ) Actualización personalizado. Ingrese la suma de las opciones que desea configurar:"
-    #echo "    (    0) Actualizar xxx (siempre se realizara esta opción)"
-    echo "     (    1) Actualizar los paquetes existentes del sistema operativo"   
-    echo "     (    2) Actualizar los binarios de los repositorios existentes"
-    echo "     (    4) Instalar/Actualizar los binarios de los repositorios basicos"
-    echo "     (    8) Instalar/Actualizar el editor: \"NeoVim\""
-    echo "     (   16) Instalar/Actualizar la implementación de Kubernates: \"k0s\""
-    echo "     (   32) Instalar/Actualizar en el server fuentes Nerd Fonts: \"ryanoasis/nerd-fonts\""
-    echo "     (   64) Instalar/Actualizar 'Powershell Core' \"PowerShell/PowerShell\""
-    echo "     (  128) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
-    echo "     (  256) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""
-    echo "     (  512) Instalar/Actualizar RTE de \"Go\""
-    echo "     ( 1024) Instalar/Actualizar el Build Generator C/C++ \"Kitware/CMake\""
-    echo "     ( 2048) Instalar/Actualizar el Build Tool C/C++ \"ninja-build/ninja\""
-    echo "     ( 4096) Instalar/Actualizar el LSP Server de C/C++: \"clangd/clangd\""
-    echo "     ( 8192) Instalar/Actualizar el LSP Server de Rust: \"rust-lang/rust-analyzer\""
-    echo "     (16384) Instalar/Actualizar el RTE GraalVM CE: \"graalvm/graalvm-ce-builds\""
-    echo "     (32768) Instalar/Actualizar el LSP de Java 'JDT LS': \"eclipse/eclipse.jdt.ls\""
-    echo "-------------------------------------------------------------------------------------------------"
-    printf "Opción : "
+    print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_title"
+    print_line '-' $g_max_length_line  "$g_color_opaque"
+    printf " (%bq%b) Salir del menu\n" "$g_color_subtitle" "$g_color_reset"
+    printf " (%ba%b) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes\n" "$g_color_subtitle" "$g_color_reset"
+    printf " ( ) Actualización personalizado. Ingrese la suma de las opciones que desea configurar:\n"
+
+    local l_i=0
+    local l_j=0
+    local IFS=','
+    local la_repos
+
+    local l_option_value
+    local l_max_digits_aux="$((1 << ${#ga_options_repo[@]}))"
+    local l_max_digits=${#l_max_digits_aux}
+    local l_aux
+    local l_n
+    local l_repo_names
+    local l_repo_id
+
+    #printf "    (%0${l_m}d) Actualizar xxx (siempre se realizara esta opción)\n" "0" 
+
+    for((l_i=0; l_i < ${#ga_options_repo[@]}; l_i++)); do
+
+        #Si no tiene repositorios a instalar, omitirlos
+        l_option_value=$((1 << ${l_i}))
+
+        l_aux="${ga_options_repo[$l_i]}"
+        if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
+            printf "     (%b%0${l_max_digits}d%b) %s\n" "$g_color_subtitle" "$l_option_value" "$g_color_reset" "${ga_options_display[$l_i]}"
+            continue
+        fi
+
+        #Obtener los repositorios a configurar
+        IFS=','
+        la_repos=(${l_aux})
+        IFS=$' \t\n'
+
+        printf "     (%b%0${l_max_digits}d%b) Instalar o actualizar \"%b%s%b\": " "$g_color_subtitle" "$l_option_value" "$g_color_reset" \
+               "$g_color_subtitle" "${ga_options_display[$l_i]}" "$g_color_reset"
+
+        l_n=${#la_repos[@]}
+        if [ $l_n -gt 3 ]; then
+            printf '\n'
+            l_aux=$((8 + l_max_digits))
+            printf ' %.0s' $(seq $l_aux)
+        fi
+
+        l_repo_names=''
+        for((l_j=0; l_j < ${l_n}; l_j++)); do
+
+            l_repo_id="${la_repos[${l_j}]}"
+            l_aux="${gA_repositories[${l_repo_id}]}"
+            if [ -z "$l_aux" ]; then
+                l_aux="$l_repo_id"
+            fi
+
+            if [ $l_j -eq 0 ]; then
+                #l_repo_names="'${l_aux}'" 
+                l_repo_names="'${g_color_opaque}${l_aux}${g_color_reset}'" 
+            else
+                #l_repo_names="${l_repo_names}, '${l_aux}'"
+                l_repo_names="${l_repo_names}, '${g_color_opaque}${l_aux}${g_color_reset}'"
+            fi
+
+        done
+
+        printf '%b\n' "$l_repo_names"
+
+    done
+
+    print_line '-' $g_max_length_line "$g_color_opaque" 
 
 }
 
@@ -3443,51 +4170,58 @@ function i_main() {
         echo "ERROR(21): El sistema operativo debe ser Linux"
         return 21;
     fi
-    
-    echo "#################################################################################################"
+   
+    print_line '#' $g_max_length_line "$g_color_title" 
+
+    _show_menu_core
 
     local l_flag_continue=0
     local l_opciones=""
+    local l_value_option_a=$(($g_opt_update_installed_pckg + $g_opt_update_installed_repo))
     while [ $l_flag_continue -eq 0 ]; do
 
-        _show_menu_core
-        read l_opciones
+        #_show_menu_core
+        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_opaque" "$g_color_reset"
+        read -r l_opciones
 
         case "$l_opciones" in
             a)
                 l_flag_continue=1
-                echo "#################################################################################################"$'\n'
-                i_setup_repositories 3 0
+                print_line '#' $g_max_length_line "$g_color_title" 
+                printf '\n'
+                i_setup_repositories $l_value_option_a 0
                 ;;
 
             q)
                 l_flag_continue=1
-                echo "#################################################################################################"$'\n'
+                print_line '#' $g_max_length_line "$g_color_title" 
+                printf '\n'
                 ;;
 
 
             0)
                 l_flag_continue=0
-                echo "Opción incorrecta"
-                echo "-------------------------------------------------------------------------------------------------"
+                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_opaque" 
                 ;;
 
             [1-9]*)
                 if [[ "$l_opciones" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    echo "#################################################################################################"$'\n'
+                    print_line '#' $g_max_length_line "$g_color_title" 
+                    printf '\n'
                     i_setup_repositories $l_opciones 0
                 else
                     l_flag_continue=0
-                    echo "Opción incorrecta"
-                    echo "-------------------------------------------------------------------------------------------------"
+                    printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
+                    print_line '-' $g_max_length_line "$g_color_opaque" 
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
-                echo "Opción incorrecta"
-                echo "-------------------------------------------------------------------------------------------------"
+                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_opaque" 
                 ;;
         esac
         
@@ -3540,7 +4274,7 @@ else
        exit 99
     fi
 
-    i_setup_repository "$gp_repo_id" 0 0 1
+    i_setup_repository "$gp_repo_id" 0 0 -1 ""
 
 fi
 

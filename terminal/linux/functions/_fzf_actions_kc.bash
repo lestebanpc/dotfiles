@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ~/.files/terminal/linux/functions/func_utility.bash
+#. ~/.files/terminal/linux/functions/func_utility.bash
 
 #Colores principales usados para presentar en FZF
 g_color_opaque="\x1b[90m"
@@ -8,175 +8,10 @@ g_color_reset="\x1b[0m"
 g_color_title="\x1b[32m"
 g_color_subtitle="\x1b[36m"
 
-# > Argumentos:
-#   1> Tipo de objeto GIT
-#      1 - Un commit: hash
-#      2 - Branch (Local y Remoto): name
-#      3 - Remote (Alias del repositorio remoto): name
-#      4 - File: name
-#      5 - Tag: name
-#   2> Nombre del objeto GIT
-_get_url_github() {
-
-    #Argumentos
-    local p_object_type="$1"
-    local p_object_name="$2"
-
-    #Obtener el nombre de la rama
-    local l_current_branch=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
-    if [ $l_current_branch = "HEAD" ]; then
-        l_current_branch=$(git describe --exact-match --tags 2> /dev/null || git rev-parse --short HEAD)
-    fi
-
-    #Obtener la ruta del objeto y el alias del repositorio remoto
-    local l_path
-    local l_remote
-    local l_tmp
-    
-    case "$p_object_type" in
-        1)
-            #Usando el codigo hash ingresado
-            l_remote=$(git config branch."${l_current_branch}".remote || echo 'origin')
-            l_path="/commit/$p_object_name"
-            ;;
-        2)
-            #usando el nombre de la rama ingresado
-            l_remote=$(git config branch."${p_object_name}".remote || echo 'origin')
-            l_tmp=${p_object_name#$l_remote/}
-            l_path="/tree/$l_tmp"
-            ;;
-        3)
-            #Usando el alias de repositorio remoto
-            l_remote=$p_object_name
-            l_path="/tree/$l_current_branch"
-            ;;
-        4) 
-            l_remote=$(git config branch."${l_current_branch}".remote || echo 'origin')
-            l_path="/blob/$l_current_branch/$(git rev-parse --show-prefix)$p_object_name"
-            ;;
-        5) 
-            l_remote=$(git config branch."${l_current_branch}".remote || echo 'origin')
-            l_path="/releases/tag/$p_object_name"
-            ;;
-        *)
-            return 1
-            ;;
-    esac
-    
-    local l_remote_url=$(git remote get-url "$l_remote" 2> /dev/null || echo "$l_remote")
-
-    local l_url
-    if [[ $remote_url =~ ^http ]]; then
-        #Si usa HTTPS
-        l_url=${remote_url%.git}
-    else
-        #Si usa SSH
-        l_url=${l_remote_url%.git}
-
-        if [[ $l_remote_url =~ ^git@ ]]; then
-            #Si no usa SSH alias
-            l_url=${l_url#git@}
-        else
-            #Si usa un SSH alias
-            l_url=${l_url#*:}
-            #TODO obtener el host del alias
-            #ssh -G ghub-lucianoepc | awk '$1 == "hostname" { print $2 }'
-            l_url="github.com/${l_url}"
-        fi
-        l_url="https://${l_url/://}"
-    fi
-    echo "$l_url$l_path"
-    return 0
-
-}
-
-
-git_open_url() {
-
-    #1. Argumentos
-    local p_object_type=$1
-    local p_object_info="$2"
-
-    #2. Obtener el nombre del objeto
-    local l_object_name="$p_object_info"
-
-    if [ $p_object_type -eq 1 ]; then
-        #Si el objeto es un commit, obtener el hash del valor
-        l_object_name=$(echo "$p_object_info" | grep -o "[a-f0-9]\{7,\}")
-    elif [ $p_object_type -eq 2 ]; then
-        #Si el objeto es un rama obtener la ...
-        l_object_name=$(echo "$p_object_info" | sed 's/^[* ]*//' | cut -d' ' -f1)
-    fi
-
-    #3. Obtener la ruta del objeto
-    local l_path=$(_get_url_github $p_object_type "$l_object_name")
-
-    echo "$l_path"
-    if [ -z "$l_path" ]; then
-        return 1
-    fi
-
-    #2. Determinar el SO
-    get_os_type
-    local l_os_type=$?
-
-    if [ $l_os_type -eq 1 ]; then
-        explorer.exe "$l_path"
-    elif [ $l_os_type -eq 21 ]; then
-        open "$l_path"
-    else
-        xdg-open "$l_path"
-    fi
-        
-}
-
-_branches() {
-    git branch "$@" --sort=-committerdate --sort=-HEAD \
-        --format=$'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)' --color=always | column -ts$'\t'
-}
-
-_refs() {
-    git for-each-ref --sort=-creatordate --sort=-HEAD --color=always \
-        --format=$'%(refname) %(color:green)(%(creatordate:relative))\t%(color:blue)%(subject)%(color:reset)' |
-        eval "$1" |
-        sed 's#^refs/remotes/#\x1b[95mremote-branch\t\x1b[33m#; s#^refs/heads/#\x1b[92mbranch\t\x1b[33m#; s#^refs/tags/#\x1b[96mtag\t\x1b[33m#; s#refs/stash#\x1b[91mstash\t\x1b[33mrefs/stash#' |
-        column -ts$'\t'
-}
-
-list_objects() {
-
-    case "$1" in
-        branches)
-            echo $'CTRL-o (Open in browser), ALT-a (Show all branches)\n'
-            _branches
-            ;;
-        all-branches)
-            echo $'CTRL-o (Open in browser)\n'
-            _branches -a
-            ;;
-        refs)
-            echo $'CTRL-o (Open in browser), CTRL-s (Git show branch), CTRL-d (Git diff branch), ALT-a (Show all refs)\n'
-            _refs 'grep -v ^refs/remotes'
-            ;;
-        all-refs)
-            echo $'CTRL-o (Open in browser), CTRL-s (Git show branch), CTRL-d (Git diff branch)\n'
-            _refs 'cat'
-            ;;
-        nobeep)
-            ;;
-        *)
-            return 1
-            ;;
-    esac
-    return 0
-}
-
-
 #Uso interno: compartir data entre funciones para evitar pasarselos por argumentos
 _g_data_object_json=""
 
-
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > Pod del contenedor donde se ejecuta el comando
 #  2 > Namespace (si se especifica se usa el por namespace actual).
 #  3 > Contenedor.
@@ -238,20 +73,26 @@ _exec_cmd() {
 
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > Nombre del pod
-#  2 > Namespace (si se especifica se usa el por namespace actual).
+#  2 > Namespace (si no se especifica se usa el namespace actual).
 #  3 > Interprete shell.
-#  4 > Archivos de datos.
-open_terminal() {
+#  4 > Modo exit (si es 0, sale de fzf) 
+#  5 > Archivos de datos.
+open_terminal1() {
+
+    local l_mode_exit=1
+    if [ "$4" = "0" ]; then
+        l_mode_exit=0
+    fi
 
     #1. Obtener informacion de los contenedores del pod que tiene puertos (y luego limpiar esta data temporal)
     
-    #Obtener el arrgelo de los contenedores habilitados
-    local l_jq_query='[.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | { containers: .spec.containers, statuses: .status.containerStatuses } | { container: .containers[], statuses: .statuses } | .container.name as $name | { container: .container, status: (.statuses[] | select(.name == $name)) } | select(.status.started) | .container]'
+    #Obtener el arreglo de los contenedores habilitados ({ spec: .spec.containers[x], status: .status.containerStatuses[x] } donde x esta vinculado al mismo contenedor).
+    local l_jq_query='[.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | { containers: .spec.containers, statuses: .status.containerStatuses } | { container: .containers[], statuses: .statuses } | .container.name as $name | { spec: .container, status: (.statuses[] | select(.name == $name)) } | select(.status.started) ]'
 
     local l_data_object_json
-    l_data_object_json=$(jq --arg objName "$1" --arg objNS "$2" "$l_jq_query" "$4" 2> /dev/null)
+    l_data_object_json=$(jq --arg objName "$1" --arg objNS "$2" "$l_jq_query" "$5" 2> /dev/null)
     if [ $? -ne 0 ]; then
         printf "Error al obtener la data de los contenedores del pod.\n"
         return 1
@@ -262,6 +103,11 @@ open_terminal() {
         return 2
     fi
 
+    #Eliminar la data temporal
+    if [ $l_mode_exit -eq 0 ] && [ ! -z "$5" ]; then
+        rm -f $5
+    fi
+
 
     #2. Obtener datos ingresado por el usuario y requeridos para ejecutar la el comando
     local l_color_1="\x1b[33m"
@@ -269,7 +115,7 @@ open_terminal() {
     
     #2.1. Obtener los nombres de los contenedores (manteniendo el orden del arreglo como estan declarados)
     local l_data
-    l_jq_query='[ .[].name ] | join("|")'
+    l_jq_query='[ .[].spec.name ] | join("|")'
 
     l_data=$(echo "$l_data_object_json" | jq -r "$l_jq_query")
     if [ $? -ne 0 ]; then
@@ -299,7 +145,7 @@ open_terminal() {
         printf "> Choose the container %bthe following table%b:\n\n" "$g_color_opaque" "$g_color_reset"
 
         #Mostrando la tabla con los contenodores
-        l_jq_query='[. | to_entries[] | { ID: .key, NAME: .value.name, PORTS: (if .value.ports == null then "" else ([.value.ports[] | select(.protocol == "TCP") | .containerPort] | join(",")) end), IMAGE: .value.image }]'        
+        l_jq_query='[. | to_entries[] | { IDX: .key, NAME: .value.spec.name, PORTS: (if .value.spec.ports == null then "" else ([.value.spec.ports[] | select(.protocol == "TCP") | .containerPort] | join(",")) end), IMAGE: .value.spec.image }]'        
         l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
         if [ $? -ne 0 ]; then
             printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
@@ -319,8 +165,8 @@ open_terminal() {
         while [ $l_i -lt 0  ]; do
             
             #
-            printf "  Choose ID container %b(Ingrese un entero desde 0 hasta %s)%b: " "$g_color_opaque" "$((l_n - 1))" "$g_color_reset"
-            read -r l_in_option
+            printf "  Choose IDX container %b(Ingrese un entero desde 0 hasta %s)%b" "$g_color_opaque" "$((l_n - 1))" "$g_color_reset"
+            read -r -p ": " l_in_option
             
             if [[ "$l_in_option" =~ ^[0-9]+$ ]]; then
                 l_i=$l_in_option
@@ -350,6 +196,52 @@ open_terminal() {
 
 }
 
+
+
+#Parametros (argumentos y opciones) de entrada:
+#  1 > Nombre del pod
+#  2 > Namespace (si no se especifica se usa el namespace actual).
+#  3 > Nombre del contenedor
+#  4 > Interprete shell.
+#  5 > Modo exit (si es 0, sale de fzf) 
+#  6 > Archivos de datos.
+open_terminal2() {
+
+    local l_mode_exit=1
+    if [ "$5" = "0" ]; then
+        l_mode_exit=0
+    fi
+
+    #1. Obtener informacion de los contenedores del pod que tiene puertos (y luego limpiar esta data temporal)
+    
+    #Obtener el objeto del contenedores si esta iniciado ({ spec: .spec.containers[x], status: .status.containerStatuses[x] } donde x esta vinculado al mismo contenedor).
+    #Validar si existe y esta en ejecución
+    local l_jq_query='.items[] | select (.metadata.name == $podName and .metadata.namespace == $objNS) | { containers: .spec.containers, statuses: .status.containerStatuses } | { container: .containers[], statuses: .statuses } | .container.name as $name | { spec: .container, status: (.statuses[] | select(.name == $name)) } | select(.status.started and .spec.name == $conName)'
+
+    local l_data_object_json
+    l_data_object_json=$(jq --arg podName "$1" --arg conName "$3" --arg objNS "$2" "$l_jq_query" "$6" 2> /dev/null)
+    if [ $? -ne 0 ]; then
+        printf "Error al obtener la data de los contenedores del pod.\n"
+        return 1
+    fi
+
+    if [ -z "$l_data_object_json" ] || [ "$l_data_object_json" = "null" ]; then
+        printf "El contenedor no esta en ejucución o no existe.\n"
+        return 2
+    fi
+
+    #Eliminar la data temporal
+    if [ $l_mode_exit -eq 0 ] && [ ! -z "$5" ]; then
+        rm -f $5
+    fi
+
+
+    #2. Ejecutar el comando
+    printf '\n'
+    _exec_cmd "$1" "$2" "$3" "$4" 0 0 1 
+
+
+}
 
 
 
@@ -421,30 +313,17 @@ _show_log() {
 
 }
 
+#Parametros (argumentos y opciones) de entrada:
+#  1 > xxx
+#Variables globales de entrada:
+#  '_g_data_object_json' > arreglo JSON con los contenedores ...
+#Variables globales de salida:
+#  '_g_container_name'   > Nombre del contenedor elegido 
+_choose_container_for_log() {
 
-
-
-#Parametros (argumentos y opciones):
-#  1 > Recursos y el Objeto 'Resource/Objet' (pod, deployments, job, ...) que referencia un conjunto de los pods
-#      donde obtendra los logs (La mayor parte de los log son de contenedores de los pod).
-#  2 > Namespace (si se especifica se usa el por namespace actual).
-#  3 > Modo 'exit & follow' si es 0.
-#  4 > Valor por defecto del filtro de logs las ultimas lineas. Ejemplo: 500
-_choose_and_show_logs() {
-
-    #1. Datos basicos
-    local l_mode_exit_follow=1
-    if [ "$3" = "0" ]; then
-        l_mode_exit_follow=0
-    fi
-
-    #2. Obtener datos ingresado por el usuario y requeridos para ejecutar la el comando
-    local l_color_1="\x1b[33m"
-    local l_color_2="\x1b[95m"
-    
-    #2.1. Obtener los nombres de los contenedores (manteniendo el orden del arreglo como estan declarados)
+    #1. Obtener los nombres de los contenedores (manteniendo el orden del arreglo como estan declarados)
     local l_data
-    l_jq_query='[ .[].name ] | join("|")'
+    local l_jq_query='[ .[].name ] | join("|")'
 
     l_data=$(echo "$_g_data_object_json" | jq -r "$l_jq_query")
     if [ $? -ne 0 ]; then
@@ -462,9 +341,9 @@ _choose_and_show_logs() {
         return 4
     fi
 
-    #2.2 Capturar el nombre de contenedor ingresado por el usuario
+    #2 Capturar el nombre de contenedor ingresado por el usuario
     local l_in_opcion
-    local l_container
+    #local l_container
 
     printf 'Ingrese valores de los parametros requeridos para mostrar el log:\n\n'
     local l_i=-1
@@ -494,9 +373,9 @@ _choose_and_show_logs() {
         while [ $l_i -lt 0  ]; do
             
             #
-            printf "  Choose %bContainer IDX%b (de 0 hasta %s asociado a un contenedor)%b or Enter %b'--all'%b (para seleccionar todos los contenedores)%b: " \
+            printf "  Choose %bContainer IDX%b (de 0 hasta %s asociado a un contenedor)%b or Enter %b'--all'%b (para seleccionar todos los contenedores)%b [ ]" \
                    "$g_color_subtitle" "$g_color_opaque" "$((l_n - 1))" "$g_color_reset" "$g_color_subtitle" "$g_color_opaque" "$g_color_reset"
-            read -r l_in_option
+            read -re -p ": " l_in_option
             
             if [[ "$l_in_option" =~ ^[0-9]+$ ]]; then
                 l_i=$l_in_option
@@ -522,43 +401,68 @@ _choose_and_show_logs() {
         l_i=0
     fi
 
-    #Contenedor elegido
+    #3. Contenedor elegido
     if [ $l_i -ge 0 ]; then
-        l_container=${la_containers[${l_i}]}
+        #l_container=${la_containers[${l_i}]}
+        _g_container_name=${la_containers[${l_i}]}
     else
-        l_container='--all'
+        #l_container='--all'
+        _g_container_name='--all'
     fi
 
-    #2.3. Leer el flag show timestamp
+    return 0
+
+}
+
+
+#Parametros (argumentos y opciones) de entrada:
+#  1 > Recursos y el Objeto 'Resource/Objet' (pod, deployments, job, ...) que referencia un conjunto de los pods
+#      donde obtendra los logs (La mayor parte de los log son de contenedores de los pod).
+#  2 > Namespace (si se especifica se usa el por namespace actual).
+#  3 > Nombre del contenedor
+#  4 > Flag the 'follow el log' si es 0.
+#  5 > Valor por defecto del filtro de logs las ultimas lineas. Ejemplo: 500
+_choose_and_show_logs() {
+
+    #1. Datos basicos
+    local l_color_1="\x1b[33m"
+    local l_color_2="\x1b[95m"
+
+    #2. Obtener datos ingresado por el usuario y requeridos para ejecutar la el comando
+    
+    #2.1. Obtener los nombres del contenedor si no se especifica
+    local l_container
+    if [ -z "$3"]; then
+        _choose_container_for_log
+        l_container="$_g_container_name"
+    else
+        l_container="$3"
+    fi
+
+    #2.2. Leer el flag show timestamp
     local l_show_timestamp=0
-    printf "> Show the timestamps %b(Use 'n' para desactivar. Caso contrario se activara)%b: " "$g_color_opaque" "$g_color_reset"
-    read -r l_in_option
+    printf "> Show the timestamps %b('n' para desactivarlo. 's' u otro valor para activarlo)%b [s]" "$g_color_opaque" "$g_color_reset"
+    read -rei 's' -p ": " l_in_option
     
     if [ "$l_in_option" = "n" ]; then
         l_show_timestamp=1
     fi
 
-    #2.4. Leer el flag the following logs
+    #2.3. Leer el flag the following logs
     local l_follow_log=1
-    if [ $l_mode_exit_follow -eq 0 ]; then
-
-        #printf "> Follow the logs %b(Use 's' para activar. Caso contrario se desactivara)%b: " "$g_color_opaque" "$g_color_reset"
-        #read -r l_in_option
-    
-        #if [ "$l_in_option" = "s" ]; then
-        #    l_follow_log=0
-        #fi
+    if [ "$4" = "0" ]; then
         l_follow_log=0
     fi
 
-    #2.5. Filtro de las ultimas lineas
+    #2.4. Filtro de las ultimas lineas
     local l_filter_lines=-1
-    if [[ "$4" =~ ^[1-9][0-9]+$ ]]; then
-        l_filter_lines=$4
+    if [[ "$5" =~ ^[1-9][0-9]+$ ]]; then
+        l_filter_lines=$5
     fi
 
-    printf "> Filter > Show last number lines %b(Ingrese un entero positivo, entero negativo desabilitar filtro. Caso contrario se considera '%s' lineas)%b: " "$g_color_opaque" "$l_filter_lines" "$g_color_reset"
-    read -r l_in_option
+    printf "> Filter > Show last number lines %b(un entero positivo para activar el filtro, entero negativo para desabilitarlo, otro valor se considera '%s' lineas)%b [%s]" "$g_color_opaque" \
+           "$l_filter_lines" "$g_color_reset" "$l_filter_lines"
+    read -rei "$l_filter_lines" -p ": " l_in_option
 
     if [[ "$l_in_option" =~ ^-[1-9][0-9]+$ ]]; then
         l_filter_lines=-1
@@ -566,11 +470,11 @@ _choose_and_show_logs() {
         l_filter_lines=$l_in_option
     fi
 
-    #2.6. Filtro de un rango de tiempo relativo
+    #2.5. Filtro de un rango de tiempo relativo
     local l_filter_time=""
 
-    printf "> Filter > Show last log since %b(Ingrese un entero positivo segido de 's' para segundos, 'm' para minutos y 'h' para horas. Caso contrario se desactiva el filtro)%b: " "$g_color_opaque" "$g_color_reset"
-    read -r l_in_option
+    printf "> Filter > Show last log since %b(un entero positivo seguido de 's' para segundos, 'm' para minutos y 'h' para horas; caso contrario se desactiva el filtro)%b [ ]" "$g_color_opaque" "$g_color_reset"
+    read -re -p ": " l_in_option
 
     if [[ "$l_in_option" =~ ^[1-9][0-9]+[smh]$ ]]; then
         l_filter_time="$l_in_option"
@@ -594,10 +498,10 @@ _choose_and_show_logs() {
 
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > Nombre del Deployment
 #  2 > Namespace (si se especifica se usa el por namespace actual).
-#  3 > Modo 'exit & follow' si es 0.
+#  3 > Flag the 'follow el log' si es 0.
 #  4 > Valor por defecto del filtro de logs las ultimas lineas. Ejemplo: 500
 #  5 > Archivos de datos.
 show_log_dply() {
@@ -630,17 +534,17 @@ show_log_dply() {
     fi
 
     #2. Obtener el container escogido por el usuario y los demas parametros
-    _choose_and_show_logs "deployment/${1}" "$2" $l_mode_exit_follow $4
+    _choose_and_show_logs "deployment/${1}" "$2" "" $l_mode_exit_follow $4
 
 }
 
 
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > Nombre del pod
 #  2 > Namespace (si se especifica se usa el por namespace actual).
-#  3 > Modo 'exit & follow' si es 0.
+#  3 > Flag the 'follow el log' si es 0.
 #  4 > Valor por defecto del filtro de logs las ultimas lineas. Ejemplo: 500
 #  5 > Archivos de datos.
 show_log_pod() {
@@ -667,13 +571,14 @@ show_log_pod() {
         return 2
     fi
 
-    #Eliminar la data temporal
+    #2. Eliminar la data temporal
     if [ $l_mode_exit_follow -eq 0 ] && [ ! -z "$5" ]; then
         rm -f $5
     fi
 
-    #2. Obtener el container escogido por el usuario y los demas parametros
-    _choose_and_show_logs "pod/${1}" "$2" $l_mode_exit_follow $4
+
+    #3. Obtener el container escogido por el usuario y los demas parametros
+    _choose_and_show_logs "pod/${1}" "$2" "" $l_mode_exit_follow $4
 
 
 }
@@ -681,7 +586,7 @@ show_log_pod() {
 
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > Nombre del pod
 #  2 > Namespace (si se especifica se usa el por namespace actual).
 #  3 > Contenedor (si no se especifica se obtendra el contenedor por defecto del pod).
@@ -696,74 +601,14 @@ show_log_container() {
         l_mode_exit_follow=0
     fi
 
-    #Capturar los valores basicos
-    local l_in_option
-    printf 'Ingrese valores de los parametros requeridos para mostrar el log:\n\n'
-
-    #Leer el flag show timestamp
-    local l_show_timestamp=0
-    printf "> Show the timestamps %b(Use 'n' para desactivar. Caso contrario se activara)%b: " "$g_color_opaque" "$g_color_reset"
-    read -r l_in_option
-    
-    if [ "$l_in_option" = "n" ]; then
-        l_show_timestamp=1
+    #1. Eiminar la data temporal
+    if [ $l_mode_exit_follow -eq 0 ] && [ ! -z "$5" ]; then
+        rm -f $5
     fi
 
-    #Leer el flag the following logs
-    local l_follow_log=1
-    if [ $l_mode_exit_follow -eq 0 ]; then
 
-        #printf "> Follow the logs %b(Use 's' para activar. Caso contrario se desactivara)%b: " "$g_color_opaque" "$g_color_reset"
-        #read -r l_in_option
-    
-        #if [ "$l_in_option" = "s" ]; then
-        #    l_follow_log=0
-        #fi
-        l_follow_log=0
-    fi
-
-    #Filtro de las ultimas lineas
-    local l_filter_lines=-1
-    if [[ "$5" =~ ^[1-9][0-9]+$ ]]; then
-        l_filter_lines=$5
-    fi
-
-    printf "> Filter > Show last number lines %b(Ingrese un entero positivo, entero negativo desabilitar filtro. Caso contrario se considera '%s' lineas)%b: " "$g_color_opaque" "$l_filter_lines" "$g_color_reset"
-    read -r l_in_option
-
-    if [[ "$l_in_option" =~ ^-[1-9][0-9]+$ ]]; then
-        l_filter_lines=-1
-    elif [[ "$l_in_option" =~ ^[1-9][0-9]+$ ]]; then
-        l_filter_lines=$l_in_option
-    fi
-
-    #Filtro de un rango de tiempo relativo
-    local l_filter_time=""
-
-    printf "> Filter > Show last log since %b(Ingrese un entero positivo segido de 's' para segundos, 'm' para minutos y 'h' para horas. Caso contrario se desactiva el filtro)%b: " "$g_color_opaque" "$g_color_reset"
-    read -r l_in_option
-
-    if [[ "$l_in_option" =~ ^[1-9][0-9]+[smh]$ ]]; then
-        l_filter_time="$l_in_option"
-    fi
-
-    #Mostrar el log
-    printf '\n'
-    if [ $l_mode_exit_follow -eq 0 ]; then
-
-        if [ ! -z "$6" ]; then
-            rm -f "$6"
-        fi
-
-        #Mostrar el log en la terminal
-        _show_log "pod/${1}" "$2" "$3" $l_follow_log $l_show_timestamp $l_filter_lines "$l_filter_time"
-
-    else
-
-        #Mostrar el log en bat siempre el pager (modo interactivo y capacidad de leer archivos grandes)
-        bat --paging always --style plain  <(_show_log "pod/${1}" "$2" "$3" $l_follow_log $l_show_timestamp $l_filter_lines "$l_filter_time")
-    fi
-
+    #2. Obtener el container escogido por el usuario y los demas parametros
+    _choose_and_show_logs "pod/${1}" "$2" "$3" $l_mode_exit_follow $4
 
 
 }
@@ -771,10 +616,10 @@ show_log_container() {
 
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos
-#  2 > El nombre deployment
-#  3 > El nombre namespace
+#  2 > El nombre objeto
+#  3 > El nombre namespace (si el objeto esta vinculado a un namespace)
 show_object_yaml() {
 
     local l_jq_query='.items[] | select (.metadata.name == $objName'
@@ -822,6 +667,40 @@ _show_pod_info() {
         l_jq_query='{ NodeName: .spec.template.spec.nodeName, DnsPolicy: .spec.template.spec.dnsPolicy, RestartPolicy: .spec.template.spec.restartPolicy, SchedulerName: .spec.template.spec.schedulerName, Priority: .spec.template.spec.priority, ServiceAccount: .spec.template.spec.serviceAccount, ServiceAccountName: .spec.template.spec.serviceAccountName, ImagePullSecrets: ([.spec.template.spec.imagePullSecrets[]?.name] | join(", ")), ActiveDeadlineSeconds: .spec.template.spec.activeDeadlineSeconds, TerminationGracePeriodSeconds:  .spec.template.spec.terminationGracePeriodSeconds } | to_entries[] | "\t\(.key)\t: \(.value)"'
     fi
     echo "$_g_data_object_json" | jq -r "$l_jq_query"
+
+    if [ $p_is_template -ne 0 ]; then
+    
+        printf "\n%bPod's Contitions:%b\n" "$g_color_subtitle" "$g_color_reset"
+        l_jq_query='[.status.conditions[]? | { TYPE: .type, STATUS: .status, TIME: .lastTransitionTime, REASON: .reason, MESSAGGE: .message }]'
+    
+        l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
+        if [ $? -eq 0 ]; then
+            if [ "$l_data" = "[]" ]; then
+                printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            else
+                echo "$l_data" | jtbl -n
+            fi
+        else
+            printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        fi
+
+    
+
+        printf '\n%bStatus de los contenedores del pod:%b\n' "$g_color_subtitle" "$g_color_reset"
+        l_jq_query='[.status.containerStatuses[]? | .containerID as $id | .name as $name | (((.state? | to_entries[]) + {type: "Current"}), ((.lastState? | to_entries[]) + { type: "Previous"})) | { CONTAINER: $name, POSITION: .type, TYPE: .key, "STARTED-AT": .value?.startedAt, "FINISHED-AT": .value?.finishedAt, "CONTAINER-ID": (if .type == "Current" then $id else .value?.containerID end), "REASON": .value?.reason, "EXITCODE": .value?.exitCode, "MESSAGE": .value?.message }]'
+    
+        l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
+        if [ $? -eq 0 ]; then
+            if [ "$l_data" = "[]" ]; then
+                printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            else
+                echo "$l_data" | jtbl -n
+            fi
+        else
+            printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        fi
+
+    fi    
 
     
     printf '\n%bContenedores principales:%b\n' "$g_color_subtitle" "$g_color_reset"
@@ -891,40 +770,6 @@ _show_pod_info() {
         printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
     fi
 
-    if [ $p_is_template -ne 0 ]; then
-    
-        printf '\n%bStatus del pod (Contitions):%b\n' "$g_color_subtitle" "$g_color_reset"
-        l_jq_query='[.status.conditions[]? | { TYPE: .type, STATUS: .status, TIME: .lastTransitionTime, REASON: .reason, MESSAGGE: .message }]'
-    
-        l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
-        if [ $? -eq 0 ]; then
-            if [ "$l_data" = "[]" ]; then
-                printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
-            else
-                echo "$l_data" | jtbl -n
-            fi
-        else
-            printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
-        fi
-
-    
-
-        printf '\n%bStatus de los contenedores del pod:%b\n' "$g_color_subtitle" "$g_color_reset"
-        l_jq_query='[.status.containerStatuses[]? | .containerID as $id | .name as $name | (((.state? | to_entries[]) + {type: "Current"}), ((.lastState? | to_entries[]) + { type: "Previous"})) | { CONTAINER: $name, POSITION: .type, TYPE: .key, "STARTED-AT": .value?.startedAt, "FINISHED-AT": .value?.finishedAt, "CONTAINER-ID": (if .type == "Current" then $id else .value?.containerID end), "REASON": .value?.reason, "EXITCODE": .value?.exitCode, "MESSAGE": .value?.message }]'
-    
-        l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
-        if [ $? -eq 0 ]; then
-            if [ "$l_data" = "[]" ]; then
-                printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
-            else
-                echo "$l_data" | jtbl -n
-            fi
-        else
-            printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
-        fi
-
-    fi    
-
     printf '\n%bTolerancias del pod:%b\n' "$g_color_subtitle" "$g_color_reset"
     l_jq_query='[ '"${l_root}"'spec.tolerations[]? | {KEY: .key, OPERATOR: .operator, VALUE: .value, EFFECT: .effect, SECONDS: .tolerationSeconds }]'
     
@@ -972,7 +817,7 @@ _show_pod_info() {
 }
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos
 #  2 > El nombre deployment
 #  3 > El nombre namespace
@@ -1043,7 +888,7 @@ show_deployment_info() {
 
 }
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos
 #  2 > El nombre deployment
 #  3 > El nombre namespace
@@ -1105,7 +950,7 @@ show_replicaset_info() {
 }
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos
 #  2 > El nombre del pod
 #  3 > El nombre namespace
@@ -1134,7 +979,7 @@ show_pod_info() {
 
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos
 #  2 > El nombre del pod
 #  3 > El nombre namespace
@@ -1258,7 +1103,92 @@ show_container_info() {
 
 }
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
+#  1 > La ruta del archivo de datos
+#  2 > El nombre del namespace 
+#  3 > Flag '0' si es project (caso contrarios es namespace)
+show_namespace_info() {
+
+    local l_is_project=1
+    if [ "$3" = "0" ]; then
+        l_is_project=0
+    fi
+
+    local l_jq_query='.items[] | select (.metadata.name == $objName)'
+    local l_data_object_json
+    local l_data=""
+
+    l_data_object_json=$(jq --arg objName "$2" "$l_jq_query" "$1" 2> /dev/null)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+
+    #1. Información especifica del Pod
+    printf '%bNamespace    :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$2"   
+
+    l_jq_query='"\(.metadata.uid)|\(.metadata.creationTimestamp)|\(.status.phase)"'
+
+    l_data=$(echo "$l_data_object_json" | jq -r "$l_jq_query")
+    local IFS='|'
+    local la_info=(${l_data})
+    IFS=$' \t\n'
+    #local l_n=${#la_info[@]}
+     
+    printf '%bUID          :%b %s\n' "$g_color_subtitle" "$g_color_reset" "${la_info[0]}"   
+    printf '%bCreation Time:%b %s\n' "$g_color_subtitle" "$g_color_reset" "${la_info[1]}"   
+    printf '%bSatus        :%b %s\n' "$g_color_subtitle" "$g_color_reset" "${la_info[2]}"   
+
+    #2. Informacion general del Pod
+    if [ $l_is_project -eq 0 ]; then
+        printf '%bInformación adicional:%b\n' "$g_color_subtitle" "$g_color_reset"
+        l_jq_query=' { Description: (.metadata.annotations."openshift.io/description"//""), DisplayName: (.metadata.annotations."openshift.io/display-name"//"") } | to_entries[] | "\t\(.key)\t: \(.value)"'
+        echo "$l_data_object_json" | jq -r "$l_jq_query"
+    fi
+
+    #3. Obtener las etiquetas de la metadata
+    printf '\n%bEtiquetas:%b\n' "$g_color_subtitle" "$g_color_reset"
+    l_jq_query='[ .metadata.labels | to_entries[] | { KEY: .key, VALUE: .value }]'
+
+    l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
+    if [ $? -eq 0 ]; then
+        if [ "$l_data" = "[]" ]; then
+            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+        else
+            echo "$l_data" | jtbl -n
+        fi
+    else
+        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+    fi
+
+    #4. Obtener las anotaciones de la metadata
+    printf '\n%bAnotaciones:%b\n' "$g_color_subtitle" "$g_color_reset"
+    l_jq_query='.metadata.annotations'
+    l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
+    if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
+        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+    else
+        echo "$l_data" | yq -p json -o yaml
+    fi
+
+    #5. Mostrar otros detalles de las especificaciones:
+    #resource quota.
+    #LimitRange resource.
+    printf '\n%bSpecifications:%b\n' "$g_color_subtitle" "$g_color_reset"
+    l_jq_query='.spec'
+    l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
+    if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
+        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+    else
+        echo "$l_data" | yq -p json -o yaml
+    fi
+
+
+}
+
+
+
+#Parametros (argumentos y opciones) de entrada:
 #  1 > Recursos y Objetos 'Resource/Objet' (pod, deployments, job, ...) que referencia un conjunto de los pods
 #  2 > Namespace (si se especifica se usa el por namespace actual).
 #  3 > Lista de adrress locales que expondra el puerto local (por defecto es 'localhost')
@@ -1300,7 +1230,7 @@ _port_forward() {
 }
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > El nombre del pod
 #  2 > El nombre namespace
 #  3 > La ruta del archivo de datos
@@ -1399,7 +1329,7 @@ port_forward_pod() {
 
     printf '\nIngrese valores de los parametros requeridos para realizar el port-forward:\n\n'
     printf "> Local's ports %bthat is linking to a container's port%b:\n" "$g_color_opaque" "$g_color_reset"
-    printf '  %bEl puerto a ingresar debe ser un entero positivo, caso contrario se omitira el puerto en el port-forwarding.%b\n' "$g_color_opaque" "$g_color_reset"
+    printf '  %bEl puerto a ingresar debe ser un entero positivo, caso contrario se omitirá en el port-forwarding.%b\n\n' "$g_color_opaque" "$g_color_reset"
 
     for ((l_i=0; l_i < ${l_n}; l_i++)); do
 
@@ -1414,9 +1344,9 @@ port_forward_pod() {
         #¿Se debe analizar el puertos de este contenedor?
         if [ $l_n -gt 1 ] && [ $l_m -gt 1 ]; then
             IFS=$' \t\n'
-            printf "\t> %bInclude%b ports of '%b%s%b' container %b('n' si no se incluye. Cualquier otro valor, si desea incluirlos)%b: " "$l_color_2" "$g_color_reset" "$l_color_1" \
+            printf "\t> %bInclude%b ports of '%b%s%b' container %b('n' si no se incluye. Si desea inclurlos use 's' o cualquier otro valor)%b [s]" "$l_color_2" "$g_color_reset" "$l_color_1" \
                    "$l_container" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-            read -r l_in_opcion
+            read -rei "s" -p ": " l_in_opcion
 
             if [ "$l_in_opcion" = "n" ]; then
                 continue
@@ -1431,9 +1361,9 @@ port_forward_pod() {
 
             #Obteniendo el puerto local
             IFS=$' \t\n'
-            printf "\t> Local's port of %b%s%b's port %b%s%b %b(Ingrese un puerto disponible de su computador)%b: " "$l_color_2" "$l_container" "$g_color_reset" "$l_color_1" "$l_port" \
+            printf "\t> Local's port of %b%s%b's port %b%s%b %b(ingrese un puerto disponible de su computador)%b [ ]" "$l_color_2" "$l_container" "$g_color_reset" "$l_color_1" "$l_port" \
                    "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-            read -r l_in_opcion
+            read -rei "$l_port" -p ": " l_in_opcion
             
             if [[ "$l_in_opcion" =~ ^[1-9][0-9]+$ ]]; then
                 ((l_availables_ports++))
@@ -1466,7 +1396,7 @@ port_forward_pod() {
 }
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > El nombre del pod
 #  2 > El nombre namespace
 #  3 > El nombre del contenedor 
@@ -1504,13 +1434,13 @@ port_forward_container() {
     printf 'Ingrese valores de los parametros requeridos para realizar el port-forward:\n\n'
 
     printf "> Local's Ports %bthat is linking a Container's Port%b:\n" "$g_color_opaque" "$g_color_reset"
-    printf '  %bEl puerto a ingresar debe ser un entero positivo, caso contrario se omitira el puerto en el port-forwarding.%b\n' "$g_color_opaque" "$g_color_reset"
+    printf '  %bEl puerto a ingresar debe ser un entero positivo, caso contrario se omitirá en el port-forwarding.%b\n\n' "$g_color_opaque" "$g_color_reset"
 
     for ((l_i=0; l_i < ${#la_container_ports[@]}; l_i++)); do
 
-        printf "\t> Local's port of %b%s%b's port %b%s%b %b(Ingrese un puerto disponible de su computador)%b: " "$l_color_2" "$3" "$g_color_reset" "$l_color_1" "${la_container_ports[$l_i]}" \
+        printf "\t> Local's port of %b%s%b's port %b%s%b %b(ingrese un puerto disponible de su computador)%b [ ]" "$l_color_2" "$3" "$g_color_reset" "$l_color_1" "${la_container_ports[$l_i]}" \
                "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-        read -r l_input
+        read -rei "${la_container_ports[$l_i]}" -p ": " l_input
 
         if [[ "$l_input" =~ ^[1-9][0-9]+$ ]]; then
             ((l_availables_ports++))
@@ -1540,11 +1470,11 @@ port_forward_container() {
 }
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > Nombre del replicaset actual
-#Variables globales:
-#    > Requiere que la variable '_g_data_object_json' es un arreglo ordenado de replicaset ordenados
-#      vincualados al deployment y ordenado por fecha creación descente (vital para la compración)
+#Variables globales de entrada:
+#  '_g_data_object_json' >  Es un arreglo ordenado de replicaset ordenados vincualados al deployment y
+#                           ordenado por fecha creación descente (vital para la compración)
 _show_compare_revision() {
 
     if [ ! -z "$1" ]; then
@@ -1591,7 +1521,7 @@ _show_compare_revision() {
     local la_rev_dates=()
     local l_n=0
 
-    while read l_rev_name l_rev_nbr l_rev_date; do
+    while read -r l_rev_name l_rev_nbr l_rev_date; do
         la_rev_nbrs[${l_n}]=$l_rev_nbr
         la_rev_names[${l_n}]=$l_rev_name
         la_rev_dates[${l_n}]=$(date -d "$l_rev_date" '+%Y-%m-%d %H:%M:%S')
@@ -1702,7 +1632,7 @@ _show_compare_revision() {
 }
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos
 #  2 > El nombre deployment
 #  3 > El nombre namespace
@@ -1740,7 +1670,7 @@ show_dply_revision1() {
 }
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos
 #  2 > El nombre replicaset
 #  3 > El nombre namespace
@@ -1800,7 +1730,7 @@ show_dply_revision2() {
 
 
 
-#Parametros (argumentos y opciones):
+#Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos de los replicaset.
 #  2 > Flag '0' para mostrar solo las replicaset con pods, caso contrario muestra todos.
 show_replicasets_table() {
@@ -1829,6 +1759,130 @@ show_replicasets_table() {
     return 0
 
 }
+
+
+
+#Parametros (argumentos y opciones) de entrada:
+#  1 > La ruta del archivo de datos de los pods.
+#  2 > Flag '0' para mostrar solo los pod que no terminen 'Succeeded' (Not-succeeded), caso contrario muestra todos.
+show_pods_table() {
+
+    #Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
+    local l_jq_query='[.items[] | '
+
+    if [ "$2" = "0" ]; then
+        l_jq_query="${l_jq_query}"'select(.status.phase != "Succeeded") | '
+    fi
+
+    l_jq_query="${l_jq_query}"'{ name: .metadata.name, namespace: .metadata.namespace, status: .status.phase, startTime: .status.startTime, ip: .status.podIP, nodeName: .spec.nodeName, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(",")), ready: (first(.status.conditions[]? | select(.type == "Ready"))), cntNbr: (.spec.containers | length), cntNbrPorts: ([.spec.containers[].ports[]? | select(.protocol == "TCP") | .containerPort] | length), cntNbrReadys: ([.status.containerStatuses[]? | select(.ready)] | length), cntNbrRestarts: ([.status.containerStatuses[]? | .restartCount] | add), cnt: ([.spec.containers[]?.name] | join(",")) } | { "POD-NAME": .name, "POD-NAMESPACE": .namespace, STATE: .status, READY: ("\(.cntNbrReadys)/\(.cntNbr)" + (if .cntNbrReadys == .cntNbr then "" elif  .ready?.status == "False" then "" else "(OB=\(.cntNbr - .cntNbrReadys))" end)), RESTARTS: .cntNbrRestarts, "START-TIME": .startTime, "READY-TIME": (if .ready?.status == "True" then .ready?.lastTransitionTime else "-" end), "FINISHED-TIME": (if .ready?.status == "False" then .ready?.lastTransitionTime else "-" end), "PORTS-NBR": .cntNbrPorts, OWNERS: (if .owners == "" then "-" else .owners end), "NODE-NAME": .nodeName, "POD-IP": .ip, CONTAINERS: .cnt}]'
+
+    local l_data=""
+    l_data=$(jq "$l_jq_query" "${1}" 2> /dev/null)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+    #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
+    if [ -z "$l_data" ] || [ "$l_data" = "[]" ]; then
+        return 2
+    fi
+
+    echo "$l_data" | jtbl -n
+    return 0
+
+}
+
+
+
+#Parametros (argumentos y opciones) de entrada:
+#  1 > La ruta del archivo de datos de los pods.
+#  2 > Flag '0' para mostrar solo los pod que no terminen 'Succeeded' (Not-succeeded), caso contrario muestra todos.
+show_containers_table() {
+
+    #Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
+    local l_jq_query='[.items[] | '
+
+    if [ "$2" = "0" ]; then
+        l_jq_query="${l_jq_query}"'select(.status.phase != "Succeeded") | '
+    fi
+
+    l_jq_query="${l_jq_query}"'(.spec.containers | length) as $allcont | { podName: .metadata.name, podNamespace: .metadata.namespace, podStatus: .status.phase, podStartTime: .status.startTime, podIP: .status.podIP, nodeName: .spec.nodeName, container: .spec.containers[], containerStatuses: .status.containerStatuses } | .container.name as $name | { podName: .podName, podNamespace: .podNamespace, podCntNbr: $allcont, podCntReady: ([.containerStatuses[].ready | select(. == true)] | length), podStartTime: .podStartTime, podIP: .podIP, nodeName: .nodeName, name: .container.name, image: .container.image, ports: ([.container.ports[]? | select(.protocol == "TCP") | .containerPort] | join(",")), status: (.containerStatuses[] | select(.name == $name)) } | (.status.state | to_entries[0]) as $st | { "POD-NAME": .podName, "POD-NAMESPACE": .podNamespace, CONTAINER: .name, "STATE": $st.key, READY: .status.ready, "POD-READY": ("\(.podCntReady)/\(.podCntNbr)" + (if .podCntReady == .podCntNbr then "" else "(OB=\(.podCntNbr - .podCntReady))" end)), "TCP-PORTS": (if .ports == "" then "-" else .ports end), "RESTART": .status.restartCount, "STARTED": (.status.started//"-"), "STARTED-AT": ($st.value.startedAt//"-"),  "FINISHED-AT": ($st.value.finishedAt//"-"), REASON: ($st.value.reason//"-"), "EXIT-CODE": ($st.value.exitCode//"-"), "POD-STARTED-AT": .podStartTime, "POD-IP": .podIP, "NODE-NAME": .nodeName }]'
+
+    local l_data=""
+    l_data=$(jq "$l_jq_query" "${1}" 2> /dev/null)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+    #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
+    if [ -z "$l_data" ] || [ "$l_data" = "[]" ]; then
+        return 2
+    fi
+
+    echo "$l_data" | jtbl -n
+    return 0
+
+}
+
+
+
+
+#Parametros (argumentos y opciones) de entrada:
+#  1 > La ruta del archivo de datos de los pods.
+show_deployment_table() {
+
+    #Generar el reporte deseado con la data ingresada
+    local l_jq_query='[.items[] | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: .status.readyReplicas, availableReplicas: .status.availableReplicas, updatedReplicas: .status.updatedReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), lastTransitionTime: (.status.conditions[] | select(.type=="Progressing") | .lastTransitionTime) } | { NAME: .name, NAMESPACE: .namespace, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", "UP-TO-DATE": .updatedReplicas, AVAILABLE: .availableReplicas, INITIAL: .lastTransitionTime, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels, OWNERS: (if .owners == "" then "-" else .owners end)}]'
+
+    local l_data=""
+    l_data=$(jq "$l_jq_query" "${1}" 2> /dev/null)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+    #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
+    if [ -z "$l_data" ] || [ "$l_data" = "[]" ]; then
+        return 2
+    fi
+
+    echo "$l_data" | jtbl -n
+    return 0
+
+}
+
+
+
+
+#Parametros (argumentos y opciones) de entrada:
+#  1 > La ruta del archivo de datos de los pods.
+#  2 > Flag '0' si es un projecto
+show_namespace_table() {
+
+    local l_is_project=1
+    if [ "$3" = "0" ]; then
+        l_is_project=0
+    fi
+
+    #Generar el reporte deseado con la data ingresada
+    local l_jq_query='[.items[] | { NAME: .metadata.name, STATUS: .status.phase, "CREATION-TIME": .metadata.creationTimestamp }]'
+
+    local l_data=""
+    l_data=$(jq "$l_jq_query" "${1}" 2> /dev/null)
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+
+    #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
+    if [ -z "$l_data" ] || [ "$l_data" = "[]" ]; then
+        return 2
+    fi
+
+    echo "$l_data" | jtbl -n
+    return 0
+
+}
+
+
 
 #Los parametros debe ser la funcion y los parametros
 "$@"

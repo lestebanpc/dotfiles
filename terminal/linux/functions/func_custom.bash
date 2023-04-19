@@ -12,7 +12,7 @@ if [ -z "$_g_fzf_bat" ]; then
 fi
 
 #Ruta del script para ejecutar funciones en acciones FZF
-_g_fzf_script_cmd=~/.files/terminal/linux/functions/fzf-cmd.bash
+_g_script_path=~/.files/terminal/linux/functions
 
 #Carpetas de archivos temporales
 _g_fzf_cache_path="/tmp/fzf"
@@ -114,6 +114,8 @@ gl_rg() {
 # Editing Code> GIT Functions
 ################################################################################################
 
+# Obtenido y modificado de https://github.com/junegunn/fzf-git.sh 
+
 #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
 # Utilidades generales
 #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
@@ -160,7 +162,7 @@ gi_files() {
         --prompt '📄 Files> ' \
         --header $'CTRL-o (open in browser) ╱ ALT-e (open in editor)\n\n' \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 4 {-1}" \
+        --bind "ctrl-o:execute-silent:bash ${_g_script_path}/_fzf_actions_git.bash git_open_url 4 {-1}" \
         --bind "alt-e:execute:${EDITOR:-vim} {-1} > /dev/tty" \
         --preview "git diff --color=always -- {-1} | delta; $_g_fzf_bat --style=numbers,header-filename,grid {-1}" "$@" |
     cut -c4- | sed 's/.* -> //'
@@ -171,7 +173,7 @@ gi_branches() {
 
     _fzf_git_check || return
 
-    bash "$_g_fzf_script_cmd" list_objects branches |
+    bash "${_g_script_path}/_fzf_actions_git.bash" list_objects branches |
     _fzf_git_fzf --ansi \
         --prompt '🌲 Branches> ' \
         --header-lines 2 \
@@ -180,8 +182,8 @@ gi_branches() {
         --color hl:underline,hl+:underline \
         --no-hscroll \
         --bind 'ctrl-/:change-preview-window(down,70%|hidden|)' \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 2 {}" \
-        --bind "alt-a:change-prompt(🌳 All branches> )+reload:bash \"$_g_fzf_script_cmd\" list_objects all-branches" \
+        --bind "ctrl-o:execute-silent:bash ${_g_script_path}/_fzf_actions_git.bash git_open_url 2 {}" \
+        --bind "alt-a:change-prompt(🌳 All branches> )+reload:bash \"${_g_script_path}/_fzf_actions_git.bash\" list_objects all-branches" \
         --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" $(sed s/^..// <<< {} | cut -d" " -f1)' "$@" |
     sed 's/^..//' | cut -d' ' -f1
 }
@@ -195,7 +197,7 @@ gi_tags() {
     _fzf_git_fzf --preview-window right,70% \
         --prompt '📛 Tags> ' \
         --header $'CTRL-o (Open in browser)\n\n' \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 5 {}" \
+        --bind "ctrl-o:execute-silent:bash ${_g_script_path}/_fzf_actions_git.bash git_open_url 5 {}" \
         --preview 'git show --color=always {} | delta' "$@"
 }
 
@@ -208,7 +210,7 @@ gi_hashes() {
         --prompt '🍡 Hashes> ' \
         --header $'CTRL-o (Open in browser), CTRL-d (Diff), CTRL-s (Toggle sort)\n\n' \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 1 {}" \
+        --bind "ctrl-o:execute-silent:bash ${_g_script_path}/_fzf_actions_git.bash git_open_url 1 {}" \
         --bind 'ctrl-d:execute:grep -o "[a-f0-9]\{7,\}" <<< {} | head -n 1 | xargs git diff | delta > /dev/tty' \
         --color hl:underline,hl+:underline \
         --preview 'grep -o "[a-f0-9]\{7,\}" <<< {} | head -n 1 | xargs git show --color=always | delta' "$@" |
@@ -247,7 +249,7 @@ gi_remotes() {
         --prompt '📡 Remotes> ' \
         --header $'CTRL-o (Open in browser)\n\n' \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 3 {1}" \
+        --bind "ctrl-o:execute-silent:bash ${_g_script_path}/_fzf_actions_git.bash git_open_url 3 {1}" \
         --preview-window right,70% \
         --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" {1}/"$(git rev-parse --abbrev-ref HEAD)"' "$@" |
     cut -d$'\t' -f1
@@ -269,7 +271,7 @@ gi_stashes() {
 gi_eachref() {
     _fzf_git_check || return
 
-    bash "$_g_fzf_script_cmd" list_objects refs | _fzf_git_fzf --ansi \
+    bash "$${_g_script_path}/_fzf_actions_git.bash" list_objects refs | _fzf_git_fzf --ansi \
         --nth 2,2.. \
         --tiebreak begin \
         --prompt '☘️  Each ref> ' \
@@ -278,10 +280,10 @@ gi_eachref() {
         --color hl:underline,hl+:underline \
         --no-hscroll \
         --bind 'ctrl-/:change-preview-window(down,70%|hidden|)' \
-        --bind "ctrl-o:execute-silent:bash $_g_fzf_script_cmd git_open_url 2 {2}" \
+        --bind "ctrl-o:execute-silent:bash ${_g_script_path}/_fzf_actions_git.bash git_open_url 2 {2}" \
         --bind "ctrl-s:execute:git show {2} | delta > /dev/tty" \
         --bind "ctrl-d:execute:git diff {2} | delta > /dev/tty" \
-        --bind "alt-a:change-prompt(🍀 Every ref> )+reload:bash \"$_g_fzf_script_cmd\" list_objects all-refs" \
+        --bind "alt-a:change-prompt(🍀 Every ref> )+reload:bash \"${_g_script_path}/_fzf_actions_git.bash\" list_objects all-refs" \
         --preview 'git log --oneline --graph --date=short --color=always --pretty="format:%C(auto)%cd %h%d %s" {2}' "$@" |
     awk '{print $2}'
     #--bind "alt-e:execute:${EDITOR:-vim} <(git show {2}) > /dev/tty" \
@@ -330,6 +332,8 @@ gi_eachref() {
 # Utilidades generales
 #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
 
+#Argumentos:
+#  1 > Si es 0, se muestra el default Namespace
 _fzf_kc_get_context_info() {
 
     #TODO mejorar para obtener la URL del servidor, nombre del usuario, ...
@@ -340,14 +344,18 @@ _fzf_kc_get_context_info() {
     
     local l_color_1="\x1b[91m"
     local l_color_2="\x1b[33m"
+    local l_color_3="\x1b[92m"
     #local l_color_opaque="\x1b[90m"
     local l_color_reset="\x1b[0m"
 
     if [ $l_n -lt 3 ]; then
         printf "Context: '%b%s%b'" "$l_color_1" "${l_data}" "$l_color_reset" 
     else
-        printf "User: '%b%s%b', Server: '%b%s%b'" "$l_color_1" "${l_items[2]}" "$l_color_reset" "$l_color_2" "${l_items[1]}" "$l_color_reset"
-        #printf "User: '\x1b[91m%s\x1b[m', Default Namespace: '\x1b[92m%s\x1b[m', Server: '\x1b[33m%s\x1b[m'" "${l_items[2]}" "${l_items[0]}" "${l_items[1]}"
+        if [ "$1" = "0" ]; then
+            printf "User: '%b%s%b', Server: '%b%s%b', Default Namespace: '%b%s%b'" "$l_color_1" "${l_items[2]}" "$l_color_reset" "$l_color_2" "${l_items[1]}" "$l_color_reset" "$l_color_3" "${l_items[2]}" "$l_color_reset"
+        else
+            printf "User: '%b%s%b', Server: '%b%s%b'" "$l_color_1" "${l_items[2]}" "$l_color_reset" "$l_color_2" "${l_items[1]}" "$l_color_reset"
+        fi
     fi
 }
 
@@ -432,6 +440,158 @@ kc_resources() {
 }
 
 
+
+oc_projects() {
+
+    #1. Inicializar variables requeridas para fzf y awk
+    local l_awk_template='{print $1}'
+    local l_cmd_options="get project -o json"
+    _g_fzf_kc_data_file="${_g_fzf_cache_path}/projects_${_g_uid}.json"
+
+    #2. Procesar los argumentos y modificar las variables segun ello
+    
+    #Ayuda
+    if [ "$1" = "--help" ]; then
+        echo "Usar: "
+        echo "     oc_projects FILTER-LABELS FILTER-FIELDS"
+        echo "     oc_projects --help" 
+        echo "> Use '.' si desea no ingresar valor para el argumento."
+        echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
+        echo "  Ejemplo 'label1=value1,label2=value2'"
+        echo "> Argumento 'FILTER-FIELDS': Coloque el listado de los campos deseado (igual al valor de '--field-selector' de kubectl)."
+        echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
+        return 0
+    fi
+    
+    #Labels
+    if [ ! -z "$1" ] &&  [ "$1" != "." ]; then
+        l_cmd_options="${l_cmd_options} -l $1"
+    fi
+
+    #Filed Selectors
+    if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
+        l_cmd_options="${l_cmd_options} --field-selector $2"
+    fi
+
+    #echo "$l_cmd_options"
+
+    #3. Obtener la data del cluster y almacenarlo en un archivo temporal
+    kubectl $l_cmd_options > $_g_fzf_kc_data_file
+    if [ $? -ne 0 ]; then
+        echo "Check the connection to k8s cluster"
+        return 1
+    fi
+
+    #4. Generar el reporte deseado con la data ingresada
+    local l_data
+    local l_status
+    l_data=$(bash "${_g_script_path}/_fzf_actions_kc.bash" show_namespace_table "${_g_fzf_kc_data_file}" 0)
+    l_status=$?
+
+    if [ $l_status -eq 1 ]; then
+        echo "Error en el fitro usado"
+        return 2
+    elif [ $l_status -ne 0 ]; then
+        echo "No data found"
+        return 3
+    fi
+    
+    #5. Mostrar el reporte
+    echo "$l_data" |
+    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
+        --prompt "Project> " \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-d (Set Default), CTRL-e (View Events)\n' \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/_fzf_actions_kc.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/_fzf_actions_kc.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 0) > /dev/tty" \
+        --bind "ctrl-d:execute-silent:oc project {1}" \
+        --bind "ctrl-e:execute:$_g_fzf_bat --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
+        --preview-window "right,60%" \
+        --preview "bash ${_g_script_path}/_fzf_actions_kc.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 0 | $_g_fzf_bat --style plain" |
+    awk "$l_awk_template"
+
+    rm -f $_g_fzf_kc_data_file
+
+
+}
+
+
+
+
+kc_namespaces() {
+
+    #1. Inicializar variables requeridas para fzf y awk
+    local l_awk_template='{print $1}'
+    local l_cmd_options="get namespace -o json"
+    _g_fzf_kc_data_file="${_g_fzf_cache_path}/namespaces_${_g_uid}.json"
+
+    #2. Procesar los argumentos y modificar las variables segun ello
+    
+    #Ayuda
+    if [ "$1" = "--help" ]; then
+        echo "Usar: "
+        echo "     kc_namespaces FILTER-LABELS FILTER-FIELDS"
+        echo "     kc_namespaces --help" 
+        echo "> Use '.' si desea no ingresar valor para el argumento."
+        echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
+        echo "  Ejemplo 'label1=value1,label2=value2'"
+        echo "> Argumento 'FILTER-FIELDS': Coloque el listado de los campos deseado (igual al valor de '--field-selector' de kubectl)."
+        echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
+        return 0
+    fi
+    
+    #Labels
+    if [ ! -z "$1" ] &&  [ "$1" != "." ]; then
+        l_cmd_options="${l_cmd_options} -l $1"
+    fi
+
+    #Filed Selectors
+    if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
+        l_cmd_options="${l_cmd_options} --field-selector $2"
+    fi
+
+    #echo "$l_cmd_options"
+
+    #3. Obtener la data del cluster y almacenarlo en un archivo temporal
+    kubectl $l_cmd_options > $_g_fzf_kc_data_file
+    if [ $? -ne 0 ]; then
+        echo "Check the connection to k8s cluster"
+        return 1
+    fi
+
+    #4. Generar el reporte deseado con la data ingresada
+    local l_data
+    local l_status
+    l_data=$(bash "${_g_script_path}/_fzf_actions_kc.bash" show_namespace_table "${_g_fzf_kc_data_file}" 1)
+    l_status=$?
+
+    if [ $l_status -eq 1 ]; then
+        echo "Error en el fitro usado"
+        return 2
+    elif [ $l_status -ne 0 ]; then
+        echo "No data found"
+        return 3
+    fi
+    
+    #5. Mostrar el reporte
+    echo "$l_data" |
+    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
+        --prompt "Project> " \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTR-d (Set Default), CTRL-e (View Events)\n' \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/_fzf_actions_kc.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/_fzf_actions_kc.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 1) > /dev/tty" \
+        --bind "ctrl-d:execute-silent:kubectl config set-context --current --namespace={1}" \
+        --bind "ctrl-e:execute:$_g_fzf_bat --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
+        --preview-window "right,60%" \
+        --preview "bash ${_g_script_path}/_fzf_actions_kc.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 1 | $_g_fzf_bat --style plain" |
+    awk "$l_awk_template"
+
+    rm -f $_g_fzf_kc_data_file
+
+
+}
+
+
+
 kc_pods() {
 
     #1. Inicializar variables requeridas para fzf y awk
@@ -485,34 +645,35 @@ kc_pods() {
     fi
 
     #4. Generar el reporte deseado con la data ingresada
-    local l_data=""
-    local l_jq_query='[.items[] | { name: .metadata.name, namespace: .metadata.namespace, status: .status.phase, startTime: .status.startTime, ip: .status.podIP, nodeName: .spec.nodeName, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(",")), ready: (first(.status.conditions[]? | select(.type == "Ready"))), cntNbr: (.spec.containers | length), cntNbrPorts: ([.spec.containers[].ports[]? | select(.protocol == "TCP") | .containerPort] | length), cntNbrReadys: ([.status.containerStatuses[]? | select(.ready)] | length), cntNbrRestarts: ([.status.containerStatuses[]? | .restartCount] | add), cnt: ([.spec.containers[]?.name] | join(",")) } | { "POD-NAME": .name, "POD-NAMESPACE": .namespace, STATE: .status, READY: ("\(.cntNbrReadys)/\(.cntNbr)" + (if .cntNbrReadys == .cntNbr then "" elif  .ready?.status == "False" then "" else "(OB=\(.cntNbr - .cntNbrReadys))" end)), RESTARTS: .cntNbrRestarts, "START-TIME": .startTime, "READY-TIME": (if .ready?.status == "True" then .ready?.lastTransitionTime else "-" end), "FINISHED-TIME": (if .ready?.status == "False" then .ready?.lastTransitionTime else "-" end), "PORTS-NBR": .cntNbrPorts, OWNERS: (if .owners == "" then "-" else .owners end), "NODE-NAME": .nodeName, "POD-IP": .ip, CONTAINERS: .cnt}]'
+    local l_data
+    local l_status
+    l_data=$(bash "${_g_script_path}/_fzf_actions_kc.bash" show_pods_table "${_g_fzf_kc_data_file}" 0)
+    l_status=$?
 
-    #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
-    l_data=$(jq "$l_jq_query" $_g_fzf_kc_data_file)
-    if [ $? -ne 0 ]; then
+    if [ $l_status -eq 1 ]; then
         echo "Error en el fitro usado"
         return 2
-    fi
-
-    if [ "$l_data" = "[]" ]; then
+    elif [ $l_status -ne 0 ]; then
         echo "No data found"
         return 3
     fi
     
     #5. Mostrar el reporte
-    echo "$l_data" | jtbl -n |
+    echo "$l_data" |
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
-        --prompt "Container> " \
-        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (Preview in full-screen), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-t:execute:bash \"${_g_fzf_script_cmd}\" open_terminal '{1}' '{2}' 'bash' '${_g_fzf_kc_data_file}'  > /dev/tty" \
-        --bind "ctrl-l:execute(bash \"${_g_fzf_script_cmd}\" show_log_pod '{1}' '{2}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
-        --bind "ctrl-p:become(bash \"${_g_fzf_script_cmd}\" port_forward_pod '{1}' '{2}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
-        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log_pod '{1}' '{2}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --prompt "Not-succeeded Pod> " \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-e (Exit & Terminal), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs), ALT-a (View all Pods), ATL-b (View Not-succeeded pods)\n' \
+        --bind "alt-a:change-prompt(Pod> )+reload:bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_pods_table \"${_g_fzf_kc_data_file}\" 1" \
+		--bind "alt-b:change-prompt(Not-succeeded Pod> )+reload:bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_pods_table \"${_g_fzf_kc_data_file}\" 0" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/_fzf_actions_kc.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/_fzf_actions_kc.bash show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-e:become:bash \"${_g_script_path}/_fzf_actions_kc.bash\" open_terminal1 '{1}' '{2}' 'bash' 0 '${_g_fzf_kc_data_file}' > /dev/tty" \
+        --bind "ctrl-t:execute:bash \"${_g_script_path}/_fzf_actions_kc.bash\" open_terminal1 '{1}' '{2}' 'bash' 1 '${_g_fzf_kc_data_file}' > /dev/tty" \
+        --bind "ctrl-l:execute(bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_log_pod '{1}' '{2}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "ctrl-p:become(bash \"${_g_script_path}/_fzf_actions_kc.bash\" port_forward_pod '{1}' '{2}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "ctrl-x:become(bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_log_pod '{1}' '{2}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${_g_fzf_script_cmd} show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_script_path}/_fzf_actions_kc.bash show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
     rm -f $_g_fzf_kc_data_file
@@ -574,38 +735,39 @@ kc_containers() {
     fi
 
     #4. Generar el reporte deseado con la data ingresada
-    local l_data=""
-    local l_jq_query='[.items[] | (.spec.containers | length) as $allcont | { podName: .metadata.name, podNamespace: .metadata.namespace, podStatus: .status.phase, podStartTime: .status.startTime, podIP: .status.podIP, nodeName: .spec.nodeName, container: .spec.containers[], containerStatuses: .status.containerStatuses } | .container.name as $name | { podName: .podName, podNamespace: .podNamespace, podCntNbr: $allcont, podCntReady: ([.containerStatuses[].ready | select(. == true)] | length), podStartTime: .podStartTime, podIP: .podIP, nodeName: .nodeName, name: .container.name, image: .container.image, ports: ([.container.ports[]? | select(.protocol == "TCP") | .containerPort] | join(",")), status: (.containerStatuses[] | select(.name == $name)) } | (.status.state | to_entries[0]) as $st | { "POD-NAME": .podName, "POD-NAMESPACE": .podNamespace, CONTAINER: .name, "STATE": $st.key, READY: .status.ready, "POD-READY": ("\(.podCntReady)/\(.podCntNbr)" + (if .podCntReady == .podCntNbr then "" else "(OB=\(.podCntNbr - .podCntReady))" end)), "TCP-PORTS": (if .ports == "" then "-" else .ports end), "RESTART": .status.restartCount, "STARTED": (.status.started//"-"), "STARTED-AT": ($st.value.startedAt//"-"),  "FINISHED-AT": ($st.value.finishedAt//"-"), REASON: ($st.value.reason//"-"), "EXIT-CODE": ($st.value.exitCode//"-"), "POD-STARTED-AT": .podStartTime, "POD-IP": .podIP, "NODE-NAME": .nodeName }]'
+    local l_data
+    local l_status
+    l_data=$(bash "${_g_script_path}/_fzf_actions_kc.bash" show_containers_table "${_g_fzf_kc_data_file}" 0)
+    l_status=$?
 
-    #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
-    l_data=$(jq "$l_jq_query" $_g_fzf_kc_data_file)
-    if [ $? -ne 0 ]; then
+    if [ $l_status -eq 1 ]; then
         echo "Error en el fitro usado"
         return 2
-    fi
-
-    if [ "$l_data" = "[]" ]; then
+    elif [ $l_status -ne 0 ]; then
         echo "No data found"
         return 3
     fi
     
     #5. Mostrar el reporte
-    echo "$l_data" | jtbl -n |
+    echo "$l_data" |
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
-        --prompt "Container> " \
-        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (Preview in full-screen), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}') > /dev/tty" \
-        --bind "ctrl-t:execute:oc exec -it {1} -n={2} -c={3} -- bash > /dev/tty" \
-        --bind "ctrl-l:execute(bash \"${_g_fzf_script_cmd}\" show_log_container '{1}' '{2}' '{3}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
-        --bind "ctrl-p:become(bash \"${_g_fzf_script_cmd}\" port_forward_container '{1}' '{2}' '{3}' '{7}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
-        --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log_container '{1}' '{2}' '{3}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --prompt "Not-succeeded Pod's Container> " \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-e (Exit & Terminal), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs), ALT-a (View all Pods), ATL-b (View Not-succeeded pods)\n' \
+        --bind "alt-a:change-prompt(Pod's Container> )+reload:bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_containers_table \"${_g_fzf_kc_data_file}\" 1" \
+		--bind "alt-b:change-prompt(Not-succeeded Pod's Container> )+reload:bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_containers_table \"${_g_fzf_kc_data_file}\" 0" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/_fzf_actions_kc.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/_fzf_actions_kc.bash show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}') > /dev/tty" \
+        --bind "ctrl-e:become:bash \"${_g_script_path}/_fzf_actions_kc.bash\" open_terminal2 '{1}' '{2}' '{3}' 'bash' 0 '${_g_fzf_kc_data_file}' > /dev/tty" \
+        --bind "ctrl-t:execute:bash \"${_g_script_path}/_fzf_actions_kc.bash\" open_terminal2 '{1}' '{2}' '{3}' 'bash' 1 '${_g_fzf_kc_data_file}' > /dev/tty" \
+        --bind "ctrl-l:execute(bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_log_container '{1}' '{2}' '{3}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "ctrl-p:become(bash \"${_g_script_path}/_fzf_actions_kc.bash\" port_forward_container '{1}' '{2}' '{3}' '{7}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "ctrl-x:become(bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_log_container '{1}' '{2}' '{3}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${_g_fzf_script_cmd} show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_script_path}/_fzf_actions_kc.bash show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
     #    --bind "ctrl-l:execute:$_g_fzf_bat --paging always --style plain  <(kubectl logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
-    #    --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
+    #    --bind "ctrl-x:become(bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
 
     rm -f $_g_fzf_kc_data_file
 
@@ -660,46 +822,44 @@ kc_deployments() {
     #echo "$l_cmd_options"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    kubectl $l_cmd_options > "$_g_fzf_kc_data_file"
+    kubectl $l_cmd_options > $_g_fzf_kc_data_file 
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
     fi
 
-    #4. Generar el reporte deseado con la data ingresada
-    local l_data=""
-    local l_jq_query='[.items[] | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: .status.readyReplicas, availableReplicas: .status.availableReplicas, updatedReplicas: .status.updatedReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), lastTransitionTime: (.status.conditions[] | select(.type=="Progressing") | .lastTransitionTime) } | { NAME: .name, NAMESPACE: .namespace, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", "UP-TO-DATE": .updatedReplicas, AVAILABLE: .availableReplicas, INITIAL: .lastTransitionTime, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels, OWNERS: (if .owners == "" then "-" else .owners end)}]'
+    #4. Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
+    local l_data
+    local l_status
+    l_data=$(bash "${_g_script_path}/_fzf_actions_kc.bash" show_deployment_table "${_g_fzf_kc_data_file}" 0)
+    l_status=$?
 
-    #Debido a que jtbl genera error cuando se el envia un arreglo vacio, usando
-    l_data=$(jq "$l_jq_query" ${_g_fzf_kc_data_file})
-    if [ $? -ne 0 ]; then
+    if [ $l_status -eq 1 ]; then
         echo "Error en el fitro usado"
         return 2
-    fi
-
-    if [ "$l_data" = "[]" ]; then
+    elif [ $l_status -ne 0 ]; then
         echo "No data found"
         return 3
     fi
     
     #5. Mostrar el reporte
-    echo "$l_data" | jtbl -n |
+    echo "$l_data" |
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Deployment> " \
-        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions), CTRL-w (Watch pods)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
-        --bind "ctrl-d:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_dply_revision1 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (View Preview), CTRL-d (View Revisions), CTRL-w (Watch pods)\n' \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/_fzf_actions_kc.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/_fzf_actions_kc.bash show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
+        --bind "ctrl-d:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/_fzf_actions_kc.bash show_dply_revision1 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${_g_fzf_script_cmd} show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_script_path}/_fzf_actions_kc.bash show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
     rm -f ${_g_fzf_kc_data_file}
 
     #    --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions), CTRL-l (View logs), CTRL-x (Exit & follow logs)\n' \
-    #    --bind "ctrl-l:execute(bash \"${_g_fzf_script_cmd}\" show_log_dply '{1}' '{2}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
-    #    --bind "ctrl-x:become(bash \"${_g_fzf_script_cmd}\" show_log_dply '{1}' '{2}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+    #    --bind "ctrl-l:execute(bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_log_dply '{1}' '{2}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+    #    --bind "ctrl-x:become(bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_log_dply '{1}' '{2}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
 }
 
 
@@ -760,7 +920,8 @@ kc_replicasets() {
 
     #4. Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
     local l_data
-    l_data=$(bash "${_g_fzf_script_cmd}" show_replicasets_table "${_g_fzf_kc_data_file}" 0)
+    local l_status
+    l_data=$(bash "${_g_script_path}/_fzf_actions_kc.bash" show_replicasets_table "${_g_fzf_kc_data_file}" 0)
     l_status=$?
 
     if [ $l_status -eq 1 ]; then
@@ -775,15 +936,15 @@ kc_replicasets() {
     echo "$l_data" |
     fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Active ReplicaSet> " \
-        --header "$(_fzf_kc_get_context_info)"$'\nALT-a (View all rs), ATL-b (View rs with pods), CTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions), CTRL-w (Watch pods)\n' \
-        --bind "alt-a:change-prompt(All Replicaset> )+reload:bash \"${_g_fzf_script_cmd}\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 1" \
-		--bind "alt-b:change-prompt(Active Replicaset> )+reload:bash \"${_g_fzf_script_cmd}\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 0" \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_fzf_script_cmd} show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
-        --bind "ctrl-d:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_fzf_script_cmd} show_dply_revision2 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --header "$(_fzf_kc_get_context_info)"$'\nALT-a (View all rs), ATL-b (View rs with pods), CTRL-a (View yaml), CTRL-b (View Preview), CTRL-d (View Revisions), CTRL-w (Watch pods)\n' \
+        --bind "alt-a:change-prompt(All Replicaset> )+reload:bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 1" \
+		--bind "alt-b:change-prompt(Active Replicaset> )+reload:bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 0" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/_fzf_actions_kc.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/_fzf_actions_kc.bash show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
+        --bind "ctrl-d:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/_fzf_actions_kc.bash show_dply_revision2 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${_g_fzf_script_cmd} show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_script_path}/_fzf_actions_kc.bash show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | $_g_fzf_bat --style plain" |
     awk "$l_awk_template"
 
     rm -f ${_g_fzf_kc_data_file}
