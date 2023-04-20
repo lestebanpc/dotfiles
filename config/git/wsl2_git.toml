@@ -1,22 +1,35 @@
+#Incluyendo los temas de delta
+#[include]
+    #path = $HOME/.files/config/delta/themes.toml
+
 [user]
-	email = esteban_fiis@hotmail.com
-	name = Luciano VM
+	email = lestebanpc@gmail.com
+	name = Esteban Peña
+
 [core]
 	editor = vim
 	autocrlf = input
 	pager = delta
+
 [init]
 	defaultBranch = main
+
 [interactive]
     diffFilter = delta --color-only
+
 [delta]
 	line-numbers = true
     light = false
 	syntax-theme = Coldark-Dark
+    #Tema que se usara para delta
+    #features = kingfisher
+
 [merge]
     conflictstyle = diff3
+
 [diff]
     colorMoved = default
+
 [alias]
     log0 = log --color=always --format='%C(cyan)%h%Creset %C(blue)%ar%Creset%C(auto)%d%Creset %C(yellow)%s%+b %C(white)%ae%Creset'
     log1 = log1-specific --all

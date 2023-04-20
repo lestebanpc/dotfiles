@@ -33,6 +33,18 @@ declare -r g_regexp_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
 #Variable global de la ruta donde se instalaran los programas CLI (mas complejos que un simple comando).
 declare -r g_path_lnx_programs='/opt/tools'
 
+
+#Colores principales usados para presentar información (menu,...)
+g_color_opaque="\x1b[90m"
+g_color_reset="\x1b[0m"
+g_color_title="\x1b[32m"
+g_color_subtitle="\x1b[36m"
+g_color_warning="\x1b[31m"
+
+#Tamaño de la linea del menu
+g_max_length_line=130
+
+
 #}}}
 
 # Parametros:
@@ -63,12 +75,12 @@ function _neovim_config_plugins() {
     local l_repo_name="packer.nvim"
     local l_repo_git="wbthomason/${l_repo_name}"
     if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-        #echo "...................................................."
+        #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
         echo "Instalando el paquete NeoVim \"${l_repo_git}\""
-        #echo "...................................................."
+        #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
         git clone --depth 1 https://github.com/${l_repo_git}.git
     else
-        #echo "...................................................."
+        #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
     
@@ -106,31 +118,30 @@ function _neovim_setup() {
     fi
 
     #3. Instalando NeoVim
-    echo "-------------------------------------------------------------------------------------------------"
+    print_line '-' $g_max_length_line "$g_color_opaque" 
     echo "> Configuración de NeoVIM"
-    echo "-------------------------------------------------------------------------------------------------"
+    print_line '-' $g_max_length_line "$g_color_opaque" 
     
     l_option=8
     l_flag=$(( $p_opciones & $l_option ))
 
     if [ $l_flag -eq $l_option ]; then
 
-        #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        #print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         if [ $l_nvim_flag -ne 0 ]; then
 
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             #echo "- Instalación de NeoVIM"
             echo "Se va instalar NeoVIM"
 
             #Valide que el flag asociado a Neovin sea el segundo parametro y sea un numero valido
-            ~/.files/setup/01_setup_commands.bash 2 8 "neovim"
+            ~/.files/setup/linux/01_setup_cli_programs.bash 2 "neovim"
             l_nvim_flag=0
 
 
         else
             echo "NeoVIM \"${l_version}\" esta instalado: "
-            echo "   > Revise si existe una nueva versión en 'https://github.com/neovim/neovim/releases/tag/stable'"
-            echo "   > Instale la ultima version usando '~/.files/setup/01_setup_commands.bash' o '~/.files/setup/03_update_all.bash'"
+            echo "   > Instale la ultima version usando '~/.files/setup/linux/01_setup_cli_programs.bash' o '~/.files/setup/linux/03_update_all.bash'"
         fi
     fi
 
@@ -165,7 +176,7 @@ function _neovim_setup() {
             #Instalando si no se obtiene la versión
             if [ -z "$l_version" ]; then
 
-                echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+                print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
                 echo "Instalando el paquete 'neovim' de Node.JS para soporte de plugins en dicho RTE"
 
                 if [ $g_is_root -eq 0 ]; then
@@ -199,7 +210,7 @@ function _neovim_setup() {
             #Instalando si no se obtiene la versión
             if [ -z "$l_version" ]; then
 
-                echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+                print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
                 echo "Instalando el paquete 'pynvim' de Python3 para soporte de plugins en dicho RTE"
 
                 if [ $g_is_root -eq 0 ]; then
@@ -221,7 +232,7 @@ function _neovim_setup() {
 
         #5.4 Creando enlaces simbolicos
         printf '\n'
-        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
 
         mkdir -p ~/.config/nvim/
 
@@ -293,7 +304,7 @@ function _neovim_setup() {
 
         #Creando enlaces simbolicos
         printf '\n'
-        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
 
         mkdir -p ~/.config/nvim/
 
@@ -409,7 +420,7 @@ function _vim_config_plugins() {
                 ;;
             *)
                 
-                #echo "...................................................."
+                #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
                 printf 'Paquete VIM (%s) "%s": No tiene tipo valido\n' "${l_repo_type}" "${l_repo_git}"
                 continue
                 ;;
@@ -424,7 +435,7 @@ function _vim_config_plugins() {
 
         #4.3 Validar si el paquete ya esta instalado
         if [ -d ${l_base_path}/${l_repo_name}/.git ]; then
-             #echo "...................................................."
+             #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
              printf 'Paquete VIM (%s) "%s": Ya esta instalado\n' "${l_repo_type}" "${l_repo_git}"
              continue
         fi
@@ -432,9 +443,9 @@ function _vim_config_plugins() {
         #4.5 Instalando el paquete
         cd ${l_base_path}
         printf '\n'
-        echo "...................................................."
-        printf 'Paquete VIM (%s) "%s": Se esta instalando\n' "${l_repo_type}" "${l_repo_git}"
-        echo "...................................................."
+        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
+        printf 'Paquete VIM (%b%s%b) "%b%s%b": Se esta instalando\n' "$g_color_subtitle" "${l_repo_type}" "$g_color_reset" "$g_color_subtitle" "${l_repo_git}" "$g_color_reset"
+        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
         case "$l_repo_git" in 
 
             "junegunn/fzf")
@@ -498,19 +509,19 @@ function _vim_setup() {
     fi
 
     #3, Instalando VIM-Enhaced
-    echo "-------------------------------------------------------------------------------------------------"
+    print_line '-' $g_max_length_line "$g_color_opaque" 
     echo "> Configuración de VIM-Enhanced"
-    echo "-------------------------------------------------------------------------------------------------"
+    print_line '-' $g_max_length_line "$g_color_opaque" 
     
     l_option=1
     l_flag=$(( $p_opciones & $l_option ))
 
     if [ $l_flag -eq $l_option ]; then
 
-        #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        #print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         if [ $l_vim_flag -ne 0 ]; then
 
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             #echo "- Instalación de VIM-Enhaced"
             echo "Se va instalar VIM-Enhaced"
 
@@ -555,7 +566,7 @@ function _vim_setup() {
 
         #Creando enlaces simbolicos
         printf '\n'
-        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         mkdir -p ~/.vim/
 
         if [ ! -e ~/.vim/coc-settings.json ] || [ $l_overwrite_ln_flag -eq 0 ]; then
@@ -600,7 +611,7 @@ function _vim_setup() {
         
         #Creando enlaces simbolicos
         printf '\n'
-        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         mkdir -p ~/.vim/
 
         #if [ ! -e ~/.vimrc ] || [ $l_overwrite_ln_flag -eq 0 ]; then
@@ -636,7 +647,7 @@ function _commands_setup() {
     local l_overwrite_ln_flag=1
     if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
     
-    echo "-------------------------------------------------------------------------------------------------"
+    print_line '-' $g_max_length_line "$g_color_opaque" 
     echo "> Instalando los comandos/programas basicos requeridos ..."
 
     #2. Instalando XClip utilitarios para gestion de "clipbboard" (X11 Selection)
@@ -646,7 +657,7 @@ function _commands_setup() {
     local l_status=$?
     if [ $l_status -ne 0 ]; then
 
-        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         #echo "- Instalación de XClip"
         echo "Se va instalar comando XClip"
 
@@ -679,7 +690,7 @@ function _commands_setup() {
     l_status=$?
     if [ $l_status -ne 0 ]; then
 
-        echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         #echo "- Instalación de XSel"
         echo "Se va instalar comando XSel"
 
@@ -719,12 +730,12 @@ function _commands_setup() {
     if [ $l_flag -eq $l_option ]; then
 
         #4.1 Instalación de Node.JS (el gestor de paquetes npm esta incluido)
-        #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+        #print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         l_version=$(node -v 2> /dev/null)
         l_status=$?
         if [ $l_status -ne 0 ]; then
 
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Vim/NeoVim como IDE> Se va instalar el scripts NVM y con ello se instalar RTE Node.JS"
 
             #Instalar los scripts de NVM
@@ -776,7 +787,7 @@ function _commands_setup() {
         l_status=$?
         if [ $l_status -ne 0 ]; then
 
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Vim/NeoVim como IDE> Se va instalar RTE Python3"
 
 
@@ -832,7 +843,7 @@ function _commands_setup() {
         l_status=$?
         if [ $l_status -ne 0 ]; then
 
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Instalando el comando 'pip' (modulo python) para  instalar paquetes python."
 
             case "$g_os_subtype_id" in
@@ -866,7 +877,7 @@ function _commands_setup() {
         l_status=$?
         if [ $l_status -ne 0 ]; then
 
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Instalando el comando 'skopeo' para examinar, copiar, eliminar contenedores de registros remotos."
 
             case "$g_os_subtype_id" in
@@ -901,7 +912,7 @@ function _commands_setup() {
         #if [ $l_status -ne 0 ]; then
         if [ -z "$l_version" ]; then
 
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Instalando el comando 'jtbl' (modulo python) para mostrar arreglos json en una consola en formato tabular."
             
             if [ $g_is_root -eq 0 ]; then
@@ -923,7 +934,7 @@ function _commands_setup() {
         #if [ $l_status -ne 0 ] || [ -z "$l_version"]; then
         if [ -z "$l_version" ]; then
 
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Instalando el comando 'compiledb' (modulo python) para generar una base de datos de compilacion Clang desde un make file."
             
             if [ $g_is_root -eq 0 ]; then
@@ -944,7 +955,7 @@ function _commands_setup() {
         l_status=$?
         if [ -z "$l_version" ]; then
 
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Instalando la libreria python 'rope' para refactorización de Python (https://github.com/python-rope/rope)."
             
             if [ $g_is_root -eq 0 ]; then
@@ -965,7 +976,8 @@ function _commands_setup() {
         l_status=$?
         if [ $l_status -ne 0 ]; then
 
-            echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+
             echo "Instlando el comando 'prettier' (como paquete global Node.JS)  para formatear archivos json, yaml, js, ..."
             
             if [ $g_is_root -eq 0 ]; then
@@ -1005,9 +1017,9 @@ function _profile_setup() {
     local l_overwrite_ln_flag=1
     if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
 
-    echo "-------------------------------------------------------------------------------------------------"
+    print_line '-' $g_max_length_line "$g_color_opaque" 
     echo "> Creando los enlaces simbolicos y folderes del profile shell ..."
-    #echo ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+    #print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
     
     if [ ! -d /u01/userkeys/ssh ]; then
 
@@ -1015,7 +1027,7 @@ function _profile_setup() {
         chmod u+x ~/.files/terminal/linux/tmux/*.bash
         chmod u+x ~/.files/terminal/linux/complete/*.bash
         chmod u+x ~/.files/terminal/linux/keybindings/*.bash
-        chmod u+x ~/.files/setup/*.bash
+        chmod u+x ~/.files/setup/linux/0*.bash
     
         if [ $g_is_root -eq 0 ]; then
             mkdir -pm 755 /u01
@@ -1055,13 +1067,13 @@ function _profile_setup() {
 
         if [ ! -e ~/.gitconfig ] || [ $l_overwrite_ln_flag -eq 0 ]; then
            echo "Creando los enlaces simbolico de ~/.gitconfig"
-           ln -snf ~/.files/git/wsl2_git.conf ~/.gitconfig
+           ln -snf ~/.files/config/git/wsl2_git.toml ~/.gitconfig
         fi
 
         if [ ! -e ~/.ssh/config ] || [ $l_overwrite_ln_flag -eq 0 ]; then
            echo "Creando los enlaces simbolico de ~/.ssh/config"
            mkdir -p ~/.ssh
-           ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config
+           ln -sfn ~/.files/config/ssh/wsl2_ssh.conf ~/.ssh/config
         fi
 
         if [ ! -e ~/.config/powershell/Microsoft.PowerShell_profile.ps1 ] || [ $l_overwrite_ln_flag -eq 0 ]; then
@@ -1080,12 +1092,12 @@ function _profile_setup() {
 
         if [ ! -e ~/.gitconfig ] || [ $l_overwrite_ln_flag -eq 0 ]; then
            echo "Creando los enlaces simbolico de ~/.gitconfig"
-           ln -snf ~/.files/git/vm_linux_git.conf ~/.gitconfig
+           ln -snf ~/.files/config/git/vm_linux_git.toml ~/.gitconfig
         fi
 
         if [ ! -e ~/.ssh/config ] || [ $l_overwrite_ln_flag -eq 0 ]; then
            echo "Creando los enlaces simbolico de ~/.ssh/config"
-           ln -snf ~/.files/ssh/vm_linux_ssh.conf ~/.ssh/config
+           ln -snf ~/.files/config/ssh/vm_linux_ssh.conf ~/.ssh/config
         fi
 
         if [ ! -e ~/.config/powershell/Microsoft.PowerShell_profile.ps1 ] || [ $l_overwrite_ln_flag -eq 0 ]; then
@@ -1100,11 +1112,30 @@ function _profile_setup() {
         #fi
     fi
 
-    #8.2 Creando enlaces simbolico independiente de tipo de Linux
+    #8.2 Creando enlaces simbolico independiente del tipo de distribución Linux
     if [ ! -e ~/.tmux.conf ] || [ $l_overwrite_ln_flag -eq 0 ]; then
        echo "Creando los enlaces simbolico de ~/.tmux.conf"
        ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
     fi
+
+    if [ ! -e ~/.config/nerdctl/nerdctl.toml ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+       echo "Creando los enlaces simbolico de ~/.config/nerdctl/nerdctl.toml"
+       mkdir -p ~/.config/nerdctl/
+       ln -snf ~/.files/config/nerdctl/default_config.toml ~/.config/nerdctl/nerdctl.toml
+    fi
+
+    if [ ! -e ~/.config/containerd/config.toml ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+       echo "Creando los enlaces simbolico de ~/.config/containerd/config.toml"
+       mkdir -p ~/.config/containerd/
+       ln -snf ~/.files/config/containerd/default_config.toml ~/.config/containerd/config.toml
+    fi
+
+    if [ ! -e ~/.kube/config ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+       echo "Creando los enlaces simbolico de ~/.kube/config"
+       mkdir -p ~/.kube/
+       ln -snf ~/.files/config/kubectl/default_config.yaml ~/.kube/config
+    fi
+
 
 }
 
@@ -1151,9 +1182,9 @@ function _setup() {
     fi
     
     #04. Actualizar los paquetes de los repositorios
-    echo "-------------------------------------------------------------------------------------------------"
+    print_line '-' $g_max_length_line "$g_color_opaque" 
     echo "> Actualizar los paquetes de los repositorio del SO Linux"
-    echo "-------------------------------------------------------------------------------------------------"
+    print_line '-' $g_max_length_line "$g_color_opaque" 
     
     #Segun el tipo de distribución de Linux
     case "$g_os_subtype_id" in
@@ -1206,98 +1237,109 @@ function _setup() {
 
 function _show_menu_core() {
 
-    echo "                                  Escoger la opción"
-    echo "-------------------------------------------------------------------------------------------------"
-    echo " (q) Salir del menu"
-    echo " (a) Configurar el profile basico (Vim/NeoVim como editor basico)"
-    echo " (b) Configurar el profile como developer (Vim/NeoVim como IDE)"
-    echo " (c) Configurar el profile basico (Vim/Neovim como editor basico) y re-crear los enlaces simbolicos"
-    echo " (d) Configurar el profile como developer (Vim/NeoVim como IDE) y re-crear los enlaces simbolicos"
-    echo " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:"
-    echo "     ( 0) Actualizar los paquetes del SO y crear los enlaces simbolicos del profile"
-    echo "     ( 1) VIM-Enhanced - Instalar si no esta instalado"
-    echo "     ( 2) VIM-Enhanced - Configurar como Editor, incluyendo paquetes VIM (Basico)"
-    echo "     ( 4) VIM-Enhanced - Configurar como IDE, incluyendo paquetes VIM (Developer)"
-    echo "     ( 8) NeoVim - Instalar si no esta instalado"
-    echo "     (16) NeoVim - Configurar como Editor (Basico)"
-    echo "     (32) NeoVim - Configurar como IDE (Developer)"
-    echo "     (64) Re-crear (crear y/o actualizar) los enlaces simbolicos del profile"
-    echo "-------------------------------------------------------------------------------------------------"
-    printf "Opción : "
+
+    print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_title"
+    print_line '-' $g_max_length_line  "$g_color_opaque"
+    printf " (%bq%b) Salir del menu\n" "$g_color_subtitle" "$g_color_reset"
+    printf " (%ba%b) Configurar el profile basico (Vim/NeoVim como editor basico)\n" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bb%b) Configurar el profile como developer (Vim/NeoVim como IDE)\n" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bc%b) Configurar el profile basico (Vim/Neovim como editor basico) y re-crear los enlaces simbolicos\n" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bd%b) Configurar el profile como developer (Vim/NeoVim como IDE) y re-crear los enlaces simbolicos\n" "$g_color_subtitle" "$g_color_reset"
+    printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
+
+    local l_max_digits=2
+
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO y crear los enlaces simbolicos del profile %b(si escoge una opcion siempre se ejecutará)%b\n" "$g_color_subtitle" "0" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Instalar si no esta instalado\n" "$g_color_subtitle" "1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Configurar como Editor, incluyendo paquetes VIM (Basico)\n" "$g_color_subtitle" "2" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Configurar como IDE, incluyendo paquetes VIM (Developer)\n" "$g_color_subtitle" "4" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVim - Instalar si no esta instalado\n" "$g_color_subtitle" "8" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVim - Configurar como Editor (Basico)\n" "$g_color_subtitle" "16" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVim - Configurar como IDE (Developer)\n" "$g_color_subtitle" "32" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Re-crear (crear y/o actualizar) los enlaces simbolicos del profile\n" "$g_color_subtitle" "64" "$g_color_reset"
+
+    print_line '-' $g_max_length_line "$g_color_opaque"
 
 }
 
 function i_main() {
 
-    echo "OS Type            : (${g_os_type})"
-    echo "OS Subtype (Distro): (${g_os_subtype_id}) ${g_os_subtype_name} - ${g_os_subtype_version}"$'\n'
+    printf '%bOS Type            : (%s)\n' "$g_color_opaque" "$g_os_type"
+    printf 'OS Subtype (Distro): (%s) %s - %s%b\n\n' "${g_os_subtype_id}" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
     
     #Determinar el tipo de distribución Linux
     if [ $g_os_type -gt 10 ]; then
-        echo "ERROR (21): El sistema operativo debe ser Linux"
+        echo "ERROR(21): El sistema operativo debe ser Linux"
         return 21;
     fi
+   
+    print_line '#' $g_max_length_line "$g_color_title" 
 
+    _show_menu_core
     
-    echo "#################################################################################################"
-
     local l_flag_continue=0
-    local l_opciones=""
+    local l_options=""
     while [ $l_flag_continue -eq 0 ]; do
 
-        _show_menu_core
-        read l_opciones
+        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_opaque" "$g_color_reset"
+        read -r l_options
 
-        case "$l_opciones" in
+        case "$l_options" in
             a)
                 l_flag_continue=1
-                echo "#################################################################################################"$'\n'
+                print_line '#' $g_max_length_line "$g_color_title" 
+                printf '\n'
                 #1 + 2 + 8 + 16
                 _setup 27
                 ;;
 
             b)
                 l_flag_continue=1
-                echo "#################################################################################################"$'\n'
+                print_line '#' $g_max_length_line "$g_color_title" 
+                printf '\n'
                 #1 + 4 + 8 + 32
                 _setup 45
                 ;;
 
             c)
                 l_flag_continue=1
-                echo "#################################################################################################"$'\n'
+                print_line '#' $g_max_length_line "$g_color_title" 
+                printf '\n'
                 #1 + 2 + 8 + 16 + 64 
                 _setup 91
                 ;;
 
             d)
                 l_flag_continue=1
+                print_line '#' $g_max_length_line "$g_color_title" 
+                printf '\n'
                 #1 + 4 + 8 + 32 + 64
-                echo "#################################################################################################"$'\n'
                 _setup 109
                 ;;
 
             q)
                 l_flag_continue=1
-                echo "#################################################################################################"$'\n'
+                print_line '#' $g_max_length_line "$g_color_title" 
+                printf '\n'
                 ;;
 
             [1-9]*)
-                if [[ "$l_opciones" =~ ^[0-9]+$ ]]; then
+                if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    echo "#################################################################################################"$'\n'
-                    _setup $l_opciones
+                    print_line '#' $g_max_length_line "$g_color_title" 
+                    printf '\n'
+                    _setup $l_options
                 else
                     l_flag_continue=0
-                    echo "Opción incorrecta"
-                    echo "-------------------------------------------------------------------------------------------------"
+                    printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
+                    print_line '-' $g_max_length_line "$g_color_opaque" 
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
-                echo "Opción incorrecta"
-                echo "-------------------------------------------------------------------------------------------------"
+                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_opaque" 
                 ;;
         esac
         

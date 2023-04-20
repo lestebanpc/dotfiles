@@ -46,60 +46,24 @@ if [ $g_os_type -eq 1 ]; then
 fi
 
 #Expresiones regulares de sustitucion mas usuadas para las versiones
-#Se extrae la 1ra subcadena que inicie con enteros 0-9 y continue con . y luego continue con cualquier caracter que solo sea 0-9 o .
+#La version 'x.y.z' esta la inicio o despues de caracteres no numericos
 declare -r g_regexp_sust_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
-#Se extrae la 1ra subcadena que inicie con enteros 0-9 y continue con . y luego continue con cualquier caracter que solo sea 0-9 o . o -
+#La version 'x.y.z' o 'x-y-z' esta la inicio o despues de caracteres no numericos
 declare -r g_regexp_sust_version2='s/[^0-9]*\([0-9]\+\.[0-9.-]\+\).*/\1/'
+#La version '.y.z' esta la inicio o despues de caracteres no numericos
 declare -r g_regexp_sust_version3='s/[^0-9]*\([0-9.]\+\).*/\1/'
-#Solo lo numeros sin puntos
+#La version 'xyz' (solo un entero sin puntos)  esta la inicio o despues de caracteres no numericos
 declare -r g_regexp_sust_version4='s/[^0-9]*\([0-9]\+\).*/\1/'
+#La version 'x.y.z' esta despues de un caracter vacio
+declare -r g_regexp_sust_version5='s/.*\s\+\([0-9]\+\.[0-9.]\+\).*/\1/'
+
 #Cuando no se puede determinar la version actual (siempre se instalara)
 declare -r g_version_none='0.0.0'
 
-#Colores principales usados para presentar información (menu,...)
-g_color_opaque="\x1b[90m"
-g_color_reset="\x1b[0m"
-g_color_title="\x1b[32m"
-g_color_subtitle="\x1b[36m"
 
-#ID de los repositorios y sus rutas bases
-declare -A gA_repositories=(
-        ['bat']='sharkdp/bat'
-        ['ripgrep']='BurntSushi/ripgrep'
-        ['xsv']='BurntSushi/xsv'
-        ['delta']='dandavison/delta'
-        ['fzf']='junegunn/fzf'
-        ['jq']='stedolan/jq'
-        ['yq']='mikefarah/yq'
-        ['less']='jftuga/less-Windows'
-        ['fd']='sharkdp/fd'
-        ['oh-my-posh']='JanDeDobbeleer/oh-my-posh'
-        ['kubectl']=''
-        ['helm']='helm/helm'
-        ['kustomize']='kubernetes-sigs/kustomize'
-        ['operator-sdk']='operator-framework/operator-sdk'
-        ['neovim']='neovim/neovim'
-        ['k0s']='k0sproject/k0s'
-        ['nerd-fonts']='ryanoasis/nerd-fonts'
-        ['powershell']='PowerShell/PowerShell'
-        ['roslyn']='OmniSharp/omnisharp-roslyn'
-        ['netcoredbg']='Samsung/netcoredbg'
-        ['go']='golang'
-        ['cmake']='Kitware/CMake'
-        ['ninja']='ninja-build/ninja'
-        ['clangd']='clangd/clangd'
-        ['rust-analyzer']='rust-lang/rust-analyzer'
-        ['graalvm']='graalvm/graalvm-ce-builds'
-        ['jdtls']='jdtls'
-        ['runc']='opencontainers/runc'
-        ['cni-plugins']='containernetworking/plugins'
-        ['rootlesskit']='rootless-containers/rootlesskit'
-        ['slirp4netns']='rootless-containers/slirp4netns'
-        ['containerd']='containerd/containerd'
-        ['buildkit']='moby/buildkit'
-        ['nerdctl']='containerd/nerdctl'
-        ['dive']='wagoodman/dive'
-    )
+#Variables y funciones para mostrar las opciones dinamicas del menu.
+. ~/.files/setup/linux/_program_menu.bash
+
 
 #Opciones de configuración de los repositorio 
 # > Por defecto los repositorios son instalados en todo los permitido (valor por defecto es 11)
@@ -124,54 +88,11 @@ declare -A gA_repo_config=(
         ['dive']=3
     )
 
-#Descripción de las opciones del menu.
-declare -a ga_options_display=(
-    "Actualizar los paquetes existentes del sistema operativo"
-    "Actualizar solo ya repositorios instalados"
-    "Los repositorios basicos"
-    "El editor 'NeoVim'"
-    "Las fuentes 'Nerd Fonts'"
-    "Shell 'Powershell Core'"
-    "Container Runtime 'ContainerD' y su CLI 'NerdCtl'"
-    "Tool de Contenedores"
-    "Tool de Kubernates"
-    "Implementación de Kubernates 'K0S'"
-    "RTE de 'Go'"
-    "RTE 'GraalVM CE'"
-    "LSP y DAP server de .Net"
-    "LSP y building tools de C/C++"
-    "LSP server de Rust"
-    "LSP y DAP server de Java"
-    )
-
-#Descripción de las opciones del menu y los ID de repositorios implicados
-declare -a ga_options_repo=(
-    "-"
-    "-"
-    "bat,ripgrep,xsv,delta,fzf,jq,yq,less,fd,oh-my-posh"
-    "neovim"
-    "nerd-fonts"
-    "powershell"
-    "runc,cni-plugins,rootlesskit,slirp4netns,containerd,buildkit,nerdctl"
-    "dive"
-    "kubectl,kustomize,helm,operator-sdk"
-    "k0s"
-    "go"
-    "graalvm"
-    "roslyn,netcoredbg"
-    "clangd,cmake,ninja"
-    "rust-analyzer"
-    "jdtls"
-    )
-
 #Valores de la opcion especiales del menu (no estan vinculado a un repositorio especifico):
 # > Actualizar todos paquetes del sistema operativo (Opción 1 del arreglo del menu)
 g_opt_update_installed_pckg=$((1 << 0))
 # > Actualizar todos los repositorios instalados (Opción 2 del arreglo del menu)
 g_opt_update_installed_repo=$((1 << 1))
-
-#Tamaño de la linea del menu
-g_max_length_line=130
 
 #}}}
 
@@ -718,6 +639,11 @@ function _get_repo_current_version() {
                 l_tmp=$(cat "${g_path_programs_lnx}/cni-plugins.info" | head -n 1)
             else
 
+                #Calcular la ruta de archivo/comando donde se obtiene la version
+                if [ -z "$p_path_file" ]; then
+                    l_path_file="${g_path_programs_lnx}/cni_plugins/"
+                fi
+
                 #CNI vlan plugin v1.2.0
                 l_tmp=$(${l_path_file}vlan --version 2> /dev/null)
                 l_status=$?
@@ -741,6 +667,7 @@ function _get_repo_current_version() {
             
             if [ $l_status -eq 0 ]; then
                 l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_sustitution_regexp="$g_regexp_sust_version5"
             fi
             ;;
 
@@ -2039,25 +1966,28 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
 
-            #Renombrar el binario antes de copiarlo
-            if [ $p_install_win_cmds -ne 0 ]; then
-
-                echo "Copiando \"${p_artifact_name_woext}\" como \"${l_path_bin}/k0s\" ..."
-                mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_temp}/k0s"
-
-                if [ $g_is_root -eq 0 ]; then
-                    cp "${l_path_temp}/k0s" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/k0s"
-                else
-                    sudo cp "${l_path_temp}/k0s" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/k0s"
-                    #sudo mkdir -pm 755 "${l_path_man}"
-                fi
-            else
-                echo "Copiando \"${p_artifact_name_woext}.exe\" como \"${l_path_bin}/k0s.exe\" ..."
-                mv "${l_path_temp}/${p_artifact_name_woext}.exe" "${l_path_temp}/k0s.exe"
-                cp "${l_path_temp}/k0s.exe" "${l_path_bin}"
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                return 40
             fi
+
+            #Detener el servicio
+
+            #Renombrar el binario antes de copiarlo
+            echo "Copiando \"${p_artifact_name_woext}\" como \"${l_path_bin}/k0s\" ..."
+            mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_temp}/k0s"
+
+            if [ $g_is_root -eq 0 ]; then
+                cp "${l_path_temp}/k0s" "${l_path_bin}"
+                chmod +x "${l_path_bin}/k0s"
+            else
+                sudo cp "${l_path_temp}/k0s" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/k0s"
+                #sudo mkdir -pm 755 "${l_path_man}"
+            fi
+
+            #Iniciar el servicio
+
             ;;
 
         roslyn)
@@ -2943,7 +2873,7 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
-            l_path_bin='/opt/cni/bin'
+            l_path_bin="${g_path_programs_lnx}/cni_plugins"
 
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -2956,11 +2886,9 @@ function _copy_artifact_files() {
                 #Crear las carpeta
                 echo "Creando la carpeta \"${l_path_bin}\" ..."
                 if [ $g_is_root -eq 0 ]; then
-                    mkdir -m 755 /opt/cni
-                    mkdir -m 755 /opt/cni/bin
+                    mkdir -pm 755 $l_path_bin
                 else
-                    sudo mkdir -m 755 /opt/cni
-                    sudo mkdir -m 755 /opt/cni/bin
+                    sudo mkdir -pm 755 $l_path_bin
                 fi
 
                 #Copiando los binarios
@@ -3010,6 +2938,11 @@ function _copy_artifact_files() {
                 echo "ERROR: El artefacto[${p_artifact_id}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
                 return 40
             fi
+
+            #Detener el demonio
+            
+            #Si no esta instalado mostrar la info para instalarlo:
+            #printf
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $g_is_root -eq 0 ]; then
@@ -3065,6 +2998,9 @@ function _copy_artifact_files() {
                 sudo chmod +x "${l_path_bin}/containerd"
 
             fi
+
+            #Iniciar el demonio 
+
             ;;
 
 
@@ -3146,16 +3082,13 @@ function _copy_artifact_files() {
 
             fi
 
-            echo "Copiando \"${l_path_temp}/containerd-rootless.sh\" a \"~/.files/setup/programs/nerdctl\" ..."
+            echo "Copiando \"${l_path_temp}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/setup/programs/nerdctl\" ..."
             cp "${l_path_temp}/containerd-rootless.sh" ~/.files/setup/programs/nerdctl
             chmod u+x ~/.files/setup/programs/nerdctl/containerd-rootless.sh
 
-            echo "Copiando \"${l_path_temp}/containerd-rootless-setuptool.sh\" a \"~/.files/setup/programs/nerdctl\" ..."
+            echo "Copiando \"${l_path_temp}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/setup/programs/nerdctl\" ..."
             cp "${l_path_temp}/containerd-rootless-setuptool.sh" ~/.files/setup/programs/nerdctl
             chmod u+x ~/.files/setup/programs/nerdctl/containerd-rootless-setuptool.sh
-
-            #printf 'Si no esta instalado, realize los siguientes pasos:\n'
-            #printf '  > '
             ;;
 
 
@@ -3674,14 +3607,14 @@ function i_setup_repository() {
             l_aux="$((1 << ${p_option_idx}))"
 
             if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
-                printf "> Actaulizando el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
-                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
+                printf "> Actualizando el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_idx}]}" "$g_color_reset"
             elif [ $l_repo_is_installed -eq 1 ]; then
                 printf "> Instalando el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
-                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_idx}]}" "$g_color_reset"
             else
                 printf "> Configurar el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
-                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_idx}]}" "$g_color_reset"
             fi
 
             print_line '-' $g_max_length_line  "$g_color_opaque"
@@ -3830,13 +3763,13 @@ function i_setup_repository() {
 
             if [ $l_repo_is_installed -eq 0 -o $l_repo_is_installed -eq 2 ]; then
                 printf "> Actualizando el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
-                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_idx}]}" "$g_color_reset"
             elif [ $l_repo_is_installed -eq 1 ]; then
                 printf "> Instalando el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
-                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_idx}]}" "$g_color_reset"
             else
                 printf "> Configurar el repositorio %b%s%b '%b%s%b' de la opción %b%s%b (%b%s%b)\n" "$g_color_opaque" "$p_option_repo_tag" "$g_color_reset" "$g_color_subtitle" "$l_repo_name_aux" \
-                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_options_display[${p_option_idx}]}" "$g_color_reset"
+                       "$g_color_reset" "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_idx}]}" "$g_color_reset"
             fi
 
             print_line '-' $g_max_length_line  "$g_color_opaque"
@@ -4032,13 +3965,13 @@ function i_setup_repositories() {
     local l_option_is_selected
     local IFS=','
     local la_repos
-    for((l_i=0; l_i < ${#ga_options_repo[@]}; l_i++)); do
+    for((l_i=0; l_i < ${#ga_menu_options_repos[@]}; l_i++)); do
 
         #Por defecto la opcion es la selecionada para configurarse
         l_option_is_selected=1
 
         #Si no tiene repositorios a instalar, omitirlos
-        l_aux="${ga_options_repo[$l_i]}"
+        l_aux="${ga_menu_options_repos[$l_i]}"
         if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
             continue
         fi
@@ -4090,80 +4023,23 @@ function _show_menu_core() {
     print_line '-' $g_max_length_line  "$g_color_opaque"
     printf " (%bq%b) Salir del menu\n" "$g_color_subtitle" "$g_color_reset"
     printf " (%ba%b) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes\n" "$g_color_subtitle" "$g_color_reset"
-    printf " ( ) Actualización personalizado. Ingrese la suma de las opciones que desea configurar:\n"
+    printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
-    local l_i=0
-    local l_j=0
-    local IFS=','
-    local la_repos
+    _get_length_menu_option
+    local l_max_digits=$?
 
-    local l_option_value
-    local l_max_digits_aux="$((1 << ${#ga_options_repo[@]}))"
-    local l_max_digits=${#l_max_digits_aux}
-    local l_aux
-    local l_n
-    local l_repo_names
-    local l_repo_id
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes existentes del sistema operativo\n" "$g_color_subtitle" "$g_opt_update_installed_pckg" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas ya instalados\n" "$g_color_subtitle" "$g_opt_update_installed_repo" "$g_color_reset"
 
-    #printf "    (%0${l_m}d) Actualizar xxx (siempre se realizara esta opción)\n" "0" 
-
-    for((l_i=0; l_i < ${#ga_options_repo[@]}; l_i++)); do
-
-        #Si no tiene repositorios a instalar, omitirlos
-        l_option_value=$((1 << ${l_i}))
-
-        l_aux="${ga_options_repo[$l_i]}"
-        if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
-            printf "     (%b%0${l_max_digits}d%b) %s\n" "$g_color_subtitle" "$l_option_value" "$g_color_reset" "${ga_options_display[$l_i]}"
-            continue
-        fi
-
-        #Obtener los repositorios a configurar
-        IFS=','
-        la_repos=(${l_aux})
-        IFS=$' \t\n'
-
-        printf "     (%b%0${l_max_digits}d%b) Instalar o actualizar \"%b%s%b\": " "$g_color_subtitle" "$l_option_value" "$g_color_reset" \
-               "$g_color_subtitle" "${ga_options_display[$l_i]}" "$g_color_reset"
-
-        l_n=${#la_repos[@]}
-        if [ $l_n -gt 3 ]; then
-            printf '\n'
-            l_aux=$((8 + l_max_digits))
-            printf ' %.0s' $(seq $l_aux)
-        fi
-
-        l_repo_names=''
-        for((l_j=0; l_j < ${l_n}; l_j++)); do
-
-            l_repo_id="${la_repos[${l_j}]}"
-            l_aux="${gA_repositories[${l_repo_id}]}"
-            if [ -z "$l_aux" ]; then
-                l_aux="$l_repo_id"
-            fi
-
-            if [ $l_j -eq 0 ]; then
-                #l_repo_names="'${l_aux}'" 
-                l_repo_names="'${g_color_opaque}${l_aux}${g_color_reset}'" 
-            else
-                #l_repo_names="${l_repo_names}, '${l_aux}'"
-                l_repo_names="${l_repo_names}, '${g_color_opaque}${l_aux}${g_color_reset}'"
-            fi
-
-        done
-
-        printf '%b\n' "$l_repo_names"
-
-    done
-
+    _show_dynamic_menu $l_max_digits
     print_line '-' $g_max_length_line "$g_color_opaque" 
 
 }
 
 function i_main() {
 
-    echo "OS Type            : (${g_os_type})"
-    echo "OS Subtype (Distro): (${g_os_subtype_id}) ${g_os_subtype_name} - ${g_os_subtype_version}"$'\n'
+    printf '%bOS Type            : (%s)\n' "$g_color_opaque" "$g_os_type"
+    printf 'OS Subtype (Distro): (%s) %s - %s%b\n\n' "${g_os_subtype_id}" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
     
     #Determinar el tipo de distribución Linux
     if [ $g_os_type -gt 10 ]; then
@@ -4176,15 +4052,14 @@ function i_main() {
     _show_menu_core
 
     local l_flag_continue=0
-    local l_opciones=""
+    local l_options=""
     local l_value_option_a=$(($g_opt_update_installed_pckg + $g_opt_update_installed_repo))
     while [ $l_flag_continue -eq 0 ]; do
 
-        #_show_menu_core
         printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_opaque" "$g_color_reset"
-        read -r l_opciones
+        read -r l_options
 
-        case "$l_opciones" in
+        case "$l_options" in
             a)
                 l_flag_continue=1
                 print_line '#' $g_max_length_line "$g_color_title" 
@@ -4206,11 +4081,11 @@ function i_main() {
                 ;;
 
             [1-9]*)
-                if [[ "$l_opciones" =~ ^[0-9]+$ ]]; then
+                if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
                     print_line '#' $g_max_length_line "$g_color_title" 
                     printf '\n'
-                    i_setup_repositories $l_opciones 0
+                    i_setup_repositories $l_options 0
                 else
                     l_flag_continue=0
                     printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
@@ -4244,6 +4119,7 @@ fi
 gp_install_all_user=0   #(0) Se instala/configura para ser usuado por todos los usuarios (si es factible).
                         #    Requiere ejecutar con privilegios de administrador.
                         #(1) Solo se instala/configura para el usuario actual (no requiere ser administrador).
+
 #if [[ "$2" =~ ^[0-9]+$ ]]; then
 #    gp_install_all_user=$2
 #fi

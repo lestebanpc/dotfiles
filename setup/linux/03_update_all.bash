@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 #Inicialización Global {{{
 
 #Funciones generales, determinar el tipo del SO y si es root
@@ -27,7 +28,15 @@ if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
     g_is_root=0
 fi
 
+
+#Variables y funciones para mostrar las opciones dinamicas del menu.
+. ~/.files/setup/linux/_program_menu.bash
+
+
+
 #}}}
+
+
 
 function _after_update_repository() {
 
@@ -115,9 +124,9 @@ function _update_repository() {
         return 9
     else
         printf '\n'
-        echo "-------------------------------------------------------------------------------------------------"
-        echo "- Repository Git para VIM: \"${p_repo_path}\""
-        echo "-------------------------------------------------------------------------------------------------"
+        print_line '-' $g_max_length_line "$g_color_opaque" 
+        printf '> Repository Git para VIM "%b%s%b"\n' "$g_color_subtitle" "${p_repo_path}" "$g_color_reset"
+        print_line '-' $g_max_length_line "$g_color_opaque" 
     fi
 
     cd $p_repo_path
@@ -202,11 +211,11 @@ function _update_all() {
         echo "   1> Descargar los archivos del repositorio:"
         echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
         echo "   2> Instalar comandos basicos:"
-        echo "      chmod u+x ~/.files/setup/01_setup_commands.bash"
-        echo "      ~/.files/setup/01_setup_commands.bash"
+        echo "      chmod u+x ~/.files/setup/linux/01_setup_cli_programs.bash"
+        echo "      ~/.files/setup/linux/01_setup_cli_programs.bash"
         echo "   3> Configurar el profile del usuario:"
-        echo "      chmod u+x ~/.files/setup/02_setup_profile.bash"
-        echo "      ~/.files/setup/02_setup_profile.bash"
+        echo "      chmod u+x ~/.files/setup/linux/02_setup_profile.bash"
+        echo "      ~/.files/setup/linux/02_setup_profile.bash"
         return 0
     fi
     
@@ -225,9 +234,9 @@ function _update_all() {
     fi
     
     #4. Actualizar los paquetes instalados desde los repositorios SO
-    echo "-------------------------------------------------------------------------------------------------"
-    echo "- Actualizar los paquetes de los repositorios del SO Linux"
-    echo "-------------------------------------------------------------------------------------------------"
+    print_line '-' $g_max_length_line "$g_color_opaque" 
+    printf '> Actualizar los paquetes de los repositorios del SO Linux\n'
+    print_line '-' $g_max_length_line "$g_color_opaque" 
     
     #Segun el tipo de distribución de Linux
     case "$g_os_subtype_id" in
@@ -272,7 +281,7 @@ function _update_all() {
     #l_opcion=1
     #l_flag=$(( $p_opciones & $l_opcion ))
     if [ $p_opciones -ge 2 ]; then
-        ~/.files/setup/01_setup_cli_programs.bash 1 $p_opciones
+        ~/.files/setup/linux/01_setup_cli_programs.bash 1 $p_opciones
     fi            
 
     #9. Caducar las credecinales de root almacenadas temporalmente
@@ -286,95 +295,94 @@ function _update_all() {
 
 function _show_menu_core() {
 
-    echo "                                  Escoger la opción"
-    echo "-------------------------------------------------------------------------------------------------"
-    echo " (q) Salir del menu"
-    echo " (a) Actualizar los artefactos existentes: paquetes del SO y paquetes VIM"
-    echo " (b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y paquetes VIM"
-    echo " ( ) Actualización personalizado. Ingrese la suma de las opciones que desea configurar:"
-    echo "     (    0) Actualizar los paquetes del SO existentes (siempre se realizara esta opción)"
-    echo "     (    1) Actualizar los paquetes VIM existentes"
-    echo "     (    2) Actualizar los binarios de los repositorios existentes"
-    echo "     (    4) Instalar/Actualizar los binarios de los repositorios basicos"
-    echo "     (    8) Instalar/Actualizar el editor: \"NeoVim\""
-    echo "     (   16) Instalar/Actualizar la implementación de Kubernates: \"k0s\""
-    echo "     (   32) Instalar/Actualizar en el server fuentes Nerd Fonts: \"ryanoasis/nerd-fonts\""
-    echo "     (   64) Instalar/Actualizar 'Powershell Core' \"PowerShell/PowerShell\""
-    echo "     (  128) Instalar/Actualizar el LSP Server de .Net: \"OmniSharp/omnisharp-roslyn\""
-    echo "     (  256) Instalar/Actualizar el DAP Server de .Net: \"Samsung/netcoredbg\""
-    echo "     (  512) Instalar/Actualizar RTE de \"Go\""
-    echo "     ( 1024) Instalar/Actualizar el Build Generator C/C++ \"Kitware/CMake\""
-    echo "     ( 2048) Instalar/Actualizar el Build Tool C/C++ \"ninja-build/ninja\""
-    echo "     ( 4096) Instalar/Actualizar el LSP Server de C/C++: \"clangd/clangd\""
-    echo "     ( 8192) Instalar/Actualizar el LSP Server de Rust: \"rust-lang/rust-analyzer\""
-    echo "     (16384) Instalar/Actualizar el RTE GraalVM CE: \"graalvm/graalvm-ce-builds\""
-    echo "     (32768) Instalar/Actualizar el LSP de Java 'JDT LS': \"eclipse/eclipse.jdt.ls\""
-    echo "-------------------------------------------------------------------------------------------------"
-    printf "Opción : "
+
+    print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_title"
+    print_line '-' $g_max_length_line  "$g_color_opaque"
+    printf " (%bq%b) Salir del menu\n" "$g_color_subtitle" "$g_color_reset"
+    printf " (%ba%b) Actualizar los artefactos existentes: paquetes del SO y paquetes VIM\n" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bb%b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y paquetes VIM\n" "$g_color_subtitle" "$g_color_reset"
+    printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
+
+    _get_length_menu_option
+    local l_max_digits=$?
+
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes %b(siempre que escoga una opcion este se ejecutará)%b\n" "$g_color_subtitle" "0" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes VIM existentes\n" "$g_color_subtitle" "1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas instalados\n" "$g_color_subtitle" "2" "$g_color_reset"
+
+    _show_dynamic_menu $l_max_digits
+    print_line '-' $g_max_length_line "$g_color_opaque" 
 
 }
 
 function i_main() {
 
-    echo "OS Type            : (${g_os_type})"
-    echo "OS Subtype (Distro): (${g_os_subtype_id}) ${g_os_subtype_name} - ${g_os_subtype_version}"$'\n'
+
+    printf '%bOS Type            : (%s)\n' "$g_color_opaque" "$g_os_type"
+    printf 'OS Subtype (Distro): (%s) %s - %s%b\n\n' "${g_os_subtype_id}" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
     
     #Determinar el tipo de distribución Linux
     if [ $g_os_type -gt 10 ]; then
-        echo "ERROR: El sistema operativo debe ser Linux"
+        echo "ERROR(21): El sistema operativo debe ser Linux"
         return 21;
     fi
+   
+    print_line '#' $g_max_length_line "$g_color_title" 
 
-    
-    echo "#################################################################################################"
+    _show_menu_core
 
     local l_flag_continue=0
-    local l_opcion=""
+    local l_options=""
     while [ $l_flag_continue -eq 0 ]; do
 
-        _show_menu_core
-        read l_opcion
+        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_opaque" "$g_color_reset"
+        read -r l_options
 
-        case "$l_opcion" in
+        case "$l_options" in
             a)
                 l_flag_continue=1
-                echo "#################################################################################################"$'\n'
+                print_line '#' $g_max_length_line "$g_color_title" 
+                printf '\n'
                 _update_all 1
                 ;;
 
             b)
                 l_flag_continue=1
-                echo "#################################################################################################"$'\n'
+                print_line '#' $g_max_length_line "$g_color_title" 
+                printf '\n'
                 _update_all 3
                 ;;
 
             0)
                 l_flag_continue=1
-                echo "#################################################################################################"$'\n'
+                print_line '#' $g_max_length_line "$g_color_title" 
+                printf '\n'
                 _update_all 0
                 ;;
 
             q)
                 l_flag_continue=1
-                echo "#################################################################################################"$'\n'
+                print_line '#' $g_max_length_line "$g_color_title" 
+                printf '\n'
                 ;;
 
             [1-9]*)
-                if [[ "$l_opcion" =~ ^[0-9]+$ ]]; then
+                if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    echo "#################################################################################################"$'\n'
-                    _update_all $l_opcion
+                    print_line '#' $g_max_length_line "$g_color_title" 
+                    printf '\n'
+                    _update_all $l_options
                 else
                     l_flag_continue=0
-                    echo "Opción incorrecta"
-                    echo "-------------------------------------------------------------------------------------------------"
+                    printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
+                    print_line '-' $g_max_length_line "$g_color_opaque" 
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
-                echo "Opción incorrecta"
-                echo "-------------------------------------------------------------------------------------------------"
+                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_opaque" 
                 ;;
         esac
         
