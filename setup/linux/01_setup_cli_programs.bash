@@ -964,7 +964,7 @@ function i_setup_repositories() {
         fi
 
         #La opción actual se debe instalar?
-        l_option=$((1 << ${l_i}))
+        l_option=$((1 << (l_i + g_offset_index_option_menu)))
         l_flag=$(( $p_opciones & $l_option ))
 
         if [ $l_option -eq $l_flag ]; then 
