@@ -1099,14 +1099,15 @@ function _request_stop_k0s_node() {
     fi
 
     #Si esta detenido
-    l_info=$(echo "$l_info" | grep 'Process ID' 2> /dev/null)
+    local l_aux
+    l_aux=$(echo "$l_info" | grep -e '^Process ID' 2> /dev/null)
     l_status=$?
-    if [ $l_status -ne 0 ] || [ -z "$l_info" ]; then
+    if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
         return 0
     fi
+    local l_node_process_id=$(echo "$l_aux" | sed 's/.*: \(.*\)/\1/' 2> /dev/null)
 
     local l_nodo_type=$(echo "$l_info" | grep -e '^Role' | sed 's/.*: \(.*\)/\1/' 2> /dev/null)
-    local l_node_process_id=$(echo "$l_info" | grep -e '^Process ID' | sed 's/.*: \(.*\)/\1/' 2> /dev/null)
 
     #Solicitar la detención del servicio
     printf "%bEl nodo k0s '%s' (PID: %s) esta iniciado y requiere detenerse para instalar el artefacto[%s] del repositorio '%s'\n" \
