@@ -216,8 +216,8 @@ function _neovim_setup() {
                 if [ $g_is_root -eq 0 ]; then
                     python3 -m pip install pynvim
                 else
-                    sudo python3 -m pip install pynvim
-                    #python3 -m pip install pynvim
+                    #sudo python3 -m pip install pynvim
+                    python3 -m pip install pynvim
                 fi
 
             else
