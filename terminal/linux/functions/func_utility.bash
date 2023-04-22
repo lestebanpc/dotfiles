@@ -306,7 +306,95 @@ print_text_in_center() {
 
 }
 
+#Parametros de entrada - Agumentos y opciones:
+#  1 > Nombre completo de la unidad (por ejemplo: 'containerd.service')
+#  2 > Flag '0' para usar el nivel 'User', caso contrario usara el nivel 'System'
+#Parametros de salida - Valor de retorno:
+#  0 > La unidad no esta instalada (no tiene archivo de configuracion): 
+#      'systemctl list-unit-files' no lo ubica o esta en cache pero como 'not-found'
+#  1 > La unidad instalada pero aun no esta en cache (no ha sido ejecutada desde el inicio del SO)
+#  2 > La unidad instalada, en cache, pero marcada para no iniciarse ('unmask', 'inactive').
+#  3 > La unidad instalada, en cache, pero no iniciado ('loaded', 'inactive').
+#  4 > La unidad instalada, en cache, iniciado y aun ejecutandose ('loaded', 'active'/'running').
+#  5 > La unidad instalada, en cache, iniciado y esperando peticionese ('loaded', 'active'/'waiting').
+#  6 > La unidad instalada, en cache, iniciado y terminado ('loaded', 'active'/'exited' or 'dead').
+#  7 > La unidad instalada, en cache, iniciado pero se desconoce su subestado.
+# 99 > La unidad instalada, en cache, pero no se puede leer su información.
+exist_systemd_unit() {
 
+    #1. Argumentos
+    local l_unit_name="$1"
+    local l_level='--system'
+    if [ "$2" = "0" ]; then
+        l_level='--user'
+    fi
+
+    #2. Validar si la unidad esta instalada
+    local l_result=$(systemctl "$l_level" --no-pager list-unit-files | grep "$l_unit_name" 2> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ] || [ -z "$l_result" ]; then
+        return 0
+    fi
+
+    #3. Validar el estado del servicio segun el cache del systemd
+    l_result=$(systemctl "$l_level" --all --no-pager list-units | grep "$l_unit_name" 2> /dev/null)
+    #  UNIT                                   LOAD      ACTIVE   SUB     DESCRIPTION
+    #● accounts-daemon.service                masked    inactive dead    accounts-daemon.service
+
+    local l_status=$?
+
+    #Si no esta en el cache
+    if [ $l_status -ne 0 ] || [ -z "$l_result" ]; then
+        return 1
+    fi
+
+    #Quitar los 2 caracteres se marcas iniciales y obtener los campos
+    l_result="${l_result:2}"
+    local l_values=($l_result)
+    local l_n=${#l_values[@]}
+
+    if [ $l_n -lt 4 ]; then
+        return 99
+    fi
+
+    #Si esta en cache pero marcada para no iniciarse
+    if [ "${l_values[1]}" = 'not-found' ]; then
+        return 0
+    fi
+
+    #Si esta en cache pero marcada para no iniciarse
+    if [ "${l_values[1]}" = 'masked' ]; then
+        return 2
+    fi
+
+    #Si esta tiene otro estado que no sea cargado en el cache
+    if [ ! "${l_values[1]}" = 'loaded' ]; then
+        return 99
+    fi
+
+    #Si el estado en cache cargado, pero no esta ejecutandose
+    if [ "${l_values[2]}" = 'inactive' ]; then
+        return 3
+    fi
+
+    #Si el estado en cache cargado e iniciado
+    if [ "${l_values[2]}" = 'active' ]; then
+
+        #Si esta ejecutandose
+        if [ "${l_values[3]}" = 'running' ]; then
+            return 4
+        elif [ "${l_values[3]}" = 'waiting' ]; then
+            return 5
+        elif [ "${l_values[3]}" = 'exited' ] || [ "${l_values[3]}" = 'dead' ]; then
+            return 6
+        else
+            return 7
+        fi
+    fi
+
+
+    return 99
+}
 
 
 
