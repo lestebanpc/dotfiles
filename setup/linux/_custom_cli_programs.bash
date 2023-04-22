@@ -1081,8 +1081,8 @@ function _load_artifacts() {
 function _request_stop_k0s_node() {
 
     #1. Argumentos
-    p_repo_id="$2"
-    p_artifact_index=$3
+    p_repo_id="$1"
+    p_artifact_index=$2
     
     #2. Logica
     local l_option
