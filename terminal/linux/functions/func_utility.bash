@@ -397,4 +397,51 @@ exist_systemd_unit() {
 }
 
 
+#Parametros de entrada - Agumentos y opciones:
+#  1 > Nombre del paquete (no requiere especificar la plataforma del paquete)
+#  2 > El tipo de distribucion Linux (valor de retorno devulto por get_linux_type_id) 
+#      00 : Distribución de Linux desconocido
+#      01 : Ubuntu
+#      02 : Fedora
+#Parametros de salida - Valor de retorno:
+#  0 > El paquete esta instalado
+#  1 > El paquete no esta instalado
+#  9 > No se puede determinar 
+is_package_installed() {
+
+    local l_status
+    local l_aux
+
+    case "$2" in
+
+        1)
+            #Si es Ubuntu
+            l_aux=$(dpkg -l | grep "$1" 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
+                return 1
+            fi
+            ;;
+
+        2) 
+            #Si es Fedora
+            l_aux=$(dnf list installed | grep "$1" 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
+                return 1
+            fi
+            ;;
+
+        *)
+            return 9
+            ;;
+    esac
+
+    return 0 
+
+
+}
+
 

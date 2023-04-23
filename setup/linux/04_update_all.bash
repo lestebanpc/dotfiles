@@ -30,7 +30,7 @@ fi
 
 
 #Variables y funciones para mostrar las opciones dinamicas del menu.
-. ~/.files/setup/linux/_program_menu.bash
+. ~/.files/setup/linux/_dynamic_commands_menu.bash
 
 
 
@@ -211,8 +211,8 @@ function _update_all() {
         echo "   1> Descargar los archivos del repositorio:"
         echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
         echo "   2> Instalar comandos basicos:"
-        echo "      chmod u+x ~/.files/setup/linux/01_setup_cli_programs.bash"
-        echo "      ~/.files/setup/linux/01_setup_cli_programs.bash"
+        echo "      chmod u+x ~/.files/setup/linux/01_setup_commands.bash"
+        echo "      ~/.files/setup/linux/01_setup_commands.bash"
         echo "   3> Configurar el profile del usuario:"
         echo "      chmod u+x ~/.files/setup/linux/02_setup_profile.bash"
         echo "      ~/.files/setup/linux/02_setup_profile.bash"
@@ -281,7 +281,7 @@ function _update_all() {
     #l_opcion=1
     #l_flag=$(( $p_opciones & $l_opcion ))
     if [ $p_opciones -ge 2 ]; then
-        ~/.files/setup/linux/01_setup_cli_programs.bash 1 $p_opciones
+        ~/.files/setup/linux/01_setup_commands.bash 1 $p_opciones
     fi            
 
     #9. Caducar las credecinales de root almacenadas temporalmente

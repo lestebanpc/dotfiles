@@ -135,13 +135,13 @@ function _neovim_setup() {
             echo "Se va instalar NeoVIM"
 
             #Valide que el flag asociado a Neovin sea el segundo parametro y sea un numero valido
-            ~/.files/setup/linux/01_setup_cli_programs.bash 2 "neovim"
+            ~/.files/setup/linux/01_setup_commands.bash 2 "neovim"
             l_nvim_flag=0
 
 
         else
             echo "NeoVIM \"${l_version}\" esta instalado: "
-            echo "   > Instale la ultima version usando '~/.files/setup/linux/01_setup_cli_programs.bash' o '~/.files/setup/linux/03_update_all.bash'"
+            echo "   > Instale la ultima version usando '~/.files/setup/linux/01_setup_commands.bash' o '~/.files/setup/linux/04_update_all.bash'"
         fi
     fi
 

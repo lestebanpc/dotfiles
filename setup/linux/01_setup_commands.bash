@@ -39,10 +39,10 @@ fi
 
 
 #Variables y funciones para mostrar las opciones dinamicas del menu.
-. ~/.files/setup/linux/_program_menu.bash
+. ~/.files/setup/linux/_dynamic_commands_menu.bash
 
 #Funciones modificables para el instalador
-. ~/.files/setup/linux/_custom_cli_programs.bash
+. ~/.files/setup/linux/_setup_commands_custom_logic.bash
 
 
 #Opciones de configuración de los repositorio 

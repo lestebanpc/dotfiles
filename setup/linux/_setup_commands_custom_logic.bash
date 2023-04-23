@@ -565,6 +565,24 @@ function _get_repo_current_version() {
             ;;
 
 
+        bypass4netns)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}bypass4netns --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_sustitution_regexp="$g_regexp_sust_version5"
+            fi
+            ;;
+
+
+
         rootlesskit)
             
             #Obtener la version
@@ -1133,16 +1151,87 @@ function _request_stop_k0s_node() {
 
 
 
+#Parametros de entrada (argumentos y opciones):
+#   1 > Nombre del repo donde se encuentra la logica para obtener la versión del comando.
+#   2 > Ruta donde desea obtener la versión a comparar con la actual (no debe termina en '/').
+#   3 > El flag sera '0' si es comando de windows (vinculado a WSL2), caso contraro es Linux.
+#Parametros de salida (valor de retorno):
+#   9 > Si el comando de la version actual aun no existe (no esta configurado o instalado).
+#   8 > Si el comando de la especificada como parametro aun no existe.
+#   0 > si la versión actual = versión especificada como parametro.
+#   1 > si la versión actual > versión especificada como parametro.
+#   2 > si la versión actual < versión especificada como parametro.
+_compare_version_current_with() {
+
+    #Argumentos
+    local p_repo_id=$1
+    local p_path="$2/"
+    local p_install_win_cmds=1
+    if [ "$7" = "0" ]; then
+        p_install_win_cmds=0
+    fi
+
+    printf 'Comparando versiones de "%s": Versión actual vs Versión ubica en "%s"...\n' "$p_repo_id" "$p_path"
+
+    #Obteniendo la versión actual
+    local l_current_version
+    l_current_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds})
+
+    local l_status=$?
+    if [ $l_status -ne 0 ]; then
+        printf 'No se puede obtener la versión actual de "%s" (status: %s)\n' "$p_repo_id" "$l_status"
+        return 9
+    fi
+
+    #Obteniendo la versión de lo especificado como parametro
+    local l_other_version
+    l_other_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "$p_path")
+
+    l_status=$?
+    if [ $l_status -ne 0 ]; then
+        printf 'No se puede obtener la versión de "%s" ubicada en "%s" (status: %s)\n' "$p_repo_id" "$p_path" "$l_status"
+        return 8
+    fi
+
+    #Comparando ambas versiones
+    compare_version "$l_current_version" "$l_other_version"
+    l_status=$?
+
+    if [ $l_status -eq 0 ]; then
+
+        printf 'La versión actual "%s" ya esta actualizado %b(= "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
+               "$l_other_version" "$p_path" "$g_color_reset"
+
+    elif [ $l_status -eq 1 ]; then
+
+        printf 'La versión actual "%s" ya esta actualizado %b(> "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
+               "$l_other_version" "$p_path" "$g_color_reset"
+
+
+    else
+
+        printf 'La versión actual "%s" requiere ser actualizado %b(= "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
+               "$l_other_version" "$p_path" "$g_color_reset"
+
+    fi
+
+    return $l_status
+
+
+}
+
+
 #Si la unidad servicio 'containerd' esta iniciado, solicitar su detención y deternerlo
 #Parametros de entrada (argumentos y opciones):
 #   1 > Nombre completo de la unidad de systemd
 #   2 > ID del repositorio
 #   3 > Indice del artefato del repositorio que se desea instalar
 #Parametros de salida (valor de retorno):
-#   0 > La unidad systemd no esta iniciado (no esta instalado o esta detenido)
-#   1 > La unidad systemd esta iniciado pero NO se acepto deternerlo
-#   2 > La unidad systemd iniciado se acepto detenerlo a nivel usuario
-#   3 > La unidad systemd iniciado se acepto detenerlo a nivel system
+#   0 > La unidad systemd NO esta instalado y NO esta iniciado
+#   1 > La unidad systemd esta instalado pero NO esta iniciado (esta detenido)
+#   2 > La unidad systemd esta iniciado pero NO se acepto deternerlo
+#   3 > La unidad systemd iniciado se acepto detenerlo a nivel usuario
+#   4 > La unidad systemd iniciado se acepto detenerlo a nivel system
 function _request_stop_systemd_unit() {
 
     #1. Argumentos
@@ -1165,11 +1254,15 @@ function _request_stop_systemd_unit() {
         l_is_user=1
         exist_systemd_unit "$p_unit_name" $l_is_user
         l_status=$?
+
+        if [ $l_status -eq 0 ]; then
+            return 0
+        fi
     fi
 
     #Si se no esta iniciado
     if [ $l_status -lt 4 ] && [ $l_status -gt 7 ]; then
-        return 0
+        return 1
     fi
 
     #Solicitar la detención del servicio
@@ -1181,14 +1274,14 @@ function _request_stop_systemd_unit() {
     if [ ! "$l_option" = "s" ]; then
         printf '%bNo se instalará el artefacto[%s] del repositorio "%s".\nDetenga el servicio "%s" o acepte su detención para su instalación%b\n' \
                "$g_color_opaque" "$p_artifact_index" "$p_repo_id" "$p_unit_name" "$g_color_reset"
-        return 1
+        return 2
     fi
 
     #Si la unidad systemd esta a nivel usuario
     if [ $l_is_user -eq 0 ]; then
         printf 'Deteniendo la unidad "%s" a nivel usuario ...\n' "$p_unit_name"
         systemctl --user stop "$p_unit_name"
-        return 2
+        return 3
     fi
 
 
@@ -1198,7 +1291,7 @@ function _request_stop_systemd_unit() {
     else
         sudo systemctl stop "$p_unit_name"
     fi
-    return 3
+    return 4
 }
 
 
@@ -1244,7 +1337,6 @@ function _copy_artifact_files() {
         l_path_man="${g_path_commands_win}/man"
     fi
 
-    local l_repo_download_version=""
     local l_status=0
     local l_flag_install=1
     local l_aux
@@ -1892,31 +1984,14 @@ function _copy_artifact_files() {
                 l_path_bin="${g_path_programs_lnx}/dap_servers/netcoredbg"
 
                 #1. Comparando la version instalada con la version descargada
-                l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                _compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
                 l_status=$?
 
-                if [ $l_status -ne 0 ]; then
-                    l_flag_install=1
+                #Actualizar solo no esta configurado o tiene una version menor a la actual
+                if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
+                    $l_flag_install=0
                 else
-
-                    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
-                        "$l_repo_id" "$l_repo_download_version"
-                    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
-                    l_status=$?
-
-                    if [ $l_status -eq 0 ]; then
-
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (= "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
-
-                    elif [ $l_status -eq 1 ]; then
-
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (> "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
-
-                    else
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Se actualizará a la versión "%s"\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                    fi
+                    $l_flag_install=1
                 fi
 
                 #2. Instalación
@@ -1945,31 +2020,14 @@ function _copy_artifact_files() {
                 l_path_bin="${g_path_programs_win}/DAP_Servers/NetCoreDbg"
 
                 #1. Comparando la version instalada con la version descargada
-                l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                _compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
                 l_status=$?
 
-                if [ $l_status -ne 0 ]; then
-                    l_flag_install=1
+                #Actualizar solo no esta configurado o tiene una version menor a la actual
+                if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
+                    $l_flag_install=0
                 else
-
-                    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
-                        "$l_repo_id" "$l_repo_download_version"
-                    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
-                    l_status=$?
-
-                    if [ $l_status -eq 0 ]; then
-
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (= "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
-
-                    elif [ $l_status -eq 1 ]; then
-
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (> "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
-
-                    else
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Se actualizará a la versión "%s"\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                    fi
+                    $l_flag_install=1
                 fi
 
                 #2. Instalación
@@ -2007,31 +2065,14 @@ function _copy_artifact_files() {
                 l_path_bin="${g_path_programs_lnx}/neovim"
 
                 #1. Comparando la version instalada con la version descargada
-                l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/bin")
+                _compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
                 l_status=$?
 
-                if [ $l_status -ne 0 ]; then
-                    l_flag_install=1
+                #Actualizar solo no esta configurado o tiene una version menor a la actual
+                if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
+                    $l_flag_install=0
                 else
-
-                    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
-                        "$l_repo_id" "$l_repo_download_version"
-                    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
-                    l_status=$?
-
-                    if [ $l_status -eq 0 ]; then
-
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (= "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
-
-                    elif [ $l_status -eq 1 ]; then
-
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (> "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
-
-                    else
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Se actualizará a la versión "%s"\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                    fi
+                    $l_flag_install=1
                 fi
 
                 #2. Instalación
@@ -2057,31 +2098,14 @@ function _copy_artifact_files() {
                 l_path_bin="${g_path_programs_win}/NeoVim"
 
                 #1. Comparando la version instalada con la version descargada
-                l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/bin")
+                _compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
                 l_status=$?
 
-                if [ $l_status -ne 0 ]; then
-                    l_flag_install=1
+                #Actualizar solo no esta configurado o tiene una version menor a la actual
+                if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
+                    $l_flag_install=0
                 else
-
-                    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
-                        "$l_repo_id" "$l_repo_download_version"
-                    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
-                    l_status=$?
-
-                    if [ $l_status -eq 0 ]; then
-
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (= "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
-
-                    elif [ $l_status -eq 1 ]; then
-
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (> "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                        l_flag_install=1
-
-                    else
-                        printf 'Repositorio "%s[%s]" (Versión Actual): Se actualizará a la versión "%s"\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                    fi
+                    $l_flag_install=1
                 fi
 
                 #2. Instalación
@@ -2358,33 +2382,16 @@ function _copy_artifact_files() {
                 chmod u+x "${l_path_temp}/rust-analyzer"
                 
                 #1. Comparando la version instalada con la version descargada
-                #l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
+                #_compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
                 #l_status=$?
 
-                #if [ $l_status -ne 0 ]; then
-                #    echo "Error al obtener la versión actual (Status = ${l_status})"
-                #    l_flag_install=1
+                ##Actualizar solo no esta configurado o tiene una version menor a la actual
+                #if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
+                #    $l_flag_install=0
                 #else
-
-                #    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
-                #        "$l_repo_id" "$l_repo_download_version"
-                #    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
-                #    l_status=$?
-
-                #    if [ $l_status -eq 0 ]; then
-
-                #        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (= "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                #        l_flag_install=1
-
-                #    elif [ $l_status -eq 1 ]; then
-
-                #        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (> "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                #        l_flag_install=1
-
-                #    else
-                #        printf 'Repositorio "%s[%s]" (Versión Actual): Se actualizará a la versión "%s"\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                #    fi
+                #    $l_flag_install=1
                 #fi
+
 
                 #2. Instalación
                 if [ $l_flag_install -eq 0 ]; then
@@ -2403,33 +2410,16 @@ function _copy_artifact_files() {
             else
 
                 #1. Comparando la version instalada con la version descargada
-                l_repo_download_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "${l_path_temp}/")
-                l_status=$?
+                #_compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
+                #l_status=$?
 
-                #if [ $l_status -ne 0 ]; then
-                #    echo "Error al obtener la versión actual (Status = ${l_status})"
-                #    l_flag_install=1
+                ##Actualizar solo no esta configurado o tiene una version menor a la actual
+                #if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
+                #    $l_flag_install=0
                 #else
-
-                #    printf 'Evaluar si el repositorio actual "%s[%s]" debe actualizarse al repositorio descargado "%s[%s]" ...\n' "$p_repo_id" "$l_repo_current_version" \
-                #        "$l_repo_id" "$l_repo_download_version"
-                #    compare_version "${l_repo_current_version}" "${l_repo_download_version}"
-                #    l_status=$?
-
-                #    if [ $l_status -eq 0 ]; then
-
-                #        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (= "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                #        l_flag_install=1
-
-                #    elif [ $l_status -eq 1 ]; then
-
-                #        printf 'Repositorio "%s[%s]" (Versión Actual): Ya esta actualizado (> "%s")\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                #        l_flag_install=1
-
-                #    else
-                #        printf 'Repositorio "%s[%s]" (Versión Actual): Se actualizará a la versión "%s"\n' "$p_repo_id" "${l_repo_current_version}" "${l_repo_download_version}"
-                #    fi
+                #    $l_flag_install=1
                 #fi
+
 
                 #2. Instalación
                 if [ $l_flag_install -eq 0 ]; then
@@ -2633,11 +2623,19 @@ function _copy_artifact_files() {
             fi
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'containerd' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
+                       "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 1 ]; then
+            if [ $l_status -eq 2 ]; then
                 return 41
             fi
 
@@ -2655,13 +2653,13 @@ function _copy_artifact_files() {
             fi
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
-            if [ $l_status -eq 2 ]; then
+            if [ $l_status -eq 3 ]; then
 
                 #Iniciar a nivel usuario
                 printf 'Iniciando la unidad "%s" a nivel usuario ...\n' 'containerd.service'
                 systemctl --user start containerd.service
 
-            elif [ $l_status -eq 3 ]; then
+            elif [ $l_status -eq 4 ]; then
 
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
@@ -2686,11 +2684,19 @@ function _copy_artifact_files() {
             fi
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'containerd' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
+                       "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 1 ]; then
+            if [ $l_status -eq 2 ]; then
                 return 41
             fi
 
@@ -2708,13 +2714,13 @@ function _copy_artifact_files() {
             fi
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
-            if [ $l_status -eq 2 ]; then
+            if [ $l_status -eq 3 ]; then
 
                 #Iniciar a nivel usuario
                 printf 'Iniciando la unidad "%s" a nivel usuario ...\n' 'containerd.service'
                 systemctl --user start containerd.service
 
-            elif [ $l_status -eq 3 ]; then
+            elif [ $l_status -eq 4 ]; then
 
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
@@ -2738,11 +2744,19 @@ function _copy_artifact_files() {
             fi
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'containerd' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
+                       "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 1 ]; then
+            if [ $l_status -eq 2 ]; then
                 return 41
             fi
 
@@ -2778,13 +2792,13 @@ function _copy_artifact_files() {
             fi
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
-            if [ $l_status -eq 2 ]; then
+            if [ $l_status -eq 3 ]; then
 
                 #Iniciar a nivel usuario
                 printf 'Iniciando la unidad "%s" a nivel usuario ...\n' 'containerd.service'
                 systemctl --user start containerd.service
 
-            elif [ $l_status -eq 3 ]; then
+            elif [ $l_status -eq 4 ]; then
 
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
@@ -2811,11 +2825,19 @@ function _copy_artifact_files() {
             
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'containerd' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
+                       "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 1 ]; then
+            if [ $l_status -eq 2 ]; then
                 return 41
             fi
 
@@ -2867,13 +2889,13 @@ function _copy_artifact_files() {
             echo "$p_repo_last_version_pretty" > "${g_path_programs_lnx}/cni-plugins.info" 
 
             #6. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
-            if [ $l_status -eq 2 ]; then
+            if [ $l_status -eq 3 ]; then
 
                 #Iniciar a nivel usuario
                 printf 'Iniciando la unidad "%s" a nivel usuario ...\n' 'containerd.service'
                 systemctl --user start containerd.service
 
-            elif [ $l_status -eq 3 ]; then
+            elif [ $l_status -eq 4 ]; then
 
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
@@ -2897,11 +2919,19 @@ function _copy_artifact_files() {
             fi
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'containerd' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
+                       "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 1 ]; then
+            if [ $l_status -eq 2 ]; then
                 return 41
             fi
 
@@ -2961,6 +2991,11 @@ function _copy_artifact_files() {
 
             fi
 
+            #Descargar archivo de configuracion como servicio a nivel system:
+            printf 'Descargando el archivo de configuracion "%s" en "%s" (requerido para instalar containerd como servicio a nivel system)\n' "containerd.service" \
+                   "~/.files/setup/programs/containerd/containerd.service"
+            mkdir -p ~/.files/setup/programs/containerd
+            curl -fLo ~/.files/setup/programs/containerd/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
             if [ $l_status -eq 2 ]; then
@@ -2978,6 +3013,23 @@ function _copy_artifact_files() {
                 else
                     sudo systemctl start containerd.service 
                 fi
+            fi
+
+            #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
+            if [ $l_status -eq 0 ]; then
+
+                printf 'El artefacto de "%s" aun no esta aun esta instalada. Si desea instalarlo requiere crear una unidad systemd "%s".\n' "$p_repo_id" "containerd.service"
+                printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
+                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/nerdctl"%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   Si desea ingresar al user-namespace creado y donde se ejecutara containerd use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" \
+                       "$g_color_reset" "$g_color_info" "$g_color_reset"
+                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/setup/programs/containerd/containerd.service /usr/local/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   sudo systemctl start containerd%b\n' "$g_color_info" "$g_color_reset"                 
+
             fi
             ;;
 
@@ -3037,25 +3089,15 @@ function _copy_artifact_files() {
 
             #1. Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
-            
+            local l_status_stop=-1
+          
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
                 return 40
             fi
 
-            mkdir -p ~/.files/setup/programs/nerdctl
 
-
-            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
-            l_status=$?
-
-            #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 1 ]; then
-                return 41
-            fi
-
-            #3. Configuración: Instalación de binario basico
+            #2. Configuración: Instalación de binario basico
             if [ $p_artifact_index -eq 0 ]; then
 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
@@ -3073,63 +3115,98 @@ function _copy_artifact_files() {
 
                 fi
 
-                echo "Copiando \"${l_path_temp}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/setup/programs/nerdctl\" ..."
-                cp "${l_path_temp}/containerd-rootless.sh" ~/.files/setup/programs/nerdctl
-                chmod u+x ~/.files/setup/programs/nerdctl/containerd-rootless.sh
+                mkdir -p ~/.files/setup/programs/containerd
 
-                echo "Copiando \"${l_path_temp}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/setup/programs/nerdctl\" ..."
-                cp "${l_path_temp}/containerd-rootless-setuptool.sh" ~/.files/setup/programs/nerdctl
-                chmod u+x ~/.files/setup/programs/nerdctl/containerd-rootless-setuptool.sh
+                #Archivos para instalar 'containerd' de modo rootless
+                echo "Copiando \"${l_path_temp}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/setup/programs/containerd\" ..."
+                cp "${l_path_temp}/containerd-rootless.sh" ~/.files/setup/programs/containerd
+                chmod u+x ~/.files/setup/programs/containerd/containerd-rootless.sh
 
-            #4. Configuración: Instalación de binarios de complementos que su reposotrio no ofrece el compilado (solo la fuente). Para ello se usa el full
+                echo "Copiando \"${l_path_temp}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/setup/programs/containerd\" ..."
+                cp "${l_path_temp}/containerd-rootless-setuptool.sh" ~/.files/setup/programs/containerd
+                chmod u+x ~/.files/setup/programs/containerd/containerd-rootless-setuptool.sh
+
+            #3. Configuración: Instalación de binarios de complementos que su reposotrio no ofrece el compilado (solo la fuente). Para ello se usa el full
             else
 
-                #4.1. Instalar 
+                #3.1. Rutas de los artectos 
                 l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/bin"
 
-                if [ $g_is_root -eq 0 ]; then
+                #3.2. Configurar 'rootless-containers/bypass4netns' usado para accelar 'Slirp4netns' (NAT o port-forwading de llamadas del exterior al contenedor)
 
-                    #Los binarios de 'rootless-containers/bypass4netns' usado para accelar 'Slirp4netns' (NAT o port-forwading de llamadas del exterior al contenedor)
-                    echo "Copiando \"${l_path_temp}/bypass4netns\" a \"${l_path_bin}\" ..."
-                    cp "${l_path_temp}/bypass4netns" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/bypass4netns"
+                #Comparar la versión actual con la versión descargada
+                _compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
+                l_status=$?
 
-                    echo "Copiando \"${l_path_temp}/bypass4netnsd\" a \"${l_path_bin}\" ..."
-                    cp "${l_path_temp}/bypass4netnsd" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/bypass4netnsd"
+                #Actualizar solo no esta configurado o tiene una version menor a la actual
+                if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
 
-                else
+                    #Instalar este artefacto requiere solicitar detener el servicio solo la versión actual existe
+                    #Solo solicitarlo una vez
+                    if [ $l_status_stop -ge 0 ]; then
 
-                    #Los binarios de 'rootless-containers/bypass4netns' usado para accelar 'Slirp4netns' (NAT o port-forwading de llamadas del exterior al contenedor)
-                    echo "Copiando \"${l_path_temp}/bypass4netns\" a \"${l_path_bin}\" ..."
-                    sudo cp "${l_path_temp}/bypass4netns" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/bypass4netns"
+                        is_package_installed 'containerd' $g_os_subtype_id
+                        l_status_stop=$?
 
-                    echo "Copiando \"${l_path_temp}/bypass4netnsd\" a \"${l_path_bin}\" ..."
-                    sudo cp "${l_path_temp}/bypass4netnsd" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/bypass4netnsd"
+                        if [ $l_status_stop -eq 0 ]; then
+                            printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
+                            "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                        fi
 
+                        _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+                        l_status_stop=$?
+                    fi
+
+                    #Si no esta iniciado o si esta iniciado se acepta detenerlo, instalarlo
+                    if [ $l_status_stop -ne 2 ]; then
+
+                        #Instalando
+                        if [ $g_is_root -eq 0 ]; then
+
+                            echo "Copiando \"${l_path_temp}/bypass4netns\" a \"${l_path_bin}\" ..."
+                            cp "${l_path_temp}/bypass4netns" "${l_path_bin}"
+                            chmod +x "${l_path_bin}/bypass4netns"
+
+                            echo "Copiando \"${l_path_temp}/bypass4netnsd\" a \"${l_path_bin}\" ..."
+                            cp "${l_path_temp}/bypass4netnsd" "${l_path_bin}"
+                            chmod +x "${l_path_bin}/bypass4netnsd"
+
+                        else
+
+                            echo "Copiando \"${l_path_temp}/bypass4netns\" a \"${l_path_bin}\" ..."
+                            sudo cp "${l_path_temp}/bypass4netns" "${l_path_bin}"
+                            sudo chmod +x "${l_path_bin}/bypass4netns"
+
+                            echo "Copiando \"${l_path_temp}/bypass4netnsd\" a \"${l_path_bin}\" ..."
+                            sudo cp "${l_path_temp}/bypass4netnsd" "${l_path_bin}"
+                            sudo chmod +x "${l_path_bin}/bypass4netnsd"
+
+                        fi
+
+                    fi
+
+                fi
+
+                #3.3. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
+                if [ $l_status_stop -eq 3 ]; then
+
+                    #Iniciar a nivel usuario
+                    printf 'Iniciando la unidad "%s" a nivel usuario ...\n' 'containerd.service'
+                    systemctl --user start containerd.service
+
+                elif [ $l_status_stop -eq 4 ]; then
+
+                    #Iniciar a nivel system
+                    printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
+                    if [ $g_is_root -eq 0 ]; then
+                        systemctl start containerd.service 
+                    else
+                        sudo systemctl start containerd.service 
+                    fi
                 fi
 
             fi
 
-            #5. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
-            if [ $l_status -eq 2 ]; then
-
-                #Iniciar a nivel usuario
-                printf 'Iniciando la unidad "%s" a nivel usuario ...\n' 'containerd.service'
-                systemctl --user start containerd.service
-
-            elif [ $l_status -eq 3 ]; then
-
-                #Iniciar a nivel system
-                printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
-                if [ $g_is_root -eq 0 ]; then
-                    systemctl start containerd.service 
-                else
-                    sudo systemctl start containerd.service 
-                fi
-            fi
             ;;
 
 
