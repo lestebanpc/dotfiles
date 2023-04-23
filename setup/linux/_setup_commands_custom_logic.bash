@@ -2627,7 +2627,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
@@ -2687,7 +2687,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
@@ -2746,7 +2746,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
@@ -2826,7 +2826,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
@@ -2919,7 +2919,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
@@ -3144,7 +3144,7 @@ function _copy_artifact_files() {
                         l_status_stop=$?
 
                         if [ $l_status_stop -eq 0 ]; then
-                            printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                            printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
                         fi
 
                         _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
