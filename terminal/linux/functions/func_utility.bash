@@ -428,6 +428,9 @@ is_package_installed() {
             #Si es Fedora
             l_aux=$(dnf list installed | grep "$1" 2> /dev/null)
             l_status=$?
+
+            #Ejemplo:
+            #containerd.io.x86_64                                 1.6.20-3.1.fc36                     @docker-ce-stable
             
             if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
                 return 1

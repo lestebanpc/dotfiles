@@ -2627,8 +2627,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
-                       "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
@@ -2684,12 +2683,11 @@ function _copy_artifact_files() {
             fi
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            is_package_installed 'containerd' $g_os_subtype_id
+            is_package_installed 'containerd.io' $g_os_subtype_id
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
-                       "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
@@ -2748,8 +2746,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
-                       "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
@@ -2829,8 +2826,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
-                       "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
@@ -2923,8 +2919,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
-                       "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
             _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
@@ -3149,8 +3144,7 @@ function _copy_artifact_files() {
                         l_status_stop=$?
 
                         if [ $l_status_stop -eq 0 ]; then
-                            printf 'El artefacto[%s] de "%b%s%b" %besta instalado como paquete%b del sistema operativo.\n' "$p_artifact_index" "$g_color_warning" \
-                            "$p_repo_id" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                            printf 'El paquete %b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
                         fi
 
                         _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
