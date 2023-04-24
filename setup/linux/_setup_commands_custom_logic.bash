@@ -1171,7 +1171,7 @@ _compare_version_current_with() {
         p_install_win_cmds=0
     fi
 
-    printf 'Comparando versiones de "%s": Versión actual vs Versión ubica en "%s"...\n' "$p_repo_id" "$p_path"
+    printf "Comparando versiones de '%s': \"Versión actual\" vs \"Versión ubica en '%s'\"...\n" "$p_repo_id" "$p_path"
 
     #Obteniendo la versión actual
     local l_current_version
@@ -1179,7 +1179,7 @@ _compare_version_current_with() {
 
     local l_status=$?
     if [ $l_status -ne 0 ]; then
-        printf 'No se puede obtener la versión actual de "%s" (status: %s)\n' "$p_repo_id" "$l_status"
+        printf '   No se puede obtener la versión actual de "%s" (status: %s)\n' "$p_repo_id" "$l_status"
         return 9
     fi
 
@@ -1189,7 +1189,7 @@ _compare_version_current_with() {
 
     l_status=$?
     if [ $l_status -ne 0 ]; then
-        printf 'No se puede obtener la versión de "%s" ubicada en "%s" (status: %s)\n' "$p_repo_id" "$p_path" "$l_status"
+        printf '   No se puede obtener la versión de "%s" ubicada en "%s" (status: %s)\n' "$p_repo_id" "$p_path" "$l_status"
         return 8
     fi
 
@@ -1199,18 +1199,18 @@ _compare_version_current_with() {
 
     if [ $l_status -eq 0 ]; then
 
-        printf 'La versión actual "%s" ya esta actualizado %b(= "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
+        printf '   La versión actual "%s" ya esta actualizado %b(= "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
                "$l_other_version" "$p_path" "$g_color_reset"
 
     elif [ $l_status -eq 1 ]; then
 
-        printf 'La versión actual "%s" ya esta actualizado %b(> "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
+        printf '   La versión actual "%s" ya esta actualizado %b(> "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
                "$l_other_version" "$p_path" "$g_color_reset"
 
 
     else
 
-        printf 'La versión actual "%s" requiere ser actualizado %b(= "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
+        printf '   La versión actual "%s" requiere ser actualizado %b(= "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
                "$l_other_version" "$p_path" "$g_color_reset"
 
     fi
@@ -1384,6 +1384,7 @@ function _copy_artifact_files() {
             ;;
 
         ripgrep)
+
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
             
@@ -1424,6 +1425,7 @@ function _copy_artifact_files() {
             ;;
 
         xsv)
+
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
             
@@ -1446,6 +1448,7 @@ function _copy_artifact_files() {
             ;;
 
         delta)
+
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
             
@@ -1507,6 +1510,7 @@ function _copy_artifact_files() {
             ;;
 
         fzf)
+
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
 
@@ -1651,6 +1655,7 @@ function _copy_artifact_files() {
             ;;
         
         oh-my-posh)
+            
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
 
@@ -2065,7 +2070,7 @@ function _copy_artifact_files() {
                 l_path_bin="${g_path_programs_lnx}/neovim"
 
                 #1. Comparando la version instalada con la version descargada
-                _compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
+                _compare_version_current_with "$p_repo_id" "$l_path_temp/bin" $p_install_win_cmds
                 l_status=$?
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
@@ -2098,7 +2103,7 @@ function _copy_artifact_files() {
                 l_path_bin="${g_path_programs_win}/NeoVim"
 
                 #1. Comparando la version instalada con la version descargada
-                _compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
+                _compare_version_current_with "$p_repo_id" "$l_path_temp/bin" $p_install_win_cmds
                 l_status=$?
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
@@ -2987,10 +2992,10 @@ function _copy_artifact_files() {
             fi
 
             #Descargar archivo de configuracion como servicio a nivel system:
-            printf 'Descargando el archivo de configuracion "%s" en "%s" (requerido para instalar containerd como servicio a nivel system)\n' "containerd.service" \
-                   "~/.files/setup/programs/containerd/containerd.service"
-            mkdir -p ~/.files/setup/programs/containerd
-            curl -fLo ~/.files/setup/programs/containerd/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+            mkdir -p ~/.files/setup/programs/nerdctl/systemd/user
+            
+            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "containerd.service" "~/.files/setup/programs/nerdctl/systemd/user/"
+            curl -fLo ~/.files/setup/programs/nerdctl/system/user/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
             if [ $l_status -eq 2 ]; then
@@ -3015,13 +3020,14 @@ function _copy_artifact_files() {
 
                 printf 'El artefacto de "%s" aun no esta aun esta instalada. Si desea instalarlo requiere crear una unidad systemd "%s".\n' "$p_repo_id" "containerd.service"
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
-                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "$p_repo_id" "$g_color_info" "$g_color_reset"
                 printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/nerdctl"%b\n' "$g_color_info" "$g_color_reset"
                 printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   Si desea ingresar al user-namespace creado y donde se ejecutara containerd use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" \
-                       "$g_color_reset" "$g_color_info" "$g_color_reset"
-                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "$g_color_info" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/setup/programs/containerd/containerd.service /usr/local/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
+                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_reset" "$g_color_info" "$g_color_reset"
+                printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_opaque" "$g_color_reset" "$g_color_info" "$g_color_reset"
+                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "$p_repo_id" "$g_color_info" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/setup/nerdctl/systemd/user/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
                 printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
                 printf '%b   sudo systemctl start containerd%b\n' "$g_color_info" "$g_color_reset"                 
 
@@ -3031,7 +3037,7 @@ function _copy_artifact_files() {
 
         buildkit)
 
-            #Ruta local de los artefactos
+            #1. Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/bin"
             
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -3039,7 +3045,16 @@ function _copy_artifact_files() {
                 return 40
             fi
 
-            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            _request_stop_systemd_unit 'buildkit.service' "$p_repo_id" "$p_artifact_index"
+            l_status=$?
+
+            #Si esta iniciado pero no acepta detenerlo
+            if [ $l_status -eq 2 ]; then
+                return 41
+            fi
+
+            #3. Configurar: Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $g_is_root -eq 0 ]; then
 
                 echo "Copiando \"${l_path_temp}/buildkit-runc\" a \"${l_path_bin}\" ..."
@@ -3077,6 +3092,21 @@ function _copy_artifact_files() {
                 sudo chmod +x "${l_path_bin}/buildctl"
 
             fi
+
+            #Descargar archivo de configuracion como servicio a nivel system:
+            mkdir -p ~/.files/setup/programs/nerdctl/systemd/system
+            mkdir -p ~/.files/setup/programs/nerdctl/systemd/user
+            
+            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.service" "~/.files/setup/programs/nerdctl/systemd/user/"
+            curl -fLo ~/.files/setup/programs/nerdctl/systemd/user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit.service
+            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.socket" "~/.files/setup/programs/nerdctl/systemd/user/"
+            curl -fLo ~/.files/setup/programs/nerdctl/systemd/user/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit.socket
+
+            printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.service" "~/.files/setup/programs/nerdctl/systemd/system/"
+            curl -fLo ~/.files/setup/programs/nerdctl/systemd/system/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.service
+            printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.socket" "~/.files/setup/programs/nerdctl/systemd/system/"
+            curl -fLo ~/.files/setup/programs/nerdctl/systemd/system/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.socket
+
             ;;
 
 
@@ -3130,7 +3160,7 @@ function _copy_artifact_files() {
                 #3.2. Configurar 'rootless-containers/bypass4netns' usado para accelar 'Slirp4netns' (NAT o port-forwading de llamadas del exterior al contenedor)
 
                 #Comparar la versión actual con la versión descargada
-                _compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
+                _compare_version_current_with "bypass4netns" "$l_path_temp" $p_install_win_cmds
                 l_status=$?
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
@@ -3154,6 +3184,7 @@ function _copy_artifact_files() {
                     #Si no esta iniciado o si esta iniciado se acepta detenerlo, instalarlo
                     if [ $l_status_stop -ne 2 ]; then
 
+                        printf 'Instalando el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s ...' "$p_artifact_index" "$p_repo_id"
                         #Instalando
                         if [ $g_is_root -eq 0 ]; then
 
@@ -3176,6 +3207,10 @@ function _copy_artifact_files() {
                             sudo chmod +x "${l_path_bin}/bypass4netnsd"
 
                         fi
+
+                    else
+
+                        printf 'No se instalará el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s.' "$p_artifact_index" "$p_repo_id"
 
                     fi
 
