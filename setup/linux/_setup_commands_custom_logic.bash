@@ -3018,16 +3018,16 @@ function _copy_artifact_files() {
             #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
             if [ $l_status -eq 0 ]; then
 
-                printf 'El artefacto de "%s" aun no esta aun esta instalada. Si desea instalarlo requiere crear una unidad systemd "%s".\n' "$p_repo_id" "containerd.service"
+                printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "containerd.service"
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
-                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "$p_repo_id" "$g_color_info" "$g_color_reset"
+                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "containerd.service" "$g_color_info" "$g_color_reset"
                 printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/nerdctl"%b\n' "$g_color_info" "$g_color_reset"
                 printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_info" "$g_color_reset"
                 printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
                 printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
                 printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
-                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "$p_repo_id" "$g_color_info" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/setup/nerdctl/systemd/user/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "containerd.service" "$g_color_info" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/user/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
                 printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
                 printf '%b   sudo systemctl start containerd%b\n' "$g_color_info" "$g_color_reset"                 
 
@@ -3107,6 +3107,24 @@ function _copy_artifact_files() {
             printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.socket" "~/.files/setup/programs/nerdctl/systemd/system/"
             curl -fLo ~/.files/setup/programs/nerdctl/systemd/system/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.socket
 
+
+            #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:            
+            if [ $l_status -eq 0 ]; then
+
+                printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "containerd.service"
+                printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
+                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "containerd.service" "$g_color_info" "$g_color_reset"
+                #printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/nerdctl"%b\n' "$g_color_info" "$g_color_reset"
+                #printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_info" "$g_color_reset"
+                #printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
+                #printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                #printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "containerd.service" "$g_color_info" "$g_color_reset"
+                #printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/user/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
+                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
+                #printf '%b   sudo systemctl start containerd%b\n' "$g_color_info" "$g_color_reset"                 
+
+            fi
             ;;
 
 
