@@ -641,7 +641,7 @@ function _get_repo_current_version() {
             fi
 
             #buildctl github.com/moby/buildkit v0.11.5 252ae63bcf2a9b62777add4838df5a257b86e991
-            l_tmp=$(${l_path_file}buildctl --version 2> /dev/null)
+            l_tmp=$(${l_path_file}buildkitd --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
@@ -3024,8 +3024,8 @@ function _copy_artifact_files() {
                 printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/nerdctl"%b\n' "$g_color_info" "$g_color_reset"
                 printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_info" "$g_color_reset"
                 printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
-                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_reset" "$g_color_info" "$g_color_reset"
-                printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_opaque" "$g_color_reset" "$g_color_info" "$g_color_reset"
+                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
                 printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "$p_repo_id" "$g_color_info" "$g_color_reset"
                 printf '%b   sudo cp ~/.files/setup/nerdctl/systemd/user/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
                 printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
