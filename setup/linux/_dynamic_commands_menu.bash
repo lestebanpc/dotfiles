@@ -49,23 +49,16 @@ declare -A gA_repositories=(
     )
 
 
-#Tamaño de la linea del menu
-g_max_length_line=130
-
-
-#Menu dinamico: Offset del indice donde inicia el menu dinamico.
-#               Generalmente el menu dinamico no inicia desde la primera opcion personalizado del menú.
-g_offset_index_option_menu=2
-
 #Menu dinamico: Titulos de las opciones del menú.
 declare -a ga_menu_options_title=(
     "Los repositorios basicos"
     "El editor 'NeoVim'"
     "Las fuentes 'Nerd Fonts'"
     "Shell 'Powershell Core'"
-    "Container Runtime 'ContainerD' y su CLI 'NerdCtl'"
-    "Tool de Contenedores"
-    "Tool de Kubernates"
+    "Container Runtime 'ContainerD''"
+    "Tools para 'ContainerD'"
+    "Tools para cualquier Container Runtime"
+    "Tools para Kubernates"
     "Implementación de Kubernates 'K0S'"
     "RTE de 'Go'"
     "RTE 'GraalVM CE'"
@@ -76,13 +69,17 @@ declare -a ga_menu_options_title=(
     )
 
 #Menu dinamico: Repositorios de programas asociados asociados a una opciones del menu.
+#Notas:
+#  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
+#    El binario se puede encontrar en nerdctl-full.
 declare -a ga_menu_options_repos=(
     "bat,ripgrep,xsv,delta,fzf,jq,yq,less,fd,oh-my-posh"
     "neovim"
     "nerd-fonts"
     "powershell"
-    "runc,cni-plugins,rootlesskit,slirp4netns,containerd,buildkit,nerdctl"
-    "dive"
+    "runc,cni-plugins,rootlesskit,slirp4netns,containerd"
+    "cni-plugins,nerdctl"
+    "runc,buildkit,dive"
     "kubectl,kustomize,helm,operator-sdk"
     "k0s"
     "go"
@@ -94,20 +91,28 @@ declare -a ga_menu_options_repos=(
     )
 
 
+#Parametros:
+# 1 > Offset del indice donde inicia el menu dinamico (usualmente, el menu dinamico no inicia desde la primera opcion del dinamico menú).
 _get_length_menu_option() {
     
+    local p_offset_option_index=$1
+
     local l_nbr_options=${#ga_menu_options_repos[@]}
-    local l_max_digits_aux="$((1 << (g_offset_index_option_menu + l_nbr_options)))"
+    local l_max_digits_aux="$((1 << (p_offset_option_index + l_nbr_options)))"
 
     return ${#l_max_digits_aux}
 }
 
 #Parametros:
-# 1 > Numero de digitos de una opción del menu personalizado.
+# 1 > Etiqueta que aparece al constado del opción ('Instalar o actualizar' o 'Desintalar')
+# 2 > Offset del indice donde inicia el menu dinamico (usualmente, el menu dinamico no inicia desde la primera opcion del dinamico menú).
+# 3 > Numero maximo de digitos de una opción del menu personalizado.
 _show_dynamic_menu() {
 
     #Argumentos
-    local p_max_digits=$1
+    local p_option_tag=$1
+    local p_offset_option_index=$2
+    local p_max_digits=$3
 
 
     #Recorreger las opciones dinamicas del menu personalizado
@@ -125,7 +130,7 @@ _show_dynamic_menu() {
     for((l_i=0; l_i < ${#ga_menu_options_repos[@]}; l_i++)); do
 
         #Si no tiene repositorios a instalar, omitirlos
-        l_option_value=$((1 << (g_offset_index_option_menu + l_i)))
+        l_option_value=$((1 << (p_offset_option_index + l_i)))
 
         l_aux="${ga_menu_options_repos[$l_i]}"
         #if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
@@ -138,8 +143,8 @@ _show_dynamic_menu() {
         la_repos=(${l_aux})
         IFS=$' \t\n'
 
-        printf "     (%b%0${p_max_digits}d%b) Instalar o actualizar \"%b%s%b\": " "$g_color_subtitle" "$l_option_value" "$g_color_reset" \
-               "$g_color_subtitle" "${ga_menu_options_title[$l_i]}" "$g_color_reset"
+        printf "     (%b%0${p_max_digits}d%b) %s \"%b%s%b\": " "$g_color_subtitle" "$l_option_value" "$g_color_reset" \
+               "$p_option_tag" "$g_color_subtitle" "${ga_menu_options_title[$l_i]}" "$g_color_reset"
 
         l_n=${#la_repos[@]}
         if [ $l_n -gt 3 ]; then

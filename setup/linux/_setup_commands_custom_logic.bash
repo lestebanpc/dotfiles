@@ -1167,7 +1167,7 @@ _compare_version_current_with() {
     local p_repo_id=$1
     local p_path="$2/"
     local p_install_win_cmds=1
-    if [ "$7" = "0" ]; then
+    if [ "$3" = "0" ]; then
         p_install_win_cmds=0
     fi
 
@@ -3028,7 +3028,7 @@ function _copy_artifact_files() {
                 printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
                 printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "containerd.service" "$g_color_info" "$g_color_reset"
                 printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
+                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
                 printf '%b   sudo systemctl start containerd%b\n' "$g_color_info" "$g_color_reset"                 
 
             fi
@@ -3114,15 +3114,16 @@ function _copy_artifact_files() {
                 printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "buildkit.service"
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
                 printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "buildkit.service" "$g_color_info" "$g_color_reset"
-                #printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/nerdctl"%b\n' "$g_color_info" "$g_color_reset"
-                #printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_info" "$g_color_reset"
-                #printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
-                #printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
-                #printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/nerdctl"%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   containerd-rootless-setuptool.sh install-buildkit%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
+                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                printf '%b      > Establezca el servicio buildkit para inicio manual:%b systemctl --user disable buildkit.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
                 printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "buildkit.service" "$g_color_info" "$g_color_reset"
-                #printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/user/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.socket /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
                 #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
-                #printf '%b   sudo systemctl start containerd%b\n' "$g_color_info" "$g_color_reset"                 
+                printf '%b   sudo systemctl start buildkit.service%b\n' "$g_color_info" "$g_color_reset"                 
 
             fi
             ;;
@@ -3202,7 +3203,7 @@ function _copy_artifact_files() {
                     #Si no esta iniciado o si esta iniciado se acepta detenerlo, instalarlo
                     if [ $l_status_stop -ne 2 ]; then
 
-                        printf 'Instalando el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s ...' "$p_artifact_index" "$p_repo_id"
+                        printf 'Instalando el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s ...\n' "$p_artifact_index" "$p_repo_id"
                         #Instalando
                         if [ $g_is_root -eq 0 ]; then
 
@@ -3228,7 +3229,7 @@ function _copy_artifact_files() {
 
                     else
 
-                        printf 'No se instalará el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s.' "$p_artifact_index" "$p_repo_id"
+                        printf 'No se instalará el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s.\n' "$p_artifact_index" "$p_repo_id"
 
                     fi
 
@@ -3284,6 +3285,609 @@ function _copy_artifact_files() {
            printf 'ERROR (50): No esta definido logica para el repositorio "%s" para procesar el artefacto "%s"\n' "$p_repo_id" "$l_tag"
            return 50
             
+    esac
+
+    return 0
+
+}
+
+
+#
+#Los argumentos de entrada son:
+#  1 > Index de la opcion de menu elegista para instalar
+#  2 > Flag '0' si es artefacto instalado en Windows (asociado a WSL2)
+#  3 > Flag '0' si se muestra el titulo, caso contrario no se muestra.
+#El valor de retorno puede ser:
+#  0 > Se debe continuar con la instalación, cualquier otro caso no se debe continuar con la instalación
+_precondition_to_intall_menu_option() {
+
+    #Argumentos
+    local p_option_idx=$1
+
+    local p_install_win_cmds=1
+    if [ "$2" = "0" ]; then
+        p_install_win_cmds=0
+    fi
+
+    local p_show_title=1
+    if [ "$3" = "0" ]; then
+        p_show_title=1
+    fi
+
+    local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    local l_option_value=$((1 << p_option_idx))
+
+
+    #Realizar validaciones segun la opcion de menu escogida
+
+    #Por defecto, se debe continuar con la instalación
+    return 0
+
+}
+
+
+#Only for test
+_uninstall_repository() {
+
+    #Argumentos
+    local p_repo_id="$1"
+    local p_repo_name="$2"
+    local p_repo_current_version="$3"
+    local p_install_win_cmds=1
+    if [ "$4" = "0" ]; then
+        p_install_win_cmds=0
+    fi
+
+    #Inicialización de variables
+    #Tag usuado para imprimir un identificador del artefacto en un log
+    local l_tag="${p_repo_id}[${p_repo_current_version}]"
+
+    printf 'No esta definido logica para desintalar los artectactos del repositorio "%s"\n' "$l_tag"
+}
+
+#
+#Los argumentos de entrada son:
+#  1 > ID del repositorio
+#  2 > Nombre del repostorio
+#  3 > Version del repositorio
+#  4 > Flag '0' si es artefacto instalado en Windows (asociado a WSL2)
+_uninstall_repository2() {
+
+    #Argumentos
+    local p_repo_id="$1"
+    local p_repo_name="$2"
+    local p_repo_current_version="$3"
+    local p_install_win_cmds=1
+    if [ "$4" = "0" ]; then
+        p_install_win_cmds=0
+    fi
+
+    #Inicialización de variables
+    #Tag usuado para imprimir un identificador del artefacto en un log
+    local l_tag="${p_repo_id}[${p_repo_current_version}]"
+    local l_path_temp=""
+
+    local l_path_man=""
+    local l_path_bin=""
+    if [ $p_install_win_cmds -ne 0 ]; then
+        l_path_bin='/usr/local/bin'
+        l_path_man='/usr/local/man/man1'
+    else
+        l_path_bin="${g_path_commands_win}/bin"
+        l_path_man="${g_path_commands_win}/man"
+    fi
+
+    local l_status=0
+    local l_flag_uninstall=1
+    local l_aux
+
+    case "$p_repo_id" in
+
+
+        runc)
+
+            #1. Ruta local de los artefactos
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                return 40
+            fi
+
+            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'containerd' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
+            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+            l_status=$?
+
+            #Si esta iniciado pero no acepta detenerlo
+            if [ $l_status -eq 2 ]; then
+                return 41
+            fi
+
+            #3. Eliminando los archivos
+
+            echo "Eliminado \"runc\" de \"${l_path_bin}\" ..."
+            if [ $g_is_root -eq 0 ]; then
+                rm "${l_path_bin}/runc"
+            else
+                sudo cp "${l_path_bin}/runc"
+            fi
+            ;;
+
+
+        slirp4netns)
+
+            #1. Ruta local de los artefactos
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'containerd.io' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
+            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+            l_status=$?
+
+            #Si esta iniciado pero no acepta detenerlo
+            if [ $l_status -eq 2 ]; then
+                return 41
+            fi
+
+            #3. Eliminando los archivos 
+            echo "Eliminando \"slirp4netns\" de \"${l_path_bin}\" ..."
+            if [ $g_is_root -eq 0 ]; then
+                rm "${l_path_bin}/slirp4netns"
+            else
+                sudo rm "${l_path_bin}/slirp4netns"
+            fi
+            ;;
+
+
+        rootlesskit)
+
+            #1. Ruta local de los artefactos
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'containerd' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
+            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+            l_status=$?
+
+            #Si esta iniciado pero no acepta detenerlo
+            if [ $l_status -eq 2 ]; then
+                return 41
+            fi
+
+            #3. Eliminando los archivos 
+            if [ $g_is_root -eq 0 ]; then
+
+                echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
+                cp "${l_path_bin}/rootlesskit-docker-proxy"
+
+                echo "Eliminando \"rootlesskit\" a \"${l_path_bin}\" ..."
+                cp "${l_path_bin}/rootlesskit"
+
+                echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
+                cp "${l_path_bin}/rootlessctl"
+
+            else
+
+                echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_bin}/rootlesskit-docker-proxy"
+
+                echo "Eliminando\"rootlesskit\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_bin}/rootlesskit"
+
+                echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_bin}/rootlessctl"
+
+            fi
+            ;;
+
+
+
+        cni-plugins)
+
+            #1. Ruta local de los artefactos
+            l_path_bin="${g_path_programs_lnx}/cni_plugins"
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+            
+
+            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'containerd' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
+            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+            l_status=$?
+
+            #Si esta iniciado pero no acepta detenerlo
+            if [ $l_status -eq 2 ]; then
+                return 41
+            fi
+
+            #3. Configurar: Si no existe el directorio
+            if  [ ! -d "$l_path_bin" ]; then
+
+                #Crear las carpeta
+                echo "Creando la carpeta \"${l_path_bin}\" ..."
+                if [ $g_is_root -eq 0 ]; then
+                    mkdir -pm 755 $l_path_bin
+                else
+                    sudo mkdir -pm 755 $l_path_bin
+                fi
+
+
+            #4. Configurar: Si existe el directorio: actualizar
+            else
+
+                #Elimimiando los binarios
+                echo "Eliminando los binarios de \"${l_path_bin}\" ..."
+                if [ $g_is_root -eq 0 ]; then
+                    rm ${l_path_bin}/*
+                else
+                    sudo rm ${l_path_bin}/*
+                fi
+
+
+            fi
+
+            #5. Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            rm "${g_path_programs_lnx}/cni-plugins.info" 
+
+            ;;
+
+
+        containerd)
+
+            #1. Ruta local de los artefactos
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'containerd' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
+            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+            l_status=$?
+
+            #Si esta iniciado pero no acepta detenerlo
+            if [ $l_status -eq 2 ]; then
+                return 41
+            fi
+
+
+            #3. Eliminando archivos 
+            if [ $g_is_root -eq 0 ]; then
+
+                echo "Copiando \"${l_path_temp}/containerd-shim\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/containerd-shim" "${l_path_bin}"
+                chmod +x "${l_path_bin}/containerd-shim"
+
+                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v1\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/containerd-shim-runc-v1" "${l_path_bin}"
+                chmod +x "${l_path_bin}/containerd-shim-runc-v1"
+
+                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v2\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/containerd-shim-runc-v2" "${l_path_bin}"
+                chmod +x "${l_path_bin}/containerd-shim-runc-v2"
+
+                echo "Copiando \"${l_path_temp}/containerd-stress\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/containerd-stress" "${l_path_bin}"
+                chmod +x "${l_path_bin}/containerd-stress"
+
+                echo "Copiando \"${l_path_temp}/ctr\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/ctr" "${l_path_bin}"
+                chmod +x "${l_path_bin}/ctr"
+
+                echo "Copiando \"${l_path_temp}/containerd\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/containerd" "${l_path_bin}"
+                chmod +x "${l_path_bin}/containerd"
+
+            else
+
+                echo "Copiando \"${l_path_temp}/containerd-shim\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/containerd-shim" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/containerd-shim"
+
+                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v1\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/containerd-shim-runc-v1" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/containerd-shim-runc-v1"
+
+                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v2\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/containerd-shim-runc-v2" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/containerd-shim-runc-v2"
+
+                echo "Copiando \"${l_path_temp}/containerd-stress\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/containerd-stress" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/containerd-stress"
+
+                echo "Copiando \"${l_path_temp}/ctr\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/ctr" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/ctr"
+
+                echo "Copiando \"${l_path_temp}/containerd\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/containerd" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/containerd"
+
+            fi
+
+            #Descargar archivo de configuracion como servicio a nivel system:
+            mkdir -p ~/.files/setup/programs/nerdctl/systemd/user
+            
+            printf 'Descargando el archivo de configuracion de "%s" a nivel system en "%s"\n' "containerd.service" "~/.files/setup/programs/nerdctl/systemd/user/"
+            curl -fLo ~/.files/setup/programs/nerdctl/systemd/system/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+
+            #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
+
+            #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
+            if [ $l_status -eq 0 ]; then
+
+                printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "containerd.service"
+                printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
+                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "containerd.service" "$g_color_info" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/nerdctl"%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
+                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "containerd.service" "$g_color_info" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
+                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   sudo systemctl start containerd%b\n' "$g_color_info" "$g_color_reset"                 
+
+            fi
+            ;;
+
+
+        buildkit)
+
+            #1. Ruta local de los artefactos
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            _request_stop_systemd_unit 'buildkit.service' "$p_repo_id" "$p_artifact_index"
+            l_status=$?
+
+            #Si esta iniciado pero no acepta detenerlo
+            if [ $l_status -eq 2 ]; then
+                return 41
+            fi
+
+            #3. 
+            if [ $g_is_root -eq 0 ]; then
+
+                echo "Copiando \"${l_path_temp}/buildkit-runc\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/buildkit-runc" "${l_path_bin}"
+                chmod +x "${l_path_bin}/buildkit-runc"
+
+                echo "Copiando \"${l_path_temp}/buildkitd\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/buildkitd" "${l_path_bin}"
+                chmod +x "${l_path_bin}/buildkitd"
+
+                echo "Copiando \"${l_path_temp}/buildkit-qemu-*\" a \"${l_path_bin}\" ..."
+                cp ${l_path_temp}/buildkit-qemu-* "${l_path_bin}"
+                chmod +x ${l_path_bin}/buildkit-qemu-*
+
+                echo "Copiando \"${l_path_temp}/buildctl\" a \"${l_path_bin}\" ..."
+                cp "${l_path_temp}/buildctl" "${l_path_bin}"
+                chmod +x "${l_path_bin}/buildctl"
+
+            else
+
+                echo "Copiando \"${l_path_temp}/buildkit-runc\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/buildkit-runc" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/buildkit-runc"
+
+                echo "Copiando \"${l_path_temp}/buildkitd\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/buildkitd" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/buildkitd"
+
+                echo "Copiando \"${l_path_temp}/buildkit-qemu-*\" a \"${l_path_bin}\" ..."
+                sudo cp ${l_path_temp}/buildkit-qemu-* "${l_path_bin}"
+                sudo chmod +x ${l_path_bin}/buildkit-qemu-*
+
+                echo "Copiando \"${l_path_temp}/buildctl\" a \"${l_path_bin}\" ..."
+                sudo cp "${l_path_temp}/buildctl" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/buildctl"
+
+            fi
+
+            #Descargar archivo de configuracion como servicio a nivel system:
+
+
+            #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:            
+            if [ $l_status -eq 0 ]; then
+
+                printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "buildkit.service"
+                printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
+                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "buildkit.service" "$g_color_info" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/nerdctl"%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   containerd-rootless-setuptool.sh install-buildkit%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
+                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                printf '%b      > Establezca el servicio buildkit para inicio manual:%b systemctl --user disable buildkit.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
+                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "buildkit.service" "$g_color_info" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.socket /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
+                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
+                printf '%b   sudo systemctl start buildkit.service%b\n' "$g_color_info" "$g_color_reset"                 
+
+            fi
+            ;;
+
+
+        nerdctl)
+
+            #1. Ruta local de los artefactos
+            local l_status_stop=-1
+          
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+
+            #2. Configuración: Instalación de binario basico
+            if [ $p_artifact_index -eq 0 ]; then
+
+                #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+                if [ $g_is_root -eq 0 ]; then
+
+                    echo "Copiando \"${l_path_temp}/nerdctl\" a \"${l_path_bin}\" ..."
+                    cp "${l_path_temp}/nerdctl" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/nerdctl"
+
+                else
+
+                    echo "Copiando \"${l_path_temp}/nerdctl\" a \"${l_path_bin}\" ..."
+                    sudo cp "${l_path_temp}/nerdctl" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/nerdctl"
+
+                fi
+
+                mkdir -p ~/.files/setup/programs/containerd
+
+                #Archivos para instalar 'containerd' de modo rootless
+                echo "Copiando \"${l_path_temp}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/setup/programs/containerd\" ..."
+                cp "${l_path_temp}/containerd-rootless.sh" ~/.files/setup/programs/containerd
+                chmod u+x ~/.files/setup/programs/containerd/containerd-rootless.sh
+
+                echo "Copiando \"${l_path_temp}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/setup/programs/containerd\" ..."
+                cp "${l_path_temp}/containerd-rootless-setuptool.sh" ~/.files/setup/programs/containerd
+                chmod u+x ~/.files/setup/programs/containerd/containerd-rootless-setuptool.sh
+
+            #3. Configuración: Instalación de binarios de complementos que su reposotrio no ofrece el compilado (solo la fuente). Para ello se usa el full
+            else
+
+                #3.1. Rutas de los artectos 
+                l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/bin"
+
+                #3.2. Configurar 'rootless-containers/bypass4netns' usado para accelar 'Slirp4netns' (NAT o port-forwading de llamadas del exterior al contenedor)
+
+                #Comparar la versión actual con la versión descargada
+                _compare_version_current_with "bypass4netns" "$l_path_temp" $p_install_win_cmds
+                l_status=$?
+
+                #Actualizar solo no esta configurado o tiene una version menor a la actual
+                if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
+
+                    #Instalar este artefacto requiere solicitar detener el servicio solo la versión actual existe
+                    #Solo solicitarlo una vez
+                    if [ $l_status_stop -ge 0 ]; then
+
+                        is_package_installed 'containerd' $g_os_subtype_id
+                        l_status_stop=$?
+
+                        if [ $l_status_stop -eq 0 ]; then
+                            printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                        fi
+
+                        _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+                        l_status_stop=$?
+                    fi
+
+                    #Si no esta iniciado o si esta iniciado se acepta detenerlo, instalarlo
+                    if [ $l_status_stop -ne 2 ]; then
+
+                        printf 'Instalando el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s ...\n' "$p_artifact_index" "$p_repo_id"
+                        #Instalando
+                        if [ $g_is_root -eq 0 ]; then
+
+                            echo "Copiando \"${l_path_temp}/bypass4netns\" a \"${l_path_bin}\" ..."
+                            cp "${l_path_temp}/bypass4netns" "${l_path_bin}"
+                            chmod +x "${l_path_bin}/bypass4netns"
+
+                            echo "Copiando \"${l_path_temp}/bypass4netnsd\" a \"${l_path_bin}\" ..."
+                            cp "${l_path_temp}/bypass4netnsd" "${l_path_bin}"
+                            chmod +x "${l_path_bin}/bypass4netnsd"
+
+                        else
+
+                            echo "Copiando \"${l_path_temp}/bypass4netns\" a \"${l_path_bin}\" ..."
+                            sudo cp "${l_path_temp}/bypass4netns" "${l_path_bin}"
+                            sudo chmod +x "${l_path_bin}/bypass4netns"
+
+                            echo "Copiando \"${l_path_temp}/bypass4netnsd\" a \"${l_path_bin}\" ..."
+                            sudo cp "${l_path_temp}/bypass4netnsd" "${l_path_bin}"
+                            sudo chmod +x "${l_path_bin}/bypass4netnsd"
+
+                        fi
+
+                    else
+
+                        printf 'No se instalará el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s.\n' "$p_artifact_index" "$p_repo_id"
+
+                    fi
+
+                fi
+
+                #3.3. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
+
+            fi
+
+            ;;
+
+
+        dive)
+
+            #Ruta local de los artefactos
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Copiando \"${l_path_temp}/dive\" a \"${l_path_bin}\" ..."
+            if [ $g_is_root -eq 0 ]; then
+                cp "${l_path_temp}/dive" "${l_path_bin}"
+                chmod +x "${l_path_bin}/dive"
+            else
+                sudo cp "${l_path_temp}/dive" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/dive"
+            fi
+            ;;
+
+
+        *)
+            printf 'No esta definido logica para desintalar los artectactos del repositorio "%s"\n' "$l_tag"
+            return 50
+            ;;
     esac
 
     return 0
