@@ -1064,6 +1064,7 @@ function i_install_repository() {
     _g_install_repo_status[1]=$((l_flag_setup_begining + l_flag_setup_sucessfully))
 
     if [ $l_repo_is_beging_setup -ne 0 ]; then
+        printf "\n"
         return 1
     fi
 
@@ -1754,8 +1755,6 @@ function i_uninstall_repository() {
     _g_uninstall_repo_status=(0 0)
 
 
-
-
     #3. Iniciar la configuración en Linux: 
     local l_install_win_cmds=1
     
@@ -1798,9 +1797,10 @@ function i_uninstall_repository() {
             _uninstall_repository "$p_repo_id" "$_g_repo_current_version" $l_install_win_cmds
 
             l_flag_uninstall_sucessfully=$g_flag_uninstall_successfully
+
+            printf "\n"
         fi
 
-        printf "\n"
 
     fi
 
@@ -1846,10 +1846,9 @@ function i_uninstall_repository() {
 
             l_flag_uninstall_sucessfully=$g_flag_uninstall_successfully
 
+            printf "\n"
+
         fi
-
-
-        printf "\n"
 
     fi
 
@@ -1857,6 +1856,7 @@ function i_uninstall_repository() {
     _g_uninstall_repo_status[1]=$((l_flag_uninstall_begining + l_flag_uninstall_sucessfully))
 
     if [ $l_repo_is_beging_uninstall -ne 0 ]; then
+        printf "\n"
         return 1
     fi
 
