@@ -288,21 +288,39 @@ print_line() {
 
 }
 
+#El usuario solo ingresa el texto y la funcion se encarga de darle colores
 #Parametros de entrada:
 #  1 > Texto a colocar el en centro
 #  2 > Tamaño de caracteres la linea
 #  3 > Color del texto
 print_text_in_center() {
 
+    #Aplicar colores al texto
     local l_n=${#1}
 
-    if [ $l_n -ge $2 ]; then
-        printf '%b%s%b\n' "$3" "$1" "$g_color_reset"
-    else
+    if [ $l_n -lt $2 ]; then
         local l_m=$(((${2} - ${l_n})/2))
         printf " %.0s" $(seq ${l_m})
-        printf '%b%s%b\n' "$3" "$1" "$g_color_reset"
     fi
+    printf "%b${1}%b\n" "$3" "$g_color_reset"
+
+}
+
+#El usuario de la funcion es el responsable de dar colores al texto
+#Parametros de entrada:
+#  1 > Texto a colocar el en centro
+#  2 > Tamaño de caracteres la linea
+print_text_in_center2() {
+
+    #Tamaño del texto sin caracteres de color
+    local l_text_without_colors=$(echo "$1" | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g")
+    local l_n=${#l_text_without_colors}
+
+    if [ $l_n -lt $2 ]; then
+        local l_m=$(((${2} - ${l_n})/2))
+        printf " %.0s" $(seq ${l_m})
+    fi
+    printf "${1}\n"
 
 }
 

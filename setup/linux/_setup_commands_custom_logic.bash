@@ -848,8 +848,8 @@ function _load_artifacts() {
             ;;
         less)
             if [ $p_install_win_cmds -eq 0 ]; then
-                pna_artifact_names=("less.exe" "lesskey.exe")
-                pna_artifact_types=(0 0)
+                pna_artifact_names=("less-x64.zip")
+                pna_artifact_types=(3)
             else
                 return 1
             fi
@@ -1088,10 +1088,12 @@ function _load_artifacts() {
 }
 
 
-#Si un nodo k0s esta iniciado solicitar su detención y deternerlo
+#Si un nodo k0s esta iniciado solicitar su detención y deternerlo.
 #Parametros de entrada (argumentos y opciones):
-#   1 > ID del repositorio
-#   2 > Indice del artefato del repositorio que se desea instalar
+#Opcionales:
+#   1 > Flag '0' si se usara para desintalar, caso contrario se usara para instalar/actualizar.
+#   2 > ID del repositorio
+#   3 > Indice del artefato del repositorio que se desea instalar
 #Parametros de salida (valor de retorno):
 #   0 > El nodo no esta iniciado (no esta instalado o esta detenido).
 #   1 > El nodo está iniciado pero NO se acepto deternerlo.
@@ -1099,47 +1101,96 @@ function _load_artifacts() {
 function _request_stop_k0s_node() {
 
     #1. Argumentos
-    p_repo_id="$1"
-    p_artifact_index=$2
+    local p_is_uninstalling=1
+    if [ "$1" = "0" ]; then
+        p_is_uninstalling=0
+    fi
+    local p_repo_id="$2"
+    local p_artifact_index=-1
+    if [[ "$3" =~ ^[0-9]+$ ]]; then
+        p_option_relative_idx=$3
+    fi
     
-    #2. Logica
+    #2. Determinar el estado actual del demonio k0s
     local l_option
-
-    #Averigur si esta instalado a nivel usuario
     local l_status
     local l_info
 
-    #Si se no esta instalado o esta detenenido
+    #Si se no esta instalado o esta detenenido, salir
     l_info=$(sudo k0s status 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ] || [ -z "$l_info" ]; then
         return 0
     fi
 
-    #Si esta detenido
+    #Si esta detenido, salir
     local l_aux
     l_aux=$(echo "$l_info" | grep -e '^Process ID' 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
         return 0
     fi
-    local l_node_process_id=$(echo "$l_aux" | sed 's/.*: \(.*\)/\1/' 2> /dev/null)
 
+    #Recuperar información adicional.
+    local l_node_process_id=$(echo "$l_aux" | sed 's/.*: \(.*\)/\1/' 2> /dev/null)
     local l_nodo_type=$(echo "$l_info" | grep -e '^Role' | sed 's/.*: \(.*\)/\1/' 2> /dev/null)
 
-    #Solicitar la detención del servicio
-    printf "%bEl nodo k0s '%s' (PID: %s) esta iniciado y requiere detenerse para instalar el artefacto[%s] del repositorio '%s'\n" \
-           "$g_color_warning" "$l_nodo_type" "$l_node_process_id" "$p_artifact_index" "$p_repo_id"
+    #3. Solicitar la detención del servicio
+    printf "%bEl nodo k0s '%s' (PID: %s) esta iniciado y requiere detenerse para " "$g_color_warning" "$l_nodo_type" "$l_node_process_id"
 
-    printf "¿Desea detener la nodo k0s?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_opaque" "$g_color_reset"
-    read -rei 's' -p ': ' l_option
-    if [ ! "$l_option" = "s" ]; then
-        printf '%bNo se instalará el artefacto[%s] del repositorio "%s".\nDetenga el nodo k0s %s o acepte su detención para su instalación%b\n' \
-               "$g_color_opaque" "$p_artifact_index" "$p_repo_id" "$l_nodo_type" "$g_color_reset"
-        return 1
+    if [ $p_is_uninstalling -eq 0 ]; then
+        printf 'desinstalar '
+    else
+        printf 'instalar '
     fi
 
-    #Detener el nodo k0s
+    if [ $p_artifact_index -lt 0 ]; then
+        printf 'un artefacto del '
+    else
+        printf 'el artefacto[%s] del ' "$p_artifact_index"
+    fi
+
+    if [ -z "$p_repo_id" ]; then
+        printf 'resositorio.\n'
+    else
+        printf "repositorio '%s'.\n" "$p_repo_id"
+    fi
+
+
+    printf "¿Desea detener el nodo k0s?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_opaque" "$g_color_reset"
+    read -rei 's' -p ': ' l_option
+    if [ "$l_option" != "s" ]; then
+
+        if [ $p_is_uninstalling -eq 0 ]; then
+            printf '%bNo se desinstalará ' "$g_color_opaque"
+        else
+            printf '%bNo se instalará ' "$g_color_opaque"
+        fi
+
+        if [ $p_artifact_index -lt 0 ]; then
+            printf 'un artefacto del '
+        else
+            printf 'el artefacto[%s] del ' "$p_artifact_index"
+        fi
+
+        if [ -z "$p_repo_id" ]; then
+            printf "resositorio.\nDetenga el nodo k0s '%s' y vuelva ejecutar el menú o acepte su detención para su " "$l_nodo_type"
+        else
+            printf "repositorio '%s'.\nDetenga el nodo k0s '%s' y vuelva ejecutar el menú o acepte su detención para su " "$p_repo_id" "$l_nodo_type"
+        fi
+
+        if [ $p_is_uninstalling -eq 0 ]; then
+            printf 'desinstalación.%b\n' "$g_color_reset"
+        else
+            printf 'instalación.%b\n' "$g_color_reset"
+        fi
+
+        return 1
+
+    fi
+
+
+    #4. Detener el nodo k0s
     printf 'Deteniendo el nodo k0s %s ...\n' "$l_nodo_type"
     if [ $g_is_root -eq 0 ]; then
         k0s stop
@@ -1163,7 +1214,7 @@ function _request_stop_k0s_node() {
 #   2 > si la versión actual < versión especificada como parametro.
 _compare_version_current_with() {
 
-    #Argumentos
+    #1. Argumentos
     local p_repo_id=$1
     local p_path="$2/"
     local p_install_win_cmds=1
@@ -1173,7 +1224,7 @@ _compare_version_current_with() {
 
     printf "Comparando versiones de '%s': \"Versión actual\" vs \"Versión ubica en '%s'\"...\n" "$p_repo_id" "$p_path"
 
-    #Obteniendo la versión actual
+    #2. Obteniendo la versión actual
     local l_current_version
     l_current_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds})
 
@@ -1183,7 +1234,7 @@ _compare_version_current_with() {
         return 9
     fi
 
-    #Obteniendo la versión de lo especificado como parametro
+    #3. Obteniendo la versión de lo especificado como parametro
     local l_other_version
     l_other_version=$(_get_repo_current_version "$p_repo_id" ${p_install_win_cmds} "$p_path")
 
@@ -1193,7 +1244,7 @@ _compare_version_current_with() {
         return 8
     fi
 
-    #Comparando ambas versiones
+    #4. Comparando ambas versiones
     compare_version "$l_current_version" "$l_other_version"
     l_status=$?
 
@@ -1224,8 +1275,10 @@ _compare_version_current_with() {
 #Si la unidad servicio 'containerd' esta iniciado, solicitar su detención y deternerlo
 #Parametros de entrada (argumentos y opciones):
 #   1 > Nombre completo de la unidad de systemd
-#   2 > ID del repositorio
-#   3 > Indice del artefato del repositorio que se desea instalar
+#Opcionales:
+#   2 > Flag '0' si se usara para desintalar, caso contrario se usara para instalar/actualizar.
+#   3 > ID del repositorio
+#   4 > Indice del artefato del repositorio que se desea instalar
 #Parametros de salida (valor de retorno):
 #   0 > La unidad systemd NO esta instalado y NO esta iniciado
 #   1 > La unidad systemd esta instalado pero NO esta iniciado (esta detenido)
@@ -1235,18 +1288,31 @@ _compare_version_current_with() {
 function _request_stop_systemd_unit() {
 
     #1. Argumentos
-    p_unit_name="$1"
-    p_repo_id="$2"
-    p_artifact_index=$3
+    local p_unit_name="$1"
+    local p_is_uninstalling=1
+    if [ "$2" = "0" ]; then
+        p_is_uninstalling=0
+    fi
+    local p_repo_id="$3"
+    local p_artifact_index=-1
+    if [[ "$4" =~ ^[0-9]+$ ]]; then
+        p_option_relative_idx=$4
+    fi
     
-    #2. Logica
+    #2. Averigur el estado actual de la unidad systemd
     local l_option
     local l_status
-
-    #Averigur si esta instalado a nivel usuario
     local l_is_user=0
+
     exist_systemd_unit "$p_unit_name" $l_is_user
-    l_status=$?
+    l_status=$?   #  1 > La unidad instalada pero aun no esta en cache (no ha sido ejecutada desde el inicio del SO)
+                  #  2 > La unidad instalada, en cache, pero marcada para no iniciarse ('unmask', 'inactive').
+                  #  3 > La unidad instalada, en cache, pero no iniciado ('loaded', 'inactive').
+                  #  4 > La unidad instalada, en cache, iniciado y aun ejecutandose ('loaded', 'active'/'running').
+                  #  5 > La unidad instalada, en cache, iniciado y esperando peticionese ('loaded', 'active'/'waiting').
+                  #  6 > La unidad instalada, en cache, iniciado y terminado ('loaded', 'active'/'exited' or 'dead').
+                  #  7 > La unidad instalada, en cache, iniciado pero se desconoce su subestado.
+                  # 99 > La unidad instalada, en cache, pero no se puede leer su información.
 
     if [ $l_status -eq 0 ]; then
 
@@ -1260,22 +1326,66 @@ function _request_stop_systemd_unit() {
         fi
     fi
 
-    #Si se no esta iniciado
-    if [ $l_status -lt 4 ] && [ $l_status -gt 7 ]; then
+    #Si se no esta iniciado, salir
+    if [ $l_status -lt 4 ] || [ $l_status -gt 7 ]; then
         return 1
     fi
 
-    #Solicitar la detención del servicio
-    printf "%bLa unidad systemd '%s' esta iniciado y requiere detenerse para instalar el artefacto[%s] del repositorio '%s'\n" \
-           "$g_color_warning" "$p_unit_name" "$p_artifact_index" "$p_repo_id"
+    #3. Solicitar la detención del servicio
+    printf "%bLa unidad systemd '%s' esta iniciado y requiere detenerse para " "$g_color_warning" "$p_unit_name"
+
+    if [ $p_is_uninstalling -eq 0 ]; then
+        printf 'desinstalar '
+    else
+        printf 'instalar '
+    fi
+
+    if [ $p_artifact_index -lt 0 ]; then
+        printf 'un artefacto del '
+    else
+        printf 'el artefacto[%s] del ' "$p_artifact_index"
+    fi
+
+    if [ -z "$p_repo_id" ]; then
+        printf 'resositorio.\n'
+    else
+        printf "repositorio '%s'.\n" "$p_repo_id"
+    fi
+
 
     printf "¿Desea detener la unidad systemd?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_opaque" "$g_color_reset"
     read -rei 's' -p ': ' l_option
-    if [ ! "$l_option" = "s" ]; then
-        printf '%bNo se instalará el artefacto[%s] del repositorio "%s".\nDetenga el servicio "%s" o acepte su detención para su instalación%b\n' \
-               "$g_color_opaque" "$p_artifact_index" "$p_repo_id" "$p_unit_name" "$g_color_reset"
+    if [ "$l_option" != "s" ]; then
+
+        if [ $p_is_uninstalling -eq 0 ]; then
+            printf '%bNo se desinstalará ' "$g_color_opaque"
+        else
+            printf '%bNo se instalará ' "$g_color_opaque"
+        fi
+
+        if [ $p_artifact_index -lt 0 ]; then
+            printf 'un artefacto del '
+        else
+            printf 'el artefacto[%s] del ' "$p_artifact_index"
+        fi
+
+        if [ -z "$p_repo_id" ]; then
+            printf "resositorio.\nDetenga el servicio '%s' y vuelva ejecutar el menú o acepte su detención para su " "$p_unit_name"
+        else
+            printf "repositorio '%s'.\nDetenga el servicio '%s' y vuelva ejecutar el menú o acepte su detención para su " "$p_repo_id" "$p_unit_name"
+        fi
+
+        if [ $p_is_uninstalling -eq 0 ]; then
+            printf 'desinstalación.%b\n' "$g_color_reset"
+        else
+            printf 'instalación.%b\n' "$g_color_reset"
+        fi
+
         return 2
+
     fi
+
+    #4. Detener la unidad systemd
 
     #Si la unidad systemd esta a nivel usuario
     if [ $l_is_user -eq 0 ]; then
@@ -1291,7 +1401,9 @@ function _request_stop_systemd_unit() {
     else
         sudo systemctl stop "$p_unit_name"
     fi
+
     return 4
+
 }
 
 
@@ -1493,7 +1605,8 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Ruta local de los artefactos
-                l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+                #l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+                l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
                 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                 echo "Copiando \"less\" a \"${l_path_bin}\" ..."
@@ -1900,7 +2013,7 @@ function _copy_artifact_files() {
             fi
 
             #2. Si la nodo k0s esta iniciado, solicitar su detención
-            _request_stop_k0s_node "$p_repo_id" "$p_artifact_index"
+            _request_stop_k0s_node 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -2635,7 +2748,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -2695,7 +2808,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -2754,7 +2867,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -2834,7 +2947,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -2927,7 +3040,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -3046,7 +3159,7 @@ function _copy_artifact_files() {
             fi
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            _request_stop_systemd_unit 'buildkit.service' "$p_repo_id" "$p_artifact_index"
+            _request_stop_systemd_unit 'buildkit.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -3196,7 +3309,7 @@ function _copy_artifact_files() {
                             printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
                         fi
 
-                        _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
+                        _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
                         l_status_stop=$?
                     fi
 
@@ -3293,29 +3406,83 @@ function _copy_artifact_files() {
 
 
 #
+#La inicialización solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
+#
 #Los argumentos de entrada son:
-#  1 > Index de la opcion de menu elegista para instalar
-#  2 > Flag '0' si es artefacto instalado en Windows (asociado a WSL2)
-#  3 > Flag '0' si se muestra el titulo, caso contrario no se muestra.
+#  1 > Index de la opcion de menu elegista para instalar (ver el arreglo 'ga_menu_options_title').
+#
 #El valor de retorno puede ser:
-#  0 > Se debe continuar con la instalación, cualquier otro caso no se debe continuar con la instalación
-_precondition_to_intall_menu_option() {
+#  0 > Si inicializo con exito.
+#  1 > No se inicializo por opcion del usuario.
+#  2 > Hubo un error en la inicialización.
+#
+_initialize_menu_option_install_lnx() {
+
+    #1. Argumentos
+    local p_option_relative_idx=$1
+
+    #2. Inicialización
+    local l_status
+    local l_repo_id
+    local l_artifact_index
+    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_value=$((1 << p_option_idx))
+
+
+    #3. Realizar validaciones segun la opcion de menu escogida
+    case "$p_option_relative_idx" in
+
+        #Container Runtime 'ContainerD'
+        4)
+            #Los valores son solo para logs, pero se calcular manualmente
+            l_repo_id='containerd'
+            
+            #1. Determinar si el paquete 'containerd.io' esta instalado en el sistema operativo
+            is_package_installed 'containerd' $g_os_subtype_id
+            l_status=$?
+
+            #Si existe el paquete no instalar nada
+            if [ $l_status -eq 0 ]; then
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'Solo se puede instalar si no se instalo usando el repositorio de github. No se puede desintalar si se instalo usando repositorio de paquetes del SO.\n'
+                return 2
+            fi
+            ;;
+        
+        ##"Tools para cualquier Container Runtime": BuildKit
+        #6)
+        #    return 0
+        #    ;;
+
+        *)
+            return 0
+            ;;
+    esac
+
+    #Por defecto, se debe continuar con la instalación
+    return 0
+
+
+}
+
+#
+#La finalización solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
+#
+#Los argumentos de entrada son:
+#  1 > Index de la opcion de menu elegista para instalar (ver el arreglo 'ga_menu_options_title').
+#
+#El valor de retorno puede ser:
+#  0 > Si finalizo con exito.
+#  1 > No se finalizo por opcion del usuario.
+#  2 > Hubo un error en la finalización.
+#
+_finalize_menu_option_install_lnx() {
 
     #Argumentos
-    local p_option_idx=$1
+    local p_option_relative_idx=$1
 
-    local p_install_win_cmds=1
-    if [ "$2" = "0" ]; then
-        p_install_win_cmds=0
-    fi
-
-    local p_show_title=1
-    if [ "$3" = "0" ]; then
-        p_show_title=1
-    fi
-
-    local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
-    local l_option_value=$((1 << p_option_idx))
+    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_value=$((1 << p_option_idx))
 
 
     #Realizar validaciones segun la opcion de menu escogida
@@ -3326,19 +3493,175 @@ _precondition_to_intall_menu_option() {
 }
 
 
-#Only for test
-_uninstall_repository() {
+
+#
+#La inicialización solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
+#
+#Los argumentos de entrada son:
+#  1 > Index de la opcion de menu elegista para desinstalar (ver el arreglo 'ga_menu_options_title').
+#
+#El valor de retorno puede ser:
+#  0 > Si inicializo con exito.
+#  1 > No se inicializo por opcion del usuario.
+#  2 > Hubo un error en la inicialización.
+#
+_initialize_menu_option_uninstall_lnx() {
+
+    #1. Argumentos
+    local p_option_relative_idx=$1
+
+    #2. Inicialización
+    local l_status
+    #local l_artifact_index
+    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_value=$((1 << p_option_idx))
+    
+    #3. Preguntar antes de eliminar los archivos
+    printf 'Se va ha iniciar con la desinstalación de los siguientes repositorios: '
+    
+    #Obtener los repositorios a configurar
+    local l_aux="${ga_menu_options_repos[$l_i]}"
+    local IFS=','
+    local la_repos=(${l_aux})
+    IFS=$' \t\n'
+
+    local l_n=${#la_repos[@]}
+    local l_repo_names=''
+    local l_repo_id
+    for((l_j=0; l_j < ${l_n}; l_j++)); do
+
+        l_repo_id="${la_repos[${l_j}]}"
+        l_aux="${gA_repositories[${l_repo_id}]}"
+        if [ -z "$l_aux" ]; then
+            l_aux="$l_repo_id"
+        fi
+
+        if [ $l_j -eq 0 ]; then
+            l_repo_names="'${g_color_opaque}${l_aux}${g_color_reset}'" 
+        else
+            l_repo_names="${l_repo_names}, '${g_color_opaque}${l_aux}${g_color_reset}'"
+        fi
+
+    done
+    printf '%b\n' "$l_repo_names"
+
+    printf "%b¿Desea continuar con la desinstalación de estos repositorios?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_warning" "$g_color_opaque" "$g_color_reset"
+    read -rei 's' -p ': ' l_option
+    if [ "$l_option" != "s" ]; then
+        printf 'Se cancela la desinstalación de los repositorios\n'
+        return 1
+    fi
+
+    #4. Realizar validaciones segun la opcion de menu escogida
+    case "$p_option_relative_idx" in
+
+        #Container Runtime 'ContainerD'
+        4)
+            #Los valores son solo para logs
+            l_repo_id='containerd'
+            
+            #1. Determinar si el paquete 'containerd.io' esta instalado en el sistema operativo
+            is_package_installed 'containerd' $g_os_subtype_id
+            l_status=$?
+
+            #Si existe el paquete no desintalar nada
+            if [ $l_status -eq 0 ]; then
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'Solo se puede desinstalar si no se instalo usando el repositorio de github. No se puede desintalar si se instalo usando repositorio de paquetes del SO.\n'
+                return 2
+            fi
+
+            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            _request_stop_systemd_unit 'containerd.service' 0 "$l_repo_id"
+            l_status=$?
+
+            #Si esta iniciado pero no acepta detenerlo
+            if [ $l_status -eq 2 ]; then
+                return 1
+            fi
+            ;;
+        
+        #"Tools para cualquier Container Runtime": BuildKit
+        6)
+            #Los valores son solo para logs
+            l_repo_id='buildkit'
+            
+            #1. Determinar si el paquete 'containerd.io' esta instalado en el sistema operativo
+            is_package_installed 'buildkit' $g_os_subtype_id
+            l_status=$?
+
+            #Si existe el paquete no desintalar nada
+            if [ $l_status -eq 0 ]; then
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "buildkit" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'Solo se puede desinstalar si no se instalo usando el repositorio de github. No se puede desintalar si se instalo usando repositorio de paquetes del SO.\n'
+                return 2
+            fi
+
+            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            _request_stop_systemd_unit 'buildkit.service' 0 "$l_repo_id"
+            l_status=$?
+
+            #Si esta iniciado pero no acepta detenerlo
+            if [ $l_status -eq 2 ]; then
+                return 1
+            fi
+            ;;
+
+        *)
+            return 0
+            ;;
+    esac
+
+    #Por defecto, se debe continuar con la instalación
+    return 0
+
+}
+
+#
+#La finalización solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
+#
+#Los argumentos de entrada son:
+#  1 > Index de la opcion de menu elegista para desinstalar (ver el arreglo 'ga_menu_options_title').
+#
+#El valor de retorno puede ser:
+#  0 > Si finalizo con exito.
+#  1 > No se finalizo por opcion del usuario.
+#  2 > Hubo un error en la finalización.
+#
+_finalize_menu_option_uninstall_lnx() {
 
     #Argumentos
+    local p_option_relative_idx=$1
+
+    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_value=$((1 << p_option_idx))
+
+
+    #Realizar validaciones segun la opcion de menu escogida
+
+    #Por defecto, se debe continuar con la instalación
+    return 0
+
+}
+
+
+
+
+#Only for test
+_uninstall_repository2() {
+
+    #1. Argumentos
     local p_repo_id="$1"
-    local p_repo_name="$2"
-    local p_repo_current_version="$3"
+    local p_repo_current_version="$2"
     local p_install_win_cmds=1
-    if [ "$4" = "0" ]; then
+    if [ "$3" = "0" ]; then
         p_install_win_cmds=0
     fi
 
-    #Inicialización de variables
+    #2. Inicialización de variables
+    local l_repo_name="${gA_repositories[$p_repo_id]}"
+    #local l_repo_name_aux="${l_repo_name:-$p_repo_id}"
+    
     #Tag usuado para imprimir un identificador del artefacto en un log
     local l_tag="${p_repo_id}[${p_repo_current_version}]"
 
@@ -3351,20 +3674,20 @@ _uninstall_repository() {
 #  2 > Nombre del repostorio
 #  3 > Version del repositorio
 #  4 > Flag '0' si es artefacto instalado en Windows (asociado a WSL2)
-_uninstall_repository2() {
+_uninstall_repository() {
 
-    #Argumentos
+    #1. Argumentos
     local p_repo_id="$1"
-    local p_repo_name="$2"
-    local p_repo_current_version="$3"
+    local p_repo_current_version="$2"
     local p_install_win_cmds=1
-    if [ "$4" = "0" ]; then
+    if [ "$3" = "0" ]; then
         p_install_win_cmds=0
     fi
 
-    #Inicialización de variables
-    #Tag usuado para imprimir un identificador del artefacto en un log
-    local l_tag="${p_repo_id}[${p_repo_current_version}]"
+    #2. Inicialización de variables
+    local l_repo_name="${gA_repositories[$p_repo_id]}"
+    #local l_repo_name_aux="${l_repo_name:-$p_repo_id}"
+
     local l_path_temp=""
 
     local l_path_man=""
@@ -3377,8 +3700,8 @@ _uninstall_repository2() {
         l_path_man="${g_path_commands_win}/man"
     fi
 
-    local l_status=0
-    local l_flag_uninstall=1
+    local l_status
+    local l_flag_uninstall
     local l_aux
 
     case "$p_repo_id" in
@@ -3392,29 +3715,12 @@ _uninstall_repository2() {
                 return 40
             fi
 
-            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            is_package_installed 'containerd' $g_os_subtype_id
-            l_status=$?
-
-            if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
-            fi
-
-            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
-            l_status=$?
-
-            #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 2 ]; then
-                return 41
-            fi
-
-            #3. Eliminando los archivos
-
+            #2. Eliminando los archivos
             echo "Eliminado \"runc\" de \"${l_path_bin}\" ..."
             if [ $g_is_root -eq 0 ]; then
                 rm "${l_path_bin}/runc"
             else
-                sudo cp "${l_path_bin}/runc"
+                sudo rm "${l_path_bin}/runc"
             fi
             ;;
 
@@ -3427,23 +3733,7 @@ _uninstall_repository2() {
                 return 40
             fi
 
-            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            is_package_installed 'containerd.io' $g_os_subtype_id
-            l_status=$?
-
-            if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
-            fi
-
-            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
-            l_status=$?
-
-            #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 2 ]; then
-                return 41
-            fi
-
-            #3. Eliminando los archivos 
+            #2. Eliminando los archivos 
             echo "Eliminando \"slirp4netns\" de \"${l_path_bin}\" ..."
             if [ $g_is_root -eq 0 ]; then
                 rm "${l_path_bin}/slirp4netns"
@@ -3461,44 +3751,28 @@ _uninstall_repository2() {
                 return 40
             fi
 
-            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            is_package_installed 'containerd' $g_os_subtype_id
-            l_status=$?
-
-            if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
-            fi
-
-            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
-            l_status=$?
-
-            #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 2 ]; then
-                return 41
-            fi
-
-            #3. Eliminando los archivos 
+            #2. Eliminando los archivos 
             if [ $g_is_root -eq 0 ]; then
 
                 echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
-                cp "${l_path_bin}/rootlesskit-docker-proxy"
+                rm "${l_path_bin}/rootlesskit-docker-proxy"
 
                 echo "Eliminando \"rootlesskit\" a \"${l_path_bin}\" ..."
-                cp "${l_path_bin}/rootlesskit"
+                rm "${l_path_bin}/rootlesskit"
 
                 echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
-                cp "${l_path_bin}/rootlessctl"
+                rm "${l_path_bin}/rootlessctl"
 
             else
 
                 echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_bin}/rootlesskit-docker-proxy"
+                sudo rm "${l_path_bin}/rootlesskit-docker-proxy"
 
                 echo "Eliminando\"rootlesskit\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_bin}/rootlesskit"
+                sudo rm "${l_path_bin}/rootlesskit"
 
                 echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_bin}/rootlessctl"
+                sudo rm "${l_path_bin}/rootlessctl"
 
             fi
             ;;
@@ -3514,38 +3788,9 @@ _uninstall_repository2() {
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
                 return 40
             fi
-            
 
-            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            is_package_installed 'containerd' $g_os_subtype_id
-            l_status=$?
-
-            if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
-            fi
-
-            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
-            l_status=$?
-
-            #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 2 ]; then
-                return 41
-            fi
-
-            #3. Configurar: Si no existe el directorio
-            if  [ ! -d "$l_path_bin" ]; then
-
-                #Crear las carpeta
-                echo "Creando la carpeta \"${l_path_bin}\" ..."
-                if [ $g_is_root -eq 0 ]; then
-                    mkdir -pm 755 $l_path_bin
-                else
-                    sudo mkdir -pm 755 $l_path_bin
-                fi
-
-
-            #4. Configurar: Si existe el directorio: actualizar
-            else
+            #2. Eliminando los archivos
+            if  [ -d "$l_path_bin" ]; then
 
                 #Elimimiando los binarios
                 echo "Eliminando los binarios de \"${l_path_bin}\" ..."
@@ -3555,10 +3800,9 @@ _uninstall_repository2() {
                     sudo rm ${l_path_bin}/*
                 fi
 
-
             fi
 
-            #5. Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            #3. Eliminado el archivo para determinar la version actual
             rm "${g_path_programs_lnx}/cni-plugins.info" 
 
             ;;
@@ -3572,101 +3816,107 @@ _uninstall_repository2() {
                 return 40
             fi
 
-            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            is_package_installed 'containerd' $g_os_subtype_id
-            l_status=$?
 
-            if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
-            fi
-
-            _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
-            l_status=$?
-
-            #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 2 ]; then
-                return 41
-            fi
-
-
-            #3. Eliminando archivos 
+            #2. Eliminando archivos 
             if [ $g_is_root -eq 0 ]; then
 
-                echo "Copiando \"${l_path_temp}/containerd-shim\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/containerd-shim" "${l_path_bin}"
-                chmod +x "${l_path_bin}/containerd-shim"
+                echo "Eliminando \"${l_path_bin}/containerd-shim\"..."
+                rm "${l_path_bin}/containerd-shim"
 
-                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v1\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/containerd-shim-runc-v1" "${l_path_bin}"
-                chmod +x "${l_path_bin}/containerd-shim-runc-v1"
+                echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v1\"..."
+                rm "${l_path_bin}/containerd-shim-runc-v1"
 
-                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v2\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/containerd-shim-runc-v2" "${l_path_bin}"
-                chmod +x "${l_path_bin}/containerd-shim-runc-v2"
+                echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v2\"..."
+                rm "${l_path_bin}/containerd-shim-runc-v2"
 
-                echo "Copiando \"${l_path_temp}/containerd-stress\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/containerd-stress" "${l_path_bin}"
-                chmod +x "${l_path_bin}/containerd-stress"
+                echo "Eliminando \"${l_path_bin}/containerd-stress\"..."
+                rm "${l_path_bin}/containerd-stress"
 
-                echo "Copiando \"${l_path_temp}/ctr\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/ctr" "${l_path_bin}"
-                chmod +x "${l_path_bin}/ctr"
+                echo "Eliminando \"${l_path_bin}/ctr\"..."
+                rm "${l_path_bin}/ctr"
 
-                echo "Copiando \"${l_path_temp}/containerd\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/containerd" "${l_path_bin}"
-                chmod +x "${l_path_bin}/containerd"
+                echo "Eliminando \"${l_path_bin}/containerd\"..."
+                rm "${l_path_bin}/containerd"
 
             else
 
-                echo "Copiando \"${l_path_temp}/containerd-shim\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/containerd-shim" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/containerd-shim"
+                echo "Eliminando \"${l_path_bin}/containerd-shim\"..."
+                sudo rm "${l_path_bin}/containerd-shim"
 
-                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v1\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/containerd-shim-runc-v1" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/containerd-shim-runc-v1"
+                echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v1\"..."
+                sudo rm "${l_path_bin}/containerd-shim-runc-v1"
 
-                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v2\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/containerd-shim-runc-v2" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/containerd-shim-runc-v2"
+                echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v2\"..."
+                sudo rm "${l_path_bin}/containerd-shim-runc-v2"
 
-                echo "Copiando \"${l_path_temp}/containerd-stress\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/containerd-stress" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/containerd-stress"
+                echo "Eliminando \"${l_path_bin}/containerd-stress\"..."
+                sudo rm "${l_path_bin}/containerd-stress"
 
-                echo "Copiando \"${l_path_temp}/ctr\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/ctr" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/ctr"
+                echo "Eliminando \"${l_path_bin}/ctr\" ..."
+                sudo rm "${l_path_bin}/ctr"
 
-                echo "Copiando \"${l_path_temp}/containerd\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/containerd" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/containerd"
+                echo "Eliminando \"${l_path_bin}/containerd\"..."
+                sudo rm "${l_path_bin}/containerd"
 
             fi
 
-            #Descargar archivo de configuracion como servicio a nivel system:
-            mkdir -p ~/.files/setup/programs/nerdctl/systemd/user
-            
-            printf 'Descargando el archivo de configuracion de "%s" a nivel system en "%s"\n' "containerd.service" "~/.files/setup/programs/nerdctl/systemd/user/"
-            curl -fLo ~/.files/setup/programs/nerdctl/systemd/system/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+            #3. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
 
-            #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
+            #Buscar si esta instalado a nive usuario
+            local l_is_user=0
+            exist_systemd_unit "containerd.service" $l_is_user
+            l_status=$?   #  1 > La unidad instalada pero aun no esta en cache (no ha sido ejecutada desde el inicio del SO)
+                          #  2 > La unidad instalada, en cache, pero marcada para no iniciarse ('unmask', 'inactive').
+                          #  3 > La unidad instalada, en cache, pero no iniciado ('loaded', 'inactive').
+                          #  4 > La unidad instalada, en cache, iniciado y aun ejecutandose ('loaded', 'active'/'running').
+                          #  5 > La unidad instalada, en cache, iniciado y esperando peticionese ('loaded', 'active'/'waiting').
+                          #  6 > La unidad instalada, en cache, iniciado y terminado ('loaded', 'active'/'exited' or 'dead').
+                          #  7 > La unidad instalada, en cache, iniciado pero se desconoce su subestado.
+                          # 99 > La unidad instalada, en cache, pero no se puede leer su información.
+        
+            if [ $l_status -eq 0 ]; then
+        
+                #Averiguar si esta instalado a nivel system
+                l_is_user=1
+                exist_systemd_unit "containerd.service" $l_is_user
+                l_status=$?
+       
+               #Si no esta instalado en nivel user ni system 
+                if [ $l_status -eq 0 ]; then
+                    return 0
+                fi
+            fi
 
             #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
-            if [ $l_status -eq 0 ]; then
+            if [ $l_is_user -eq 0 ]; then
 
-                printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "containerd.service"
-                printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
-                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "containerd.service" "$g_color_info" "$g_color_reset"
-                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/nerdctl"%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
-                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
-                printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
-                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "containerd.service" "$g_color_info" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
-                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   sudo systemctl start containerd%b\n' "$g_color_info" "$g_color_reset"                 
+                if [ -f ~/.config/systemd/user/containerd.service ]; then
+                    echo "Eliminando la configuración '~/.config/systemd/user/containerd.service' de la unidad systemd 'containerd.service'"
+                    rm ~/.config/systemd/user/containerd.service
+                    #Si esta configurado para inicio automatico desactivarlo
+                    systemctl --user disable containerd.service
+                    #Recargar el arbol de dependencies cargados por systemd
+                    systemctl --user daemon-reload
+                fi
+
+            else
+
+                if [ -f /usr/lib/systemd/system/containerd.service ]; then
+                    echo "Eliminando la configuración '/usr/lib/systemd/system/containerd.service' de la unidad systemd 'containerd.service'"
+                    if [ $g_is_root -eq 0 ]; then
+                        rm /usr/lib/systemd/system/containerd.service
+                        #Si esta configurado para inicio automatico desactivarlo
+                        systemctl disable containerd.service
+                        #Recargar el arbol de dependencies cargados por systemd
+                        systemctl daemon-reload
+                    else
+                        sudo rm /usr/lib/systemd/system/containerd.service
+                        #Si esta configurado para inicio automatico desactivarlo
+                        sudo systemctl disable containerd.service
+                        #Recargar el arbol de dependencies cargados por systemd
+                        sudo systemctl daemon-reload
+                    fi
+                fi
 
             fi
             ;;
@@ -3680,73 +3930,94 @@ _uninstall_repository2() {
                 return 40
             fi
 
-            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            _request_stop_systemd_unit 'buildkit.service' "$p_repo_id" "$p_artifact_index"
-            l_status=$?
-
-            #Si esta iniciado pero no acepta detenerlo
-            if [ $l_status -eq 2 ]; then
-                return 41
-            fi
-
-            #3. 
+            #2. Eliminando archivos 
             if [ $g_is_root -eq 0 ]; then
 
-                echo "Copiando \"${l_path_temp}/buildkit-runc\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/buildkit-runc" "${l_path_bin}"
-                chmod +x "${l_path_bin}/buildkit-runc"
+                echo "Eliminando \"${l_path_bin}/buildkit-runc\"..."
+                rm "${l_path_bin}/buildkit-runc"
 
-                echo "Copiando \"${l_path_temp}/buildkitd\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/buildkitd" "${l_path_bin}"
-                chmod +x "${l_path_bin}/buildkitd"
+                echo "Eliminando \"${l_path_bin}/buildkitd\"..."
+                rm "${l_path_bin}/buildkitd"
 
-                echo "Copiando \"${l_path_temp}/buildkit-qemu-*\" a \"${l_path_bin}\" ..."
-                cp ${l_path_temp}/buildkit-qemu-* "${l_path_bin}"
-                chmod +x ${l_path_bin}/buildkit-qemu-*
+                echo "Eliminando \"${l_path_bin}/buildkit-qemu-*\"..."
+                rm ${l_path_bin}/buildkit-qemu-*
 
-                echo "Copiando \"${l_path_temp}/buildctl\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/buildctl" "${l_path_bin}"
-                chmod +x "${l_path_bin}/buildctl"
+                echo "Eliminando \"${l_path_bin}/buildctl\"..."
+                rm "${l_path_bin}/buildctl"
 
             else
 
-                echo "Copiando \"${l_path_temp}/buildkit-runc\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/buildkit-runc" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/buildkit-runc"
+                echo "Eliminando \"${l_path_bin}/buildkit-runc\"..."
+                sudo rm "${l_path_bin}/buildkit-runc"
 
-                echo "Copiando \"${l_path_temp}/buildkitd\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/buildkitd" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/buildkitd"
+                echo "Eliminando \"${l_path_bin}/buildkitd\"..."
+                sudo rm "${l_path_bin}/buildkitd"
 
-                echo "Copiando \"${l_path_temp}/buildkit-qemu-*\" a \"${l_path_bin}\" ..."
-                sudo cp ${l_path_temp}/buildkit-qemu-* "${l_path_bin}"
-                sudo chmod +x ${l_path_bin}/buildkit-qemu-*
+                echo "Eliminando \"${l_path_bin}/buildkit-qemu-*\"..."
+                sudo rm ${l_path_bin}/buildkit-qemu-*
 
-                echo "Copiando \"${l_path_temp}/buildctl\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/buildctl" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/buildctl"
+                echo "Eliminando \"${l_path_bin}/buildctl\"..."
+                sudo rm "${l_path_bin}/buildctl"
 
             fi
 
-            #Descargar archivo de configuracion como servicio a nivel system:
+            #3. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
 
-
-            #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:            
+            #Buscar si esta instalado a nive usuario
+            local l_is_user=0
+            exist_systemd_unit "buildkit.service" $l_is_user
+            l_status=$?   #  1 > La unidad instalada pero aun no esta en cache (no ha sido ejecutada desde el inicio del SO)
+                          #  2 > La unidad instalada, en cache, pero marcada para no iniciarse ('unmask', 'inactive').
+                          #  3 > La unidad instalada, en cache, pero no iniciado ('loaded', 'inactive').
+                          #  4 > La unidad instalada, en cache, iniciado y aun ejecutandose ('loaded', 'active'/'running').
+                          #  5 > La unidad instalada, en cache, iniciado y esperando peticionese ('loaded', 'active'/'waiting').
+                          #  6 > La unidad instalada, en cache, iniciado y terminado ('loaded', 'active'/'exited' or 'dead').
+                          #  7 > La unidad instalada, en cache, iniciado pero se desconoce su subestado.
+                          # 99 > La unidad instalada, en cache, pero no se puede leer su información.
+        
             if [ $l_status -eq 0 ]; then
+        
+                #Averiguar si esta instalado a nivel system
+                l_is_user=1
+                exist_systemd_unit "buildkit.service" $l_is_user
+                l_status=$?
+        
+               #Si no esta instalado en nivel user ni system 
+                if [ $l_status -eq 0 ]; then
+                    return 0
+                fi
+            fi
 
-                printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "buildkit.service"
-                printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
-                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "buildkit.service" "$g_color_info" "$g_color_reset"
-                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/nerdctl"%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   containerd-rootless-setuptool.sh install-buildkit%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
-                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
-                printf '%b      > Establezca el servicio buildkit para inicio manual:%b systemctl --user disable buildkit.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
-                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "buildkit.service" "$g_color_info" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.socket /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
-                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   sudo systemctl start buildkit.service%b\n' "$g_color_info" "$g_color_reset"                 
+            #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
+            if [ $l_is_user -eq 0 ]; then
+
+                if [ -f ~/.config/systemd/user/buildkit.service ]; then
+                    echo "Eliminando la configuración '~/.config/systemd/user/buildkit.service' de la unidad systemd 'buildkit.service'"
+                    rm ~/.config/systemd/user/buildkit.service
+                    #Si esta configurado para inicio automatico desactivarlo
+                    systemctl --user disable buildkit.service
+                    #Recargar el arbol de dependencies cargados por systemd
+                    systemctl --user daemon-reload
+                fi
+
+            else
+
+                if [ -f /usr/lib/systemd/system/buildkit.service ]; then
+                    echo "Eliminando la configuración '/usr/lib/systemd/system/buildkit.service' de la unidad systemd 'buildkit.service'"
+                    if [ $g_is_root -eq 0 ]; then
+                        rm /usr/lib/systemd/system/buildkit.service
+                        #Si esta configurado para inicio automatico desactivarlo
+                        systemctl disable buildkit.service
+                        #Recargar el arbol de dependencies cargados por systemd
+                        systemctl daemon-reload
+                    else
+                        sudo rm /usr/lib/systemd/system/buildkit.service
+                        #Si esta configurado para inicio automatico desactivarlo
+                        sudo systemctl disable buildkit.service
+                        #Recargar el arbol de dependencies cargados por systemd
+                        sudo systemctl daemon-reload
+                    fi
+                fi
 
             fi
             ;;
@@ -3755,112 +4026,58 @@ _uninstall_repository2() {
         nerdctl)
 
             #1. Ruta local de los artefactos
-            local l_status_stop=-1
-          
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
                 return 40
             fi
 
+            #2. Eliminando los archivos
+            if [ $g_is_root -eq 0 ]; then
 
-            #2. Configuración: Instalación de binario basico
-            if [ $p_artifact_index -eq 0 ]; then
+                echo "Eliminando \"${l_path_bin}/nerdctl\"..."
+                rm "${l_path_bin}/nerdctl"
 
-                #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-                if [ $g_is_root -eq 0 ]; then
-
-                    echo "Copiando \"${l_path_temp}/nerdctl\" a \"${l_path_bin}\" ..."
-                    cp "${l_path_temp}/nerdctl" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/nerdctl"
-
-                else
-
-                    echo "Copiando \"${l_path_temp}/nerdctl\" a \"${l_path_bin}\" ..."
-                    sudo cp "${l_path_temp}/nerdctl" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/nerdctl"
-
-                fi
-
-                mkdir -p ~/.files/setup/programs/containerd
-
-                #Archivos para instalar 'containerd' de modo rootless
-                echo "Copiando \"${l_path_temp}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/setup/programs/containerd\" ..."
-                cp "${l_path_temp}/containerd-rootless.sh" ~/.files/setup/programs/containerd
-                chmod u+x ~/.files/setup/programs/containerd/containerd-rootless.sh
-
-                echo "Copiando \"${l_path_temp}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/setup/programs/containerd\" ..."
-                cp "${l_path_temp}/containerd-rootless-setuptool.sh" ~/.files/setup/programs/containerd
-                chmod u+x ~/.files/setup/programs/containerd/containerd-rootless-setuptool.sh
-
-            #3. Configuración: Instalación de binarios de complementos que su reposotrio no ofrece el compilado (solo la fuente). Para ello se usa el full
             else
 
-                #3.1. Rutas de los artectos 
-                l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/bin"
-
-                #3.2. Configurar 'rootless-containers/bypass4netns' usado para accelar 'Slirp4netns' (NAT o port-forwading de llamadas del exterior al contenedor)
-
-                #Comparar la versión actual con la versión descargada
-                _compare_version_current_with "bypass4netns" "$l_path_temp" $p_install_win_cmds
-                l_status=$?
-
-                #Actualizar solo no esta configurado o tiene una version menor a la actual
-                if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-
-                    #Instalar este artefacto requiere solicitar detener el servicio solo la versión actual existe
-                    #Solo solicitarlo una vez
-                    if [ $l_status_stop -ge 0 ]; then
-
-                        is_package_installed 'containerd' $g_os_subtype_id
-                        l_status_stop=$?
-
-                        if [ $l_status_stop -eq 0 ]; then
-                            printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
-                        fi
-
-                        _request_stop_systemd_unit 'containerd.service' "$p_repo_id" "$p_artifact_index"
-                        l_status_stop=$?
-                    fi
-
-                    #Si no esta iniciado o si esta iniciado se acepta detenerlo, instalarlo
-                    if [ $l_status_stop -ne 2 ]; then
-
-                        printf 'Instalando el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s ...\n' "$p_artifact_index" "$p_repo_id"
-                        #Instalando
-                        if [ $g_is_root -eq 0 ]; then
-
-                            echo "Copiando \"${l_path_temp}/bypass4netns\" a \"${l_path_bin}\" ..."
-                            cp "${l_path_temp}/bypass4netns" "${l_path_bin}"
-                            chmod +x "${l_path_bin}/bypass4netns"
-
-                            echo "Copiando \"${l_path_temp}/bypass4netnsd\" a \"${l_path_bin}\" ..."
-                            cp "${l_path_temp}/bypass4netnsd" "${l_path_bin}"
-                            chmod +x "${l_path_bin}/bypass4netnsd"
-
-                        else
-
-                            echo "Copiando \"${l_path_temp}/bypass4netns\" a \"${l_path_bin}\" ..."
-                            sudo cp "${l_path_temp}/bypass4netns" "${l_path_bin}"
-                            sudo chmod +x "${l_path_bin}/bypass4netns"
-
-                            echo "Copiando \"${l_path_temp}/bypass4netnsd\" a \"${l_path_bin}\" ..."
-                            sudo cp "${l_path_temp}/bypass4netnsd" "${l_path_bin}"
-                            sudo chmod +x "${l_path_bin}/bypass4netnsd"
-
-                        fi
-
-                    else
-
-                        printf 'No se instalará el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s.\n' "$p_artifact_index" "$p_repo_id"
-
-                    fi
-
-                fi
-
-                #3.3. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
+                echo "Eliminando \"${l_path_bin}/nerdctl\"..."
+                sudo rm "${l_path_bin}/nerdctl"
 
             fi
 
+            #3. Eliminando archivos del programa "bypass4netns" (acelerador de "Slirp4netns")
+            #is_package_installed 'containerd' $g_os_subtype_id
+            #l_status=$?
+
+            #if [ $l_status -eq 0 ]; then
+
+            #    printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            #    printf 'No se desinstalará el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s.\n' "$p_artifact_index" "$p_repo_id"
+            #    return 0
+
+            #else
+
+            #    printf 'Desinstalando el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s ...\n' "$p_artifact_index" "$p_repo_id"
+
+            #    #Instalando
+            #    if [ $g_is_root -eq 0 ]; then
+
+            #        echo "Eliminando \"${l_path_bin}/bypass4netns\"..."
+            #        rm "${l_path_bin}/bypass4netns"
+
+            #        echo "Eliminando \"${l_path_bin}/bypass4netnsd\"..."
+            #        rm "${l_path_bin}/bypass4netnsd"
+
+            #    else
+
+            #        echo "Eliminando \"${l_path_bin}/bypass4netns\"..."
+            #        sudo rm "${l_path_bin}/bypass4netns"
+
+            #        echo "Eliminando \"${l_path_bin}/bypass4netnsd\"..."
+            #        sudo rm "${l_path_bin}/bypass4netnsd"
+
+            #    fi
+
+            #fi
             ;;
 
 
@@ -3873,13 +4090,11 @@ _uninstall_repository2() {
             fi
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"${l_path_temp}/dive\" a \"${l_path_bin}\" ..."
+            echo "Eliminando \"${l_path_bin}/dive\"..."
             if [ $g_is_root -eq 0 ]; then
-                cp "${l_path_temp}/dive" "${l_path_bin}"
-                chmod +x "${l_path_bin}/dive"
+                rm "${l_path_bin}/dive"
             else
-                sudo cp "${l_path_temp}/dive" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/dive"
+                sudo rm "${l_path_bin}/dive"
             fi
             ;;
 

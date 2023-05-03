@@ -55,7 +55,7 @@ declare -a ga_menu_options_title=(
     "El editor 'NeoVim'"
     "Las fuentes 'Nerd Fonts'"
     "Shell 'Powershell Core'"
-    "Container Runtime 'ContainerD''"
+    "Container Runtime 'ContainerD'"
     "Tools para 'ContainerD'"
     "Tools para cualquier Container Runtime"
     "Tools para Kubernates"
@@ -77,7 +77,7 @@ declare -a ga_menu_options_repos=(
     "neovim"
     "nerd-fonts"
     "powershell"
-    "runc,cni-plugins,rootlesskit,slirp4netns,containerd"
+    "runc,rootlesskit,slirp4netns,containerd"
     "cni-plugins,nerdctl"
     "runc,buildkit,dive"
     "kubectl,kustomize,helm,operator-sdk"
@@ -114,6 +114,10 @@ _show_dynamic_menu() {
     local p_offset_option_index=$2
     local p_max_digits=$3
 
+    #Espacios vacios al inicio del menu
+    local l_empty_space
+    local l_aux=$((8 + p_max_digits))
+    printf -v l_empty_space ' %.0s' $(seq $l_aux)
 
     #Recorreger las opciones dinamicas del menu personalizado
     local l_i=0
@@ -121,10 +125,10 @@ _show_dynamic_menu() {
     local IFS=','
     local la_repos
     local l_option_value
-    local l_aux
     local l_n
     local l_repo_names
     local l_repo_id
+
 
 
     for((l_i=0; l_i < ${#ga_menu_options_repos[@]}; l_i++)); do
@@ -148,9 +152,7 @@ _show_dynamic_menu() {
 
         l_n=${#la_repos[@]}
         if [ $l_n -gt 3 ]; then
-            printf '\n'
-            l_aux=$((8 + p_max_digits))
-            printf ' %.0s' $(seq $l_aux)
+            printf "\n${l_empty_space}"
         fi
 
         l_repo_names=''
@@ -163,11 +165,13 @@ _show_dynamic_menu() {
             fi
 
             if [ $l_j -eq 0 ]; then
-                #l_repo_names="'${l_aux}'" 
                 l_repo_names="'${g_color_opaque}${l_aux}${g_color_reset}'" 
             else
-                #l_repo_names="${l_repo_names}, '${l_aux}'"
-                l_repo_names="${l_repo_names}, '${g_color_opaque}${l_aux}${g_color_reset}'"
+                if [ $l_j -eq 6 ]; then
+                    l_repo_names="${l_repo_names},\n${l_empty_space}'${g_color_opaque}${l_aux}${g_color_reset}'"
+                else
+                    l_repo_names="${l_repo_names}, '${g_color_opaque}${l_aux}${g_color_reset}'"
+                fi
             fi
 
         done
