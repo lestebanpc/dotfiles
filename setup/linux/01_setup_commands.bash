@@ -987,9 +987,9 @@ function i_install_repository() {
 
             fi
 
-        fi
+            printf "\n"
 
-        printf "\n"
+        fi
 
     fi
 
@@ -1054,9 +1054,9 @@ function i_install_repository() {
 
             fi
 
-        fi
+            printf "\n"
 
-        printf "\n"
+        fi
 
     fi
 
@@ -1566,7 +1566,7 @@ function i_install_repositories() {
         for l_repo_id in ${!_gA_processed_repo[@]}; do
 
             #A. Obtener el estado del repositorio despues de las instalación anterior
-            l_aux=${lA_repos[$l_repo_id]:-0|}
+            l_aux=${_gA_processed_repo[$l_repo_id]:-0|}
             
             IFS='|'
             la_processed_repo_info=(${l_aux})
@@ -1905,8 +1905,6 @@ function _uninstall_menu_options() {
         return 99
     fi
 
-    #Limpizar el arreglo asociativo
-    _gA_processed_repo=()
 
     #1. Obtener los repositorios a configurar
     local l_aux="${ga_menu_options_repos[$l_i]}"
@@ -1999,7 +1997,7 @@ function _uninstall_menu_options() {
         l_repo_name_aux="${gA_repositories[$l_repo_id]:-$l_repo_id}"
 
         #4.1. Obtener el estado del repositorio antes de su desinstalación.
-        l_aux=${lA_repos[$l_repo_id]:-0|}
+        l_aux=${gA_repositories[$l_repo_id]:-0|}
         
         IFS='|'
         la_processed_repo_info=(${l_aux})
