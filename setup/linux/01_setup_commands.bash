@@ -933,12 +933,15 @@ function i_install_repository() {
 
     local l_flag_setup_begining=0
     local l_flag_setup_sucessfully=0
+
+    local l_repo_is_version_valilated=1
     local l_repo_is_beging_setup=1
 
     #Si esta permitido configurarse en este sistema operativo, iniciar el proceso
     if [ $l_status -eq 0 ]; then
 
         #4.2. Validar la versión actual con la ultima existente del repositorio.
+        l_repo_is_version_valilated=0
         _validate_versions_to_install "$p_repo_id" "$l_repo_last_version" "$l_repo_last_version_pretty" $p_only_update_if_its_installed \
                                       $l_install_win_cmds "$p_repo_title_template"
         l_status=$?    #El valor de retorno puede ser:
@@ -987,8 +990,6 @@ function i_install_repository() {
 
             fi
 
-            printf "\n"
-
         fi
 
     fi
@@ -1009,6 +1010,11 @@ function i_install_repository() {
 
     #Si esta permitido configurarse en este sistema operativo, iniciar el proceso
     if [ $l_status -eq 0 ]; then
+
+
+        if [ $l_repo_is_version_valilated -eq 0 ]; then
+            printf "\n\n"
+        fi
 
         #5.2. Validar la versión actual con la ultima existente del repositorio.
         _validate_versions_to_install "$p_repo_id" "$l_repo_last_version" "$l_repo_last_version_pretty" $p_only_update_if_its_installed \
@@ -1031,7 +1037,10 @@ function i_install_repository() {
         #5.3. Instalar el repositorio
         if [ $l_status -ge 0 ] && [ $l_status -le 9 ]; then
 
-            l_repo_is_beging_setup=0
+            if [ $l_repo_is_beging_setup -ne 0 ]; then
+                l_repo_is_beging_setup=0
+            fi
+
             l_flag_setup_begining=$g_flag_setup_begining
 
             if [ $l_artifact_subversions_nbr -eq 0 ]; then
@@ -1054,8 +1063,6 @@ function i_install_repository() {
 
             fi
 
-            printf "\n"
-
         fi
 
     fi
@@ -1064,7 +1071,6 @@ function i_install_repository() {
     _g_install_repo_status[1]=$((l_flag_setup_begining + l_flag_setup_sucessfully))
 
     if [ $l_repo_is_beging_setup -ne 0 ]; then
-        printf "\n"
         return 1
     fi
 
@@ -1310,7 +1316,14 @@ function _install_menu_options() {
         #4.5. Si es la primera vez que se configurar (el repositorios de la opción del menu), inicie la configuración
         
         i_install_repository "$l_repo_id" "$l_title_template" 1 
-        l_status=$?
+        l_status=$?   # 0 > Se inicio la configuración (en por lo menos uno de los 2 SO Linux o Windows), para ver detalle del estado ver '_g_install_repo_status'.
+                      # 1 > No se inicio la configuración del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
+                      #     - No se puede obtener correctamente los parametros del repositorio (no se puede obtener la versión actual, ....).
+                      #     - El repositorio no esta habilitado para que se procese en este sistema operativo.
+                      #     - No se puede actualizar porque ya estaban actualizados o no se puede desintalar porque no esta instalado.
+                      #98 > No se puede obtener la ultima versión del repositorio o la versión obtenida no es valida.
+                      #99 > Argumentos ingresados son invalidos
+
 
         #4.6. Si fallo en configurarse (instalación/configuración), detenga el proceso (y no se invoca a la finalización).
 
@@ -1323,6 +1336,7 @@ function _install_menu_options() {
             la_previous_options_idx+=(${p_option_relative_idx})
             _gA_processed_repo["$l_repo_id"]="1|${la_previous_options_idx[@]}"
             #echo "E > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            printf '\n'
             continue
         fi
 
@@ -1335,6 +1349,7 @@ function _install_menu_options() {
             la_previous_options_idx+=(${p_option_relative_idx})
             _gA_processed_repo["$l_repo_id"]="1|${la_previous_options_idx[@]}"
             #echo "F > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            printf '\n'
             continue
         fi
 
@@ -1344,6 +1359,7 @@ function _install_menu_options() {
             la_previous_options_idx+=(${p_option_relative_idx})
             _gA_processed_repo["$l_repo_id"]="1|${la_previous_options_idx[@]}"
             #echo "G > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            printf '\n'
             continue
 
         fi
@@ -1361,6 +1377,7 @@ function _install_menu_options() {
             la_previous_options_idx+=(${p_option_relative_idx})
             _gA_processed_repo["$l_repo_id"]="3|${la_previous_options_idx[@]}"
             #echo "H > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            printf '\n'
             continue
         fi
 
@@ -1375,15 +1392,17 @@ function _install_menu_options() {
             la_previous_options_idx+=(${p_option_relative_idx})
             _gA_processed_repo["$l_repo_id"]="3|${la_previous_options_idx[@]}"
             #echo "I > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            printf '\n'
             continue
         fi
 
-        #Si no se pudo iniciar la configuración tanto en Linux como en Windows (no cumplica con las precondiciones requeridas para el sistema operativo, por ejemplo, ya esta actualizado o no se permite en el SO)
+        #Si no se pudo iniciar la configuración tanto en Linux como en Windows (no se cumplia con las precondiciones requeridas para el sistema operativo, por ejemplo, ya esta actualizado o no se permite en el SO)
         if [ $((l_k & g_flag_setup_begining)) -ne $g_flag_setup_begining ]  && [ $((l_l & g_flag_setup_begining)) -ne $g_flag_setup_begining ]; then 
             
             la_previous_options_idx+=(${p_option_relative_idx})
             _gA_processed_repo=["$l_repo_id"]="1|${la_previous_options_idx[@]}"
             #echo "J > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            printf '\n'
             continue
         fi
 
@@ -1391,6 +1410,7 @@ function _install_menu_options() {
         la_previous_options_idx+=(${p_option_relative_idx})
         _gA_processed_repo["$l_repo_id"]="2|${la_previous_options_idx[@]}"
         #echo "K > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+        printf '\n'
 
 
     done
@@ -1589,6 +1609,7 @@ function i_install_repositories() {
                 #B.1. Valores iniciales
                 l_repo_name_aux="${gA_repositories[$l_repo_id]:-$l_repo_id}"
 
+                #TODO No es un contador ideal, no es lineal el incremento
                 ((l_j++))
 
                 #B.2. Calcular la plantilla del titulo.
@@ -1597,6 +1618,35 @@ function i_install_repositories() {
 
                 #Configurar el respositorio, con el flag 'solo actulizar si esta instalado'
                 i_install_repository "$l_repo_id" "$l_title_template" 0
+                l_status=$?   # 0 > Se inicio la configuración (en por lo menos uno de los 2 SO Linux o Windows), para ver detalle del estado ver '_g_install_repo_status'.
+                              # 1 > No se inicio la configuración del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
+                              #     - No se puede obtener correctamente los parametros del repositorio (no se puede obtener la versión actual, ....).
+                              #     - El repositorio no esta habilitado para que se procese en este sistema operativo.
+                              #     - No se puede actualizar porque ya estaban actualizados o no se puede desintalar porque no esta instalado.
+                              #98 > No se puede obtener la ultima versión del repositorio o la versión obtenida no es valida.
+                              #99 > Argumentos ingresados son invalidos.
+               #Si se envio parrametros incorrectos
+               if [ $l_status -eq 99 ]; then
+                   printf 'No se pudo iniciar la configuración de este repositorio debido a los parametros incorrectos enviados.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
+                   printf '\n'
+                   continue
+               fi
+
+               #Si no se pudo obtener la ultima versión del repositorio
+               if [ $l_status -eq 98 ]; then
+                   printf 'No se pudo iniciar la configuración de este repositorio debido su ultima versión obtenida es invalida.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
+                   printf '\n'
+                   continue
+               fi
+
+               #Si no se puedo iniciar la configuración del repositorio en ninguno de los 2 SO debido a que no se cumple la precondiciones requeridad (por ejemplo, ya estan actualizados)
+               if [ $l_status -eq 1 ]; then
+                   printf '\n'
+                   continue
+               fi
+
+               printf '\n'
+
             fi
 
         done
@@ -1760,7 +1810,9 @@ function i_uninstall_repository() {
     
     local l_flag_uninstall_begining=0
     local l_flag_uninstall_sucessfully=0
+
     local l_repo_is_beging_uninstall=1
+    local l_repo_is_version_valilated=1
 
     #3.1. Validar si el repositorio se puede configurarse en el sistema operativo.
     _can_setup_repository_in_this_so "$p_repo_id" $l_install_win_cmds
@@ -1771,6 +1823,7 @@ function i_uninstall_repository() {
     if [ $l_status -eq 0 ]; then
 
         #A. Validar la versión actual con la ultima existente del repositorio.
+        l_repo_is_version_valilated=0
         _validate_versions_to_uninstall "$p_repo_id" $l_install_win_cmds "$p_repo_title_template"
         l_status=$?    #El valor de retorno puede ser:
                        #Si el repositorio puede desintalarse si devuelve de [0, 9]:
@@ -1792,13 +1845,13 @@ function i_uninstall_repository() {
         if [ $l_status -ge 0 ] && [ $l_status -le 9 ]; then
 
             l_repo_is_beging_uninstall=0
+
             l_flag_uninstall_begining=$g_flag_uninstall_begining
 
             _uninstall_repository "$p_repo_id" "$_g_repo_current_version" $l_install_win_cmds
 
             l_flag_uninstall_sucessfully=$g_flag_uninstall_successfully
 
-            printf "\n"
         fi
 
 
@@ -1824,6 +1877,11 @@ function i_uninstall_repository() {
     #4.2. Si esta permitido configurarse en este sistema operativo, iniciar el proceso
     if [ $l_status -eq 0 ]; then
 
+
+        if [ $l_repo_is_version_valilated -eq 0 ]; then
+            printf "\n\n"
+        fi
+
         #A. Validar la versión actual con la ultima existente del repositorio.
         _validate_versions_to_uninstall "$p_repo_id" "$l_repo_description" $l_show_title $l_install_win_cmds
         l_status=$?    #El valor de retorno puede ser:
@@ -1839,14 +1897,16 @@ function i_uninstall_repository() {
         #B. Instalar el repositorio
         if [ $l_status -ge 0 ] && [ $l_status -le 9 ]; then
 
-            l_repo_is_beging_uninstall=0
+            if [ $l_repo_is_beging_setup -ne 0 ]; then
+                l_repo_is_beging_setup=0
+            fi
+
             l_flag_uninstall_begining=$g_flag_uninstall_begining
 
             _uninstall_repository "$p_repo_id" "$_g_repo_current_version" $l_install_win_cmds
 
             l_flag_uninstall_sucessfully=$g_flag_uninstall_successfully
 
-            printf "\n"
 
         fi
 
@@ -1856,7 +1916,6 @@ function i_uninstall_repository() {
     _g_uninstall_repo_status[1]=$((l_flag_uninstall_begining + l_flag_uninstall_sucessfully))
 
     if [ $l_repo_is_beging_uninstall -ne 0 ]; then
-        printf "\n"
         return 1
     fi
 
