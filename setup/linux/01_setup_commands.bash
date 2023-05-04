@@ -1327,9 +1327,10 @@ function _install_menu_options() {
 
         #4.6. Si fallo en configurarse (instalación/configuración), detenga el proceso (y no se invoca a la finalización).
 
-        #Si se envio parrametros incorrectos
+        #Si se envio parrametros incorrectos (no se muestra el titulo del repostorio)
         if [ $l_status -eq 99 ]; then
-            printf 'No se pudo iniciar la configuración de este repositorio debido a los parametros incorrectos enviados.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
+            printf '%bNo se pudo iniciar la configuración del repositorio "%s"%b debido a los parametros incorrectos enviados.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n' \
+                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
             l_flag_process_next_repo=1
             l_exits_error=0
 
@@ -1340,9 +1341,10 @@ function _install_menu_options() {
             continue
         fi
 
-        #Si no se pudo obtener la ultima versión del repositorio
+        #Si no se pudo obtener la ultima versión del repositorio (no se muestra el titulo del repostorio)
         if [ $l_status -eq 98 ]; then
-            printf 'No se pudo iniciar la configuración de este repositorio debido su ultima versión obtenida es invalida.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
+            printf '%bNo se pudo iniciar la configuración del repositorio "%s"%b debido su ultima versión obtenida es invalida.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n' \
+                   "$g_color_warning" "$l_repo_id" "$g_color_reset"
             l_flag_process_next_repo=1
             l_exits_error=0
 
@@ -1625,16 +1627,19 @@ function i_install_repositories() {
                               #     - No se puede actualizar porque ya estaban actualizados o no se puede desintalar porque no esta instalado.
                               #98 > No se puede obtener la ultima versión del repositorio o la versión obtenida no es valida.
                               #99 > Argumentos ingresados son invalidos.
-               #Si se envio parrametros incorrectos
+
+               #Si se envio parrametros incorrectos (no se muestra el titulo del repostorio)
                if [ $l_status -eq 99 ]; then
-                   printf 'No se pudo iniciar la configuración de este repositorio debido a los parametros incorrectos enviados.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
+                   printf '%bNo se pudo iniciar la configuración del repositorio "%s"%b debido a los parametros incorrectos enviados.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n' \
+                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
                    printf '\n'
                    continue
                fi
 
-               #Si no se pudo obtener la ultima versión del repositorio
+               #Si no se pudo obtener la ultima versión del repositorio (no se muestra el titulo del repostorio)
                if [ $l_status -eq 98 ]; then
-                   printf 'No se pudo iniciar la configuración de este repositorio debido su ultima versión obtenida es invalida.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
+                   printf '%bNo se pudo iniciar la configuración del repositorio "%s"%b debido su ultima versión obtenida es invalida.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n' \
+                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
                    printf '\n'
                    continue
                fi
@@ -2143,9 +2148,10 @@ function _uninstall_menu_options() {
 
         #4.6. Si fallo en la desinstalación, detenga el proceso (y no se invoca a la finalización).
 
-        #Si se envio parrametros incorrectos
+        #Si se envio parrametros incorrectos (no se muestra el titulo del repostorio)
         if [ $l_status -eq 99 ]; then
-            printf 'No se pudo iniciar la desinstalación de este repositorio debido a los parametros incorrectos enviados.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
+            printf '%bNo se pudo iniciar la desinstalación del repositorio "%s"%b debido a los parametros incorrectos enviados.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n' \
+                   "$g_color_warning" "$l_repo_id" "$g_color_reset"
             l_flag_process_next_repo=1
             l_exits_error=0
 
@@ -2154,7 +2160,7 @@ function _uninstall_menu_options() {
             continue
         fi
 
-        #Si no se pudo obtener 
+        #Si no se pudo obtener XYZ (no se muestra el titulo del repostorio)
         #if [ $l_status -eq 98 ]; then
         #    printf 'No se pudo iniciar la desinstalación de este repositorio debido XXXX.\nCorrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
         #    l_flag_process_next_repo=1
