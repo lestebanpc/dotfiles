@@ -1583,7 +1583,6 @@ function i_install_repositories() {
                "$g_color_reset"
         print_text_in_center2 "$l_title_template" $g_max_length_line 
         print_line '─' $g_max_length_line "$g_color_opaque"
-        printf '\n'
 
         #6.2. Actualizar los repositorios actualizados
         for l_repo_id in ${!_gA_processed_repo[@]}; do
