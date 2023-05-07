@@ -308,17 +308,17 @@ function _show_menu_core() {
 
     print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_title"
     print_line '-' $g_max_length_line  "$g_color_opaque"
-    printf " (%bq%b) Salir del menu\n" "$g_color_subtitle" "$g_color_reset"
-    printf " (%ba%b) Actualizar los artefactos existentes: paquetes del SO y paquetes VIM\n" "$g_color_subtitle" "$g_color_reset"
-    printf " (%bb%b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y paquetes VIM\n" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
+    printf " (%ba%b) Actualizar los artefactos existentes: paquetes del SO y paquetes VIM\n" "$g_color_title" "$g_color_reset"
+    printf " (%bb%b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y paquetes VIM\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     _get_length_menu_option $g_offset_option_index_menu_install
     local l_max_digits=$?
 
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes %b(siempre que escoga una opcion este se ejecutará)%b\n" "$g_color_subtitle" "0" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes VIM existentes\n" "$g_color_subtitle" "1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas instalados\n" "$g_color_subtitle" "2" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes %b(siempre que escoga una opcion este se ejecutará)%b\n" "$g_color_title" "0" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes VIM existentes\n" "$g_color_title" "1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas instalados\n" "$g_color_title" "2" "$g_color_reset"
 
     _show_dynamic_menu 'Instalar o actualizar' $g_offset_option_index_menu_install $l_max_digits
     print_line '-' $g_max_length_line "$g_color_opaque" 
@@ -337,7 +337,7 @@ function i_main() {
         return 21;
     fi
    
-    print_line '#' $g_max_length_line "$g_color_title" 
+    print_line '─' $g_max_length_line "$g_color_title" 
 
     _show_menu_core
 
@@ -351,28 +351,28 @@ function i_main() {
         case "$l_options" in
             a)
                 l_flag_continue=1
-                print_line '#' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
                 _update_all 1
                 ;;
 
             b)
                 l_flag_continue=1
-                print_line '#' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
                 _update_all 3
                 ;;
 
             0)
                 l_flag_continue=1
-                print_line '#' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
                 _update_all 0
                 ;;
 
             q)
                 l_flag_continue=1
-                print_line '#' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
                 ;;
 

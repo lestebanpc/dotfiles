@@ -1998,15 +1998,15 @@ function _show_menu_install_core() {
 
     print_text_in_center "Menu de Opciones (Install/Update)" $g_max_length_line "$g_color_title"
     print_line '-' $g_max_length_line  "$g_color_opaque"
-    printf " (%bq%b) Salir del menu\n" "$g_color_subtitle" "$g_color_reset"
-    printf " (%ba%b) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes\n" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
+    printf " (%ba%b) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     _get_length_menu_option $g_offset_option_index_menu_install
     local l_max_digits=$?
 
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes existentes del sistema operativo\n" "$g_color_subtitle" "$g_opt_update_installed_pckg" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas ya instalados\n" "$g_color_subtitle" "$g_opt_update_installed_repo" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes existentes del sistema operativo\n" "$g_color_title" "$g_opt_update_installed_pckg" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas ya instalados\n" "$g_color_title" "$g_opt_update_installed_repo" "$g_color_reset"
 
     _show_dynamic_menu 'Instalar o actualizar' $g_offset_option_index_menu_install $l_max_digits
     print_line '-' $g_max_length_line "$g_color_opaque"
@@ -2747,7 +2747,7 @@ function _show_menu_uninstall_core() {
 
     print_text_in_center "Menu de Opciones (Uninstall)" $g_max_length_line "$g_color_title"
     print_line '-' $g_max_length_line  "$g_color_opaque"
-    printf " (%bq%b) Salir del menu\n" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Para desintalar ingrese un opción o la suma de las opciones que desea configurar:\n"
 
     _get_length_menu_option $g_offset_option_index_menu_uninstall

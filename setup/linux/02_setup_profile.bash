@@ -1240,23 +1240,23 @@ function _show_menu_core() {
 
     print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_title"
     print_line '-' $g_max_length_line  "$g_color_opaque"
-    printf " (%bq%b) Salir del menu\n" "$g_color_subtitle" "$g_color_reset"
-    printf " (%ba%b) Configurar el profile basico (Vim/NeoVim como editor basico)\n" "$g_color_subtitle" "$g_color_reset"
-    printf " (%bb%b) Configurar el profile como developer (Vim/NeoVim como IDE)\n" "$g_color_subtitle" "$g_color_reset"
-    printf " (%bc%b) Configurar el profile basico (Vim/Neovim como editor basico) y re-crear los enlaces simbolicos\n" "$g_color_subtitle" "$g_color_reset"
-    printf " (%bd%b) Configurar el profile como developer (Vim/NeoVim como IDE) y re-crear los enlaces simbolicos\n" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
+    printf " (%ba%b) Configurar el profile basico (Vim/NeoVim como editor basico)\n" "$g_color_title" "$g_color_reset"
+    printf " (%bb%b) Configurar el profile como developer (Vim/NeoVim como IDE)\n" "$g_color_title" "$g_color_reset"
+    printf " (%bc%b) Configurar el profile basico (Vim/Neovim como editor basico) y re-crear los enlaces simbolicos\n" "$g_color_title" "$g_color_reset"
+    printf " (%bd%b) Configurar el profile como developer (Vim/NeoVim como IDE) y re-crear los enlaces simbolicos\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     local l_max_digits=2
 
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO y crear los enlaces simbolicos del profile %b(si escoge una opcion siempre se ejecutará)%b\n" "$g_color_subtitle" "0" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Instalar si no esta instalado\n" "$g_color_subtitle" "1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Configurar como Editor, incluyendo paquetes VIM (Basico)\n" "$g_color_subtitle" "2" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Configurar como IDE, incluyendo paquetes VIM (Developer)\n" "$g_color_subtitle" "4" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVim - Instalar si no esta instalado\n" "$g_color_subtitle" "8" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVim - Configurar como Editor (Basico)\n" "$g_color_subtitle" "16" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVim - Configurar como IDE (Developer)\n" "$g_color_subtitle" "32" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Re-crear (crear y/o actualizar) los enlaces simbolicos del profile\n" "$g_color_subtitle" "64" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO y crear los enlaces simbolicos del profile %b(si escoge una opcion siempre se ejecutará)%b\n" "$g_color_title" "0" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Instalar si no esta instalado\n" "$g_color_title" "1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Configurar como Editor, incluyendo paquetes VIM (Basico)\n" "$g_color_title" "2" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Configurar como IDE, incluyendo paquetes VIM (Developer)\n" "$g_color_title" "4" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVim - Instalar si no esta instalado\n" "$g_color_title" "8" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVim - Configurar como Editor (Basico)\n" "$g_color_title" "16" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVim - Configurar como IDE (Developer)\n" "$g_color_title" "32" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Re-crear (crear y/o actualizar) los enlaces simbolicos del profile\n" "$g_color_title" "64" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_opaque"
 
@@ -1273,7 +1273,7 @@ function i_main() {
         return 21;
     fi
    
-    print_line '#' $g_max_length_line "$g_color_title" 
+    print_line '─' $g_max_length_line "$g_color_title" 
 
     _show_menu_core
     
@@ -1287,7 +1287,7 @@ function i_main() {
         case "$l_options" in
             a)
                 l_flag_continue=1
-                print_line '#' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
                 #1 + 2 + 8 + 16
                 _setup 27
@@ -1295,7 +1295,7 @@ function i_main() {
 
             b)
                 l_flag_continue=1
-                print_line '#' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
                 #1 + 4 + 8 + 32
                 _setup 45
@@ -1303,7 +1303,7 @@ function i_main() {
 
             c)
                 l_flag_continue=1
-                print_line '#' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
                 #1 + 2 + 8 + 16 + 64 
                 _setup 91
@@ -1311,7 +1311,7 @@ function i_main() {
 
             d)
                 l_flag_continue=1
-                print_line '#' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
                 #1 + 4 + 8 + 32 + 64
                 _setup 109
@@ -1319,14 +1319,14 @@ function i_main() {
 
             q)
                 l_flag_continue=1
-                print_line '#' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
                 ;;
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '#' $g_max_length_line "$g_color_title" 
+                    print_line '─' $g_max_length_line "$g_color_title" 
                     printf '\n'
                     _setup $l_options
                 else

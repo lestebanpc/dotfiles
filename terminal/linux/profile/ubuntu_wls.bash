@@ -178,8 +178,8 @@ export NVM_DIR="/opt/tools/nvm"
 #[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 
-# Ruta por defecto de los binarios de CNI plugin usados por un Container Runtime (como ContainerD)
-[ -d "/opt/tools/cni_plugins" ] && export CNI_PATH=/opt/tools/cni_plugins
+# Ruta por defecto de los binarios de CNI plugin usados por CLI de Container Runtime como NerdCtl (no se usara, se usara su archivo de configuración nerdctl.tom)
+#[ -d "/opt/tools/cni_plugins" ] && export CNI_PATH=/opt/tools/cni_plugins
 
 #Funciones basicas
 source ~/.files/terminal/linux/functions/func_custom.bash

@@ -138,7 +138,7 @@ _show_dynamic_menu() {
 
         l_aux="${ga_menu_options_repos[$l_i]}"
         #if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
-        #    printf "     (%b%0${p_max_digits}d%b) %s\n" "$g_color_subtitle" "$l_option_value" "$g_color_reset" "${ga_menu_options_title[$l_i]}"
+        #    printf "     (%b%0${p_max_digits}d%b) %s\n" "$g_color_title" "$l_option_value" "$g_color_reset" "${ga_menu_options_title[$l_i]}"
         #    continue
         #fi
 
@@ -147,8 +147,8 @@ _show_dynamic_menu() {
         la_repos=(${l_aux})
         IFS=$' \t\n'
 
-        printf "     (%b%0${p_max_digits}d%b) %s \"%b%s%b\": " "$g_color_subtitle" "$l_option_value" "$g_color_reset" \
-               "$p_option_tag" "$g_color_subtitle" "${ga_menu_options_title[$l_i]}" "$g_color_reset"
+        printf "     (%b%0${p_max_digits}d%b) %s \"%b%s%b\": " "$g_color_title" "$l_option_value" "$g_color_reset" \
+               "$p_option_tag" "$g_color_title" "${ga_menu_options_title[$l_i]}" "$g_color_reset"
 
         l_n=${#la_repos[@]}
         if [ $l_n -gt 3 ]; then
