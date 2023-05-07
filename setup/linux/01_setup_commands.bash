@@ -1800,6 +1800,7 @@ function i_install_repositories() {
 
     local l_aux
     local la_aux
+    l_i=1
 
     if [ $l_update_all_installed_repo -eq 0 ]; then
 
@@ -1846,11 +1847,9 @@ function i_install_repositories() {
                 #B.1. Valores iniciales
                 l_repo_name_aux="${gA_repositories[${l_repo_id}]:-${l_repo_id}}"
 
-                #TODO No es un contador ideal, no es lineal el incremento
-                ((l_j++))
 
                 #B.2. Calcular la plantilla del titulo.
-                printf -v l_title_template "%s(%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$l_j" "$g_color_reset" "$g_color_subtitle" \
+                printf -v l_title_template "%s(%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$l_i" "$g_color_reset" "$g_color_subtitle" \
                        "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_opt_update_installed_repo" "$g_color_reset"
 
                 #Configurar el respositorio, con el flag 'solo actulizar si esta instalado'
@@ -1942,6 +1941,7 @@ function i_install_repositories() {
                     #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
                     #l_flag_process_next_repo=1
                     l_exits_error=0
+                    ((l_i++))
 
                     printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
                     printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
@@ -1950,17 +1950,20 @@ function i_install_repositories() {
                 #   4 > El repositorio esta instalado y ya esta actualizado.
                 elif [ $l_processed_repo -eq 4 ]; then
                     #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+                    ((l_i++))
                     printf '\n'
 
                 #B. Estados de un proceso iniciado:
                 #   5 > El repositorio inicio la instalación y lo termino con exito.
                 elif [ $l_processed_repo -eq 5 ]; then
                     #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+                    ((l_i++))
                     printf '\n'
 
                 #   6 > El repositorio inicio la actualización y lo termino con exito.
                 elif [ $l_processed_repo -eq 6 ]; then
                     #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+                    ((l_i++))
                     printf '\n'
 
                 #   7 > El repositorio inicio la instalación y lo termino con error.
@@ -1968,6 +1971,7 @@ function i_install_repositories() {
                     #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
                     #l_flag_process_next_repo=1
                     l_exits_error=0
+                    ((l_i++))
 
                     printf '%bError al instalar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
                     printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
@@ -1977,6 +1981,7 @@ function i_install_repositories() {
                     #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
                     #l_flag_process_next_repo=1
                     l_exits_error=0
+                    ((l_i++))
 
                     printf '%bError al actualizar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
                     printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
