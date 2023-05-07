@@ -1431,9 +1431,11 @@ function _copy_artifact_files() {
     fi
 
     #Tag usuado para imprimir un identificador del artefacto en un log
-    local l_tag="${p_repo_id}[${p_repo_last_version_pretty}]"
+    local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
     if [ ! -z "${p_arti_version}" ]; then
-        l_tag="${l_tag}[${p_arti_version}]"
+        l_tag="${l_tag}[${p_arti_version}]${g_color_reset}"
+    else
+        l_tag="${l_tag}${g_color_reset}"
     fi
 
     #3. Copiar loa archivos del artefacto segun el prefijo
@@ -3395,7 +3397,7 @@ function _copy_artifact_files() {
 
 
         *)
-           printf 'ERROR (50): No esta definido logica para el repositorio "%s" para procesar el artefacto "%s"\n' "$p_repo_id" "$l_tag"
+           printf 'ERROR: No esta definido logica para el repositorio "%s" para procesar el artefacto "%b"\n' "$p_repo_id" "$l_tag"
            return 50
             
     esac
