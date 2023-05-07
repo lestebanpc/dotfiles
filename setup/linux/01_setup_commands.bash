@@ -1585,8 +1585,13 @@ function _install_menu_options() {
         #4.5.3. Mostrar información adicional
 
         #A. Estados de un proceso no iniciado:
+        #   2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
+        if [ $l_processed_repo -eq 2 ]; then
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            continue
+
         #   3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-        if [ $l_processed_repo -le 3 ]; then
+        elif [ $l_processed_repo -eq 3 ]; then
 
             #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
             l_flag_process_next_repo=1
@@ -1594,10 +1599,6 @@ function _install_menu_options() {
 
             printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
             printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
-
-        #   2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
-        #elif [ $l_processed_repo -eq 2 ]; then
-        #    #No se considera un error, continue con el procesamiento de los siguientes repositorios.
 
         #   4 > El repositorio esta instalado y ya esta actualizado.
         elif [ $l_processed_repo -eq 4 ]; then
@@ -1930,8 +1931,13 @@ function i_install_repositories() {
                 #B.4.2. Mostrar información adicional
 
                 #A. Estados de un proceso no iniciado:
+                #   2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
+                if [ $l_processed_repo -eq 2 ]; then
+                    #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+                    continue
+
                 #   3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-                if [ $l_processed_repo -le 3 ]; then
+                elif [ $l_processed_repo -eq 3 ]; then
 
                     #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
                     #l_flag_process_next_repo=1
@@ -1940,9 +1946,6 @@ function i_install_repositories() {
                     printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
                     printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
 
-                #   2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
-                #elif [ $l_processed_repo -eq 2 ]; then
-                #    #No se considera un error, continue con el procesamiento de los siguientes repositorios.
 
                 #   4 > El repositorio esta instalado y ya esta actualizado.
                 elif [ $l_processed_repo -eq 4 ]; then
