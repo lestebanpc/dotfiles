@@ -3738,11 +3738,11 @@ _uninstall_repository() {
             #2. Eliminando los archivos 
             echo "Eliminando \"slirp4netns\" de \"${l_path_bin}\" ..."
             if [ $g_is_root -eq 0 ]; then
-                if [-f "${l_path_bin}/slirp4netns" ]; then
+                if [ -f "${l_path_bin}/slirp4netns" ]; then
                     rm "${l_path_bin}/slirp4netns"
                 fi
             else
-                if [-f "${l_path_bin}/slirp4netns" ]; then
+                if [ -f "${l_path_bin}/slirp4netns" ]; then
                     sudo rm "${l_path_bin}/slirp4netns"
                 fi
             fi
@@ -3760,34 +3760,34 @@ _uninstall_repository() {
             #2. Eliminando los archivos 
             if [ $g_is_root -eq 0 ]; then
 
-                if [-f "${l_path_bin}/rootlesskit-docker-proxy" ]; then
+                if [ -f "${l_path_bin}/rootlesskit-docker-proxy" ]; then
                     echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
                     rm "${l_path_bin}/rootlesskit-docker-proxy"
                 fi
 
-                if [-f "${l_path_bin}/rootlesskit" ]; then
+                if [ -f "${l_path_bin}/rootlesskit" ]; then
                     echo "Eliminando \"rootlesskit\" a \"${l_path_bin}\" ..."
                     rm "${l_path_bin}/rootlesskit"
                 fi
 
-                if [-f "${l_path_bin}/rootlessctl" ]; then
+                if [ -f "${l_path_bin}/rootlessctl" ]; then
                     echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
                     rm "${l_path_bin}/rootlessctl"
                 fi
 
             else
 
-                if [-f "${l_path_bin}/rootlesskit-docker-proxy" ]; then
+                if [ -f "${l_path_bin}/rootlesskit-docker-proxy" ]; then
                     echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
                     sudo rm "${l_path_bin}/rootlesskit-docker-proxy"
                 fi
 
-                if [-f "${l_path_bin}/rootlesskit" ]; then
+                if [ -f "${l_path_bin}/rootlesskit" ]; then
                     echo "Eliminando\"rootlesskit\" a \"${l_path_bin}\" ..."
                     sudo rm "${l_path_bin}/rootlesskit"
                 fi
 
-                if [-f "${l_path_bin}/rootlessctl" ]; then
+                if [ -f "${l_path_bin}/rootlessctl" ]; then
                     echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
                     sudo rm "${l_path_bin}/rootlessctl"
                 fi
@@ -3837,64 +3837,64 @@ _uninstall_repository() {
             #2. Eliminando archivos 
             if [ $g_is_root -eq 0 ]; then
 
-                if [-f "${l_path_bin}/containerd-shim" ]; then
+                if [ -f "${l_path_bin}/containerd-shim" ]; then
                     echo "Eliminando \"${l_path_bin}/containerd-shim\"..."
                     rm "${l_path_bin}/containerd-shim"
                 fi
 
-                if [-f "${l_path_bin}/containerd-shim-runc-v1" ]; then
+                if [ -f "${l_path_bin}/containerd-shim-runc-v1" ]; then
                     echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v1\"..."
                     rm "${l_path_bin}/containerd-shim-runc-v1"
                 fi
 
-                if [-f "${l_path_bin}/containerd-shim-runc-v2" ]; then
+                if [ -f "${l_path_bin}/containerd-shim-runc-v2" ]; then
                     echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v2\"..."
                     rm "${l_path_bin}/containerd-shim-runc-v2"
                 fi
 
-                if [-f "${l_path_bin}/containerd-stress" ]; then
+                if [ -f "${l_path_bin}/containerd-stress" ]; then
                     echo "Eliminando \"${l_path_bin}/containerd-stress\"..."
                     rm "${l_path_bin}/containerd-stress"
                 fi
 
-                if [-f "${l_path_bin}/ctr" ]; then
+                if [ -f "${l_path_bin}/ctr" ]; then
                     echo "Eliminando \"${l_path_bin}/ctr\"..."
                     rm "${l_path_bin}/ctr"
                 fi
 
-                if [-f "${l_path_bin}/containerd" ]; then
+                if [ -f "${l_path_bin}/containerd" ]; then
                     echo "Eliminando \"${l_path_bin}/containerd\"..."
                     rm "${l_path_bin}/containerd"
                 fi
 
             else
 
-                if [-f "${l_path_bin}/containerd-shim" ]; then
+                if [ -f "${l_path_bin}/containerd-shim" ]; then
                     echo "Eliminando \"${l_path_bin}/containerd-shim\"..."
                     sudo rm "${l_path_bin}/containerd-shim"
                 fi
 
-                if [-f "${l_path_bin}/containerd-shim-runc-v1" ]; then
+                if [ -f "${l_path_bin}/containerd-shim-runc-v1" ]; then
                     echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v1\"..."
                     sudo rm "${l_path_bin}/containerd-shim-runc-v1"
                 fi
 
-                if [-f "${l_path_bin}/containerd-shim-runc-v2" ]; then
+                if [ -f "${l_path_bin}/containerd-shim-runc-v2" ]; then
                     echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v2\"..."
                     sudo rm "${l_path_bin}/containerd-shim-runc-v2"
                 fi
 
-                if [-f "${l_path_bin}/containerd-stress" ]; then
+                if [ -f "${l_path_bin}/containerd-stress" ]; then
                     echo "Eliminando \"${l_path_bin}/containerd-stress\"..."
                     sudo rm "${l_path_bin}/containerd-stress"
                 fi
 
-                if [-f "${l_path_bin}/ctr" ]; then
+                if [ -f "${l_path_bin}/ctr" ]; then
                     echo "Eliminando \"${l_path_bin}/ctr\" ..."
                     sudo rm "${l_path_bin}/ctr"
                 fi
 
-                if [-f "${l_path_bin}/containerd" ]; then
+                if [ -f "${l_path_bin}/containerd" ]; then
                     echo "Eliminando \"${l_path_bin}/containerd\"..."
                     sudo rm "${l_path_bin}/containerd"
                 fi
@@ -3999,44 +3999,44 @@ _uninstall_repository() {
             #2. Eliminando archivos 
             if [ $g_is_root -eq 0 ]; then
 
-                if [-f "${l_path_bin}/buildkit-runc" ]; then
+                if [ -f "${l_path_bin}/buildkit-runc" ]; then
                     echo "Eliminando \"${l_path_bin}/buildkit-runc\"..."
                     rm "${l_path_bin}/buildkit-runc"
                 fi
 
-                if [-f "${l_path_bin}/buildkitd" ]; then
+                if [ -f "${l_path_bin}/buildkitd" ]; then
                     echo "Eliminando \"${l_path_bin}/buildkitd\"..."
                     rm "${l_path_bin}/buildkitd"
                 fi
 
-                if [-f "${l_path_bin}/buildkit-qemu-*" ]; then
+                if [ -f "${l_path_bin}/buildkit-qemu-*" ]; then
                     echo "Eliminando \"${l_path_bin}/buildkit-qemu-*\"..."
                     rm ${l_path_bin}/buildkit-qemu-*
                 fi
 
-                if [-f "${l_path_bin}/buildctl" ]; then
+                if [ -f "${l_path_bin}/buildctl" ]; then
                     echo "Eliminando \"${l_path_bin}/buildctl\"..."
                     rm "${l_path_bin}/buildctl"
                 fi
 
             else
 
-                if [-f "${l_path_bin}/buildkit-runc" ]; then
+                if [ -f "${l_path_bin}/buildkit-runc" ]; then
                     echo "Eliminando \"${l_path_bin}/buildkit-runc\"..."
                     sudo rm "${l_path_bin}/buildkit-runc"
                 fi
 
-                if [-f "${l_path_bin}/buildkitd" ]; then
+                if [ -f "${l_path_bin}/buildkitd" ]; then
                     echo "Eliminando \"${l_path_bin}/buildkitd\"..."
                     sudo rm "${l_path_bin}/buildkitd"
                 fi
 
-                if [-f "${l_path_bin}/buildkit-qemu-*" ]; then
+                if [ -f "${l_path_bin}/buildkit-qemu-*" ]; then
                     echo "Eliminando \"${l_path_bin}/buildkit-qemu-*\"..."
                     sudo rm ${l_path_bin}/buildkit-qemu-*
                 fi
 
-                if [-f "${l_path_bin}/buildctl" ]; then
+                if [ -f "${l_path_bin}/buildctl" ]; then
                     echo "Eliminando \"${l_path_bin}/buildctl\"..."
                     sudo rm "${l_path_bin}/buildctl"
                 fi
@@ -4140,14 +4140,14 @@ _uninstall_repository() {
             #2. Eliminando los archivos
             if [ $g_is_root -eq 0 ]; then
 
-                if [-f "${l_path_bin}/nerdctl" ]; then
+                if [ -f "${l_path_bin}/nerdctl" ]; then
                     echo "Eliminando \"${l_path_bin}/nerdctl\"..."
                     rm "${l_path_bin}/nerdctl"
                 fi
 
             else
 
-                if [-f "${l_path_bin}/nerdctl" ]; then
+                if [ -f "${l_path_bin}/nerdctl" ]; then
                     echo "Eliminando \"${l_path_bin}/nerdctl\"..."
                     sudo rm "${l_path_bin}/nerdctl"
                 fi
@@ -4203,14 +4203,14 @@ _uninstall_repository() {
             echo "Eliminando \"${l_path_bin}/dive\"..."
             if [ $g_is_root -eq 0 ]; then
 
-                if [-f "${l_path_bin}/dive" ]; then
+                if [ -f "${l_path_bin}/dive" ]; then
                     echo "Eliminando \"${l_path_bin}/dive\"..."
                     rm "${l_path_bin}/dive"
                 fi
 
             else
 
-                if [-f "${l_path_bin}/dive" ]; then
+                if [ -f "${l_path_bin}/dive" ]; then
                     echo "Eliminando \"${l_path_bin}/dive\"..."
                     sudo rm "${l_path_bin}/dive"
                 fi
