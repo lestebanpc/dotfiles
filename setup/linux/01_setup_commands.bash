@@ -1426,7 +1426,7 @@ function _install_menu_options() {
         l_repo_name_aux="${gA_repositories[${l_repo_id}]:-${l_repo_id}}"
 
         #4.1. Obtener el estado del repositorio antes de su instalación.
-        l_aux="${lA_repos[$l_repo_id]:--1|}"
+        l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
         
         IFS='|'
         la_aux=(${l_aux})
@@ -1778,7 +1778,7 @@ function _update_installed_repository() {
 
 
          #1. Obtener el estado del repositorio antes de su instalación.
-         l_aux="${lA_repos[$l_repo_id]:--1|}"
+         l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
          
          IFS='|'
          la_aux=(${l_aux})
@@ -2493,7 +2493,7 @@ function _uninstall_menu_options() {
         l_repo_name_aux="${gA_repositories[$l_repo_id]:-$l_repo_id}"
 
         #4.1. Obtener el estado del repositorio antes de su instalación.
-        l_aux="${lA_repos[$l_repo_id]:--1|}"
+        l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
         
         IFS='|'
         la_aux=(${l_aux})
