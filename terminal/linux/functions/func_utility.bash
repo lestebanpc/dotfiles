@@ -308,12 +308,13 @@ print_text_in_center() {
 
 #El usuario de la funcion es el responsable de dar colores al texto
 #Parametros de entrada:
-#  1 > Texto a colocar el en centro
+#  1 > Texto a colocar el en centro (¿tiene el color pero con el formato '\x1b[**m'?)
+#      Acutalmente funciona cuando se usan almacena la variable usando 'prinft -v "%b"'
 #  2 > Tamaño de caracteres la linea
 print_text_in_center2() {
 
     #Tamaño del texto sin caracteres de color
-    local l_text_without_colors=$(echo "$1" | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g")
+    local l_text_without_colors=$(echo "$1" | sed -r "s/\x1b\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g")
     local l_n=${#l_text_without_colors}
 
     if [ $l_n -lt $2 ]; then

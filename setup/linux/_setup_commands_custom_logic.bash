@@ -3738,9 +3738,13 @@ _uninstall_repository() {
             #2. Eliminando los archivos 
             echo "Eliminando \"slirp4netns\" de \"${l_path_bin}\" ..."
             if [ $g_is_root -eq 0 ]; then
-                rm "${l_path_bin}/slirp4netns"
+                if [-f "${l_path_bin}/slirp4netns" ]; then
+                    rm "${l_path_bin}/slirp4netns"
+                fi
             else
-                sudo rm "${l_path_bin}/slirp4netns"
+                if [-f "${l_path_bin}/slirp4netns" ]; then
+                    sudo rm "${l_path_bin}/slirp4netns"
+                fi
             fi
             ;;
 
@@ -3756,25 +3760,37 @@ _uninstall_repository() {
             #2. Eliminando los archivos 
             if [ $g_is_root -eq 0 ]; then
 
-                echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
-                rm "${l_path_bin}/rootlesskit-docker-proxy"
+                if [-f "${l_path_bin}/rootlesskit-docker-proxy" ]; then
+                    echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
+                    rm "${l_path_bin}/rootlesskit-docker-proxy"
+                fi
 
-                echo "Eliminando \"rootlesskit\" a \"${l_path_bin}\" ..."
-                rm "${l_path_bin}/rootlesskit"
+                if [-f "${l_path_bin}/rootlesskit" ]; then
+                    echo "Eliminando \"rootlesskit\" a \"${l_path_bin}\" ..."
+                    rm "${l_path_bin}/rootlesskit"
+                fi
 
-                echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
-                rm "${l_path_bin}/rootlessctl"
+                if [-f "${l_path_bin}/rootlessctl" ]; then
+                    echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
+                    rm "${l_path_bin}/rootlessctl"
+                fi
 
             else
 
-                echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
-                sudo rm "${l_path_bin}/rootlesskit-docker-proxy"
+                if [-f "${l_path_bin}/rootlesskit-docker-proxy" ]; then
+                    echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
+                    sudo rm "${l_path_bin}/rootlesskit-docker-proxy"
+                fi
 
-                echo "Eliminando\"rootlesskit\" a \"${l_path_bin}\" ..."
-                sudo rm "${l_path_bin}/rootlesskit"
+                if [-f "${l_path_bin}/rootlesskit" ]; then
+                    echo "Eliminando\"rootlesskit\" a \"${l_path_bin}\" ..."
+                    sudo rm "${l_path_bin}/rootlesskit"
+                fi
 
-                echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
-                sudo rm "${l_path_bin}/rootlessctl"
+                if [-f "${l_path_bin}/rootlessctl" ]; then
+                    echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
+                    sudo rm "${l_path_bin}/rootlessctl"
+                fi
 
             fi
             ;;
@@ -3806,7 +3822,6 @@ _uninstall_repository() {
 
             #3. Eliminado el archivo para determinar la version actual
             rm "${g_path_programs_lnx}/cni-plugins.info" 
-
             ;;
 
 
@@ -3822,43 +3837,67 @@ _uninstall_repository() {
             #2. Eliminando archivos 
             if [ $g_is_root -eq 0 ]; then
 
-                echo "Eliminando \"${l_path_bin}/containerd-shim\"..."
-                rm "${l_path_bin}/containerd-shim"
+                if [-f "${l_path_bin}/containerd-shim" ]; then
+                    echo "Eliminando \"${l_path_bin}/containerd-shim\"..."
+                    rm "${l_path_bin}/containerd-shim"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v1\"..."
-                rm "${l_path_bin}/containerd-shim-runc-v1"
+                if [-f "${l_path_bin}/containerd-shim-runc-v1" ]; then
+                    echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v1\"..."
+                    rm "${l_path_bin}/containerd-shim-runc-v1"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v2\"..."
-                rm "${l_path_bin}/containerd-shim-runc-v2"
+                if [-f "${l_path_bin}/containerd-shim-runc-v2" ]; then
+                    echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v2\"..."
+                    rm "${l_path_bin}/containerd-shim-runc-v2"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/containerd-stress\"..."
-                rm "${l_path_bin}/containerd-stress"
+                if [-f "${l_path_bin}/containerd-stress" ]; then
+                    echo "Eliminando \"${l_path_bin}/containerd-stress\"..."
+                    rm "${l_path_bin}/containerd-stress"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/ctr\"..."
-                rm "${l_path_bin}/ctr"
+                if [-f "${l_path_bin}/ctr" ]; then
+                    echo "Eliminando \"${l_path_bin}/ctr\"..."
+                    rm "${l_path_bin}/ctr"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/containerd\"..."
-                rm "${l_path_bin}/containerd"
+                if [-f "${l_path_bin}/containerd" ]; then
+                    echo "Eliminando \"${l_path_bin}/containerd\"..."
+                    rm "${l_path_bin}/containerd"
+                fi
 
             else
 
-                echo "Eliminando \"${l_path_bin}/containerd-shim\"..."
-                sudo rm "${l_path_bin}/containerd-shim"
+                if [-f "${l_path_bin}/containerd-shim" ]; then
+                    echo "Eliminando \"${l_path_bin}/containerd-shim\"..."
+                    sudo rm "${l_path_bin}/containerd-shim"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v1\"..."
-                sudo rm "${l_path_bin}/containerd-shim-runc-v1"
+                if [-f "${l_path_bin}/containerd-shim-runc-v1" ]; then
+                    echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v1\"..."
+                    sudo rm "${l_path_bin}/containerd-shim-runc-v1"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v2\"..."
-                sudo rm "${l_path_bin}/containerd-shim-runc-v2"
+                if [-f "${l_path_bin}/containerd-shim-runc-v2" ]; then
+                    echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v2\"..."
+                    sudo rm "${l_path_bin}/containerd-shim-runc-v2"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/containerd-stress\"..."
-                sudo rm "${l_path_bin}/containerd-stress"
+                if [-f "${l_path_bin}/containerd-stress" ]; then
+                    echo "Eliminando \"${l_path_bin}/containerd-stress\"..."
+                    sudo rm "${l_path_bin}/containerd-stress"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/ctr\" ..."
-                sudo rm "${l_path_bin}/ctr"
+                if [-f "${l_path_bin}/ctr" ]; then
+                    echo "Eliminando \"${l_path_bin}/ctr\" ..."
+                    sudo rm "${l_path_bin}/ctr"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/containerd\"..."
-                sudo rm "${l_path_bin}/containerd"
+                if [-f "${l_path_bin}/containerd" ]; then
+                    echo "Eliminando \"${l_path_bin}/containerd\"..."
+                    sudo rm "${l_path_bin}/containerd"
+                fi
 
             fi
 
@@ -3867,7 +3906,8 @@ _uninstall_repository() {
             #Buscar si esta instalado a nive usuario
             local l_is_user=0
             exist_systemd_unit "containerd.service" $l_is_user
-            l_status=$?   #  1 > La unidad instalada pero aun no esta en cache (no ha sido ejecutada desde el inicio del SO)
+            l_status=$?   #  0 > La unidad no esta instalada (no tiene archivo de configuracion): 
+                          #  1 > La unidad instalada pero aun no esta en cache (no ha sido ejecutada desde el inicio del SO)
                           #  2 > La unidad instalada, en cache, pero marcada para no iniciarse ('unmask', 'inactive').
                           #  3 > La unidad instalada, en cache, pero no iniciado ('loaded', 'inactive').
                           #  4 > La unidad instalada, en cache, iniciado y aun ejecutandose ('loaded', 'active'/'running').
@@ -3890,36 +3930,60 @@ _uninstall_repository() {
             fi
 
             #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
-            if [ $l_is_user -eq 0 ]; then
+            l_aux="containerd.service"
 
-                if [ -f ~/.config/systemd/user/containerd.service ]; then
-                    echo "Eliminando la configuración '~/.config/systemd/user/containerd.service' de la unidad systemd 'containerd.service'"
-                    rm ~/.config/systemd/user/containerd.service
-                    #Si esta configurado para inicio automatico desactivarlo
-                    systemctl --user disable containerd.service
-                    #Recargar el arbol de dependencies cargados por systemd
-                    systemctl --user daemon-reload
-                fi
+            if [ $l_status -ne 0 ]; then
 
-            else
+                if [ $l_is_user -eq 0 ]; then
 
-                if [ -f /usr/lib/systemd/system/containerd.service ]; then
-                    echo "Eliminando la configuración '/usr/lib/systemd/system/containerd.service' de la unidad systemd 'containerd.service'"
-                    if [ $g_is_root -eq 0 ]; then
-                        rm /usr/lib/systemd/system/containerd.service
+                    if [ -f ~/.config/systemd/user/${l_aux} ]; then
+
                         #Si esta configurado para inicio automatico desactivarlo
-                        systemctl disable containerd.service
+                        printf "Disable la unidad systemd '%s'" "$l_aux"
+                        systemctl --user disable $l_aux
+
+                        echo "Eliminando la configuración '~/.config/systemd/user/%s' de la unidad systemd '%s'" "$l_aux" "$l_aux"
+                        rm ~/.config/systemd/user/${l_aux}
+
                         #Recargar el arbol de dependencies cargados por systemd
-                        systemctl daemon-reload
-                    else
-                        sudo rm /usr/lib/systemd/system/containerd.service
-                        #Si esta configurado para inicio automatico desactivarlo
-                        sudo systemctl disable containerd.service
-                        #Recargar el arbol de dependencies cargados por systemd
-                        sudo systemctl daemon-reload
+                        printf "Actualizar el arbol de configuraciones de unidad systemd '%s'" "$l_aux"
+                        systemctl --user daemon-reload
                     fi
-                fi
 
+                else
+
+                    if [ -f /usr/lib/systemd/system/${l_aux} ]; then
+
+                        if [ $g_is_root -eq 0 ]; then
+
+                            #Si esta configurado para inicio automatico desactivarlo
+                            printf "Disable la unidad systemd '%s'" "$l_aux"
+                            systemctl disable $l_aux
+
+                            echo "Eliminando la configuración '/usr/lib/systemd/system/%s' de la unidad systemd '%s'" "$l_aux" "$l_aux"
+                            rm /usr/lib/systemd/system/${l_aux}
+
+                            #Recargar el arbol de dependencies cargados por systemd
+                            printf "Actualizar el arbol de configuraciones de unidad systemd '%s'" "$l_aux"
+                            systemctl daemon-reload
+
+                        else
+
+                            #Si esta configurado para inicio automatico desactivarlo
+                            printf "Disable la unidad systemd '%s'" "$l_aux"
+                            sudo systemctl disable $l_aux
+
+                            echo "Eliminando la configuración '/usr/lib/systemd/system/%s' de la unidad systemd '%s'" "$l_aux" "$l_aux"
+                            sudo rm /usr/lib/systemd/system/${l_aux}
+
+                            #Recargar el arbol de dependencies cargados por systemd
+                            printf "Actualizar el arbol de configuraciones de unidad systemd '%s'" "$l_aux"
+                            sudo systemctl daemon-reload
+
+                        fi
+                    fi
+
+                fi
             fi
             ;;
 
@@ -3935,31 +3999,47 @@ _uninstall_repository() {
             #2. Eliminando archivos 
             if [ $g_is_root -eq 0 ]; then
 
-                echo "Eliminando \"${l_path_bin}/buildkit-runc\"..."
-                rm "${l_path_bin}/buildkit-runc"
+                if [-f "${l_path_bin}/buildkit-runc" ]; then
+                    echo "Eliminando \"${l_path_bin}/buildkit-runc\"..."
+                    rm "${l_path_bin}/buildkit-runc"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/buildkitd\"..."
-                rm "${l_path_bin}/buildkitd"
+                if [-f "${l_path_bin}/buildkitd" ]; then
+                    echo "Eliminando \"${l_path_bin}/buildkitd\"..."
+                    rm "${l_path_bin}/buildkitd"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/buildkit-qemu-*\"..."
-                rm ${l_path_bin}/buildkit-qemu-*
+                if [-f "${l_path_bin}/buildkit-qemu-*" ]; then
+                    echo "Eliminando \"${l_path_bin}/buildkit-qemu-*\"..."
+                    rm ${l_path_bin}/buildkit-qemu-*
+                fi
 
-                echo "Eliminando \"${l_path_bin}/buildctl\"..."
-                rm "${l_path_bin}/buildctl"
+                if [-f "${l_path_bin}/buildctl" ]; then
+                    echo "Eliminando \"${l_path_bin}/buildctl\"..."
+                    rm "${l_path_bin}/buildctl"
+                fi
 
             else
 
-                echo "Eliminando \"${l_path_bin}/buildkit-runc\"..."
-                sudo rm "${l_path_bin}/buildkit-runc"
+                if [-f "${l_path_bin}/buildkit-runc" ]; then
+                    echo "Eliminando \"${l_path_bin}/buildkit-runc\"..."
+                    sudo rm "${l_path_bin}/buildkit-runc"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/buildkitd\"..."
-                sudo rm "${l_path_bin}/buildkitd"
+                if [-f "${l_path_bin}/buildkitd" ]; then
+                    echo "Eliminando \"${l_path_bin}/buildkitd\"..."
+                    sudo rm "${l_path_bin}/buildkitd"
+                fi
 
-                echo "Eliminando \"${l_path_bin}/buildkit-qemu-*\"..."
-                sudo rm ${l_path_bin}/buildkit-qemu-*
+                if [-f "${l_path_bin}/buildkit-qemu-*" ]; then
+                    echo "Eliminando \"${l_path_bin}/buildkit-qemu-*\"..."
+                    sudo rm ${l_path_bin}/buildkit-qemu-*
+                fi
 
-                echo "Eliminando \"${l_path_bin}/buildctl\"..."
-                sudo rm "${l_path_bin}/buildctl"
+                if [-f "${l_path_bin}/buildctl" ]; then
+                    echo "Eliminando \"${l_path_bin}/buildctl\"..."
+                    sudo rm "${l_path_bin}/buildctl"
+                fi
 
             fi
 
@@ -3991,36 +4071,60 @@ _uninstall_repository() {
             fi
 
             #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
-            if [ $l_is_user -eq 0 ]; then
+            l_aux="buildkit.service"
 
-                if [ -f ~/.config/systemd/user/buildkit.service ]; then
-                    echo "Eliminando la configuración '~/.config/systemd/user/buildkit.service' de la unidad systemd 'buildkit.service'"
-                    rm ~/.config/systemd/user/buildkit.service
-                    #Si esta configurado para inicio automatico desactivarlo
-                    systemctl --user disable buildkit.service
-                    #Recargar el arbol de dependencies cargados por systemd
-                    systemctl --user daemon-reload
-                fi
+            if [ $l_status -ne 0 ]; then
 
-            else
+                if [ $l_is_user -eq 0 ]; then
 
-                if [ -f /usr/lib/systemd/system/buildkit.service ]; then
-                    echo "Eliminando la configuración '/usr/lib/systemd/system/buildkit.service' de la unidad systemd 'buildkit.service'"
-                    if [ $g_is_root -eq 0 ]; then
-                        rm /usr/lib/systemd/system/buildkit.service
+                    if [ -f ~/.config/systemd/user/${l_aux} ]; then
+
                         #Si esta configurado para inicio automatico desactivarlo
-                        systemctl disable buildkit.service
+                        printf "Disable la unidad systemd '%s'" "$l_aux"
+                        systemctl --user disable $l_aux
+
+                        echo "Eliminando la configuración '~/.config/systemd/user/%s' de la unidad systemd '%s'" "$l_aux" "$l_aux"
+                        rm ~/.config/systemd/user/${l_aux}
+
                         #Recargar el arbol de dependencies cargados por systemd
-                        systemctl daemon-reload
-                    else
-                        sudo rm /usr/lib/systemd/system/buildkit.service
-                        #Si esta configurado para inicio automatico desactivarlo
-                        sudo systemctl disable buildkit.service
-                        #Recargar el arbol de dependencies cargados por systemd
-                        sudo systemctl daemon-reload
+                        printf "Actualizar el arbol de configuraciones de unidad systemd '%s'" "$l_aux"
+                        systemctl --user daemon-reload
                     fi
-                fi
 
+                else
+
+                    if [ -f /usr/lib/systemd/system/${l_aux} ]; then
+
+                        if [ $g_is_root -eq 0 ]; then
+
+                            #Si esta configurado para inicio automatico desactivarlo
+                            printf "Disable la unidad systemd '%s'" "$l_aux"
+                            systemctl disable $l_aux
+
+                            echo "Eliminando la configuración '/usr/lib/systemd/system/%s' de la unidad systemd '%s'" "$l_aux" "$l_aux"
+                            rm /usr/lib/systemd/system/${l_aux}
+
+                            #Recargar el arbol de dependencies cargados por systemd
+                            printf "Actualizar el arbol de configuraciones de unidad systemd '%s'" "$l_aux"
+                            systemctl daemon-reload
+
+                        else
+
+                            #Si esta configurado para inicio automatico desactivarlo
+                            printf "Disable la unidad systemd '%s'" "$l_aux"
+                            sudo systemctl disable $l_aux
+
+                            echo "Eliminando la configuración '/usr/lib/systemd/system/%s' de la unidad systemd '%s'" "$l_aux" "$l_aux"
+                            sudo rm /usr/lib/systemd/system/${l_aux}
+
+                            #Recargar el arbol de dependencies cargados por systemd
+                            printf "Actualizar el arbol de configuraciones de unidad systemd '%s'" "$l_aux"
+                            sudo systemctl daemon-reload
+
+                        fi
+                    fi
+
+                fi
             fi
             ;;
 
@@ -4036,13 +4140,17 @@ _uninstall_repository() {
             #2. Eliminando los archivos
             if [ $g_is_root -eq 0 ]; then
 
-                echo "Eliminando \"${l_path_bin}/nerdctl\"..."
-                rm "${l_path_bin}/nerdctl"
+                if [-f "${l_path_bin}/nerdctl" ]; then
+                    echo "Eliminando \"${l_path_bin}/nerdctl\"..."
+                    rm "${l_path_bin}/nerdctl"
+                fi
 
             else
 
-                echo "Eliminando \"${l_path_bin}/nerdctl\"..."
-                sudo rm "${l_path_bin}/nerdctl"
+                if [-f "${l_path_bin}/nerdctl" ]; then
+                    echo "Eliminando \"${l_path_bin}/nerdctl\"..."
+                    sudo rm "${l_path_bin}/nerdctl"
+                fi
 
             fi
 
@@ -4094,9 +4202,19 @@ _uninstall_repository() {
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Eliminando \"${l_path_bin}/dive\"..."
             if [ $g_is_root -eq 0 ]; then
-                rm "${l_path_bin}/dive"
+
+                if [-f "${l_path_bin}/dive" ]; then
+                    echo "Eliminando \"${l_path_bin}/dive\"..."
+                    rm "${l_path_bin}/dive"
+                fi
+
             else
-                sudo rm "${l_path_bin}/dive"
+
+                if [-f "${l_path_bin}/dive" ]; then
+                    echo "Eliminando \"${l_path_bin}/dive\"..."
+                    sudo rm "${l_path_bin}/dive"
+                fi
+
             fi
             ;;
 
