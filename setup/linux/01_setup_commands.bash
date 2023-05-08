@@ -1381,7 +1381,7 @@ function _install_menu_options() {
         printf -v l_title_template 'Opción %b%s%b: %b%s%b' "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         print_text_in_center2 "$l_title_template" $g_max_length_line 
         print_line '─' $g_max_length_line "$g_color_opaque"
-        printf 'Inicializando la opción elegida del menu ...\n'
+        #printf 'Inicializando la opción elegida del menu ...\n'
 
         #3.2. Inicializar la opcion si aun no ha sido inicializado.
         _initialize_menu_option_install_lnx $p_option_relative_idx
@@ -2447,7 +2447,7 @@ function _uninstall_menu_options() {
         printf -v l_title_template "Opción %s%s%s '%s%s%s'" "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         print_text_in_center2 "$l_title_template" $g_max_length_line 
         print_line '─' $g_max_length_line "$g_color_opaque"
-        printf 'Inicializando la opción elegida del menu ...\n'
+        #printf 'Inicializando la opción elegida del menu ...\n'
 
         #3.2. Inicializar la opcion si aun no ha sido inicializado.
         _initialize_menu_option_uninstall_lnx $p_option_relative_idx
@@ -2722,7 +2722,7 @@ function _uninstall_menu_options() {
     if [ -z "$l_result" ]; then
 
         #5.1. Inicializar la opcion si aun no ha sido inicializado.
-        printf 'Se inicia la finalización de la opción del menu...\n'
+        #printf 'Se inicia la finalización de la opción del menu...\n'
         _finalize_menu_option_uninstall_lnx $p_option_relative_idx
         l_status=$?
 
