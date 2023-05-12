@@ -628,7 +628,10 @@ _validate_versions_to_install() {
 
     local p_title_template="$6"
 
+    #Inicialización
     _g_repo_current_version=""
+    local l_empty_version
+    printf -v l_empty_version ' %.0s' $(seq ${#l_repo_last_version_pretty})
 
 
     #2. Obtener la versión de repositorio instalado en Linux
@@ -652,6 +655,7 @@ _validate_versions_to_install() {
 
 
     #3. Mostrar el titulo
+
     if [ ! -z "$p_title_template" ]; then
 
         print_line '-' $g_max_length_line  "$g_color_opaque"
@@ -674,35 +678,37 @@ _validate_versions_to_install() {
     fi
 
 
+    #5. Mostar información de la versión actual.
+    if [ $l_status -ne 0 ]; then
+        printf 'Repositorio "%s%b[%s]%b" ' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset"
+    fi
+
+    if [ $l_status -eq 9 ]; then
+        printf 'actual no tiene implamentado la logica para obtener la versión actual.\n'
+    elif [ $l_status -eq 1 ]; then
+        printf 'no esta instalado.\n'
+    elif [ $l_status -eq 2 ]; then
+        printf 'tiene una versión "%s" con formato invalido.\n' "$l_repo_current_version"
+        l_repo_current_version=""
+    elif [ $l_status -eq 3 ]; then
+        printf 'ocurrio un error al obtener la versión actual "%s".\n' "$l_repo_current_version"
+    #else
+    #    printf 'esta instalado y tiene como versión actual "%s".\n' "${l_repo_current_version}"
+    fi
+
     #4. Mostrar información de la ultima versión.
-    printf 'Repositorio "%s%b[%s]%b" (Ultima Versión): "%s"\n' "${p_repo_id}" "$g_color_opaque" "${p_repo_last_version_pretty}" "$g_color_reset"  "${p_repo_last_version}"
+    printf 'Repositorio "%s%b[%s]%b" actual tiene la versión disponible "%s%b[%s]%b" (%s)\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" \
+            "${p_repo_id}" "$g_color_opaque" "${p_repo_last_version_pretty}" "$g_color_reset" "${p_repo_last_version}" 
 
     #Si el artefacto tiene Subversiones, mostrarlos.
     local l_artifact_subversions_nbr=${#_ga_artifact_subversions[@]} 
     if [ $l_artifact_subversions_nbr -ne 0 ]; then
         for ((l_n=0; l_n< ${l_artifact_subversions_nbr}; l_n++)); do
-            printf 'Repositorio "%s%b[%s]%b" (Ultima Versión): Sub-version[%s] es "%s"\n' "${p_repo_id}" "$g_color_opaque" "${p_repo_last_version_pretty}" "$g_color_reset" \
-                   "${l_n}" "${_ga_artifact_subversions[${l_n}]}"
+            printf 'Repositorio "%s%b[%s]%b" actual tiene la versión disponible "%s%b[%s]%b" con subversiones: Subversion[%s] es "%s"\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" \
+                   "${p_repo_id}" "$g_color_opaque" "${p_repo_last_version_pretty}" "$g_color_reset" "${l_n}" "${_ga_artifact_subversions[${l_n}]}"
         done
     fi
 
-
-    #5. Mostar información de la versión actual.
-    local l_empty_version
-    printf -v l_empty_version ' %.0s' $(seq ${#l_repo_last_version_pretty})
-
-    if [ $l_status -eq 9 ]; then
-        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_opaque" "$l_empty_version" "$g_color_reset" "No implementado"
-    elif [ $l_status -eq 1 ]; then
-        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_opaque" "$l_empty_version" "$g_color_reset" "No instalado"
-    elif [ $l_status -eq 2 ]; then
-        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset" "Formato invalido"
-        l_repo_current_version=""
-    elif [ $l_status -eq 3 ]; then
-        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset" "No se puede determinar"
-    #else
-    #    printf 'Repositorio "%s[%s]" (Versión Actual): "%s"\n' "${p_repo_id}" "${l_repo_current_version}" "OK"
-    fi
 
 
     #6. Evaluar los escenarios donde se obtiene una versión actual invalido.
@@ -757,18 +763,18 @@ _validate_versions_to_install() {
     #Si ya esta actualizado
     if [ $l_status -eq 0 ]; then
 
-        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): Ya esta actualizado (= "%s")\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
+        printf 'Repositorio "%s%b[%s]%b" actual ya esta actualizado (= "%s")\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
         return 10
 
     elif [ $l_status -eq 1 ]; then
 
-        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): Ya esta actualizado (> "%s")\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
+        printf 'Repositorio "%s%b[%s]%b" actual ya esta actualizado (> "%s")\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
         return 11
 
     fi
 
     #Si requiere actualizarse
-    printf 'Repositorio "%s%b[%s]%b" (Versión Actual): Se actualizará a la versión "%s"\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
+    printf 'Repositorio "%s%b[%s]%b" se actualizará a la versión "%s"\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
 
     return 5
 
@@ -1162,7 +1168,7 @@ function i_install_repository() {
     if [ $l_status -eq 0 ]; then
 
 
-        if [ $l_status_process_lnx -gt 1 ] && [ $l_status_process_lnx -lt 5 ]; then
+        if [ $l_status_process_lnx -ge 3 ]; then
             printf "\n\n"
         fi
 
@@ -2303,7 +2309,7 @@ function i_uninstall_repository() {
     if [ $l_status -eq 0 ]; then
 
 
-        if [ $l_status_process_lnx -gt 1 ] && [ $l_status_process_lnx -lt 4 ]; then
+        if [ $l_status_process_lnx -ge 2 ]; then
             printf "\n\n"
         fi
 
