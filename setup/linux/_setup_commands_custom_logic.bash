@@ -3110,7 +3110,7 @@ function _copy_artifact_files() {
             mkdir -p ~/.files/setup/programs/nerdctl/systemd/user
             
             printf 'Descargando el archivo de configuracion de "%s" a nivel system en "%s"\n' "containerd.service" "~/.files/setup/programs/nerdctl/systemd/user/"
-            curl -fLo ~/.files/setup/programs/nerdctl/systemd/system/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+            curl -fLo ~/.files/setup/programs/nerdctl/systemd/user/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
             if [ $l_status -eq 2 ]; then
