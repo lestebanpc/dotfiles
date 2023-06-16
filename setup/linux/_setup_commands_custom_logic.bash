@@ -215,6 +215,15 @@ function _get_repo_current_version() {
             fi
             ;;
 
+        3scale-toolbox)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            else
+                l_tmp=$(${l_path_file}3scale --version 2> /dev/null)
+                l_status=$?
+            fi
+            ;;
+
         k0s)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}k0s.exe version 2> /dev/null)
@@ -966,6 +975,21 @@ function _load_artifacts() {
                     pna_artifact_types=(1)
                 else
                     pna_artifact_names=("powershell-${p_repo_last_version_pretty}-1.rh.x86_64.rpm")
+                    pna_artifact_types=(1)
+                fi
+            else
+                #No se instala nada en Windows
+                return 1
+            fi
+            ;;
+
+        3scale-toolbox)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    pna_artifact_names=("3scale-toolbox_${p_repo_last_version_pretty}-1_amd64.deb")
+                    pna_artifact_types=(1)
+                else
+                    pna_artifact_names=("3scale-toolbox_${p_repo_last_version_pretty}-1.el8.x86_64.rpm")
                     pna_artifact_types=(1)
                 fi
             else

@@ -21,12 +21,13 @@ declare -A gA_repositories=(
         ['less']='jftuga/less-Windows'
         ['fd']='sharkdp/fd'
         ['oh-my-posh']='JanDeDobbeleer/oh-my-posh'
+        ['neovim']='neovim/neovim'
         ['kubectl']=''
         ['helm']='helm/helm'
         ['kustomize']='kubernetes-sigs/kustomize'
         ['operator-sdk']='operator-framework/operator-sdk'
-        ['neovim']='neovim/neovim'
         ['k0s']='k0sproject/k0s'
+        ['3scale-toolbox']='3scale-labs/3scale_toolbox_packaging'
         ['nerd-fonts']='ryanoasis/nerd-fonts'
         ['powershell']='PowerShell/PowerShell'
         ['roslyn']='OmniSharp/omnisharp-roslyn'
@@ -80,7 +81,7 @@ declare -a ga_menu_options_repos=(
     "runc,rootlesskit,slirp4netns,containerd"
     "cni-plugins,nerdctl"
     "runc,buildkit,dive"
-    "kubectl,kustomize,helm,operator-sdk"
+    "kubectl,kustomize,helm,operator-sdk,3scale-toolbox"
     "k0s"
     "go"
     "graalvm"
@@ -90,6 +91,29 @@ declare -a ga_menu_options_repos=(
     "jdtls"
     )
 
+#Opciones de configuración de los repositorio 
+# > Por defecto los repositorios son instalados en todo los permitido (valor por defecto es 11)
+# > Las opciones puede ser uno o la suma de los siguientes valores:
+#   1 (00001) Linux que no WSL2
+#   2 (00010) Linux WSL2
+#   8 (00100) Windows vinculado al Linux WSL2
+#
+declare -A gA_repo_config=(
+        ['less']=8
+        ['k0s']=1
+        ['operator-sdk']=3
+        ['nerd-fonts']=3
+        ['powershell']=3
+        ['runc']=3
+        ['cni-plugins']=3
+        ['3scale-toolbox']=3
+        ['rootlesskit']=3
+        ['slirp4netns']=3
+        ['containerd']=3
+        ['buildkit']=3
+        ['nerdctl']=3
+        ['dive']=3
+    )
 
 #Parametros:
 # 1 > Offset del indice donde inicia el menu dinamico (usualmente, el menu dinamico no inicia desde la primera opcion del dinamico menú).
