@@ -2081,15 +2081,34 @@ function _show_menu_install_core() {
 
 function i_main_install() {
 
+    #1. Pre-requisitos
     printf '%bOS Type            : (%s)\n' "$g_color_opaque" "$g_os_type"
-    printf 'OS Subtype (Distro): (%s) %s - %s%b\n\n' "${g_os_subtype_id}" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+    printf 'OS Subtype (Distro): (%s) %s - %s%b\n' "${g_os_subtype_id}" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
     
     #Determinar el tipo de distribución Linux
     if [ $g_os_type -gt 10 ]; then
-        echo "ERROR(21): El sistema operativo debe ser Linux"
+        printf '\nERROR: El sistema operativo debe ser Linux\n'
         return 21;
     fi
+
+    #¿Esta 'curl' instalado?
+    local l_curl_version=$(curl --version 2> /dev/null)
+    if [ ! -z "$l_curl_version" ]; then
+        l_curl_version=$(echo "$l_curl_version" | head -n 1 | sed "$g_regexp_sust_version1")
+        printf '%bCURL version       : (%s)%b\n\n' "$g_color_opaque" "$l_curl_version" "$g_color_reset"
+    else
+        printf '\nERROR: CURL no esta instalado, debe instalarlo para descargar los artefactos a instalar/actualizar.\n'
+        printf '%bBinarios: https://curl.se/download.html\n' "$g_color_opaque"
+        printf 'Paquete Ubuntu/Debian:\n'
+        printf '          apt-get install curl\n'
+        printf 'Paquete CentOS/Fedora:\n'
+        printf '          dnf install curl\n%b' "$g_color_reset"
+
+        return 22;
+    fi
+    
    
+    #2. Mostrar el Menu
     print_line '─' $g_max_length_line "$g_color_title" 
 
     _show_menu_install_core

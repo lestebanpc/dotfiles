@@ -687,7 +687,7 @@ _show_pod_info() {
     
 
         printf '\n%bStatus de los contenedores del pod:%b\n' "$g_color_subtitle" "$g_color_reset"
-        l_jq_query='[.status.containerStatuses[]? | .containerID as $id | .name as $name | (((.state? | to_entries[]) + {type: "Current"}), ((.lastState? | to_entries[]) + { type: "Previous"})) | { CONTAINER: $name, POSITION: .type, TYPE: .key, "STARTED-AT": .value?.startedAt, "FINISHED-AT": .value?.finishedAt, "CONTAINER-ID": (if .type == "Current" then $id else .value?.containerID end), "REASON": .value?.reason, "EXITCODE": .value?.exitCode, "MESSAGE": .value?.message }]'
+        l_jq_query='[.status.containerStatuses[]? | . as $item | (.imageID/"/") as $imgIdParts | (.image/"/") as $imgParts | (((.state? | to_entries[]) + {type: "Current"}), ((.lastState? | to_entries[]) + { type: "Previous"})) | { CONTAINER: $item.name, POSITION: .type, TYPE: .key, "STARTED-AT": .value?.startedAt, "FINISHED-AT": .value?.finishedAt, "CONTAINER-ID": (if .type == "Current" then $item.containerID else .value?.containerID end), "REASON": .value?.reason, "EXITCODE": .value?.exitCode, "MESSAGE": .value?.message, "IMAGE-HASH": (if .type == "Current" then $imgIdParts[2] else "" end), "IMAGE-TAG": (if .type == "Current" and $imgParts[2] != $imgIdParts[2] then $imgParts[2] else "" end) }]'
     
         l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
         if [ $? -eq 0 ]; then
@@ -726,7 +726,7 @@ _show_pod_info() {
 
 
     printf '\n%bVariables de contenedores principales:%b\n' "$g_color_subtitle" "$g_color_reset"
-    l_jq_query='[ '"${l_root}"'spec.containers[] | { name: .name, env: .env[]? } | { CONTAINER: .name, VARIABLE: .env.name, TYPE: (if .env.value? != null then "VALUE" elif .env.valueFrom?.fieldRef != null then "FROM-FIELDREF" elif .env.valueFrom?.secretKeyRef != null then "FROM-SECRET-REF" else "UNKNOWN" end), VALUE: (if .env.value? != null then .env.value? elif .env.valueFrom?.fieldRef != null then .env.valueFrom?.fieldRef.fieldPath elif .env.valueFrom?.secretKeyRef != null then "\(.env.valueFrom?.secretKeyRef.key) [SecretName: \(.env.valueFrom?.secretKeyRef.name)]" else "..." end) }]'
+    l_jq_query='[ '"${l_root}"'spec.containers[] | { name: .name, env: .env[]? } | { CONTAINER: .name, VARIABLE: .env.name, TYPE: (if .env.value? != null then "VALUE" elif .env.valueFrom?.fieldRef != null then "FROM-FIELDREF" elif .env.valueFrom?.secretKeyRef != null then "FROM-SECRET-REF" else "UNKNOWN" end), VALUE: (if .env.value? != null then .env.value? elif .env.valueFrom?.fieldRef != null then .env.valueFrom?.fieldRef.fieldPath elif .env.valueFrom?.secretKeyRef != null then "[SecretName: \(.env.valueFrom?.secretKeyRef.name)] \(.env.valueFrom?.secretKeyRef.key)" else "..." end) }]'
     
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
