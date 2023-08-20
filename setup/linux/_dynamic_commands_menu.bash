@@ -20,6 +20,7 @@ declare -A gA_repositories=(
         ['yq']='mikefarah/yq'
         ['less']='jftuga/less-Windows'
         ['fd']='sharkdp/fd'
+        ['step']='smallstep/cli'
         ['oh-my-posh']='JanDeDobbeleer/oh-my-posh'
         ['neovim']='neovim/neovim'
         ['kubectl']=''
@@ -74,7 +75,7 @@ declare -a ga_menu_options_title=(
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
 declare -a ga_menu_options_repos=(
-    "bat,ripgrep,xsv,delta,fzf,jq,yq,less,fd,oh-my-posh"
+    "bat,ripgrep,xsv,delta,fzf,jq,yq,less,fd,oh-my-posh,step"
     "neovim"
     "nerd-fonts"
     "powershell"
