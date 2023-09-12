@@ -24,6 +24,7 @@ declare -A gA_repositories=(
         ['oh-my-posh']='JanDeDobbeleer/oh-my-posh'
         ['neovim']='neovim/neovim'
         ['kubectl']=''
+        ['pgo']='CrunchyData/postgres-operator-client'
         ['helm']='helm/helm'
         ['kustomize']='kubernetes-sigs/kustomize'
         ['operator-sdk']='operator-framework/operator-sdk'
@@ -82,7 +83,7 @@ declare -a ga_menu_options_repos=(
     "runc,rootlesskit,slirp4netns,containerd"
     "cni-plugins,nerdctl"
     "runc,buildkit,dive"
-    "kubectl,kustomize,helm,operator-sdk,3scale-toolbox"
+    "kubectl,kustomize,helm,operator-sdk,3scale-toolbox,pgo"
     "k0s"
     "go"
     "graalvm"

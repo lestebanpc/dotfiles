@@ -237,6 +237,27 @@ function _get_repo_current_version() {
             fi
             ;;
 
+        pgo)
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+                if [ -f "${g_path_programs_win}/pgo.info" ]; then
+                    l_tmp=$(cat "${g_path_programs_win}/pgo.info" | head -n 1)
+                else
+                    #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
+                    echo "$g_version_none"
+                    return 3
+                fi
+            else
+                if [ -f "${g_path_programs_lnx}/pgo.info" ]; then
+                    l_tmp=$(cat "${g_path_programs_lnx}/pgo.info" | head -n 1)
+                else
+                    #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
+                    echo "$g_version_none"
+                    return 3
+                fi
+            fi
+            ;;
+
         k0s)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}k0s.exe version 2> /dev/null)
@@ -875,6 +896,7 @@ function _load_artifacts() {
                 pna_artifact_types=(3)
             fi
             ;;
+
         kubectl)
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("kubectl")
@@ -884,6 +906,17 @@ function _load_artifacts() {
                 pna_artifact_types=(0)
             fi
             ;;
+
+        pgo)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("kubectl-pgo-linux-amd64")
+                pna_artifact_types=(0)
+            else
+                pna_artifact_names=("kubectl-pgo-windows-386")
+                pna_artifact_types=(0)
+            fi
+            ;;
+
         less)
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("less-x64.zip")
@@ -1926,15 +1959,18 @@ function _copy_artifact_files() {
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_is_root -eq 0 ]; then
+                    echo "Copiando \"kubectl\" en \"${l_path_bin}/\" ..."
                     cp "${l_path_temp}/kubectl" "${l_path_bin}"
                     chmod +x "${l_path_bin}/kubectl"
                     #mkdir -pm 755 "${l_path_man}"
                 else
+                    echo "Copiando \"kubectl\" en \"${l_path_bin}/\" ..."
                     sudo cp "${l_path_temp}/kubectl" "${l_path_bin}"
                     sudo chmod +x "${l_path_bin}/kubectl"
                     #sudo mkdir -pm 755 "${l_path_man}"
                 fi
             else
+                echo "Copiando \"kubectl.exe\" en \"${l_path_bin}/\" ..."
                 cp "${l_path_temp}/kubectl.exe" "${l_path_bin}"
                 #mkdir -p "${l_path_man}"
             fi
@@ -1954,6 +1990,44 @@ function _copy_artifact_files() {
             #cp "${l_path_temp}/autocomplete/fd.ps1" ~/.files/terminal/powershell/complete/fd.ps1
             ;;
         
+        pgo)
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                echo "Renombrando \"kubectl-pgo-linux-amd64\" en \"${l_path_temp}/kubectl-pgo\" ..."
+                mv "${l_path_temp}/kubectl-pgo-linux-amd64" "${l_path_temp}/kubectl-pgo"
+
+                if [ $g_is_root -eq 0 ]; then
+                    echo "Copiando \"kubectl-pgo\" en \"${l_path_bin}/\" ..."
+                    cp "${l_path_temp}/kubectl-pgo" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/kubectl-pgo"
+                    #mkdir -pm 755 "${l_path_man}"
+                else
+                    echo "Copiando \"kubectl-pgo\" en \"${l_path_bin}/\" ..."
+                    sudo cp "${l_path_temp}/kubectl-pgo" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/kubectl-pgo"
+                    #sudo mkdir -pm 755 "${l_path_man}"
+                fi
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                echo "$p_repo_last_version_pretty" > "${g_path_programs_lnx}/pgo.info" 
+            else
+
+                echo "Renombrando \"kubectl-pgo-windows-386\" en \"${l_path_temp}/kubectl-pgo.exe\" ..."
+                mv "${l_path_temp}/kubectl-pgo-windows-386" "${l_path_temp}/kubectl-pgo.exe"
+
+                echo "Copiando \"kubectl-pgo.exe\" en \"${l_path_bin}/\" ..."
+                cp "${l_path_temp}/kubectl-pgo.exe" "${l_path_bin}"
+                #mkdir -p "${l_path_man}"
+                
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                echo "$p_repo_last_version_pretty" > "${g_path_programs_win}/pgo.info" 
+            fi
+            ;;
+            
         helm)
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
