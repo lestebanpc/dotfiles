@@ -770,10 +770,10 @@ function _load_artifacts() {
     case "$p_repo_id" in
         jq)
             if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("jq_linux64")
+                pna_artifact_names=("jq-linux64")
                 pna_artifact_types=(0)
             else
-                pna_artifact_names=("jq_win64.exe")
+                pna_artifact_names=("jq-win64.exe")
                 pna_artifact_types=(0)
             fi
             ;;
