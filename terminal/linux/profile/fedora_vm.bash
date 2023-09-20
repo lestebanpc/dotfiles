@@ -53,6 +53,7 @@ export PATH
 
 # Alias
 alias kc='kubectl'
+alias step-jwt='step crypto jwt'
 
 
 # Uncomment the following line if you don't like systemctl's auto-paging feature:

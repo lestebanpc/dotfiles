@@ -1118,18 +1118,28 @@ function _profile_setup() {
        ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
     fi
 
+    #Configuración de un CLI de alto nivel: 'Container Runtime' 'ContainerD'
     if [ ! -e ~/.config/nerdctl/nerdctl.toml ] || [ $l_overwrite_ln_flag -eq 0 ]; then
        echo "Creando los enlaces simbolico de ~/.config/nerdctl/nerdctl.toml"
        mkdir -p ~/.config/nerdctl/
        ln -snf ~/.files/config/nerdctl/default_config.toml ~/.config/nerdctl/nerdctl.toml
     fi
 
+    #Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
     if [ ! -e ~/.config/containerd/config.toml ] || [ $l_overwrite_ln_flag -eq 0 ]; then
        echo "Creando los enlaces simbolico de ~/.config/containerd/config.toml"
        mkdir -p ~/.config/containerd/
        ln -snf ~/.files/config/containerd/default_config.toml ~/.config/containerd/config.toml
     fi
 
+    #Configuración del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
+    if [ ! -e ~/.config/buildkit/buildkitd.toml ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+       echo "Creando los enlaces simbolico de ~/.config/buildkit/buildkitd.toml"
+       mkdir -p ~/.config/buildkit/
+       ln -snf ~/.files/config/buildkit/default_config.toml ~/.config/buildkit/buildkitd.toml
+    fi
+
+    #Configuracion por defecto para un Cluster de Kubernates
     if [ ! -e ~/.kube/config ] || [ $l_overwrite_ln_flag -eq 0 ]; then
        echo "Creando los enlaces simbolico de ~/.kube/config"
        mkdir -p ~/.kube/

@@ -21,6 +21,7 @@ declare -A gA_repositories=(
         ['less']='jftuga/less-Windows'
         ['fd']='sharkdp/fd'
         ['step']='smallstep/cli'
+        ['jwt']='mike-engel/jwt-cli'
         ['oh-my-posh']='JanDeDobbeleer/oh-my-posh'
         ['neovim']='neovim/neovim'
         ['kubectl']=''
@@ -76,14 +77,14 @@ declare -a ga_menu_options_title=(
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
 declare -a ga_menu_options_repos=(
-    "bat,ripgrep,xsv,delta,fzf,jq,yq,less,fd,oh-my-posh,step"
+    "bat,ripgrep,xsv,delta,fzf,jq,yq,less,fd,oh-my-posh,jwt,step"
     "neovim"
     "nerd-fonts"
     "powershell"
     "runc,rootlesskit,slirp4netns,containerd"
     "cni-plugins,nerdctl"
     "runc,buildkit,dive"
-    "kubectl,kustomize,helm,operator-sdk,3scale-toolbox,pgo"
+    "kubectl,helm,operator-sdk,3scale-toolbox,pgo"
     "k0s"
     "go"
     "graalvm"

@@ -181,6 +181,15 @@ function _get_repo_current_version() {
                 l_sustitution_regexp="$g_regexp_sust_version3"
             fi
             ;;
+        jwt)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}jwt.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}jwt --version 2> /dev/null)
+                l_status=$?
+            fi
+            ;;
         step)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}step.exe --version 2> /dev/null)
@@ -880,6 +889,17 @@ function _load_artifacts() {
                 pna_artifact_types=(3)
             fi
             ;;
+
+        jwt)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("jwt-linux.tar.gz")
+                pna_artifact_types=(2)
+            else
+                pna_artifact_names=("jwt-windows.tar.gz")
+                pna_artifact_types=(2)
+            fi
+            ;;
+
         step)
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
@@ -1911,6 +1931,29 @@ function _copy_artifact_files() {
             fi
             ;;
 
+        jwt)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Copiando \"jwt\" a \"${l_path_bin}\" ..."
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_is_root -eq 0 ]; then
+                    cp "${l_path_temp}/jwt" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/jwt"
+                    #mkdir -pm 755 "${l_path_man}"
+                else
+                    sudo cp "${l_path_temp}/jwt" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/jwt"
+                    #sudo mkdir -pm 755 "${l_path_man}"
+                fi
+            else
+                cp "${l_path_temp}/jwt.exe" "${l_path_bin}"
+                #mkdir -p "${l_path_man}"
+            fi
+            ;;
+            
         fd)
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"

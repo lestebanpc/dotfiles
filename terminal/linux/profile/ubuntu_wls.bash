@@ -96,6 +96,7 @@ alias la='ls -A'
 alias l='ls -CF'
 
 alias kc='kubectl'
+alias step-jwt='step crypto jwt'
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
