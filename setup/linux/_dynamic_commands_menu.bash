@@ -22,6 +22,9 @@ declare -A gA_repositories=(
         ['fd']='sharkdp/fd'
         ['step']='smallstep/cli'
         ['jwt']='mike-engel/jwt-cli'
+        ['grpcurl']='fullstorydev/grpcurl'
+        ['evans']='ktr0731/evans'
+        ['protoc']='protocolbuffers/protobuf'
         ['oh-my-posh']='JanDeDobbeleer/oh-my-posh'
         ['neovim']='neovim/neovim'
         ['kubectl']=''
@@ -59,6 +62,7 @@ declare -a ga_menu_options_title=(
     "El editor 'NeoVim'"
     "Las fuentes 'Nerd Fonts'"
     "Shell 'Powershell Core'"
+    "Tools para gRPC"
     "Container Runtime 'ContainerD'"
     "Tools para 'ContainerD'"
     "Tools para cualquier Container Runtime"
@@ -81,6 +85,7 @@ declare -a ga_menu_options_repos=(
     "neovim"
     "nerd-fonts"
     "powershell"
+    "protoc,grpcurl,evans"
     "runc,rootlesskit,slirp4netns,containerd"
     "cni-plugins,nerdctl"
     "runc,buildkit,dive"

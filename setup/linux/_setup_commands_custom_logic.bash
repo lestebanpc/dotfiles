@@ -203,6 +203,52 @@ function _get_repo_current_version() {
                 #l_sustitution_regexp="$g_regexp_sust_version3"
             fi
             ;;
+
+        protoc)
+           
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_programs_win}/ProtoC/bin/"
+               else
+                  l_path_file="${g_path_programs_lnx}/protoc/bin/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}protoc.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}protoc --version 2> /dev/null)
+                l_status=$?
+            fi
+            ;;
+
+        grpcurl)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}grpcurl.exe --version 2>&1)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}grpcurl --version 2>&1)
+                l_status=$?
+            fi
+
+            if [ $l_status -ne 0 ]; then
+                l_tmp=""
+            fi
+            ;;
+
+        evans)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}evans.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}evans --version 2> /dev/null)
+                l_status=$?
+            fi
+            ;;
+
         kubectl)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}kubectl.exe version --client=true -o json 2> /dev/null)
@@ -914,6 +960,36 @@ function _load_artifacts() {
             else
                 pna_artifact_names=("step_windows_${p_repo_last_version_pretty}_amd64.zip")
                 pna_artifact_types=(3)
+            fi
+            ;;
+
+        protoc)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("protoc-${p_repo_last_version_pretty}-linux-x86_64.zip")
+                pna_artifact_types=(3)
+            else
+                pna_artifact_names=("protoc-${p_repo_last_version_pretty}-win64.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+
+        grpcurl)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("grpcurl_${p_repo_last_version_pretty}_linux_x86_64.tar.gz")
+                pna_artifact_types=(2)
+            else
+                pna_artifact_names=("grpcurl_${p_repo_last_version_pretty}_windows_x86_64.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+
+        evans)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("evans_linux_amd64.tar.gz")
+                pna_artifact_types=(2)
+            else
+                pna_artifact_names=("evans_windows_amd64.tar.gz")
+                pna_artifact_types=(2)
             fi
             ;;
 
@@ -1954,6 +2030,94 @@ function _copy_artifact_files() {
             fi
             ;;
             
+        grpcurl)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Copiando \"grpcurl\" a \"${l_path_bin}\" ..."
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_is_root -eq 0 ]; then
+                    cp "${l_path_temp}/grpcurl" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/grpcurl"
+                    #mkdir -pm 755 "${l_path_man}"
+                else
+                    sudo cp "${l_path_temp}/grpcurl" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/grpcurl"
+                    #sudo mkdir -pm 755 "${l_path_man}"
+                fi
+            else
+                cp "${l_path_temp}/grpcurl.exe" "${l_path_bin}"
+                #mkdir -p "${l_path_man}"
+            fi
+            ;;
+            
+        evans)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Copiando \"evans\" a \"${l_path_bin}\" ..."
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_is_root -eq 0 ]; then
+                    cp "${l_path_temp}/evans" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/evans"
+                    #mkdir -pm 755 "${l_path_man}"
+                else
+                    sudo cp "${l_path_temp}/evans" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/evans"
+                    #sudo mkdir -pm 755 "${l_path_man}"
+                fi
+            else
+                cp "${l_path_temp}/evans.exe" "${l_path_bin}"
+                #mkdir -p "${l_path_man}"
+            fi
+            ;;
+            
+        protoc)
+            
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                l_path_bin="${g_path_programs_lnx}/protoc"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                    chmod g+rx,o+rx $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover todos archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+
+            else
+                
+                l_path_bin="${g_path_programs_win}/ProtoC"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover los archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+            fi
+            ;;
+
         fd)
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"

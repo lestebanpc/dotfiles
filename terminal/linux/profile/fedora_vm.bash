@@ -46,6 +46,9 @@ PATH=$PATH:/opt/tools/neovim/bin
 #Ruta del builder Apache Maven
 [ -d "/opt/tools/maven/bin" ] && PATH=/opt/tools/maven/bin:$PATH
 
+#Ruta del compilador de ProtoBuffer de gRPC
+[ -d "/opt/tools/protoc/bin" ] && PATH=/opt/tools/protoc/bin:$PATH
+
 
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
