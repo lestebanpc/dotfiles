@@ -1118,11 +1118,25 @@ function _profile_setup() {
        ln -snf ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
     fi
 
-    #Configuración de un CLI de alto nivel: 'Container Runtime' 'ContainerD'
+    #Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD': nerdctl
     if [ ! -e ~/.config/nerdctl/nerdctl.toml ] || [ $l_overwrite_ln_flag -eq 0 ]; then
        echo "Creando los enlaces simbolico de ~/.config/nerdctl/nerdctl.toml"
        mkdir -p ~/.config/nerdctl/
        ln -snf ~/.files/config/nerdctl/default_config.toml ~/.config/nerdctl/nerdctl.toml
+    fi
+
+    #Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless'): Podman
+    if [ ! -e ~/.config/containers/containers.conf ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+       echo "Creando los enlaces simbolico de ~/.config/containers/containers.conf"
+       mkdir -p ~/.config/containers/
+       ln -snf ~/.files/config/podman/default_config.toml ~/.config/containers/containers.conf
+    fi
+
+    #Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless'): Podman
+    if [ ! -e ~/.config/containers/registries.conf ] || [ $l_overwrite_ln_flag -eq 0 ]; then
+       echo "Creando los enlaces simbolico de ~/.config/containers/registries.conf"
+       mkdir -p ~/.config/containers/
+       ln -snf ~/.files/config/podman/default_registries.toml ~/.config/containers/registries.conf
     fi
 
     #Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')

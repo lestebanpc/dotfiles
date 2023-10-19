@@ -67,6 +67,7 @@ function _get_repo_current_version() {
     fi
 
     case "$p_repo_id" in
+
         jq)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}jq.exe --version 2> /dev/null)
@@ -604,6 +605,21 @@ function _get_repo_current_version() {
             fi
             ;;
 
+        butane)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}butane --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
         runc)
             
             #Obtener la version
@@ -616,6 +632,37 @@ function _get_repo_current_version() {
             
             if [ $l_status -eq 0 ]; then
                 l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+        crun)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}crun --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
+        fuse-overlayfs)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}fuse-overlayfs --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | grep fuse-overlayfs)
             fi
             ;;
 
@@ -823,6 +870,7 @@ function _load_artifacts() {
     local l_artifact_type=99
 
     case "$p_repo_id" in
+
         jq)
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("jq-linux64")
@@ -1185,6 +1233,15 @@ function _load_artifacts() {
             pna_artifact_types=(2)
             ;;
 
+        butane)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            pna_artifact_names=("butane-x86_64-unknown-linux-gnu")
+            pna_artifact_types=(0)
+            ;;
+
         runc)
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 1
@@ -1194,6 +1251,23 @@ function _load_artifacts() {
             pna_artifact_types=(0)
             ;;
 
+        crun)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            pna_artifact_names=("crun-${p_repo_last_version}-linux-amd64")
+            pna_artifact_types=(0)
+            ;;
+
+        fuse-overlayfs)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            pna_artifact_names=("fuse-overlayfs-x86_64")
+            pna_artifact_types=(0)
+            ;;
 
         cni-plugins)
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -1802,6 +1876,33 @@ function _copy_artifact_files() {
 
             else
                 echo "ERROR (50): El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
+                return 40
+            fi            
+            ;;
+
+        butane)
+
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                #Ruta local de los artefactos
+                #l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+                l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+                
+                #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+                echo "Copiando \"butane-x86_64-unknown-linux-gn4\" como \"${l_path_bin}/butane\" ..."
+                mv "${l_path_temp}/butane-x86_64-unknown-linux-gnu" "${l_path_temp}/butane"
+
+                echo "Copiando \"butane\" a \"${l_path_bin}\" ..."
+                if [ $g_is_root -eq 0 ]; then
+                    cp "${l_path_temp}/butane" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/butane"
+                else
+                    sudo cp "${l_path_temp}/butane" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/butane"
+                fi
+
+            else
+                echo "ERROR (50): El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
                 return 40
             fi            
             ;;
@@ -3160,6 +3261,65 @@ function _copy_artifact_files() {
 
 
 
+        crun)
+
+            #1. Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                return 40
+            fi
+
+            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'podman' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "podman" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
+            _request_stop_systemd_unit 'podman.service' 1 "$p_repo_id" "$p_artifact_index"
+            l_status=$?
+
+            #Si esta iniciado pero no acepta detenerlo
+            if [ $l_status -eq 2 ]; then
+                return 41
+            fi
+
+            #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Renombrando \"${l_path_temp}/crun-${p_repo_last_version_pretty}-linux-amd64\" a \"${l_path_temp}/crun\""
+            mv "${l_path_temp}/crun-${p_repo_last_version_pretty}-linux-amd64" "${l_path_temp}/crun"
+
+            echo "Copiando \"crun\" a \"${l_path_bin}\" ..."
+            if [ $g_is_root -eq 0 ]; then
+                cp "${l_path_temp}/crun" "${l_path_bin}"
+                chmod +x "${l_path_bin}/crun"
+            else
+                sudo cp "${l_path_temp}/crun" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/crun"
+            fi
+
+            #4. Si la unidad servicio 'podman' estaba iniciando y se detuvo, iniciarlo
+            if [ $l_status -eq 3 ]; then
+
+                #Iniciar a nivel usuario
+                printf 'Iniciando la unidad "%s" a nivel usuario ...\n' 'podman.service'
+                systemctl --user start podman.service
+
+            elif [ $l_status -eq 4 ]; then
+
+                #Iniciar a nivel system
+                printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'podman.service'
+                if [ $g_is_root -eq 0 ]; then
+                    systemctl start podman.service 
+                else
+                    sudo systemctl start podman.service 
+                fi
+            fi
+            ;;
+
+
         slirp4netns)
 
             #1. Ruta local de los artefactos
@@ -3197,6 +3357,65 @@ function _copy_artifact_files() {
             else
                 sudo cp "${l_path_temp}/slirp4netns" "${l_path_bin}"
                 sudo chmod +x "${l_path_bin}/slirp4netns"
+            fi
+
+            #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
+            if [ $l_status -eq 3 ]; then
+
+                #Iniciar a nivel usuario
+                printf 'Iniciando la unidad "%s" a nivel usuario ...\n' 'containerd.service'
+                systemctl --user start containerd.service
+
+            elif [ $l_status -eq 4 ]; then
+
+                #Iniciar a nivel system
+                printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
+                if [ $g_is_root -eq 0 ]; then
+                    systemctl start containerd.service 
+                else
+                    sudo systemctl start containerd.service 
+                fi
+            fi
+            ;;
+
+
+        fuse-overlayfs)
+
+            #1. Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                return 40
+            fi
+
+            #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
+            is_package_installed 'containerd.io' $g_os_subtype_id
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            fi
+
+            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            l_status=$?
+
+            #Si esta iniciado pero no acepta detenerlo
+            if [ $l_status -eq 2 ]; then
+                return 41
+            fi
+
+            #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Renombrando \"${l_path_temp}/fuse-overlayfs-x86_64\" a \"${l_path_temp}/fuse-overlayfs\""
+            mv "${l_path_temp}/fuse-overlayfs-x86_64" "${l_path_temp}/fuse-overlayfs"
+
+            echo "Copiando \"${l_path_temp}/fuse-overlayfs\" a \"${l_path_bin}\" ..."
+            if [ $g_is_root -eq 0 ]; then
+                cp "${l_path_temp}/fuse-overlayfs" "${l_path_bin}"
+                chmod +x "${l_path_bin}/fuse-overlayfs"
+            else
+                sudo cp "${l_path_temp}/fuse-overlayfs" "${l_path_bin}"
+                sudo chmod +x "${l_path_bin}/fuse-overlayfs"
             fi
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo

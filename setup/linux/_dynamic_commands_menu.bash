@@ -22,6 +22,7 @@ declare -A gA_repositories=(
         ['fd']='sharkdp/fd'
         ['step']='smallstep/cli'
         ['jwt']='mike-engel/jwt-cli'
+        ['butane']='coreos/butane'
         ['grpcurl']='fullstorydev/grpcurl'
         ['evans']='ktr0731/evans'
         ['protoc']='protocolbuffers/protobuf'
@@ -46,6 +47,8 @@ declare -A gA_repositories=(
         ['graalvm']='graalvm/graalvm-ce-builds'
         ['jdtls']='jdtls'
         ['runc']='opencontainers/runc'
+        ['crun']='containers/crun'
+        ['fuse-overlayfs']='containers/fuse-overlayfs'
         ['cni-plugins']='containernetworking/plugins'
         ['rootlesskit']='rootless-containers/rootlesskit'
         ['slirp4netns']='rootless-containers/slirp4netns'
@@ -63,9 +66,9 @@ declare -a ga_menu_options_title=(
     "Las fuentes 'Nerd Fonts'"
     "Shell 'Powershell Core'"
     "Tools para gRPC"
-    "Container Runtime 'ContainerD'"
-    "Tools para 'ContainerD'"
-    "Tools para cualquier Container Runtime"
+    "HL Container Runtime 'ContainerD', BuildKit y NerdCtl"
+    "LL Container Runtine, comandos root-less, CNI plugins"
+    "Tools para gestionar containers"
     "Tools para Kubernates"
     "Implementación de Kubernates 'K0S'"
     "RTE de 'Go'"
@@ -81,14 +84,14 @@ declare -a ga_menu_options_title=(
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
 declare -a ga_menu_options_repos=(
-    "bat,ripgrep,xsv,delta,fzf,jq,yq,less,fd,oh-my-posh,jwt,step"
+    "bat,ripgrep,xsv,delta,fzf,jq,yq,less,fd,oh-my-posh,jwt,step,butane"
     "neovim"
     "nerd-fonts"
     "powershell"
     "protoc,grpcurl,evans"
-    "runc,rootlesskit,slirp4netns,containerd"
-    "cni-plugins,nerdctl"
-    "runc,buildkit,dive"
+    "containerd,buildkit,nerdctl"
+    "runc,crun,rootlesskit,slirp4netns,fuse-overlayfs,cni-plugins"
+    "dive"
     "kubectl,helm,operator-sdk,3scale-toolbox,pgo"
     "k0s"
     "go"
@@ -113,14 +116,17 @@ declare -A gA_repo_config=(
         ['nerd-fonts']=3
         ['powershell']=3
         ['runc']=3
+        ['crun']=3
         ['cni-plugins']=3
         ['3scale-toolbox']=3
         ['rootlesskit']=3
         ['slirp4netns']=3
+        ['fuse-overlayfs']=3
         ['containerd']=3
         ['buildkit']=3
         ['nerdctl']=3
         ['dive']=3
+        ['butane']=3
     )
 
 #Parametros:
