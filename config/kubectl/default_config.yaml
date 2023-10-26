@@ -7,7 +7,7 @@ clusters:
 contexts:
 - context:
     cluster: cluster01
-    namespace: npoc-testone
+    namespace: npoc-one
     user: lucianoepc
   name: cluster01-lepc
 current-context: cluster01-lepc
