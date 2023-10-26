@@ -245,6 +245,9 @@ function _update_all() {
     
     #4. Actualizar los paquetes instalados desde los repositorios SO
     print_line '-' $g_max_length_line "$g_color_opaque" 
+        #Indexar la documentación de plugins
+        echo "Indexar la documentación del plugin \"${l_base_path}/${l_repo_name}/doc\""
+        vim -u NONE -c "helptags ${l_base_path}/${l_repo_name}/doc" -c q    
     printf '> Actualizar los paquetes de los repositorios del SO Linux\n'
     print_line '-' $g_max_length_line "$g_color_opaque" 
     
@@ -279,7 +282,24 @@ function _update_all() {
     l_opcion=1
     l_flag=$(( $p_opciones & $l_opcion ))
     if [ $l_flag -eq $l_opcion ]; then
+
+        #Actualizaciones de los paquetes instalados
         _update_vim_package
+
+        #Otras actualizaciones para VIM
+        echo 'Actualizar los plugins "Vim Plug" de VIM ejecutando el comando ":PlugUpdate"'
+        vim -c 'PlugUpdate' -c 'q' -c 'q'
+        #echo 'Actualizar los gadgets de "VimSpector" ejecutando el comando ":VimspectorUpdate"'
+        #vim -c 'VimspectorUpdate' -c 'q'
+        #Actualizar CoC
+        #
+
+        #Otras actualizaciones de NVIM
+        echo 'Actualizar los plugins "Vim Plug" de NVIM ejecutando el comando ":PlugUpdate"'
+        nvim -c 'PlugUpdate' -c 'q' -c 'q'
+        echo 'Actualizar los plugins "Packer" de NVIM ejecutando el comando ":PackerUpdate"'
+        nvim -c 'PackerUpdate' -c 'q' -c 'q'
+
     fi
 
     #6. Si es desarrallador: Actualizar los modulos Python
