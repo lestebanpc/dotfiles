@@ -33,6 +33,8 @@ fi
 . ~/.files/setup/linux/_dynamic_commands_menu.bash
 
 
+#Expresion regular para extrear la versión de un programa
+declare -r g_regexp_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
 
 #Tamaño de la linea del menu
 g_max_length_line=130
@@ -60,7 +62,7 @@ function _after_update_repository() {
 
     #Indexar la documentación de plugins
     echo "Indexar la documentación del plugin \"${p_repo_path}/doc\""
-    vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
+    vim -u NONE -Esc "helptags ${p_repo_path}/doc" -c q
     
     #case "$p_repo_name" in
 
@@ -279,26 +281,69 @@ function _update_all() {
     echo ""
 
     #5. Actualizar paquetes VIM instalados
+    local l_version=""
+    local l_status=0
+    local l_vim_flag=1
+    local l_nvim_flag=1
+
     l_opcion=1
     l_flag=$(( $p_opciones & $l_opcion ))
     if [ $l_flag -eq $l_opcion ]; then
 
-        #Actualizaciones de los paquetes instalados
-        _update_vim_package
+        #5.1. Si esta instalado VIM, obtener la versión
+        l_version=$(vim --version 2> /dev/null)
+        l_status=$?
+        if [ $l_status -eq 0 ]; then
+            l_version=$(echo "$l_version" | head -n 1)
+            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+            l_vim_flag=0
+        else
+            l_version=""
+        fi
 
-        #Otras actualizaciones para VIM
-        echo 'Actualizar los plugins "Vim Plug" de VIM ejecutando el comando ":PlugUpdate"'
-        vim -c 'PlugUpdate' -c 'q' -c 'q'
-        #echo 'Actualizar los gadgets de "VimSpector" ejecutando el comando ":VimspectorUpdate"'
-        #vim -c 'VimspectorUpdate' -c 'q'
-        #Actualizar CoC
-        #
+        #5.2. Actualizaciones de VIM
+        if [ $l_vim_flag -eq 0 ]; then
 
-        #Otras actualizaciones de NVIM
-        echo 'Actualizar los plugins "Vim Plug" de NVIM ejecutando el comando ":PlugUpdate"'
-        nvim -c 'PlugUpdate' -c 'q' -c 'q'
-        echo 'Actualizar los plugins "Packer" de NVIM ejecutando el comando ":PackerUpdate"'
-        nvim -c 'PackerUpdate' -c 'q' -c 'q'
+            printf 'Se actualizará los paquetes/plugin del VIM "%s" ...\n' "${l_version}"
+
+            #Actualizar los package nativos de VIM 
+            _update_vim_package
+
+            #Otras actualizaciones para VIM (modo de inicio 'ex' y silencioso)
+            printf '\nActualizando los plugins "Vim Plug" de VIM ejecutando el comando ":PlugUpdate"\n'
+            vim -Esc 'PlugUpdate' -c 'q' -c 'q'
+            
+            #echo 'Actualizar los gadgets de "VimSpector" ejecutando el comando ":VimspectorUpdate"'
+            #vim -c 'VimspectorUpdate' -c 'q'
+            
+            #Actualizar CoC
+            #
+
+        fi
+
+        #5.3. Si esta instalado NeoVIM, obtener la versión
+        l_version=$(nvim --version 2> /dev/null)
+        l_status=$?
+        if [ $l_status -eq 0 ]; then
+            l_version=$(echo "$l_version" | head -n 1)
+            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
+            l_nvim_flag=0
+        else
+            l_version=""
+        fi
+
+        #5.4. Actualizaciones de NeoVIM
+        if [ $l_vim_flag -eq 0 ]; then
+
+            printf '\nSe actualizará los paquetes/plugin del NeoVIM "%s" ...\n\n' "${l_version}"
+
+            #Otras actualizaciones de NVIM (modo de inicio 'ex' y silencioso)
+            echo 'Actualizando los plugins "Vim Plug" de NeoVIM ejecutando el comando ":PlugUpdate"'
+            nvim -Esc 'PlugUpdate' -c 'q' -c 'q'
+            echo 'Actualizando los plugins "Packer" de NeoVIM ejecutando el comando ":PackerUpdate"'
+            nvim -Esc 'PackerUpdate' -c 'q' -c 'q'
+
+        fi
 
     fi
 
@@ -337,7 +382,7 @@ function _show_menu_core() {
     local l_max_digits=$?
 
     printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes %b(siempre que escoga una opcion este se ejecutará)%b\n" "$g_color_title" "0" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes VIM existentes\n" "$g_color_title" "1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin/paquetes VIM/NeoVim existentes\n" "$g_color_title" "1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas instalados\n" "$g_color_title" "2" "$g_color_reset"
 
     _show_dynamic_menu 'Instalar o actualizar' $g_offset_option_index_menu_install $l_max_digits

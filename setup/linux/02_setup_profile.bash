@@ -470,7 +470,7 @@ function _vim_config_plugins() {
         
         #Indexar la documentación de plugins
         echo "Indexar la documentación del plugin \"${l_base_path}/${l_repo_name}/doc\""
-        vim -u NONE -c "helptags ${l_base_path}/${l_repo_name}/doc" -c q    
+        vim -u NONE -Esc "helptags ${l_base_path}/${l_repo_name}/doc" -c q    
 
         printf '\n'
 

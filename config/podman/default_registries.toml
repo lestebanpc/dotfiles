@@ -62,5 +62,5 @@
 # # in order, and use the first one that exists.
 
 [registries.search]
-registries = ['registry.access.redhat.com', 'registry.redhat.io', 'docker.io', 'quay.io']
+registries = ['registry.access.redhat.com', 'registry.redhat.io', 'docker.io', 'mcr.microsoft.com', 'quay.io']
 

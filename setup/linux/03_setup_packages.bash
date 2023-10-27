@@ -35,7 +35,7 @@ fi
 
 #}}}
 
-#
+#La instalación/desintalación de Skopeo (eliminar del profile)
 #La instalación/desintalación de Python
 #La instalación/desintalación de NVM y Node.JS
 #La instalacion/desintalación VIM-enhanced
