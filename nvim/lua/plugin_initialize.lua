@@ -53,12 +53,6 @@ return require('packer').startup(function(use)
     }
 
 
-    -- Package UI> CORE> Facilita la navegacion entre Split VIM y Paneles TMUX
-    use {
-        'christoomey/vim-tmux-navigator',
-        opt = true
-    }
-
     -- Package UI> EXTENDED> FZF - Plugin de funciones basicas
     use {
         'junegunn/fzf',

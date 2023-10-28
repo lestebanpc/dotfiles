@@ -61,13 +61,14 @@ function _neovim_config_plugins() {
 
     local path_data=~/.local/share
 
-    #Instalar los plugins
+    #2. Instalar el gestor de plugin/paquetes 'Vim-Plug'
     echo "Instalar el gestor de paquetes Vim-Plug"
     if [ ! -f ${path_data}/nvim/site/autoload/plug.vim ]; then
         mkdir -p ${path_data}/nvim/site/autoload
         curl -fLo ${path_data}/nvim/site/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     fi
     
+    #3. Instalar el gestor de paquetes 'Packer'
     local l_base_path="${path_data}/nvim/site/pack/packer/start"
     mkdir -p $l_base_path
     cd ${l_base_path}
@@ -83,7 +84,42 @@ function _neovim_config_plugins() {
         #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
-    
+
+    #4. Actualizar los paquetes/plugin de NeoVim
+    echo 'Instalando los plugins "Vim-Plug" de NeoVIM ejecutando el comando ":PlugInstall"'
+    nvim -Esc 'PlugInstall' -c 'q' -c 'q'
+
+    echo 'Instalando/Actualizando los plugins "Packer" de NeoVIM ejecutando el comando ":PackerUpdate"'
+    nvim -Esc 'PackerUpdate' -c 'q' -c 'q'
+
+    echo 'Actualizando los plugins "Vim-Plug" de NeoVIM ejecutando el comando ":PlugUpdate"'
+    nvim -Esc 'PlugUpdate' -c 'q' -c 'q'
+
+    if [ $p_opcion -eq 1 ]; then
+
+        printf '  Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "NeoVIM" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
+        printf '  Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
+        printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+
+        printf '  Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
+        echo "    1> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
+        echo "       1.1> Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash:"
+        echo "           \":CocInstall coc-tsserver coc-json coc-html coc-css\""
+        echo "           \":CocInstall coc-pyrigh\""
+        echo "           \":CocInstall coc-sh\""
+        echo "       1.2> Motor de snippets 'UtilSips' (no usar el builtin/nativo de CoC):"
+        echo "           \":CocInstall coc-ultisnips\""
+        echo "    2> Revisar la Configuracion de COC \":CocConfig\":"
+        echo "       2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+        echo "          { \"diagnostic.displayByAle\": true }"
+        echo "       2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+        echo "          Si esta instalado esta extension, desintalarlo."
+
+    else
+
+        printf '  Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "NeoVIM" "$g_color_reset" "$g_color_subtitle" "Editor" "$g_color_reset"
+    fi
 
     return 0
 }
@@ -227,10 +263,7 @@ function _neovim_setup() {
             fi
         fi
 
-        #5.3 Instalando paquetes
-        _neovim_config_plugins 1
-
-        #5.4 Creando enlaces simbolicos
+        #5.3 Creando enlaces simbolicos
         printf '\n'
         print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
 
@@ -276,21 +309,9 @@ function _neovim_setup() {
             ln -snf ~/.files/nvim/ide_nococ/ftplugin/ ~/.config/nvim/runtime_nococ/ftplugin
         fi
 
-        echo "Complete la configuración de NeoVIM como IDE:"
-        echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
-        echo "  2> Instalar los plugins de Packer  : \":PackerUpdate\""
-        echo "  3> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
-        echo "     3.1> Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash:"
-        echo "         \":CocInstall coc-tsserver coc-json coc-html coc-css\""
-        echo "         \":CocInstall coc-pyrigh\""
-        echo "         \":CocInstall coc-sh\""
-        echo "     3.2> Motor de snippets 'UtilSips' (no usar el builtin/nativo de CoC):"
-        echo "         \":CocInstall coc-ultisnips\""
-        echo "  4> Revisar la Configuracion de COC \":CocConfig\":"
-        echo "     4.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-        echo "          { \"diagnostic.displayByAle\": true }"
-        echo "     4.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-        echo "          Si esta instalado esta extension, desintalarlo."
+        #5.4 Instalando paquetes
+        _neovim_config_plugins 1
+
 
     fi
 
@@ -299,10 +320,7 @@ function _neovim_setup() {
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then
 
-        #Instalando paquetes
-        _neovim_config_plugins 0
-
-        #Creando enlaces simbolicos
+        #6.1 Creando enlaces simbolicos
         printf '\n'
         print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
 
@@ -323,9 +341,9 @@ function _neovim_setup() {
             ln -snf ~/.files/nvim/editor/ftplugin/ ~/.config/nvim/ftplugin
         fi
         
-        echo "Complete la configuración de los plugins en NeoVIM como Editor:"
-        echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
-        echo "  2> Instalar los plugins de VIM-Plug: \":PackerUpdate\""
+        #6.2 Instalando paquetes
+        _neovim_config_plugins 0
+
 
     fi
 
@@ -476,6 +494,35 @@ function _vim_config_plugins() {
 
     done;
 
+    #5. Instalar los paquetes/plugin que se instana por comandos de Vim
+    echo 'Instalando los plugins "Vim-Plug" de VIM ejecutando el comando ":PlugInstall"'
+    vim -Esc 'PlugInstall' -c 'q' -c 'q'
+
+    echo 'Actualizando los plugins "Vim-Plug" de VIM ejecutando el comando ":PlugUpdate"'
+    vim -Esc 'PlugUpdate' -c 'q' -c 'q'
+
+    if [ $p_opcion -eq 1 ]; then
+
+        printf '  Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "VIM" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
+
+        printf '  Se recomienda que configure su IDE CoC segun su necesidad:\n'
+        echo "    1> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
+        echo "       1.1> Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash:"
+        echo "           \":CocInstall coc-tsserver coc-json coc-html coc-css\""
+        echo "           \":CocInstall coc-pyrigh\""
+        echo "           \":CocInstall coc-sh\""
+        echo "       1.2> Motor de snippets 'UtilSips' (no usar el builtin/nativo de CoC):"
+        echo "           \":CocInstall coc-ultisnips\""
+        echo "    2> Revisar la Configuracion de COC \":CocConfig\":"
+        echo "       2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+        echo "          { \"diagnostic.displayByAle\": true }"
+        echo "       2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+        echo "          Si esta instalado esta extension, desintalarlo."
+
+    else
+        printf '  Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "VIM" "$g_color_reset" "$g_color_subtitle" "Editor" "$g_color_reset"
+    fi
     return 0
 }
 
@@ -561,9 +608,6 @@ function _vim_setup() {
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then
 
-        #Instalar los plugins
-        _vim_config_plugins 1
-
         #Creando enlaces simbolicos
         printf '\n'
         print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
@@ -583,20 +627,9 @@ function _vim_setup() {
         echo "IDE (CoC)> Creando el enlace del script de inicio \"~/.vimrc\" para usarlos como IDE"
         ln -snf ~/.files/vim/vimrc_linux_ide.vim ~/.vimrc
         #fi
-        echo "Complete la configuracion de VIM para IDE usando CoC:"
-        echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
-        echo "  2> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
-        echo "     2.1> Adaptador de LSP server basicos: JS, Json, HTLML, CSS, Python, Bash:"
-        echo "         \":CocInstall coc-tsserver coc-json coc-html coc-css\""
-        echo "         \":CocInstall coc-pyrigh\""
-        echo "         \":CocInstall coc-sh\""
-        echo "     2.2> Motor de snippets 'UtilSips' (no usar el builtin/nativo de CoC):"
-        echo "         \":CocInstall coc-ultisnips\""
-        echo "  3> Revisar la Configuracion de COC: \":CocConfig\""
-        echo "     3.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-        echo "          { \"diagnostic.displayByAle\": true }"
-        echo "     3.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-        echo "          Si esta instalado esta extension, desintalarlo"
+
+        #Instalar los plugins
+        _vim_config_plugins 1
 
     fi
 
@@ -605,9 +638,6 @@ function _vim_setup() {
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then
 
-
-        #Instalar los plugins
-        _vim_config_plugins 0
         
         #Creando enlaces simbolicos
         printf '\n'
@@ -627,6 +657,8 @@ function _vim_setup() {
         echo "Complete la configuración de VIM como editor basico:"
         echo "  1> Instalar los plugins de VIM-Plug: \":PlugInstall\""
 
+        #Instalar los plugins
+        _vim_config_plugins 0
     fi
 
 }
@@ -665,6 +697,7 @@ function _commands_setup() {
             1)
                #Distribución: Ubuntu
                if [ $g_is_root -eq 0 ]; then
+
                   apt-get install xclip
                else
                   sudo apt-get install xclip
