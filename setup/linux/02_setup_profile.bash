@@ -85,18 +85,20 @@ function _neovim_config_plugins() {
         echo "Paquete VIM \"${l_repo_git}\" ya esta instalado"
     fi
 
+    #3. Instalar el gestor de paquetes 'Lazy'
+
     #4. Actualizar los paquetes/plugin de NeoVim
     echo 'Instalando los plugins "Vim-Plug" de NeoVIM ejecutando el comando ":PlugInstall"'
-    nvim -Esc 'PlugInstall' -c 'q' -c 'q'
+    nvim --headless -c 'PlugInstall' -c 'q' -c 'q'
 
     echo 'Instalando los plugins "Packer" de NeoVIM ejecutando el comando ":PackerUpdate"'
-    nvim -Esc 'PackerInstall' -c 'q' -c 'q'
+    nvim --headless -c 'PackerInstall' -c 'q' -c 'q'
 
     echo 'Actualizando los plugins "Vim-Plug" de NeoVIM ejecutando el comando ":PlugUpdate"'
-    nvim -Esc 'PlugUpdate' -c 'q' -c 'q'
+    nvim --headless -c 'PlugUpdate' -c 'q' -c 'q'
 
     echo 'Actualizando los plugins "Packer" de NeoVIM ejecutando el comando ":PackerUpdate"'
-    nvim -Esc 'PackerUpdate' -c 'q' -c 'q'
+    nvim --headless -c 'PackerUpdate' -c 'q' -c 'q'
 
     if [ $p_opcion -eq 1 ]; then
 

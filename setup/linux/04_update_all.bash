@@ -339,9 +339,9 @@ function _update_all() {
 
             #Otras actualizaciones de NVIM (modo de inicio 'ex' y silencioso)
             echo 'Actualizando los plugins "Vim Plug" de NeoVIM ejecutando el comando ":PlugUpdate"'
-            nvim -Esc 'PlugUpdate' -c 'q' -c 'q'
+            nvim --headless -c 'PlugUpdate' -c 'q' -c 'q'
             echo 'Actualizando los plugins "Packer" de NeoVIM ejecutando el comando ":PackerUpdate"'
-            nvim -Esc 'PackerUpdate' -c 'q' -c 'q'
+            nvim --headless -c 'PackerUpdate' -c 'q' -c 'q'
 
         fi
 
