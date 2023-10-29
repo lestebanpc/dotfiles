@@ -62,7 +62,7 @@ function _after_update_repository() {
 
     #Indexar la documentación de plugins
     echo "Indexar la documentación del plugin \"${p_repo_path}/doc\""
-    vim -u NONE -Esc "helptags ${p_repo_path}/doc" -c q
+    vim -u NONE -Esc "helptags ${p_repo_path}/doc" -c qa
     
     #case "$p_repo_name" in
 
@@ -70,49 +70,6 @@ function _after_update_repository() {
     #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
     #        ;;
     #    vim-surround)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-
-
-    #    vimspector)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-    #    omnisharp-vim)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-    #    ultisnips)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-    #    ale)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-    #    coc.nvim)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-    #    vim-snippets)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-
-
-    #    fzf)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-    #    fzf.vim)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-    #    vim-devicons)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-    #    vim-tmux-navigator)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-    #    vim-airline)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-    #    vim-airline-themes)
-    #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
-    #        ;;
-    #    nerdtree)
     #        vim -u NONE -c "helptags ${p_repo_path}/doc" -c q
     #        ;;
 
@@ -285,6 +242,8 @@ function _update_all() {
     local l_status=0
     local l_vim_flag=1
     local l_nvim_flag=1
+    local l_aux=""
+    local l_is_developer=1
 
     l_opcion=1
     l_flag=$(( $p_opciones & $l_opcion ))
@@ -306,18 +265,51 @@ function _update_all() {
 
             printf 'Se actualizará los paquetes/plugin del VIM "%s" ...\n' "${l_version}"
 
+            #5.2.1. Atualizaciones generales
+
             #Actualizar los package nativos de VIM 
             _update_vim_package
 
             #Otras actualizaciones para VIM (modo de inicio 'ex' y silencioso)
-            printf '\nActualizando los plugins "Vim Plug" de VIM ejecutando el comando ":PlugUpdate"\n'
-            vim -Esc 'PlugUpdate' -c 'q' -c 'q'
+            printf '\nActualizando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugUpdate"\n'
+            vim -esc 'PlugUpdate' -c 'qa'
+
+
+            #5.2.2. Verificar si esta instalado en modo developer/IDE
+            l_is_developer=1
+            l_aux=$(readlink ~/.vimrc 2> /dev/null)
+            l_status=$?
+            if [ $l_status -eq 0 ]; then
+                l_aux="${l_aux##*/}"
+                if [ "$l_aux" = "vimrc_linux_ide.vim" ]; then
+                    l_is_developer=0
+                    printf 'Se ha detectado que %s esta instalado en modo developer (usa el arhivo de inicialización "%s")\n' "VIM" "$l_aux"
+                fi
+            fi
+
+            #5.2.3. Actualizar en modo deleloper
+            if [ $l_is_developer -eq 0 ]; then
+
+                #Actualizar las extensiones de CoC
+                printf 'Actualizando las extensiones existentes de CoC, ejecutando el comando ":CocUpdate"\n'
+                vim -esc 'CocUpdate' -c 'qa'
+
+                #Actualizando los gadgets de 'VimSpector'
+                printf 'Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
+                vim -esc 'VimspectorUpdate' -c 'qa'
+
+                printf '\nRecomendaciones:\n'
+                printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
+                printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
+                echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
+                echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
+                echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+                echo "               { \"diagnostic.displayByAle\": true }"
+                echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+                echo "               Si esta instalado esta extension, desintalarlo."
+
+            fi
             
-            #echo 'Actualizar los gadgets de "VimSpector" ejecutando el comando ":VimspectorUpdate"'
-            #vim -c 'VimspectorUpdate' -c 'q'
-            
-            #Actualizar CoC
-            #
 
         fi
 
@@ -338,11 +330,48 @@ function _update_all() {
             printf '\nSe actualizará los paquetes/plugin del NeoVIM "%s" ...\n\n' "${l_version}"
 
             #Otras actualizaciones de NVIM (modo de inicio 'ex' y silencioso)
-            echo 'Actualizando los plugins "Vim Plug" de NeoVIM ejecutando el comando ":PlugUpdate"'
-            nvim --headless -c 'PlugUpdate' -c 'q' -c 'q'
-            echo 'Actualizando los plugins "Packer" de NeoVIM ejecutando el comando ":PackerUpdate"'
-            nvim --headless -c 'PackerUpdate' -c 'q' -c 'q'
+            echo 'Actualizando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugUpdate"'
+            nvim --headless -c 'PlugUpdate' -c 'qa'
+            echo 'Actualizando los plugins "Packer" de NeoVIM, ejecutando el comando ":PackerUpdate"'
+            nvim --headless -c 'PackerUpdate' -c 'qa'
 
+            #5.4.1. Verificar si esta instalado en modo developer/IDE
+            l_is_developer=1
+            l_aux=$(readlink ~/.config/nvim/init.vim 2> /dev/null)
+            l_status=$?
+            if [ $l_status -eq 0 ]; then
+                l_aux="${l_aux##*/}"
+                if [ "$l_aux" = "init_linux_ide.vim" ]; then
+                    l_is_developer=0
+                    printf 'Se ha detectado que %s esta instalado en modo developer (usa el arhivo de inicialización "%s")\n' "NeoVIM" "$l_aux"
+                fi
+            fi
+
+            #5.4.2. Actualizar en modo developer
+            if [ $l_is_developer -eq 0 ]; then
+
+                #Actualizar las extensiones de CoC
+                printf 'Actualizando los extensiones existentes de CoC, ejecutando el comando ":CocUpdate"\n'
+                USE_COC=1 nvim --headless -c 'CocUpdate' -c 'qa'
+
+                #Actualizando los gadgets de 'VimSpector'
+                #printf 'Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
+                #USE_COC=1 nvim --headless -c 'VimspectorUpdate' -c 'qa'
+
+                printf '\nRecomendaciones:\n'
+                printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
+                printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+                printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+
+                printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
+                echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
+                echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
+                echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+                echo "               { \"diagnostic.displayByAle\": true }"
+                echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+                echo "               Si esta instalado esta extension, desintalarlo."
+
+            fi
         fi
 
     fi
@@ -374,15 +403,15 @@ function _show_menu_core() {
     print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_title"
     print_line '-' $g_max_length_line  "$g_color_opaque"
     printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
-    printf " (%ba%b) Actualizar los artefactos existentes: paquetes del SO y paquetes VIM\n" "$g_color_title" "$g_color_reset"
-    printf " (%bb%b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y paquetes VIM\n" "$g_color_title" "$g_color_reset"
+    printf " (%ba%b) Actualizar los artefactos existentes: paquetes del SO y VIM/NeoVIM (update & config plugins) \n" "$g_color_title" "$g_color_reset"
+    printf " (%bb%b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y VIM/NeoVIM (update & config plugins)\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     _get_length_menu_option $g_offset_option_index_menu_install
     local l_max_digits=$?
 
     printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes %b(siempre que escoga una opcion este se ejecutará)%b\n" "$g_color_title" "0" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin/paquetes VIM/NeoVim existentes\n" "$g_color_title" "1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de VIM/NeoVim existentes y configurarlos\n" "$g_color_title" "1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas instalados\n" "$g_color_title" "2" "$g_color_reset"
 
     _show_dynamic_menu 'Instalar o actualizar' $g_offset_option_index_menu_install $l_max_digits

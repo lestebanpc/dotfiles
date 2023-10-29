@@ -5,7 +5,7 @@
 if g:is_neovim
     
     "Inicializar el StatusLine, TabLine, ...
-    lua require('ui.core')
+    lua require('packer.ui.core')
 
 else
     "StatusLine y TabLine : AirLine

@@ -1,13 +1,13 @@
 "Configuracion de NeoVim (usa el LSP nativo y como completado usa CMP)
 if g:is_neovim && !g:use_coc_in_nvim
 
-    lua require('ide.lsp')
-    lua require('ide.completition')
-    lua require('ide.diagnostic')
-    lua require('ide.dap')
-    "lua require('ide.others')
-    lua require('ide.lsp_adapters')
-    lua require('ide.dap_adapters')
+    lua require('packer.ide.lsp')
+    lua require('packer.ide.completition')
+    lua require('packer.ide.diagnostic')
+    lua require('packer.ide.dap')
+    "lua require('packer.ide.others')
+    lua require('packer.ide.lsp_adapters')
+    lua require('packer.ide.dap_adapters')
 
     "Open a REPL / Debug-console.
     "nnoremap <Leader>dr <Cmd>lua require('dap').repl.open()<CR>

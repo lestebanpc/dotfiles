@@ -88,38 +88,58 @@ function _neovim_config_plugins() {
     #3. Instalar el gestor de paquetes 'Lazy'
 
     #4. Actualizar los paquetes/plugin de NeoVim
-    echo 'Instalando los plugins "Vim-Plug" de NeoVIM ejecutando el comando ":PlugInstall"'
-    nvim --headless -c 'PlugInstall' -c 'q' -c 'q'
+    echo 'Instalando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugInstall"'
+    nvim --headless -c 'PlugInstall' -c 'qa'
 
-    echo 'Instalando los plugins "Packer" de NeoVIM ejecutando el comando ":PackerUpdate"'
-    nvim --headless -c 'PackerInstall' -c 'q' -c 'q'
+    echo 'Instalando los plugins "Packer" de NeoVIM, ejecutando el comando ":PackerUpdate"'
+    nvim --headless -c 'PackerInstall' -c 'qa'
 
-    echo 'Actualizando los plugins "Vim-Plug" de NeoVIM ejecutando el comando ":PlugUpdate"'
-    nvim --headless -c 'PlugUpdate' -c 'q' -c 'q'
+    echo 'Actualizando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugUpdate"'
+    nvim --headless -c 'PlugUpdate' -c 'qa'
 
-    echo 'Actualizando los plugins "Packer" de NeoVIM ejecutando el comando ":PackerUpdate"'
-    nvim --headless -c 'PackerUpdate' -c 'q' -c 'q'
+    echo 'Actualizando los plugins "Packer" de NeoVIM, ejecutando el comando ":PackerUpdate"'
+    nvim --headless -c 'PackerUpdate' -c 'qa'
 
     if [ $p_opcion -eq 1 ]; then
 
+
         printf '  Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "NeoVIM" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
-        printf '  Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
+        printf 'Configurando los plugins usados para el IDE CoC ...\n' 
+
+        #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
+        printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) ":CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh"\n'
+        USE_COC=1 nvim --headless -c 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
+
+        #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
+        printf '  Instalando extensiones de CoC (Motor de snippets "UtilSnips") ":CocInstall coc-ultisnips" (no se esta usando el nativo de CoC)\n'
+        USE_COC=1 nvim --headless -c 'CocInstall coc-update' -c 'qa'
+
+        #Instalando los gadgets basicos de 'VimSpector'
+        #printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
+        #USE_COC=1 nvim --headless -c 'VimspectorUpdate' -c 'qa'
+
+        #Actualizar las extensiones de CoC
+        printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando ":CocUpdate"\n'
+        USE_COC=1 nvim --headless -c 'CocUpdate' -c 'qa'
+
+        #Actualizando los gadgets de 'VimSpector'
+        #printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
+        #USE_COC=1 nvim --headless -c 'VimspectorUpdate' -c 'qa'
+
+        #printf 'Configurando los plugins usados para el IDE vinculado al LSP nativo de NeoVIM ...\n' 
+
+        printf '\nRecomendaciones:\n'
+        printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
         printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
         printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
 
-        printf '  Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
-        echo "    1> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
-        echo "       1.1> Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash:"
-        echo "           \":CocInstall coc-tsserver coc-json coc-html coc-css\""
-        echo "           \":CocInstall coc-pyrigh\""
-        echo "           \":CocInstall coc-sh\""
-        echo "       1.2> Motor de snippets 'UtilSips' (no usar el builtin/nativo de CoC):"
-        echo "           \":CocInstall coc-ultisnips\""
-        echo "    2> Revisar la Configuracion de COC \":CocConfig\":"
-        echo "       2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-        echo "          { \"diagnostic.displayByAle\": true }"
-        echo "       2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-        echo "          Si esta instalado esta extension, desintalarlo."
+        printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
+        echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
+        echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
+        echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+        echo "               { \"diagnostic.displayByAle\": true }"
+        echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+        echo "               Si esta instalado esta extension, desintalarlo."
 
     else
 
@@ -493,37 +513,53 @@ function _vim_config_plugins() {
         
         #Indexar la documentación de plugins
         echo "Indexar la documentación del plugin \"${l_base_path}/${l_repo_name}/doc\""
-        vim -u NONE -Esc "helptags ${l_base_path}/${l_repo_name}/doc" -c q    
+        vim -u NONE -esc "helptags ${l_base_path}/${l_repo_name}/doc" -c qa    
 
         printf '\n'
 
     done;
 
     #5. Instalar los paquetes/plugin que se instana por comandos de Vim
-    echo 'Instalando los plugins "Vim-Plug" de VIM ejecutando el comando ":PlugInstall"'
-    vim -Esc 'PlugInstall' -c 'q' -c 'q'
+    echo 'Instalando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugInstall"'
+    vim -esc 'PlugInstall' -c 'qa'
 
-    echo 'Actualizando los plugins "Vim-Plug" de VIM ejecutando el comando ":PlugUpdate"'
-    vim -Esc 'PlugUpdate' -c 'q' -c 'q'
+    echo 'Actualizando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugUpdate"'
+    vim -esc 'PlugUpdate' -c 'qa'
 
     if [ $p_opcion -eq 1 ]; then
 
         printf '  Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "VIM" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
+        printf 'Configurando los plugins usados para IDE ...\n' 
 
-        printf '  Se recomienda que configure su IDE CoC segun su necesidad:\n'
-        echo "    1> Instalar extensiones de COC (Listar existentes \":CocList extensions\")"
-        echo "       1.1> Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash:"
-        echo "           \":CocInstall coc-tsserver coc-json coc-html coc-css\""
-        echo "           \":CocInstall coc-pyrigh\""
-        echo "           \":CocInstall coc-sh\""
-        echo "       1.2> Motor de snippets 'UtilSips' (no usar el builtin/nativo de CoC):"
-        echo "           \":CocInstall coc-ultisnips\""
-        echo "    2> Revisar la Configuracion de COC \":CocConfig\":"
-        echo "       2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-        echo "          { \"diagnostic.displayByAle\": true }"
-        echo "       2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-        echo "          Si esta instalado esta extension, desintalarlo."
+        #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
+        printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) ":CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh"\n'
+        vim -esc 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
+
+        #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
+        printf '  Instalando extensiones de CoC (Motor de snippets "UtilSnips") ":CocInstall coc-ultisnips" (no se esta usando el nativo de CoC)\n'
+        vim -esc 'CocInstall coc-update' -c 'qa'
+
+        #Instalando los gadgets basicos de 'VimSpector'
+        #printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
+        #vim -esc 'VimspectorUpdate' -c 'qa'
+
+        #Actualizar las extensiones de CoC
+        printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando ":CocUpdate"\n'
+        vim -esc 'CocUpdate' -c 'qa'
+
+        #Actualizando los gadgets de 'VimSpector'
+        printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
+        vim -esc 'VimspectorUpdate' -c 'qa'
+
+        printf '\nRecomendaciones:\n'
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
+        printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
+        echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
+        echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
+        echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+        echo "               { \"diagnostic.displayByAle\": true }"
+        echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+        echo "               Si esta instalado esta extension, desintalarlo."
 
     else
         printf '  Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "VIM" "$g_color_reset" "$g_color_subtitle" "Editor" "$g_color_reset"

@@ -10,7 +10,7 @@ if g:is_neovim
     "El ESQUEMA DE COLOR del tema SIEMPRE debera configurarse antes de la carga de una UI
     
     "Inicializar los packetes gestionados por Packer
-     lua require('plugin_initialize')
+     lua require('packer.plugin_initialize')
 
     "Plug-In> UI> CORE> Tema 'Tokyo Night' (carga automatica)
     "packadd tokyonight.nvim

@@ -5,7 +5,7 @@
 if g:is_neovim
     
     "Configurar el explorador de archivos ('nvim-tree'):
-    lua require('ui.extended')
+    lua require('packer.ui.extended')
 
 else
 
