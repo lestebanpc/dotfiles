@@ -46,6 +46,12 @@ return require('packer').startup(function(use)
         requires = { {'nvim-lua/plenary.nvim'} }
     }
 
+    -- Package UI> CORE> Crear paneles TMUX desde VIM (en Windows no existe TMUX) 
+    use {
+        'preservim/vimux',
+        opt = true
+    }
+
     -- Package UI> CORE> Facilita la navegacion entre Split VIM y Paneles TMUX
     use {
         'christoomey/vim-tmux-navigator',
@@ -82,6 +88,12 @@ return require('packer').startup(function(use)
     -- Package UI> IDE> TYPING> Vim-Surround (completar (), [], {})
     use {
         'tpope/vim-surround',
+        opt = true
+    }
+
+    -- Package UI> IDE> TYPING> Crear elementos HTML por comandos  
+    use {
+        'mattn/emmet-vim',
         opt = true
     }
 

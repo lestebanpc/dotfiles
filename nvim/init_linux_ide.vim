@@ -28,25 +28,23 @@ let g:using_lsp_server_cs_win = 0
 source ~/.files/vim/setting/core_setting.vim
 source ~/.files/vim/setting/core_mapping.vim
 
-"----------------------------- Plugins Initialize      -----------------------------
-"Registro de los plugin en los gestores de plugins Vim-Plug y de paquetes Packer
-"Carga automatica de plugins por el gestor de paquetes
+"----------------------------- Load plugins            -----------------------------
+"Registro de los plugin en los gestores de plugins (si se usa)
+"Carga automatica de algunos plugins por el gestor de paquetes
 "Carga manual de plugin
-"Configuracion de basica de inicializacion de plugins:
+"Configuracion de basica de plugins basicos:
 "  - Configuracion basica requeridos antes de la carga de un plugin
-"  - Establecer el 'Color Schema' del tema (requerido antes de cualquiere plugin UI)
-"  - Configuracion basica requerida despues de la carga de cirtos plugin
-source ~/.files/vim/setting/plugin_initialize.vim
+"  - Establecer el 'Color Schema' del tema (requerido antes de cualquier plugin UI)
+source ~/.files/vim/setting/plugin_load.vim
 
-"----------------------------- Plugins UI Basicos      -----------------------------
-
+"----------------------------- Setup plugins (UI)       ----------------------------
 "StatusLine, TabLine, TMUX, ...
 source ~/.files/vim/setting/plugin/ui_core.vim
 
 "Utilitarios basicos: FZF, NERDTree, ...
 source ~/.files/vim/setting/plugin/ui_extended.vim
 
-"----------------------------- Plugins IDE             -----------------------------
+"----------------------------- Setup plugins (IDE)     -----------------------------
 if !g:use_ide
     finish
 endif

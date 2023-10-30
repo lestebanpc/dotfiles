@@ -2,8 +2,11 @@
 
 #Inicialización Global {{{
 
-#Funciones generales, determinar el tipo del SO y si es root
+#Funciones generales: determinar el tipo del SO, ...
 . ~/.files/terminal/linux/functions/func_utility.bash
+
+#Funciones de utlidad
+. ~/.files/setup/linux/_common_utility.bash
 
 #Variable global pero solo se usar localmente en las funciones
 _g_tmp=""
@@ -44,6 +47,12 @@ g_color_warning="\x1b[31m"
 #Tamaño de la linea del menu
 g_max_length_line=130
 
+#Estado del almacenado temporalmente de las credenciales para sudo
+# -1 - No se solicito el almacenamiento de las credenciales
+#  0 - No es root: se almaceno las credenciales
+#  1 - No es root: no se pudo almacenar las credenciales.
+#  2 - Es root: no requiere realizar sudo.
+g_status_crendential_storage=-1
 
 #}}}
 
@@ -61,14 +70,14 @@ function _neovim_config_plugins() {
 
     local path_data=~/.local/share
 
-    #2. Instalar el gestor de plugin/paquetes 'Vim-Plug'
-    echo "Instalar el gestor de paquetes Vim-Plug"
-    if [ ! -f ${path_data}/nvim/site/autoload/plug.vim ]; then
-        mkdir -p ${path_data}/nvim/site/autoload
-        curl -fLo ${path_data}/nvim/site/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-    fi
+    #2. Instalar el gestor de plugin/paquetes 'Vim-Plug' (no se usara este gestor)
+    #echo "Instalar el gestor de paquetes Vim-Plug"
+    #if [ ! -f ${path_data}/nvim/site/autoload/plug.vim ]; then
+    #    mkdir -p ${path_data}/nvim/site/autoload
+    #    curl -fLo ${path_data}/nvim/site/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    #fi
     
-    #3. Instalar el gestor de paquetes 'Packer'
+    #3. Instalar el gestor de paquetes 'Packer' (cambiarlo por lazy)
     local l_base_path="${path_data}/nvim/site/pack/packer/start"
     mkdir -p $l_base_path
     cd ${l_base_path}
@@ -88,14 +97,14 @@ function _neovim_config_plugins() {
     #3. Instalar el gestor de paquetes 'Lazy'
 
     #4. Actualizar los paquetes/plugin de NeoVim
-    echo 'Instalando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugInstall"'
-    nvim --headless -c 'PlugInstall' -c 'qa'
+    #echo 'Instalando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugInstall"'
+    #nvim --headless -c 'PlugInstall' -c 'qa'
 
-    echo 'Instalando los plugins "Packer" de NeoVIM, ejecutando el comando ":PackerUpdate"'
+    echo 'Instalando los plugins "Packer" de NeoVIM, ejecutando el comando ":PackerInstall"'
     nvim --headless -c 'PackerInstall' -c 'qa'
 
-    echo 'Actualizando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugUpdate"'
-    nvim --headless -c 'PlugUpdate' -c 'qa'
+    #echo 'Actualizando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugUpdate"'
+    #nvim --headless -c 'PlugUpdate' -c 'qa'
 
     echo 'Actualizando los plugins "Packer" de NeoVIM, ejecutando el comando ":PackerUpdate"'
     nvim --headless -c 'PackerUpdate' -c 'qa'
@@ -178,15 +187,20 @@ function _neovim_setup() {
         l_version=""
     fi
 
+    local l_flag_title=1
+
     #3. Instalando NeoVim
-    print_line '-' $g_max_length_line "$g_color_opaque" 
-    echo "> Configuración de NeoVIM"
-    print_line '-' $g_max_length_line "$g_color_opaque" 
-    
-    l_option=8
+    l_option=64
     l_flag=$(( $p_opciones & $l_option ))
 
     if [ $l_flag -eq $l_option ]; then
+
+        if [ $l_flag_title -ne 0 ]; then
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            echo "> Configuración de NeoVIM"
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            l_flag_title=0
+        fi
 
         #print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         if [ $l_nvim_flag -ne 0 ]; then
@@ -202,23 +216,28 @@ function _neovim_setup() {
 
         else
             echo "NeoVIM \"${l_version}\" esta instalado: "
-            echo "   > Instale la ultima version usando '~/.files/setup/linux/01_setup_commands.bash' o '~/.files/setup/linux/04_update_all.bash'"
+            echo "   > Si desea actualizar a la ultima version, use: '~/.files/setup/linux/01_setup_commands.bash' o '~/.files/setup/linux/04_update_all.bash'"
         fi
-    fi
-
-
-    #Configurar NeoVim solo si esta instalado (no todos los opciones instalan VIM y plugins)
-    if [ $l_nvim_flag -ne 0 ]; then
-        echo "Para configurar NeoVim debera instalar primero NeoVim"
-        return 0
     fi
 
     
     #5. Configurar NeoVim como IDE (Developer)
     local l_temp=""
-    l_option=32
+    l_option=256
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then
+
+        if [ $l_flag_title -ne 0 ]; then
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            echo "> Configuración de NeoVIM"
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            l_flag_title=0
+        fi
+        
+        if [ $l_nvim_flag -ne 0 ]; then
+            echo "Para configurar NeoVIM debera instalar primero NeoVIM"
+            return 1
+        fi
 
         #5.1 Instalando paquete requeridos para usar plugins de Node.JS
         l_temp=$(npm list -g --depth=0 2> /dev/null) 
@@ -237,6 +256,17 @@ function _neovim_setup() {
             #Instalando si no se obtiene la versión
             if [ -z "$l_version" ]; then
 
+               #Solicitar credenciales de administrador y almacenarlas temporalmente
+               if [ $g_status_crendential_storage -eq -1 ]; then
+
+                   storage_sudo_credencial
+                   g_status_crendential_storage=$?
+
+                   if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                       return 99
+                   fi
+               fi
+
                 print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
                 echo "Instalando el paquete 'neovim' de Node.JS para soporte de plugins en dicho RTE"
 
@@ -250,7 +280,7 @@ function _neovim_setup() {
             else
                 l_version=$(echo "$l_version" | head -n 1 )
                 l_version=$(echo "$l_version" | sed "$g_regexp_version1")
-                echo "Paquete de Node.JS 'neovim' ya esta instalado: versión \"${l_version}\""
+                echo "Paquete 'neovim' de Node.JS para soporte de plugins con NeoVIM, ya esta instalado: versión \"${l_version}\""
             fi
         fi
 
@@ -284,7 +314,7 @@ function _neovim_setup() {
             else
                 l_version=$(echo "$l_version" | head -n 1 )
                 l_version=$(echo "$l_version" | sed "$g_regexp_version1")
-                echo "Paquete de Python3 'pynvim' ya esta instalado: versión \"${l_version}\""
+                echo "Paquete 'pynvim' de Python3 para soporte de plugins con NeoVIM, ya esta instalado: versión \"${l_version}\""
             fi
         fi
 
@@ -341,9 +371,21 @@ function _neovim_setup() {
     fi
 
     #6. Configurar NeoVim como Editor basico 
-    l_option=16
+    l_option=128
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then
+
+        if [ $l_flag_title -ne 0 ]; then
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            echo "> Configuración de NeoVIM"
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            l_flag_title=0
+        fi
+        
+        if [ $l_nvim_flag -ne 0 ]; then
+            echo "Para configurar NeoVIM debera instalar primero NeoVIM"
+            return 1
+        fi
 
         #6.1 Creando enlaces simbolicos
         printf '\n'
@@ -381,18 +423,20 @@ function _neovim_setup() {
 #   (2) Perfil Basic - UI
 #   (3) Perfil Developer - Typing
 #   (4) Perfil Developer - IDE
-declare -A gA_repositories=(
+declare -A gA_repos_type=(
         ['tomasr/molokai']=1
         ['dracula/vim']=1
         ['vim-airline/vim-airline']=2
         ['vim-airline/vim-airline-themes']=2
         ['preservim/nerdtree']=2
         ['ryanoasis/vim-devicons']=2
+        ['preservim/vimux']=2
         ['christoomey/vim-tmux-navigator']=2
         ['junegunn/fzf']=2
         ['junegunn/fzf.vim']=2
         ['tpope/vim-surround']=3
         ['mg979/vim-visual-multi']=3
+        ['mattn/emmet-vim']=3
         ['dense-analysis/ale']=4
         ['neoclide/coc.nvim']=4
         ['OmniSharp/omnisharp-vim']=4
@@ -401,6 +445,19 @@ declare -A gA_repositories=(
         #['nickspoons/vim-sharpenup']=4
         ['puremourning/vimspector']=4
     )
+
+# Repositorios Git - Branch donde esta el plugin no es el por defecto
+declare -A gA_repos_branch=(
+        ['neoclide/coc.nvim']='release'
+    )
+
+
+# Repositorios Git - Deep de la clonacion del repositorio que no es el por defecto
+declare -A gA_repos_depth=(
+        ['neoclide/coc.nvim']=1
+        ['junegunn/fzf']=1
+    )
+
 
 # Parametros:
 # > Opcion:
@@ -427,12 +484,12 @@ function _vim_config_plugins() {
         mkdir -p ~/.vim/pack/ide/opt
     fi
    
-    #3. Instalar el gestor de paquetes 
-    if [ ! -f ~/.vim/autoload/plug.vim ]; then
-        echo "Instalar el gestor de paquetes Vim-Plug"
-        mkdir -p ~/.vim/autoload
-        curl -fLo ~/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-    fi
+    #3. Instalar el gestor de paquetes (no se usara gestor de paquetes para VIM)
+    #if [ ! -f ~/.vim/autoload/plug.vim ]; then
+    #    echo "Instalar el gestor de paquetes Vim-Plug"
+    #    mkdir -p ~/.vim/autoload
+    #    curl -fLo ~/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    #fi
     
     #4. Instalar el plugins que se instalan manualmente
     local l_base_path
@@ -440,10 +497,13 @@ function _vim_config_plugins() {
     local l_repo_name
     local l_repo_type=1
     local l_repo_url
-    for l_repo_git in "${!gA_repositories[@]}"; do
+    local l_repo_branch
+    local l_repo_depth
+    local l_aux
+    for l_repo_git in "${!gA_repos_type[@]}"; do
 
         #4.1 Configurar el repositorio
-        l_repo_type=${gA_repositories[$l_repo_git]}
+        l_repo_type=${gA_repos_type[$l_repo_git]}
         l_repo_name=${l_repo_git#*/}
 
         #4.2 Obtener la ruta base donde se clorara el paquete
@@ -489,19 +549,30 @@ function _vim_config_plugins() {
         print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
         printf 'Paquete VIM (%b%s%b) "%b%s%b": Se esta instalando\n' "$g_color_subtitle" "${l_repo_type}" "$g_color_reset" "$g_color_subtitle" "${l_repo_git}" "$g_color_reset"
         print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-        case "$l_repo_git" in 
 
-            "junegunn/fzf")
-                git clone --depth 1 https://github.com/${l_repo_git}.git
-                ;;
+        l_aux=""
 
-            "neoclide/coc.nvim")
-                git clone --branch release --depth=1 https://github.com/${l_repo_git}.git
-                ;;
-            *)
-                git clone https://github.com/${l_repo_git}.git
-                ;;
-        esac
+        l_repo_branch=${gA_repos_branch[$l_repo_git]}
+        if [ ! -z "$l_repo_branch" ]; then
+            l_aux="--branch ${l_repo_branch}"
+        fi
+
+        l_repo_depth=${gA_repos_depth[$l_repo_git]}
+        if [ ! -z "$l_repo_depth" ]; then
+            if [ -z "$l_aux" ]; then
+                l_aux="--depth ${l_repo_depth}"
+            else
+                l_aux="${l_aux} --depth ${l_repo_depth}"
+            fi
+        fi
+
+        if [ -z "$l_aux" ]; then
+            printf 'Ejecutando "git clone https://github.com/%s.git"\n' "$l_repo_git"
+            git clone https://github.com/${l_repo_git}.git
+        else
+            printf 'Ejecutando "git clone %s https://github.com/%s.git"\n' "$l_aux" "$l_repo_git"
+            git clone ${l_aux} https://github.com/${l_repo_git}.git
+        fi
 
         #4.6 Actualizar la documentación de VIM
 
@@ -520,11 +591,11 @@ function _vim_config_plugins() {
     done;
 
     #5. Instalar los paquetes/plugin que se instana por comandos de Vim
-    echo 'Instalando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugInstall"'
-    vim -esc 'PlugInstall' -c 'qa'
+    #echo 'Instalando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugInstall"'
+    #vim -esc 'PlugInstall' -c 'qa'
 
-    echo 'Actualizando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugUpdate"'
-    vim -esc 'PlugUpdate' -c 'qa'
+    #echo 'Actualizando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugUpdate"'
+    #vim -esc 'PlugUpdate' -c 'qa'
 
     if [ $p_opcion -eq 1 ]; then
 
@@ -560,6 +631,7 @@ function _vim_config_plugins() {
         echo "               { \"diagnostic.displayByAle\": true }"
         echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
         echo "               Si esta instalado esta extension, desintalarlo."
+        l_repo_branch=${gA_repos_branch[$l_repo_git]}
 
     else
         printf '  Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "VIM" "$g_color_reset" "$g_color_subtitle" "Editor" "$g_color_reset"
@@ -597,17 +669,32 @@ function _vim_setup() {
     fi
 
     #3, Instalando VIM-Enhaced
-    print_line '-' $g_max_length_line "$g_color_opaque" 
-    echo "> Configuración de VIM-Enhanced"
-    print_line '-' $g_max_length_line "$g_color_opaque" 
+    local l_flag_title=1
     
-    l_option=1
+    l_option=8
     l_flag=$(( $p_opciones & $l_option ))
-
     if [ $l_flag -eq $l_option ]; then
+
+        if [ $l_flag_title -ne 0 ]; then
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            echo "> Configuración de VIM-Enhanced"
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            l_flag_title=0
+        fi
 
         #print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         if [ $l_vim_flag -ne 0 ]; then
+
+            #Solicitar credenciales de administrador y almacenarlas temporalmente
+            if [ $g_status_crendential_storage -eq -1 ]; then
+
+                storage_sudo_credencial
+                g_status_crendential_storage=$?
+
+                if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                    return 99
+                fi
+            fi
 
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             #echo "- Instalación de VIM-Enhaced"
@@ -639,15 +726,23 @@ function _vim_setup() {
     fi
 
     #4. Configurar VIM
-    if [ $l_vim_flag -ne 0 ]; then
-        echo "Para configurar VIM debera instalar primero VIM"
-        return 0
-    fi
 
     #Configurar VIM como IDE (Developer)
-    l_option=4
+    l_option=32
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then
+
+        if [ $l_flag_title -ne 0 ]; then
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            echo "> Configuración de VIM-Enhanced"
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            l_flag_title=0
+        fi
+        
+        if [ $l_vim_flag -ne 0 ]; then
+            echo "Para configurar VIM debera instalar primero VIM"
+            return 1
+        fi
 
         #Creando enlaces simbolicos
         printf '\n'
@@ -675,10 +770,22 @@ function _vim_setup() {
     fi
 
     #Configurar VIM como Editor basico
-    l_option=2
+    l_option=16
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then
 
+
+        if [ $l_flag_title -ne 0 ]; then
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            echo "> Configuración de VIM-Enhanced"
+            print_line '-' $g_max_length_line "$g_color_opaque" 
+            l_flag_title=0
+        fi
+        
+        if [ $l_vim_flag -ne 0 ]; then
+            echo "Para configurar VIM debera instalar primero VIM"
+            return 1
+        fi
         
         #Creando enlaces simbolicos
         printf '\n'
@@ -714,11 +821,23 @@ function _commands_setup() {
         p_opciones=$1
     fi
 
-    #Sobrescribir los enlaces simbolicos
-    local l_option=64
+    #¿Se requiere instalar VIM/NVIM?
+    local l_flag_install_vim=1
+    local l_flag_install_nvim=1
+
+    local l_option=8
     local l_flag=$(( $p_opciones & $l_option ))
-    local l_overwrite_ln_flag=1
-    if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
+    if [ $l_flag -eq $l_option ]; then l_flag_install_vim=0; fi
+    
+    l_option=64
+    l_flag=$(( $p_opciones & $l_option ))
+    if [ $l_flag -eq $l_option ]; then l_flag_install_nvim=0; fi
+
+    #Si no se solicitar instalar VIM o NeoVIM no instalar ningun comando
+    #Si requiere instalar algun comando especifico use el script de instalacion de paquetes de SO
+    if [ $l_flag_install_vim -ne 0 ] || [ $l_flag_install_nvim -ne 0 ]; then
+        return 1
+    fi
     
     print_line '-' $g_max_length_line "$g_color_opaque" 
     echo "> Instalando los comandos/programas basicos requeridos ..."
@@ -729,6 +848,17 @@ function _commands_setup() {
     l_version=$(xclip -version 2>&1 1> /dev/null)
     local l_status=$?
     if [ $l_status -ne 0 ]; then
+
+        #Solicitar credenciales de administrador y almacenarlas temporalmente
+        if [ $g_status_crendential_storage -eq -1 ]; then
+
+            storage_sudo_credencial
+            g_status_crendential_storage=$?
+
+            if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                return 99
+            fi
+        fi
 
         print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         #echo "- Instalación de XClip"
@@ -763,6 +893,17 @@ function _commands_setup() {
     l_version=$(xsel --version 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ]; then
+
+        #Solicitar credenciales de administrador y almacenarlas temporalmente
+        if [ $g_status_crendential_storage -eq -1 ]; then
+
+            storage_sudo_credencial
+            g_status_crendential_storage=$?
+
+            if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                return 99
+            fi
+        fi
 
         print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         #echo "- Instalación de XSel"
@@ -808,6 +949,17 @@ function _commands_setup() {
         l_version=$(node -v 2> /dev/null)
         l_status=$?
         if [ $l_status -ne 0 ]; then
+
+            #Solicitar credenciales de administrador y almacenarlas temporalmente
+            if [ $g_status_crendential_storage -eq -1 ]; then
+
+                storage_sudo_credencial
+                g_status_crendential_storage=$?
+
+                if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                    return 99
+                fi
+            fi
 
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Vim/NeoVim como IDE> Se va instalar el scripts NVM y con ello se instalar RTE Node.JS"
@@ -860,6 +1012,17 @@ function _commands_setup() {
         l_version=$(python3 --version 2> /dev/null)
         l_status=$?
         if [ $l_status -ne 0 ]; then
+
+            #Solicitar credenciales de administrador y almacenarlas temporalmente
+            if [ $g_status_crendential_storage -eq -1 ]; then
+
+                storage_sudo_credencial
+                g_status_crendential_storage=$?
+
+                if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                    return 99
+                fi
+            fi
 
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Vim/NeoVim como IDE> Se va instalar RTE Python3"
@@ -917,6 +1080,17 @@ function _commands_setup() {
         l_status=$?
         if [ $l_status -ne 0 ]; then
 
+            #Solicitar credenciales de administrador y almacenarlas temporalmente
+            if [ $g_status_crendential_storage -eq -1 ]; then
+
+                storage_sudo_credencial
+                g_status_crendential_storage=$?
+
+                if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                    return 99
+                fi
+            fi
+
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Instalando el comando 'pip' (modulo python) para  instalar paquetes python."
 
@@ -950,6 +1124,17 @@ function _commands_setup() {
         l_version=$(skopeo -v 2> /dev/null)
         l_status=$?
         if [ $l_status -ne 0 ]; then
+
+            #Solicitar credenciales de administrador y almacenarlas temporalmente
+            if [ $g_status_crendential_storage -eq -1 ]; then
+
+                storage_sudo_credencial
+                g_status_crendential_storage=$?
+
+                if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                    return 99
+                fi
+            fi
 
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Instalando el comando 'skopeo' para examinar, copiar, eliminar contenedores de registros remotos."
@@ -1086,10 +1271,16 @@ function _profile_setup() {
     fi
 
     #Sobrescribir los enlaces simbolicos
-    local l_option=64
+    local l_option=4
     local l_flag=$(( $p_opciones & $l_option ))
     local l_overwrite_ln_flag=1
     if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
+
+    l_option=2
+    l_flag=$(( $p_opciones & $l_option ))
+    if [ $l_flag -ne $l_option ] && [ $l_overwrite_ln_flag -ne 0 ]; then
+        return 1 
+    fi
 
     print_line '-' $g_max_length_line "$g_color_opaque" 
     echo "> Creando los enlaces simbolicos y folderes del profile shell ..."
@@ -1131,6 +1322,7 @@ function _profile_setup() {
     #        ;;
     #esac
 
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "256" "$g_color_reset"
     #Si es Linux WSL
     if [ $g_os_type -eq 1 ]; then
 
@@ -1234,16 +1426,79 @@ function _profile_setup() {
        ln -snf ~/.files/config/kubectl/default_config.yaml ~/.kube/config
     fi
 
+    return 0
+e
+
+}
+
+# Remover el gestor de paquetes VIM-Plug en VIM y NeoVIM
+function _remove_vim_plug() {
+
+    #1. Argumentos
+    local p_opciones=0
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_opciones=$1
+    fi
+
+    #Eliminar en VIM
+    local l_option=512
+    local l_flag=$(( $p_opciones & $l_option ))
+
+    local l_flag_removed=1
+    if [ $l_flag -eq $l_option ]; then
+
+        #echo "> Eliminado el gestor 'VIM-Plug' de VIM..."
+        if [ -f ~/.vim/autoload/plug.vim ]; then
+            echo "Eliminado '~/.vim/autoload/plug.vim' ..."
+            rm ~/.vim/autoload/plug.vim
+            l_flag_removed=0
+        fi
+
+        if [ -d ~/.vim/plugged/ ]; then
+            echo "Eliminado el folder '~/.vim/plugged/' ..."
+            rm -rf ~/.vim/plugged/
+            l_flag_removed=0
+        fi
+
+        if [ $l_flag_removed -ne 0 ]; then
+            printf 'No esta instalado el gestor de paquetes "VIM-Plug" en VIM\n'
+        fi
+
+    fi
+
+
+    #Eliminar en NeoVIM
+    l_option=1024
+    l_flag=$(( $p_opciones & $l_option ))
+
+    l_flag_removed=1
+    if [ $l_flag -eq $l_option ]; then
+
+        #echo "> Eliminado el gestor 'VIM-Plug' de NeoVIM..."
+        if [ -f ~/.local/share/nvim/site/autoload/plug.vim ]; then
+            echo "Eliminado '~/.local/share/nvim/site/autoload/plug.vim' ..."
+            rm ~/.local/share/nvim/site/autoload/plug.vim
+            l_flag_removed=0
+        fi
+
+        if [ -d ~/.local/share/nvim/plugged/ ]; then
+            echo "Eliminado el folder '~/.local/share/nvim/plugged/' ..."
+            rm -rf ~/.local/share/nvim/plugged/
+            l_flag_removed=0
+        fi
+
+        if [ $l_flag_removed -ne 0 ]; then
+            printf 'No esta instalado el gestor de paquetes "VIM-Plug" en NeoVIM\n'
+        fi
+
+    fi
 
 }
 
 # Opciones:
-#   ( 0) Actualizar los paquetes del SO y actualizar los enlaces simbolicos (siempre se ejecutara)"
-#   ( 1) Instalar VIM-Enhanced si no esta instalado"
-#   ( 2) Instalar NeoVIM si no esta instalado"
-#   ( 4) Configurar VIM-Enhanced como Developer"
-#   ( 8) Configurar NeoVIM como Developer"
-#   (16) Forzar el actualizado de los enlaces simbolicos del profile"
+#   (  1) Actualizar los paquetes del SO 
+#   (  2) Crear los enlaces simbolicos (siempre se ejecutara)
+#   (  8) Forzar el actualizado de los enlaces simbolicos del profile
 function _setup() {
 
     #01. Argumentos
@@ -1254,80 +1509,103 @@ function _setup() {
 
     #02. Validar si fue descarga el repositorio git correspondiente
     if [ ! -d ~/.files/.git ]; then
-        echo "No existe los archivos necesarios, debera seguir los siguientes pasos:"
-        echo "   1> Descargar los archivos del repositorio:"
-        echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
-        echo "   2> Instalar comandos basicos:"
-        echo "      chmod u+x ~/.files/setup/01_setup_commands.bash"
-        echo "      ~/.files/setup/01_setup_commands.bash"
-        echo "   3> Configurar el profile del usuario:"
-        echo "      chmod u+x ~/.files/setup/02_setup_profile.bash"
-        echo "      ~/.files/setup/02_setup_profile.bash"
-        return 0
+        show_message_nogitrepo
+        return 10
     fi
     
-    #03. Solicitar credenciales de administrador y almacenarlas temporalmente
-    if [ $g_is_root -ne 0 ]; then
+    g_status_crendential_storage=-1
+    local l_status
 
-        #echo "Se requiere alamcenar temporalmente su password"
-        sudo -v
+    #03. Actualizar los paquetes de los repositorios
+    local l_option=1
+    local l_flag=$(( $p_opciones & $l_option ))
 
-        if [ $? -ne 0 ]; then
-            echo "ERROR(20): Se requiere \"sudo -v\" almacenar temporalmente su credenciales de root"
-            return 20;
+    if [ $l_flag -eq $l_option ]; then
+
+        #Solicitar credenciales de administrador y almacenarlas temporalmente
+        storage_sudo_credencial
+        g_status_crendential_storage=$?
+        #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+        if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+            return 99
         fi
-        printf '\n\n'
-    fi
-    
-    #04. Actualizar los paquetes de los repositorios
-    print_line '-' $g_max_length_line "$g_color_opaque" 
-    echo "> Actualizar los paquetes de los repositorio del SO Linux"
-    print_line '-' $g_max_length_line "$g_color_opaque" 
-    
-    #Segun el tipo de distribución de Linux
-    case "$g_os_subtype_id" in
-        1)
-            #Distribución: Ubuntu
-            if [ $g_is_root -eq 0 ]; then
-                apt-get update
-                apt-get upgrade
-            else
-                sudo apt-get update
-                sudo apt-get upgrade
-            fi
-            ;;
-        2)
-            #Distribución: Fedora
-            if [ $g_is_root -eq 0 ]; then
-                dnf upgrade
-            else
-                sudo dnf upgrade
-            fi
-            ;;
-        0)
-            echo "ERROR (22): No se identificado el tipo de Distribución Linux"
-            return 22;
-            ;;
-    esac
-   
+        
+        #Actualizar los paquetes de los repositorios
+        print_line '-' $g_max_length_line "$g_color_opaque" 
+        echo "> Actualizar los paquetes de los repositorio del SO Linux"
+        print_line '-' $g_max_length_line "$g_color_opaque" 
+        
+        #Segun el tipo de distribución de Linux
+        case "$g_os_subtype_id" in
+            1)
+                #Distribución: Ubuntu
+                if [ $g_is_root -eq 0 ]; then
+                    apt-get update
+                    apt-get upgrade
+                else
+                    sudo apt-get update
+                    sudo apt-get upgrade
+                fi
+                ;;
+            2)
+                #Distribución: Fedora
+                if [ $g_is_root -eq 0 ]; then
+                    dnf upgrade
+                else
+                    sudo dnf upgrade
+                fi
+                ;;
+            0)
+                echo "ERROR (22): No se identificado el tipo de Distribución Linux"
+                return 22;
+                ;;
+        esac
+
+    fi   
     
     #05. Instalando comandos y programas basicos
     _commands_setup $p_opciones
+    l_status=$?
+    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+    if [ $l_status -eq 99 ]; then
+        return 99
+    fi
 
     #06. Instalando VIM-Enhaced
     _vim_setup $p_opciones
+    l_status=$?
+    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+    if [ $l_status -eq 99 ]; then
+        return 99
+    fi
     
     #07. Instalando NeoVim
     _neovim_setup $p_opciones
-    
+    l_status=$?
+    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+    if [ $l_status -eq 99 ]; then
+        return 99
+    fi
 
     #08. Configuracion el SO: Crear enlaces simbolicos y folderes basicos
     _profile_setup $p_opciones
+    l_status=$?
+    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+    if [ $l_status -eq 99 ]; then
+        return 99
+    fi
+
+    #09. Eliminar el gestor 'VIM-Plug'
+    _remove_vim_plug $p_opciones
+    l_status=$?
+    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+    if [ $l_status -eq 99 ]; then
+        return 99
+    fi
 
     #09. Caducar las credecinales de root almacenadas temporalmente
-    if [ $g_is_root -ne 0 ]; then
-        echo $'\n'"Caducando el cache de temporal password de su 'sudo'"
-        sudo -k
+    if [ $g_status_crendential_storage -eq 0 ]; then
+        clean_sudo_credencial
     fi
 
 }
@@ -1345,16 +1623,19 @@ function _show_menu_core() {
     printf " (%bd%b) Configurar el profile como developer (Vim/NeoVim como IDE) y re-crear los enlaces simbolicos\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
-    local l_max_digits=2
+    local l_max_digits=4
 
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO y crear los enlaces simbolicos del profile %b(si escoge una opcion siempre se ejecutará)%b\n" "$g_color_title" "0" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Instalar si no esta instalado\n" "$g_color_title" "1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Configurar como Editor, incluyendo paquetes VIM (Basico)\n" "$g_color_title" "2" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM-Enhanced - Configurar como IDE, incluyendo paquetes VIM (Developer)\n" "$g_color_title" "4" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVim - Instalar si no esta instalado\n" "$g_color_title" "8" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVim - Configurar como Editor (Basico)\n" "$g_color_title" "16" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVim - Configurar como IDE (Developer)\n" "$g_color_title" "32" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Re-crear (crear y/o actualizar) los enlaces simbolicos del profile\n" "$g_color_title" "64" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO\n" "$g_color_title" "1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Crear los enlaces simbolicos del profile\n" "$g_color_title" "2" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Re-crear (crear y/o actualizar) los enlaces simbolicos del profile\n" "$g_color_title" "4" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Instalar si no esta instalado\n" "$g_color_title" "8" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Configurar como Editor (Basico)\n" "$g_color_title" "16" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Configurar como IDE (Developer)\n" "$g_color_title" "32" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Instalar si no esta instalado\n" "$g_color_title" "64" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Configurar como Editor (Basico)\n" "$g_color_title" "128" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Configurar como IDE (Developer)\n" "$g_color_title" "256" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "512" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "1024" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_opaque"
 
@@ -1373,21 +1654,13 @@ function i_main() {
     fi
 
     #¿Esta 'curl' instalado?
-    local l_curl_version=$(curl --version 2> /dev/null)
-    if [ ! -z "$l_curl_version" ]; then
-        l_curl_version=$(echo "$l_curl_version" | head -n 1 | sed "$g_regexp_version1")
-        printf '%bCURL version       : (%s)%b\n\n' "$g_color_opaque" "$l_curl_version" "$g_color_reset"
-    else
-        printf '\nERROR: CURL no esta instalado, debe instalarlo para descargar los artefactos a instalar/actualizar.\n'
-        printf '%bBinarios: https://curl.se/download.html\n' "$g_color_opaque"
-        printf 'Paquete Ubuntu/Debian:\n'
-        printf '          apt-get install curl\n'
-        printf 'Paquete CentOS/Fedora:\n'
-        printf '          dnf install curl\n%b' "$g_color_reset"
+    local l_status
+    fulfill_preconditions1
+    l_status=$?
 
-        return 22;
+    if [ $l_status -ne 0 ]; then
+        return 22
     fi
-    
    
     #2. Mostrar el Menu
    
@@ -1406,32 +1679,32 @@ function i_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
-                #1 + 2 + 8 + 16
-                _setup 27
+                #1 + 2 + 8 + 16 + 64 + 128
+                _setup 219
                 ;;
 
             b)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
-                #1 + 4 + 8 + 32
-                _setup 45
+                #1 + 2 + 8 + 32 + 64 + 256 
+                _setup 363
                 ;;
 
             c)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
-                #1 + 2 + 8 + 16 + 64 
-                _setup 91
+                #1 + 2 + 4 + 8 + 16 + 64 + 128
+                _setup 223
                 ;;
 
             d)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
-                #1 + 4 + 8 + 32 + 64
-                _setup 109
+                #1 + 2 + 4 + 8 + 32 + 64 + 256
+                _setup 367
                 ;;
 
             q)

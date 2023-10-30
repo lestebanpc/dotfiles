@@ -1,16 +1,27 @@
-"###################################################################################
-" Package Manager : Carga manual de Paquetes y su configuracion basica
-"###################################################################################
+"####################################################################################
+" Registro de plugins en el gestor de paquetes y carga automatica de algunos de ellos
+"####################################################################################
+
+"Solo se esta usando gestor de paquetes para NeoVim
+if g:is_neovim
+
+    "Registro de los plugin en el gestor de packetes 'Packer'
+     lua require('packer.plugin_register')
+endif
+
+
+
+"####################################################################################
+" Carga manual de plugin
+"####################################################################################
 
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-"Editor> Mejorar la experiencia de usuario
+"UI> CORE> Basico y extendido (Mejorar la experiencia de usuario)
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if g:is_neovim
 
     "El ESQUEMA DE COLOR del tema SIEMPRE debera configurarse antes de la carga de una UI
     
-    "Inicializar los packetes gestionados por Packer
-     lua require('packer.plugin_initialize')
 
     "Plug-In> UI> CORE> Tema 'Tokyo Night' (carga automatica)
     "packadd tokyonight.nvim
@@ -92,7 +103,7 @@ if g:use_ide
     
     "Si es VIM siempre usar CoC.nVim, si es NeoVim solo si se habilita el flag    
     if !g:is_neovim || (g:is_neovim && g:use_coc_in_nvim)
-
+ 
         "Package UI> IDE> Core> Linting (analisis y diagnostico sin compilar)
         "   Desabilitar LSP : Se usara CoC o Vim-LSP.
         let g:ale_disable_lsp = 1
@@ -210,40 +221,26 @@ if g:use_ide
 endif
 
 
-"###################################################################################
-" Plug-In Manager (Vim-Plug): Registro de Plugins y su Carga automatica
-"###################################################################################
 
-"----------------------------- Plug-In Manager - INIT  -----------------------------
-call plug#begin()
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"UI> CORE
+"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
-"----------------------------- Plug-in Manager - LOAD  -----------------------------
-"Plug-In> UI> CORE> Crear paneles TMUX desde VIM (en Windows no existe TMUX)
 "Solo en Linux (incluyendo WSL, solo en Linux y MacOS)
 if g:os_type != 0
-    Plug 'preservim/vimux'
+    "Package UI> CORE> Crear paneles TMUX desde VIM (en Windows no existe TMUX)
+    packadd vimux
 endif
 
 
 if g:use_typing_html_emmet
-    "Plug-In> UI> IDE> TYPING> Crear elementos HTML por comandos
-    Plug 'mattn/emmet-vim'
+    "Package UI> IDE> TYPING> Crear elementos HTML por comandos
+    packadd emmet-vim
 endif
 
-
-"----------------------------- Plug-In Manager - END   -----------------------------
-call plug#end()
-
-
-
-"###################################################################################
-" Package Manager : Carga manual paquetes y configuracion basica
-"###################################################################################
-
-"Paquete UI> CORE> Permite navegar entre split VIM y paneles TMUX como el mismo comando
 "Solo en Linux (incluyendo WSL, solo en Linux y MacOS)
 if g:os_type != 0
+    "Paquete UI> CORE> Permite navegar entre split VIM y paneles TMUX como el mismo comando
     packadd vim-tmux-navigator
 endif
 

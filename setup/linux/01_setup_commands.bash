@@ -2918,7 +2918,10 @@ _usage() {
 #}}}
 
 
-#Argumentos del script
+#A. Argumentos fijos del script
+
+
+#Argumento 1: ¿instalar/actualizar o desintalar?
 if [[ "$1" =~ ^[0-9]+$ ]]; then
     gp_type_calling=$1
 elif [ "$1" = "uninstall" ]; then
@@ -2930,6 +2933,7 @@ elif [ ! -z "$1" ]; then
 fi
 
 
+#Argumento 2: ¿solo para el usuario actual? ¿para todos los usuarios?
 gp_install_all_user=0   #(0) Se instala/configura para ser usuado por todos los usuarios (si es factible).
                         #    Requiere ejecutar con privilegios de administrador.
                         #(1) Solo se instala/configura para el usuario actual (no requiere ser administrador).
@@ -2938,7 +2942,9 @@ gp_install_all_user=0   #(0) Se instala/configura para ser usuado por todos los 
 #    gp_install_all_user=$2
 #fi
 
-#Logica principal del script
+
+
+#B. Logica principal del script (incluyendo los argumentos variables)
 
 #1. Desintalar los artefactos de un repoistorio
 if [ $gp_uninstall -eq 0 ]; then

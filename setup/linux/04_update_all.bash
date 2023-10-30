@@ -6,6 +6,9 @@
 #Funciones generales, determinar el tipo del SO y si es root
 . ~/.files/terminal/linux/functions/func_utility.bash
 
+#Funciones de utlidad
+. ~/.files/setup/linux/_common_utility.bash
+
 #Variable global pero solo se usar localmente en las funciones
 _g_tmp=""
 
@@ -30,7 +33,7 @@ fi
 
 
 #Variables y funciones para mostrar las opciones dinamicas del menu.
-. ~/.files/setup/linux/_dynamic_commands_menu.bash
+#. ~/.files/setup/linux/_dynamic_commands_menu.bash
 
 
 #Expresion regular para extrear la versión de un programa
@@ -42,8 +45,14 @@ g_max_length_line=130
 
 #Menu dinamico: Offset del indice donde inicia el menu dinamico.
 #               Generalmente el menu dinamico no inicia desde la primera opcion personalizado del menú.
-g_offset_option_index_menu_install=2
+#g_offset_option_index_menu_install=2
 
+#Estado del almacenado temporalmente de las credenciales para sudo
+# -1 - No se solicito el almacenamiento de las credenciales
+#  0 - No es root: se almaceno las credenciales
+#  1 - No es root: no se pudo almacenar las credenciales.
+#  2 - Es root: no requiere realizar sudo.
+g_status_crendential_storage=-1
 
 
 #}}}
@@ -161,12 +170,7 @@ function _update_vim_package() {
 
 }
 
-#
-# Argumentos:
-# 1) Repositorios que se se instalaran basicos y opcionales (flag en binario. entero que es suma de 2^n).
-# 2) -
-#
-function _update_all() {
+function _update_vim_nvim_packages() {
 
     #1. Argumentos
     local p_opciones=0
@@ -174,70 +178,7 @@ function _update_all() {
         p_opciones=$1
     fi
 
-    #2. Validar si fue descarga el repositorio git correspondiente
-    if [ ! -d ~/.files/.git ]; then
-        echo "No existe los archivos necesarios, debera seguir los siguientes pasos:"
-        echo "   1> Descargar los archivos del repositorio:"
-        echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
-        echo "   2> Instalar comandos basicos:"
-        echo "      chmod u+x ~/.files/setup/linux/01_setup_commands.bash"
-        echo "      ~/.files/setup/linux/01_setup_commands.bash"
-        echo "   3> Configurar el profile del usuario:"
-        echo "      chmod u+x ~/.files/setup/linux/02_setup_profile.bash"
-        echo "      ~/.files/setup/linux/02_setup_profile.bash"
-        return 0
-    fi
-    
-
-    #3. Solicitar credenciales de administrador y almacenarlas temporalmente
-    if [ $g_is_root -ne 0 ]; then
-
-        #echo "Se requiere alamcenar temporalmente su password"
-        sudo -v
-
-        if [ $? -ne 0 ]; then
-            echo "ERROR(20): Se requiere \"sudo -v\" almacene temporalmente su credenciales de root"
-            return 20;
-        fi
-        printf '\n\n'
-    fi
-    
-    #4. Actualizar los paquetes instalados desde los repositorios SO
-    print_line '-' $g_max_length_line "$g_color_opaque" 
-        #Indexar la documentación de plugins
-        echo "Indexar la documentación del plugin \"${l_base_path}/${l_repo_name}/doc\""
-        vim -u NONE -c "helptags ${l_base_path}/${l_repo_name}/doc" -c q    
-    printf '> Actualizar los paquetes de los repositorios del SO Linux\n'
-    print_line '-' $g_max_length_line "$g_color_opaque" 
-    
-    #Segun el tipo de distribución de Linux
-    case "$g_os_subtype_id" in
-        1)
-            #Distribución: Ubuntu
-            if [ $g_is_root -eq 0 ]; then
-                apt-get update
-                apt-get upgrade
-            else
-                sudo apt-get update
-                sudo apt-get upgrade
-            fi
-            ;;
-        2)
-            #Distribución: Fedora
-            if [ $g_is_root -eq 0 ]; then
-                dnf upgrade
-            else
-                sudo dnf upgrade
-            fi
-            ;;
-        0)
-            echo "ERROR (22): No se identificado el tipo de Distribución Linux"
-            return 22;
-            ;;
-    esac
-    echo ""
-
-    #5. Actualizar paquetes VIM instalados
+    #Actualizar paquetes VIM/NeoVIM instalados
     local l_version=""
     local l_status=0
     local l_vim_flag=1
@@ -245,8 +186,8 @@ function _update_all() {
     local l_aux=""
     local l_is_developer=1
 
-    l_opcion=1
-    l_flag=$(( $p_opciones & $l_opcion ))
+    local l_opcion=2
+    local l_flag=$(( $p_opciones & $l_opcion ))
     if [ $l_flag -eq $l_opcion ]; then
 
         #5.1. Si esta instalado VIM, obtener la versión
@@ -271,8 +212,8 @@ function _update_all() {
             _update_vim_package
 
             #Otras actualizaciones para VIM (modo de inicio 'ex' y silencioso)
-            printf '\nActualizando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugUpdate"\n'
-            vim -esc 'PlugUpdate' -c 'qa'
+            #printf '\nActualizando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugUpdate"\n'
+            #vim -esc 'PlugUpdate' -c 'qa'
 
 
             #5.2.2. Verificar si esta instalado en modo developer/IDE
@@ -283,7 +224,7 @@ function _update_all() {
                 l_aux="${l_aux##*/}"
                 if [ "$l_aux" = "vimrc_linux_ide.vim" ]; then
                     l_is_developer=0
-                    printf 'Se ha detectado que %s esta instalado en modo developer (usa el arhivo de inicialización "%s")\n' "VIM" "$l_aux"
+                    printf '\nSe ha detectado que %s esta instalado en modo developer (usa el arhivo de inicialización "%s")\n' "VIM" "$l_aux"
                 fi
             fi
 
@@ -330,8 +271,8 @@ function _update_all() {
             printf '\nSe actualizará los paquetes/plugin del NeoVIM "%s" ...\n\n' "${l_version}"
 
             #Otras actualizaciones de NVIM (modo de inicio 'ex' y silencioso)
-            echo 'Actualizando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugUpdate"'
-            nvim --headless -c 'PlugUpdate' -c 'qa'
+            #echo 'Actualizando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugUpdate"'
+            #nvim --headless -c 'PlugUpdate' -c 'qa'
             echo 'Actualizando los plugins "Packer" de NeoVIM, ejecutando el comando ":PackerUpdate"'
             nvim --headless -c 'PackerUpdate' -c 'qa'
 
@@ -376,22 +317,107 @@ function _update_all() {
 
     fi
 
-    #6. Si es desarrallador: Actualizar los modulos Python
+    #Si es desarrallador: Actualizar los modulos Python
     
 
-    #7. Si es desarrollador: Actualizar los paquetes globales Node.JS istalados
+    #Si es desarrollador: Actualizar los paquetes globales Node.JS istalados
 
-    #8. Actualizar los binarios de otros repositorios que no sean del SO (solo si la opcion ingresada es >= 2)
-    #l_opcion=1
-    #l_flag=$(( $p_opciones & $l_opcion ))
-    if [ $p_opciones -ge 2 ]; then
-        ~/.files/setup/linux/01_setup_commands.bash 1 $p_opciones
+}
+
+#
+# Argumentos:
+# 1) Repositorios que se se instalaran basicos y opcionales (flag en binario. entero que es suma de 2^n).
+# 2) -
+#
+function _update_all() {
+
+    #1. Argumentos
+    local p_opciones=0
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_opciones=$1
+    fi
+
+    #2. Validar si fue descarga el repositorio git correspondiente
+    if [ ! -d ~/.files/.git ]; then
+        show_message_nogitrepo
+        return 10
+    fi
+    
+    #3. Actualizar los paquetes instalados desde los repositorios SO
+    g_status_crendential_storage=-1
+    local l_opcion=1
+    local l_flag=$(( $p_opciones & $l_opcion ))
+    if [ $l_flag -eq $l_opcion ]; then
+
+    
+        #Solicitar credenciales de administrador y almacenarlas temporalmente
+        if [ $g_status_crendential_storage -eq -1 ]; then
+            storage_sudo_credencial
+            g_status_crendential_storage=$?
+            #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+            if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                return 99
+            fi
+        fi
+
+        print_line '-' $g_max_length_line "$g_color_opaque" 
+        printf '> Actualizar los paquetes de los repositorios del SO Linux\n'
+        print_line '-' $g_max_length_line "$g_color_opaque" 
+        
+        #Segun el tipo de distribución de Linux
+        case "$g_os_subtype_id" in
+            1)
+                #Distribución: Ubuntu
+                if [ $g_is_root -eq 0 ]; then
+                    apt-get update
+                    apt-get upgrade
+                else
+                    sudo apt-get update
+                    sudo apt-get upgrade
+                fi
+                ;;
+            2)
+                #Distribución: Fedora
+                if [ $g_is_root -eq 0 ]; then
+                    dnf upgrade
+                else
+                    sudo dnf upgrade
+                fi
+                ;;
+            0)
+                echo "ERROR (22): No se identificado el tipo de Distribución Linux"
+                return 22;
+                ;;
+        esac
+        echo ""
+
+    fi
+
+    #4. Actualizar paquetes VIM/NeoVIM instalados
+    _update_vim_nvim_packages $p_opciones
+
+    #5. Actualizar los binarios instados de repositorios como Git
+    l_opcion=4
+    l_flag=$(( $p_opciones & $l_opcion ))
+    if [ $l_flag -eq $l_opcion ]; then
+    
+        #Solicitar credenciales de administrador y almacenarlas temporalmente
+        if [ $g_status_crendential_storage -eq -1 ]; then
+            storage_sudo_credencial
+            g_status_crendential_storage=$?
+            #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+            if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                return 99
+            fi
+        fi
+
+        #2 es la opcion de actulizar solo los comandos instalados
+        ~/.files/setup/linux/01_setup_commands.bash 1 2
     fi            
 
-    #9. Caducar las credecinales de root almacenadas temporalmente
-    if [ $g_is_root -ne 0 ]; then
-        echo $'\n'"Caducando el cache de temporal password de su 'sudo'"
-        sudo -k
+    #6. Caducar las credecinales de root almacenadas temporalmente
+    if [ $g_status_crendential_storage -eq 0 ]; then
+        clean_sudo_credencial
     fi
 
 }
@@ -407,14 +433,14 @@ function _show_menu_core() {
     printf " (%bb%b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y VIM/NeoVIM (update & config plugins)\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
-    _get_length_menu_option $g_offset_option_index_menu_install
+    #_get_length_menu_option $g_offset_option_index_menu_install
     local l_max_digits=$?
 
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes %b(siempre que escoga una opcion este se ejecutará)%b\n" "$g_color_title" "0" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de VIM/NeoVim existentes y configurarlos\n" "$g_color_title" "1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas instalados\n" "$g_color_title" "2" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes\n" "$g_color_title" "1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de VIM/NeoVim existentes y configurarlos\n" "$g_color_title" "2" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los binarios instalados de un repositorio de comandos como GitHub\n" "$g_color_title" "4" "$g_color_reset"
 
-    _show_dynamic_menu 'Instalar o actualizar' $g_offset_option_index_menu_install $l_max_digits
+    #_show_dynamic_menu 'Instalar o actualizar' $g_offset_option_index_menu_install $l_max_digits
     print_line '-' $g_max_length_line "$g_color_opaque" 
 
 }
@@ -429,6 +455,15 @@ function i_main() {
     if [ $g_os_type -gt 10 ]; then
         echo "ERROR(21): El sistema operativo debe ser Linux"
         return 21;
+    fi
+   
+    #¿Esta 'curl' instalado?
+    local l_status
+    fulfill_preconditions1
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        return 22
     fi
    
     print_line '─' $g_max_length_line "$g_color_title" 
@@ -447,22 +482,22 @@ function i_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
-                _update_all 1
+                _update_all 3
                 ;;
 
             b)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
-                _update_all 3
+                _update_all 7
                 ;;
 
-            0)
-                l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
-                printf '\n'
-                _update_all 0
-                ;;
+            #0)
+            #    l_flag_continue=1
+            #    print_line '─' $g_max_length_line "$g_color_title" 
+            #    printf '\n'
+            #    _update_all 0
+            #    ;;
 
             q)
                 l_flag_continue=1
