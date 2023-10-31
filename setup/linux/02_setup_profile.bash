@@ -1600,14 +1600,12 @@ function _show_menu_core() {
     print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_title"
     print_line '-' $g_max_length_line  "$g_color_opaque"
     printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
-    printf " (%ba%b) Instalación y configuración de VIM como editor basico\n" "$g_color_title" "$g_color_reset"
-    printf " (%bb%b) Instalación y configuración de VIM como IDE\n" "$g_color_title" "$g_color_reset"
-    printf " (%bc%b) Instalación y configuración de NeoVIM como editor basico\n" "$g_color_title" "$g_color_reset"
-    printf " (%bd%b) Instalación y configuración de NeoVIM como IDE\n" "$g_color_title" "$g_color_reset"
-    printf " (%be%b) Configurar todo el profile como basico (Vim/NeoVim como editor basico)\n" "$g_color_title" "$g_color_reset"
-    printf " (%bf%b) Configurar todo el profile como developer (Vim/NeoVim como IDE)\n" "$g_color_title" "$g_color_reset"
-    printf " (%bg%b) Configurar todo el profile como basico (Vim/Neovim como editor basico) y re-crear enlaces simbolicos\n" "$g_color_title" "$g_color_reset"
-    printf " (%bh%b) Configurar todo el profile como developer (Vim/NeoVim como IDE) y re-crear enlaces simbolicos\n" "$g_color_title" "$g_color_reset"
+    printf " (%ba%b) Instalación y configuración de VIM/NeoVIM como %beditor%b basico\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bb%b) Instalación y configuración de VIM/NeoVIM como %bIDE%b\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bc%b) Configurar todo el profile como %bbasico%b    (VIM/NeoVIM como editor basico)\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bd%b) Configurar todo el profile como %bdeveloper%b (VIM/NeoVIM como IDE)\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf " (%be%b) Configurar todo el profile como %bbasico%b    (VIM/NeovIM como editor basico) y re-crear enlaces simbolicos\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf " (%bf%b) Configurar todo el profile como %bdeveloper%b (VIM/NeoVIM como IDE) y re-crear enlaces simbolicos\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     local l_max_digits=4
@@ -1616,11 +1614,11 @@ function _show_menu_core() {
     printf "     (%b%0${l_max_digits}d%b) Crear los enlaces simbolicos del profile\n" "$g_color_title" "2" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Re-crear (crear y/o actualizar) los enlaces simbolicos del profile\n" "$g_color_title" "4" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) VIM    - Instalar si no esta instalado\n" "$g_color_title" "8" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM    - Configurar como Editor (Basico)\n" "$g_color_title" "16" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM    - Configurar como IDE (Developer)\n" "$g_color_title" "32" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Configurar como %beditor%b (Basico)\n" "$g_color_title" "16" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Configurar como %bIDE%b (Developer)\n" "$g_color_title" "32" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Instalar si no esta instalado\n" "$g_color_title" "64" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Configurar como Editor (Basico)\n" "$g_color_title" "128" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Configurar como IDE (Developer)\n" "$g_color_title" "256" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Configurar como %beditor%b (Basico)\n" "$g_color_title" "128" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Configurar como %bIDE%b (Developer)\n" "$g_color_title" "256" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) VIM    - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "512" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "1024" "$g_color_reset"
 
@@ -1666,31 +1664,18 @@ function i_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
-                _setup 24
+                _setup 216
                 ;;
+
 
             b)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
-                _setup 40
+                _setup 360
                 ;;
 
             c)
-                l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
-                printf '\n'
-                _setup 192
-                ;;
-
-            d)
-                l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
-                printf '\n'
-                _setup 320
-                ;;
-
-            e)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
@@ -1698,7 +1683,7 @@ function i_main() {
                 _setup 219
                 ;;
 
-            f)
+            d)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
@@ -1706,7 +1691,7 @@ function i_main() {
                 _setup 363
                 ;;
 
-            g)
+            e)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
@@ -1714,7 +1699,7 @@ function i_main() {
                 _setup 223
                 ;;
 
-            h)
+            f)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
