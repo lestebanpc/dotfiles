@@ -17,14 +17,6 @@ declare -r g_regexp_sust_version5='s/.*\s\+\([0-9]\+\.[0-9.]\+\).*/\1/'
 #Cuando no se puede determinar la version actual (siempre se instalara)
 declare -r g_version_none='0.0.0'
 
-#Variable global de la ruta donde se instalaran los programas CLI (mas complejos que un simple comando).
-declare -r g_path_programs_lnx='/opt/tools'
-
-#Variable global ruta de los programas CLI y/o binarios en Windows desde su WSL2
-if [ $g_os_type -eq 1 ]; then
-   declare -r g_path_programs_win='/mnt/d/CLI'
-   declare -r g_path_commands_win="${g_path_programs_win}/Cmds"
-fi
 
 #Funciones modificables (Nive 1) {{{
 
@@ -399,6 +391,27 @@ function _get_repo_current_version() {
 
             if [ $l_status -eq 0 ]; then
                 l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+        nodejs)
+           
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_programs_win}/NodeJS/bin/"
+               else
+                  l_path_file="${g_path_programs_lnx}/nodejs/bin/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}node.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}node --version 2> /dev/null)
+                l_status=$?
             fi
             ;;
 
@@ -1031,6 +1044,16 @@ function _load_artifacts() {
             fi
             ;;
 
+        nodejs)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-x64.tar.gz")
+                pna_artifact_types=(2)
+            else
+                pna_artifact_names=("node-v${p_repo_last_version_pretty}-win-x64.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+
         evans)
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("evans_linux_amd64.tar.gz")
@@ -1342,6 +1365,67 @@ function _load_artifacts() {
 
     return 0
 }
+
+
+function _get_last_repo_url() {
+
+    #1. Argumentos
+    local p_repo_id="$1"
+    local p_repo_name="$2"
+    local p_repo_last_version="$3"
+    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                         #(0) Los binarios de los comandos se estan instalando en Linux
+    if [ "$5" -eq 0 2> /dev/null ]; then
+        p_install_win_cmds=0
+    fi
+
+    #2. Obtener la URL base
+    local l_base_url=""
+    case "$p_repo_id" in
+
+        kubectl)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/windows/amd64"
+            else
+                l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/linux/amd64"
+            fi
+            ;;
+
+        kustomize)
+            l_base_url="https://github.com/${p_repo_name}/releases/download/kustomize%2F${p_repo_last_version}"
+            ;;
+
+        helm)
+            l_base_url="https://get.helm.sh"
+            ;;
+
+        go)
+            l_base_url="https://storage.googleapis.com/${p_repo_name}"
+            ;;
+            
+        jdtls)
+            l_base_url="https://download.eclipse.org/${p_repo_name}/snapshots"
+            ;;
+
+        step)
+            l_base_url="https://dl.smallstep.com/gh-release/cli/gh-release-header/${p_repo_last_version}"
+            ;;
+
+        nodejs)
+            l_base_url="https://nodejs.org/dist/${p_repo_last_version}"
+            ;;
+
+        *)
+            l_base_url="https://github.com/${p_repo_name}/releases/download/${p_repo_last_version}"
+            ;;
+
+    esac
+
+    #3. Obtener la URL
+    echo "$l_base_url"
+
+}
+
 
 
 #Si un nodo k0s esta iniciado solicitar su detención y deternerlo.
@@ -2844,6 +2928,52 @@ function _copy_artifact_files() {
                 find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
             fi
             ;;
+
+
+        nodejs)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                l_path_temp="${l_path_temp}/node-${p_repo_last_version}-linux-x64"
+                l_path_bin="${g_path_programs_lnx}/nodejs"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                    chmod g+rx,o+rx $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover todos archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+
+            else
+                
+                l_path_temp="${l_path_temp}/node-${p_repo_last_version}-win-x64"
+                l_path_bin="${g_path_programs_win}/NodeJS"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover los archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+            fi
+            ;;
+
 
 
         cmake)
@@ -4916,6 +5046,24 @@ function _get_repo_latest_version() {
             fi
             ;;
 
+        nodejs)
+            #Si no esta instalado 'jq' no continuar
+            if ! command -v jq &> /dev/null; then
+                return 1
+            fi
+            
+            #Usando JSON para obtener la ultima version
+            l_aux=$(curl -Ls "https://nodejs.org/dist/index.json" | jq -r 'first(.[] | select(.lts != false)) | "\(.version)"' 2> /dev/null)
+
+            if [ $? -eq 0 ]; then
+                l_repo_last_version="$l_aux"
+                l_repo_last_version_pretty=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
+            else
+                l_repo_last_version=""        
+                l_repo_last_version_pretty=""
+            fi
+            ;;
+
        less)
             #Si no esta instalado 'jq' no continuar
             if ! command -v jq &> /dev/null; then
@@ -4972,63 +5120,6 @@ function _get_repo_latest_version() {
     pna_repo_versions=("$l_aux" "$l_repo_last_version_pretty")
     pna_arti_versions=(${l_arti_versions})
     return 0
-}
-
-
-
-function _get_last_repo_url() {
-
-    #1. Argumentos
-    local p_repo_id="$1"
-    local p_repo_name="$2"
-    local p_repo_last_version="$3"
-    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                         #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$5" -eq 0 2> /dev/null ]; then
-        p_install_win_cmds=0
-    fi
-
-    #2. Obtener la URL base
-    local l_base_url=""
-    case "$p_repo_id" in
-
-        kubectl)
-            if [ $p_install_win_cmds -eq 0 ]; then
-                l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/windows/amd64"
-            else
-                l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/linux/amd64"
-            fi
-            ;;
-
-        kustomize)
-            l_base_url="https://github.com/${p_repo_name}/releases/download/kustomize%2F${p_repo_last_version}"
-            ;;
-
-        helm)
-            l_base_url="https://get.helm.sh"
-            ;;
-
-        go)
-            l_base_url="https://storage.googleapis.com/${p_repo_name}"
-            ;;
-            
-        jdtls)
-            l_base_url="https://download.eclipse.org/${p_repo_name}/snapshots"
-            ;;
-
-        step)
-            l_base_url="https://dl.smallstep.com/gh-release/cli/gh-release-header/${p_repo_last_version}"
-            ;;
-
-        *)
-            l_base_url="https://github.com/${p_repo_name}/releases/download/${p_repo_last_version}"
-            ;;
-
-    esac
-
-    #3. Obtener la URL
-    echo "$l_base_url"
-
 }
 
 

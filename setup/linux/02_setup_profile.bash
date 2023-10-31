@@ -35,6 +35,7 @@ declare -r g_regexp_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
 
 #Variable global de la ruta donde se instalaran los programas CLI (mas complejos que un simple comando).
 declare -r g_path_lnx_programs='/opt/tools'
+#declare -r g_path_lnx_programs=~/tools
 
 
 #Colores principales usados para presentar información (menu,...)
@@ -838,7 +839,7 @@ function _commands_setup() {
 
     #Si no se solicitar instalar VIM o NeoVIM no instalar ningun comando
     #Si requiere instalar algun comando especifico use el script de instalacion de paquetes de SO
-    if [ $l_flag_install_vim -ne 0 ] || [ $l_flag_install_nvim -ne 0 ]; then
+    if [ $l_flag_install_vim -ne 0 ] && [ $l_flag_install_nvim -ne 0 ]; then
         return 1
     fi
     
@@ -948,10 +949,29 @@ function _commands_setup() {
     if [ $l_flag -eq $l_option ]; then
 
         #4.1 Instalación de Node.JS (el gestor de paquetes npm esta incluido)
+
         #print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+
+        #Obtener la version de Node.JS actual
         l_version=$(node -v 2> /dev/null)
         l_status=$?
         if [ $l_status -ne 0 ]; then
+
+            #El RTE puede estar instado pero no estar en el PATH
+            l_version=$(${g_path_lnx_programs}/nodejs/bin/node -v 2> /dev/null)
+            l_status=$?
+            if [ $l_status -eq 0 ]; then
+                printf '%bNode.JS %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en su profile\n' \
+                    "$g_color_warning" "$l_version" "$g_color_reset"
+                printf 'Adicionando a la sesion actual: PATH=%s/nodejs/bin:$PATH\n' "${g_path_lnx_programs}"
+                export PATH=${g_path_lnx_programs}/nodejs/bin:$PATH
+            else
+                l_version=""
+            fi
+        fi
+
+        #Si no esta instalado
+        if [ -z "$l_version" ]; then
 
             #Solicitar credenciales de administrador y almacenarlas temporalmente
             if [ $g_status_crendential_storage -eq -1 ]; then
@@ -965,47 +985,24 @@ function _commands_setup() {
             fi
 
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
-            echo "Vim/NeoVim como IDE> Se va instalar el scripts NVM y con ello se instalar RTE Node.JS"
+            echo "Soporte a CoC en Vim/NeoVim> Se va instalar el scripts NVM y con ello se instalar RTE Node.JS"
 
-            #Instalar los scripts de NVM
-            if [ ! -f "${g_path_lnx_programs}/nvm/nvm.sh" ]; then
+            #Instalando NodeJS
 
-                if [ -d "${g_path_lnx_programs}/nvm" ]; then
-                    rm -rf "${g_path_lnx_programs}/nvm" 
-                fi
+            #Parametros:
+            # 1> Tipo de ejecución: 2 (ejecución no-interactiva para instalar/actualizar un respositorio especifico)
+            # 2> Repositorio a instalar/acutalizar: "nodejs" (actualizar solo los comandos instalados)
+            # 3> El estado de la credencial almacenada para el sudo
+            ~/.files/setup/linux/01_setup_commands.bash 2 "nodejs" $g_status_crendential_storage
+            export PATH=${g_path_lnx_programs}/nodejs/bin:$PATH
 
-                #Instalar los script desde el repositorio 'nvm-sh/nvm.git'
-                echo "Instalar el repositorio 'nvm-sh/nvm.git' de script para nvm"
-                git clone https://github.com/nvm-sh/nvm.git ${g_path_lnx_programs}/nvm
-                cd ${g_path_lnx_programs}/nvm
-                git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
-                . ${g_path_lnx_programs}/nvm/nvm.sh
-            else
-                
-                #Actualizar los script desde el repositorio 'nvm-sh/nvm.git'
-                echo "Actualizar el repositorio 'nvm-sh/nvm.git' de script para nvm"
-                cd ${g_path_lnx_programs}/nvm
-                git fetch --tags origin
-                git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
-
-            fi
-
-            l_temp=$(nvm --version 2> /dev/null)
+            l_version=$(node -v 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                
-                echo "Usando 'nvm' (versión '${l_temp}') para instalar la ultima versión de Node.JS: 'nvm install node'"
-                nvm install node
-
-            else
-                echo "No se puede determinar la versión de 'nvm'."
-                echo "Revise su shell profile y la instalación en '${g_path_lnx_programs}/nvm/':"
-                echo "    export NVM_DIR=\"${g_path_lnx_programs}/nvm\""
-                echo "    [ -s \"$NVM_DIR/nvm.sh\" ] && \. \"$NVM_DIR/nvm.sh\""
-                echo "    [ -s \"$NVM_DIR/bash_completion\" ] && \. \"$NVM_DIR/bash_completion\""
-                #return 10
+                printf 'Se instaló la Node.JS version %s\n' "$l_version"
             fi
 
+        #Si esta instalado
         else
             l_version=$(echo "$l_version" | sed "$g_regexp_version1")
             echo "Node.JS \"$l_version\" ya esta instalado"
@@ -1177,12 +1174,8 @@ function _commands_setup() {
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Instalando el comando 'jtbl' (modulo python) para mostrar arreglos json en una consola en formato tabular."
             
-            if [ $g_is_root -eq 0 ]; then
-                pip3 install jtbl
-            else
-                pip3 install jtbl
-                #sudo pip3 install jtbl
-            fi
+            #Se instalar a nivel usuario
+            pip3 install jtbl
 
         else
             l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_version1")
@@ -1199,12 +1192,8 @@ function _commands_setup() {
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Instalando el comando 'compiledb' (modulo python) para generar una base de datos de compilacion Clang desde un make file."
             
-            if [ $g_is_root -eq 0 ]; then
-                pip3 install compiledb
-            else
-                pip3 install compiledb
-                #sudo pip3 install jtbl
-            fi
+            #Se instalar a nivel usuario
+            pip3 install compiledb
 
         else
             l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_version1")
@@ -1220,12 +1209,8 @@ function _commands_setup() {
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "Instalando la libreria python 'rope' para refactorización de Python (https://github.com/python-rope/rope)."
             
-            if [ $g_is_root -eq 0 ]; then
-                pip3 install rope
-            else
-                pip3 install rope
-                #sudo pip3 install rope
-            fi
+            #Se instalara a nivel usuario
+            pip3 install rope
 
         else
             l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_version1")
@@ -1241,13 +1226,9 @@ function _commands_setup() {
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
 
             echo "Instlando el comando 'prettier' (como paquete global Node.JS)  para formatear archivos json, yaml, js, ..."
-            
-            if [ $g_is_root -eq 0 ]; then
-                npm install -g --save-dev prettier
-            else
-                npm install -g --save-dev prettier
-                #sudo npm install -g --save-dev prettier
-            fi
+
+            #Se instalara a nivel glabal (puede ser usado por todos los usuarios)
+            npm install -g --save-dev prettier
 
         else
             l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_version1")
@@ -1325,7 +1306,6 @@ function _profile_setup() {
     #        ;;
     #esac
 
-    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "256" "$g_color_reset"
     #Si es Linux WSL
     if [ $g_os_type -eq 1 ]; then
 
@@ -1620,10 +1600,14 @@ function _show_menu_core() {
     print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_title"
     print_line '-' $g_max_length_line  "$g_color_opaque"
     printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
-    printf " (%ba%b) Configurar el profile basico (Vim/NeoVim como editor basico)\n" "$g_color_title" "$g_color_reset"
-    printf " (%bb%b) Configurar el profile como developer (Vim/NeoVim como IDE)\n" "$g_color_title" "$g_color_reset"
-    printf " (%bc%b) Configurar el profile basico (Vim/Neovim como editor basico) y re-crear los enlaces simbolicos\n" "$g_color_title" "$g_color_reset"
-    printf " (%bd%b) Configurar el profile como developer (Vim/NeoVim como IDE) y re-crear los enlaces simbolicos\n" "$g_color_title" "$g_color_reset"
+    printf " (%ba%b) Instalación y configuración de VIM como editor basico\n" "$g_color_title" "$g_color_reset"
+    printf " (%bb%b) Instalación y configuración de VIM como IDE\n" "$g_color_title" "$g_color_reset"
+    printf " (%bc%b) Instalación y configuración de NeoVIM como editor basico\n" "$g_color_title" "$g_color_reset"
+    printf " (%bd%b) Instalación y configuración de NeoVIM como IDE\n" "$g_color_title" "$g_color_reset"
+    printf " (%be%b) Configurar todo el profile como basico (Vim/NeoVim como editor basico)\n" "$g_color_title" "$g_color_reset"
+    printf " (%bf%b) Configurar todo el profile como developer (Vim/NeoVim como IDE)\n" "$g_color_title" "$g_color_reset"
+    printf " (%bg%b) Configurar todo el profile como basico (Vim/Neovim como editor basico) y re-crear enlaces simbolicos\n" "$g_color_title" "$g_color_reset"
+    printf " (%bh%b) Configurar todo el profile como developer (Vim/NeoVim como IDE) y re-crear enlaces simbolicos\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     local l_max_digits=4
@@ -1682,11 +1666,39 @@ function i_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
+                _setup 24
+                ;;
+
+            b)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_title" 
+                printf '\n'
+                _setup 40
+                ;;
+
+            c)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_title" 
+                printf '\n'
+                _setup 192
+                ;;
+
+            d)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_title" 
+                printf '\n'
+                _setup 320
+                ;;
+
+            e)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_title" 
+                printf '\n'
                 #1 + 2 + 8 + 16 + 64 + 128
                 _setup 219
                 ;;
 
-            b)
+            f)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
@@ -1694,7 +1706,7 @@ function i_main() {
                 _setup 363
                 ;;
 
-            c)
+            g)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
@@ -1702,7 +1714,7 @@ function i_main() {
                 _setup 223
                 ;;
 
-            d)
+            h)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'

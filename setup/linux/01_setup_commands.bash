@@ -60,12 +60,6 @@ g_status_crendential_storage=-1
 #  0 - Se abrio externamente (solo se puede dar en una ejecución no-interactiva)
 g_is_credential_storage_externally=1
 
-#Personalización: Variables a modificar.
-. ~/.files/setup/linux/_setup_commands_custom_settings.bash
-
-#Personalización: Funciones modificables para el instalador.
-. ~/.files/setup/linux/_setup_commands_custom_logic.bash
-
 
 #Valores de la opcion especiales del menu (no estan vinculado a un repositorio especifico):
 # > Actualizar todos paquetes del sistema operativo (Opción 1 del arreglo del menu)
@@ -77,11 +71,17 @@ g_opt_update_installed_repo=$((1 << 1))
 #Tamaño de la linea del menu
 g_max_length_line=130
 
-
 #Menu dinamico: Offset del indice donde inicia el menu dinamico.
 #               Generalmente el menu dinamico no inicia desde la primera opcion personalizado del menú.
 g_offset_option_index_menu_install=2
 g_offset_option_index_menu_uninstall=0
+
+
+#Personalización: Variables a modificar.
+. ~/.files/setup/linux/_setup_commands_custom_settings.bash
+
+#Personalización: Funciones modificables para el instalador.
+. ~/.files/setup/linux/_setup_commands_custom_logic.bash
 
 
 #}}}

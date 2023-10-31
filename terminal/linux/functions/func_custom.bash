@@ -73,6 +73,7 @@ gl_files() {
         --prompt '📄 File> ' -m \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
         --bind "ctrl-a:execute:$_g_fzf_bat --paging always --style=numbers,header-filename,grid {}" \
+        --preview-window "right,60%" \
         --header $'CTRL-a (Show in full-screen), SHIFT-↑/↓ (Navigate preview\'s pages)\n'
 }
 
@@ -164,6 +165,7 @@ gi_files() {
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
         --bind "ctrl-o:execute-silent:bash ${_g_script_path}/_fzf_actions_git.bash git_open_url 4 {-1}" \
         --bind "alt-e:execute:${EDITOR:-vim} {-1} > /dev/tty" \
+        --preview-window "right,60%" \
         --preview "git diff --color=always -- {-1} | delta; $_g_fzf_bat --style=numbers,header-filename,grid {-1}" "$@" |
     cut -c4- | sed 's/.* -> //'
 }
@@ -198,6 +200,7 @@ gi_tags() {
         --prompt '📛 Tags> ' \
         --header $'CTRL-o (Open in browser)\n\n' \
         --bind "ctrl-o:execute-silent:bash ${_g_script_path}/_fzf_actions_git.bash git_open_url 5 {}" \
+        --preview-window "right,60%" \
         --preview 'git show --color=always {} | delta' "$@"
 }
 
@@ -213,6 +216,7 @@ gi_hashes() {
         --bind "ctrl-o:execute-silent:bash ${_g_script_path}/_fzf_actions_git.bash git_open_url 1 {}" \
         --bind 'ctrl-d:execute:grep -o "[a-f0-9]\{7,\}" <<< {} | head -n 1 | xargs git diff | delta > /dev/tty' \
         --color hl:underline,hl+:underline \
+        --preview-window "right,60%" \
         --preview 'grep -o "[a-f0-9]\{7,\}" <<< {} | head -n 1 | xargs git show --color=always | delta' "$@" |
     awk 'match($0, /[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*/) { print substr($0, RSTART, RLENGTH) }'
 }

@@ -149,6 +149,9 @@ PATH=$PATH:/opt/tools/neovim/bin
 #Ruta del compilador de ProtoBuffer de gRPC
 [ -d "/opt/tools/protoc/bin" ] && PATH=/opt/tools/protoc/bin:$PATH
 
+#Node.Js (RTE)
+[ -d "/opt/tools/nodejs/bin" ] && PATH=/opt/tools/nodejs/bin:$PATH
+
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
 
@@ -173,12 +176,6 @@ export EDITOR=vim
 export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"
 source ~/.files/terminal/linux/complete/fzf.bash
 source ~/.files/terminal/linux/keybindings/fzf.bash
-
-
-# Node.Js (nvm) - Usando varias Node.JS
-export NVM_DIR="/opt/tools/nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-#[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 
 # Ruta por defecto de los binarios de CNI plugin usados por CLI de Container Runtime como NerdCtl (no se usara, se usara su archivo de configuración nerdctl.tom)
