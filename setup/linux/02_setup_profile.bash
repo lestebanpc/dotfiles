@@ -209,8 +209,11 @@ function _neovim_setup() {
             #echo "- Instalación de NeoVIM"
             echo "Se va instalar NeoVIM"
 
-            #Valide que el flag asociado a Neovin sea el segundo parametro y sea un numero valido
-            ~/.files/setup/linux/01_setup_commands.bash 2 "neovim"
+            #Parametros:
+            # 1> Tipo de ejecución: 2 (ejecución no-interactiva para instalar/actualizar un respositorio especifico)
+            # 2> Repsositorio a instalar/acutalizar: "neovim" (actualizar solo los comandos instalados)
+            # 3> El estado de la credencial almacenada para el sudo
+            ~/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage
             l_nvim_flag=0
 
 

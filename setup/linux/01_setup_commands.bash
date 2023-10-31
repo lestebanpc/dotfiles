@@ -6,6 +6,9 @@
 #Funciones generales, determinar el tipo del SO y si es root
 . ~/.files/terminal/linux/functions/func_utility.bash
 
+#Funciones de utilidad
+. ~/.files/setup/linux/_common_utility.bash
+
 #Variable global pero solo se usar localmente en las funciones
 _g_tmp=""
 
@@ -41,69 +44,26 @@ fi
 gp_uninstall=1          #(0) Para instalar/actualizar
                         #(1) Para desintalar
 
-gp_type_calling=0       #(0) Llamada directa del script (es decir se muestra el menu).
-                        #(1) Llamada indirecta del script, instalando/desactualizando un conjunto de respositorios
-                        #(2) Llamada indirecta del script, instalando/desactualizando un solo repositorio
+gp_type_calling=0       #(0) Ejecución interactiva del script (muestra el menu).
+                        #(1) Ejecución no-interactiva del script para instalar/actualizar un conjunto de respositorios
+                        #(2) Ejecución no-interactiva del script para instalar/actualizar un solo repositorio
 
-g_is_credential_saved=1    #(0) si se almacenado, (1) no se almacenado
+#Estado del almacenado temporalmente de las credenciales para sudo
+# -1 - No se solicito el almacenamiento de las credenciales
+#  0 - No es root: se almaceno las credenciales
+#  1 - No es root: no se pudo almacenar las credenciales.
+#  2 - Es root: no requiere realizar sudo.
+g_status_crendential_storage=-1
 
+#Si la credenciales de sudo es abierto externamente.
+#  1 - No se abrio externamente
+#  0 - Se abrio externamente (solo se puede dar en una ejecución no-interactiva)
+g_is_credential_storage_externally=1
 
-#Solicitar credenciales del usuario para sudo y almacenarlas temporalmente.
-#Parametros de entrada (parametros globales):
-#    > 'gp_type_calling'
-#    > 'g_is_root'
-#Parametros de salida (parametros globales):
-#    > 'g_is_credential_saved'
-#Valores de retorno:
-#  0 > Se almaceno temporalmente las credenciales.
-#  1 > No se ha almacenado temporalmente, debido a que no aplica. 
-#  2 > No se ha almacenado temporalmente, debido a que el usuario acepto.
-function _save_credentials() {
+#Personalización: Variables a modificar.
+. ~/.files/setup/linux/_setup_commands_custom_settings.bash
 
-    g_is_credential_saved=1
-    #Solo para llamadas directas y cuando no es root
-    if [ $gp_type_calling -ne 0 ] || [ $g_is_root -eq 0 ]; then
-        return 1
-    fi
-
-    #echo "Se requiere alamcenar temporalmente su password"
-    sudo -v
-    if [ $? -ne 0 ]; then
-        printf "ERROR: Se requiere 'sudo -v' almacene temporalmente su credenciales de su usuario para continuar con la instalación\n"
-        return 2
-    fi
-
-    g_is_credential_saved=0
-    return 0
-
-}
-
-#Elimina las credenciales guardada del usuario para el sudo.
-#Parametros de entrada (parametros globales):
-#    > 'gp_type_calling'
-#    > 'g_is_root'
-#Valores de retorno:
-#  0 > Se almaceno temporalmente las credenciales.
-#  1 > No se ha almacenado temporalmente, debido a que no aplica. 
-function _expire_credentials() {
-    
-    #Solo para llamadas directas y cuando no es root
-    if [ $gp_type_calling -ne 0 ] || [ $g_is_root -eq 0 ]; then
-        return 1
-    fi
-    
-    #
-    printf '\nCaducando el cache de temporal password de su '"'sudo'\n"
-    sudo -k
-
-    g_is_credential_saved=1
-    return 0
-}
-
-#Variables y funciones para mostrar las opciones dinamicas del menu.
-. ~/.files/setup/linux/_dynamic_commands_menu.bash
-
-#Funciones modificables para el instalador
+#Personalización: Funciones modificables para el instalador.
 . ~/.files/setup/linux/_setup_commands_custom_logic.bash
 
 
@@ -1057,9 +1017,20 @@ function i_install_repository() {
             #Si ya se mostro no hacerlo nuevamente
             p_repo_title_template=""
         fi
+                #Si termino sin errores cambiar al estado
             
         #4.3. Instalar el repositorio
         if [ -z "$l_status_process_lnx" ]; then
+
+            #Solicitar credenciales para sudo y almacenarlas temporalmente
+            if [ $g_status_crendential_storage -eq -1 ]; then
+                storage_sudo_credencial
+                g_status_crendential_storage=$?
+                #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+                if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                    return 120
+                fi
+            fi
 
             #Por defecto considerando que termino con error
             if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
@@ -1086,6 +1057,11 @@ function i_install_repository() {
                 _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" "" 0 $l_install_win_cmds
                 l_status2=$?
 
+                #Se requiere almacenar las credenciales para realizar cambios con sudo.
+                if [ $l_status2 -eq 120 ]; then
+                    return 120
+                fi
+
                 #Si termino sin errores cambiar al estado
                 if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
                     l_status_process_lnx=5
@@ -1096,6 +1072,7 @@ function i_install_repository() {
 
             else
 
+    
                 for ((l_n=0; l_n<${l_artifact_subversions_nbr}; l_n++)); do
 
                     #Etiqueta para identificar el repositorio que se usara en lo logs cuando se instala
@@ -1109,6 +1086,11 @@ function i_install_repository() {
                     _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" \
                         "${_ga_artifact_subversions[${l_n}]}" ${l_n} $l_install_win_cmds
                     l_status2=$?
+
+                    #Se requiere almacenar las credenciales para realizar cambios con sudo.
+                    if [ $l_status2 -eq 120 ]; then
+                        return 120
+                    fi
 
                 done
 
@@ -1257,6 +1239,11 @@ function i_install_repository() {
     #Si no se llego a iniciar el proceso de configuración en ninguno de los 2 sistemas operativos
     if [ $l_status_process_lnx -lt 5 ] && [ $l_status_process_win -lt 5 ]; then
         return 1
+    fi
+
+    #Caducar las credencinales de root almacenadas temporalmente si: se hiceron internamente y fue no-interactiva de un solo ID del repositorio
+    if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ] && [ $gp_type_calling -eq 2 ]; then
+        clean_sudo_credencial
     fi
 
     return 0
@@ -1548,6 +1535,10 @@ function _install_menu_options() {
                       # 2 > No se puede obtener la ultima versión del repositorio o la versión obtenida no es valida.
                       #99 > Argumentos ingresados son invalidos.
 
+        #Se requiere almacenar las credenciales para realizar cambios con sudo.
+        if [ $l_status -eq 120 ]; then
+            return 120
+        fi
 
         #4.4. Si no se inicio el analisis para evaluar si se debe dar el proceso de configuración: 
 
@@ -1806,6 +1797,10 @@ function _update_installed_repository() {
                           # 2 > No se puede obtener la ultima versión del repositorio o la versión obtenida no es valida.
                           #99 > Argumentos ingresados son invalidos.
 
+            #Se requiere almacenar las credenciales para realizar cambios con sudo.
+            if [ $l_status -eq 120 ]; then
+                return 120
+            fi
 
             #2.3. Si no se inicio el analisis para evaluar si se debe dar el proceso de configuración: 
 
@@ -1867,6 +1862,7 @@ function _update_installed_repository() {
                 l_processed_repo=${_g_install_repo_status[0]}
                 l_aux="Linux WSL '${g_os_subtype_name}' (o su Windows vinculado)"
             fi
+                #Si termino sin errores cambiar al estado
 
             #la_previous_options_idx+=(${p_option_relative_idx})
             #_gA_processed_repo["$l_repo_id"]="${l_processed_repo}|${la_previous_options_idx[@]}"
@@ -1960,35 +1956,28 @@ function i_install_repositories() {
 
     #2. Validar si fue descarga el repositorio git correspondiente
     if [ ! -d ~/.files/.git ]; then
-        echo "No existe los archivos necesarios, debera seguir los siguientes pasos:"
-        echo "   1> Descargar los archivos del repositorio:"
-        echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
-        echo "   2> Instalar comandos basicos:"
-        echo "      chmod u+x ~/.files/setup/01_setup_commands.bash"
-        echo "      ~/.files/setup/01_setup_commands.bash"
-        echo "   3> Configurar el profile del usuario:"
-        echo "      chmod u+x ~/.files/setup/02_setup_profile.bash"
-        echo "      ~/.files/setup/02_setup_profile.bash"
-        return 0
+        show_message_nogitrepo
+        return 10
     fi
     
     #3. Inicializaciones cuando se invoca directamente el script
     local l_flag=0
-    local l_status
     if [ $gp_type_calling -eq 0 ]; then
 
-        #3.1. Solicitar credenciales de administrador y almacenarlas temporalmente
-        _save_credentials
-        l_status=$?
 
-        if [ $l_status -eq 2 ]; then
-            return 20
-        fi
-        printf '\n'
-
-        #3.2. Instalacion de paquetes del SO
+        #Instalacion de paquetes del SO
         l_flag=$(( $p_input_options & $g_opt_update_installed_pckg ))
         if [ $g_opt_update_installed_pckg -eq $l_flag ]; then
+
+            #Solicitar credenciales para sudo y almacenarlas temporalmente
+            if [ $g_status_crendential_storage -eq -1 ]; then
+                storage_sudo_credencial
+                g_status_crendential_storage=$?
+                #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+                if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                    return 120
+                fi
+            fi
 
             print_line '-' $g_max_length_line "$g_color_opaque" 
             echo "- Actualizar los paquetes de los repositorio del SO Linux"
@@ -2027,12 +2016,19 @@ function i_install_repositories() {
     #   Si la configuración de un repositorio de la opción de menú falla, se deteniene la configuración de la opción.
 
     local l_i=0
+    local l_status
     #Limpiar el arreglo asociativo
     _gA_processed_repo=()
 
     for((l_i=0; l_i < ${#ga_menu_options_repos[@]}; l_i++)); do
         
         _install_menu_options $p_input_options $l_i
+        l_status=$?
+
+        #Se requiere almacenar las credenciales para realizar cambios con sudo.
+        if [ $l_status -eq 120 ]; then
+            return 120
+        fi
 
     done
 
@@ -2050,11 +2046,19 @@ function i_install_repositories() {
     if [ $l_update_all_installed_repo -eq 0 ]; then
 
         _update_installed_repository
+        l_status=$?
+
+        #Se requiere almacenar las credenciales para realizar cambios con sudo.
+        if [ $l_status -eq 120 ]; then
+            return 120
+        fi
 
     fi
 
-    #7. Caducar las credecinales de root almacenadas temporalmente
-    _expire_credentials
+    #7. Caducar las credencinales de root almacenadas temporalmente si se hiceron internamente
+    if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
+        clean_sudo_credencial
+    fi
 
 }
 
@@ -2092,27 +2096,20 @@ function i_main_install() {
     fi
 
     #¿Esta 'curl' instalado?
-    local l_curl_version=$(curl --version 2> /dev/null)
-    if [ ! -z "$l_curl_version" ]; then
-        l_curl_version=$(echo "$l_curl_version" | head -n 1 | sed "$g_regexp_sust_version1")
-        printf '%bCURL version       : (%s)%b\n\n' "$g_color_opaque" "$l_curl_version" "$g_color_reset"
-    else
-        printf '\nERROR: CURL no esta instalado, debe instalarlo para descargar los artefactos a instalar/actualizar.\n'
-        printf '%bBinarios: https://curl.se/download.html\n' "$g_color_opaque"
-        printf 'Paquete Ubuntu/Debian:\n'
-        printf '          apt-get install curl\n'
-        printf 'Paquete CentOS/Fedora:\n'
-        printf '          dnf install curl\n%b' "$g_color_reset"
+    local l_status
+    fulfill_preconditions1
+    l_status=$?
 
-        return 22;
+    if [ $l_status -ne 0 ]; then
+        return 22
     fi
-    
+
    
     #2. Mostrar el Menu
     print_line '─' $g_max_length_line "$g_color_title" 
-
     _show_menu_install_core
 
+    #3. Mostar la ultima parte del menu y capturar la opcion elegida
     local l_flag_continue=0
     local l_options=""
     local l_value_option_a=$(($g_opt_update_installed_pckg + $g_opt_update_installed_repo))
@@ -2771,16 +2768,8 @@ function i_uninstall_repositories() {
 
     #2. Validar si fue descarga el repositorio git correspondiente
     if [ ! -d ~/.files/.git ]; then
-        echo "No existe los archivos necesarios, debera seguir los siguientes pasos:"
-        echo "   1> Descargar los archivos del repositorio:"
-        echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
-        echo "   2> Instalar comandos basicos:"
-        echo "      chmod u+x ~/.files/setup/01_setup_commands.bash"
-        echo "      ~/.files/setup/01_setup_commands.bash"
-        echo "   3> Configurar el profile del usuario:"
-        echo "      chmod u+x ~/.files/setup/02_setup_profile.bash"
-        echo "      ~/.files/setup/02_setup_profile.bash"
-        return 0
+        show_message_nogitrepo
+        return 10
     fi
     
     #3. Inicializaciones cuando se invoca directamente el script
@@ -2816,7 +2805,9 @@ function i_uninstall_repositories() {
     #echo "Values de _gA_processed_repo=${_gA_processed_repo[@]}"
 
     #6. Caducar las credecinales de root almacenadas temporalmente
-    _expire_credentials
+    if [ $g_status_crendential_storage -eq 0 ]; then
+        clean_sudo_credencial
+    fi
 
 }
 
@@ -2903,14 +2894,14 @@ function i_main_uninstall() {
 _usage() {
 
     printf '%bUsage:\n\n' "$g_color_opaque"
-    printf '  > Mostrar el menu para desintalar repositorios:\n'
+    printf '  > Desintalar repositorios de manera interactiva (muestra el menú):\n'
     printf '    %b~/.files/setup/linux/01_setup_commands.bash uninstall\n%b' "$g_color_info" "$g_color_opaque"
-    printf '  > Mostrar el menu para instalar repositorios:\n'
+    printf '  > Instalar repositorios de manera interactiva (muestra el menú):\n'
     printf '    %b~/.files/setup/linux/01_setup_commands.bash\n%b' "$g_color_info" "$g_color_opaque"
-    printf '  > Instalar uno o mas repositorios (sin menú):\n'
+    printf '  > Instalar/Actualizar uno o mas repositorios en forma no interactiva (sin menú):\n'
     printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
-    printf '  > Instalar un repositorio (sin menú):\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 2 REPO-ID%b\n\n' "$g_color_info" "$g_color_reset"
+    printf '  > Instalar/Actualizar un repositorio en forma no interactiva (sin menú):\n'
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 REPO-ID%b\n\n' "$g_color_info" "$g_color_reset"
 
 }
 
@@ -2918,7 +2909,7 @@ _usage() {
 #}}}
 
 
-#A. Argumentos fijos del script
+#1. Argumentos fijos del script
 
 
 #Argumento 1: ¿instalar/actualizar o desintalar?
@@ -2929,7 +2920,7 @@ elif [ "$1" = "uninstall" ]; then
 elif [ ! -z "$1" ]; then
     printf 'Argumentos invalidos.\n\n'
     _usage
-    exit 97
+    exit 80
 fi
 
 
@@ -2944,45 +2935,75 @@ gp_install_all_user=0   #(0) Se instala/configura para ser usuado por todos los 
 
 
 
-#B. Logica principal del script (incluyendo los argumentos variables)
+#2. Logica principal del script (incluyendo los argumentos variables)
 
-#1. Desintalar los artefactos de un repoistorio
+#Aun no se ha solicitado almacenar temporalmente las credenciales para el sudo
+g_status_crendential_storage=-1
+#La credencial no se almaceno por un script externo.
+g_is_credential_storage_externally=1
+
+#2.1. Desintalar los artefactos de un repoistorio
 if [ $gp_uninstall -eq 0 ]; then
 
     i_main_uninstall
 
-#2. Instalar y actualizar los artefactos de un repositorio
+#2.2. Instalar y actualizar los artefactos de un repositorio
 else
 
-    #2.1. Por defecto, mostrar el menu para escoger lo que se va instalar
+    #2.2.1. Por defecto, mostrar el menu para escoger lo que se va instalar
     if [ $gp_type_calling -eq 0 ]; then
     
         i_main_install
     
-    #2.2. Instalando los repositorios especificados por las opciones indicas en '$2'
+    #2.2.2. Instalando los repositorios especificados por las opciones indicas en '$2'
     elif [ $gp_type_calling -eq 1 ]; then
     
+        #Parametros del script usados hasta el momento:
+        # 1> Tipo de configuración: 1 (instalación/actualización).
+        # 2> Opciones de menu a ejecutar: entero positivo.
+        # 3> El estado de la credencial almacenada para el sudo.
         gp_opciones=0
         if [[ "$2" =~ ^[0-9]+$ ]]; then
             gp_opciones=$2
         else
-            exit 98
+            exit 88
         fi
+
+        if [[ "$3" =~ ^[0-2]$ ]]; then
+            g_status_crendential_storage=$3
+
+            if [ $g_status_crendential_storage -eq 0 ]; then
+                g_is_credential_storage_externally=0
+            fi
+
+        fi
+
         i_install_repositories $gp_opciones 1
     
-    #2.3. Instalando un solo repostorio del ID indicao por '$2'
+    #2.2.3. Instalando un solo repostorio del ID indicao por '$2'
     else
     
+        #Parametros del script usados hasta el momento:
+        # 1> Tipo de configuración: 1 (instalación/actualización).
+        # 2> ID del repositorio a instalar: identificado interno del respositorio
+        # 3> El estado de la credencial almacenada para el sudo.
         gp_repo_id="$2"
         if [ -z "$gp_repo_id" ]; then
            echo "Parametro 2 \"$2\" debe ser un ID de repositorio valido"
-           exit 99
+           exit 89
+        fi
+
+        if [[ "$3" =~ ^[0-2]$ ]]; then
+            g_status_crendential_storage=$3
+
+            if [ $g_status_crendential_storage -eq 0 ]; then
+                g_is_credential_storage_externally=0
+            fi
         fi
     
         i_install_repository "$gp_repo_id" "" 1
     
     fi
-
     
 fi
 

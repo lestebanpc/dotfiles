@@ -6,7 +6,7 @@
 #Funciones generales, determinar el tipo del SO y si es root
 . ~/.files/terminal/linux/functions/func_utility.bash
 
-#Funciones de utlidad
+#Funciones de utilidad
 . ~/.files/setup/linux/_common_utility.bash
 
 #Variable global pero solo se usar localmente en las funciones
@@ -31,21 +31,12 @@ if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
     g_is_root=0
 fi
 
-
-#Variables y funciones para mostrar las opciones dinamicas del menu.
-#. ~/.files/setup/linux/_dynamic_commands_menu.bash
-
-
 #Expresion regular para extrear la versión de un programa
 declare -r g_regexp_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
 
 #Tamaño de la linea del menu
 g_max_length_line=130
 
-
-#Menu dinamico: Offset del indice donde inicia el menu dinamico.
-#               Generalmente el menu dinamico no inicia desde la primera opcion personalizado del menú.
-#g_offset_option_index_menu_install=2
 
 #Estado del almacenado temporalmente de las credenciales para sudo
 # -1 - No se solicito el almacenamiento de las credenciales
@@ -401,7 +392,7 @@ function _update_all() {
     l_flag=$(( $p_opciones & $l_opcion ))
     if [ $l_flag -eq $l_opcion ]; then
     
-        #Solicitar credenciales de administrador y almacenarlas temporalmente
+        #Solicitar credenciales para sudo y almacenarlas temporalmente
         if [ $g_status_crendential_storage -eq -1 ]; then
             storage_sudo_credencial
             g_status_crendential_storage=$?
@@ -411,8 +402,11 @@ function _update_all() {
             fi
         fi
 
-        #2 es la opcion de actulizar solo los comandos instalados
-        ~/.files/setup/linux/01_setup_commands.bash 1 2
+        #Parametros:
+        # 1> Tipo de ejecución: 1 (ejecución no-interactiva para actualizar un conjuentos de respositorios)
+        # 2> Opciones de menu seleccionados para instalar/actualizar: 2 (instalar/actualizar solo los comandos instalados)
+        # 3> El estado de la credencial almacenada para el sudo
+        ~/.files/setup/linux/01_setup_commands.bash 1 2 $g_status_crendential_storage
     fi            
 
     #6. Caducar las credecinales de root almacenadas temporalmente
@@ -433,14 +427,12 @@ function _show_menu_core() {
     printf " (%bb%b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y VIM/NeoVIM (update & config plugins)\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
-    #_get_length_menu_option $g_offset_option_index_menu_install
     local l_max_digits=$?
 
     printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes\n" "$g_color_title" "1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de VIM/NeoVim existentes y configurarlos\n" "$g_color_title" "2" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Actualizar los binarios instalados de un repositorio de comandos como GitHub\n" "$g_color_title" "4" "$g_color_reset"
 
-    #_show_dynamic_menu 'Instalar o actualizar' $g_offset_option_index_menu_install $l_max_digits
     print_line '-' $g_max_length_line "$g_color_opaque" 
 
 }
@@ -508,7 +500,7 @@ function i_main() {
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '#' $g_max_length_line "$g_color_title" 
+                    print_line '─' $g_max_length_line "$g_color_title" 
                     printf '\n'
                     _update_all $l_options
                 else
