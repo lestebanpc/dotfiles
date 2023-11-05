@@ -1,22 +1,12 @@
 #!/bin/bash
 
-
-#Colores principales usados para presentar información (menu,...)
-g_color_opaque="\x1b[90m"
-g_color_reset="\x1b[0m"
-g_color_title="\x1b[32m"
-g_color_subtitle="\x1b[36m"
-g_color_info="\x1b[33m"
-g_color_warning="\x1b[31m"
-
-
 #ID de los repositorios y sus rutas bases
 #Menu dinamico: Listado de repositorios que son instalados por las opcion de menu dinamicas
 #  - Cada repositorio tiene un ID interno del un repositorios y un identifificador realizar: 
 #    ['internal-id']='external-id'
 #  - Por ejemplo para el repositorio GitHub 'stedolan/jq', el item se tendria:
 #    ['jq']='stedolan/jq'
-gA_repositories=(
+gA_packages=(
         ['bat']='sharkdp/bat'
         ['ripgrep']='BurntSushi/ripgrep'
         ['xsv']='BurntSushi/xsv'
@@ -65,7 +55,8 @@ gA_repositories=(
         ['dive']='wagoodman/dive'
     )
 
-
+#WARNING: Un cambio en el orden implica modificar los indices de los eventos:
+#         'install_initialize_menu_option', 'install_finalize_menu_option', 'uninstall_initialize_menu_option' y 'uninstall_finalize_menu_option'
 #Menu dinamico: Titulos de las opciones del menú
 #  - Cada entrada define un opcion de menú. Su valor define el titulo.
 ga_menu_options_title=(
@@ -74,8 +65,8 @@ ga_menu_options_title=(
     "Las fuentes 'Nerd Fonts'"
     "Shell 'Powershell Core'"
     "Tools para gRPC"
-    "HL Container Runtime 'ContainerD', BuildKit y NerdCtl"
     "LL Container Runtine, comandos root-less, CNI plugins"
+    "HL Container Runtime 'ContainerD', BuildKit y NerdCtl"
     "Tools para gestionar containers"
     "Tools para Kubernates"
     "Implementación de Kubernates 'K0S'"
@@ -88,20 +79,22 @@ ga_menu_options_title=(
     "LSP y DAP server de Java"
     )
 
+#WARNING: Un cambio en el orden implica modificar los indices de los eventos:
+#         'install_initialize_menu_option', 'install_finalize_menu_option', 'uninstall_initialize_menu_option' y 'uninstall_finalize_menu_option'
 #Menu dinamico: Repositorios de programas asociados asociados a una opciones del menu.
 #  - Cada entrada define un opcion de menú. 
 #  - Su valor es un cadena con ID de repositorios separados por comas.
 #Notas:
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
-ga_menu_options_repos=(
+ga_menu_options_packages=(
     "bat,ripgrep,xsv,delta,fzf,jq,yq,less,fd,oh-my-posh,jwt,step,butane"
     "neovim"
     "nerd-fonts"
     "powershell"
     "protoc,grpcurl,evans"
-    "containerd,buildkit,nerdctl"
     "runc,crun,rootlesskit,slirp4netns,fuse-overlayfs,cni-plugins"
+    "containerd,buildkit,nerdctl"
     "dive"
     "kubectl,helm,operator-sdk,3scale-toolbox,pgo"
     "k0s"
@@ -142,9 +135,6 @@ declare -A gA_repo_config=(
     )
 
 
-#Variable global de la ruta donde se instalaran los programas CLI (mas complejos que un simple comando).
-declare -r g_path_programs_lnx='/opt/tools'
-#declare -r g_path_programs_lnx=~/tools
 
 #Variable global ruta de los programas CLI y/o binarios en Windows desde su WSL2
 if [ $g_os_type -eq 1 ]; then

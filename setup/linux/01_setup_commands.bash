@@ -44,6 +44,7 @@ fi
 gp_uninstall=1          #(0) Para instalar/actualizar
                         #(1) Para desintalar
 
+#Tipo de ejecucion del script principal
 gp_type_calling=0       #(0) Ejecución interactiva del script (muestra el menu).
                         #(1) Ejecución no-interactiva del script para instalar/actualizar un conjunto de respositorios
                         #(2) Ejecución no-interactiva del script para instalar/actualizar un solo repositorio
@@ -67,9 +68,6 @@ g_opt_update_installed_pckg=$((1 << 0))
 # > Actualizar todos los repositorios instalados (Opción 2 del arreglo del menu)
 g_opt_update_installed_repo=$((1 << 1))
 
-
-#Tamaño de la linea del menu
-g_max_length_line=130
 
 #Menu dinamico: Offset del indice donde inicia el menu dinamico.
 #               Generalmente el menu dinamico no inicia desde la primera opcion personalizado del menú.
@@ -588,7 +586,7 @@ _validate_versions_to_install() {
         return 14        
     fi
 
-    local l_repo_name_aux="${gA_repositories[$p_repo_id]:-$p_repo_id}"
+    local l_repo_name_aux="${gA_packages[$p_repo_id]:-$p_repo_id}"
 
 
     #3. Mostrar el titulo
@@ -766,7 +764,7 @@ _validate_versions_to_uninstall() {
     _g_repo_current_version="$l_repo_current_version"
 
 
-    local l_repo_name_aux="${gA_repositories[$p_repo_id]:-$p_repo_id}"
+    local l_repo_name_aux="${gA_packages[$p_repo_id]:-$p_repo_id}"
 
 
     #3. Mostrar el titulo
@@ -853,11 +851,1397 @@ _validate_versions_to_uninstall() {
 
 #Codigo principal del script {{{
 
-#Es un arreglo con 2 valores enteros, el primero es el estado de la instalación en Linux, el segundo es el estado de la instalación en Windows.
-#'i_install_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_install_repo_status' es [0, 2].
+
+#Un arreglo de asociativo cuyo key es el ID del repositorio hasta el momento procesados en el menu. El valor indica información del información de procesamiento.
+#El procesamiento puede ser una configuración (instalación/actualización) o desinstalacíon.
+#El valor almacenado para un repositorio es 'X|Y', donde:
+#   X es el estado de la primera configuración y sus valores son:
+#     . -1 > El repositorio aun no se ha se ha analizado (ni iniciado su proceso).
+#     .  n > Los definidos por la variable '_g_install_repo_status' para una instalación/actualización o '_g_uninstall_repo_status' para una desinstalación.
+#   Y Listado de indice relativo (de las opcion de menú) separados por espacios ' ' donde (hasta el momento) se usa el repositorio.
+#     El primer indice es de la primera opción del menu que instala los artefactos. Los demas opciones no vuelven a instalar el artefacto
+declare -A _gA_processed_repo=()
+
+
+
+#
+#El proceso de configuración (instalación/configuración) no es transaccional (no hay un rollback si hay un error) pero es idempotente (se puede reintar y solo 
+#configura a los que falto configurar).
+#Solo existe inicializacion y finalización para la configuración de repositorios Linux (en Windows, la configuración solo es copiar archivos, no se instala programas).
+#
+#Parametros de entrada (argumentos de entrada son):
+#  1 > Opciones de menu ingresada por el usuario 
+#  2 > Indice relativo de la opcion en el menú de opciones (inicia con 0 y solo considera el indice del menu dinamico).
+#
+#Parametros de entrada (variables globales):
+#    > '_g_install_repo_status' indicadores que muestran el estado de la configuración (instalación/actualización) realizada.
+#
+#Parametros de salida (El valor de retorno). Sus valores pueder ser
+#    0 > La opcion de menu se configuro con exito (se inicializo, se configuro los repositorios y se finalizo existosamente).
+#    1 > No se inicio con la configuración de la opcion del menu (no se instalo, ni se se inicializo/finalizo).
+#    2 > La inicialización de la opción no termino con exito.
+#    3 > Alguno de lo repositorios fallo en configurarse (instalación/configuración). Ello provoca que se detiene el proceso (y no se invoca a la finalización).
+#    4 > La finalización de la opción no termino con exito. 
+#   98 > El repositorios vinculados a la opcion del menu no han sido configurados correctamente. 
+#   99 > Argumentos ingresados son invalidos
+#
+#Parametros de salida (variables globales):
+#    > '_gA_processed_repo' retona el estado de procesamiento de los repositorios hasta el momento procesados por el usuario. 
+#           
+function _install_menu_options() {
+
+    #1. Argumentos 
+    local p_input_options=-1
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_input_options=$1
+    fi
+
+    local p_option_relative_idx=-1
+    if [[ "$2" =~ ^[0-9]+$ ]]; then
+        p_option_relative_idx=$2
+    fi
+
+
+    if [ $p_input_options -le 0 ] || [ $p_option_relative_idx -lt 0 ]; then
+        return 99
+    fi
+
+
+
+    #1. Obtener los repositorios a configurar
+    local l_aux="${ga_menu_options_packages[$p_option_relative_idx]}"
+    #echo "Input: ${p_input_options} , Repos[${p_option_relative_idx}]: ${l_aux}"
+
+    if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
+        return 98
+    fi
+
+    local IFS=','
+    local la_repos=(${l_aux})
+    IFS=$' \t\n'
+
+    local l_n=${#la_repos[@]}
+    if [ $l_n -le 0 ]; then
+        return 98
+    fi
+
+
+    #2. ¿La opción actual ha sido elejido para configurarse?
+    local l_result       #0 > La opcion de menu se configuro con exito (se inicializo, se configuro los repositorios y se finalizo existosamente).
+                         #1 > No se inicio con la inicialización ni la configuración la opcion del menu (no se instalo, ni se se inicializo/finalizo).
+                         #2 > La inicialización de la opción termino con errores.
+                         #3 > Alguno de los repositorios fallo en configurarse (instalación/configuración), se detiene el proceso (no se invoca a la finalización).
+                         #4 > La finalización de la opción no termino con exito. 
+
+    local l_option_value=$((1 << (p_option_relative_idx + g_offset_option_index_menu_install)))
+
+    if [ $((p_input_options & l_option_value)) -ne $l_option_value ]; then 
+        l_result=1
+    fi
+    #echo "l_result: ${l_result}"
+
+    #3. Inicializar la opción del menu
+    local l_status
+    local l_title_template
+
+    if [ -z "$l_result" ]; then
+   
+        #3.1. Mostrar el titulo
+        print_line '─' $g_max_length_line  "$g_color_opaque"
+
+        #Si se ejecuta en forma interactiva
+        if [ $gp_type_calling -eq 0 ]; then
+            printf -v l_title_template 'Opción %b%s%b: %b%s%b' "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+        #Si se ejecuta en forma no-interactiva
+        else
+            printf -v l_title_template 'Grupo de repositorios: %b%s%b' "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+        fi
+
+        print_text_in_center2 "$l_title_template" $g_max_length_line
+        print_line '─' $g_max_length_line "$g_color_opaque"
+
+        #3.2. Inicializar la opcion si aun no ha sido inicializado.
+        install_initialize_menu_option $p_option_relative_idx
+        l_status=$?
+
+        #3.3. Si se inicializo no se realizo con exito.
+        if [ $l_status -ne 0 ]; then
+
+            printf 'No se ha completo la inicialización de la opción del menu elegida...\n'
+            l_result=2
+
+        fi
+
+        printf '\n'
+
+    fi
+
+
+    #4. Recorriendo los los repositorios, opcionalmente procesarlo, y almacenando el estado en la variable '_gA_processed_repo'
+    local l_status
+    local l_repo_id
+    local l_j
+    local l_k
+
+    local la_aux
+    local la_previous_options_idx
+    local l_status_first_setup
+    local l_repo_name_aux
+    local l_processed_repo
+    local l_exits_error=1
+
+    local l_flag_process_next_repo=1      #(0) Se debe intentar procesar (intalar/actualizar o desinstalar) los repositorio de la opción del menu.
+                                          #(1) No se debe intentar procesar los repositorios de la opción del menú.
+    if [ -z "$l_result" ]; then
+        l_flag_process_next_repo=0
+    fi
+
+    for((l_j=0; l_j < ${l_n}; l_j++)); do
+
+        #Nombre a mostrar del respositorio
+        l_repo_id="${la_repos[$l_j]}"
+        l_repo_name_aux="${gA_packages[${l_repo_id}]:-${l_repo_id}}"
+
+        #4.1. Obtener el estado del repositorio antes de su instalación.
+        l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
+        
+        IFS='|'
+        la_aux=(${l_aux})
+        IFS=$' \t\n'
+
+        l_status_first_setup=${la_aux[0]}    #'g_install_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_install_repo_status' es [0, 2].
+                                             # -1 > El repositorio no se ha iniciado su analisis ni su proceso.
+                                             #Estados de un proceso no iniciado:
+                                             #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('g_install_repository' retorno 2 o 99).
+                                             #  1 > El repositorio no esta habilitado para este SO.
+                                             #  2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
+                                             #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
+                                             #  4 > El repositorio esta instalado y ya esta actualizado.
+                                             #Estados de un proceso iniciado:
+                                             #  5 > El repositorio inicio la instalación y lo termino con exito.
+                                             #  6 > El repositorio inicio la actualización y lo termino con exito.
+                                             #  7 > El repositorio inicio la instalación y lo termino con error.
+                                             #  8 > El repositorio inicio la actualización y lo termino con error.
+
+        la_previous_options_idx=(${la_aux[1]})
+        l_title_template=""
+        #echo "Index '${p_option_relative_idx}/${l_j}', RepoID '${l_repo_id}', ProcessThisRepo '${l_flag_process_next_repo}', FisrtSetupStatus '${l_status_first_setup}', PreviousOptions '${la_previous_options_idx[@]}'"
+
+        #4.2. Si el repositorio ya ha pasado por el analisis para determinar si debe ser procesado o no
+        if [ $l_status_first_setup -ne -1 ]; then
+
+            #4.2.1. Almacenar la información del procesamiento.
+            la_previous_options_idx+=(${p_option_relative_idx})
+            _gA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
+            #echo "A > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+
+            #4.2.2. Si ya no se debe procesar mas repositorios de la opción del menú.
+            if [ $l_flag_process_next_repo -ne 0 ]; then
+                continue
+            fi
+
+            #4.2.3. No mostrar titulo, ni información alguna en los casos [0, 2]
+            if [ $l_status_first_setup -ge 0 ] && [ $l_status_first_setup -le 2 ]; then
+                continue
+            fi
+
+            #4.2.4. Calcular la plantilla del titulo.
+            #Si se ejecuta en forma interactiva
+            if [ $gp_type_calling -eq 0 ]; then
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+            #Si se ejecuta en forma no-interactiva
+            else
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+            fi
+
+            #El primer repositorio donde se ha analizado si se puede o no ser procesado.
+            l_k=${la_previous_options_idx[0]}
+            l_aux=$((1 << (l_k + g_offset_option_index_menu_install)))
+
+            #4.2.5. Mostrar el titulo y mensaje en los casos donde hubo error antes de procesarse y/o durante el procesamiento
+
+
+            #Estados de un proceso no iniciado:
+            #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
+            if [ $l_status_first_setup -eq 3 ]; then
+
+                print_line '-' $g_max_length_line "$g_color_opaque"
+                printf "${l_title_template}\n" "no procesado"
+                print_line '-' $g_max_length_line "$g_color_opaque"
+
+                printf 'El repositorio "%s" no se pudo obtener su versión cuando se analizó con la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+
+            #  4 > El repositorio esta instalado y ya esta actualizado.
+            elif [ $l_status_first_setup -eq 4 ]; then
+
+                print_line '-' $g_max_length_line "$g_color_opaque"
+                printf "${l_title_template}\n" "no procesado"
+                print_line '-' $g_max_length_line "$g_color_opaque"
+
+                printf 'El repositorio "%s" ya esta instalado y actualizado con la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+
+            #Estados de un proceso iniciado:
+            #  5 > El repositorio inicio la instalación y lo termino con exito.
+            elif [ $l_status_first_setup -eq 5 ]; then
+
+                print_line '-' $g_max_length_line "$g_color_opaque"
+                printf "${l_title_template}\n" "se acaba de instalar"
+                print_line '-' $g_max_length_line "$g_color_opaque"
+
+                printf 'El repositorio "%s" se acaba de instalar en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+
+            #  6 > El repositorio inicio la actualización y lo termino con exito.
+            elif [ $l_status_first_setup -eq 6 ]; then
+
+                print_line '-' $g_max_length_line "$g_color_opaque"
+                printf "${l_title_template}\n" "se acaba de actualizar"
+                print_line '-' $g_max_length_line "$g_color_opaque"
+
+                printf 'El repositorio "%s" se acaba de actualizar en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+
+            #  7 > El repositorio inicio la instalación y lo termino con error.
+            elif [ $l_status_first_setup -eq 7 ]; then
+
+                print_line '-' $g_max_length_line "$g_color_opaque"
+                printf "${l_title_template}\n" "se acaba de instalar con error"
+                print_line '-' $g_max_length_line "$g_color_opaque"
+
+                printf 'El repositorio "%s" se acaba de instalar con error en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+
+            #  8 > El repositorio inicio la actualización y lo termino con error.
+            elif [ $l_status_first_setup -eq 8 ]; then
+
+                print_line '-' $g_max_length_line "$g_color_opaque"
+                printf "${l_title_template}\n" "se acaba de instalar con error"
+                print_line '-' $g_max_length_line "$g_color_opaque"
+
+                printf 'El repositorio "%s" se acaba de instalar con error en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+
+            fi
+
+            continue
+
+        fi
+
+
+        #4.3. Si es la primera vez que se configurar (el repositorios de la opción del menu), inicie la configuración
+
+        #Si no se debe procesar mas repositorios de la opción del menú.
+        if [ $l_flag_process_next_repo -ne 0 ]; then
+            la_previous_options_idx+=(${p_option_relative_idx})
+            _gA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
+            continue
+        fi
+
+        if [ -z "$l_title_template" ]; then
+
+            #Si se ejecuta en forma interactiva
+            if [ $gp_type_calling -eq 0 ]; then
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+            #Si se ejecuta en forma no-interactiva
+            else
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+            fi
+        fi
+        
+        g_install_repository "$l_repo_id" "$l_title_template" 1 
+        l_status=$?   #'g_install_repository' solo se puede mostrar el titulo del repositorio cuando retorna [0, 1] y ninguno de los estados de '_g_install_repo_status' sea [0, 2].
+                      # 0 > Se inicio la configuración (en por lo menos uno de los 2 SO Linux o Windows).
+                      #     Para ver detalle del estado ver '_g_install_repo_status'.
+                      # 1 > No se inicio la configuración del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
+                      #     Para ver detalle del estado ver '_g_install_repo_status'.
+                      # 2 > No se puede obtener la ultima versión del repositorio o la versión obtenida no es valida.
+                      #99 > Argumentos ingresados son invalidos.
+
+        #Se requiere almacenar las credenciales para realizar cambios con sudo.
+        if [ $l_status -eq 120 ]; then
+            return 120
+        fi
+
+        #4.4. Si no se inicio el analisis para evaluar si se debe dar el proceso de configuración: 
+
+        #4.4.1. Si se envio parametros incorrectos
+        if [ $l_status -eq 99 ]; then
+
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_flag_process_next_repo=1
+            l_exits_error=0
+
+            la_previous_options_idx+=(${p_option_relative_idx})
+            _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
+
+            printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido a los parametros incorrectos enviados.\n' \
+                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+
+            #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            continue
+
+        fi
+
+        #4.4.2. Si no se pudo obtener la ultima versión del repositorio
+        if [ $l_status -eq 2 ]; then
+
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_flag_process_next_repo=1
+            l_exits_error=0
+
+            la_previous_options_idx+=(${p_option_relative_idx})
+            _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
+
+            printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido su ultima versión obtenida es invalida.\n' \
+                   "$g_color_warning" "$l_repo_id" "$g_color_reset"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+
+            #echo "C > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            continue
+        fi
+
+        #4.4.3. Si el repositorio no esta permitido procesarse en ninguno de los SO (no esta permitido para ser instalado en SO).
+        if [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
+
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            la_previous_options_idx+=(${p_option_relative_idx})
+            _gA_processed_repo["$l_repo_id"]="1|${la_previous_options_idx[@]}"
+
+            #echo "E > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            continue
+        fi 
+
+        #4.5. Si se inicio el pocesamiento del repositorio en Linux o en Windows.
+
+        #4.5.1. Obtener el status del procesamiento principal del repositorio
+        if [ ${_g_install_repo_status[0]} -gt 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
+            #Si solo este permitido iniciar su proceso en Linux.
+            l_processed_repo=${_g_install_repo_status[0]}
+            l_aux="Linux '${g_os_subtype_name}'"
+        elif [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -gt 1 ]; then
+            #Si solo este permitido iniciar su proceso en Windows.
+            l_processed_repo=${_g_install_repo_status[1]}
+            l_aux="Windows vinculado a su Linux WSL '${g_os_subtype_name}')"
+        else
+            #Si esta permitido iniciar el procesa tanto el Linux como en Windows (solo se considera como estado de Linux. El Windows es opcional y pocas veces usado).
+            l_processed_repo=${_g_install_repo_status[0]}
+            l_aux="Linux WSL '${g_os_subtype_name}' (o su Windows vinculado)"
+        fi
+
+        #4.5.2. Almacenar la información del procesamiento
+        la_previous_options_idx+=(${p_option_relative_idx})
+        _gA_processed_repo["$l_repo_id"]="${l_processed_repo}|${la_previous_options_idx[@]}"
+        #echo "F > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+
+        #4.5.3. Mostrar información adicional
+
+        #A. Estados de un proceso no iniciado:
+        #   2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
+        if [ $l_processed_repo -eq 2 ]; then
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            continue
+
+        #   3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
+        elif [ $l_processed_repo -eq 3 ]; then
+
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_flag_process_next_repo=1
+            l_exits_error=0
+
+            printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+
+        #   4 > El repositorio esta instalado y ya esta actualizado.
+        elif [ $l_processed_repo -eq 4 ]; then
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            printf '\n'
+
+        #B. Estados de un proceso iniciado:
+        #   5 > El repositorio inicio la instalación y lo termino con exito.
+        elif [ $l_processed_repo -eq 5 ]; then
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            printf '\n'
+
+        #   6 > El repositorio inicio la actualización y lo termino con exito.
+        elif [ $l_processed_repo -eq 6 ]; then
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            printf '\n'
+
+        #   7 > El repositorio inicio la instalación y lo termino con error.
+        elif [ $l_processed_repo -eq 7 ]; then
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_flag_process_next_repo=1
+            l_exits_error=0
+
+            printf '%bError al instalar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+
+        #   8 > El repositorio inicio la actualización y lo termino con error.
+        elif [ $l_processed_repo -eq 8 ]; then
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_flag_process_next_repo=1
+            l_exits_error=0
+
+            printf '%bError al actualizar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+        fi
+
+
+    done
+
+    #Establecer el estado despues del procesamiento
+    if [ -z "$l_result" ]; then
+    
+        #Si se inicio la configuración de algun repositorio y se obtuvo error
+        if [ $l_exits_error -eq 0 ]; then
+            l_result=3
+        fi
+
+    fi
+
+    #5. Iniciar la finalización (solo si se proceso correctamente todos los repositorios de la opción de menú)
+    if [ -z "$l_result" ]; then
+   
+
+        #5.1. Inicializar la opcion si aun no ha sido inicializado.
+        install_finalize_menu_option $p_option_relative_idx
+        l_status=$?
+
+        #5.2. Si se inicializo con exito.
+        if [ $l_status -eq 0 ]; then
+
+            l_result=0
+
+        else
+
+            printf 'No se completo la finalización de la opción del menu ...\n'
+            l_result=4
+
+        fi
+
+
+    fi
+
+    return $l_result
+
+}
+
+#
+#
+#Parametros de entrada (argumentos de entrada son):
+#
+#Parametros de entrada (variables globales):
+#    > '_gA_processed_repo' diccionario el estado de procesamiento de los repositorios hasta el momento procesados por el usuario.
+#    > 'gA_packages' listado de repositorios.
+#
+#Parametros de salida (El valor de retorno). Sus valores pueder ser
+#    0 > Resultado exitoso. 
+#   99 > Argumentos ingresados son invalidos.
+#
+#Parametros de salida (variables globales):
+#           
+function _update_installed_repository() {
+
+    #A. Argumentos
+
+    #B. Inicialización
+    local l_repo_id
+    local l_repo_name_aux
+    local l_title_template
+    #local la_previous_options_idx
+    local l_status_first_setup
+    local l_processed_repo
+
+    #local l_flag_process_next_repo
+    local l_exits_error=1
+
+    local l_aux
+    local la_aux
+    local l_i=1
+
+
+    #C. Mostrar el titulo
+    print_line '─' $g_max_length_line  "$g_color_opaque"
+    
+    #Si se ejecuta en forma interactiva
+    if [ $gp_type_calling -eq 0 ]; then
+        printf -v l_title_template 'Opción %b%s%b: %bActualizando repositorios instalados%b' "$g_color_opaque" "$g_opt_update_installed_repo" "$g_color_reset" "$g_color_subtitle" \
+           "$g_color_reset"
+    #Si se ejecuta en forma no-interactiva
+    else
+        printf -v l_title_template 'Grupo de respositorios: %bActualizando repositorios instalados%b' "$g_color_subtitle" \
+           "$g_color_reset"
+    fi
+    print_text_in_center2 "$l_title_template" $g_max_length_line 
+    print_line '─' $g_max_length_line "$g_color_opaque"
+    printf '\n'
+
+    #D. Actualizar los repositorios actualizados
+    for l_repo_id in ${!_gA_processed_repo[@]}; do
+
+
+         #1. Obtener el estado del repositorio antes de su instalación.
+         l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
+         
+         IFS='|'
+         la_aux=(${l_aux})
+         IFS=$' \t\n'
+
+         l_status_first_setup=${la_aux[0]}    #'g_install_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_install_repo_status' es [0, 2].
+                                              # -1 > El repositorio no se ha iniciado su analisis ni su proceso.
+                                              #Estados de un proceso no iniciado:
+                                              #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('g_install_repository' retorno 2 o 99).
+                                              #  1 > El repositorio no esta habilitado para este SO.
+                                              #  2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
+                                              #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
+                                              #  4 > El repositorio esta instalado y ya esta actualizado.
+                                              #Estados de un proceso iniciado:
+                                              #  5 > El repositorio inicio la instalación y lo termino con exito.
+                                              #  6 > El repositorio inicio la actualización y lo termino con exito.
+                                              #  7 > El repositorio inicio la instalación y lo termino con error.
+                                              #  8 > El repositorio inicio la actualización y lo termino con error.
+
+        #la_previous_options_idx=(${la_processed_repo_info[1]})
+        l_title_template=""
+        #echo "RepoID '${l_repo_id}', FisrtSetupStatus '${l_status_first_setup}', PreviousOptions '${la_previous_options_idx[@]}'"
+
+        #2. Solo iniciar la configuración con lo repositorios que no se han iniciado su configuración
+        if [ $l_status_first_setup -eq -1 ]; then
+
+            #2.1. Valores iniciales
+            l_repo_name_aux="${gA_packages[${l_repo_id}]:-${l_repo_id}}"
+
+
+            #B.2. Calcular la plantilla del titulo.
+            #Si se ejecuta en forma interactiva
+            if [ $gp_type_calling -eq 0 ]; then
+                printf -v l_title_template "%s(%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$l_i" "$g_color_reset" "$g_color_subtitle" \
+                   "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_opt_update_installed_repo" "$g_color_reset"
+            #Si se ejecuta en forma no-interactiva
+            else
+                printf -v l_title_template "%s(%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_opaque" "$l_i" "$g_color_reset" "$g_color_subtitle" \
+                   "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+            fi
+
+            #Configurar el respositorio, con el flag 'solo actulizar si esta instalado'
+            g_install_repository "$l_repo_id" "$l_title_template" 0
+            l_status=$?   #'g_install_repository' solo se puede mostrar el titulo del repositorio cuando retorna [0, 1] y ninguno de los estados de '_g_install_repo_status' sea [0, 2].
+                          # 0 > Se inicio la configuración (en por lo menos uno de los 2 SO Linux o Windows).
+                          #     Para ver detalle del estado ver '_g_install_repo_status'.
+                          # 1 > No se inicio la configuración del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
+                          #     Para ver detalle del estado ver '_g_install_repo_status'.
+                          # 2 > No se puede obtener la ultima versión del repositorio o la versión obtenida no es valida.
+                          #99 > Argumentos ingresados son invalidos.
+
+            #Se requiere almacenar las credenciales para realizar cambios con sudo.
+            if [ $l_status -eq 120 ]; then
+                return 120
+            fi
+
+            #2.3. Si no se inicio el analisis para evaluar si se debe dar el proceso de configuración: 
+
+            #2.3.1. Si se envio parametros incorrectos
+            if [ $l_status -eq 99 ]; then
+
+                #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+                #l_flag_process_next_repo=1
+                l_exits_error=0
+
+                #la_previous_options_idx+=(${p_option_relative_idx})
+                #_gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
+
+                printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido a los parametros incorrectos enviados.\n' \
+                              "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+                continue
+
+            fi
+
+            #2.3.2. Si no se pudo obtener la ultima versión del repositorio
+            if [ $l_status -eq 2 ]; then
+
+                #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+                #l_flag_process_next_repo=1
+                l_exits_error=0
+
+                #la_previous_options_idx+=(${p_option_relative_idx})
+                #_gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
+
+                printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido su ultima versión obtenida es invalida.\n' \
+                       "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+                continue
+            fi
+
+            #2.3.3. Si el repositorio no esta permitido procesarse en ninguno de los SO (no esta permitido para ser instalado en SO).
+            if [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
+
+                #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+                #la_previous_options_idx+=(${p_option_relative_idx})
+                #_gA_processed_repo["$l_repo_id"]="1|${la_previous_options_idx[@]}"
+                continue
+            fi 
+
+            #2.4. Si se inicio el pocesamiento del repositorio en Linux o en Windows.
+
+            #2.4.1. Obtener el status del procesamiento principal del repositorio
+            if [ ${_g_install_repo_status[0]} -gt 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
+                #Si solo este permitido iniciar su proceso en Linux.
+                l_processed_repo=${_g_install_repo_status[0]}
+                l_aux="Linux '${g_os_subtype_name}'"
+            elif [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -gt 1 ]; then
+                #Si solo este permitido iniciar su proceso en Windows.
+                l_processed_repo=${_g_install_repo_status[1]}
+                l_aux="Windows vinculado a su Linux WSL '${g_os_subtype_name}')"
+            else
+                #Si esta permitido iniciar el procesa tanto el Linux como en Windows (solo se considera como estado de Linux. El Windows es opcional y pocas veces usado).
+                l_processed_repo=${_g_install_repo_status[0]}
+                l_aux="Linux WSL '${g_os_subtype_name}' (o su Windows vinculado)"
+            fi
+                #Si termino sin errores cambiar al estado
+
+            #la_previous_options_idx+=(${p_option_relative_idx})
+            #_gA_processed_repo["$l_repo_id"]="${l_processed_repo}|${la_previous_options_idx[@]}"
+
+            #2.4.2. Mostrar información adicional
+
+            #A. Estados de un proceso no iniciado:
+            #   2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
+            if [ $l_processed_repo -eq 2 ]; then
+                #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+                continue
+
+            #   3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
+            elif [ $l_processed_repo -eq 3 ]; then
+
+                #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+                #l_flag_process_next_repo=1
+                l_exits_error=0
+                ((l_i++))
+
+                printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+                printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+
+
+            #   4 > El repositorio esta instalado y ya esta actualizado.
+            elif [ $l_processed_repo -eq 4 ]; then
+                #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+                ((l_i++))
+                printf '\n'
+
+            #B. Estados de un proceso iniciado:
+            #   5 > El repositorio inicio la instalación y lo termino con exito.
+            elif [ $l_processed_repo -eq 5 ]; then
+                #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+                ((l_i++))
+                printf '\n'
+
+            #   6 > El repositorio inicio la actualización y lo termino con exito.
+            elif [ $l_processed_repo -eq 6 ]; then
+                #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+                ((l_i++))
+                printf '\n'
+
+            #   7 > El repositorio inicio la instalación y lo termino con error.
+            elif [ $l_processed_repo -eq 7 ]; then
+                #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+                #l_flag_process_next_repo=1
+                l_exits_error=0
+                ((l_i++))
+
+                printf '%bError al instalar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+                printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+
+            #   8 > El repositorio inicio la actualización y lo termino con error.
+            elif [ $l_processed_repo -eq 8 ]; then
+                #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+                #l_flag_process_next_repo=1
+                l_exits_error=0
+                ((l_i++))
+
+                printf '%bError al actualizar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+                printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+            fi
+
+        fi
+
+    done
+
+
+}
+
+
+#Es un arreglo con 2 valores enteros, el primero es el estado de la desinstalación en Linux, el segundo es el estado de la desinstalación en Windows.
+#'i_uninstall_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_uninstall_repo_status' es [0, 1].
 #Cada estado puede tener uno de los siguiente valores: 
 # Estados de un proceso no se ha iniciado:
-#  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('i_install_repository' retorno 2 o 99).
+#  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('i_uninstall_repository' retorno 2 o 99).
+#  1 > El repositorio no esta habilitado para este SO.
+#  2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
+#  3 > El repositorio no esta instalado.
+# Estados de un proceso iniciado:
+#  4 > El repositorio inicio la desinstalación y lo termino con exito.
+#  5 > El repositorio inicio la desinstalación y lo termino con error.
+declare -a _g_uninstall_repo_status
+
+
+
+#
+#Permite desinstalar un repositorio en Linux (incluyendo a Windows vinculado a un Linux WSL)
+#Un repositorio o se configura en Linux o Windows del WSL o ambos.
+#'i_uninstall_repository' nunca se muestra con el titulo del repositorio cuando retorna 99 y 2. 
+#'i_uninstall_repository' solo se puede mostrar el titulo del repositorio cuando retorno [0, 1] y ninguno de los estados de '_g_uninstall_repo_status' es [0, 1].
+#
+#Parametros de entrada (argumentos de entrada son):
+#  1 > ID del repositorio.
+#  2 > La plantilla del titulo (si tiene un '%s', sera remplazado por "se desconfigurará"). 
+#      Si se envia una cadena vacia o no se especifica, no se mostrara el titulo.
+#
+#Parametros de salida (El valor de retorno). Sus valores pueder ser
+#    0 > Se inicio la desinstalacíon (en por lo menos uno de los 2 SO o Windows)
+#        Para ver el estado ver '_g_uninstall_repo_status'.
+#    1 > No se inicio la desinstalacíon del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
+#        Para ver el estado ver '_g_uninstall_repo_status'.
+#   99 > Argumentos ingresados son invalidos
+#
+#Parametros de salida (variables globales):
+#    > '_g_uninstall_repo_status' retorna indicadores que indican el estado de la desinstalacíon realizada.
+#           
+function i_uninstall_repository() {
+
+    #1. Argumentos 
+    local p_repo_id="$1"
+    local p_repo_title_template="$2"
+
+
+    #2. Valores iniciales
+    local l_status
+    #local l_repo_name="${gA_packages[$p_repo_id]}"
+    #local l_repo_name_aux="${l_repo_name:-$p_repo_id}"
+    
+    _g_uninstall_repo_status=(0 0)
+
+
+    #4. Iniciar la configuración en Linux: 
+    local l_aux
+    local l_status2
+    local l_tag
+    
+    #4.1. Validar si el repositorio se puede configurarse en el sistema operativo.
+    local l_install_win_cmds=1
+    local l_status_process_lnx     # Estados de un proceso no se ha iniciado:
+                                   # Estados de un proceso no se ha iniciado:
+                                   #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('i_uninstall_repository' retornó 99).
+                                   #  1 > El repositorio no esta habilitado para este SO.
+                                   #  2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
+                                   #  3 > El repositorio no esta instalado.
+                                   # Estados de un proceso iniciado:
+                                   #  4 > El repositorio inicio la desinstalación y lo termino con exito.
+                                   #  5 > El repositorio inicio la desinstalación y lo termino con error.
+
+    _can_setup_repository_in_this_so "$p_repo_id" $l_install_win_cmds
+    l_status=$?
+
+
+    #Si esta permitido configurarse en este sistema operativo, iniciar el proceso
+    if [ $l_status -eq 0 ]; then
+
+        #4.2. Validar la versión actual para poder desinstalar el repositorio.
+        _validate_versions_to_uninstall "$p_repo_id" $l_install_win_cmds "$p_repo_title_template"
+        l_status=$?    #El valor de retorno puede ser:
+                       #Si el repositorio puede actualizarse devolverá de [1,9]:
+                       #    0 > El repositorio esta instalado.
+                       #    1 > El repositorio esta instalado pero tiene una versión actual invalido.
+                       #Si el repositorio NO se puede desintalarse [10, 99]:
+                       #   10 > El repositorio no esta instalado.
+                       #   11 > El repositorio no puede determinarse su versión actual (la logica para obtener la version genero un error).
+                       #   12 > El repositorio no tiene implamentado la logica para obtener la versión actual del repositorio.
+
+
+        #Establecer el estado del proceso que no seran procesados (instalados/actualizados)
+        if [ $l_status -eq 11 ] || [ $l_status -eq 12 ]; then
+            l_status_process_lnx=2
+        elif [ $l_status -eq 10 ]; then
+            l_status_process_lnx=3
+        fi
+
+        #¿El titulo se debe mostrar en la instalacion de Windows? 
+        #'_validate_versions_to_uninstall' siempre muestra un titulo e información.
+        if [ ! -z "$p_repo_title_template" ]; then
+            #Si ya se mostro no hacerlo nuevamente
+            p_repo_title_template=""
+        fi
+            
+        #4.3. Instalar el repositorio
+        if [ -z "$l_status_process_lnx" ]; then
+
+            #Por defecto considerando que termino con error
+            l_status_process_lnx=5
+            l_tag="${l_tag}${g_color_opaque}[${_g_repo_current_version}]${g_color_reset}"
+            printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%s" ...\n' "desinstalación" "${l_tag}" "$g_os_subtype_name"
+            _uninstall_repository "$p_repo_id" "$_g_repo_current_version" $l_install_win_cmds
+            l_status2=$?
+
+            #Si termino sin errores cambiar al estado
+            l_status_process_lnx=4
+
+        fi
+
+    else
+
+        l_status_process_lnx=1
+
+    fi
+
+    #Mostrar el status de la instalacion en Linux
+    _g_install_repo_status[0]=$l_status_process_lnx
+
+    #5. Iniciar la configuración en Windows:
+    local l_status_process_win
+    l_install_win_cmds=0
+    
+
+    #5.1. Validar si el repositorio se puede configurarse en el sistema operativo.
+    _can_setup_repository_in_this_so "$p_repo_id" $l_install_win_cmds
+    l_status=$?
+
+    #Si esta permitido configurarse en este sistema operativo, iniciar el proceso
+    if [ $l_status -eq 0 ]; then
+
+
+        if [ $l_status_process_lnx -ge 2 ]; then
+            printf "\n\n"
+        fi
+
+        #5.2. Validar la versión actual para poder desinstalar el repositorio.
+        _validate_versions_to_uninstall "$p_repo_id" $l_install_win_cmds "$p_repo_title_template"
+        l_status=$?    #El valor de retorno puede ser:
+                       #Si el repositorio puede actualizarse devolverá de [1,9]:
+                       #    0 > El repositorio esta instalado.
+                       #    1 > El repositorio esta instalado pero tiene una versión actual invalido.
+                       #Si el repositorio NO se puede desintalarse [10, 99]:
+                       #   10 > El repositorio no esta instalado.
+                       #   11 > El repositorio no puede determinarse su versión actual (la logica para obtener la version genero un error).
+                       #   12 > El repositorio no tiene implamentado la logica para obtener la versión actual del repositorio.
+
+
+        #Establecer el estado del proceso que no seran procesados (instalados/actualizados)
+        if [ $l_status -eq 11 ] || [ $l_status -eq 12 ]; then
+            l_status_process_win=2
+        elif [ $l_status -eq 10 ]; then
+            l_status_process_win=3
+        fi
+            
+        #5.3. Instalar el repositorio
+        if [ -z "$l_status_process_lnx" ]; then
+
+            #Por defecto considerando que termino con error
+            l_status_process_win=5
+
+            l_tag="${l_tag}${g_color_opaque}[${_g_repo_current_version}]${g_color_reset}"
+            printf '\nIniciando la %s de los artefactos del repositorio "%b" en Windows vinculado a Linux "%s" ...\n' "desinstalación" "${l_tag}" "$g_os_subtype_name"
+            _uninstall_repository "$p_repo_id" "$_g_repo_current_version" $l_install_win_cmds
+            l_status2=$?
+
+            #Si termino sin errores cambiar al estado
+            l_status_process_win=4
+
+        fi
+
+
+    else
+
+        l_status_process_win=1
+
+    fi
+
+    #Mostrar el status de la instalacion en Linux
+    _g_install_repo_status[1]=$l_status_process_win
+
+    #Si no se llego a iniciar el proceso de configuración en ninguno de los 2 sistemas operativos
+    if [ $l_status_process_lnx -lt 4 ] && [ $l_status_process_win -lt 4 ]; then
+        return 1
+    fi
+
+    return 0
+
+
+
+}
+
+
+#
+#Parametros de entrada (argumentos de entrada son):
+#  1 > Opciones de menu ingresada por el usuario 
+#  2 > Indice relativo de la opcion en el menú de opciones (inicia con 0 y solo considera el indice del menu dinamico).
+#
+#Parametros de entrada (variables globales):
+#    > '_g_uninstall_repo_status' indicadores que muestran el estado de la configuración (instalación/actualización) realizada.
+#
+#Parametros de salida (El valor de retorno). Sus valores pueder ser
+#    0 > La opcion de menu se desintaló con exito (se inicializo, se configuro los repositorios y se finalizo existosamente).
+#    1 > No se ha inicio la desinstalacíon de la opcion del menu debido a que no se cumple las precondiciones requeridas (no se desintaló, ni se se inicializo/finalizo).
+#    2 > La inicialización de la opción no termino con exito.
+#    3 > Alguno de lo repositorios fallo en desinstalacíon. Ello provoca que se detiene el proceso (y no se invoca a la finalización).
+#    4 > La finalización de la opción no termino con exito. 
+#   98 > El repositorios vinculados a la opcion del menu no tienen parametros configurados correctos. 
+#   99 > Argumentos ingresados son invalidos
+#
+#Parametros de salida (variables globales):
+#    > '_gA_processed_repo' retona el estado de procesamiento de los repositorios hasta el momento procesados por el usuario. 
+#           
+function _uninstall_menu_options() {
+
+    #1. Argumentos 
+    local p_input_options=-1
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_input_options=$1
+    fi
+
+    local p_option_relative_idx=-1
+    if [[ "$2" =~ ^[0-9]+$ ]]; then
+        p_option_relative_idx=$2
+    fi
+
+
+    if [ $p_input_options -le 0 ]; then
+        return 99
+    fi
+
+
+    #1. Obtener los repositorios a configurar
+    local l_aux="${ga_menu_options_packages[$p_option_relative_idx]}"
+
+    if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
+        return 98
+    fi
+
+    local IFS=','
+    local la_repos=(${l_aux})
+    IFS=$' \t\n'
+
+    local l_n=${#la_repos[@]}
+    if [ $l_n -le 0 ]; then
+        return 98
+    fi
+
+
+    #2. ¿La opción actual ha sido elejido para configurarse?
+    local l_result       #0 > La opcion de menu se desintaló con exito (se inicializo, se configuro los repositorios y se finalizo existosamente).
+                         #1 > No se inicio la inicialización ni la desinstalacíon de la opcion del menu (no se desintaló, ni se se inicializo/finalizo).
+                         #2 > La inicialización de la opción no termino con exito.
+                         #3 > Alguno de lo repositorios fallo en desinstalacíon. Ello provoca que se detiene el proceso (y no se invoca a la finalización).
+                         #4 > La finalización de la opción no termino con exito. 
+
+    local l_option_value=$((1 << (p_option_relative_idx + g_offset_option_index_menu_uninstall)))
+
+    if [ $((p_input_options & l_option_value)) -ne $l_option_value ]; then
+        #No inicializar ni instalar
+        l_result=1 
+    fi
+
+    #echo "index: ${p_option_relative_idx}, input: ${p_input_options}, value: ${l_option_value}"
+
+    #3. Inicializar la opción del menu
+    local l_status
+    local l_title_template
+
+    if [ -z "$l_result" ]; then
+   
+        #3.1. Mostrar el titulo
+        print_line '─' $g_max_length_line  "$g_color_opaque"
+
+        #Si se ejecuta en forma interactiva
+        if [ $gp_type_calling -eq 0 ]; then
+            printf -v l_title_template "Opción %s%s%s '%s%s%s'" "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+        #Si se ejecuta en forma no-interactiva
+        else
+            printf -v l_title_template "Grupo de respositorios: '%s%s%s'" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+        fi
+
+        print_text_in_center2 "$l_title_template" $g_max_length_line 
+        print_line '─' $g_max_length_line "$g_color_opaque"
+
+        #3.2. Inicializar la opcion si aun no ha sido inicializado.
+        uninstall_initialize_menu_option $p_option_relative_idx
+        l_status=$?
+
+        #3.3. Si se inicializo con error (cancelado por el usuario u otro error) 
+        if [ $l_status -ne 0 ]; then
+
+            printf 'No se ha completo la inicialización de la opción del menu elegida...\n'
+            l_result=2
+
+        fi
+
+        printf '\n'
+
+    fi
+
+
+    #4. Recorriendo todos los repositorios, opcionalmente procesarlo, y almacenando el estado en la variable '_gA_processed_repo'
+    local l_status
+    local l_repo_id
+    local l_j
+    local l_k
+
+    local la_aux
+    local la_previous_options_idx
+    local l_status_first_setup
+    local l_repo_name_aux
+    local l_processed_repo
+    local l_exits_error=1
+
+    local l_flag_process_next_repo=1      #(0) Se debe intentar procesar (intalar/actualizar o desinstalar) los repositorio de la opción del menu.
+                                          #(1) No se debe intentar procesar los repositorios de la opción del menú.
+    if [ -z "$l_result" ]; then
+        l_flag_process_next_repo=0
+    fi
+
+    #Se desintanla en orden inverso a la instalación
+    for((l_j=(l_n-1); l_j >= 0; l_j--)); do
+
+        #Nombre a mostrar del respositorio
+        l_repo_id="${la_repos[$l_j]}"
+        l_repo_name_aux="${gA_packages[$l_repo_id]:-$l_repo_id}"
+
+        #4.1. Obtener el estado del repositorio antes de su instalación.
+        l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
+        
+        IFS='|'
+        la_aux=(${l_aux})
+        IFS=$' \t\n'
+
+        l_status_first_setup=${la_aux[0]}    #'i_uninstall_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_uninstall_repo_status' es [0, 1].
+                                             # -1 > El repositorio no se ha iniciado su analisis ni su proceso.
+                                             #Estados de un proceso no se ha iniciado:
+                                             #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('i_uninstall_repository' retorno 99).
+                                             #  1 > El repositorio no esta habilitado para este SO.
+                                             #  2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
+                                             #  3 > El repositorio no esta instalado.
+                                             #Estados de un proceso iniciado:
+                                             #  4 > El repositorio inicio la desinstalación y lo termino con exito.
+                                             #  5 > El repositorio inicio la desinstalación y lo termino con error.
+
+        la_previous_options_idx=(${la_aux[1]})
+        l_title_template=""
+        #echo "Index '${p_option_relative_idx}/${l_j}', RepoID '${l_repo_id}', ProcessThisRepo '${l_flag_process_next_repo}', FisrtSetupStatus '${l_status_first_setup}', PreviousOptions '${la_previous_options_idx[@]}'"
+
+        #4.2. Si el repositorio ya ha pasado por el analisis para determinar si debe ser procesado o no
+        if [ $l_status_first_setup -ne -1 ]; then
+
+            #4.2.1. Almacenar la información del procesamiento.
+            la_previous_options_idx+=(${p_option_relative_idx})
+            _gA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
+            #echo "A > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+
+            #4.2.2. Si ya no se debe procesar mas repositorios de la opción del menú.
+            if [ $l_flag_process_next_repo -ne 0 ]; then
+                continue
+            fi
+
+            #4.2.3. No mostrar titulo, ni información alguna en los casos [0, 1]
+            if [ $l_status_first_setup -ge 0 ] && [ $l_status_first_setup -le 1 ]; then
+                continue
+            fi
+
+            #4.2.4. Calcular la plantilla del titulo.
+            #Si se ejecuta en forma interactiva
+            if [ $gp_type_calling -eq 0 ]; then
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+            #Si se ejecuta en forma no-interactiva
+            else
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+            fi
+
+            #El primer repositorio donde se ha analizado si se puede o no ser procesado.
+            l_k=${la_previous_options_idx[0]}
+            l_aux=$((1 << (l_k + g_offset_option_index_menu_install)))
+
+            #4.2.5. Mostrar el titulo y mensaje en los casos donde hubo error antes de procesarse y/o durante el procesamiento
+
+
+            #Estados de un proceso no iniciado:
+            #  2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
+            if [ $l_status_first_setup -eq 2 ]; then
+
+                print_line '-' $g_max_length_line "$g_color_opaque"
+                printf "${l_title_template}\n" "no procesado"
+                print_line '-' $g_max_length_line "$g_color_opaque"
+
+                printf 'El repositorio "%s" no se pudo obtener su versión cuando se analizó con la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+
+            #  3 > El repositorio no esta instalado.
+            elif [ $l_status_first_setup -eq 3 ]; then
+
+                print_line '-' $g_max_length_line "$g_color_opaque"
+                printf "${l_title_template}\n" "no procesado"
+                print_line '-' $g_max_length_line "$g_color_opaque"
+
+                printf 'El repositorio "%s" no esta instalado, ello se determino con la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+
+            #Estados de un proceso iniciado:
+            #  4 > El repositorio inicio la desinstalación y lo termino con exito.
+            elif [ $l_status_first_setup -eq 4 ]; then
+
+                print_line '-' $g_max_length_line "$g_color_opaque"
+                printf "${l_title_template}\n" "se acaba de instalar"
+                print_line '-' $g_max_length_line "$g_color_opaque"
+
+                printf 'El repositorio "%s" se acaba de desinstalar en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+
+
+            #  5 > El repositorio inicio la desinstalación y lo termino con error.
+            elif [ $l_status_first_setup -eq 5 ]; then
+
+                print_line '-' $g_max_length_line "$g_color_opaque"
+                printf "${l_title_template}\n" "se acaba de instalar con error"
+                print_line '-' $g_max_length_line "$g_color_opaque"
+
+                printf 'El repositorio "%s" se acaba de desinstalar con error en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+
+
+            fi
+
+            continue
+
+        fi
+
+
+        #4.3. Si es la primera vez que se configurar (el repositorios de la opción del menu), inicie la configuración
+
+        #Si no se debe procesar mas repositorios de la opción del menú.
+        if [ $l_flag_process_next_repo -ne 0 ]; then
+            la_previous_options_idx+=(${p_option_relative_idx})
+            _gA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
+            continue
+        fi
+
+        if [ -z "$l_title_template" ]; then
+            #Si se ejecuta en forma interactiva
+            if [ $gp_type_calling -eq 0 ]; then
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+            #Si se ejecuta en forma no-interactiva
+            else
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+            fi
+        fi
+        
+        i_uninstall_repository "$l_repo_id" "$l_title_template" 
+        l_status=$?   #'i_uninstall_repository' solo se puede mostrar el titulo del repositorio cuando retorna [0, 1] y ninguno de los estados de '_g_install_repo_status' sea [0, 1].
+                      #    0 > Se inicio la desinstalacíon (en por lo menos uno de los 2 SO o Windows)
+                      #        Para ver el estado ver '_g_uninstall_repo_status'.
+                      #    1 > No se inicio la desinstalacíon del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
+                      #        Para ver el estado ver '_g_uninstall_repo_status'.
+                      #   99 > Argumentos ingresados son invalidos
+
+
+        #4.4. Si no se inicio el analisis para evaluar si se debe dar el proceso de configuración: 
+
+        #4.4.1. Si se envio parametros incorrectos
+        if [ $l_status -eq 99 ]; then
+
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_flag_process_next_repo=1
+            l_exits_error=0
+
+            la_previous_options_idx+=(${p_option_relative_idx})
+            _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
+
+            printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido a los parametros incorrectos enviados.\n' \
+                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+
+            #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            continue
+
+        fi
+
+
+
+        #4.4.3. Si el repositorio no esta permitido procesarse en ninguno de los SO (no esta permitido para ser instalado en SO).
+        if [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
+
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            la_previous_options_idx+=(${p_option_relative_idx})
+            _gA_processed_repo["$l_repo_id"]="1|${la_previous_options_idx[@]}"
+
+            #echo "E > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            continue
+        fi 
+
+        #4.5. Si se inicio el pocesamiento del repositorio en Linux o en Windows.
+
+        #4.5.1. Obtener el status del procesamiento principal del repositorio
+        if [ ${_g_install_repo_status[0]} -gt 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
+            #Si solo este permitido iniciar su proceso en Linux.
+            l_processed_repo=${_g_install_repo_status[0]}
+
+            l_aux="Linux '${g_os_subtype_name}'"
+        elif [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -gt 1 ]; then
+            #Si solo este permitido iniciar su proceso en Windows.
+            l_processed_repo=${_g_install_repo_status[1]}
+            l_aux="Windows vinculado a su Linux WSL '${g_os_subtype_name}')"
+        else
+            #Si esta permitido iniciar el procesa tanto el Linux como en Windows (solo se considera como estado de Linux. El Windows es opcional y pocas veces usado).
+            l_processed_repo=${_g_install_repo_status[0]}
+            l_aux="Linux WSL '${g_os_subtype_name}' (o su Windows vinculado)"
+        fi
+
+        #4.5.2. Almacenar la información del procesamiento
+        la_previous_options_idx+=(${p_option_relative_idx})
+        _gA_processed_repo["$l_repo_id"]="${l_processed_repo}|${la_previous_options_idx[@]}"
+        #echo "F > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+
+
+        #4.5.3. Mostrar información adicional
+
+        #A. Estados de un proceso no iniciado:
+        #   2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
+        if [ $l_processed_repo -le 2 ]; then
+
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_flag_process_next_repo=1
+            l_exits_error=0
+
+            printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+
+        #   3 > El repositorio no esta instalado.
+        elif [ $l_processed_repo -eq 3 ]; then
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            printf '\n'
+
+        #B. Estados de un proceso iniciado:
+        #   4 > El repositorio inicio la desinstalación y lo termino con exito.
+        elif [ $l_processed_repo -eq 4 ]; then
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            printf '\n'
+
+
+        #   5 > El repositorio inicio la desinstalación y lo termino con error.
+        elif [ $l_processed_repo -eq 5 ]; then
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_flag_process_next_repo=1
+            l_exits_error=0
+
+            printf '%bError al desinstalar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+
+        fi
+
+
+    done
+
+    #Calcular el estado despues del procesamiento de repositorios
+    if [ -z "$l_result" ]; then
+
+        #Si se inicio la desinstalación de algun repositorio y se obtuvo error
+        if [ $l_exits_error -eq 0 ]; then
+            l_result=3
+        fi
+    fi
+
+    #5. Iniciar la finalización (solo si no hubo error despues de la procesamiento de respositorios)
+    if [ -z "$l_result" ]; then
+
+        #5.1. Inicializar la opcion si aun no ha sido inicializado.
+        #printf 'Se inicia la finalización de la opción del menu...\n'
+        uninstall_finalize_menu_option $p_option_relative_idx
+        l_status=$?
+
+        #5.2. Si se inicializo con exito.
+        if [ $l_status -eq 0 ]; then
+
+            l_result=0
+
+        #5.3. Si en la inicialización hubo un error.
+        else
+
+            printf 'No se completo la finalización de la opción del menu.\n'
+            l_result=4
+
+        fi
+
+
+    fi
+
+    return $l_result
+
+}
+
+
+#Parametros de entrada (Argumentos):
+#  1 > Opciones relacionados con los repositorios que se se instalaran (entero que es suma de opciones de tipo 2^n).
+#
+#Parametros de entrada (Globales):
+#    > 'gp_type_calling' es el flag '0' si es invocado directamente, caso contrario es invocado desde otro script.
+#
+function i_uninstall_repositories() {
+    
+    #1. Argumentos 
+    local p_input_options=0
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_input_options=$1
+    fi
+
+    if [ $p_input_options -eq 0 ]; then
+        echo "ERROR: Argumento de opciones \"${p_opciones}\" es incorrecta"
+        return 23;
+    fi
+
+    
+    #3. Inicializaciones cuando se invoca directamente el script
+    local l_status
+    if [ $gp_type_calling -eq 0 ]; then
+
+        printf '\n'
+
+    fi
+
+    #5. Configurar (Desintalar) los diferentes repositorios
+    local l_i=0
+
+    #Limpiar el arreglo asociativo
+    _gA_processed_repo=()
+
+
+    for((l_i=0; l_i < ${#ga_menu_options_packages[@]}; l_i++)); do
+
+        _uninstall_menu_options $p_input_options $l_i
+
+    done
+
+    #echo "Keys de _gA_processed_repo=${!_gA_processed_repo[@]}"
+    #echo "Values de _gA_processed_repo=${_gA_processed_repo[@]}"
+
+    #6. Caducar las credecinales de root almacenadas temporalmente
+    if [ $g_status_crendential_storage -eq 0 ]; then
+        clean_sudo_credencial
+    fi
+
+}
+
+
+
+#}}}
+
+
+
+
+#Funciones genericas - 1er nivel de ejecución {{{
+
+
+#Es un arreglo con 2 valores enteros, el primero es el estado de la instalación en Linux, el segundo es el estado de la instalación en Windows.
+#'g_install_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_install_repo_status' es [0, 2].
+#Cada estado puede tener uno de los siguiente valores: 
+# Estados de un proceso no se ha iniciado:
+#  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('g_install_repository' retorno 2 o 99).
 #  1 > El repositorio no esta habilitado para este SO.
 #  2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
 #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
@@ -869,13 +2253,11 @@ _validate_versions_to_uninstall() {
 #  8 > El repositorio inicio la actualización y lo termino con error.
 declare -a _g_install_repo_status
 
-
-
 #
 #Permite instalar un repositorio en Linux (incluyendo a Windows vinculado a un Linux WSL)
 #Un repositorio o se configura en Linux o Windows del WSL o ambos.
-#'i_install_repository' nunca se muestra con el titulo del repositorio cuando retorna 99 y 2. 
-#'i_install_repository' solo se puede mostrar el titulo del repositorio cuando retorno [0, 1] y ninguno de los estados de '_g_install_repo_status' es [0, 2].
+#'g_install_repository' nunca se muestra con el titulo del repositorio cuando retorna 99 y 2. 
+#'g_install_repository' solo se puede mostrar el titulo del repositorio cuando retorno [0, 1] y ninguno de los estados de '_g_install_repo_status' es [0, 2].
 #
 #Parametros de entrada (argumentos de entrada son):
 #  1 > ID del repositorio.
@@ -895,7 +2277,7 @@ declare -a _g_install_repo_status
 #Parametros de salida (variables globales):
 #    > '_g_install_repo_status' retona indicadores que indican el estado de la configuración (instalación/actualización) realizada.
 #           
-function i_install_repository() {
+function g_install_repository() {
 
     #1. Argumentos 
     local p_repo_id="$1"
@@ -908,7 +2290,7 @@ function i_install_repository() {
 
     #1. Inicializaciones
     local l_status=0
-    local l_repo_name="${gA_repositories[$p_repo_id]}"
+    local l_repo_name="${gA_packages[$p_repo_id]}"
 
 
     #2. Obtener la ultima version del repositorio
@@ -965,7 +2347,7 @@ function i_install_repository() {
     #4.1. Validar si el repositorio se puede configurarse en el sistema operativo.
     local l_install_win_cmds=1
     local l_status_process_lnx     # Estados de un proceso no se ha iniciado:
-                                   #  0 > El repositorio tiene parametros invalidos que impiden su proceso (se da cuando 'i_install_repository' retorno 99).
+                                   #  0 > El repositorio tiene parametros invalidos que impiden su proceso (se da cuando 'g_install_repository' retorno 99).
                                    #  1 > El repositorio no esta habilitado para este SO.
                                    #  2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
                                    #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
@@ -1017,7 +2399,6 @@ function i_install_repository() {
             #Si ya se mostro no hacerlo nuevamente
             p_repo_title_template=""
         fi
-                #Si termino sin errores cambiar al estado
             
         #4.3. Instalar el repositorio
         if [ -z "$l_status_process_lnx" ]; then
@@ -1236,712 +2617,30 @@ function i_install_repository() {
     #Mostrar el status de la instalacion en Linux
     _g_install_repo_status[1]=$l_status_process_win
 
+
+    #Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
+    #Si no se invoca interactivamente y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
+    #if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ] && [ $gp_type_calling -eq 2 ]; then
+    #    clean_sudo_credencial
+    #fi
+
+
     #Si no se llego a iniciar el proceso de configuración en ninguno de los 2 sistemas operativos
     if [ $l_status_process_lnx -lt 5 ] && [ $l_status_process_win -lt 5 ]; then
         return 1
     fi
 
-    #Caducar las credencinales de root almacenadas temporalmente si: se hiceron internamente y fue no-interactiva de un solo ID del repositorio
-    if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ] && [ $gp_type_calling -eq 2 ]; then
-        clean_sudo_credencial
-    fi
 
     return 0
 
 }
 
 
-
-#Un arreglo de asociativo cuyo key es el ID del repositorio hasta el momento procesados en el menu. El valor indica información del información de procesamiento.
-#El procesamiento puede ser una configuración (instalación/actualización) o desinstalacíon.
-#El valor almacenado para un repositorio es 'X|Y', donde:
-#   X es el estado de la primera configuración y sus valores son:
-#     . -1 > El repositorio aun no se ha se ha analizado (ni iniciado su proceso).
-#     .  n > Los definidos por la variable '_g_install_repo_status' para una instalación/actualización o '_g_uninstall_repo_status' para una desinstalación.
-#   Y Listado de indice relativo (de las opcion de menú) separados por espacios ' ' donde (hasta el momento) se usa el repositorio.
-#     El primer indice es de la primera opción del menu que instala los artefactos. Los demas opciones no vuelven a instalar el artefacto
-declare -A _gA_processed_repo=()
-
-
-
-#
-#El proceso de configuración (instalación/configuración) no es transaccional (no hay un rollback si hay un error) pero es idempotente (se puede reintar y solo 
-#configura a los que falto configurar).
-#Solo existe inicializacion y finalización para la configuración de repositorios Linux (en Windows, la configuración solo es copiar archivos, no se instala programas).
-#
-#Parametros de entrada (argumentos de entrada son):
-#  1 > Opciones de menu ingresada por el usuario 
-#  2 > Indice relativo de la opcion en el menú de opciones (inicia con 0 y solo considera el indice del menu dinamico).
-#
-#Parametros de entrada (variables globales):
-#    > '_g_install_repo_status' indicadores que muestran el estado de la configuración (instalación/actualización) realizada.
-#
-#Parametros de salida (El valor de retorno). Sus valores pueder ser
-#    0 > La opcion de menu se configuro con exito (se inicializo, se configuro los repositorios y se finalizo existosamente).
-#    1 > No se inicio con la configuración de la opcion del menu (no se instalo, ni se se inicializo/finalizo).
-#    2 > La inicialización de la opción no termino con exito.
-#    3 > Alguno de lo repositorios fallo en configurarse (instalación/configuración). Ello provoca que se detiene el proceso (y no se invoca a la finalización).
-#    4 > La finalización de la opción no termino con exito. 
-#   98 > El repositorios vinculados a la opcion del menu no han sido configurados correctamente. 
-#   99 > Argumentos ingresados son invalidos
-#
-#Parametros de salida (variables globales):
-#    > '_gA_processed_repo' retona el estado de procesamiento de los repositorios hasta el momento procesados por el usuario. 
-#           
-function _install_menu_options() {
-
-    #1. Argumentos 
-    local p_input_options=-1
-    if [[ "$1" =~ ^[0-9]+$ ]]; then
-        p_input_options=$1
-    fi
-
-    local p_option_relative_idx=-1
-    if [[ "$2" =~ ^[0-9]+$ ]]; then
-        p_option_relative_idx=$2
-    fi
-
-
-    if [ $p_input_options -le 0 ] || [ $p_option_relative_idx -lt 0 ]; then
-        return 99
-    fi
-
-
-
-    #1. Obtener los repositorios a configurar
-    local l_aux="${ga_menu_options_repos[$p_option_relative_idx]}"
-    #echo "Input: ${p_input_options} , Repos[${p_option_relative_idx}]: ${l_aux}"
-
-    if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
-        return 98
-    fi
-
-    local IFS=','
-    local la_repos=(${l_aux})
-    IFS=$' \t\n'
-
-    local l_n=${#la_repos[@]}
-    if [ $l_n -le 0 ]; then
-        return 98
-    fi
-
-
-    #2. ¿La opción actual ha sido elejido para configurarse?
-    local l_result       #0 > La opcion de menu se configuro con exito (se inicializo, se configuro los repositorios y se finalizo existosamente).
-                         #1 > No se inicio con la inicialización ni la configuración la opcion del menu (no se instalo, ni se se inicializo/finalizo).
-                         #2 > La inicialización de la opción termino con errores.
-                         #3 > Alguno de los repositorios fallo en configurarse (instalación/configuración), se detiene el proceso (no se invoca a la finalización).
-                         #4 > La finalización de la opción no termino con exito. 
-
-    local l_option_value=$((1 << (p_option_relative_idx + g_offset_option_index_menu_install)))
-
-    if [ $((p_input_options & l_option_value)) -ne $l_option_value ]; then 
-        l_result=1
-    fi
-    #echo "l_result: ${l_result}"
-
-    #3. Inicializar la opción del menu
-    local l_status
-    local l_title_template
-
-    if [ -z "$l_result" ]; then
-   
-        #3.1. Mostrar el titulo
-        print_line '─' $g_max_length_line  "$g_color_opaque"
-        printf -v l_title_template 'Opción %b%s%b: %b%s%b' "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
-        print_text_in_center2 "$l_title_template" $g_max_length_line 
-        print_line '─' $g_max_length_line "$g_color_opaque"
-        #printf 'Inicializando la opción elegida del menu ...\n'
-
-        #3.2. Inicializar la opcion si aun no ha sido inicializado.
-        _initialize_menu_option_install_lnx $p_option_relative_idx
-        l_status=$?
-
-        #3.3. Si se inicializo no se realizo con exito.
-        if [ $l_status -ne 0 ]; then
-
-            printf 'No se ha completo la inicialización de la opción del menu elegida...\n'
-            l_result=2
-
-        fi
-
-        printf '\n'
-
-    fi
-
-
-    #4. Recorriendo los los repositorios, opcionalmente procesarlo, y almacenando el estado en la variable '_gA_processed_repo'
-    local l_status
-    local l_repo_id
-    local l_j
-    local l_k
-
-    local la_aux
-    local la_previous_options_idx
-    local l_status_first_setup
-    local l_repo_name_aux
-    local l_processed_repo
-    local l_exits_error=1
-
-    local l_flag_process_next_repo=1      #(0) Se debe intentar procesar (intalar/actualizar o desinstalar) los repositorio de la opción del menu.
-                                          #(1) No se debe intentar procesar los repositorios de la opción del menú.
-    if [ -z "$l_result" ]; then
-        l_flag_process_next_repo=0
-    fi
-
-    for((l_j=0; l_j < ${l_n}; l_j++)); do
-
-        #Nombre a mostrar del respositorio
-        l_repo_id="${la_repos[$l_j]}"
-        l_repo_name_aux="${gA_repositories[${l_repo_id}]:-${l_repo_id}}"
-
-        #4.1. Obtener el estado del repositorio antes de su instalación.
-        l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
-        
-        IFS='|'
-        la_aux=(${l_aux})
-        IFS=$' \t\n'
-
-        l_status_first_setup=${la_aux[0]}    #'i_install_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_install_repo_status' es [0, 2].
-                                             # -1 > El repositorio no se ha iniciado su analisis ni su proceso.
-                                             #Estados de un proceso no iniciado:
-                                             #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('i_install_repository' retorno 2 o 99).
-                                             #  1 > El repositorio no esta habilitado para este SO.
-                                             #  2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
-                                             #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-                                             #  4 > El repositorio esta instalado y ya esta actualizado.
-                                             #Estados de un proceso iniciado:
-                                             #  5 > El repositorio inicio la instalación y lo termino con exito.
-                                             #  6 > El repositorio inicio la actualización y lo termino con exito.
-                                             #  7 > El repositorio inicio la instalación y lo termino con error.
-                                             #  8 > El repositorio inicio la actualización y lo termino con error.
-
-        la_previous_options_idx=(${la_aux[1]})
-        l_title_template=""
-        #echo "Index '${p_option_relative_idx}/${l_j}', RepoID '${l_repo_id}', ProcessThisRepo '${l_flag_process_next_repo}', FisrtSetupStatus '${l_status_first_setup}', PreviousOptions '${la_previous_options_idx[@]}'"
-
-        #4.2. Si el repositorio ya ha pasado por el analisis para determinar si debe ser procesado o no
-        if [ $l_status_first_setup -ne -1 ]; then
-
-            #4.2.1. Almacenar la información del procesamiento.
-            la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
-            #echo "A > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
-
-            #4.2.2. Si ya no se debe procesar mas repositorios de la opción del menú.
-            if [ $l_flag_process_next_repo -ne 0 ]; then
-                continue
-            fi
-
-            #4.2.3. No mostrar titulo, ni información alguna en los casos [0, 2]
-            if [ $l_status_first_setup -ge 0 ] && [ $l_status_first_setup -le 2 ]; then
-                continue
-            fi
-
-            #4.2.4. Calcular la plantilla del titulo.
-            printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
-
-            #El primer repositorio donde se ha analizado si se puede o no ser procesado.
-            l_k=${la_previous_options_idx[0]}
-            l_aux=$((1 << (l_k + g_offset_option_index_menu_install)))
-
-            #4.2.5. Mostrar el titulo y mensaje en los casos donde hubo error antes de procesarse y/o durante el procesamiento
-
-
-            #Estados de un proceso no iniciado:
-            #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-            if [ $l_status_first_setup -eq 3 ]; then
-
-                print_line '-' $g_max_length_line "$g_color_opaque"
-                printf "${p_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
-
-                printf 'El repositorio "%s" no se pudo obtener su versión cuando se analizó con la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
-
-            #  4 > El repositorio esta instalado y ya esta actualizado.
-            elif [ $l_status_first_setup -eq 4 ]; then
-
-                print_line '-' $g_max_length_line "$g_color_opaque"
-                printf "${p_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
-
-                printf 'El repositorio "%s" ya esta instalado y actualizado con la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
-
-            #Estados de un proceso iniciado:
-            #  5 > El repositorio inicio la instalación y lo termino con exito.
-            elif [ $l_status_first_setup -eq 5 ]; then
-
-                print_line '-' $g_max_length_line "$g_color_opaque"
-                printf "${p_title_template}\n" "se acaba de instalar"
-                print_line '-' $g_max_length_line "$g_color_opaque"
-
-                printf 'El repositorio "%s" se acaba de instalar en la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
-
-            #  6 > El repositorio inicio la actualización y lo termino con exito.
-            elif [ $l_status_first_setup -eq 6 ]; then
-
-                print_line '-' $g_max_length_line "$g_color_opaque"
-                printf "${p_title_template}\n" "se acaba de actualizar"
-                print_line '-' $g_max_length_line "$g_color_opaque"
-
-                printf 'El repositorio "%s" se acaba de actualizar en la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
-
-            #  7 > El repositorio inicio la instalación y lo termino con error.
-            elif [ $l_status_first_setup -eq 7 ]; then
-
-                print_line '-' $g_max_length_line "$g_color_opaque"
-                printf "${p_title_template}\n" "se acaba de instalar con error"
-                print_line '-' $g_max_length_line "$g_color_opaque"
-
-                printf 'El repositorio "%s" se acaba de instalar con error en la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
-
-            #  8 > El repositorio inicio la actualización y lo termino con error.
-            elif [ $l_status_first_setup -eq 8 ]; then
-
-                print_line '-' $g_max_length_line "$g_color_opaque"
-                printf "${p_title_template}\n" "se acaba de instalar con error"
-                print_line '-' $g_max_length_line "$g_color_opaque"
-
-                printf 'El repositorio "%s" se acaba de instalar con error en la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
-
-            fi
-
-            continue
-
-        fi
-
-
-        #4.3. Si es la primera vez que se configurar (el repositorios de la opción del menu), inicie la configuración
-
-        #Si no se debe procesar mas repositorios de la opción del menú.
-        if [ $l_flag_process_next_repo -ne 0 ]; then
-            la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
-            continue
-        fi
-
-        if [ -z "$l_title_template" ]; then
-            printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
-        fi
-        
-        i_install_repository "$l_repo_id" "$l_title_template" 1 
-        l_status=$?   #'i_install_repository' solo se puede mostrar el titulo del repositorio cuando retorna [0, 1] y ninguno de los estados de '_g_install_repo_status' sea [0, 2].
-                      # 0 > Se inicio la configuración (en por lo menos uno de los 2 SO Linux o Windows).
-                      #     Para ver detalle del estado ver '_g_install_repo_status'.
-                      # 1 > No se inicio la configuración del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
-                      #     Para ver detalle del estado ver '_g_install_repo_status'.
-                      # 2 > No se puede obtener la ultima versión del repositorio o la versión obtenida no es valida.
-                      #99 > Argumentos ingresados son invalidos.
-
-        #Se requiere almacenar las credenciales para realizar cambios con sudo.
-        if [ $l_status -eq 120 ]; then
-            return 120
-        fi
-
-        #4.4. Si no se inicio el analisis para evaluar si se debe dar el proceso de configuración: 
-
-        #4.4.1. Si se envio parametros incorrectos
-        if [ $l_status -eq 99 ]; then
-
-            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-            l_flag_process_next_repo=1
-            l_exits_error=0
-
-            la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
-
-            printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido a los parametros incorrectos enviados.\n' \
-                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
-            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
-
-            #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
-            continue
-
-        fi
-
-        #4.4.2. Si no se pudo obtener la ultima versión del repositorio
-        if [ $l_status -eq 2 ]; then
-
-            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-            l_flag_process_next_repo=1
-            l_exits_error=0
-
-            la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
-
-            printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido su ultima versión obtenida es invalida.\n' \
-                   "$g_color_warning" "$l_repo_id" "$g_color_reset"
-            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
-
-            #echo "C > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
-            continue
-        fi
-
-        #4.4.3. Si el repositorio no esta permitido procesarse en ninguno de los SO (no esta permitido para ser instalado en SO).
-        if [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
-
-            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-            la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="1|${la_previous_options_idx[@]}"
-
-            #echo "E > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
-            continue
-        fi 
-
-        #4.5. Si se inicio el pocesamiento del repositorio en Linux o en Windows.
-
-        #4.5.1. Obtener el status del procesamiento principal del repositorio
-        if [ ${_g_install_repo_status[0]} -gt 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
-            #Si solo este permitido iniciar su proceso en Linux.
-            l_processed_repo=${_g_install_repo_status[0]}
-            l_aux="Linux '${g_os_subtype_name}'"
-        elif [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -gt 1 ]; then
-            #Si solo este permitido iniciar su proceso en Windows.
-            l_processed_repo=${_g_install_repo_status[1]}
-            l_aux="Windows vinculado a su Linux WSL '${g_os_subtype_name}')"
-        else
-            #Si esta permitido iniciar el procesa tanto el Linux como en Windows (solo se considera como estado de Linux. El Windows es opcional y pocas veces usado).
-            l_processed_repo=${_g_install_repo_status[0]}
-            l_aux="Linux WSL '${g_os_subtype_name}' (o su Windows vinculado)"
-        fi
-
-        #4.5.2. Almacenar la información del procesamiento
-        la_previous_options_idx+=(${p_option_relative_idx})
-        _gA_processed_repo["$l_repo_id"]="${l_processed_repo}|${la_previous_options_idx[@]}"
-        #echo "F > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
-
-        #4.5.3. Mostrar información adicional
-
-        #A. Estados de un proceso no iniciado:
-        #   2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
-        if [ $l_processed_repo -eq 2 ]; then
-            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-            continue
-
-        #   3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-        elif [ $l_processed_repo -eq 3 ]; then
-
-            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-            l_flag_process_next_repo=1
-            l_exits_error=0
-
-            printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
-            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
-
-        #   4 > El repositorio esta instalado y ya esta actualizado.
-        elif [ $l_processed_repo -eq 4 ]; then
-            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-            printf '\n'
-
-        #B. Estados de un proceso iniciado:
-        #   5 > El repositorio inicio la instalación y lo termino con exito.
-        elif [ $l_processed_repo -eq 5 ]; then
-            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-            printf '\n'
-
-        #   6 > El repositorio inicio la actualización y lo termino con exito.
-        elif [ $l_processed_repo -eq 6 ]; then
-            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-            printf '\n'
-
-        #   7 > El repositorio inicio la instalación y lo termino con error.
-        elif [ $l_processed_repo -eq 7 ]; then
-            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-            l_flag_process_next_repo=1
-            l_exits_error=0
-
-            printf '%bError al instalar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
-            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
-
-        #   8 > El repositorio inicio la actualización y lo termino con error.
-        elif [ $l_processed_repo -eq 8 ]; then
-            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-            l_flag_process_next_repo=1
-            l_exits_error=0
-
-            printf '%bError al actualizar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
-            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
-        fi
-
-
-    done
-
-    #Establecer el estado despues del procesamiento
-    if [ -z "$l_result" ]; then
-    
-        #Si se inicio la configuración de algun repositorio y se obtuvo error
-        if [ $l_exits_error -eq 0 ]; then
-            l_result=3
-        fi
-
-    fi
-
-    #5. Iniciar la finalización (solo si se proceso correctamente todos los repositorios de la opción de menú)
-    if [ -z "$l_result" ]; then
-   
-
-        #5.1. Inicializar la opcion si aun no ha sido inicializado.
-        _finalize_menu_option_install_lnx $p_option_relative_idx
-        l_status=$?
-
-        #5.2. Si se inicializo con exito.
-        if [ $l_status -eq 0 ]; then
-
-            l_result=0
-
-        else
-
-            printf 'No se completo la finalización de la opción del menu ...\n'
-            l_result=4
-
-        fi
-
-
-    fi
-
-    return $l_result
-
-}
-
-#
-#
-#Parametros de entrada (argumentos de entrada son):
-#
-#Parametros de entrada (variables globales):
-#    > '_gA_processed_repo' diccionario el estado de procesamiento de los repositorios hasta el momento procesados por el usuario.
-#    > 'gA_repositories' listado de repositorios.
-#
-#Parametros de salida (El valor de retorno). Sus valores pueder ser
-#    0 > Resultado exitoso. 
-#   99 > Argumentos ingresados son invalidos.
-#
-#Parametros de salida (variables globales):
-#           
-function _update_installed_repository() {
-
-    #A. Argumentos
-
-    #B. Inicialización
-    local l_repo_id
-    local l_repo_name_aux
-    local l_title_template
-    #local la_previous_options_idx
-    local l_status_first_setup
-    local l_processed_repo
-
-    #local l_flag_process_next_repo
-    local l_exits_error=1
-
-    local l_aux
-    local la_aux
-    local l_i=1
-
-
-    #C. Mostrar el titulo
-    print_line '─' $g_max_length_line  "$g_color_opaque"
-    printf -v l_title_template 'Opción %b%s%b: %bActualizando repositorios instalados%b' "$g_color_opaque" "$g_opt_update_installed_repo" "$g_color_reset" "$g_color_subtitle" \
-           "$g_color_reset"
-    print_text_in_center2 "$l_title_template" $g_max_length_line 
-    print_line '─' $g_max_length_line "$g_color_opaque"
-    printf '\n'
-
-    #D. Actualizar los repositorios actualizados
-    for l_repo_id in ${!_gA_processed_repo[@]}; do
-
-
-         #1. Obtener el estado del repositorio antes de su instalación.
-         l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
-         
-         IFS='|'
-         la_aux=(${l_aux})
-         IFS=$' \t\n'
-
-         l_status_first_setup=${la_aux[0]}    #'i_install_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_install_repo_status' es [0, 2].
-                                              # -1 > El repositorio no se ha iniciado su analisis ni su proceso.
-                                              #Estados de un proceso no iniciado:
-                                              #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('i_install_repository' retorno 2 o 99).
-                                              #  1 > El repositorio no esta habilitado para este SO.
-                                              #  2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
-                                              #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-                                              #  4 > El repositorio esta instalado y ya esta actualizado.
-                                              #Estados de un proceso iniciado:
-                                              #  5 > El repositorio inicio la instalación y lo termino con exito.
-                                              #  6 > El repositorio inicio la actualización y lo termino con exito.
-                                              #  7 > El repositorio inicio la instalación y lo termino con error.
-                                              #  8 > El repositorio inicio la actualización y lo termino con error.
-
-        #la_previous_options_idx=(${la_processed_repo_info[1]})
-        l_title_template=""
-        #echo "RepoID '${l_repo_id}', FisrtSetupStatus '${l_status_first_setup}', PreviousOptions '${la_previous_options_idx[@]}'"
-
-        #2. Solo iniciar la configuración con lo repositorios que no se han iniciado su configuración
-        if [ $l_status_first_setup -eq -1 ]; then
-
-            #2.1. Valores iniciales
-            l_repo_name_aux="${gA_repositories[${l_repo_id}]:-${l_repo_id}}"
-
-
-            #B.2. Calcular la plantilla del titulo.
-            printf -v l_title_template "%s(%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$l_i" "$g_color_reset" "$g_color_subtitle" \
-                   "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_opt_update_installed_repo" "$g_color_reset"
-
-            #Configurar el respositorio, con el flag 'solo actulizar si esta instalado'
-            i_install_repository "$l_repo_id" "$l_title_template" 0
-            l_status=$?   #'i_install_repository' solo se puede mostrar el titulo del repositorio cuando retorna [0, 1] y ninguno de los estados de '_g_install_repo_status' sea [0, 2].
-                          # 0 > Se inicio la configuración (en por lo menos uno de los 2 SO Linux o Windows).
-                          #     Para ver detalle del estado ver '_g_install_repo_status'.
-                          # 1 > No se inicio la configuración del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
-                          #     Para ver detalle del estado ver '_g_install_repo_status'.
-                          # 2 > No se puede obtener la ultima versión del repositorio o la versión obtenida no es valida.
-                          #99 > Argumentos ingresados son invalidos.
-
-            #Se requiere almacenar las credenciales para realizar cambios con sudo.
-            if [ $l_status -eq 120 ]; then
-                return 120
-            fi
-
-            #2.3. Si no se inicio el analisis para evaluar si se debe dar el proceso de configuración: 
-
-            #2.3.1. Si se envio parametros incorrectos
-            if [ $l_status -eq 99 ]; then
-
-                #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-                #l_flag_process_next_repo=1
-                l_exits_error=0
-
-                #la_previous_options_idx+=(${p_option_relative_idx})
-                #_gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
-
-                printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido a los parametros incorrectos enviados.\n' \
-                              "$g_color_warning" "$l_repo_id" "$g_color_reset"
-                printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
-                continue
-
-            fi
-
-            #2.3.2. Si no se pudo obtener la ultima versión del repositorio
-            if [ $l_status -eq 2 ]; then
-
-                #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-                #l_flag_process_next_repo=1
-                l_exits_error=0
-
-                #la_previous_options_idx+=(${p_option_relative_idx})
-                #_gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
-
-                printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido su ultima versión obtenida es invalida.\n' \
-                       "$g_color_warning" "$l_repo_id" "$g_color_reset"
-                printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
-                continue
-            fi
-
-            #2.3.3. Si el repositorio no esta permitido procesarse en ninguno de los SO (no esta permitido para ser instalado en SO).
-            if [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
-
-                #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-                #la_previous_options_idx+=(${p_option_relative_idx})
-                #_gA_processed_repo["$l_repo_id"]="1|${la_previous_options_idx[@]}"
-                continue
-            fi 
-
-            #2.4. Si se inicio el pocesamiento del repositorio en Linux o en Windows.
-
-            #2.4.1. Obtener el status del procesamiento principal del repositorio
-            if [ ${_g_install_repo_status[0]} -gt 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
-                #Si solo este permitido iniciar su proceso en Linux.
-                l_processed_repo=${_g_install_repo_status[0]}
-                l_aux="Linux '${g_os_subtype_name}'"
-            elif [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -gt 1 ]; then
-                #Si solo este permitido iniciar su proceso en Windows.
-                l_processed_repo=${_g_install_repo_status[1]}
-                l_aux="Windows vinculado a su Linux WSL '${g_os_subtype_name}')"
-            else
-                #Si esta permitido iniciar el procesa tanto el Linux como en Windows (solo se considera como estado de Linux. El Windows es opcional y pocas veces usado).
-                l_processed_repo=${_g_install_repo_status[0]}
-                l_aux="Linux WSL '${g_os_subtype_name}' (o su Windows vinculado)"
-            fi
-                #Si termino sin errores cambiar al estado
-
-            #la_previous_options_idx+=(${p_option_relative_idx})
-            #_gA_processed_repo["$l_repo_id"]="${l_processed_repo}|${la_previous_options_idx[@]}"
-
-            #2.4.2. Mostrar información adicional
-
-            #A. Estados de un proceso no iniciado:
-            #   2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
-            if [ $l_processed_repo -eq 2 ]; then
-                #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-                continue
-
-            #   3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-            elif [ $l_processed_repo -eq 3 ]; then
-
-                #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-                #l_flag_process_next_repo=1
-                l_exits_error=0
-                ((l_i++))
-
-                printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
-                printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
-
-
-            #   4 > El repositorio esta instalado y ya esta actualizado.
-            elif [ $l_processed_repo -eq 4 ]; then
-                #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-                ((l_i++))
-                printf '\n'
-
-            #B. Estados de un proceso iniciado:
-            #   5 > El repositorio inicio la instalación y lo termino con exito.
-            elif [ $l_processed_repo -eq 5 ]; then
-                #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-                ((l_i++))
-                printf '\n'
-
-            #   6 > El repositorio inicio la actualización y lo termino con exito.
-            elif [ $l_processed_repo -eq 6 ]; then
-                #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-                ((l_i++))
-                printf '\n'
-
-            #   7 > El repositorio inicio la instalación y lo termino con error.
-            elif [ $l_processed_repo -eq 7 ]; then
-                #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-                #l_flag_process_next_repo=1
-                l_exits_error=0
-                ((l_i++))
-
-                printf '%bError al instalar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
-                printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
-
-            #   8 > El repositorio inicio la actualización y lo termino con error.
-            elif [ $l_processed_repo -eq 8 ]; then
-                #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-                #l_flag_process_next_repo=1
-                l_exits_error=0
-                ((l_i++))
-
-                printf '%bError al actualizar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
-                printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
-            fi
-
-        fi
-
-    done
-
-
-}
-
 #
 #Parametros de entrada (Argumentos):
 #  1 > Opciones relacionados con los repositorios que se se instalaran (entero que es suma de opciones de tipo 2^n).
 #
-#Parametros de entrada (Globales):
-#    > 'gp_type_calling' es el flag '0' si es invocado directamente, caso contrario es invocado desde otro script.
-#
-function i_install_repositories() {
+function g_install_repositories() {
     
     #1. Argumentos 
     local p_input_options=-1
@@ -1954,16 +2653,13 @@ function i_install_repositories() {
         return 99
     fi
 
-    #2. Validar si fue descarga el repositorio git correspondiente
-    if [ ! -d ~/.files/.git ]; then
-        show_message_nogitrepo
-        return 10
-    fi
     
     #3. Inicializaciones cuando se invoca directamente el script
     local l_flag=0
-    if [ $gp_type_calling -eq 0 ]; then
+    local l_status
+    local l_title
 
+    if [ $gp_type_calling -eq 0 ]; then
 
         #Instalacion de paquetes del SO
         l_flag=$(( $p_input_options & $g_opt_update_installed_pckg ))
@@ -1979,35 +2675,13 @@ function i_install_repositories() {
                 fi
             fi
 
-            print_line '-' $g_max_length_line "$g_color_opaque" 
-            echo "- Actualizar los paquetes de los repositorio del SO Linux"
-            print_line '-' $g_max_length_line "$g_color_opaque" 
+            print_line '─' $g_max_length_line  "$g_color_opaque"
+            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+            print_text_in_center2 "$l_title" $g_max_length_line 
+            print_line '─' $g_max_length_line "$g_color_opaque"
+
             
-            #Segun el tipo de distribución de Linux
-            case "$g_os_subtype_id" in
-                1)
-                    #Distribución: Ubuntu
-                    if [ $g_is_root -eq 0 ]; then
-                        apt-get update
-                        apt-get upgrade
-                    else
-                        sudo apt-get update
-                        sudo apt-get upgrade
-                    fi
-                    ;;
-                2)
-                    #Distribución: Fedora
-                    if [ $g_is_root -eq 0 ]; then
-                        dnf upgrade
-                    else
-                        sudo dnf upgrade
-                    fi
-                    ;;
-                0)
-                    echo "ERROR: No se identificado el tipo de Distribución Linux"
-                    return 22;
-                    ;;
-            esac
+            upgrade_os_packages $g_os_subtype_id
 
         fi
     fi
@@ -2016,11 +2690,10 @@ function i_install_repositories() {
     #   Si la configuración de un repositorio de la opción de menú falla, se deteniene la configuración de la opción.
 
     local l_i=0
-    local l_status
     #Limpiar el arreglo asociativo
     _gA_processed_repo=()
 
-    for((l_i=0; l_i < ${#ga_menu_options_repos[@]}; l_i++)); do
+    for((l_i=0; l_i < ${#ga_menu_options_packages[@]}; l_i++)); do
         
         _install_menu_options $p_input_options $l_i
         l_status=$?
@@ -2033,10 +2706,10 @@ function i_install_repositories() {
     done
 
     #echo "Keys de _gA_processed_repo=${!_gA_processed_repo[@]}"
-    #echo "Values de _gA_processed_repo=${_gA_processed_repo[@]}"
+    #echo "Values de _gA_processed_repo=${_gA_p_title_templateprocessed_repo[@]}"
 
     #6. Si el flag actualizar todos los instalados esta activo, actualizar todos los instalados que aun no fueron actualizado.
-    #   Si la configuración de un repositorio de la opción de menú falla, se continua la configuración con la siguiente opción del menú
+    #   Si la configuración de un repositorio p_title_templatede la opción de menú falla, se continua la configuración con la siguiente opción del menú
     local l_update_all_installed_repo=1
     if [ $((p_input_options & g_opt_update_installed_repo)) -eq $g_opt_update_installed_repo ]; then 
         l_update_all_installed_repo=0
@@ -2055,13 +2728,16 @@ function i_install_repositories() {
 
     fi
 
-    #7. Caducar las credencinales de root almacenadas temporalmente si se hiceron internamente
-    if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
+
+    #7. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
+    #   Si no se invoca interactivamente y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
+    if [ $g_status_crendential_storage -eq 0 ] && [ $gp_type_calling -eq 0 ]; then
+    #if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
         clean_sudo_credencial
     fi
 
-}
 
+}
 
 function _show_menu_install_core() {
 
@@ -2083,27 +2759,9 @@ function _show_menu_install_core() {
 }
 
 
-function i_main_install() {
+function g_install_main() {
 
     #1. Pre-requisitos
-    printf '%bOS Type            : (%s)\n' "$g_color_opaque" "$g_os_type"
-    printf 'OS Subtype (Distro): (%s) %s - %s%b\n' "${g_os_subtype_id}" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
-    
-    #Determinar el tipo de distribución Linux
-    if [ $g_os_type -gt 10 ]; then
-        printf '\nERROR: El sistema operativo debe ser Linux\n'
-        return 21;
-    fi
-
-    #¿Esta 'curl' instalado?
-    local l_status
-    fulfill_preconditions1
-    l_status=$?
-
-    if [ $l_status -ne 0 ]; then
-        return 22
-    fi
-
    
     #2. Mostrar el Menu
     print_line '─' $g_max_length_line "$g_color_title" 
@@ -2123,7 +2781,7 @@ function i_main_install() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
-                i_setup_repositories $l_value_option_a 0
+                g_install_repositories $l_value_option_a 0
                 ;;
 
             q)
@@ -2144,7 +2802,7 @@ function i_main_install() {
                     l_flag_continue=1
                     print_line '─' $g_max_length_line "$g_color_title" 
                     printf '\n'
-                    i_install_repositories $l_options 0
+                    g_install_repositories $l_options 0
                 else
                     l_flag_continue=0
                     printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
@@ -2164,653 +2822,6 @@ function i_main_install() {
 }
 
 
-#Es un arreglo con 2 valores enteros, el primero es el estado de la desinstalación en Linux, el segundo es el estado de la desinstalación en Windows.
-#'i_uninstall_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_uninstall_repo_status' es [0, 1].
-#Cada estado puede tener uno de los siguiente valores: 
-# Estados de un proceso no se ha iniciado:
-#  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('i_uninstall_repository' retorno 2 o 99).
-#  1 > El repositorio no esta habilitado para este SO.
-#  2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-#  3 > El repositorio no esta instalado.
-# Estados de un proceso iniciado:
-#  4 > El repositorio inicio la desinstalación y lo termino con exito.
-#  5 > El repositorio inicio la desinstalación y lo termino con error.
-declare -a _g_uninstall_repo_status
-
-
-
-#
-#Permite desinstalar un repositorio en Linux (incluyendo a Windows vinculado a un Linux WSL)
-#Un repositorio o se configura en Linux o Windows del WSL o ambos.
-#'i_uninstall_repository' nunca se muestra con el titulo del repositorio cuando retorna 99 y 2. 
-#'i_uninstall_repository' solo se puede mostrar el titulo del repositorio cuando retorno [0, 1] y ninguno de los estados de '_g_uninstall_repo_status' es [0, 1].
-#
-#Parametros de entrada (argumentos de entrada son):
-#  1 > ID del repositorio.
-#  2 > La plantilla del titulo (si tiene un '%s', sera remplazado por "se desconfigurará"). 
-#      Si se envia una cadena vacia o no se especifica, no se mostrara el titulo.
-#
-#Parametros de salida (El valor de retorno). Sus valores pueder ser
-#    0 > Se inicio la desinstalacíon (en por lo menos uno de los 2 SO o Windows)
-#        Para ver el estado ver '_g_uninstall_repo_status'.
-#    1 > No se inicio la desinstalacíon del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
-#        Para ver el estado ver '_g_uninstall_repo_status'.
-#   99 > Argumentos ingresados son invalidos
-#
-#Parametros de salida (variables globales):
-#    > '_g_uninstall_repo_status' retorna indicadores que indican el estado de la desinstalacíon realizada.
-#           
-function i_uninstall_repository() {
-
-    #1. Argumentos 
-    local p_repo_id="$1"
-    local p_repo_title_template="$2"
-
-
-    #2. Valores iniciales
-    local l_status
-    #local l_repo_name="${gA_repositories[$p_repo_id]}"
-    #local l_repo_name_aux="${l_repo_name:-$p_repo_id}"
-    
-    _g_uninstall_repo_status=(0 0)
-
-
-    #4. Iniciar la configuración en Linux: 
-    local l_aux
-    local l_status2
-    local l_tag
-    
-    #4.1. Validar si el repositorio se puede configurarse en el sistema operativo.
-    local l_install_win_cmds=1
-    local l_status_process_lnx     # Estados de un proceso no se ha iniciado:
-                                   # Estados de un proceso no se ha iniciado:
-                                   #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('i_uninstall_repository' retornó 99).
-                                   #  1 > El repositorio no esta habilitado para este SO.
-                                   #  2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-                                   #  3 > El repositorio no esta instalado.
-                                   # Estados de un proceso iniciado:
-                                   #  4 > El repositorio inicio la desinstalación y lo termino con exito.
-                                   #  5 > El repositorio inicio la desinstalación y lo termino con error.
-
-    _can_setup_repository_in_this_so "$p_repo_id" $l_install_win_cmds
-    l_status=$?
-
-
-    #Si esta permitido configurarse en este sistema operativo, iniciar el proceso
-    if [ $l_status -eq 0 ]; then
-
-        #4.2. Validar la versión actual para poder desinstalar el repositorio.
-        _validate_versions_to_uninstall "$p_repo_id" $l_install_win_cmds "$p_repo_title_template"
-        l_status=$?    #El valor de retorno puede ser:
-                       #Si el repositorio puede actualizarse devolverá de [1,9]:
-                       #    0 > El repositorio esta instalado.
-                       #    1 > El repositorio esta instalado pero tiene una versión actual invalido.
-                       #Si el repositorio NO se puede desintalarse [10, 99]:
-                       #   10 > El repositorio no esta instalado.
-                       #   11 > El repositorio no puede determinarse su versión actual (la logica para obtener la version genero un error).
-                       #   12 > El repositorio no tiene implamentado la logica para obtener la versión actual del repositorio.
-
-
-        #Establecer el estado del proceso que no seran procesados (instalados/actualizados)
-        if [ $l_status -eq 11 ] || [ $l_status -eq 12 ]; then
-            l_status_process_lnx=2
-        elif [ $l_status -eq 10 ]; then
-            l_status_process_lnx=3
-        fi
-
-        #¿El titulo se debe mostrar en la instalacion de Windows? 
-        #'_validate_versions_to_uninstall' siempre muestra un titulo e información.
-        if [ ! -z "$p_repo_title_template" ]; then
-            #Si ya se mostro no hacerlo nuevamente
-            p_repo_title_template=""
-        fi
-            
-        #4.3. Instalar el repositorio
-        if [ -z "$l_status_process_lnx" ]; then
-
-            #Por defecto considerando que termino con error
-            l_status_process_lnx=5
-            l_tag="${l_tag}${g_color_opaque}[${_g_repo_current_version}]${g_color_reset}"
-            printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%s" ...\n' "desinstalación" "${l_tag}" "$g_os_subtype_name"
-            _uninstall_repository "$p_repo_id" "$_g_repo_current_version" $l_install_win_cmds
-            l_status2=$?
-
-            #Si termino sin errores cambiar al estado
-            l_status_process_lnx=4
-
-        fi
-
-    else
-
-        l_status_process_lnx=1
-
-    fi
-
-    #Mostrar el status de la instalacion en Linux
-    _g_install_repo_status[0]=$l_status_process_lnx
-
-    #5. Iniciar la configuración en Windows:
-    local l_status_process_win
-    l_install_win_cmds=0
-    
-
-    #5.1. Validar si el repositorio se puede configurarse en el sistema operativo.
-    _can_setup_repository_in_this_so "$p_repo_id" $l_install_win_cmds
-    l_status=$?
-
-    #Si esta permitido configurarse en este sistema operativo, iniciar el proceso
-    if [ $l_status -eq 0 ]; then
-
-
-        if [ $l_status_process_lnx -ge 2 ]; then
-            printf "\n\n"
-        fi
-
-        #5.2. Validar la versión actual para poder desinstalar el repositorio.
-        _validate_versions_to_uninstall "$p_repo_id" $l_install_win_cmds "$p_repo_title_template"
-        l_status=$?    #El valor de retorno puede ser:
-                       #Si el repositorio puede actualizarse devolverá de [1,9]:
-                       #    0 > El repositorio esta instalado.
-                       #    1 > El repositorio esta instalado pero tiene una versión actual invalido.
-                       #Si el repositorio NO se puede desintalarse [10, 99]:
-                       #   10 > El repositorio no esta instalado.
-                       #   11 > El repositorio no puede determinarse su versión actual (la logica para obtener la version genero un error).
-                       #   12 > El repositorio no tiene implamentado la logica para obtener la versión actual del repositorio.
-
-
-        #Establecer el estado del proceso que no seran procesados (instalados/actualizados)
-        if [ $l_status -eq 11 ] || [ $l_status -eq 12 ]; then
-            l_status_process_win=2
-        elif [ $l_status -eq 10 ]; then
-            l_status_process_win=3
-        fi
-            
-        #5.3. Instalar el repositorio
-        if [ -z "$l_status_process_lnx" ]; then
-
-            #Por defecto considerando que termino con error
-            l_status_process_win=5
-
-            l_tag="${l_tag}${g_color_opaque}[${_g_repo_current_version}]${g_color_reset}"
-            printf '\nIniciando la %s de los artefactos del repositorio "%b" en Windows vinculado a Linux "%s" ...\n' "desinstalación" "${l_tag}" "$g_os_subtype_name"
-            _uninstall_repository "$p_repo_id" "$_g_repo_current_version" $l_install_win_cmds
-            l_status2=$?
-
-            #Si termino sin errores cambiar al estado
-            l_status_process_win=4
-
-        fi
-
-
-    else
-
-        l_status_process_win=1
-
-    fi
-
-    #Mostrar el status de la instalacion en Linux
-    _g_install_repo_status[1]=$l_status_process_win
-
-    #Si no se llego a iniciar el proceso de configuración en ninguno de los 2 sistemas operativos
-    if [ $l_status_process_lnx -lt 4 ] && [ $l_status_process_win -lt 4 ]; then
-        return 1
-    fi
-
-    return 0
-
-
-
-}
-
-
-#
-#Parametros de entrada (argumentos de entrada son):
-#  1 > Opciones de menu ingresada por el usuario 
-#  2 > Indice relativo de la opcion en el menú de opciones (inicia con 0 y solo considera el indice del menu dinamico).
-#
-#Parametros de entrada (variables globales):
-#    > '_g_uninstall_repo_status' indicadores que muestran el estado de la configuración (instalación/actualización) realizada.
-#
-#Parametros de salida (El valor de retorno). Sus valores pueder ser
-#    0 > La opcion de menu se desintaló con exito (se inicializo, se configuro los repositorios y se finalizo existosamente).
-#    1 > No se ha inicio la desinstalacíon de la opcion del menu debido a que no se cumple las precondiciones requeridas (no se desintaló, ni se se inicializo/finalizo).
-#    2 > La inicialización de la opción no termino con exito.
-#    3 > Alguno de lo repositorios fallo en desinstalacíon. Ello provoca que se detiene el proceso (y no se invoca a la finalización).
-#    4 > La finalización de la opción no termino con exito. 
-#   98 > El repositorios vinculados a la opcion del menu no tienen parametros configurados correctos. 
-#   99 > Argumentos ingresados son invalidos
-#
-#Parametros de salida (variables globales):
-#    > '_gA_processed_repo' retona el estado de procesamiento de los repositorios hasta el momento procesados por el usuario. 
-#           
-function _uninstall_menu_options() {
-
-    #1. Argumentos 
-    local p_input_options=-1
-    if [[ "$1" =~ ^[0-9]+$ ]]; then
-        p_input_options=$1
-    fi
-
-    local p_option_relative_idx=-1
-    if [[ "$2" =~ ^[0-9]+$ ]]; then
-        p_option_relative_idx=$2
-    fi
-
-
-    if [ $p_input_options -le 0 ]; then
-        return 99
-    fi
-
-
-    #1. Obtener los repositorios a configurar
-    local l_aux="${ga_menu_options_repos[$p_option_relative_idx]}"
-
-    if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
-        return 98
-    fi
-
-    local IFS=','
-    local la_repos=(${l_aux})
-    IFS=$' \t\n'
-
-    local l_n=${#la_repos[@]}
-    if [ $l_n -le 0 ]; then
-        return 98
-    fi
-
-
-    #2. ¿La opción actual ha sido elejido para configurarse?
-    local l_result       #0 > La opcion de menu se desintaló con exito (se inicializo, se configuro los repositorios y se finalizo existosamente).
-                         #1 > No se inicio la inicialización ni la desinstalacíon de la opcion del menu (no se desintaló, ni se se inicializo/finalizo).
-                         #2 > La inicialización de la opción no termino con exito.
-                         #3 > Alguno de lo repositorios fallo en desinstalacíon. Ello provoca que se detiene el proceso (y no se invoca a la finalización).
-                         #4 > La finalización de la opción no termino con exito. 
-
-    local l_option_value=$((1 << (p_option_relative_idx + g_offset_option_index_menu_uninstall)))
-
-    if [ $((p_input_options & l_option_value)) -ne $l_option_value ]; then
-        #No inicializar ni instalar
-        l_result=1 
-    fi
-
-    #echo "index: ${p_option_relative_idx}, input: ${p_input_options}, value: ${l_option_value}"
-
-    #3. Inicializar la opción del menu
-    local l_status
-    local l_title_template
-
-    if [ -z "$l_result" ]; then
-   
-        #3.1. Mostrar el titulo
-        print_line '─' $g_max_length_line  "$g_color_opaque"
-        printf -v l_title_template "Opción %s%s%s '%s%s%s'" "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
-        print_text_in_center2 "$l_title_template" $g_max_length_line 
-        print_line '─' $g_max_length_line "$g_color_opaque"
-        #printf 'Inicializando la opción elegida del menu ...\n'
-
-        #3.2. Inicializar la opcion si aun no ha sido inicializado.
-        _initialize_menu_option_uninstall_lnx $p_option_relative_idx
-        l_status=$?
-
-        #3.3. Si se inicializo con error (cancelado por el usuario u otro error) 
-        if [ $l_status -ne 0 ]; then
-
-            printf 'No se ha completo la inicialización de la opción del menu elegida...\n'
-            l_result=2
-
-        fi
-
-        printf '\n'
-
-    fi
-
-
-    #4. Recorriendo todos los repositorios, opcionalmente procesarlo, y almacenando el estado en la variable '_gA_processed_repo'
-    local l_status
-    local l_repo_id
-    local l_j
-    local l_k
-
-    local la_aux
-    local la_previous_options_idx
-    local l_status_first_setup
-    local l_repo_name_aux
-    local l_processed_repo
-    local l_exits_error=1
-
-    local l_flag_process_next_repo=1      #(0) Se debe intentar procesar (intalar/actualizar o desinstalar) los repositorio de la opción del menu.
-                                          #(1) No se debe intentar procesar los repositorios de la opción del menú.
-    if [ -z "$l_result" ]; then
-        l_flag_process_next_repo=0
-    fi
-
-    #Se desintanla en orden inverso a la instalación
-    for((l_j=(l_n-1); l_j >= 0; l_j--)); do
-
-        #Nombre a mostrar del respositorio
-        l_repo_id="${la_repos[$l_j]}"
-        l_repo_name_aux="${gA_repositories[$l_repo_id]:-$l_repo_id}"
-
-        #4.1. Obtener el estado del repositorio antes de su instalación.
-        l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
-        
-        IFS='|'
-        la_aux=(${l_aux})
-        IFS=$' \t\n'
-
-        l_status_first_setup=${la_aux[0]}    #'i_uninstall_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_uninstall_repo_status' es [0, 1].
-                                             # -1 > El repositorio no se ha iniciado su analisis ni su proceso.
-                                             #Estados de un proceso no se ha iniciado:
-                                             #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('i_uninstall_repository' retorno 99).
-                                             #  1 > El repositorio no esta habilitado para este SO.
-                                             #  2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-                                             #  3 > El repositorio no esta instalado.
-                                             #Estados de un proceso iniciado:
-                                             #  4 > El repositorio inicio la desinstalación y lo termino con exito.
-                                             #  5 > El repositorio inicio la desinstalación y lo termino con error.
-
-        la_previous_options_idx=(${la_aux[1]})
-        l_title_template=""
-        #echo "Index '${p_option_relative_idx}/${l_j}', RepoID '${l_repo_id}', ProcessThisRepo '${l_flag_process_next_repo}', FisrtSetupStatus '${l_status_first_setup}', PreviousOptions '${la_previous_options_idx[@]}'"
-
-        #4.2. Si el repositorio ya ha pasado por el analisis para determinar si debe ser procesado o no
-        if [ $l_status_first_setup -ne -1 ]; then
-
-            #4.2.1. Almacenar la información del procesamiento.
-            la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
-            #echo "A > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
-
-            #4.2.2. Si ya no se debe procesar mas repositorios de la opción del menú.
-            if [ $l_flag_process_next_repo -ne 0 ]; then
-                continue
-            fi
-
-            #4.2.3. No mostrar titulo, ni información alguna en los casos [0, 1]
-            if [ $l_status_first_setup -ge 0 ] && [ $l_status_first_setup -le 1 ]; then
-                continue
-            fi
-
-            #4.2.4. Calcular la plantilla del titulo.
-            printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
-
-            #El primer repositorio donde se ha analizado si se puede o no ser procesado.
-            l_k=${la_previous_options_idx[0]}
-            l_aux=$((1 << (l_k + g_offset_option_index_menu_install)))
-
-            #4.2.5. Mostrar el titulo y mensaje en los casos donde hubo error antes de procesarse y/o durante el procesamiento
-
-
-            #Estados de un proceso no iniciado:
-            #  2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-            if [ $l_status_first_setup -eq 2 ]; then
-
-                print_line '-' $g_max_length_line "$g_color_opaque"
-                printf "${p_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
-
-                printf 'El repositorio "%s" no se pudo obtener su versión cuando se analizó con la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
-
-            #  3 > El repositorio no esta instalado.
-            elif [ $l_status_first_setup -eq 3 ]; then
-
-                print_line '-' $g_max_length_line "$g_color_opaque"
-                printf "${p_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
-
-                printf 'El repositorio "%s" no esta instalado, ello se determino con la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
-
-            #Estados de un proceso iniciado:
-            #  4 > El repositorio inicio la desinstalación y lo termino con exito.
-            elif [ $l_status_first_setup -eq 4 ]; then
-
-                print_line '-' $g_max_length_line "$g_color_opaque"
-                printf "${p_title_template}\n" "se acaba de instalar"
-                print_line '-' $g_max_length_line "$g_color_opaque"
-
-                printf 'El repositorio "%s" se acaba de desinstalar en la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
-
-
-            #  5 > El repositorio inicio la desinstalación y lo termino con error.
-            elif [ $l_status_first_setup -eq 5 ]; then
-
-                print_line '-' $g_max_length_line "$g_color_opaque"
-                printf "${p_title_template}\n" "se acaba de instalar con error"
-                print_line '-' $g_max_length_line "$g_color_opaque"
-
-                printf 'El repositorio "%s" se acaba de desinstalar con error en la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
-
-
-            fi
-
-            continue
-
-        fi
-
-
-        #4.3. Si es la primera vez que se configurar (el repositorios de la opción del menu), inicie la configuración
-
-        #Si no se debe procesar mas repositorios de la opción del menú.
-        if [ $l_flag_process_next_repo -ne 0 ]; then
-            la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
-            continue
-        fi
-
-        if [ -z "$l_title_template" ]; then
-            printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
-        fi
-        
-        i_uninstall_repository "$l_repo_id" "$l_title_template" 
-        l_status=$?   #'i_uninstall_repository' solo se puede mostrar el titulo del repositorio cuando retorna [0, 1] y ninguno de los estados de '_g_install_repo_status' sea [0, 1].
-                      #    0 > Se inicio la desinstalacíon (en por lo menos uno de los 2 SO o Windows)
-                      #        Para ver el estado ver '_g_uninstall_repo_status'.
-                      #    1 > No se inicio la desinstalacíon del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
-                      #        Para ver el estado ver '_g_uninstall_repo_status'.
-                      #   99 > Argumentos ingresados son invalidos
-
-
-        #4.4. Si no se inicio el analisis para evaluar si se debe dar el proceso de configuración: 
-
-        #4.4.1. Si se envio parametros incorrectos
-        if [ $l_status -eq 99 ]; then
-
-            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-            l_flag_process_next_repo=1
-            l_exits_error=0
-
-            la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
-
-            printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido a los parametros incorrectos enviados.\n' \
-                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
-            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
-
-            #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
-            continue
-
-        fi
-
-
-
-        #4.4.3. Si el repositorio no esta permitido procesarse en ninguno de los SO (no esta permitido para ser instalado en SO).
-        if [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
-
-            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-            la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="1|${la_previous_options_idx[@]}"
-
-            #echo "E > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
-            continue
-        fi 
-
-        #4.5. Si se inicio el pocesamiento del repositorio en Linux o en Windows.
-
-        #4.5.1. Obtener el status del procesamiento principal del repositorio
-        if [ ${_g_install_repo_status[0]} -gt 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
-            #Si solo este permitido iniciar su proceso en Linux.
-            l_processed_repo=${_g_install_repo_status[0]}
-            l_aux="Linux '${g_os_subtype_name}'"
-        elif [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -gt 1 ]; then
-            #Si solo este permitido iniciar su proceso en Windows.
-            l_processed_repo=${_g_install_repo_status[1]}
-            l_aux="Windows vinculado a su Linux WSL '${g_os_subtype_name}')"
-        else
-            #Si esta permitido iniciar el procesa tanto el Linux como en Windows (solo se considera como estado de Linux. El Windows es opcional y pocas veces usado).
-            l_processed_repo=${_g_install_repo_status[0]}
-            l_aux="Linux WSL '${g_os_subtype_name}' (o su Windows vinculado)"
-        fi
-
-        #4.5.2. Almacenar la información del procesamiento
-        la_previous_options_idx+=(${p_option_relative_idx})
-        _gA_processed_repo["$l_repo_id"]="${l_processed_repo}|${la_previous_options_idx[@]}"
-        #echo "F > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
-
-
-        #4.5.3. Mostrar información adicional
-
-        #A. Estados de un proceso no iniciado:
-        #   2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
-        if [ $l_processed_repo -le 2 ]; then
-
-            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-            l_flag_process_next_repo=1
-            l_exits_error=0
-
-            printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
-            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
-
-        #   3 > El repositorio no esta instalado.
-        elif [ $l_processed_repo -eq 3 ]; then
-            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-            printf '\n'
-
-        #B. Estados de un proceso iniciado:
-        #   4 > El repositorio inicio la desinstalación y lo termino con exito.
-        elif [ $l_processed_repo -eq 4 ]; then
-            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
-            printf '\n'
-
-
-        #   5 > El repositorio inicio la desinstalación y lo termino con error.
-        elif [ $l_processed_repo -eq 5 ]; then
-            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
-            l_flag_process_next_repo=1
-            l_exits_error=0
-
-            printf '%bError al desinstalar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
-            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
-
-        fi
-
-
-    done
-
-    #Calcular el estado despues del procesamiento de repositorios
-    if [ -z "$l_result" ]; then
-
-        #Si se inicio la desinstalación de algun repositorio y se obtuvo error
-        if [ $l_exits_error -eq 0 ]; then
-            l_result=3
-        fi
-    fi
-
-    #5. Iniciar la finalización (solo si no hubo error despues de la procesamiento de respositorios)
-    if [ -z "$l_result" ]; then
-
-        #5.1. Inicializar la opcion si aun no ha sido inicializado.
-        #printf 'Se inicia la finalización de la opción del menu...\n'
-        _finalize_menu_option_uninstall_lnx $p_option_relative_idx
-        l_status=$?
-
-        #5.2. Si se inicializo con exito.
-        if [ $l_status -eq 0 ]; then
-
-            l_result=0
-
-        #5.3. Si en la inicialización hubo un error.
-        else
-
-            printf 'No se completo la finalización de la opción del menu.\n'
-            l_result=4
-
-        fi
-
-
-    fi
-
-    return $l_result
-
-}
-
-
-#
-#Parametros de entrada (Argumentos):
-#  1 > Opciones relacionados con los repositorios que se se instalaran (entero que es suma de opciones de tipo 2^n).
-#
-#Parametros de entrada (Globales):
-#    > 'gp_type_calling' es el flag '0' si es invocado directamente, caso contrario es invocado desde otro script.
-#
-function i_uninstall_repositories() {
-    
-    #1. Argumentos 
-    local p_input_options=0
-    if [[ "$1" =~ ^[0-9]+$ ]]; then
-        p_input_options=$1
-    fi
-
-    if [ $p_input_options -eq 0 ]; then
-        echo "ERROR: Argumento de opciones \"${p_opciones}\" es incorrecta"
-        return 23;
-    fi
-
-    #2. Validar si fue descarga el repositorio git correspondiente
-    if [ ! -d ~/.files/.git ]; then
-        show_message_nogitrepo
-        return 10
-    fi
-    
-    #3. Inicializaciones cuando se invoca directamente el script
-    local l_status
-    if [ $gp_type_calling -eq 0 ]; then
-
-        #3.1. Solicitar credenciales de administrador y almacenarlas temporalmente
-        _save_credentials
-        l_status=$?
-
-        if [ $l_status -eq 2 ]; then
-            return 20
-        fi
-
-        printf '\n'
-
-    fi
-
-    #5. Configurar (Desintalar) los diferentes repositorios
-    local l_i=0
-
-    #Limpiar el arreglo asociativo
-    _gA_processed_repo=()
-
-
-    for((l_i=0; l_i < ${#ga_menu_options_repos[@]}; l_i++)); do
-
-        _uninstall_menu_options $p_input_options $l_i
-
-    done
-
-    #echo "Keys de _gA_processed_repo=${!_gA_processed_repo[@]}"
-    #echo "Values de _gA_processed_repo=${_gA_processed_repo[@]}"
-
-    #6. Caducar las credecinales de root almacenadas temporalmente
-    if [ $g_status_crendential_storage -eq 0 ]; then
-        clean_sudo_credencial
-    fi
-
-}
-
 
 function _show_menu_uninstall_core() {
 
@@ -2828,17 +2839,10 @@ function _show_menu_uninstall_core() {
 }
 
 
-function i_main_uninstall() {
+function g_uninstall_main() {
 
-    printf '%bOS Type            : (%s)\n' "$g_color_opaque" "$g_os_type"
-    printf 'OS Subtype (Distro): (%s) %s - %s%b\n\n' "${g_os_subtype_id}" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
-    
-    #Determinar el tipo de distribución Linux
-    if [ $g_os_type -gt 10 ]; then
-        echo "ERROR: El sistema operativo debe ser Linux"
-        return 21;
-    fi
-   
+  
+    #Mostrar la parte superior del menu 
     print_line '─' $g_max_length_line "$g_color_title" 
 
     _show_menu_uninstall_core
@@ -2891,7 +2895,7 @@ function i_main_uninstall() {
 }
 
 
-_usage() {
+g_usage() {
 
     printf '%bUsage:\n\n' "$g_color_opaque"
     printf '  > Desintalar repositorios de manera interactiva (muestra el menú):\n'
@@ -2901,7 +2905,7 @@ _usage() {
     printf '  > Instalar/Actualizar uno o mas repositorios en forma no interactiva (sin menú):\n'
     printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
     printf '  > Instalar/Actualizar un repositorio en forma no interactiva (sin menú):\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 REPO-ID%b\n\n' "$g_color_info" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 2 REPO-ID%b\n\n' "$g_color_info" "$g_color_reset"
 
 }
 
@@ -2919,8 +2923,8 @@ elif [ "$1" = "uninstall" ]; then
     gp_uninstall=0
 elif [ ! -z "$1" ]; then
     printf 'Argumentos invalidos.\n\n'
-    _usage
-    exit 80
+    g_usage
+    exit 110
 fi
 
 
@@ -2936,6 +2940,8 @@ gp_install_all_user=0   #(0) Se instala/configura para ser usuado por todos los 
 
 
 #2. Logica principal del script (incluyendo los argumentos variables)
+_g_result=0
+_g_status=0
 
 #Aun no se ha solicitado almacenar temporalmente las credenciales para el sudo
 g_status_crendential_storage=-1
@@ -2945,7 +2951,17 @@ g_is_credential_storage_externally=1
 #2.1. Desintalar los artefactos de un repoistorio
 if [ $gp_uninstall -eq 0 ]; then
 
-    i_main_uninstall
+    #Validar los requisitos
+    fulfill_preconditions2 $g_os_type $gp_type_calling
+    _g_status=$?
+
+    #Iniciar el procesamiento
+    if [ $_g_status -eq 0 ]; then
+        g_uninstall_main
+    else
+        _g_result=111
+    fi
+
 
 #2.2. Instalar y actualizar los artefactos de un repositorio
 else
@@ -2953,7 +2969,16 @@ else
     #2.2.1. Por defecto, mostrar el menu para escoger lo que se va instalar
     if [ $gp_type_calling -eq 0 ]; then
     
-        i_main_install
+        #Validar los requisitos
+        fulfill_preconditions1 $g_os_type $gp_type_calling
+        _g_status=$?
+
+        #Iniciar el procesamiento
+        if [ $_g_status -eq 0 ]; then
+            g_install_main
+        else
+            _g_result=111
+        fi
     
     #2.2.2. Instalando los repositorios especificados por las opciones indicas en '$2'
     elif [ $gp_type_calling -eq 1 ]; then
@@ -2966,7 +2991,7 @@ else
         if [[ "$2" =~ ^[0-9]+$ ]]; then
             gp_opciones=$2
         else
-            exit 88
+            exit 110
         fi
 
         if [[ "$3" =~ ^[0-2]$ ]]; then
@@ -2978,7 +3003,27 @@ else
 
         fi
 
-        i_install_repositories $gp_opciones 1
+        #Validar los requisitos
+        fulfill_preconditions1 $g_os_type $gp_type_calling
+        _g_status=$?
+
+        #Iniciar el procesamiento
+        if [ $_g_status -eq 0 ]; then
+
+            g_install_repositories $gp_opciones
+            _g_status=$?
+
+            #Informar si se nego almacenar las credencial cuando es requirido
+            if [ $_g_status -eq 120 ]; then
+                _g_result=120
+            #Si la credencial se almaceno en este script (localmente). avisar para que lo cierre el caller
+            elif [ $g_is_credential_storage_externally -ne 0 ] && [ $g_status_crendential_storage -eq 0 ]; then
+                _g_result=119
+            fi
+
+        else
+            _g_result=111
+        fi
     
     #2.2.3. Instalando un solo repostorio del ID indicao por '$2'
     else
@@ -2990,7 +3035,7 @@ else
         gp_repo_id="$2"
         if [ -z "$gp_repo_id" ]; then
            echo "Parametro 2 \"$2\" debe ser un ID de repositorio valido"
-           exit 89
+           exit 110
         fi
 
         if [[ "$3" =~ ^[0-2]$ ]]; then
@@ -3001,10 +3046,36 @@ else
             fi
         fi
     
-        i_install_repository "$gp_repo_id" "" 1
+        #Validar los requisitos
+        fulfill_preconditions1 $g_os_type $gp_type_calling
+        _g_status=$?
+
+        #Iniciar el procesamiento
+        if [ $_g_status -eq 0 ]; then
+
+            g_install_repository "$gp_repo_id" "" 1
+            _g_status=$?
+
+            #Informar si se nego almacenar las credencial cuando es requirido
+            if [ $_g_status -eq 0 ]; then
+
+                if [ $_g_status -eq 120 ]; then
+                    _g_result=120
+                #Si la credencial se almaceno en este script (localmente). avisar para que lo cierre el caller
+                elif [ $g_is_credential_storage_externally -ne 0 ] && [ $g_status_crendential_storage -eq 0 ]; then
+                    _g_result=119
+                fi
+
+            fi
+
+        else
+            _g_result=111
+        fi
     
     fi
     
 fi
+
+exit $_g_result
 
 

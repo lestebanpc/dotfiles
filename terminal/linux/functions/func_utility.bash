@@ -314,7 +314,8 @@ print_text_in_center() {
 print_text_in_center2() {
 
     #Tamaño del texto sin caracteres de color
-    local l_text_without_colors=$(echo "$1" | sed -r "s/\x1b\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g")
+    #local l_text_without_colors=$(echo "$1" | sed -r "s/\x1b\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g")
+    local l_text_without_colors=$(echo "$1" | sed -r "s/\x1b\[[0-9]\+m//g")
     local l_n=${#l_text_without_colors}
 
     if [ $l_n -lt $2 ]; then

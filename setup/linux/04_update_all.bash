@@ -31,12 +31,9 @@ if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
     g_is_root=0
 fi
 
-#Expresion regular para extrear la versión de un programa
-declare -r g_regexp_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
 
 #Tamaño de la linea del menu
 g_max_length_line=130
-
 
 #Estado del almacenado temporalmente de las credenciales para sudo
 # -1 - No se solicito el almacenamiento de las credenciales
@@ -169,148 +166,171 @@ function _update_vim_nvim_packages() {
         p_opciones=$1
     fi
 
-    #Actualizar paquetes VIM/NeoVIM instalados
-    local l_version=""
-    local l_status=0
-    local l_vim_flag=1
-    local l_nvim_flag=1
-    local l_aux=""
-    local l_is_developer=1
-
+    #2. ¿Esta habilitado esta opción?
     local l_opcion=2
     local l_flag=$(( $p_opciones & $l_opcion ))
-    if [ $l_flag -eq $l_opcion ]; then
+    if [ $l_flag -ne $l_opcion ]; then
+        return 1
+    fi
 
-        #5.1. Si esta instalado VIM, obtener la versión
-        l_version=$(vim --version 2> /dev/null)
+
+    #3. Si esta instalado VIM/NeoVIM, obtener la versión
+    local l_status
+    local l_vim_version=""
+    l_vim_version=$(vim --version 2> /dev/null)
+    l_status=$?
+    if [ $l_status -eq 0 ]; then
+        l_vim_version=$(echo "$l_vim_version" | head -n 1)
+        l_vim_version=$(echo "$l_vim_version" | sed "$g_regexp_sust_version1")
+    else
+        l_vim_version=""
+    fi
+
+    local l_nvim_version=""
+    l_nvim_version=$(nvim --version 2> /dev/null)
+    l_status=$?
+    if [ $l_status -eq 0 ]; then
+        l_nvim_version=$(echo "$l_nvim_version" | head -n 1)
+        l_nvim_version=$(echo "$l_nvim_version" | sed "$g_regexp_sust_version1")
+    else
+        l_nvim_version=""
+    fi
+
+    #Si no esta instalado VIM ni NeoVIM
+    if [ -z "$l_vim_version" ] && [ -z "$l_nvim_version" ]; then
+        return 2
+    fi
+
+
+
+    #4. Actualizar paquetes VIM/NeoVIM instalados
+    local l_title
+    local l_aux=""
+
+    if [ ! -z "$l_vim_version" ]; then
+        printf -v l_aux "%sVIM%s %s(%s)%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_vim_version" "$g_color_reset"
+    fi
+
+    if [ ! -z "$l_nvim_version" ]; then
+        if [ ! -z "$l_aux" ]; then
+            l_aux="${l_aux} y "
+        fi
+        printf -v l_aux "%s%sNeoVIM%s %s(%s)%s" "$l_aux" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_vim_version" "$g_color_reset"
+    fi
+
+    printf -v l_title "Actualizar los paquetes de  %s" "$l_aux"
+
+
+    print_line '─' $g_max_length_line  "$g_color_opaque"
+    print_text_in_center2 "$l_title" $g_max_length_line 
+    print_line '─' $g_max_length_line "$g_color_opaque"
+
+
+    local l_is_developer=1
+
+    #5. Actualizaciones de VIM
+    if [ ! -z "$l_vim_version" ]; then
+
+        printf 'Se actualizará los paquetes/plugin del VIM "%s" ...\n' "${l_vim_version}"
+
+        #5.1. Actualizar los package nativos de VIM 
+        _update_vim_package
+
+        #Otras actualizaciones para VIM (modo de inicio 'ex' y silencioso)
+        #printf '\nActualizando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugUpdate"\n'
+        #vim -esc 'PlugUpdate' -c 'qa'
+
+
+        #5.2. Verificar si esta instalado en modo developer/IDE
+        l_is_developer=1
+        l_aux=$(readlink ~/.vimrc 2> /dev/null)
         l_status=$?
         if [ $l_status -eq 0 ]; then
-            l_version=$(echo "$l_version" | head -n 1)
-            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
-            l_vim_flag=0
-        else
-            l_version=""
-        fi
-
-        #5.2. Actualizaciones de VIM
-        if [ $l_vim_flag -eq 0 ]; then
-
-            printf 'Se actualizará los paquetes/plugin del VIM "%s" ...\n' "${l_version}"
-
-            #5.2.1. Atualizaciones generales
-
-            #Actualizar los package nativos de VIM 
-            _update_vim_package
-
-            #Otras actualizaciones para VIM (modo de inicio 'ex' y silencioso)
-            #printf '\nActualizando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugUpdate"\n'
-            #vim -esc 'PlugUpdate' -c 'qa'
-
-
-            #5.2.2. Verificar si esta instalado en modo developer/IDE
-            l_is_developer=1
-            l_aux=$(readlink ~/.vimrc 2> /dev/null)
-            l_status=$?
-            if [ $l_status -eq 0 ]; then
-                l_aux="${l_aux##*/}"
-                if [ "$l_aux" = "vimrc_linux_ide.vim" ]; then
-                    l_is_developer=0
-                    printf '\nSe ha detectado que %s esta instalado en modo developer (usa el arhivo de inicialización "%s")\n' "VIM" "$l_aux"
-                fi
-            fi
-
-            #5.2.3. Actualizar en modo deleloper
-            if [ $l_is_developer -eq 0 ]; then
-
-                #Actualizar las extensiones de CoC
-                printf 'Actualizando las extensiones existentes de CoC, ejecutando el comando ":CocUpdate"\n'
-                vim -esc 'CocUpdate' -c 'qa'
-
-                #Actualizando los gadgets de 'VimSpector'
-                printf 'Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
-                vim -esc 'VimspectorUpdate' -c 'qa'
-
-                printf '\nRecomendaciones:\n'
-                printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
-                printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
-                echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
-                echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
-                echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-                echo "               { \"diagnostic.displayByAle\": true }"
-                echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-                echo "               Si esta instalado esta extension, desintalarlo."
-
-            fi
-            
-
-        fi
-
-        #5.3. Si esta instalado NeoVIM, obtener la versión
-        l_version=$(nvim --version 2> /dev/null)
-        l_status=$?
-        if [ $l_status -eq 0 ]; then
-            l_version=$(echo "$l_version" | head -n 1)
-            l_version=$(echo "$l_version" | sed "$g_regexp_version1")
-            l_nvim_flag=0
-        else
-            l_version=""
-        fi
-
-        #5.4. Actualizaciones de NeoVIM
-        if [ $l_vim_flag -eq 0 ]; then
-
-            printf '\nSe actualizará los paquetes/plugin del NeoVIM "%s" ...\n\n' "${l_version}"
-
-            #Otras actualizaciones de NVIM (modo de inicio 'ex' y silencioso)
-            #echo 'Actualizando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugUpdate"'
-            #nvim --headless -c 'PlugUpdate' -c 'qa'
-            echo 'Actualizando los plugins "Packer" de NeoVIM, ejecutando el comando ":PackerUpdate"'
-            nvim --headless -c 'PackerUpdate' -c 'qa'
-
-            #5.4.1. Verificar si esta instalado en modo developer/IDE
-            l_is_developer=1
-            l_aux=$(readlink ~/.config/nvim/init.vim 2> /dev/null)
-            l_status=$?
-            if [ $l_status -eq 0 ]; then
-                l_aux="${l_aux##*/}"
-                if [ "$l_aux" = "init_linux_ide.vim" ]; then
-                    l_is_developer=0
-                    printf 'Se ha detectado que %s esta instalado en modo developer (usa el arhivo de inicialización "%s")\n' "NeoVIM" "$l_aux"
-                fi
-            fi
-
-            #5.4.2. Actualizar en modo developer
-            if [ $l_is_developer -eq 0 ]; then
-
-                #Actualizar las extensiones de CoC
-                printf 'Actualizando los extensiones existentes de CoC, ejecutando el comando ":CocUpdate"\n'
-                USE_COC=1 nvim --headless -c 'CocUpdate' -c 'qa'
-
-                #Actualizando los gadgets de 'VimSpector'
-                #printf 'Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
-                #USE_COC=1 nvim --headless -c 'VimspectorUpdate' -c 'qa'
-
-                printf '\nRecomendaciones:\n'
-                printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
-                printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
-                printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
-
-                printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
-                echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
-                echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
-                echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-                echo "               { \"diagnostic.displayByAle\": true }"
-                echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-                echo "               Si esta instalado esta extension, desintalarlo."
-
+            l_aux="${l_aux##*/}"
+            if [ "$l_aux" = "vimrc_linux_ide.vim" ]; then
+                l_is_developer=0
+                printf '\nSe ha detectado que %s esta instalado en modo developer (usa el arhivo de inicialización "%s")\n' "VIM" "$l_aux"
             fi
         fi
+
+        #5.3. Actualizar en modo deleloper
+        if [ $l_is_developer -eq 0 ]; then
+
+            #Actualizar las extensiones de CoC
+            printf 'Actualizando las extensiones existentes de CoC, ejecutando el comando ":CocUpdate"\n'
+            vim -esc 'CocUpdate' -c 'qa'
+
+            #Actualizando los gadgets de 'VimSpector'
+            printf 'Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
+            vim -esc 'VimspectorUpdate' -c 'qa'
+
+            printf '\nRecomendaciones:\n'
+            printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
+            printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
+            echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
+            echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
+            echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+            echo "               { \"diagnostic.displayByAle\": true }"
+            echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+            echo "               Si esta instalado esta extension, desintalarlo."
+
+        fi
+        
 
     fi
 
-    #Si es desarrallador: Actualizar los modulos Python
-    
+    #6. Actualizaciones de NeoVIM
+    if [ ! -z "$l_nvim_version" ]; then
 
+        printf '\nSe actualizará los paquetes/plugin del NeoVIM "%s" ...\n\n' "${l_nvim_version}"
+
+        #Otras actualizaciones de NVIM (modo de inicio 'ex' y silencioso)
+        #echo 'Actualizando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugUpdate"'
+        #nvim --headless -c 'PlugUpdate' -c 'qa'
+        echo 'Actualizando los plugins "Packer" de NeoVIM, ejecutando el comando ":PackerUpdate"'
+        nvim --headless -c 'PackerUpdate' -c 'qa'
+
+        #Verificar si esta instalado en modo developer/IDE
+        l_is_developer=1
+        l_aux=$(readlink ~/.config/nvim/init.vim 2> /dev/null)
+        l_status=$?
+        if [ $l_status -eq 0 ]; then
+            l_aux="${l_aux##*/}"
+            if [ "$l_aux" = "init_linux_ide.vim" ]; then
+                l_is_developer=0
+                printf 'Se ha detectado que %s esta instalado en modo developer (usa el arhivo de inicialización "%s")\n' "NeoVIM" "$l_aux"
+            fi
+        fi
+
+        #Actualizar en modo developer
+        if [ $l_is_developer -eq 0 ]; then
+
+            #Actualizar las extensiones de CoC
+            printf 'Actualizando los extensiones existentes de CoC, ejecutando el comando ":CocUpdate"\n'
+            USE_COC=1 nvim --headless -c 'CocUpdate' -c 'qa'
+
+            #Actualizando los gadgets de 'VimSpector'
+            #printf 'Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
+            #USE_COC=1 nvim --headless -c 'VimspectorUpdate' -c 'qa'
+
+            printf '\nRecomendaciones:\n'
+            printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
+            printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+            printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+
+            printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
+            echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
+            echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
+            echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+            echo "               { \"diagnostic.displayByAle\": true }"
+            echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+            echo "               Si esta instalado esta extension, desintalarlo."
+
+        fi
+    fi
+
+    printf '\n'
+    #Si es desarrallador: Actualizar los modulos Python
     #Si es desarrollador: Actualizar los paquetes globales Node.JS istalados
 
 }
@@ -327,16 +347,12 @@ function _update_all() {
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_opciones=$1
     fi
-
-    #2. Validar si fue descarga el repositorio git correspondiente
-    if [ ! -d ~/.files/.git ]; then
-        show_message_nogitrepo
-        return 10
-    fi
     
     #3. Actualizar los paquetes instalados desde los repositorios SO
     g_status_crendential_storage=-1
+    local l_title
     local l_opcion=1
+    local l_status
     local l_flag=$(( $p_opciones & $l_opcion ))
     if [ $l_flag -eq $l_opcion ]; then
 
@@ -347,39 +363,16 @@ function _update_all() {
             g_status_crendential_storage=$?
             #Se requiere almacenar las credenciales para realizar cambiso con sudo.
             if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
-                return 99
+                return 120
             fi
         fi
 
-        print_line '-' $g_max_length_line "$g_color_opaque" 
-        printf '> Actualizar los paquetes de los repositorios del SO Linux\n'
-        print_line '-' $g_max_length_line "$g_color_opaque" 
-        
-        #Segun el tipo de distribución de Linux
-        case "$g_os_subtype_id" in
-            1)
-                #Distribución: Ubuntu
-                if [ $g_is_root -eq 0 ]; then
-                    apt-get update
-                    apt-get upgrade
-                else
-                    sudo apt-get update
-                    sudo apt-get upgrade
-                fi
-                ;;
-            2)
-                #Distribución: Fedora
-                if [ $g_is_root -eq 0 ]; then
-                    dnf upgrade
-                else
-                    sudo dnf upgrade
-                fi
-                ;;
-            0)
-                echo "ERROR (22): No se identificado el tipo de Distribución Linux"
-                return 22;
-                ;;
-        esac
+        print_line '─' $g_max_length_line  "$g_color_opaque"
+        printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+        print_text_in_center2 "$l_title" $g_max_length_line 
+        print_line '─' $g_max_length_line "$g_color_opaque"
+
+        upgrade_os_packages $g_os_subtype_id     
         echo ""
 
     fi
@@ -392,21 +385,21 @@ function _update_all() {
     l_flag=$(( $p_opciones & $l_opcion ))
     if [ $l_flag -eq $l_opcion ]; then
     
-        #Solicitar credenciales para sudo y almacenarlas temporalmente
-        if [ $g_status_crendential_storage -eq -1 ]; then
-            storage_sudo_credencial
-            g_status_crendential_storage=$?
-            #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-            if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
-                return 99
-            fi
-        fi
-
         #Parametros:
         # 1> Tipo de ejecución: 1 (ejecución no-interactiva para actualizar un conjuentos de respositorios)
         # 2> Opciones de menu seleccionados para instalar/actualizar: 2 (instalar/actualizar solo los comandos instalados)
         # 3> El estado de la credencial almacenada para el sudo
         ~/.files/setup/linux/01_setup_commands.bash 1 2 $g_status_crendential_storage
+        l_status=$?
+
+        #Si no se acepto almacenar credenciales
+        if [ $l_status -eq 120 ]; then
+            return 120
+        #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+        elif [ $l_status -eq 119 ]; then
+           g_status_crendential_storage=0
+        fi
+
     fi            
 
     #6. Caducar las credecinales de root almacenadas temporalmente
@@ -437,29 +430,11 @@ function _show_menu_core() {
 
 }
 
-function i_main() {
+function g_main() {
 
-
-    printf '%bOS Type            : (%s)\n' "$g_color_opaque" "$g_os_type"
-    printf 'OS Subtype (Distro): (%s) %s - %s%b\n\n' "${g_os_subtype_id}" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
-    
-    #Determinar el tipo de distribución Linux
-    if [ $g_os_type -gt 10 ]; then
-        echo "ERROR(21): El sistema operativo debe ser Linux"
-        return 21;
-    fi
-   
-    #¿Esta 'curl' instalado?
-    local l_status
-    fulfill_preconditions1
-    l_status=$?
-
-    if [ $l_status -ne 0 ]; then
-        return 22
-    fi
-   
+  
+    #Mostar el menu principal 
     print_line '─' $g_max_length_line "$g_color_title" 
-
     _show_menu_core
 
     local l_flag_continue=0
@@ -473,6 +448,7 @@ function i_main() {
             a)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
+
                 printf '\n'
                 _update_all 3
                 ;;
@@ -521,7 +497,19 @@ function i_main() {
 
 }
 
-i_main
+#1. Logica principal del script (incluyendo los argumentos variables)
+_g_status=0
+
+#Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
+fulfill_preconditions1 $g_os_type 0
+_g_status=$?
+
+#Iniciar el procesamiento
+if [ $_g_status -eq 0 ]; then
+    g_main
+fi
+
+
 
 
 

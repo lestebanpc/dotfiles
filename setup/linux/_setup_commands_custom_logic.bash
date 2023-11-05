@@ -1,17 +1,6 @@
 #!/bin/bash
 
 
-#Expresiones regulares de sustitucion mas usuadas para las versiones
-#La version 'x.y.z' esta la inicio o despues de caracteres no numericos
-declare -r g_regexp_sust_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
-#La version 'x.y.z' o 'x-y-z' esta la inicio o despues de caracteres no numericos
-declare -r g_regexp_sust_version2='s/[^0-9]*\([0-9]\+\.[0-9.-]\+\).*/\1/'
-#La version '.y.z' esta la inicio o despues de caracteres no numericos
-declare -r g_regexp_sust_version3='s/[^0-9]*\([0-9.]\+\).*/\1/'
-#La version 'xyz' (solo un entero sin puntos)  esta la inicio o despues de caracteres no numericos
-declare -r g_regexp_sust_version4='s/[^0-9]*\([0-9]\+\).*/\1/'
-#La version 'x.y.z' esta despues de un caracter vacio
-declare -r g_regexp_sust_version5='s/.*\s\+\([0-9]\+\.[0-9.]\+\).*/\1/'
 
 
 #Cuando no se puede determinar la version actual (siempre se instalara)
@@ -399,7 +388,7 @@ function _get_repo_current_version() {
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
-                  l_path_file="${g_path_programs_win}/NodeJS/bin/"
+                  l_path_file="${g_path_programs_win}/NodeJS/"
                else
                   l_path_file="${g_path_programs_lnx}/nodejs/bin/"
                fi
@@ -1112,8 +1101,10 @@ function _load_artifacts() {
             ;;
         operator-sdk)
             if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("operator-sdk_linux_amd64" "ansible-operator_linux_amd64" "helm-operator_linux_amd64")
-                pna_artifact_types=(0 0 0)
+                #pna_artifact_names=("operator-sdk_linux_amd64" "ansible-operator_linux_amd64" "helm-operator_linux_amd64")
+                #pna_artifact_types=(0 0 0)
+                pna_artifact_names=("operator-sdk_linux_amd64" "helm-operator_linux_amd64")
+                pna_artifact_types=(0 0)
             else
                 return 1
             fi
@@ -2490,18 +2481,18 @@ function _copy_artifact_files() {
                    fi
 
                 #Instalacion del SDK para construir el operador usando Ansible
-                elif [ $p_artifact_index -eq 1 ]; then
+                #elif [ $p_artifact_index -eq 1 ]; then
 
-                   mv "${l_path_temp}/ansible-operator_linux_amd64" "${l_path_temp}/ansible-operator"
-                   if [ $g_is_root -eq 0 ]; then
-                      cp "${l_path_temp}/ansible-operator" "${l_path_bin}"
-                      chmod +x "${l_path_bin}/ansible-operator"
-                      #mkdir -pm 755 "${l_path_man}"
-                   else
-                      sudo cp "${l_path_temp}/ansible-operator" "${l_path_bin}"
-                      sudo chmod +x "${l_path_bin}/ansible-operator"
-                      #sudo mkdir -pm 755 "${l_path_man}"
-                   fi
+                #   mv "${l_path_temp}/ansible-operator_linux_amd64" "${l_path_temp}/ansible-operator"
+                #   if [ $g_is_root -eq 0 ]; then
+                #      cp "${l_path_temp}/ansible-operator" "${l_path_bin}"
+                #      chmod +x "${l_path_bin}/ansible-operator"
+                #      #mkdir -pm 755 "${l_path_man}"
+                #   else
+                #      sudo cp "${l_path_temp}/ansible-operator" "${l_path_bin}"
+                #      sudo chmod +x "${l_path_bin}/ansible-operator"
+                #      #sudo mkdir -pm 755 "${l_path_man}"
+                #   fi
 
                 #Instalacion del SDK para construir el operador usando Helm
                 else
@@ -4125,17 +4116,18 @@ function _copy_artifact_files() {
 
 
 #
-#La inicialización solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
+#La inicialización del menú opcion de instalación (codigo que se ejecuta antes de instalar los repositorios de la opcion menú)
+#Solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
 #
 #Los argumentos de entrada son:
-#  1 > Index de la opcion de menu elegista para instalar (ver el arreglo 'ga_menu_options_title').
+#  1 > Index (inicia en 0) de la opcion de menu elegista para instalar (ver el arreglo 'ga_menu_options_title').
 #
 #El valor de retorno puede ser:
 #  0 > Si inicializo con exito.
 #  1 > No se inicializo por opcion del usuario.
 #  2 > Hubo un error en la inicialización.
 #
-_initialize_menu_option_install_lnx() {
+install_initialize_menu_option() {
 
     #1. Argumentos
     local p_option_relative_idx=$1
@@ -4152,7 +4144,7 @@ _initialize_menu_option_install_lnx() {
     case "$p_option_relative_idx" in
 
         #Container Runtime 'ContainerD'
-        4)
+        6)
             #Los valores son solo para logs, pero se calcular manualmente
             l_repo_id='containerd'
             
@@ -4168,10 +4160,6 @@ _initialize_menu_option_install_lnx() {
             fi
             ;;
         
-        ##"Tools para cualquier Container Runtime": BuildKit
-        #6)
-        #    return 0
-        #    ;;
 
         *)
             return 0
@@ -4185,7 +4173,8 @@ _initialize_menu_option_install_lnx() {
 }
 
 #
-#La finalización solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
+#La finalización del menú opcion de instalación (codigo que se ejecuta despues de instalar todos los repositorios de la opcion de menú)
+#Solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
 #
 #Los argumentos de entrada son:
 #  1 > Index de la opcion de menu elegista para instalar (ver el arreglo 'ga_menu_options_title').
@@ -4195,7 +4184,7 @@ _initialize_menu_option_install_lnx() {
 #  1 > No se finalizo por opcion del usuario.
 #  2 > Hubo un error en la finalización.
 #
-_finalize_menu_option_install_lnx() {
+install_finalize_menu_option() {
 
     #Argumentos
     local p_option_relative_idx=$1
@@ -4213,7 +4202,7 @@ _finalize_menu_option_install_lnx() {
 
 
 
-#
+#Codigo que se ejecuta cuando se inicializa la opcion de menu de desinstalación.
 #La inicialización solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
 #
 #Los argumentos de entrada son:
@@ -4224,7 +4213,7 @@ _finalize_menu_option_install_lnx() {
 #  1 > No se inicializo por opcion del usuario.
 #  2 > Hubo un error en la inicialización.
 #
-_initialize_menu_option_uninstall_lnx() {
+uninstall_initialize_menu_option() {
 
     #1. Argumentos
     local p_option_relative_idx=$1
@@ -4239,7 +4228,7 @@ _initialize_menu_option_uninstall_lnx() {
     printf 'Se va ha iniciar con la desinstalación de los siguientes repositorios: '
     
     #Obtener los repositorios a configurar
-    local l_aux="${ga_menu_options_repos[$l_i]}"
+    local l_aux="${ga_menu_options_packages[$l_i]}"
     local IFS=','
     local la_repos=(${l_aux})
     IFS=$' \t\n'
@@ -4250,7 +4239,7 @@ _initialize_menu_option_uninstall_lnx() {
     for((l_j=0; l_j < ${l_n}; l_j++)); do
 
         l_repo_id="${la_repos[${l_j}]}"
-        l_aux="${gA_repositories[${l_repo_id}]}"
+        l_aux="${gA_packages[${l_repo_id}]}"
         if [ -z "$l_aux" ]; then
             l_aux="$l_repo_id"
         fi
@@ -4274,8 +4263,8 @@ _initialize_menu_option_uninstall_lnx() {
     #4. Realizar validaciones segun la opcion de menu escogida
     case "$p_option_relative_idx" in
 
-        #Container Runtime 'ContainerD'
-        4)
+        6)
+            #Container Runtime 'ContainerD'
             #Los valores son solo para logs
             l_repo_id='containerd'
             
@@ -4298,10 +4287,8 @@ _initialize_menu_option_uninstall_lnx() {
             if [ $l_status -eq 2 ]; then
                 return 1
             fi
-            ;;
         
-        #"Tools para cualquier Container Runtime": BuildKit
-        6)
+            #"Tools para cualquier Container Runtime": BuildKit
             #Los valores son solo para logs
             l_repo_id='buildkit'
             
@@ -4336,7 +4323,7 @@ _initialize_menu_option_uninstall_lnx() {
 
 }
 
-#
+#Codigo que se ejecuta cuando se finaliza la opcion de menu de desinstalación.
 #La finalización solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
 #
 #Los argumentos de entrada son:
@@ -4347,7 +4334,7 @@ _initialize_menu_option_uninstall_lnx() {
 #  1 > No se finalizo por opcion del usuario.
 #  2 > Hubo un error en la finalización.
 #
-_finalize_menu_option_uninstall_lnx() {
+uninstall_finalize_menu_option() {
 
     #Argumentos
     local p_option_relative_idx=$1
@@ -4378,7 +4365,7 @@ _uninstall_repository2() {
     fi
 
     #2. Inicialización de variables
-    local l_repo_name="${gA_repositories[$p_repo_id]}"
+    local l_repo_name="${gA_packages[$p_repo_id]}"
     #local l_repo_name_aux="${l_repo_name:-$p_repo_id}"
     
     #Tag usuado para imprimir un identificador del artefacto en un log
@@ -4404,7 +4391,7 @@ _uninstall_repository() {
     fi
 
     #2. Inicialización de variables
-    local l_repo_name="${gA_repositories[$p_repo_id]}"
+    local l_repo_name="${gA_packages[$p_repo_id]}"
     #local l_repo_name_aux="${l_repo_name:-$p_repo_id}"
 
     local l_path_temp=""
