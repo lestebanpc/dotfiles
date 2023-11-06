@@ -834,13 +834,13 @@ _install_nodejs() {
     #1. Instalación de Node.JS (el gestor de paquetes npm esta incluido)
 
     #Validar si 'node' esta en el PATH
-    echo "$PATH" | grep "${g_path_lnx_programs}/nodejs/bin" &> /dev/null
+    echo "$PATH" | grep "${g_path_programs_lnx}/nodejs/bin" &> /dev/null
     l_status=$?
     if [ $l_status -ne 0 ]; then
         printf '%bNode.JS %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
             "$g_color_warning" "$l_version" "$g_color_reset"
-        printf 'Adicionando a la sesion actual: PATH=%s/nodejs/bin:$PATH\n' "${g_path_lnx_programs}"
-        export PATH=${g_path_lnx_programs}/nodejs/bin:$PATH
+        printf 'Adicionando a la sesion actual: PATH=%s/nodejs/bin:$PATH\n' "${g_path_programs_lnx}"
+        export PATH=${g_path_programs_lnx}/nodejs/bin:$PATH
     fi
 
     #Obtener la version de Node.JS actual
@@ -874,10 +874,10 @@ _install_nodejs() {
         fi
 
         #Validar si 'node' esta en el PATH
-        echo "$PATH" | grep "${g_path_lnx_programs}/nodejs/bin" &> /dev/null
+        echo "$PATH" | grep "${g_path_programs_lnx}/nodejs/bin" &> /dev/null
         l_status=$?
         if [ $l_status -ne 0 ]; then
-            export PATH=${g_path_lnx_programs}/nodejs/bin:$PATH
+            export PATH=${g_path_programs_lnx}/nodejs/bin:$PATH
         fi
 
         #Obtener la version instalada
@@ -1188,9 +1188,9 @@ function _install_vim_nvim_environment() {
 
             #Parametros:
             # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-            # 2> Repositorios a instalar/acutalizar: 2 (herramienta de X11 clipbboard)
+            # 2> Repositorios a instalar/acutalizar: 4 (herramienta de X11 clipbboard)
             # 3> El estado de la credencial almacenada para el sudo
-            ~/.files/setup/linux/03_setup_packages.bash 1 2 $g_status_crendential_storage
+            ~/.files/setup/linux/03_setup_packages.bash 1 4 $g_status_crendential_storage
             l_status=$?
 
             #Si no se acepto almacenar credenciales
@@ -1305,13 +1305,13 @@ function _install_vim_nvim_environment() {
     #7. Instalar NeoVIM
 
     #Validar si 'nvim' esta en el PATH
-    echo "$PATH" | grep "${g_path_lnx_programs}/neovim/bin" &> /dev/null
+    echo "$PATH" | grep "${g_path_programs_lnx}/neovim/bin" &> /dev/null
     l_status=$?
     if [ $l_status -ne 0 ]; then
         printf '%bNode.JS %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
             "$g_color_warning" "$l_version" "$g_color_reset"
-        printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_lnx_programs}"
-        export PATH=${g_path_lnx_programs}/neovim/bin:$PATH
+        printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_programs_lnx}"
+        export PATH=${g_path_programs_lnx}/neovim/bin:$PATH
     fi
 
     #Determinar si esta instalado VIM:
@@ -1347,10 +1347,10 @@ function _install_vim_nvim_environment() {
             fi
 
             #Validar si 'nvim' esta en el PATH
-            echo "$PATH" | grep "${g_path_lnx_programs}/neovim/bin" &> /dev/null
+            echo "$PATH" | grep "${g_path_programs_lnx}/neovim/bin" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
-                export PATH=${g_path_lnx_programs}/neovim/bin:$PATH
+                export PATH=${g_path_programs_lnx}/neovim/bin:$PATH
             fi
 
             #Obtener la version instalada

@@ -53,7 +53,14 @@ gA_packages=(
         ['buildkit']='moby/buildkit'
         ['nerdctl']='containerd/nerdctl'
         ['dive']='wagoodman/dive'
+        ['net-sdk']='dotnet/Sdk'
+        ['net-rt-core']='dotnet/Runtime'
+        ['net-rt-aspnet']='dotnet/aspnetcore/Runtime'
+        ['kubeadm']=''
+        ['kubelet']=''
+        ['crictl']='kubernetes-sigs/cri-tool'
     )
+#TODO incluir maven
 
 #WARNING: Un cambio en el orden implica modificar los indices de los eventos:
 #         'install_initialize_menu_option', 'install_finalize_menu_option', 'uninstall_initialize_menu_option' y 'uninstall_finalize_menu_option'
@@ -68,11 +75,15 @@ ga_menu_options_title=(
     "LL Container Runtine, comandos root-less, CNI plugins"
     "HL Container Runtime 'ContainerD', BuildKit y NerdCtl"
     "Tools para gestionar containers"
-    "Tools para Kubernates"
-    "Implementación de Kubernates 'K0S'"
+    "Tools para K8S"
+    "Binarios para un nodo K8S de 'K0S'"
+    "Binarios para un nodo maestro K8S de 'KubeAdmin'"
+    "Binarios para un nodo worker  K8S de 'KubeAdmin'"
     "RTE de 'Go'"
     "RTE 'GraalVM CE' (Java)"
     "RTE Node.JS"
+    "RTE .NET"
+    "RTE y SDK .NET"
     "LSP y DAP server de .Net"
     "LSP y building tools de C/C++"
     "LSP server de Rust"
@@ -98,9 +109,13 @@ ga_menu_options_packages=(
     "dive"
     "kubectl,helm,operator-sdk,3scale-toolbox,pgo"
     "k0s"
+    "kubectl,kubelet,crictl,kubeadm"
+    "kubelet"
     "go"
     "graalvm"
     "nodejs"
+    "net-rt-core,net-rt-aspnet"
+    "net-sdk"
     "roslyn,netcoredbg"
     "clangd,cmake,ninja"
     "rust-analyzer"
@@ -119,7 +134,6 @@ declare -A gA_repo_config=(
         ['k0s']=1
         ['operator-sdk']=3
         ['nerd-fonts']=3
-        ['powershell']=3
         ['runc']=3
         ['crun']=3
         ['cni-plugins']=3
@@ -132,6 +146,9 @@ declare -A gA_repo_config=(
         ['nerdctl']=3
         ['dive']=3
         ['butane']=3
+        ['kubeadm']=3
+        ['kubelet']=3
+        ['crictl']=3
     )
 
 

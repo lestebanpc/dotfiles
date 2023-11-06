@@ -11,22 +11,25 @@ then
     PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 fi
 
+#Ruta por defecto donde se instalan los programas (incluye, entre otros, 1 o mas comandos)
+l_program_path='/opt/tools'
+
 # GraalVM (rutas)
-GRAALVM_HOME=/opt/tools/graalvm
+GRAALVM_HOME=${l_program_path}/graalvm
 JAVA_HOME=${GRAALVM_HOME}
 export GRAALVM_HOME JAVA_HOME
 
 # Rutas por defecto: Adicionando rutas de programas especificos
-PATH=$PATH:/opt/tools/neovim/bin
+PATH=$PATH:${l_program_path}/neovim/bin
 
 #RH-OCP - CLI
-[ -d "/opt/tools/rh-ocp-cli" ] && PATH=$PATH:/opt/tools/rh-ocp-cli
+[ -d "${l_program_path}/rh-ocp-cli" ] && PATH=$PATH:${l_program_path}/rh-ocp-cli
 
 #CMake - Sistema de contrucción para C/C++ y otros
-[ -d "/opt/tools/cmake" ] && PATH=$PATH:/opt/tools/cmake/bin
+[ -d "${l_program_path}/cmake" ] && PATH=$PATH:${l_program_path}/cmake/bin
 
 #Go - Tools estandar para desarrollo
-[ -d "/opt/tools/go/bin" ] && PATH=$PATH:/opt/tools/go/bin
+[ -d "${l_program_path}/go/bin" ] && PATH=$PATH:${l_program_path}/go/bin
 
 #Go - Tools adicionales
 [ -d ~/go/bin ] && PATH=$PATH:~/go/bin
@@ -38,19 +41,24 @@ PATH=$PATH:/opt/tools/neovim/bin
 [ -d "${JAVA_HOME}/bin" ] && PATH=$PATH:${JAVA_HOME}/bin
 
 #Rust - LSP server
-#[ -d "/opt/tools/lsp_servers/rust_analyzer" ] && PATH=$PATH:/opt/tools/lsp_servers/rust_analyzer
+#[ -d "${l_program_path}/lsp_servers/rust_analyzer" ] && PATH=$PATH:${l_program_path}/lsp_servers/rust_analyzer
 
 #LLVM/ClangD - LSP server
-[ -d "/opt/tools/lsp_servers/clangd" ] && PATH=$PATH:/opt/tools/lsp_servers/clangd/bin
+[ -d "${l_program_path}/lsp_servers/clangd" ] && PATH=$PATH:${l_program_path}/lsp_servers/clangd/bin
 
 #Ruta del builder Apache Maven
-[ -d "/opt/tools/maven/bin" ] && PATH=/opt/tools/maven/bin:$PATH
+[ -d "${l_program_path}/maven/bin" ] && PATH=${l_program_path}/maven/bin:$PATH
 
 #Ruta del compilador de ProtoBuffer de gRPC
-[ -d "/opt/tools/protoc/bin" ] && PATH=/opt/tools/protoc/bin:$PATH
+[ -d "${l_program_path}/protoc/bin" ] && PATH=${l_program_path}/protoc/bin:$PATH
 
 #Node.Js (RTE)
-[ -d "/opt/tools/nodejs/bin" ] && PATH=/opt/tools/nodejs/bin:$PATH
+[ -d "${l_program_path}/nodejs/bin" ] && PATH=${l_program_path}/nodejs/bin:$PATH
+
+#DotNet
+export DOTNET_ROOT=${l_program_path}/dotnet
+[ -d "$DOTNET_ROOT" ] && PATH=${DOTNET_ROOT}:$PATH
+[ -d "$DOTNET_ROOT/tools" ] && PATH=${DOTNET_ROOT}/tools:$PATH
 
 
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
@@ -90,7 +98,7 @@ source ~/.files/terminal/linux/keybindings/fzf.bash
 
 
 # Ruta por defecto de los binarios de CNI plugin usados por CLI de Container Runtime como NerdCtl (no se usara, se usara su archivo de configuración nerdctl.tom)
-#[ -d "/opt/tools/cni_plugins" ] && export CNI_PATH=/opt/tools/cni_plugins
+#[ -d "${l_program_path}/cni_plugins" ] && export CNI_PATH=${l_program_path}/cni_plugins
 
 
 #Funciones basicas

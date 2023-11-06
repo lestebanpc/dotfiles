@@ -7,7 +7,262 @@
 declare -r g_version_none='0.0.0'
 
 
+#Funciones modificables (Nivel 2) {{{
+
+
+#Obtiene la ultima version de realease obtenido en un repositorio
+# > Los argumentos de entrada son:
+#   1ro  - El ID del repositorio
+#   2do  - El nombre del repositorio
+# > Los argumentos de salida son:
+#   3ro  - Arreglo con la version original (usado para descargar) y la version amigable o 'pretty version' (usando para comparar versiones)
+#   4to  - Arreglo con la versiones de artefactos de los repostorios (por defecto este es 'null', existe artefactos con la misma version que el repositorio)
+#          Debera iniciar por la ultima versión. No existe.
+# > Los valores de retorno es 0 si es OK, caso contrario ocurrio un error. Los errores devueltos son
+#   1    - Se requiere tener habilitado el comando jq
+function _get_repo_latest_version() {
+
+    #1. Argumentos
+    local p_repo_id="$1"
+    local p_repo_name="$2"
+    declare -n pna_repo_versions=$3   #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
+    declare -n pna_arti_versions=$4
+    
+    #2. Obtener la version
+    local l_repo_last_version=""
+    local l_repo_last_version_pretty=""
+    local l_aux=""
+    local l_arti_versions=""
+    #local l_status=0
+
+    case "$p_repo_id" in
+
+        kubectl|kubelet|kubeadm)
+            #El artefacto se obtiene del repositorio de Kubernates
+            l_repo_last_version=$(curl -Ls https://dl.k8s.io/release/stable.txt)
+            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
+            ;;
+
+        net-sdk|net-rt-core|net-rt-aspnet)
+
+            #El artefacto se obtiene del repositorio de Microsoft
+            #Usar la version STS (standar term support) y no LTS (long term support)
+            l_repo_last_version=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/STS/latest.version")
+            #l_repo_last_version=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/LTS/latest.version")
+
+            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
+            ;;
+        
+        
+        kustomize)
+            #Si no esta instalado 'jq' no continuar
+            if ! command -v jq &> /dev/null; then
+                return 1
+            fi
+
+            l_repo_last_version=$(kubectl version --client=true -o json  | jq -r '.kustomizeVersion' 2> /dev/null)
+            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
+            ;;
+
+        jdtls)
+            l_aux=$(curl -Ls https://download.eclipse.org/jdtls/snapshots/latest.txt)
+            l_aux=${l_aux%.tar.gz}
+            l_repo_last_version=$(echo "$l_aux" | sed -e "$g_regexp_sust_version2")
+            l_repo_last_version_pretty="${l_repo_last_version//-/.}"
+            ;;
+
+        go)
+            #Si no esta instalado 'jq' no continuar
+            if ! command -v jq &> /dev/null; then
+                return 1
+            fi
+
+            l_aux=$(curl -Ls -H 'Accept: application/json' "https://go.dev/dl/?mode=json" | jq -r '.[0].version')
+            if [ $? -eq 0 ]; then
+                l_repo_last_version=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
+                l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
+            else
+                l_repo_last_version=""
+            fi
+            ;;
+
+        jq)
+            #Si no esta instalado 'jq' usar expresiones regulares
+            if ! command -v jq &> /dev/null; then
+                l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+            else
+                l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            fi            
+            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
+            ;;
+
+        neovim)
+            #Si no esta instalado 'jq' no continuar
+            if ! command -v jq &> /dev/null; then
+                return 1
+            fi
+            
+            #Usando el API resumido del repositorio de GitHub
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+
+            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
+            l_aux=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.body' | head -n 2 | tail -1)
+            if [ $? -eq 0 ]; then
+                l_repo_last_version_pretty=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
+            else                                
+                l_repo_last_version_pretty=""
+            fi
+            ;;
+
+        nodejs)
+            #Si no esta instalado 'jq' no continuar
+            if ! command -v jq &> /dev/null; then
+                return 1
+            fi
+            
+            #Usando JSON para obtener la ultima version
+            l_aux=$(curl -Ls "https://nodejs.org/dist/index.json" | jq -r 'first(.[] | select(.lts != false)) | "\(.version)"' 2> /dev/null)
+
+            if [ $? -eq 0 ]; then
+                l_repo_last_version="$l_aux"
+                l_repo_last_version_pretty=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
+            else
+                l_repo_last_version=""        
+                l_repo_last_version_pretty=""
+            fi
+            ;;
+
+       less)
+            #Si no esta instalado 'jq' no continuar
+            if ! command -v jq &> /dev/null; then
+                return 1
+            fi
+
+            #Usando el API resumido del repositorio de GitHub
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
+            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+
+            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version4")
+           ;;
+
+        graalvm)
+            #Si no esta instalado 'jq' no continuar
+            if ! command -v jq &> /dev/null; then
+                return 1
+            fi
+
+            #Usando el API resumido del repositorio de GitHub
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
+            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+
+            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
+            l_arti_versions=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.assets[].name' | \
+                  grep -e '^graalvm-ce-java.*-linux-amd64-.*\.tar\.gz$' | sed -e 's/graalvm-ce-java\(.*\)-linux-amd64-.*/\1/' | sort -r)
+            ;;
+
+        #crictl)
+        #    #Obtener una ultima version que sea compatible con la version actual de kubelet, kubeadm
+        #    ;;
+
+        *)
+            #Si no esta instalado 'jq' no continuar
+            if ! command -v jq &> /dev/null; then
+                return 1
+            fi
+
+            #Usando el API resumido del repositorio de GitHub
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
+            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            
+            if [ "$p_repo_id" = "netcoredbg" ]; then
+                l_aux="${l_repo_last_version//-/.}"
+            else
+                l_aux="$l_repo_last_version"
+            fi
+
+            l_repo_last_version_pretty=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
+            ;;
+    esac
+
+    #Codificar en base64
+    l_aux=$(url_encode "$l_repo_last_version")
+    pna_repo_versions=("$l_aux" "$l_repo_last_version_pretty")
+    pna_arti_versions=(${l_arti_versions})
+    return 0
+}
+
+function _get_last_repo_url() {
+
+    #1. Argumentos
+    local p_repo_id="$1"
+    local p_repo_name="$2"
+    local p_repo_last_version="$3"
+    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                         #(0) Los binarios de los comandos se estan instalando en Linux
+    if [ "$5" -eq 0 2> /dev/null ]; then
+        p_install_win_cmds=0
+    fi
+
+    #2. Obtener la URL base
+    local l_base_url=""
+    case "$p_repo_id" in
+
+        kubectl|kubelet|kubeadm)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/windows/amd64"
+            else
+                l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/linux/amd64"
+            fi
+            ;;
+
+        net-sdk|net-rt-core|net-rt-aspnet)
+            l_base_url="https://dotnetcli.azureedge.net/${p_repo_name}/${p_repo_last_version}"
+            ;;
+
+        kustomize)
+            l_base_url="https://github.com/${p_repo_name}/releases/download/kustomize%2F${p_repo_last_version}"
+            ;;
+
+        helm)
+            l_base_url="https://get.helm.sh"
+            ;;
+
+        go)
+            l_base_url="https://storage.googleapis.com/${p_repo_name}"
+            ;;
+            
+        jdtls)
+            l_base_url="https://download.eclipse.org/${p_repo_name}/snapshots"
+            ;;
+
+        step)
+            l_base_url="https://dl.smallstep.com/gh-release/cli/gh-release-header/${p_repo_last_version}"
+            ;;
+
+        nodejs)
+            l_base_url="https://nodejs.org/dist/${p_repo_last_version}"
+            ;;
+
+        *)
+            l_base_url="https://github.com/${p_repo_name}/releases/download/${p_repo_last_version}"
+            ;;
+
+    esac
+
+    #3. Obtener la URL
+    echo "$l_base_url"
+
+}
+
+
+#}}}
+
+
 #Funciones modificables (Nive 1) {{{
+
 
 #Determinar la version actual del repositorio usado para instalar los comandos instalados:
 #  0 - Si existe y se obtiene un valor
@@ -449,6 +704,77 @@ function _get_repo_current_version() {
             fi
             ;;
 
+
+       net-sdk)
+
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_programs_win}/DotNet/"
+               else
+                  l_path_file="${g_path_programs_lnx}/dotnet/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}dotnet.exe --list-sdks version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}dotnet --list-sdks version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+                l_tmp=$(echo "$l_tmp" | sort -r | head -n 1)
+            fi
+            ;;
+
+
+       net-rt-core|net-rt-aspnet)
+
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_programs_win}/DotNet/"
+               else
+                  l_path_file="${g_path_programs_lnx}/dotnet/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}dotnet.exe --list-runtimes version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}dotnet --list-runtimes version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+
+                if [ "$p_repo_id" = "net-rt-core" ]; then
+
+                    l_tmp=$(echo "$l_tmp" | grep 'Microsoft.NETCore.App' | sort -r | head -n 1)
+                    l_status=$?
+                    if [ $l_status -ne 0 ]; then
+                        l_tmp=""
+                    fi
+
+                else
+                    l_tmp=$(echo "$l_tmp" | grep 'Microsoft.AspNetCore.App' | sort -r | head -n 1)
+                    l_status=$?
+                    if [ $l_status -ne 0 ]; then
+                        l_tmp=""
+                    fi
+
+                fi
+
+            fi
+            ;;
+
+
+
         clangd)
 
             #Calcular la ruta de archivo/comando donde se obtiene la version
@@ -517,14 +843,24 @@ function _get_repo_current_version() {
 
         powershell)
             
-            #Obtener la version
-            if [ $p_install_win_cmds -eq 0 ]; then
-                return 9
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_path_programs_win}/PowerShell/"
+               else
+                  l_path_file="${g_path_programs_lnx}/powershell/"
+               fi
             fi
 
-            l_tmp=$(${l_path_file}pwsh --version 2> /dev/null)
-            l_status=$?
-            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}pwsh.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}pwsh --version 2> /dev/null)
+                l_status=$?
+            fi
+
             if [ $l_status -eq 0 ]; then
                 l_tmp=$(echo "$l_tmp" | head -n 1)
             fi
@@ -813,6 +1149,20 @@ function _get_repo_current_version() {
             fi
             ;;
 
+        crictl)
+            
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}crictl --version 2> /dev/null)
+            l_status=$?
+            
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
 
         *)
             return 9
@@ -872,6 +1222,45 @@ function _load_artifacts() {
     local l_artifact_type=99
 
     case "$p_repo_id" in
+
+        net-sdk)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("dotnet-sdk-${p_repo_last_version_pretty}-linux-x64.tar.gz")
+                pna_artifact_types=(2)
+            else
+                pna_artifact_names=("dotnet-sdk-${p_repo_last_version_pretty}-win-x64.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+
+        net-rt-core)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("dotnet-runtime-${p_repo_last_version_pretty}-linux-x64.tar.gz")
+                pna_artifact_types=(2)
+            else
+                pna_artifact_names=("dotnet-runtime-${p_repo_last_version_pretty}-win-x64.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+
+        net-rt-aspnet)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("aspnetcore-runtime-${p_repo_last_version_pretty}-linux-x64.tar.gz")
+                pna_artifact_types=(2)
+            else
+                pna_artifact_names=("aspnetcore-runtime-${p_repo_last_version_pretty}-win-x64.zip")
+                pna_artifact_types=(3)
+            fi
+            ;;
+
+        crictl)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("crictl-v${p_repo_last_version_pretty}-linux-amd64.tar.gz" "critest-v${p_repo_last_version_pretty}-linux-amd64.tar.gz")
+                pna_artifact_types=(2 2)
+            else
+                return 1
+            fi
+            ;;
 
         jq)
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -1063,6 +1452,24 @@ function _load_artifacts() {
             fi
             ;;
 
+        kubelet)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("kubelet")
+                pna_artifact_types=(0)
+            else
+                return 1
+            fi
+            ;;
+
+        kubeadmin)
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_names=("kubeadmin")
+                pna_artifact_types=(0)
+            else
+                return 1
+            fi
+            ;;
+
         pgo)
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("kubectl-pgo-linux-amd64")
@@ -1190,16 +1597,11 @@ function _load_artifacts() {
 
         powershell)
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype_id -eq 1 ]; then
-                    pna_artifact_names=("powershell_${p_repo_last_version_pretty}-1.deb_amd64.deb")
-                    pna_artifact_types=(1)
-                else
-                    pna_artifact_names=("powershell-${p_repo_last_version_pretty}-1.rh.x86_64.rpm")
-                    pna_artifact_types=(1)
-                fi
+                pna_artifact_names=("powershell-${p_repo_last_version_pretty}-linux-x64.tar.gz")
+                pna_artifact_types=(2)
             else
-                #No se instala nada en Windows
-                return 1
+                pna_artifact_names=("PowerShell-${p_repo_last_version_pretty}-win-x64.zip")
+                pna_artifact_types=(3)
             fi
             ;;
 
@@ -1355,66 +1757,6 @@ function _load_artifacts() {
     esac
 
     return 0
-}
-
-
-function _get_last_repo_url() {
-
-    #1. Argumentos
-    local p_repo_id="$1"
-    local p_repo_name="$2"
-    local p_repo_last_version="$3"
-    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                         #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$5" -eq 0 2> /dev/null ]; then
-        p_install_win_cmds=0
-    fi
-
-    #2. Obtener la URL base
-    local l_base_url=""
-    case "$p_repo_id" in
-
-        kubectl)
-            if [ $p_install_win_cmds -eq 0 ]; then
-                l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/windows/amd64"
-            else
-                l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/linux/amd64"
-            fi
-            ;;
-
-        kustomize)
-            l_base_url="https://github.com/${p_repo_name}/releases/download/kustomize%2F${p_repo_last_version}"
-            ;;
-
-        helm)
-            l_base_url="https://get.helm.sh"
-            ;;
-
-        go)
-            l_base_url="https://storage.googleapis.com/${p_repo_name}"
-            ;;
-            
-        jdtls)
-            l_base_url="https://download.eclipse.org/${p_repo_name}/snapshots"
-            ;;
-
-        step)
-            l_base_url="https://dl.smallstep.com/gh-release/cli/gh-release-header/${p_repo_last_version}"
-            ;;
-
-        nodejs)
-            l_base_url="https://nodejs.org/dist/${p_repo_last_version}"
-            ;;
-
-        *)
-            l_base_url="https://github.com/${p_repo_name}/releases/download/${p_repo_last_version}"
-            ;;
-
-    esac
-
-    #3. Obtener la URL
-    echo "$l_base_url"
-
 }
 
 
@@ -1950,7 +2292,7 @@ function _copy_artifact_files() {
                 fi
 
             else
-                echo "ERROR (50): El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
+                echo "ERROR (50): El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
                 return 40
             fi            
             ;;
@@ -1977,7 +2319,7 @@ function _copy_artifact_files() {
                 fi
 
             else
-                echo "ERROR (50): El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                echo "ERROR (50): El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
                 return 40
             fi            
             ;;
@@ -2276,6 +2618,16 @@ function _copy_artifact_files() {
                 #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
                 find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
 
+                #Validar si 'protoc' esta en el PATH
+                echo "$PATH" | grep "${g_path_programs_lnx}/protoc/bin" &> /dev/null
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                        "$g_color_warning" "ProtoC"  "$p_repo_last_version_pretty" "$g_color_reset"
+                    printf 'Adicionando a la sesion actual: PATH=%s/protoc/bin:$PATH\n' "${g_path_programs_lnx}"
+                    export PATH=${g_path_programs_lnx}/protoc/bin:$PATH
+                fi
+
             else
                 
                 l_path_bin="${g_path_programs_win}/ProtoC"
@@ -2335,6 +2687,90 @@ function _copy_artifact_files() {
             fi
             ;;
 
+            
+        crictl)
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                if [ $p_artifact_index -eq 0 ]; then
+
+                    if [ $g_is_root -eq 0 ]; then
+                        echo "Copiando \"crictl\" en \"${l_path_bin}/\" ..."
+                        cp "${l_path_temp}/crictl" "${l_path_bin}"
+                        chmod +x "${l_path_bin}/crictl"
+                    else
+                        echo "Copiando \"crictl\" en \"${l_path_bin}/\" ..."
+                        sudo cp "${l_path_temp}/crictl" "${l_path_bin}"
+                        sudo chmod +x "${l_path_bin}/crictl"
+                    fi
+
+                else
+
+                    if [ $g_is_root -eq 0 ]; then
+                        echo "Copiando \"critest\" en \"${l_path_bin}/\" ..."
+                        cp "${l_path_temp}/critest" "${l_path_bin}"
+                        chmod +x "${l_path_bin}/critest"
+                    else
+                        echo "Copiando \"critest\" en \"${l_path_bin}/\" ..."
+                        sudo cp "${l_path_temp}/critest" "${l_path_bin}"
+                        sudo chmod +x "${l_path_bin}/critest"
+                    fi
+
+                fi
+            else
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
+                return 40
+            fi
+            ;;
+
+            
+        kubelet)
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_is_root -eq 0 ]; then
+                    echo "Copiando \"kubelet\" en \"${l_path_bin}/\" ..."
+                    cp "${l_path_temp}/kubelet" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/kubelet"
+                else
+                    echo "Copiando \"kubelet\" en \"${l_path_bin}/\" ..."
+                    sudo cp "${l_path_temp}/kubelet" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/kubelet"
+                fi
+            else
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
+                return 40
+            fi
+            ;;
+
+            
+        kubeadmin)
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_is_root -eq 0 ]; then
+                    echo "Copiando \"kubeadmin\" en \"${l_path_bin}/\" ..."
+                    cp "${l_path_temp}/kubeadmin" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/kubeadmin"
+                else
+                    echo "Copiando \"kubeadmin\" en \"${l_path_bin}/\" ..."
+                    sudo cp "${l_path_temp}/kubeadmin" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/kubeadmin"
+                fi
+            else
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
+                return 40
+            fi
+            ;;
+
+            
         kubectl)
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
@@ -2720,6 +3156,17 @@ function _copy_artifact_files() {
                     #2.2. Instalación: Mover todos archivos
                     #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
                     find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+
+                    #Validar si 'nvim' esta en el PATH
+                    echo "$PATH" | grep "${g_path_programs_lnx}/neovim/bin" &> /dev/null
+                    l_status=$?
+                    if [ $l_status -ne 0 ]; then
+                        printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                            "$g_color_warning" "NeoVIM"  "$p_repo_last_version_pretty" "$g_color_reset"
+                        printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_programs_lnx}"
+                        export PATH=${g_path_programs_lnx}/neovim/bin:$PATH
+                    fi
+
                 fi
 
 
@@ -2859,6 +3306,16 @@ function _copy_artifact_files() {
                 #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
                 find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
 
+               #Validar si 'clangd' esta en el PATH
+               echo "$PATH" | grep "${g_path_programs_lnx}/lsp_servers/clangd/bin" &> /dev/null
+               l_status=$?
+               if [ $l_status -ne 0 ]; then
+                   printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                       "$g_color_warning" "CLangD"  "$p_repo_last_version_pretty" "$g_color_reset"
+                   printf 'Adicionando a la sesion actual: PATH=%s/lsp_servers/clangd/bin:$PATH\n' "${g_path_programs_lnx}"
+                   export PATH=${g_path_programs_lnx}/lsp_servers/clangd/bin:$PATH
+               fi
+
             else
                 
                 l_path_bin="${g_path_programs_win}/LSP_Servers/CLangD"
@@ -2876,6 +3333,66 @@ function _copy_artifact_files() {
                 find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
             fi
             ;;
+
+
+        net-sdk|net-rt-core|net-rt-aspnet)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                l_path_bin="${g_path_programs_lnx}/dotnet"
+
+                #Crear el directorio si no existe (no limpiar)
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                    chmod g+rx,o+rx $l_path_bin
+                #else
+                    #Limpieza
+                    #rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
+                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv -f '{}' ${l_path_bin} \;
+
+                #Validar si 'DotNet' esta en el PATH
+                echo "$PATH" | grep "${g_path_programs_lnx}/dotnet" &> /dev/null
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                        "$g_color_warning" "DotNet"  "$p_repo_last_version_pretty" "$g_color_reset"
+                    printf 'Adicionando a la sesion actual: PATH=%s/dotnet:$PATH\n' "${g_path_programs_lnx}"
+
+                    export DOTNET_ROOT=${g_path_programs_lnx}/dotnet
+                    PATH=${g_path_programs_lnx}/dotnet:$PATH                    
+                    if [ "$p_repo_id" = "net-sdk" ]; then
+                        PATH=${g_path_programs_lnx}/dotnet/tools:$PATH
+                    fi
+                    export PATH
+                fi
+
+            else
+                
+                l_path_bin="${g_path_programs_win}/DotNet"
+
+                #Crear el directorio si no existe (no limpiar)
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                #else
+                    #Limpieza
+                    #rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
+                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv -f '{}' ${l_path_bin} \;
+            fi
+            ;;
+
 
 
         go)
@@ -2901,6 +3418,17 @@ function _copy_artifact_files() {
                 #Mover todos archivos
                 #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
                 find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+
+                #Validar si 'Go' esta en el PATH
+                echo "$PATH" | grep "${g_path_programs_lnx}/go/bin" &> /dev/null
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                        "$g_color_warning" "Go"  "$p_repo_last_version_pretty" "$g_color_reset"
+                    printf 'Adicionando a la sesion actual: PATH=%s/go/bin:$PATH\n' "${g_path_programs_lnx}"
+                    export PATH=${g_path_programs_lnx}/go/bin:$PATH
+                    [ -d ~/go/bin ] && PATH=$PATH:~/go/bin
+                fi
 
             else
                 
@@ -2945,6 +3473,17 @@ function _copy_artifact_files() {
                 #Mover todos archivos
                 #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
                 find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+
+
+                #Validar si 'Node.JS' esta en el PATH
+                echo "$PATH" | grep "${g_path_programs_lnx}/nodejs/bin" &> /dev/null
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                        "$g_color_warning" "Node.JS"  "$p_repo_last_version_pretty" "$g_color_reset"
+                    printf 'Adicionando a la sesion actual: PATH=%s/nodejs/bin:$PATH\n' "${g_path_programs_lnx}"
+                    export PATH=${g_path_programs_lnx}/nodejs/bin:$PATH
+                fi
 
             else
                 
@@ -2998,6 +3537,16 @@ function _copy_artifact_files() {
                 #Mover todos archivos
                 #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
                 find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+
+                #Validar si 'CMake' esta en el PATH
+                echo "$PATH" | grep "${g_path_programs_lnx}/cmake/bin" &> /dev/null
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                        "$g_color_warning" "CMake"  "$p_repo_last_version_pretty" "$g_color_reset"
+                    printf 'Adicionando a la sesion actual: PATH=%s/cmake/bin:$PATH\n' "${g_path_programs_lnx}"
+                    export PATH=${g_path_programs_lnx}/cmake/bin:$PATH
+                fi
 
             else
                 
@@ -3117,6 +3666,17 @@ function _copy_artifact_files() {
                     echo "$p_repo_last_version_pretty" > "${l_path_bin}/rust-analyzer.info" 
                 fi
 
+
+                #Validar si 'Rust Analizer' esta en el PATH
+                #echo "$PATH" | grep "${g_path_programs_lnx}/lsp_servers/rust_analyzer" &> /dev/null
+                #l_status=$?
+                #if [ $l_status -ne 0 ]; then
+                #    printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                #        "$g_color_warning" "Rust-Analizer"  "$p_repo_last_version_pretty" "$g_color_reset"
+                #    printf 'Adicionando a la sesion actual: PATH=%s/lsp_servers/rust_analyzer:$PATH\n' "${g_path_programs_lnx}"
+                #    export PATH=${g_path_programs_lnx}/lsp_servers/rust_analyzer:$PATH
+                #fi
+
             else
 
                 #1. Comparando la version instalada con la version descargada
@@ -3221,6 +3781,19 @@ function _copy_artifact_files() {
                     echo " > cd ${l_path_bin}"
                     echo "   gu -L install ${p_artifact_name_woext}"
 
+                fi
+
+                #Validar si 'GraalVM' esta en el PATH
+                echo "$PATH" | grep "${g_path_programs_lnx}/graalvm/bin" &> /dev/null
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                        "$g_color_warning" "GraalVM"  "$p_repo_last_version_pretty" "$g_color_reset"
+                    printf 'Adicionando a la sesion actual: PATH=%s/graalvm/bin:$PATH\n' "${g_path_programs_lnx}"
+                    export PATH=${g_path_programs_lnx}/graalvm/bin:$PATH
+                    GRAALVM_HOME=/opt/tools/graalvm
+                    JAVA_HOME=${GRAALVM_HOME}
+                    export GRAALVM_HOME JAVA_HOME
                 fi
 
             else
@@ -4103,6 +4676,56 @@ function _copy_artifact_files() {
             ;;
 
 
+        powershell)
+
+            #Ruta local de los artefactos
+            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            
+
+            #Copiando el binario en una ruta del path
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                l_path_bin="${g_path_programs_lnx}/powershell"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                    chmod g+rx,o+rx $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover todos archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                
+                if [ $g_is_root -eq 0 ]; then
+                    chmod +x ${g_path_programs_lnx}/powershell/pwsh
+                    ln -snf ${g_path_programs_lnx}/powershell/pwsh /usr/bin/pwsh
+                else
+                    sudo chmod +x ${g_path_programs_lnx}/powershell/pwsh
+                    sudo ln -snf ${g_path_programs_lnx}/powershell/pwsh /usr/bin/pwsh
+                fi
+
+            else
+                
+                l_path_bin="${g_path_programs_win}/PowerShell"
+
+                #Limpieza del directorio del programa
+                if  [ ! -d "$l_path_bin" ]; then
+                    mkdir -p $l_path_bin
+                else
+                    #Limpieza
+                    rm -rf ${l_path_bin}/*
+                fi
+                    
+                #Mover los archivos
+                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
+                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+            fi
+            ;;
+
 
         *)
            printf 'ERROR: No esta definido logica para el repositorio "%s" para procesar el artefacto "%b"\n' "$p_repo_id" "$l_tag"
@@ -4936,183 +5559,6 @@ _uninstall_repository() {
 
 #}}}
 
-
-#Funciones modificables (Nive 2) {{{
-
-
-#Obtiene la ultima version de realease obtenido en un repositorio
-# > Los argumentos de entrada son:
-#   1ro  - El ID del repositorio
-#   2do  - El nombre del repositorio
-# > Los argumentos de salida son:
-#   3ro  - Arreglo con la version original (usado para descargar) y la version amigable o 'pretty version' (usando para comparar versiones)
-#   4to  - Arreglo con la versiones de artefactos de los repostorios (por defecto este es 'null', existe artefactos con la misma version que el repositorio)
-#          Debera iniciar por la ultima versión. No existe.
-# > Los valores de retorno es 0 si es OK, caso contrario ocurrio un error. Los errores devueltos son
-#   1    - Se requiere tener habilitado el comando jq
-function _get_repo_latest_version() {
-
-    #1. Argumentos
-    local p_repo_id="$1"
-    local p_repo_name="$2"
-    declare -n pna_repo_versions=$3   #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
-    declare -n pna_arti_versions=$4
-    
-    #2. Obtener la version
-    local l_repo_last_version=""
-    local l_repo_last_version_pretty=""
-    local l_aux=""
-    local l_arti_versions=""
-    #local l_status=0
-
-    case "$p_repo_id" in
-
-        kubectl)
-            #El artefacto se obtiene del repositorio de Kubernates
-            l_repo_last_version=$(curl -L -s https://dl.k8s.io/release/stable.txt)
-            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
-            ;;
-        
-        kustomize)
-            #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
-                return 1
-            fi
-
-            l_repo_last_version=$(kubectl version --client=true -o json  | jq -r '.kustomizeVersion' 2> /dev/null)
-            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
-            ;;
-
-        jdtls)
-            l_aux=$(curl -Ls https://download.eclipse.org/jdtls/snapshots/latest.txt)
-            l_aux=${l_aux%.tar.gz}
-            l_repo_last_version=$(echo "$l_aux" | sed -e "$g_regexp_sust_version2")
-            l_repo_last_version_pretty="${l_repo_last_version//-/.}"
-            ;;
-
-        go)
-            #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
-                return 1
-            fi
-
-            l_aux=$(curl -Ls -H 'Accept: application/json' "https://go.dev/dl/?mode=json" | jq -r '.[0].version')
-            if [ $? -eq 0 ]; then
-                l_repo_last_version=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
-                l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
-            else
-                l_repo_last_version=""
-            fi
-            ;;
-
-        jq)
-            #Si no esta instalado 'jq' usar expresiones regulares
-            if ! command -v jq &> /dev/null; then
-                l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
-            else
-                l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | jq -r '.tag_name')
-            fi            
-            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
-            ;;
-
-        neovim)
-            #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
-                return 1
-            fi
-            
-            #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | jq -r '.tag_name')
-
-            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            l_aux=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.body' | head -n 2 | tail -1)
-            if [ $? -eq 0 ]; then
-                l_repo_last_version_pretty=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
-            else                                
-                l_repo_last_version_pretty=""
-            fi
-            ;;
-
-        nodejs)
-            #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
-                return 1
-            fi
-            
-            #Usando JSON para obtener la ultima version
-            l_aux=$(curl -Ls "https://nodejs.org/dist/index.json" | jq -r 'first(.[] | select(.lts != false)) | "\(.version)"' 2> /dev/null)
-
-            if [ $? -eq 0 ]; then
-                l_repo_last_version="$l_aux"
-                l_repo_last_version_pretty=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
-            else
-                l_repo_last_version=""        
-                l_repo_last_version_pretty=""
-            fi
-            ;;
-
-       less)
-            #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
-                return 1
-            fi
-
-            #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | jq -r '.tag_name')
-            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.tag_name')
-
-            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version4")
-           ;;
-
-        graalvm)
-            #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
-                return 1
-            fi
-
-            #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | jq -r '.tag_name')
-            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.tag_name')
-
-            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
-            l_arti_versions=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.assets[].name' | \
-                  grep -e '^graalvm-ce-java.*-linux-amd64-.*\.tar\.gz$' | sed -e 's/graalvm-ce-java\(.*\)-linux-amd64-.*/\1/' | sort -r)
-            ;;
-
-        *)
-            #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
-                return 1
-            fi
-
-            #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://github.com/${p_repo_name}/releases/latest" | jq -r '.tag_name')
-            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.tag_name')
-            
-            if [ "$p_repo_id" = "netcoredbg" ]; then
-                l_aux="${l_repo_last_version//-/.}"
-            else
-                l_aux="$l_repo_last_version"
-            fi
-
-            l_repo_last_version_pretty=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
-            ;;
-    esac
-
-    #Codificar en base64
-    l_aux=$(url_encode "$l_repo_last_version")
-    pna_repo_versions=("$l_aux" "$l_repo_last_version_pretty")
-    pna_arti_versions=(${l_arti_versions})
-    return 0
-}
-
-
-
-
-#}}}
 
 
 
