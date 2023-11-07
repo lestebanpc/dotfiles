@@ -58,7 +58,7 @@ gA_packages=(
         ['net-rt-aspnet']='dotnet/aspnetcore/Runtime'
         ['kubeadm']=''
         ['kubelet']=''
-        ['crictl']='kubernetes-sigs/cri-tool'
+        ['crictl']='kubernetes-sigs/cri-tools'
     )
 #TODO incluir maven
 

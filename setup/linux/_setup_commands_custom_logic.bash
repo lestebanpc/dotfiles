@@ -506,11 +506,13 @@ function _get_repo_current_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}kubeadm version 2> /dev/null)
+            l_tmp=$(${l_path_file}kubeadm version -o json 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
-                #l_sustitution_regexp="$g_regexp_sust_version3"
+                l_tmp=$(echo "$l_tmp" | jq -r '.clientVersion.gitVersion' 2> /dev/null)
+                if [ $? -ne 0 ]; then
+                    return 9;
+                fi
             fi
             ;;
 
