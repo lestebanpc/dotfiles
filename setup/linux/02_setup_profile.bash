@@ -1644,7 +1644,7 @@ function _setup_profile() {
             printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
         fi
     else
-        mkdir -p 
+        mkdir -p ~/.config/containers/
         ln -snf ${HOME}${l_object} ${HOME}${l_link}
         printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
     fi
