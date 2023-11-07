@@ -984,9 +984,9 @@ _install_python() {
 
         #Parametros:
         # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-        # 2> Repositorios a instalar/acutalizar: 4 (RTE Python y Pip)
+        # 2> Repositorios a instalar/acutalizar: 8 (RTE Python y Pip. Tiene Offset=1)
         # 3> El estado de la credencial almacenada para el sudo
-        ~/.files/setup/linux/03_setup_packages.bash 1 4 $g_status_crendential_storage
+        ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
         l_status=$?
 
         #Si no se acepto almacenar credenciales
@@ -1189,7 +1189,7 @@ function _install_vim_nvim_environment() {
 
             #Parametros:
             # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-            # 2> Repositorios a instalar/acutalizar: 4 (herramienta de X11 clipbboard)
+            # 2> Repositorios a instalar/acutalizar: 4 (herramienta de X11 clipbboard. Tiene Offset=1)
             # 3> El estado de la credencial almacenada para el sudo
             ~/.files/setup/linux/03_setup_packages.bash 1 4 $g_status_crendential_storage
             l_status=$?
@@ -1281,6 +1281,9 @@ function _install_vim_nvim_environment() {
             case "$g_os_subtype_id" in
                 1)
                    #Distribución: Ubuntu
+                   #Tiene una version de vi muy antigua
+                   #Para instalar una version mas moderna requiere usar un repositorio externo
+                   #TODO incluir el repositorio externo
                    if [ $g_is_root -eq 0 ]; then
                       apt-get install vim
                    else
@@ -1289,6 +1292,7 @@ function _install_vim_nvim_environment() {
                    ;;
                 2)
                    #Distribución: Fedora
+                   #Fedora por defecto tiene vi pero no incluye vim
                    if [ $g_is_root -eq 0 ]; then
                       dnf install vim-enhanced
                    else

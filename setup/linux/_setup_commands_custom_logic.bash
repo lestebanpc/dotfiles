@@ -5067,7 +5067,8 @@ function install_initialize_menu_option() {
 
             #Si es Fedora
             if [ $g_os_subtype_id -eq 2 ]; then
-                la_packages_needed=("krb5-libs" "libicu" "openssl-libs" "zlib" "compat-openssl10")
+                #la_packages_needed=("krb5-libs" "libicu" "openssl-libs" "zlib" "compat-openssl10")
+                la_packages_needed=("krb5-libs" "libicu" "openssl-libs" "zlib")
 
             #Si es otro
             else

@@ -165,12 +165,21 @@ install_finalize_menu_option() {
     case "$p_option_relative_idx" in
 
         #RTE Python
-        1)
+        2)
 
             #Adicionar packetes basicos al python instalado
+            local l_aux=$(pip3 list 2> /dev/null)
+            l_status=$?
+
+            if [ $l_status -ne 0 ]; then
+                printf 'Python: %bNo esta instalado el gestor de paquetes "pip"%b. Instale/Actualize el profile para instalar paquetes basicos.\n' "$g_color_warning" "$g_color_reset"
+                #return 1
+                return 0
+            fi
+
 
             #1. Instalación de Herramienta para mostrar arreglo json al formato tabular
-            l_version=$(pip3 list | grep jtbl 2> /dev/null)
+            l_version=$(echo "$l_aux" | grep jtbl 2> /dev/null)
             #l_version=$(jtbl -v 2> /dev/null)
             l_status=$?
             #if [ $l_status -ne 0 ]; then
@@ -184,7 +193,7 @@ install_finalize_menu_option() {
             fi
 
             #2. Instalación de Herramienta para generar la base de compilacion de Clang desde un make file
-            l_version=$(pip3 list | grep compiledb 2> /dev/null)
+            l_version=$(echo "$l_aux" | grep compiledb 2> /dev/null)
             #l_version=$(compiledb -h 2> /dev/null)
             l_status=$?
             #if [ $l_status -ne 0 ] || [ -z "$l_version"]; then
@@ -198,7 +207,7 @@ install_finalize_menu_option() {
             fi
 
             #3. Instalación de la libreria de refactorización de Python (https://github.com/python-rope/rope)
-            l_version=$(pip3 list | grep rope 2> /dev/null)
+            l_version=$(echo "$l_aux" | grep rope 2> /dev/null)
             l_status=$?
             if [ -z "$l_version" ]; then
 
