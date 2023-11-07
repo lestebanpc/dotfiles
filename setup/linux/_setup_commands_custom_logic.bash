@@ -487,6 +487,33 @@ function _get_repo_current_version() {
                 fi
             fi
             ;;
+
+        kubelet)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}kubelet --version 2> /dev/null)
+            l_status=$?
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+                #l_sustitution_regexp="$g_regexp_sust_version3"
+            fi
+            ;;
+
+        kubeadm)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}kubeadm version 2> /dev/null)
+            l_status=$?
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+                #l_sustitution_regexp="$g_regexp_sust_version3"
+            fi
+            ;;
+
         kustomize)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}kustomize.exe version 2> /dev/null)
