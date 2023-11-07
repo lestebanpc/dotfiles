@@ -2011,7 +2011,7 @@ function g_main() {
 _g_status=0
 
 #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
-fulfill_preconditions1 $g_os_type 0
+fulfill_preconditions1 $g_os_subtype_id 0
 _g_status=$?
 
 #Iniciar el procesamiento
