@@ -108,7 +108,7 @@ ga_menu_options_packages=(
     "dive"
     "kubectl,helm,operator-sdk,3scale-toolbox,pgo"
     "k0s"
-    "kubectl,kubelet,crictl,kubeadm"
+    "cni-plugins,kubectl,kubelet,crictl,kubeadm"
     "go"
     "graalvm"
     "nodejs"
