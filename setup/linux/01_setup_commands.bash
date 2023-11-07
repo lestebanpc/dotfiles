@@ -504,14 +504,16 @@ function _install_repository_internal() {
     fi
 
     #Homologando los URLs bases faltantes
-    ((l_m= ${l_n} - ${l_m}))
-    if [ $l_m -ge 1 ]; then
+    #echo "ln= ${l_n} ,l_m= ${l_m}"
+    if [ $l_m -lt $l_n ]; then
 
-        local l_i
+        local l_i=0
         local l_base_url="${la_artifact_baseurl[0]}"
-        for((l_i= ${l_m}-1; l_i < ${l_n}; l_i++)); do
+        for((l_i= ${l_m}; l_i < ${l_n}; l_i++)); do
            la_artifact_baseurl[${l_i}]="${l_base_url}"
         done
+        
+        #echo "la_artifact_baseurl= ${la_artifact_baseurl[@]}"        
     fi
 
     #5. Descargar el artifacto en la carpeta
