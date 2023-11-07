@@ -1640,7 +1640,7 @@ function load_artifacts() {
             fi
             ;;
 
-        kubeadmin)
+        kubeadm)
             #URL base fijo     : "https://dl.k8s.io/release"
             #URL base variable :
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -1652,7 +1652,7 @@ function load_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("kubeadmin")
+                pna_artifact_names=("kubeadm")
                 pna_artifact_types=(0)
             else
                 return 1
@@ -3004,6 +3004,16 @@ function _copy_artifact_files() {
                     sudo cp "${l_path_temp}/kubelet" "${l_path_bin}"
                     sudo chmod +x "${l_path_bin}/kubelet"
                 fi
+
+                #Desacargar archivos adicionales para su configuración
+                mkdir -p ~/.files/setup/programs/kubelet
+                l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubelet/kubelet.service 2> /dev/null)
+                l_status=$?
+                if [ $l_status -eq 0 ]; then
+                    printf 'Creando el archivo "%b~/.files/setup/programs/kubelet/kubelet.service%b" ... \n' "$g_color_opaque" "$g_color_reset"
+                    echo "$l_aux" | sed "s:/usr/bin:${l_path_bin}:g" > ~/.files/setup/programs/kubelet/kubelet.service
+                fi
+
             else
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
                 return 40
@@ -3011,21 +3021,31 @@ function _copy_artifact_files() {
             ;;
 
             
-        kubeadmin)
+        kubeadm)
             #Ruta local de los artefactos
             l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_is_root -eq 0 ]; then
-                    echo "Copiando \"kubeadmin\" en \"${l_path_bin}/\" ..."
-                    cp "${l_path_temp}/kubeadmin" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/kubeadmin"
+                    echo "Copiando \"kubeadm\" en \"${l_path_bin}/\" ..."
+                    cp "${l_path_temp}/kubeadm" "${l_path_bin}"
+                    chmod +x "${l_path_bin}/kubeadm"
                 else
-                    echo "Copiando \"kubeadmin\" en \"${l_path_bin}/\" ..."
-                    sudo cp "${l_path_temp}/kubeadmin" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/kubeadmin"
+                    echo "Copiando \"kubeadm\" en \"${l_path_bin}/\" ..."
+                    sudo cp "${l_path_temp}/kubeadm" "${l_path_bin}"
+                    sudo chmod +x "${l_path_bin}/kubeadm"
                 fi
+
+                #Desacargar archivos adicionales para su configuración
+                mkdir -p ~/.files/setup/programs/kubeadm
+                l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubeadm/10-kubeadm.conf 2> /dev/null)
+                l_status=$?
+                if [ $l_status -eq 0 ]; then
+                    printf 'Creando el archivo "%b~/.files/setup/programs/kubeadm/10-kubeadm.conf%b" ... \n' "$g_color_opaque" "$g_color_reset"
+                    echo "$l_aux" | sed "s:/usr/bin:${l_path_bin}:g" > ~/.files/setup/programs/kubeadm/10-kubeadm.conf
+                fi
+
             else
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
                 return 40
@@ -5055,7 +5075,7 @@ function install_initialize_menu_option() {
             ;;
 
         #Instalacion de DotNet (runtime o SDK o ambos)
-        15|16)
+        14|15)
 
             #Validar si algunos paquees necesarios estan instalados
             #https://learn.microsoft.com/en-us/dotnet/core/install/linux-fedora#dependencies
