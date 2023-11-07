@@ -99,7 +99,7 @@ ga_menu_options_title=(
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
 ga_menu_options_packages=(
-    "bat,ripgrep,xsv,delta,fzf,jq,yq,less,fd,oh-my-posh,jwt,step,butane"
+    "jq,yq,bat,ripgrep,xsv,delta,fzf,less,fd,oh-my-posh,jwt,step,butane"
     "neovim"
     "nerd-fonts"
     "powershell"

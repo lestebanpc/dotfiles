@@ -2826,8 +2826,8 @@ function g_install_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
-                #4 + 16 + 32 + 64 + 262144
-                g_install_repositories 262260 0
+                #1 + 4 + 16 + 32 + 64 + 262144
+                g_install_repositories 262261 0
                 ;;
 
             q)
