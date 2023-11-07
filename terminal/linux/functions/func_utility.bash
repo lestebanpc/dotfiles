@@ -468,3 +468,191 @@ is_package_installed() {
 }
 
 
+
+#Actualizar los paquete del SO
+#Parametros de entrada - Agumentos y opciones:
+#  1 > El tipo de distribucion Linux (valor de retorno devuelto por get_linux_type_id) 
+#      00 : Distribución de Linux desconocido
+#      01 : Ubuntu
+#      02 : Fedora
+#Parametros de salida :
+#  Valor de retorno :
+#    0 > OK
+#    1 > No OK
+#    9 > Parametros de entrada invalido
+upgrade_os_packages() {
+
+    local p_os_type=$1
+    local l_status=0
+
+    case "$p_os_type" in
+
+        #Si es Ubuntu
+        1)
+
+            #Distribución: Ubuntu
+            if [ $g_is_root -eq 0 ]; then
+                apt-get update
+                apt-get upgrade
+            else
+                sudo apt-get update
+                sudo apt-get upgrade
+            fi
+            l_status=$?
+            ;;
+
+        #Si es Fedora
+        2)
+
+            #Distribución: Fedora
+            if [ $g_is_root -eq 0 ]; then
+                dnf upgrade
+            else
+                sudo dnf upgrade
+            fi
+            l_status=$?
+            ;;
+
+        *)
+            printf 'La actualización de paquetes del SO (tipo "%s") aun no esta implementado\n' "$p_os_type"
+            l_status=9
+            ;;
+    esac
+
+    if [ $l_status -eq 9 ]; then
+        return 9
+    elif [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    return 0 
+
+}
+
+
+#Instalacion de un paquete del SO
+#Parametros de entrada - Agumentos y opciones:
+#  1 > Nombre del paquete o un listado de paquetes separados por espacios 
+#  2 > El tipo de distribucion Linux (valor de retorno devuelto por get_linux_type_id) 
+#      00 : Distribución de Linux desconocido
+#      01 : Ubuntu
+#      02 : Fedora
+#Parametros de salida :
+#  Valor de retorno :
+#    0 > OK
+#    1 > No OK
+#    9 > Parametros de entrada invalido
+install_os_package() {
+
+    local p_package_name=$1
+    local p_os_type=$2
+    local l_status=0
+
+    case "$p_os_type" in
+
+        #Si es Ubuntu
+        1)
+
+            #Distribución: Ubuntu
+            if [ $g_is_root -eq 0 ]; then
+               apt-get install "$p_package_name"
+            else
+               sudo apt-get install "$p_package_name"
+            fi
+            l_status=$?
+            ;;
+
+        #Si es Fedora
+        2)
+
+            #Distribución: Fedora
+            if [ $g_is_root -eq 0 ]; then
+               dnf install "$p_package_name"
+            else
+               sudo dnf install "$p_package_name"
+            fi
+            l_status=$?
+            ;;
+
+        *)
+            printf 'La instalación del paquete "%s" en el SO (tipo "%s") aun no esta implementado\n' "$p_package_name" "$p_os_type"
+            l_status=110
+            ;;
+    esac
+
+    if [ $l_status -eq 110 ]; then
+        return 9
+    elif [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    return 0 
+
+}
+
+
+
+#Desinstalacion de un paquete del SO
+#Parametros de entrada - Agumentos y opciones:
+#  1 > Nombre del paquete 
+#  2 > El tipo de distribucion Linux (valor de retorno devuelto por get_linux_type_id) 
+#      00 : Distribución de Linux desconocido
+#      01 : Ubuntu
+#      02 : Fedora
+#Parametros de salida :
+#  Valor de retorno :
+#    0 > OK
+#    1 > No OK
+#    9 > Parametros de entrada invalido
+uninstall_os_package() {
+
+    local p_package_name=$1
+    local p_os_type=$2
+    local l_status=0
+
+    case "$p_os_type" in
+
+        #Si es Ubuntu
+        1)
+
+            #Distribución: Ubuntu
+            if [ $g_is_root -eq 0 ]; then
+               apt-get purge "$p_package_name"
+               #apt-get autoremove
+            else
+               sudo apt-get purge "$p_package_name"
+               #sudo apt-get autoremove
+            fi
+            l_status=$?
+            ;;
+
+        #Si es Fedora
+        2)
+
+            #Distribución: Fedora
+            if [ $g_is_root -eq 0 ]; then
+               dnf erase "$p_package_name"
+            else
+               sudo dnf erase "$p_package_name"
+            fi
+            l_status=$?
+            ;;
+
+        *)
+            printf 'La desinstalación del paquete "%s" en el SO (tipo "%s") aun no esta implementado\n' "$p_package_name" "$p_os_type"
+            l_status=110
+            ;;
+    esac
+
+    if [ $l_status -eq 110 ]; then
+        return 9
+    elif [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    return 0 
+
+}
+
+
+

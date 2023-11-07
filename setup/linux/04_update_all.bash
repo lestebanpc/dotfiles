@@ -23,6 +23,7 @@ if [ $g_os_type -le 10 ]; then
     declare -r g_os_subtype_name="$_g_tmp"
     _g_tmp=$(get_linux_type_version)
     declare -r g_os_subtype_version="$_g_tmp"
+    declare -r g_os_subtype_version_pretty=$(echo "$g_os_subtype_version" | sed -e "$g_regexp_sust_version1")
 fi
 
 #Determinar si es root

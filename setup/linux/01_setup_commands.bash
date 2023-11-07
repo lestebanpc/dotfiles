@@ -32,6 +32,7 @@ if [ $g_os_type -le 10 ]; then
     declare -r g_os_subtype_name="$_g_tmp"
     _g_tmp=$(get_linux_type_version)
     declare -r g_os_subtype_version="$_g_tmp"
+    declare -r g_os_subtype_version_pretty=$(echo "$g_os_subtype_version" | sed -e "$g_regexp_sust_version1")
 fi
 
 #Determinar si es root
@@ -217,11 +218,9 @@ function _download_artifacts() {
 
     #1. Argumentos
     local p_repo_id="$1"
-    local p_repo_name="$2"
-    local p_repo_last_version="$3"
-    local p_repo_last_version_pretty="$4"
-    declare -nr pnra_artifact_names=$5   #Parametro por referencia: Arreglo de los nombres de los artefactos
-    local p_arti_version="$6"    
+    declare -nr pnra_artifact_baseurl=$2
+    declare -nr pnra_artifact_names=$3   #Parametro por referencia: Arreglo de los nombres de los artefactos
+    local p_arti_version="$4"    
 
 
     #2. Descargar los artectos del repositorio
@@ -245,7 +244,7 @@ function _download_artifacts() {
     for ((l_i=0; l_i<$l_n; l_i++)); do
 
         l_artifact_name="${pnra_artifact_names[$l_i]}"
-        l_base_url=$(_get_last_repo_url "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$l_artifact_name" $p_install_win_cmds)
+        l_base_url="${pnra_artifact_baseurl[$l_i]}"
         l_artifact_url="${l_base_url}/${l_artifact_name}"
         printf '\nArtefacto "%b[%s]" a descargar - Name    : %s\n' "$l_tag" "${l_i}" "${l_artifact_name}"
         printf 'Artefacto "%b[%s]" a descargar - URL     : %s\n' "$l_tag" "${l_i}" "${l_artifact_url}"
@@ -452,6 +451,14 @@ function _install_repository_internal() {
     if [ "$8" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
+
+    #Si se estan instalando (la primera vez) es '0', caso contrario es otro valor (se actualiza o se desconoce el estado)
+    local p_flag_install=1
+    if [ "$9" = "0" ]; then
+        p_flag_install=0
+    fi
+    
+
     #echo "p_repo_current_version = ${p_repo_current_version}"
 
     #4. Obtener el los artefacto que se instalaran del repositorio
@@ -464,31 +471,51 @@ function _install_repository_internal() {
 
     
     #Vriables de referencias a arreglos que se crearan dentro de la funcion '_load_artifacts'
+    local la_artifact_baseurl
     local la_artifact_names
     local la_artifact_types
-    _load_artifacts "$p_repo_id" "$p_repo_last_version" "$p_repo_last_version_pretty" la_artifact_names la_artifact_types "$p_arti_version" $p_install_win_cmds
+    load_artifacts "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$p_repo_last_version_pretty" la_artifact_baseurl la_artifact_names la_artifact_types \
+                    "$p_arti_version" $p_install_win_cmds $p_flag_install
     l_status=$?    
     if [ $l_status -ne 0 ]; then
         printf 'ERROR: No esta configurado correctamente los artefactos para el repositorio "%b"\n' ${l_tag}
-        return 22
+        return 99
     fi
 
     #si el arreglo es vacio
     local l_n=${#la_artifact_names[@]}
     if [ $l_n -le 0 ]; then
         printf 'ERROR: No esta configurado correctamente los artefactos para el repositorio "%b".\n' ${l_tag}
-        return 98
+        return 99
     fi
     printf 'Repositorio "%b" tiene "%s" artefactos.\n' ${l_tag} ${l_n}
 
     #si el tamano del los arrgelos no son iguales
     if [ $l_n -ne ${#la_artifact_types[@]} ]; then
         printf 'ERROR: No se ha definido todos los tipo de artefactos en el repositorio "%b".\n' ${l_tag}
-        return 97
-    fi    
+        return 99
+    fi
+
+    #Se debe definir por lo menos 1 URL base del artefacto
+    local l_m=${#la_artifact_baseurl[@]}
+    if [ $l_m -le 0 ]; then
+        printf 'ERROR: Se requiere definido por lo menos 1 URL base de los artefactos del repositorio "%b".\n' ${l_tag}
+        return 99
+    fi
+
+    #Homologando los URLs bases faltantes
+    ((l_m= ${l_n} - ${l_m}))
+    if [ $l_m -ge 1 ]; then
+
+        local l_i
+        local l_base_url="${la_artifact_baseurl[0]}"
+        for((l_i= ${l_m}-1; l_i < ${l_n}; l_i++)); do
+           la_artifact_baseurl[${l_i}]="${l_base_url}"
+        done
+    fi
 
     #5. Descargar el artifacto en la carpeta
-    if ! _download_artifacts "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$p_repo_last_version_pretty" la_artifact_names "$p_arti_version"; then
+    if ! _download_artifacts "$p_repo_id" la_artifact_baseurl la_artifact_names "$p_arti_version"; then
         printf 'ERROR: No se ha podido descargar los artefactos del repositorio "%b".\n' ${l_tag}
         _clean_temp "$p_repo_id"
         return 23
@@ -1391,7 +1418,8 @@ function _update_installed_repository() {
          l_status_first_setup=${la_aux[0]}    #'g_install_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_install_repo_status' es [0, 2].
                                               # -1 > El repositorio no se ha iniciado su analisis ni su proceso.
                                               #Estados de un proceso no iniciado:
-                                              #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('g_install_repository' retorno 2 o 99).
+                                              #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se
+                                              #      procesa o no ('g_install_repository' retorno 2 o 99).
                                               #  1 > El repositorio no esta habilitado para este SO.
                                               #  2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
                                               #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
@@ -2205,15 +2233,15 @@ function i_uninstall_repositories() {
     fi
 
     #5. Configurar (Desintalar) los diferentes repositorios
-    local l_i=0
+    local l_x=0
 
     #Limpiar el arreglo asociativo
     _gA_processed_repo=()
 
 
-    for((l_i=0; l_i < ${#ga_menu_options_packages[@]}; l_i++)); do
+    for((l_x=0; l_x < ${#ga_menu_options_packages[@]}; l_x++)); do
 
-        _uninstall_menu_options $p_input_options $l_i
+        _uninstall_menu_options $p_input_options $l_x
 
     done
 
@@ -2361,6 +2389,8 @@ function g_install_repository() {
     _can_setup_repository_in_this_so "$p_repo_id" $l_install_win_cmds
     l_status=$?
 
+    #Flag '0' si se instala (se realiza por primera vez), caso contrario no se instala (se actualiza o no se realiza ningun cambio)
+    local l_flag_install=1
 
     #Si esta permitido configurarse en este sistema operativo, iniciar el proceso
     if [ $l_status -eq 0 ]; then
@@ -2416,6 +2446,7 @@ function g_install_repository() {
             #Por defecto considerando que termino con error
             if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
                 l_status_process_lnx=7
+                l_flag_install=0
                 l_aux='instalación'
             else
                 l_status_process_lnx=8
@@ -2435,7 +2466,7 @@ function g_install_repository() {
 
                 printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%s" ...\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
 
-                _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" "" 0 $l_install_win_cmds
+                _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" "" 0 $l_install_win_cmds $l_flag_install
                 l_status2=$?
 
                 #Se requiere almacenar las credenciales para realizar cambios con sudo.
@@ -2443,7 +2474,7 @@ function g_install_repository() {
                     return 120
                 fi
 
-                #Si termino sin errores cambiar al estado
+                #Si no termino sin errores ... cambiar al estado 5/6 segun sea el caso
                 if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
                     l_status_process_lnx=5
                 else
@@ -2465,7 +2496,7 @@ function g_install_repository() {
                     printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%s" ...\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
 
                     _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" \
-                        "${_ga_artifact_subversions[${l_n}]}" ${l_n} $l_install_win_cmds
+                        "${_ga_artifact_subversions[${l_n}]}" ${l_n} $l_install_win_cmds $l_flag_install
                     l_status2=$?
 
                     #Se requiere almacenar las credenciales para realizar cambios con sudo.
@@ -2475,7 +2506,7 @@ function g_install_repository() {
 
                 done
 
-                #Si termino sin errores cambiar al estado
+                #Si no termino sin errores ... cambiar al estado 5/6 segun sea el caso
                 if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
                     l_status_process_lnx=5
                 else
@@ -2503,6 +2534,9 @@ function g_install_repository() {
     #5.1. Validar si el repositorio se puede configurarse en el sistema operativo.
     _can_setup_repository_in_this_so "$p_repo_id" $l_install_win_cmds
     l_status=$?
+
+    #Flag '0' si se instala (se realiza por primera vez), caso contrario no se instala (se actualiza o no se realiza ningun cambio)
+    l_flag_install=1
 
     #Si esta permitido configurarse en este sistema operativo, iniciar el proceso
     if [ $l_status -eq 0 ]; then
@@ -2547,6 +2581,7 @@ function g_install_repository() {
             #Por defecto considerando que termino con error
             if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
                 l_status_process_win=7
+                l_flag_install=0
                 l_aux='instalación'
             else
                 l_status_process_win=8
@@ -2567,10 +2602,10 @@ function g_install_repository() {
 
                 printf '\nIniciando la %s de los artefactos del repositorio "%b" Windows (asociado al WSL "%s")\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
 
-                _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" "" 0 $l_install_win_cmds
+                _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" "" 0 $l_install_win_cmds $l_flag_install
                 l_status2=$?
 
-                #Si termino sin errores cambiar al estado
+                #Si no termino sin errores ... cambiar al estado 5/6 segun sea el caso
                 if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
                     l_status_process_win=5
                 else
@@ -2592,12 +2627,12 @@ function g_install_repository() {
                     printf '\nIniciando la %s de los artefactos del repositorio "%b" Windows (asociado al WSL "%s")\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
 
                     _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" \
-                        "${_ga_artifact_subversions[${l_n}]}" ${l_n} $l_install_win_cmds
+                        "${_ga_artifact_subversions[${l_n}]}" ${l_n} $l_install_win_cmds $l_flag_install
                     l_status2=$?
 
                 done
 
-                #Si termino sin errores cambiar al estado
+                #Si no termino sin errores ... cambiar al estado 5/6 segun sea el caso
                 if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
                     l_status_process_win=5
                 else
@@ -2689,13 +2724,13 @@ function g_install_repositories() {
     #5. Configurar (instalar/actualizar) los repositorios selecionados por las opciones de menú dinamico.
     #   Si la configuración de un repositorio de la opción de menú falla, se deteniene la configuración de la opción.
 
-    local l_i=0
+    local l_x=0
     #Limpiar el arreglo asociativo
     _gA_processed_repo=()
 
-    for((l_i=0; l_i < ${#ga_menu_options_packages[@]}; l_i++)); do
+    for((l_x=0; l_x < ${#ga_menu_options_packages[@]}; l_x++)); do
         
-        _install_menu_options $p_input_options $l_i
+        _install_menu_options $p_input_options $l_x
         l_status=$?
 
         #Se requiere almacenar las credenciales para realizar cambios con sudo.
@@ -2706,7 +2741,7 @@ function g_install_repositories() {
     done
 
     #echo "Keys de _gA_processed_repo=${!_gA_processed_repo[@]}"
-    #echo "Values de _gA_processed_repo=${_gA_p_title_templateprocessed_repo[@]}"
+    #echo "Values de _gA_processed_repo=${_gA_processed_repo[@]}"
 
     #6. Si el flag actualizar todos los instalados esta activo, actualizar todos los instalados que aun no fueron actualizado.
     #   Si la configuración de un repositorio p_title_templatede la opción de menú falla, se continua la configuración con la siguiente opción del menú
@@ -2718,6 +2753,7 @@ function g_install_repositories() {
 
     if [ $l_update_all_installed_repo -eq 0 ]; then
 
+        #echo "p_input_options: $p_input_options"
         _update_installed_repository
         l_status=$?
 
@@ -2745,15 +2781,16 @@ function _show_menu_install_core() {
     print_line '-' $g_max_length_line  "$g_color_opaque"
     printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
     printf " (%ba%b) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes\n" "$g_color_title" "$g_color_reset"
+    printf " (%bb%b) Actualizar los paquetes existentes del SO y los binarios basicos para 'VM Template'\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
-    _get_length_menu_option $g_offset_option_index_menu_install
+    get_length_menu_option $g_offset_option_index_menu_install
     local l_max_digits=$?
 
     printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes existentes del sistema operativo\n" "$g_color_title" "$g_opt_update_installed_pckg" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas ya instalados\n" "$g_color_title" "$g_opt_update_installed_repo" "$g_color_reset"
 
-    _show_dynamic_menu 'Instalar o actualizar' $g_offset_option_index_menu_install $l_max_digits
+    show_dynamic_menu 'Instalar o actualizar' $g_offset_option_index_menu_install $l_max_digits
     print_line '-' $g_max_length_line "$g_color_opaque"
 
 }
@@ -2777,11 +2814,20 @@ function g_install_main() {
         read -r l_options
 
         case "$l_options" in
+
             a)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
                 g_install_repositories $l_value_option_a 0
+                ;;
+
+            b)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_title" 
+                printf '\n'
+                #4 + 16 + 32 + 64 + 262144
+                g_install_repositories 262260 0
                 ;;
 
             q)
@@ -2815,6 +2861,7 @@ function g_install_main() {
                 printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
                 print_line '-' $g_max_length_line "$g_color_opaque" 
                 ;;
+
         esac
         
     done
@@ -2830,10 +2877,10 @@ function _show_menu_uninstall_core() {
     printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Para desintalar ingrese un opción o la suma de las opciones que desea configurar:\n"
 
-    _get_length_menu_option $g_offset_option_index_menu_uninstall
+    get_length_menu_option $g_offset_option_index_menu_uninstall
     local l_max_digits=$?
 
-    _show_dynamic_menu 'Desinstalar' $g_offset_option_index_menu_uninstall $l_max_digits
+    show_dynamic_menu 'Desinstalar' $g_offset_option_index_menu_uninstall $l_max_digits
     print_line '-' $g_max_length_line "$g_color_opaque" 
 
 }

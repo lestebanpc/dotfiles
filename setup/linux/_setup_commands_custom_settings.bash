@@ -70,7 +70,7 @@ ga_menu_options_title=(
     "Los repositorios basicos"
     "El editor 'NeoVim'"
     "Las fuentes 'Nerd Fonts'"
-    "Shell 'Powershell Core'"
+    "Shell 'Powershell'"
     "Tools para gRPC"
     "LL Container Runtine, comandos root-less, CNI plugins"
     "HL Container Runtime 'ContainerD', BuildKit y NerdCtl"

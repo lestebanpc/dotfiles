@@ -10,6 +10,55 @@ declare -r g_version_none='0.0.0'
 #Funciones modificables (Nivel 2) {{{
 
 
+function _get_repo_base_url() {
+
+    #1. Argumentos
+    local p_repo_id="$1"
+
+    #2. Obtener la URL base
+    local l_base_url=""
+    case "$p_repo_id" in
+
+        kubectl|kubelet|kubeadm)
+            l_base_url="https://dl.k8s.io/release"
+            ;;
+
+        net-sdk|net-rt-core|net-rt-aspnet)
+            l_base_url="https://dotnetcli.azureedge.net"
+            ;;
+
+        helm)
+            l_base_url="https://get.helm.sh"
+            ;;
+
+        go)
+            l_base_url="https://storage.googleapis.com"
+            ;;
+            
+        jdtls)
+            l_base_url="https://download.eclipse.org"
+            ;;
+
+        step)
+            l_base_url="https://dl.smallstep.com/gh-release/cli/gh-release-header"
+            ;;
+
+        nodejs)
+            l_base_url="https://nodejs.org/dist"
+            ;;
+
+        *)
+            l_base_url="https://github.com"
+            ;;
+
+    esac
+
+    #3. Obtener la URL
+    echo "$l_base_url"
+
+}
+
+
 #Obtiene la ultima version de realease obtenido en un repositorio
 # > Los argumentos de entrada son:
 #   1ro  - El ID del repositorio
@@ -192,69 +241,6 @@ function _get_repo_latest_version() {
     pna_repo_versions=("$l_aux" "$l_repo_last_version_pretty")
     pna_arti_versions=(${l_arti_versions})
     return 0
-}
-
-function _get_last_repo_url() {
-
-    #1. Argumentos
-    local p_repo_id="$1"
-    local p_repo_name="$2"
-    local p_repo_last_version="$3"
-    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                         #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$5" -eq 0 2> /dev/null ]; then
-        p_install_win_cmds=0
-    fi
-
-    #2. Obtener la URL base
-    local l_base_url=""
-    case "$p_repo_id" in
-
-        kubectl|kubelet|kubeadm)
-            if [ $p_install_win_cmds -eq 0 ]; then
-                l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/windows/amd64"
-            else
-                l_base_url="https://dl.k8s.io/release/${p_repo_last_version}/bin/linux/amd64"
-            fi
-            ;;
-
-        net-sdk|net-rt-core|net-rt-aspnet)
-            l_base_url="https://dotnetcli.azureedge.net/${p_repo_name}/${p_repo_last_version}"
-            ;;
-
-        kustomize)
-            l_base_url="https://github.com/${p_repo_name}/releases/download/kustomize%2F${p_repo_last_version}"
-            ;;
-
-        helm)
-            l_base_url="https://get.helm.sh"
-            ;;
-
-        go)
-            l_base_url="https://storage.googleapis.com/${p_repo_name}"
-            ;;
-            
-        jdtls)
-            l_base_url="https://download.eclipse.org/${p_repo_name}/snapshots"
-            ;;
-
-        step)
-            l_base_url="https://dl.smallstep.com/gh-release/cli/gh-release-header/${p_repo_last_version}"
-            ;;
-
-        nodejs)
-            l_base_url="https://nodejs.org/dist/${p_repo_last_version}"
-            ;;
-
-        *)
-            l_base_url="https://github.com/${p_repo_name}/releases/download/${p_repo_last_version}"
-            ;;
-
-    esac
-
-    #3. Obtener la URL
-    echo "$l_base_url"
-
 }
 
 
@@ -1190,9 +1176,70 @@ function _get_repo_current_version() {
 
 }
 
+#Obtener 2 versiones menores a la actual
+#
+#Parametros de salida:
+#  > Valor de retorno:
+#    0 - OK
+#    1 - No OK
+#  > STDOUT: Las 2 versiones separadas por '|'
+function _dotnet_get_minor_version()
+{
+    local p_repo_name="$1"
+    local p_version_pretty="$2"
+
+    #Cortar y obtener 1er numero
+    IFS='.'
+    la_numbers=($p_version_pretty)
+    unset IFS
+
+    local l_n=${#la_numbers[@]}
+
+    #Version enviada es incorrecta
+    if [ $l_n -le 1 ]; then
+        return 1
+    fi
+
+    local l_number=${la_numbers[0]}
+    local l_status
+    local l_aux
+    local l_versions=""
+
+    for ((l_i=1; l_i<=2; l_i++)); do
+
+        l_aux=""
+        ((l_n=${l_number} - ${l_i}))
+
+        #El artefacto se obtiene del repositorio de Microsoft y usando una version especifica
+        l_aux=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/${l_n}.0/latest.version")
+        l_status=$?
+        l_aux=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
+
+        if [ $l_status -eq 0 ] && [ ! -z "$l_aux" ]; then
+
+            if [ -z "$l_versions" ]; then
+                l_versions="${l_aux}"
+            else
+                l_versions="${l_aux}|${l_versions}"
+            fi
+        fi
+
+    done 
+
+    if [ -z "$l_versions" ]; then
+        return 1
+    fi
+
+    echo "$l_versions"
+    return 0
+
+}
 
 #Devuelve un arreglo de artefectos, usando los argumentos 3 y 4 como de referencia:
-#  - Argumento 4, un arreglo de tipo de artefacto donde cada item puede ser:
+#  5> Un arrego de bases URL del los artefactos. 
+#     Si el repositorio tiene muchos artefactos pero todos tiene la misma URL base, puede indicar
+#     solo una URL, para los demas se repitira el mismo valor
+#  6> Un arreglo de tipo de artefacto donde cada item puede ser:
 #       >  0 si es binario
 #       >  1 si es package
 #       >  2 si es un .tar.gz
@@ -1200,60 +1247,129 @@ function _get_repo_current_version() {
 #       >  4 si es un .gz
 #       >  5 si es un .tgz
 #       > 99 si no se define el artefacto para el prefijo
-#  - Argumento 3, un arreglo de nombre de los artectos a descargar
+#  7> Un arreglo de nombre de los artectos a descargar
 #En el argumento 2 se debe pasar la version pura quitando, sin contener "v" u otras letras iniciales
-function _load_artifacts() {
+function load_artifacts() {
 
     #1. Argumentos
     local p_repo_id="$1"
-    local p_repo_last_version="$2"
-    local p_repo_last_version_pretty="$3"
-    declare -n pna_artifact_names=$4   #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
-    declare -n pna_artifact_types=$5   #Parametro por referencia: Se devuelve un arreglo de los tipos de los artefactos
-    local p_arti_version="$6"
+    local p_repo_name="$2"
+    local p_repo_last_version="$3"
+    local p_repo_last_version_pretty="$4"
+    declare -n pna_artifact_baseurl=$5   #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
+    declare -n pna_artifact_names=$6     #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
+    declare -n pna_artifact_types=$7     #Parametro por referencia: Se devuelve un arreglo de los tipos de los artefactos
+    local p_arti_version="$8"
     local p_install_win_cmds=1         #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                        #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$7" -eq 0 2> /dev/null ]; then
+    if [ "$9" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
     
+    #Si se estan instalando (la primera vez) es '0', caso contrario es otro valor (se actualiza o se desconoce el estado)
+    local p_flag_install=1
+    if [ "${10}" = "0" ]; then
+        p_flag_install=0
+    fi
+
     #2. Generar el nombre
     local l_artifact_name=""
     local l_artifact_type=99
+    local l_status
+
+    #URL base por defecto a usar
+    #URL base fijo     :  Usuarlmente "https://github.com"
+    local l_base_url_fixed=$(_get_repo_base_url "$p_repo_id")
+    #URL base variable :
+    local l_base_url_variable="${p_repo_name}/releases/download/${p_repo_last_version}"
 
     case "$p_repo_id" in
 
-        net-sdk)
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("dotnet-sdk-${p_repo_last_version_pretty}-linux-x64.tar.gz")
-                pna_artifact_types=(2)
+        net-sdk|net-rt-core|net-rt-aspnet)
+
+            #Prefijo del nombre del artefacto
+            local l_prefix_repo='dotnet-sdk'
+            if [ "p_repo_id" = "net-rt-core" ]; then
+                l_prefix_repo='dotnet-runtime'
+            elif [ "p_repo_id" = "net-rt-aspnet" ]; then
+                l_prefix_repo='aspnetcore-runtime'
+            fi
+
+            #Si es instalacion obtener la 2 versiones menores a la actual
+            local l_aux=""
+            local l_nbr_versions=0
+            local la_versions
+            if [ $l_flag_install -ne 0 ]; then
+                l_aux=$(_dotnet_get_minor_version "$p_repo_name" "$p_repo_last_version_pretty")
+                l_status=$?
+
+                if [ $l_status -ne 0 ]; then
+                    l_nbr_versions=0
+                else
+                    #Cortar y obtener las versiones
+                    IFS='|'
+                    la_versions=($l_aux)
+                    unset IFS
+
+                    l_nbr_versions=${#la_versions[@]}
+                fi
+            fi
+
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            #Si es actualiza
+            if [ $l_nbr_versions -eq 0 ]; then
+
+                #URL base fijo     : "https://dotnetcli.azureedge.net"
+                #URL base variable :
+                l_base_url_variable="${p_repo_name}/${p_repo_last_version}"
+
+                #Generar la URL con el artefactado:
+                pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
+                if [ $p_install_win_cmds -ne 0 ]; then
+                    pna_artifact_names=("${l_prefix_repo}-${p_repo_last_version_pretty}-linux-x64.tar.gz")
+                    pna_artifact_types=(2)
+                else
+                    pna_artifact_names=("${l_prefix_repo}-${p_repo_last_version_pretty}-win-x64.zip")
+                    pna_artifact_types=(3)
+                fi
+
+            #Si se instala, obtener la version de 2 versiones menores para que lo descargue y lo instale antes
             else
-                pna_artifact_names=("dotnet-sdk-${p_repo_last_version_pretty}-win-x64.zip")
-                pna_artifact_types=(3)
+
+                local l_version
+                for ((l_i=0; l_i<=l_nbr_versions; l_i++)); do
+
+                    #Obtener la version a usar
+                    if [ $l_i -eq $l_nbr_versions ]; then
+                        l_version="$p_repo_last_version"
+                    else
+                        l_version="${la_versions[${l_i}]}"
+                    fi
+
+                    #URL base fijo     : "https://dotnetcli.azureedge.net"
+                    #URL base variable :
+                    l_base_url_variable="${p_repo_name}/${l_version}"
+
+                    #Generar la datos de cada artefacto:
+                    pna_artifact_baseurl[$l_i]="${l_base_url_fixed}/${l_base_url_variable}"
+                    if [ $p_install_win_cmds -ne 0 ]; then
+                        pna_artifact_names[${l_i}]="${l_prefix_repo}-${l_version}-linux-x64.tar.gz"
+                        pna_artifact_types[${l_i}]=2
+                    else
+                        pna_artifact_names[${l_i}]="${l_prefix_repo}-${l_version}-win-x64.zip"
+                        pna_artifact_types[${l_i}]=3
+                    fi
+
+                done
+
             fi
             ;;
 
-        net-rt-core)
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("dotnet-runtime-${p_repo_last_version_pretty}-linux-x64.tar.gz")
-                pna_artifact_types=(2)
-            else
-                pna_artifact_names=("dotnet-runtime-${p_repo_last_version_pretty}-win-x64.zip")
-                pna_artifact_types=(3)
-            fi
-            ;;
-
-        net-rt-aspnet)
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("aspnetcore-runtime-${p_repo_last_version_pretty}-linux-x64.tar.gz")
-                pna_artifact_types=(2)
-            else
-                pna_artifact_names=("aspnetcore-runtime-${p_repo_last_version_pretty}-win-x64.zip")
-                pna_artifact_types=(3)
-            fi
-            ;;
 
         crictl)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("crictl-v${p_repo_last_version_pretty}-linux-amd64.tar.gz" "critest-v${p_repo_last_version_pretty}-linux-amd64.tar.gz")
                 pna_artifact_types=(2 2)
@@ -1263,6 +1379,8 @@ function _load_artifacts() {
             ;;
 
         jq)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("jq-linux64")
                 pna_artifact_types=(0)
@@ -1272,6 +1390,8 @@ function _load_artifacts() {
             fi
             ;;
         yq)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("yq_linux_amd64.tar.gz")
                 pna_artifact_types=(2)
@@ -1281,6 +1401,8 @@ function _load_artifacts() {
             fi
             ;;
         fzf)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_amd64.tar.gz")
                 pna_artifact_types=(2)
@@ -1289,7 +1411,12 @@ function _load_artifacts() {
                 pna_artifact_types=(3)
             fi
             ;;
+
         helm)
+            #URL base fijo     : "https://get.helm.sh"
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("helm-v${p_repo_last_version_pretty}-linux-amd64.tar.gz")
                 pna_artifact_types=(2)
@@ -1299,6 +1426,8 @@ function _load_artifacts() {
             fi
             ;;
         delta)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
                     pna_artifact_names=("git-delta_${p_repo_last_version_pretty}_amd64.deb")
@@ -1313,6 +1442,8 @@ function _load_artifacts() {
             fi
             ;;
         ripgrep)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
                     pna_artifact_names=("ripgrep_${p_repo_last_version_pretty}_amd64.deb")
@@ -1327,6 +1458,8 @@ function _load_artifacts() {
             fi
             ;;
         xsv)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("xsv-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
                 pna_artifact_types=(2)
@@ -1336,6 +1469,8 @@ function _load_artifacts() {
             fi
             ;;
         bat)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
                     pna_artifact_names=("bat_${p_repo_last_version_pretty}_amd64.deb")
@@ -1350,6 +1485,8 @@ function _load_artifacts() {
             fi
             ;;
         oh-my-posh)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("posh-linux-amd64" "themes.zip")
                 pna_artifact_types=(0 3)
@@ -1359,6 +1496,8 @@ function _load_artifacts() {
             fi
             ;;
         fd)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
                     #pna_artifact_names=("fd_${p_repo_last_version_pretty}_amd64.deb")
@@ -1376,6 +1515,8 @@ function _load_artifacts() {
             ;;
 
         jwt)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("jwt-linux.tar.gz")
                 pna_artifact_types=(2)
@@ -1386,6 +1527,12 @@ function _load_artifacts() {
             ;;
 
         step)
+            #URL base fijo     : "https://dl.smallstep.com/gh-release/cli/gh-release-header"
+            #URL base variable :
+            l_base_url_variable="${p_repo_last_version}"
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
                     #pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.deb")
@@ -1403,6 +1550,8 @@ function _load_artifacts() {
             ;;
 
         protoc)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("protoc-${p_repo_last_version_pretty}-linux-x86_64.zip")
                 pna_artifact_types=(3)
@@ -1413,6 +1562,8 @@ function _load_artifacts() {
             ;;
 
         grpcurl)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("grpcurl_${p_repo_last_version_pretty}_linux_x86_64.tar.gz")
                 pna_artifact_types=(2)
@@ -1423,6 +1574,12 @@ function _load_artifacts() {
             ;;
 
         nodejs)
+            #URL base fijo     : "https://nodejs.org/dist"
+            #URL base variable :
+            l_base_url_variable="${p_repo_last_version}"
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-x64.tar.gz")
                 pna_artifact_types=(2)
@@ -1433,6 +1590,8 @@ function _load_artifacts() {
             ;;
 
         evans)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("evans_linux_amd64.tar.gz")
                 pna_artifact_types=(2)
@@ -1443,6 +1602,16 @@ function _load_artifacts() {
             ;;
 
         kubectl)
+            #URL base fijo     : "https://dl.k8s.io/release"
+            #URL base variable :
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_base_url_variable="${p_repo_last_version}/bin/windows/amd64"
+            else
+                l_base_url_variable="${p_repo_last_version}/bin/linux/amd64"
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("kubectl")
                 pna_artifact_types=(0)
@@ -1453,6 +1622,16 @@ function _load_artifacts() {
             ;;
 
         kubelet)
+            #URL base fijo     : "https://dl.k8s.io/release"
+            #URL base variable :
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_base_url_variable="${p_repo_last_version}/bin/windows/amd64"
+            else
+                l_base_url_variable="${p_repo_last_version}/bin/linux/amd64"
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("kubelet")
                 pna_artifact_types=(0)
@@ -1462,6 +1641,16 @@ function _load_artifacts() {
             ;;
 
         kubeadmin)
+            #URL base fijo     : "https://dl.k8s.io/release"
+            #URL base variable :
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_base_url_variable="${p_repo_last_version}/bin/windows/amd64"
+            else
+                l_base_url_variable="${p_repo_last_version}/bin/linux/amd64"
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("kubeadmin")
                 pna_artifact_types=(0)
@@ -1471,6 +1660,8 @@ function _load_artifacts() {
             ;;
 
         pgo)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("kubectl-pgo-linux-amd64")
                 pna_artifact_types=(0)
@@ -1481,6 +1672,8 @@ function _load_artifacts() {
             ;;
 
         less)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("less-x64.zip")
                 pna_artifact_types=(3)
@@ -1489,6 +1682,8 @@ function _load_artifacts() {
             fi
             ;;
         k0s)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("k0s-v${p_repo_last_version_pretty}+k0s.0-amd64")
                 pna_artifact_types=(0)
@@ -1497,7 +1692,14 @@ function _load_artifacts() {
                 pna_artifact_types=(0)
             fi
             ;;
+
         kustomize)
+            #URL base fijo     : "https://github.com"
+            #URL base variable :
+            l_base_url_variable="${p_repo_name}/releases/download/kustomize%2F${p_repo_last_version}"
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("kustomize_v${p_repo_last_version_pretty}_linux_amd64.tar.gz")
                 pna_artifact_types=(2)
@@ -1506,7 +1708,10 @@ function _load_artifacts() {
                 pna_artifact_types=(2)
             fi
             ;;
+
         operator-sdk)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 #pna_artifact_names=("operator-sdk_linux_amd64" "ansible-operator_linux_amd64" "helm-operator_linux_amd64")
                 #pna_artifact_types=(0 0 0)
@@ -1517,6 +1722,8 @@ function _load_artifacts() {
             fi
             ;;
         roslyn)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("omnisharp-win-x64-net6.0.zip")
                 pna_artifact_types=(3)
@@ -1526,6 +1733,8 @@ function _load_artifacts() {
             fi
             ;;
         netcoredbg)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("netcoredbg-win64.zip")
                 pna_artifact_types=(3)
@@ -1535,6 +1744,8 @@ function _load_artifacts() {
             fi
             ;;
         neovim)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
                     #pna_artifact_names=("nvim-linux64.deb")
@@ -1551,11 +1762,20 @@ function _load_artifacts() {
             fi
             ;;
         nerd-fonts)
-            pna_artifact_names=("JetBrainsMono.zip" "CascadiaCode.zip" "DroidSansMono.zip" "InconsolataLGC.zip" "UbuntuMono.zip" "3270.zip")
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
+            pna_artifact_names=("JetBrainsMono.zip" "CascadiaCode.zip" "DroidSansMono.zip"
+                                "InconsolataLGC.zip" "UbuntuMono.zip" "3270.zip")
             pna_artifact_types=(3 3 3 3 3 3)
             ;;
 
         go)
+            #URL base fijo     : "https://storage.googleapis.com"
+            #URL base variable :
+            l_base_url_variable="${p_repo_name}"
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("go${p_repo_last_version_pretty}.linux-amd64.tar.gz")
                 pna_artifact_types=(2)
@@ -1566,6 +1786,8 @@ function _load_artifacts() {
             ;;
 
         clangd)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("clangd-linux-${p_repo_last_version_pretty}.zip")
                 pna_artifact_types=(3)
@@ -1576,6 +1798,8 @@ function _load_artifacts() {
             ;;
 
         cmake)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("cmake-${p_repo_last_version#v}-linux-x86_64.tar.gz")
                 pna_artifact_types=(2)
@@ -1586,6 +1810,8 @@ function _load_artifacts() {
             ;;
 
         ninja)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("ninja-linux.zip")
                 pna_artifact_types=(3)
@@ -1596,6 +1822,8 @@ function _load_artifacts() {
             ;;
 
         powershell)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("powershell-${p_repo_last_version_pretty}-linux-x64.tar.gz")
                 pna_artifact_types=(2)
@@ -1606,6 +1834,8 @@ function _load_artifacts() {
             ;;
 
         3scale-toolbox)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_os_subtype_id -eq 1 ]; then
                     pna_artifact_names=("3scale-toolbox_${p_repo_last_version_pretty}-1_amd64.deb")
@@ -1621,6 +1851,8 @@ function _load_artifacts() {
             ;;
 
         rust-analyzer)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("rust-analyzer-x86_64-unknown-linux-gnu.gz")
                 pna_artifact_types=(4)
@@ -1631,6 +1863,8 @@ function _load_artifacts() {
             ;;
 
         graalvm)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_names=("graalvm-ce-java${p_arti_version}-linux-amd64-${p_repo_last_version_pretty}.tar.gz" 
                                     "native-image-installable-svm-java${p_arti_version}-linux-amd64-${p_repo_last_version_pretty}.jar"
@@ -1645,6 +1879,12 @@ function _load_artifacts() {
             ;;
         
         jdtls)
+            #URL base fijo     : "https://download.eclipse.org"
+            #URL base variable :
+            l_base_url_variable="${p_repo_name}/snapshots"
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("jdt-language-server-${p_repo_last_version}.tar.gz")
             pna_artifact_types=(2)
             ;;
@@ -1654,6 +1894,8 @@ function _load_artifacts() {
                 return 1
             fi
 
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("butane-x86_64-unknown-linux-gnu")
             pna_artifact_types=(0)
             ;;
@@ -1663,6 +1905,8 @@ function _load_artifacts() {
                 return 1
             fi
 
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("runc.amd64")
             pna_artifact_types=(0)
             ;;
@@ -1672,6 +1916,8 @@ function _load_artifacts() {
                 return 1
             fi
 
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("crun-${p_repo_last_version}-linux-amd64")
             pna_artifact_types=(0)
             ;;
@@ -1681,6 +1927,8 @@ function _load_artifacts() {
                 return 1
             fi
 
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("fuse-overlayfs-x86_64")
             pna_artifact_types=(0)
             ;;
@@ -1690,6 +1938,8 @@ function _load_artifacts() {
                 return 1
             fi
 
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("cni-plugins-linux-amd64-${p_repo_last_version}.tgz")
             pna_artifact_types=(5)
             ;;
@@ -1699,6 +1949,8 @@ function _load_artifacts() {
                 return 1
             fi
 
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("slirp4netns-x86_64")
             pna_artifact_types=(0)
             ;;
@@ -1708,6 +1960,8 @@ function _load_artifacts() {
                 return 1
             fi
 
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("rootlesskit-x86_64.tar.gz")
             pna_artifact_types=(2)
             ;;
@@ -1717,6 +1971,8 @@ function _load_artifacts() {
                 return 1
             fi
 
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("containerd-${p_repo_last_version_pretty}-linux-amd64.tar.gz")
             pna_artifact_types=(2)
             ;;
@@ -1726,6 +1982,8 @@ function _load_artifacts() {
                 return 1
             fi
 
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("buildkit-${p_repo_last_version}.linux-amd64.tar.gz")
             pna_artifact_types=(2)
             ;;
@@ -1735,6 +1993,8 @@ function _load_artifacts() {
                 return 1
             fi
 
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("nerdctl-${p_repo_last_version_pretty}-linux-amd64.tar.gz" "nerdctl-full-${p_repo_last_version_pretty}-linux-amd64.tar.gz")
             pna_artifact_types=(2 2)
             ;;
@@ -1745,6 +2005,8 @@ function _load_artifacts() {
                 return 1
             fi
 
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("dive_${p_repo_last_version_pretty}_linux_amd64.tar.gz")
             pna_artifact_types=(2)
             ;;
@@ -3355,9 +3617,13 @@ function _copy_artifact_files() {
                     #rm -rf ${l_path_bin}/*
                 fi
                     
+                #No es necesario eliminarlo, lo hace el metodo que lo descarga y lo descomprime
+                #find "${l_path_temp}/*.tar.gz" -maxdepth 1 -mindepth 1 -type f -exec rm '{}' \;
+                 
                 #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
-                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv -f '{}' ${l_path_bin} \;
+                printf '%b' "$g_color_opaque"
+                rsync -a --stats "${l_path_temp}/" "${l_path_bin}"
+                printf '%b' "$g_color_reset"
 
                 #Validar si 'DotNet' esta en el PATH
                 echo "$PATH" | grep "${g_path_programs_lnx}/dotnet" &> /dev/null
@@ -3387,9 +3653,13 @@ function _copy_artifact_files() {
                     #rm -rf ${l_path_bin}/*
                 fi
                     
+                #No es necesario eliminarlo, lo hace el metodo que lo descarga y lo descomprime
+                #find "${l_path_temp}/*.zip" -maxdepth 1 -mindepth 1 -type f -exec rm '{}' \;
+
                 #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
-                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv -f '{}' ${l_path_bin} \;
+                printf '%b' "$g_color_opaque"
+                rsync -a --stats "${l_path_temp}/" "${l_path_bin}"
+                printf '%b' "$g_color_reset"
             fi
             ;;
 
@@ -4750,7 +5020,7 @@ function _copy_artifact_files() {
 #  1 > No se inicializo por opcion del usuario.
 #  2 > Hubo un error en la inicialización.
 #
-install_initialize_menu_option() {
+function install_initialize_menu_option() {
 
     #1. Argumentos
     local p_option_relative_idx=$1
@@ -4759,6 +5029,7 @@ install_initialize_menu_option() {
     local l_status
     local l_repo_id
     local l_artifact_index
+    #local l_aux
     #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
 
@@ -4782,7 +5053,105 @@ install_initialize_menu_option() {
                 return 2
             fi
             ;;
-        
+
+        #Instalacion de DotNet (runtime o SDK o ambos)
+        15|16)
+
+            #Validar si algunos paquees necesarios estan instalados
+            #https://learn.microsoft.com/en-us/dotnet/core/install/linux-fedora#dependencies
+            #https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu#dependencies
+            
+            
+            #1. Obtener los paquetes que requeridos
+            local la_packages_needed=()
+
+            #Si es Fedora
+            if [ $g_os_subtype_id -eq 2 ]; then
+                la_packages_needed=("krb5-libs" "libicu" "openssl-libs" "zlib" "compat-openssl10")
+
+            #Si es otro
+            else
+
+                #libc6
+                #
+                #libgcc1
+                #libgcc-s1 (for 22.x)
+                #
+                #libgssapi-krb5-2
+                #
+                #libicu55 (for 16.x)
+                #libicu60 (for 18.x)
+                #libicu66 (for 20.x)
+                #libicu70 (for 22.04)
+                #libicu71 (for 22.10)
+                #libicu72 (for 23.04)
+                #
+                #liblttng-ust1 (for 22.x)
+                #
+                #libssl1.0.0 (for 16.x)
+                #libssl1.1 (for 18.x, 20.x)
+                #libssl3 (for 22.x)
+                #
+                #libstdc++6
+                #libunwind8 (for 22.x)
+                #zlib1g
+                la_packages_needed=("libc6" "libgssapi-krb5-2" "libstdc++6" "zlib1g" "libunwind8" "liblttng-ust1" "libicu70" "libssl3")
+            fi
+
+            #2. Determinar los paquetes que ya estan instalados
+            local l_n=${#la_packages_needed[@]}
+            local l_packages=''
+            local l_package
+            local l_i
+
+            if [ $l_n -gt 0 ]; then
+
+                for ((l_i=0; l_i < l_n; l_i++)); do
+
+                    l_package="${la_packages_needed[$l_i]}"
+
+                    #Buscar si el paquete esta instalado
+                    is_package_installed "$l_package" $g_os_subtype_id
+                    l_status=$?
+
+                    if [ $l_status -eq 1 ]; then
+                        if [ -z "$l_packages" ]; then
+                            l_packages="$l_package"
+                        else
+                            l_packages="${l_package} ${l_packages}"
+                        fi
+                    else
+                        printf '%bEl paquete "%s" requerido por .NET ya esta instalado.%b\n' "$g_color_opaque" "$l_package" "$g_color_reset"
+                    fi
+
+                done
+            fi
+
+            #3. Instalar los paquetes
+            if [ ! -z "$l_packages" ]; then
+
+                printf 'Se requiere instalar los paquetes "%b%s%b".\n' "$g_color_opaque" "$l_packages" "$g_color_reset"
+
+                #Solicitar credenciales de administrador y almacenarlas temporalmente
+                if [ $g_status_crendential_storage -eq -1 ]; then
+
+                    #Solicitar credenciales de administrador y almacenarlas temporalmente
+                    storage_sudo_credencial
+                    g_status_crendential_storage=$?
+
+                    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+                    if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                        #return 120
+                        return 2
+                    fi
+                fi
+
+                #Instalar los paquetes
+                install_os_package "$l_packages" $g_os_subtype_id
+            fi
+
+            return 0
+            ;;        
 
         *)
             return 0

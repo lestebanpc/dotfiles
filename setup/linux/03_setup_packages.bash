@@ -23,6 +23,7 @@ if [ $g_os_type -le 10 ]; then
     declare -r g_os_subtype_name="$_g_tmp"
     _g_tmp=$(get_linux_type_version)
     declare -r g_os_subtype_version="$_g_tmp"
+    declare -r g_os_subtype_version_pretty=$(echo "$g_os_subtype_version" | sed -e "$g_regexp_sust_version1")
 fi
 
 #Determinar si es root
@@ -1149,14 +1150,14 @@ function g_install_packages() {
     fi
 
     #5. Instalar los paquetes selecionados por las opciones de menú dinamico.
-    local l_i=0
+    local l_x=0
     local l_status
     #Limpiar los resultados anteriores
     _gA_processed_repo=()
 
-    for((l_i=0; l_i < ${#ga_menu_options_packages[@]}; l_i++)); do
+    for((l_x=0; l_x < ${#ga_menu_options_packages[@]}; l_x++)); do
         
-        _install_menu_options $p_input_options $l_i
+        _install_menu_options $p_input_options $l_x
         l_status=$?
 
         #Se requiere almacenar las credenciales para realizar cambios con sudo.
@@ -1205,9 +1206,9 @@ function g_uninstall_packages() {
     #Limpiar los resultados anteriores
     _gA_processed_repo=()
 
-    for((l_i=0; l_i < ${#ga_menu_options_packages[@]}; l_i++)); do
+    for((l_x=0; l_x < ${#ga_menu_options_packages[@]}; l_x++)); do
         
-        _uninstall_menu_options $p_input_options $l_i
+        _uninstall_menu_options $p_input_options $l_x
         l_status=$?
 
         #Se requiere almacenar las credenciales para realizar cambios con sudo.
@@ -1240,12 +1241,12 @@ function g_install_main() {
     printf " (%ba%b) Actualizar los paquetes existentes del SO y los binarios de los paquetes existentes\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
-    _get_length_menu_option $g_offset_option_index_menu_install
+    get_length_menu_option $g_offset_option_index_menu_install
     local l_max_digits=$?
 
     printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes existentes del sistema operativo\n" "$g_color_title" "$g_opt_update_installed_pckg" "$g_color_reset"
 
-    _show_dynamic_menu 'Instalar' $g_offset_option_index_menu_install $l_max_digits
+    show_dynamic_menu 'Instalar' $g_offset_option_index_menu_install $l_max_digits
     print_line '-' $g_max_length_line "$g_color_opaque"
 
     #3. Mostrar la ultima parte del menu y capturar la opcion elegida
@@ -1314,10 +1315,10 @@ function g_uninstall_main() {
     printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Para desintalar ingrese un opción o la suma de las opciones que desea configurar:\n"
 
-    _get_length_menu_option $g_offset_option_index_menu_uninstall
+    get_length_menu_option $g_offset_option_index_menu_uninstall
     local l_max_digits=$?
 
-    _show_dynamic_menu 'Desinstalar' $g_offset_option_index_menu_uninstall $l_max_digits
+    show_dynamic_menu 'Desinstalar' $g_offset_option_index_menu_uninstall $l_max_digits
     print_line '-' $g_max_length_line "$g_color_opaque"
 
     #Capturar la opcion de menu y completar el menu
