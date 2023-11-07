@@ -1008,12 +1008,14 @@ _install_python() {
 
     l_version=$(python3 -m pip --version 2> /dev/null)
     l_status=$?
-    if [ $l_status -eq 0 ]; then
-
-        l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-        echo "VIM (IDE)   > Comando 'pip' (modulo python) \"$l_version\" ya esta instalado"
+    if [ $l_status -ne 0 ]; then
+        printf 'VIM (IDE)   > Comando "%bpip%b" (modulo python) %bno se ha instalado correctamente%b. Corrija el error y vuelva configurar el profile.\n' \
+            "$g_color_warning" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+        return 1
     fi
 
+    l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+    echo "VIM (IDE)   > Comando 'pip' (modulo python) \"$l_version\" ya esta instalado"
 
     #2. Instalación de Herramienta para mostrar arreglo json al formato tabular
     l_version=$(pip3 list | grep jtbl 2> /dev/null)
