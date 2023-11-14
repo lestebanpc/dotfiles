@@ -23,6 +23,7 @@ contexts:
     context:
       cluster: k8s1
       user: k8s1-admin
+      namespace: ppoc-one
   - name: admin@k8s2
     context:
       cluster: k8s2
