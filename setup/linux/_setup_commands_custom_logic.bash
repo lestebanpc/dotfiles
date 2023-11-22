@@ -262,7 +262,7 @@ function _get_repo_current_version() {
     local p_repo_id="$1"
     local p_install_win_cmds=1          #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                         #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$2" -eq 0 2> /dev/null ]; then
+    if [ "$2" = "0" ]; then
         p_install_win_cmds=0
     fi
 
@@ -756,6 +756,20 @@ function _get_repo_current_version() {
                   l_path_file="${g_path_programs_lnx}/dotnet/"
                fi
             fi
+
+            #Si esta instalado SDK, no instalarlo
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}dotnet.exe --list-sdks version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}dotnet --list-sdks version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -ne 0 ] || [ -z "$l_tmp" ]; then
+                return 9
+            fi
+
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -1264,6 +1278,81 @@ function _dotnet_get_minor_version()
 
 }
 
+#Obtener 2 versiones menores a la actual
+#
+#Parametros de salida:
+#  > Valor de retorno:
+#    0 - Existe
+#    1 - No existe
+function _dotnet_exist_version()
+{
+    local p_repo_id="$1"
+    local p_version="$2"
+    local p_install_win_cmds=1          #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                        #(0) Los binarios de los comandos se estan instalando en Linux
+    if [ "$2" = "0" ]; then
+        p_install_win_cmds=0
+    fi
+
+    #Calcular la ruta de archivo/comando donde se obtiene la version
+    local l_path_file=""
+    if [ $p_install_win_cmds -eq 0 ]; then
+       l_path_file="${g_path_programs_win}/DotNet/"
+    else
+       l_path_file="${g_path_programs_lnx}/dotnet/"
+    fi
+
+    #Prefijo del nombre del artefacto
+    local l_cmd_option=''
+    if [ "p_repo_id" = "dotnet-sdk" ]; then
+        l_cmd_option='--list-sdks'
+    else
+        l_cmd_option='--list-runtimes'
+    fi
+
+    #Obtener las versiones instaladas
+    local l_info=""
+    local l_status
+    if [ $p_install_win_cmds -eq 0 ]; then
+        l_info=$(${l_path_file}dotnet.exe ${l_cmd_option} version 2> /dev/null)
+        l_status=$?
+    else
+        l_info=$(${l_path_file}dotnet ${l_cmd_option} version 2> /dev/null)
+        l_status=$?
+    fi
+
+    if [ $l_status -eq 0 ] && [ ! -z "$l_info" ]; then
+
+        if [ "$p_repo_id" = "dotnet-sdk" ]; then
+
+            l_info=$(echo "$l_info" | grep "$p_version" | head -n 1)
+            l_status=$?
+
+        elif [ "$p_repo_id" = "net-rt-core" ]; then
+
+            l_info=$(echo "$l_info" | grep 'Microsoft.NETCore.App' | grep "$p_version" | head -n 1)
+            l_status=$?
+
+        else
+            l_info=$(echo "$l_info" | grep 'Microsoft.AspNetCore.App' | grep "$p_version" | head -n 1)
+            l_status=$?
+
+        fi
+
+        if [ $l_status -ne 0 ]; then
+            l_info=""
+        fi
+
+    fi
+
+    #Resultados
+    if [ -z "$l_info" ]; then
+        return 1
+    fi
+
+    return 0
+}
+
 #Devuelve un arreglo de artefectos, usando los argumentos 3 y 4 como de referencia:
 #  5> Un arrego de bases URL del los artefactos. 
 #     Si el repositorio tiene muchos artefactos pero todos tiene la misma URL base, puede indicar
@@ -1367,13 +1456,22 @@ function load_artifacts() {
             else
 
                 local l_version
+                local l_idx=0
                 for ((l_i=0; l_i<=l_nbr_versions; l_i++)); do
 
                     #Obtener la version a usar
                     if [ $l_i -eq $l_nbr_versions ]; then
                         l_version="$p_repo_last_version"
                     else
+
                         l_version="${la_versions[${l_i}]}"
+
+                        #Validar que existe la version no esta instalado
+                        _dotnet_exist_version "$p_repo_id" "$l_version" p_install_win_cmds
+                        l_status=$?
+                        if [ $l_status -eq 0 ]; then
+                            continue
+                        fi
                     fi
 
                     #URL base fijo     : "https://dotnetcli.azureedge.net"
@@ -1381,14 +1479,16 @@ function load_artifacts() {
                     l_base_url_variable="${p_repo_name}/${l_version}"
 
                     #Generar la datos de cada artefacto:
-                    pna_artifact_baseurl[$l_i]="${l_base_url_fixed}/${l_base_url_variable}"
+                    pna_artifact_baseurl[$l_idx]="${l_base_url_fixed}/${l_base_url_variable}"
                     if [ $p_install_win_cmds -ne 0 ]; then
-                        pna_artifact_names[${l_i}]="${l_prefix_repo}-${l_version}-linux-x64.tar.gz"
-                        pna_artifact_types[${l_i}]=2
+                        pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-linux-x64.tar.gz"
+                        pna_artifact_types[${l_idx}]=2
                     else
-                        pna_artifact_names[${l_i}]="${l_prefix_repo}-${l_version}-win-x64.zip"
-                        pna_artifact_types[${l_i}]=3
+                        pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-win-x64.zip"
+                        pna_artifact_types[${l_idx}]=3
                     fi
+
+                    ((l_idx++))
 
                 done
 
