@@ -1441,6 +1441,7 @@ function _setup_profile() {
     local l_link=""
     local l_object=""
     local l_aux
+    local l_status
     if [ $g_os_type -eq 1 ]; then
 
         l_link='/.dircolors'
@@ -1510,17 +1511,18 @@ function _setup_profile() {
 
         l_link='/.bashrc'
         l_object='/.files/terminal/linux/profile/ubuntu_wls.bash'
-        if [ -e ${HOME}${l_link} ]; then
+        l_aux=$(readlink ${HOME}${l_link})
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+            ln -snf ${HOME}${l_object} ${HOME}${l_link}
+            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
+        else
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
             else
-                l_aux=$(readlink ${HOME}${l_link})
                 printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
             fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
         fi
 
 
@@ -1579,17 +1581,18 @@ function _setup_profile() {
 
         l_link='/.bashrc'
         l_object='/.files/terminal/linux/profile/fedora_vm.bash'
-        if [ -e ${HOME}${l_link} ]; then
+        l_aux=$(readlink ${HOME}${l_link})
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+            ln -snf ${HOME}${l_object} ${HOME}${l_link}
+            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
+        else
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
             else
-                l_aux=$(readlink ${HOME}${l_link})
                 printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
             fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
         fi
 
     fi
