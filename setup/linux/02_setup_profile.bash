@@ -246,7 +246,7 @@ function _config_nvim() {
 
         l_link='/.config/nvim/coc-settings.json'
         l_object='/.files/nvim/ide_coc/coc-settings_lnx.json'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -263,7 +263,7 @@ function _config_nvim() {
 
         l_link='/.config/nvim/init.vim'
         l_object='/.files/nvim/init_linux_ide.vim'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -278,7 +278,7 @@ function _config_nvim() {
 
         l_link='/.config/nvim/lua'
         l_object='/.files/nvim/lua'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -295,7 +295,7 @@ function _config_nvim() {
         #El codigo open/close asociado a los 'file types'
         l_link='/.config/nvim/ftplugin'
         l_object='/.files/nvim/ide_commom/ftplugin/'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -318,7 +318,7 @@ function _config_nvim() {
         #Para el codigo open/close asociado a los 'file types' de CoC
         l_link='/.config/nvim/runtime_coc/ftplugin'
         l_object='/.files/vim/ide_coc/ftplugin/'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -340,7 +340,7 @@ function _config_nvim() {
         #Para el codigo open/close asociado a los 'file types' que no sean CoC
         l_link='/.config/nvim/runtime_nococ/ftplugin'
         l_object='/.files/nvim/ide_nococ/ftplugin'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -358,7 +358,7 @@ function _config_nvim() {
 
         l_link='/.config/nvim/init.vim'
         l_object='/.files/nvim/init_linux_basic.vim'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -374,7 +374,7 @@ function _config_nvim() {
         
         l_link='/.config/nvim/lua'
         l_object='/.files/nvim/lua'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -391,7 +391,7 @@ function _config_nvim() {
         #El codigo open/close asociado a los 'file types' como Editor
         l_link='/.config/nvim/ftplugin'
         l_object='/.files/nvim/editor/ftplugin/'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -634,7 +634,7 @@ function _config_vim() {
         #Creando enlaces simbolicos
         l_link='/.vim/coc-settings.json'
         l_object='/.files/vim/ide_coc/coc-settings_lnx.json'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "VIM (IDE)   > El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -651,7 +651,7 @@ function _config_vim() {
         
         l_link='/.vim/ftplugin'
         l_object='/.files/vim/ide_coc/ftplugin/'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "VIM (IDE)   > El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -668,7 +668,7 @@ function _config_vim() {
 
         l_link='/.vimrc'
         l_object='/.files/vim/vimrc_linux_ide.vim'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "VIM (IDE)   > El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -687,7 +687,7 @@ function _config_vim() {
 
         l_link='/.vimrc'
         l_object='/.files/vim/vimrc_linux_basic.vim'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "VIM (IDE)   > El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -703,7 +703,7 @@ function _config_vim() {
 
         l_link='/.vim/ftplugin'
         l_object='/.files/vim/editor/ftplugin/'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "VIM (IDE)   > El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -1441,12 +1441,11 @@ function _setup_profile() {
     local l_link=""
     local l_object=""
     local l_aux
-    local l_status
     if [ $g_os_type -eq 1 ]; then
 
         l_link='/.dircolors'
         l_object='/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -1461,7 +1460,7 @@ function _setup_profile() {
 
         l_link='/.gitconfig'
         l_object='/.files/config/git/wsl2_git.toml'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -1477,7 +1476,7 @@ function _setup_profile() {
 
         l_link='/.ssh/config'
         l_object='/.files/config/ssh/wsl2_ssh.conf'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -1493,7 +1492,7 @@ function _setup_profile() {
 
         l_link='/.config/powershell/Microsoft.PowerShell_profile.ps1'
         l_object='/.files/terminal/powershell/profile/ubuntu_wsl.ps1'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 mkdir -p ~/.config/powershell/
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -1511,18 +1510,17 @@ function _setup_profile() {
 
         l_link='/.bashrc'
         l_object='/.files/terminal/linux/profile/ubuntu_wls.bash'
-        l_aux=$(readlink ${HOME}${l_link})
-        l_status=$?
-        if [ $l_status -ne 0 ]; then
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
             else
+                l_aux=$(readlink ${HOME}${l_link})
                 printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
             fi
+        else
+            ln -snf ${HOME}${l_object} ${HOME}${l_link}
+            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
         fi
 
 
@@ -1531,7 +1529,7 @@ function _setup_profile() {
 
         l_link='/.gitconfig'
         l_object='/.files/config/git/vm_linux_git.toml'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -1547,7 +1545,7 @@ function _setup_profile() {
 
         l_link='/.ssh/config'
         l_object='/.files/config/ssh/vm_linux_ssh.conf'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -1563,7 +1561,7 @@ function _setup_profile() {
 
         l_link='/.config/powershell/Microsoft.PowerShell_profile.ps1'
         l_object='/.files/terminal/powershell/profile/fedora_vm.ps1'
-        if [ -e ${HOME}${l_link} ]; then
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 mkdir -p ~/.config/powershell/
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -1581,18 +1579,17 @@ function _setup_profile() {
 
         l_link='/.bashrc'
         l_object='/.files/terminal/linux/profile/fedora_vm.bash'
-        l_aux=$(readlink ${HOME}${l_link})
-        l_status=$?
-        if [ $l_status -ne 0 ]; then
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
+        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
                 printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
             else
+                l_aux=$(readlink ${HOME}${l_link})
                 printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
             fi
+        else
+            ln -snf ${HOME}${l_object} ${HOME}${l_link}
+            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
         fi
 
     fi
@@ -1602,7 +1599,7 @@ function _setup_profile() {
     #Crear el enlace de TMUX
     l_link='/.tmux.conf'
     l_object='/.files/terminal/linux/tmux/tmux.conf'
-    if [ -e ${HOME}${l_link} ]; then
+    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
         if [ $l_overwrite_ln_flag -eq 0 ]; then
             ln -snf ${HOME}${l_object} ${HOME}${l_link}
             printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
@@ -1618,7 +1615,7 @@ function _setup_profile() {
     #Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD': nerdctl
     l_link='/.config/nerdctl/nerdctl.toml'
     l_object='/.files/config/nerdctl/default_config.toml'
-    if [ -e ${HOME}${l_link} ]; then
+    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
         if [ $l_overwrite_ln_flag -eq 0 ]; then
             mkdir -p ~/.config/nerdctl/
             ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -1637,7 +1634,7 @@ function _setup_profile() {
     #Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless'): Podman
     l_link='/.config/containers/containers.conf'
     l_object='/.files/config/podman/default_config.toml'
-    if [ -e ${HOME}${l_link} ]; then
+    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
         if [ $l_overwrite_ln_flag -eq 0 ]; then
             mkdir -p ~/.config/containers/ 
             ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -1655,7 +1652,7 @@ function _setup_profile() {
     #Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless'): Podman
     l_link='/.config/containers/registries.conf'
     l_object='/.files/config/podman/default_registries.toml'
-    if [ -e ${HOME}${l_link} ]; then
+    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
         if [ $l_overwrite_ln_flag -eq 0 ]; then
             mkdir -p ~/.config/containers/ 
             ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -1674,7 +1671,7 @@ function _setup_profile() {
     #Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
     l_link='/.config/containerd/config.toml'
     l_object='/.files/config/containerd/default_config.toml'
-    if [ -e ${HOME}${l_link} ]; then
+    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
         if [ $l_overwrite_ln_flag -eq 0 ]; then
             mkdir -p ~/.config/containerd/
             ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -1695,7 +1692,7 @@ function _setup_profile() {
     #Configuración del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
     l_link='/.config/buildkit/buildkitd.toml'
     l_object='/.files/config/buildkit/default_config.toml'
-    if [ -e ${HOME}${l_link} ]; then
+    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
         if [ $l_overwrite_ln_flag -eq 0 ]; then
             mkdir -p ~/.config/buildkit/
             ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -1714,7 +1711,7 @@ function _setup_profile() {
     #Configuracion por defecto para un Cluster de Kubernates
     l_link='/.kube/config'
     l_object='/.files/config/kubectl/default_config.yaml'
-    if [ -e ${HOME}${l_link} ]; then
+    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
         if [ $l_overwrite_ln_flag -eq 0 ]; then
             mkdir -p ~/.kube/
             ln -snf ${HOME}${l_object} ${HOME}${l_link}
