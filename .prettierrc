@@ -13,7 +13,7 @@
     "semi": true,
     "singleAttributePerLine": false,
     "singleQuote": true,
-    "tabWidth": 4,
+    "tabWidth": 2,
     "trailingComma": "es5",
     "useTabs": false,
     "vueIndentScriptAndStyle": false

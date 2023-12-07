@@ -1574,13 +1574,15 @@ function load_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype_id -eq 1 ]; then
-                    pna_artifact_names=("ripgrep_${p_repo_last_version_pretty}_amd64.deb")
-                    pna_artifact_types=(1)
-                else
-                    pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
-                    pna_artifact_types=(2)
-                fi
+                #if [ $g_os_subtype_id -eq 1 ]; then
+                #    pna_artifact_names=("ripgrep_${p_repo_last_version_pretty}_amd64.deb")
+                #    pna_artifact_types=(1)
+                #else
+                #    pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                #    pna_artifact_types=(2)
+                #fi
+                pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                pna_artifact_types=(2)
             else
                 pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(3)
