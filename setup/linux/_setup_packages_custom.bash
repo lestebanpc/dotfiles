@@ -12,6 +12,7 @@ gA_packages=(
         ['openssl']='openssl'
         ['xclip']='xclip'
         ['xsel']='xsel'
+        ['vim']='vim-enhanced'
         ['python']='python3'
         ['python-pip']='python3-pip'
         ['skopeo']='skopeo'
@@ -26,6 +27,7 @@ ga_menu_options_title=(
     "Basicos"
     "CLI para portapales X11"
     "RTE Python3"
+    "Editor VIM"
     "Gestión de imagenes de contenedores"
     )
 
@@ -41,6 +43,7 @@ ga_menu_options_packages=(
     "curl,openssl"
     "xclip,xsel"
     "python,python-pip"
+    "vim"
     "skopeo"
     )
 
@@ -49,46 +52,50 @@ ga_menu_options_packages=(
 
 
 #Parametros de entrada - Agumentos y opciones:
-#  1 > Nombre del paquete generico 
-#  2 > El tipo de distribucion Linux (valor de retorno devulto por get_linux_type_id) 
-#      00 : Distribución de Linux desconocido
-#      01 : Ubuntu
-#      02 : Fedora
+#  1 > ID de paquete
+#  2 > Nombre por defecto del paquete
+#  3 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
 #Parametros de salida :
-#  STDOUT           : El nombre real para el sistema operativo indicado
-#  Valor de retorno :
-#    0 > OK
-#    1 > No OK
+#  > STDOUT           : El nombre real del paquete (segun el sistema operativo indicado
+#  > Valor de retorno : Tipo de busqueda del paquete
+#    0 > Busqueda inexacta (texto buscado tiene que estar en cualquier parte del nombre del paquete)
+#    1 > Busqueda exacta
+#    9 > Error
 get_package_name() {
 
-    if [ -z "$1" ]; then
-        return 1
+    #Parametros
+    if [ -z "$1" ] || [ -z "$2" ]; then
+        return 9
     fi
+    local p_package_id="$1"
+    local p_package_name="$2"
+    local p_os_subtype_id=$3
 
-    local p_os_type=$2
-    #local l_aux
+    #Obtener el nombre del paquete personalizado
+    local l_package_name_custom="$p_package_name"
+    local l_search_type=0
 
-    case "$1" in
+    case "$p_package_id" in
 
-        #value2)
+        vim)
 
-        #    #Si es Ubuntu
-        #    if [ $p_os_type -eq 1 ]; then
-        #        echo "value1"
-        #    #Si es Fedora
-        #    elif [ $p_os_type -eq 2 ]; then
-        #        echo "value2"
-        #    else
-        #        return 1
-        #    fi 
-        #    ;;
+            #Si es un distribucion de la familia Debian
+            if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
+
+                #Si es Ubuntu
+                l_package_name_custom="vim"
+                l_search_type=1
+            fi 
+            ;;
 
         *)
-            echo "$1"
+            l_package_name_custom="$p_package_name"
+            l_search_type=0
             ;;
     esac
 
-    return 0 
+    echo "$l_package_name_custom"
+    return $l_search_type
 
 
 }

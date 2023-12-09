@@ -1,14 +1,30 @@
 #!/bin/bash
 
+#Expresiones regulares de sustitucion mas usuadas para las versiones
+if [ -z "$g_regexp_sust_version1" ]; then
+    #La version 'x.y.z' esta la inicio o despues de caracteres no numericos
+    declare -r g_regexp_sust_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
+    #La version 'x.y.z' o 'x-y-z' esta la inicio o despues de caracteres no numericos
+    declare -r g_regexp_sust_version2='s/[^0-9]*\([0-9]\+\.[0-9.-]\+\).*/\1/'
+    #La version '.y.z' esta la inicio o despues de caracteres no numericos
+    declare -r g_regexp_sust_version3='s/[^0-9]*\([0-9.]\+\).*/\1/'
+    #La version 'xyz' (solo un entero sin puntos)  esta la inicio o despues de caracteres no numericos
+    declare -r g_regexp_sust_version4='s/[^0-9]*\([0-9]\+\).*/\1/'
+    #La version 'x.y.z' esta despues de un caracter vacio
+    declare -r g_regexp_sust_version5='s/.*\s\+\([0-9]\+\.[0-9.]\+\).*/\1/'
+fi
+
 #Funciones de utilidad de Inicialización {{{
 
-#Determinar el tipo de SO. Devuelve:
-#  00 - 10: Si es Linux
-#           00 - Si es Linux generico
-#           01 - Si es WSL2
-#  11 - 20: Si es Unix
-#  21 - 30: si es MacOS
-#  31 - 40: Si es Windows
+#Determinar el tipo de SO compatible con interprete shell POSIX.
+#Devuelve:
+#  00 > Si es Linux no-WSL
+#  01 > Si es Linux WSL2 (Kernel de Linux nativo sobre Windows)
+#  02 > Si es Unix
+#  03 > Si es MacOS
+#  04 > Compatible en Linux en Windows: CYGWIN
+#  05 > Compatible en Linux en Windows: MINGW
+#  09 > No identificado
 function get_os_type() {
     local l_system=$(uname -s)
 
@@ -23,10 +39,10 @@ function get_os_type() {
                 l_os_type=0
             fi
             ;;
-        Darwin*)  l_os_type=21;;
-        CYGWIN*)  l_os_type=31;;
-        MINGW*)   l_os_type=32;;
-        *)        l_os_type=99;;
+        Darwin*)  l_os_type=3;;
+        CYGWIN*)  l_os_type=4;;
+        MINGW*)   l_os_type=5;;
+        *)        l_os_type=9;;
     esac
 
     return $l_os_type
@@ -35,79 +51,87 @@ function get_os_type() {
 
 
 #Determinar el tipo de distribucion Linux. Devuelve:
-#  1) Retorna en un entero el tipo de distribucion Linux
-#     00 : Distribución de Linux desconocido
-#     01 : Ubuntu
-#     02 : Fedora
-#  2) En el flujo de salida, se muestra la nombre de distribucion Linux
-function get_linux_type_id() {
+# 1) Retorna 0 si se encontro informacion de la distribucion Linux, caso contrario retorna 1.
+# 2) En el flujo de salida, en variales globales:
+#    > 'g_os_subtype_id'             : Tipo de distribucion Linux
+#       > 0000000 : Distribución de Linux desconocidos
+#       > 10 - 29 : Familia Fedora
+#              10 : Fedora
+#              11 : CoreOS Stream
+#              12 : Red Hat Enterprise Linux
+#              19 : Amazon Linux
+#       > 30 - 49 : Familia Debian
+#              30 : Debian
+#              31 : Ubuntu
+#    > 'g_os_subtype_name'           : Nombre de distribucion Linux
+#    > 'g_os_subtype_version'        : Version extendida de la distribucion Linux
+#    > 'g_os_subtype_version_pretty' : Version corta de la distribucion Linux
+function get_linux_type_info() {
 
-    if [ -z "$g_info_distro" ]; then
-        if ! g_info_distro=$(cat /etc/*-release 2> /dev/null); then
-            return 0
-        fi
-    fi
-
-    # Ubuntu:
-    #   NAME="Ubuntu"
-    #   VERSION="22.04.1 LTS (Jammy Jellyfish)"
-    #
-    # Fedora:
-    #   NAME="Fedora Linux"
-    #   VERSION="36 (Workstation Edition)"
-    #
-    local l_tag_distro_type="NAME"
-    local l_distro_type=$(echo "$g_info_distro" | grep -e "^${l_tag_distro_type}=" | sed 's/'"$l_tag_distro_type"'="\(.*\)"/\1/')
-    if [ -z "$l_distro_type" ]; then
-        return 0
-    fi
-    echo "$l_distro_type"
-
-    local l_type=0
-    case "$l_distro_type" in
-        Ubuntu*)
-            l_type=1
-            ;;
-        Fedora*)
-            l_type=2
-            ;;
-        *)
-            l_type=0
-            ;;
-    esac
-
-    return $l_type
-
-}
-
-#Determinar la version de una disstribucion Linux. Devuelve:
-#  1) Retorna si obtuvo una versionde distribucion: 0 si es ok, otro valor si no se pudo obtener la version
-#  2) En el flujo de salida se muestra la version de la distribucion Linux
-function get_linux_type_version() {
-
-    if [ -z "$g_info_distro" ]; then
-        if ! g_info_distro=$(cat /etc/*-release 2> /dev/null); then
-            return 1
-        fi
-    fi
-
-    # Ubuntu:
-    #   NAME="Ubuntu"
-    #   VERSION="22.04.1 LTS (Jammy Jellyfish)"
-    #
-    # Fedora:
-    #   NAME="Fedora Linux"
-    #   VERSION="36 (Workstation Edition)"
-    #
-    local l_tag_distro_version="VERSION"
-    local l_distro_version=$(echo "$g_info_distro" | grep -e "^${l_tag_distro_version}=" | sed 's/'"$l_tag_distro_version"'="\(.*\)"/\1/')
-    if [ -z "$l_distro_version" ]; then
+    local l_info_distro
+    if ! l_info_distro=$(cat /etc/*-release 2> /dev/null); then
         return 1
     fi
 
-    echo "$l_distro_version"
+    #Determinar el tipo de distribucion Linux
+    # Ubuntu:
+    #   NAME="Ubuntu"
+    # Fedora:
+    #   NAME="Fedora Linux"
+    # Amazon Linux 2023
+    #   NAME="Amazon Linux"
+    #
+    local l_tag="NAME"
+    local l_distro_type=$(echo "$l_info_distro" | grep -e "^${l_tag}=" | sed 's/'"$l_tag"'="\(.*\)"/\1/')
+    if [ -z "$l_distro_type" ]; then
+        return 1
+    fi
+
+    g_os_subtype_name="$l_distro_type"
+    local l_value
+    case "$l_distro_type" in
+        Ubuntu*)
+            l_value=31
+            ;;
+        Fedora*)
+            l_value=10
+            ;;
+        Amazon*)
+            l_value=19
+            ;;
+        *)
+            l_value=0
+            ;;
+    esac
+
+    g_os_subtype_id=$l_value
+    #if [ $l_value -eq 0 ]; then
+    #    return 1
+    #fi
+
+    #Determinar la version de un distribucion Linux 
+    # Ubuntu:
+    #   VERSION="22.04.1 LTS (Jammy Jellyfish)"
+    # Fedora:
+    #   VERSION="36 (Workstation Edition)"
+    # Amazon Linux 2023
+    #   VERSION="2023"
+    #
+    l_tag="VERSION"
+    local l_distro_version=$(echo "$l_info_distro" | grep -e "^${l_tag}=" | sed 's/'"$l_tag"'="\(.*\)"/\1/')
+
+    if [ -z "$l_distro_version" ]; then
+        g_os_subtype_version=""
+        g_os_subtype_version_pretty=""
+    else
+        g_os_subtype_version="$l_distro_version"
+        g_os_subtype_version_pretty=$(echo "$l_distro_version" | sed -e "$g_regexp_sust_version1")
+    fi
+
     return 0
+
 }
+
 
 #}}}
 
@@ -419,51 +443,56 @@ exist_systemd_unit() {
 
 #Parametros de entrada - Agumentos y opciones:
 #  1 > Nombre del paquete (no requiere especificar la plataforma del paquete)
-#  2 > El tipo de distribucion Linux (valor de retorno devulto por get_linux_type_id) 
-#      00 : Distribución de Linux desconocido
-#      01 : Ubuntu
-#      02 : Fedora
+#  2 > El tipo de distribucion Linux (variable global 'g_os_subtype_id' generado por la funcion 'get_linux_type_info') 
+#  3 > Use '1' si es una busqueda exacta de nombre del paquete. Por defecto, su valor es '0', se busca el(los) paquete(s)
+#      que contiene la cadena ingresada en el parametro 1.
 #Parametros de salida - Valor de retorno:
 #  0 > El paquete esta instalado
 #  1 > El paquete no esta instalado
 #  9 > No se puede determinar 
 is_package_installed() {
 
+    #Parametros
+    local p_package_name_part="$1"
+    if [ "$3" = "1" ]; then
+        p_package_name_part="${1} "
+    fi
+
+    local p_os_subtype_id=$2
+
+    #Buscar el paquete
     local l_status
     local l_aux
 
-    case "$2" in
+    #Si es un distribucion de la familia Debian
+    if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
+        
+        #Si es Ubuntu
+        l_aux=$(dpkg -l | grep "$p_package_name_part" 2> /dev/null)
+        l_status=$?
+        
+        if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
+            return 1
+        fi
 
-        1)
-            #Si es Ubuntu
-            l_aux=$(dpkg -l | grep "$1" 2> /dev/null)
-            l_status=$?
-            
-            if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
-                return 1
-            fi
-            ;;
+    #Si es un distribucion de la familia Fedora
+    elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
+        
+        #Si es Fedora
+        l_aux=$(dnf list installed | grep "$p_package_name_part" 2> /dev/null)
+        l_status=$?
 
-        2) 
-            #Si es Fedora
-            l_aux=$(dnf list installed | grep "$1" 2> /dev/null)
-            l_status=$?
-
-            #Ejemplo:
-            #containerd.io.x86_64                                 1.6.20-3.1.fc36                     @docker-ce-stable
-            
-            if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
-                return 1
-            fi
-            ;;
-
-        *)
-            return 9
-            ;;
-    esac
+        #Ejemplo:
+        #containerd.io.x86_64                                 1.6.20-3.1.fc36                     @docker-ce-stable
+        
+        if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
+            return 1
+        fi
+    else
+        return 9
+    fi
 
     return 0 
-
 
 }
 
@@ -471,10 +500,7 @@ is_package_installed() {
 
 #Actualizar los paquete del SO
 #Parametros de entrada - Agumentos y opciones:
-#  1 > El tipo de distribucion Linux (valor de retorno devuelto por get_linux_type_id) 
-#      00 : Distribución de Linux desconocido
-#      01 : Ubuntu
-#      02 : Fedora
+#  1 > El tipo de distribucion Linux (variable global 'g_os_subtype_id' generado por la funcion 'get_linux_type_info') 
 #Parametros de salida :
 #  Valor de retorno :
 #    0 > OK
@@ -482,42 +508,38 @@ is_package_installed() {
 #    9 > Parametros de entrada invalido
 upgrade_os_packages() {
 
-    local p_os_type=$1
+    local p_os_subtype_id=$1
     local l_status=0
 
-    case "$p_os_type" in
+    #Si es un distribucion de la familia Debian
+    if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
 
-        #Si es Ubuntu
-        1)
+        #Distribución: Ubuntu
+        if [ $g_is_root -eq 0 ]; then
+            apt-get update
+            apt-get upgrade
+        else
+            sudo apt-get update
+            sudo apt-get upgrade
+        fi
+        l_status=$?
 
-            #Distribución: Ubuntu
-            if [ $g_is_root -eq 0 ]; then
-                apt-get update
-                apt-get upgrade
-            else
-                sudo apt-get update
-                sudo apt-get upgrade
-            fi
-            l_status=$?
-            ;;
+    #Si es un distribucion de la familia Fedora
+    elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
 
-        #Si es Fedora
-        2)
+        #Distribución: Fedora
+        if [ $g_is_root -eq 0 ]; then
+            dnf upgrade
+        else
+            sudo dnf upgrade
+        fi
+        l_status=$?
 
-            #Distribución: Fedora
-            if [ $g_is_root -eq 0 ]; then
-                dnf upgrade
-            else
-                sudo dnf upgrade
-            fi
-            l_status=$?
-            ;;
+    else
+        printf 'La actualización de paquetes del SO (tipo "%s") aun no esta implementado\n' "$p_os_type"
+        l_status=9
+    fi
 
-        *)
-            printf 'La actualización de paquetes del SO (tipo "%s") aun no esta implementado\n' "$p_os_type"
-            l_status=9
-            ;;
-    esac
 
     if [ $l_status -eq 9 ]; then
         return 9
@@ -545,40 +567,37 @@ upgrade_os_packages() {
 install_os_package() {
 
     local p_package_name=$1
-    local p_os_type=$2
+    local p_os_subtype_id=$2
     local l_status=0
 
-    case "$p_os_type" in
+    #Si es un distribucion de la familia Debian
+    if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
 
-        #Si es Ubuntu
-        1)
+        #Distribución: Ubuntu
+        if [ $g_is_root -eq 0 ]; then
+           apt-get install "$p_package_name"
+        else
+           sudo apt-get install "$p_package_name"
+        fi
+        l_status=$?
 
-            #Distribución: Ubuntu
-            if [ $g_is_root -eq 0 ]; then
-               apt-get install "$p_package_name"
-            else
-               sudo apt-get install "$p_package_name"
-            fi
-            l_status=$?
-            ;;
+    #Si es un distribucion de la familia Fedora
+    elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
 
-        #Si es Fedora
-        2)
+        #Distribución: Fedora
+        if [ $g_is_root -eq 0 ]; then
+           dnf install "$p_package_name"
+        else
+           sudo dnf install "$p_package_name"
+        fi
+        l_status=$?
 
-            #Distribución: Fedora
-            if [ $g_is_root -eq 0 ]; then
-               dnf install "$p_package_name"
-            else
-               sudo dnf install "$p_package_name"
-            fi
-            l_status=$?
-            ;;
+    else
 
-        *)
-            printf 'La instalación del paquete "%s" en el SO (tipo "%s") aun no esta implementado\n' "$p_package_name" "$p_os_type"
-            l_status=110
-            ;;
-    esac
+        printf 'La instalación del paquete "%s" en el SO (tipo "%s") aun no esta implementado\n' "$p_package_name" "$p_os_type"
+        l_status=110
+    fi
+
 
     if [ $l_status -eq 110 ]; then
         return 9
@@ -607,42 +626,39 @@ install_os_package() {
 uninstall_os_package() {
 
     local p_package_name=$1
-    local p_os_type=$2
+    local p_os_subtype_id=$2
     local l_status=0
 
-    case "$p_os_type" in
 
-        #Si es Ubuntu
-        1)
+    #Si es un distribucion de la familia Debian
+    if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
 
-            #Distribución: Ubuntu
-            if [ $g_is_root -eq 0 ]; then
-               apt-get purge "$p_package_name"
-               #apt-get autoremove
-            else
-               sudo apt-get purge "$p_package_name"
-               #sudo apt-get autoremove
-            fi
-            l_status=$?
-            ;;
+        #Distribución: Ubuntu
+        if [ $g_is_root -eq 0 ]; then
+           apt-get purge "$p_package_name"
+           #apt-get autoremove
+        else
+           sudo apt-get purge "$p_package_name"
+           #sudo apt-get autoremove
+        fi
+        l_status=$?
 
-        #Si es Fedora
-        2)
+    #Si es un distribucion de la familia Fedora
+    elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
 
-            #Distribución: Fedora
-            if [ $g_is_root -eq 0 ]; then
-               dnf erase "$p_package_name"
-            else
-               sudo dnf erase "$p_package_name"
-            fi
-            l_status=$?
-            ;;
+        #Distribución: Fedora
+        if [ $g_is_root -eq 0 ]; then
+           dnf erase "$p_package_name"
+        else
+           sudo dnf erase "$p_package_name"
+        fi
+        l_status=$?
 
-        *)
-            printf 'La desinstalación del paquete "%s" en el SO (tipo "%s") aun no esta implementado\n' "$p_package_name" "$p_os_type"
-            l_status=110
-            ;;
-    esac
+    else
+        printf 'La desinstalación del paquete "%s" en el SO (tipo "%s") aun no esta implementado\n' "$p_package_name" "$p_os_type"
+        l_status=110
+    fi
+
 
     if [ $l_status -eq 110 ]; then
         return 9

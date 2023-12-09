@@ -9,30 +9,33 @@
 #Funciones de utilidad
 . ~/.files/setup/linux/_common_utility.bash
 
-#Variable global pero solo se usar localmente en las funciones
-_g_tmp=""
-
-#Determinar la clase del SO
-#  00 - 10: Si es Linux
-#           00 - Si es Linux generico
-#           01 - Si es WSL2
-#  11 - 20: Si es Unix
-#  21 - 30: si es MacOS
-#  31 - 40: Si es Windows
+#Determinar el tipo de SO compatible con interprete shell POSIX.
+#  00 > Si es Linux no-WSL
+#  01 > Si es Linux WSL2 (Kernel de Linux nativo sobre Windows)
+#  02 > Si es Unix
+#  03 > Si es MacOS
+#  04 > Compatible en Linux en Windows: CYGWIN
+#  05 > Compatible en Linux en Windows: MINGW
+#  09 > No identificado
 get_os_type 
 declare -r g_os_type=$?
 
-#Deteriminar el tipo de distribución Linux
-#  00 : Distribución de Linux desconocido
-#  01 : Ubuntu
-#  02 : Fedora
-if [ $g_os_type -le 10 ]; then
-    _g_tmp=$(get_linux_type_id)
-    declare -r g_os_subtype_id=$?
-    declare -r g_os_subtype_name="$_g_tmp"
-    _g_tmp=$(get_linux_type_version)
-    declare -r g_os_subtype_version="$_g_tmp"
-    declare -r g_os_subtype_version_pretty=$(echo "$g_os_subtype_version" | sed -e "$g_regexp_sust_version1")
+#Obtener información de la distribución Linux
+# > 'g_os_subtype_id'             : Tipo de distribucion Linux
+#    > 0000000 : Distribución de Linux desconocidos
+#    > 10 - 29 : Familia Fedora
+#           10 : Fedora
+#           11 : CoreOS Stream
+#           12 : Red Hat Enterprise Linux
+#           19 : Amazon Linux
+#    > 30 - 49 : Familia Debian
+#           30 : Debian
+#           31 : Ubuntu
+# > 'g_os_subtype_name'           : Nombre de distribucion Linux
+# > 'g_os_subtype_version'        : Version extendida de la distribucion Linux
+# > 'g_os_subtype_version_pretty' : Version corta de la distribucion Linux
+if [ $g_os_type -le 1 ]; then
+    get_linux_type_info
 fi
 
 #Determinar si es root
@@ -119,7 +122,7 @@ _can_setup_repository_in_this_so() {
     if [ $p_install_win_cmds -ne 0 ]; then
 
         #Si es Linux
-        if [ $g_os_type -ge 0 ] && [ $g_os_type -le 10 ]; then
+        if [ $g_os_type -le 1 ]; then
 
             #Si es Linux WSL2
             if [ $g_os_type -eq 1 ]; then
@@ -406,7 +409,8 @@ function _install_artifacts() {
 
         elif [ $l_artifact_type -eq 1 ]; then
 
-            if [ $g_os_subtype_id -ne 1 ]; then
+            #Si no es de la familia Debian
+            if [ $g_os_subtype_id -lt 30 ] || [ $g_os_subtype_id -ge 50 ]; then
                 printf 'ERROR (%s): No esta permitido instalar el artefacto "%b[%s]" ("%s") en SO que no sean de familia Debian\n\n' "22" "${l_tag}" "${l_i}" "${l_artifact_name}"
                 return 22
             fi

@@ -9,21 +9,14 @@
 #Funciones de utilidad
 . ~/.files/setup/linux/_common_utility.bash
 
-#Variable global pero solo se usar localmente en las funciones
-_g_tmp=""
 
-#Determinar la clase del SO
+#Determinar el tipo del SO con soporte a interprete shell POSIX
 get_os_type
 declare -r g_os_type=$?
 
-#Deteriminar el tipo de distribución Linux
-if [ $g_os_type -le 10 ]; then
-    _g_tmp=$(get_linux_type_id)
-    declare -r g_os_subtype_id=$?
-    declare -r g_os_subtype_name="$_g_tmp"
-    _g_tmp=$(get_linux_type_version)
-    declare -r g_os_subtype_version="$_g_tmp"
-    declare -r g_os_subtype_version_pretty=$(echo "$g_os_subtype_version" | sed -e "$g_regexp_sust_version1")
+#Obtener informacion de la distribución Linux
+if [ $g_os_type -le 1 ]; then
+    get_linux_type_info
 fi
 
 #Determinar si es root

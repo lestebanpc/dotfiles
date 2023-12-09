@@ -9,21 +9,13 @@
 #Funciones de utilidad
 . ~/.files/setup/linux/_common_utility.bash
 
-#Variable global pero solo se usar localmente en las funciones
-_g_tmp=""
-
-#Determinar la clase del SO
+#Determinar el tipo del SO con soporte a interprete shell POSIX
 get_os_type
 declare -r g_os_type=$?
 
-#Deteriminar el tipo de distribución Linux
-if [ $g_os_type -le 10 ]; then
-    _g_tmp=$(get_linux_type_id)
-    declare -r g_os_subtype_id=$?
-    declare -r g_os_subtype_name="$_g_tmp"
-    _g_tmp=$(get_linux_type_version)
-    declare -r g_os_subtype_version="$_g_tmp"
-    declare -r g_os_subtype_version_pretty=$(echo "$g_os_subtype_version" | sed -e "$g_regexp_sust_version1")
+#Obtener informacion de la distribución Linux
+if [ $g_os_type -le 1 ]; then
+    get_linux_type_info
 fi
 
 #Determinar si es root
@@ -949,7 +941,7 @@ function g_uninstall_package() {
 
     #1. Inicializaciones
     local l_status=0
-    local l_package_name_general="${gA_packages[$p_package_id]}"
+    local l_package_name_default="${gA_packages[$p_package_id]}"
     local l_package_name
 
     #3. Mostrar el titulo
@@ -962,24 +954,25 @@ function g_uninstall_package() {
     fi
 
     #2. Obtener el nombre del paquete para el sistema operativo
-    l_package_name=$(get_package_name "$l_package_name_general" ${g_os_subtype_id})
+    l_package_name=$(get_package_name "$p_package_id" "$l_package_name_default" ${g_os_subtype_id})
     l_status=$?
 
-    if [ $l_status -ne 0 ]; then
-        printf 'No se pudo obtener el nombre real del paquete "%s"\n' "$l_package_name_general"
+    if [ $l_status -eq 9 ]; then
+        printf 'No se pudo obtener el nombre real del paquete "%s"\n' "$l_package_name_default"
         return 3
     fi
     
     #3. ¿El paquete esta instalado?
-    is_package_installed "$l_package_name" $g_os_subtype_id
+    is_package_installed "$l_package_name" $g_os_subtype_id $l_status
     l_status=$?
+    #echo "Package to install: ${l_package_name} - ${g_os_subtype_id} - ${l_status}"
 
     if [ $l_status -eq 9 ]; then
-        printf 'No se pudo obtener información del  paquete "%s"\n' "$l_package_name_general"
+        printf 'No se pudo obtener información del paquete "%s"\n' "$l_package_name_default"
         return 4
 
     elif [ $l_status -eq 1 ]; then
-        #printf 'El paquete "%s" no esta instalado\n' "$l_package_name_general"
+        #printf 'El paquete "%s" no esta instalado\n' "$l_package_name_default"
         return 2
     fi
 
@@ -1038,7 +1031,7 @@ function g_install_package() {
 
     #1. Inicializaciones
     local l_status=0
-    local l_package_name_general="${gA_packages[$p_package_id]}"
+    local l_package_name_default="${gA_packages[$p_package_id]}"
     local l_package_name
 
     #3. Mostrar el titulo
@@ -1051,17 +1044,19 @@ function g_install_package() {
     fi
 
     #2. Obtener el nombre del paquete para el sistema operativo
-    l_package_name=$(get_package_name "$l_package_name_general" ${g_os_subtype_id})
+    l_package_name=$(get_package_name "$p_package_id" "$l_package_name_default" ${g_os_subtype_id})
     l_status=$?
+    #echo "Package> ID: ${p_package_id} - NameGeneral: ${l_package_name_default} - Name: ${l_package_name} - SearchType: ${l_status}"
 
-    if [ $l_status -ne 0 ]; then
-        printf 'No se pudo obtener el nombre real del paquete "%s"\n' "$l_package_name_general"
+    if [ $l_status -eq 9 ]; then
+        printf 'No se pudo obtener el nombre real del paquete "%s"\n' "$l_package_name_default"
         return 3
     fi
     
     #3. ¿El paquete esta instalado?
-    is_package_installed "$l_package_name" $g_os_subtype_id
+    is_package_installed "$l_package_name" $g_os_subtype_id $l_status
     l_status=$?
+    #echo "Package ${l_package_name} installing - Status: ${l_status} - OS: ${g_os_subtype_id}"
 
     if [ $l_status -eq 9 ]; then
         printf 'No se pudo obtener información del  paquete "%s"\n' "$l_package_name"

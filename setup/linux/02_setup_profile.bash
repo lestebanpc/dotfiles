@@ -8,22 +8,16 @@
 #Funciones de utlidad
 . ~/.files/setup/linux/_common_utility.bash
 
-#Variable global pero solo se usar localmente en las funciones
-_g_tmp=""
 
-#Determinar la clase del SO
+#Determinar el tipo del SO con soporte a interprete shell POSIX
 get_os_type
 declare -r g_os_type=$?
 
-#Deteriminar el tipo de distribución Linux
-if [ $g_os_type -le 10 ]; then
-    _g_tmp=$(get_linux_type_id)
-    declare -r g_os_subtype_id=$?
-    declare -r g_os_subtype_name="$_g_tmp"
-    _g_tmp=$(get_linux_type_version)
-    declare -r g_os_subtype_version="$_g_tmp"
-    declare -r g_os_subtype_version_pretty=$(echo "$g_os_subtype_version" | sed -e "$g_regexp_sust_version1")
+#Obtener informacion de la distribución Linux
+if [ $g_os_type -le 1 ]; then
+    get_linux_type_info
 fi
+
 
 #Determinar si es root
 g_is_root=1
@@ -1265,44 +1259,24 @@ function _install_vim_nvim_environment() {
         #print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         if [ -z "$l_version" ]; then
 
-            #Solicitar credenciales de administrador y almacenarlas temporalmente
-            if [ $g_status_crendential_storage -eq -1 ]; then
-
-                storage_sudo_credencial
-                g_status_crendential_storage=$?
-
-                if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
-                    return 120
-                fi
-            fi
-
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
-            #echo "- Instalación de VIM-Enhaced"
             echo "VIM         > Se va instalar VIM-Enhaced"
 
-            case "$g_os_subtype_id" in
-                1)
-                   #Distribución: Ubuntu
-                   #Tiene una version de vi muy antigua
-                   #Para instalar una version mas moderna requiere usar un repositorio externo
-                   #TODO incluir el repositorio externo
-                   if [ $g_is_root -eq 0 ]; then
-                      apt-get install vim
-                   else
-                      sudo apt-get install vim
-                   fi
-                   ;;
-                2)
-                   #Distribución: Fedora
-                   #Fedora por defecto tiene vi pero no incluye vim
-                   if [ $g_is_root -eq 0 ]; then
-                      dnf install vim-enhanced
-                   else
-                      sudo dnf install vim-enhanced
-                   fi
-                   ;;
-            esac
-            l_vim_flag=0
+            #Parametros:
+            # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
+            # 2> Repositorios a instalar/acutalizar: 8 (editor VIM. Tiene Offset=1)
+            # 3> El estado de la credencial almacenada para el sudo
+            ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
+            l_status=$?
+
+            #Si no se acepto almacenar credenciales
+            if [ $l_status -eq 120 ]; then
+                return 120
+            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+            elif [ $l_status -eq 119 ]; then
+               g_status_crendential_storage=0
+            fi
+
         else
             echo "VIM         > VIM-Enhaced \"${l_version}\" ya esta instalado"
         fi
@@ -1904,12 +1878,16 @@ function _show_menu_core() {
     printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO\n" "$g_color_title" "1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Crear los enlaces simbolicos del profile\n" "$g_color_title" "2" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Flag para %bre-crear%b un enlaces simbolicos en caso de existir\n" "$g_color_title" "4" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM    - Instalar   %b(si desea un IDE use 'Flag habilitar como IDE')%b\n" "$g_color_title" "8" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM    - Configurar %b(si desea un IDE use 'Flag habilitar como IDE')%b\n" "$g_color_title" "16" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM    - Flag para habilitarlo como %bIDE%b\n" "$g_color_title" "32" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Instalar   %b(si desea un IDE use 'Flag habitilar como IDE')%b\n" "$g_color_title" "64" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Configurar %b(si desea un IDE use 'Flag habitilar como IDE')%b\n" "$g_color_title" "128" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag para habilitarlo como %bIDE%b\n" "$g_color_title" "256" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Instalar el programa '%bvim%b'\n" "$g_color_title" "8" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Configurar lo basico %b(configura '.vimrc', folderes y plugins que habilitan el modo basico)%b\n" "$g_color_title" "16" \
+           "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(instala 'xclip', 'xsel', 'python3', 'nodejs'/configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
+           "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Instalar el programa '%bnvim%b'\n" "$g_color_title" "64" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Configurar lo basico %b(configura 'init.vim', folderes y plugins que habilitan el modo basico)%b\n" "$g_color_title" "128" \
+           "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(instala 'xclip', 'xsel', 'python3', 'nodejs'/configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \
+           "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) VIM    - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "512" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "1024" "$g_color_reset"
 

@@ -11,18 +11,6 @@ g_color_subtitle="\x1b[36m"
 g_color_info="\x1b[33m"
 g_color_warning="\x1b[31m"
 
-#Expresiones regulares de sustitucion mas usuadas para las versiones
-#La version 'x.y.z' esta la inicio o despues de caracteres no numericos
-declare -r g_regexp_sust_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
-#La version 'x.y.z' o 'x-y-z' esta la inicio o despues de caracteres no numericos
-declare -r g_regexp_sust_version2='s/[^0-9]*\([0-9]\+\.[0-9.-]\+\).*/\1/'
-#La version '.y.z' esta la inicio o despues de caracteres no numericos
-declare -r g_regexp_sust_version3='s/[^0-9]*\([0-9.]\+\).*/\1/'
-#La version 'xyz' (solo un entero sin puntos)  esta la inicio o despues de caracteres no numericos
-declare -r g_regexp_sust_version4='s/[^0-9]*\([0-9]\+\).*/\1/'
-#La version 'x.y.z' esta despues de un caracter vacio
-declare -r g_regexp_sust_version5='s/.*\s\+\([0-9]\+\.[0-9.]\+\).*/\1/'
-
 #Variable global de la ruta donde se instalaran los programas CLI (mas complejos que un simple comando).
 declare -r g_path_programs_lnx='/opt/tools'
 #declare -r g_path_programs_lnx=~/tools
@@ -35,20 +23,14 @@ g_max_length_line=130
 
 #Parametros de entrada - Agumentos y opciones:
 #  1 > El tipo de distribucion Linux (valor de retorno devulto por get_linux_type_id) 
-#      00 : Distribución de Linux desconocido
-#      01 : Ubuntu
-#      02 : Fedora
-#  2 > Tipo de ejecucion del script principal (generalmente el valor de variable 'gp_type_calling')
-#      00 : Ejecución interactiva del script (muestra el menu).
-#      01 : Ejecución no-interactiva del script para instalar/actualizar un conjunto de respositorios
-#      02 : Ejecución no-interactiva del script para instalar/actualizar un solo repositorio
+#  2 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
 # Retorno:
 #   0 - Se tiene los programas necesarios para iniciar la configuración
 #   1 - No se tiene los programas necesarios para iniciar la configuración
 function fulfill_preconditions1() {
 
     #Argumentos
-    local p_os_type="$1"
+    local p_os_subtype_id="$1"
 
     local p_type_calling=$2
     if [ -z "$p_type_calling" ]; then
@@ -74,11 +56,11 @@ function fulfill_preconditions1() {
     #1. Validar el SO
     local l_status=0
 
-    if [ ! -z "$p_os_type" ]; then
+    if [ ! -z "$p_os_subtype_id" ]; then
         
-        #Actualmente solo esta habilitado para: Ubuntu (1), Fedora (2)
-        if [ $p_os_type -lt 1 ] || [ $p_os_type -gt 2 ]; then
-            printf 'No esta implementado operaciones para SO Linux de tipo "%s"\n' "$p_os_type"
+        #Actualmente solo esta habilitado para distribucion de la familia Debian y Fedora.
+        if [ $p_os_subtype_id -lt 10 ] || [ $p_os_subtype_id -ge 50 ]; then
+            printf 'No esta implementado operaciones para SO Linux de tipo "%s"\n' "$p_os_subtype_id"
             return 1
         fi
 
@@ -100,11 +82,10 @@ function fulfill_preconditions1() {
 
     #Solo mostrar info adicional si la ejecución es interactiva
     if [ $p_type_calling -eq 0 ]; then
-        printf '%bOS Type            : (%s)\n' "$g_color_opaque" "$g_os_type"
-        printf 'OS Subtype (Distro): (%s) %s\n' "${g_os_subtype_id}" "${g_os_subtype_version_pretty}"
-        printf 'OS Subtype (Distro): (%s) %s - %s%b\n' "${g_os_subtype_id}" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+        printf '%bLinux distribution - Name   : (%s) %s\n' "$g_color_opaque" "${g_os_subtype_id}" "${g_os_subtype_name}"
+        printf 'Linux distribution - Version: (%s) %s (%s)%b\n' "${g_os_subtype_id}" "$g_os_subtype_version" "${g_os_subtype_version_pretty}" "$g_color_reset"
         l_curl_version=$(echo "$l_curl_version" | head -n 1 | sed "$g_regexp_sust_version1")
-        printf '%bCURL version       : (%s)%b\n' "$g_color_opaque" "$l_curl_version" "$g_color_reset"
+        printf '%bCURL version                :      %s%b\n' "$g_color_opaque" "$l_curl_version" "$g_color_reset"
     fi
     return 0
 
@@ -112,17 +93,14 @@ function fulfill_preconditions1() {
 
 
 #Requisitos necesarios para instalar paquetes
-#  1 > El tipo de distribucion Linux (valor de retorno devulto por get_linux_type_id) 
-#      00 : Distribución de Linux desconocido
-#      01 : Ubuntu
-#      02 : Fedora
+#  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
 # Retorno:
 #   0 - Se tiene los programas necesarios para iniciar la configuración
 #   1 - No se tiene los programas necesarios para iniciar la configuración
 function fulfill_preconditions2() {
 
     #Argumentos
-    local p_os_type="$1"
+    local p_os_subtype_id="$1"
 
     local p_type_calling=$2
     if [ -z "$p_type_calling" ]; then
@@ -140,20 +118,23 @@ function fulfill_preconditions2() {
         echo "      ~/.files/setup/01_setup_commands.bash"
         echo "   3> Configurar el profile del usuario:"
         echo "      chmod u+x ~/.files/setup/02_setup_profile.bash"
+#      00 : Ejecución interactiva del script (muestra el menu).
+#      01 : Ejecución no-interactiva del script para instalar/actualizar un conjunto de respositorios
+#      02 : Ejecución no-interactiva del script para instalar/actualizar un solo repositorio
         echo "      ~/.files/setup/02_setup_profile.bash"
 
         return 1
     fi
 
     #1. Validar el SO
-    local p_os_type="$1"
+    local p_os_subtype_id="$1"
     local l_status=0
 
-    if [ ! -z "$p_os_type" ]; then
+    if [ ! -z "$p_os_subtype_id" ]; then
         
-        #Actualmente solo esta habilitado para: Ubuntu (1), Fedora (2)
-        if [ $p_os_type -lt 1 ] || [ $p_os_type -gt 2 ]; then
-            printf 'No esta implementado operaciones para SO Linux de tipo "%s"\n' "$p_os_type"
+        #Actualmente solo esta habilitado para distribucion de la familia Debian y Fedora.
+        if [ $p_os_subtype_id -lt 10 ] || [ $p_os_subtype_id -ge 50 ]; then
+            printf 'No esta implementado operaciones para SO Linux de tipo "%s"\n' "$p_os_subtype_id"
             return 1
         fi
 
@@ -163,9 +144,8 @@ function fulfill_preconditions2() {
 
     #Solo mostrar info adicional si la ejecución es interactiva
     if [ $p_type_calling -eq 0 ]; then
-        printf '%bOS Type            : (%s)\n' "$g_color_opaque" "$g_os_type"
-        printf 'OS Subtype (Distro): (%s) %s\n' "${g_os_subtype_id}" "${g_os_subtype_version_pretty}"
-        printf 'OS Subtype (Distro): (%s) %s - %s%b\n' "${g_os_subtype_id}" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+        printf '%bLinux distribution - Name   : (%s) %s\n' "$g_color_opaque" "${g_os_subtype_id}" "${g_os_subtype_name}"
+        printf 'Linux distribution - Version: (%s) %s (%s)%b\n' "${g_os_subtype_id}" "$g_os_subtype_version" "${g_os_subtype_version_pretty}" "$g_color_reset"
     fi
     return 0
 

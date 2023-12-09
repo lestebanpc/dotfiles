@@ -1558,13 +1558,15 @@ function load_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype_id -eq 1 ]; then
-                    pna_artifact_names=("git-delta_${p_repo_last_version_pretty}_amd64.deb")
-                    pna_artifact_types=(1)
-                else
-                    pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
-                    pna_artifact_types=(2)
-                fi
+                #if [ $g_os_subtype_id -eq 31 ]; then
+                #    pna_artifact_names=("git-delta_${p_repo_last_version_pretty}_amd64.deb")
+                #    pna_artifact_types=(1)
+                #else
+                #    pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                #    pna_artifact_types=(2)
+                #fi
+                pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                pna_artifact_types=(2)
             else
                 pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(3)
@@ -1574,7 +1576,7 @@ function load_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
-                #if [ $g_os_subtype_id -eq 1 ]; then
+                #if [ $g_os_subtype_id -eq 31 ]; then
                 #    pna_artifact_names=("ripgrep_${p_repo_last_version_pretty}_amd64.deb")
                 #    pna_artifact_types=(1)
                 #else
@@ -1603,13 +1605,15 @@ function load_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype_id -eq 1 ]; then
-                    pna_artifact_names=("bat_${p_repo_last_version_pretty}_amd64.deb")
-                    pna_artifact_types=(1)
-                else
-                    pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
-                    pna_artifact_types=(2)
-                fi
+                #if [ $g_os_subtype_id -eq 31 ]; then
+                #    pna_artifact_names=("bat_${p_repo_last_version_pretty}_amd64.deb")
+                #    pna_artifact_types=(1)
+                #else
+                #    pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                #    pna_artifact_types=(2)
+                #fi
+                pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                pna_artifact_types=(2)
             else
                 pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(3)
@@ -1630,15 +1634,15 @@ function load_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype_id -eq 1 ]; then
-                    #pna_artifact_names=("fd_${p_repo_last_version_pretty}_amd64.deb")
-                    #pna_artifact_types=(1)
-                    pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
-                    pna_artifact_types=(2)
-                else
-                    pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
-                    pna_artifact_types=(2)
-                fi
+                #if [ $g_os_subtype_id -eq 31 ]; then
+                #    pna_artifact_names=("fd_${p_repo_last_version_pretty}_amd64.deb")
+                #    pna_artifact_types=(1)
+                #else
+                #    pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                #    pna_artifact_types=(2)
+                #fi
+                pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                pna_artifact_types=(2)
             else
                 pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(3)
@@ -1665,15 +1669,15 @@ function load_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype_id -eq 1 ]; then
-                    #pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.deb")
-                    #pna_artifact_types=(1)
-                    pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.tar.gz")
-                    pna_artifact_types=(2)
-                else
-                    pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.tar.gz")
-                    pna_artifact_types=(2)
-                fi
+                #if [ $g_os_subtype_id -eq 31 ]; then
+                #    pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.deb")
+                #    pna_artifact_types=(1)
+                #else
+                #    pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.tar.gz")
+                #    pna_artifact_types=(2)
+                #fi
+                pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.tar.gz")
+                pna_artifact_types=(2)
             else
                 pna_artifact_names=("step_windows_${p_repo_last_version_pretty}_amd64.zip")
                 pna_artifact_types=(3)
@@ -1878,15 +1882,15 @@ function load_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype_id -eq 1 ]; then
-                    #pna_artifact_names=("nvim-linux64.deb")
-                    #pna_artifact_types=(1)
-                    pna_artifact_names=("nvim-linux64.tar.gz")
-                    pna_artifact_types=(2)
-                else
-                    pna_artifact_names=("nvim-linux64.tar.gz")
-                    pna_artifact_types=(2)
-                fi
+                #if [ $g_os_subtype_id -eq 31 ]; then
+                #    pna_artifact_names=("nvim-linux64.deb")
+                #    pna_artifact_types=(1)
+                #else
+                #    pna_artifact_names=("nvim-linux64.tar.gz")
+                #    pna_artifact_types=(2)
+                #fi
+                pna_artifact_names=("nvim-linux64.tar.gz")
+                pna_artifact_types=(2)
             else
                 pna_artifact_names=("nvim-win64.zip")
                 pna_artifact_types=(3)
@@ -1968,12 +1972,17 @@ function load_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_os_subtype_id -eq 1 ]; then
+                #Si es de la familia Debian
+                if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
                     pna_artifact_names=("3scale-toolbox_${p_repo_last_version_pretty}-1_amd64.deb")
                     pna_artifact_types=(1)
-                else
+                #Si es de la familia Fedora
+                elif [ $g_os_subtype_id -ge 10 ] && [ $g_os_subtype_id -lt 30 ]; then
                     pna_artifact_names=("3scale-toolbox_${p_repo_last_version_pretty}-1.el8.x86_64.rpm")
                     pna_artifact_types=(1)
+                else
+                    #No soportato en esta distribución Linux
+                    return 1
                 fi
             else
                 #No se instala nada en Windows
@@ -5216,13 +5225,14 @@ function install_initialize_menu_option() {
             #1. Obtener los paquetes que requeridos
             local la_packages_needed=()
 
-            #Si es Fedora
-            if [ $g_os_subtype_id -eq 2 ]; then
+            #Si es de la familia Fedora/CentOS
+            if [ $g_os_subtype_id -ge 10 ] && [ $g_os_subtype_id -lt 30 ]; then
+
                 #la_packages_needed=("krb5-libs" "libicu" "openssl-libs" "zlib" "compat-openssl10")
                 la_packages_needed=("krb5-libs" "libicu" "openssl-libs" "zlib")
 
-            #Si es otro
-            else
+            #Si es de la familia Debian
+            elif [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
 
                 #libc6
                 #
@@ -5247,7 +5257,10 @@ function install_initialize_menu_option() {
                 #libstdc++6
                 #libunwind8 (for 22.x)
                 #zlib1g
+
+                #Por ahora solo esta soportando Ubuntu 22.04
                 la_packages_needed=("libc6" "libgssapi-krb5-2" "libstdc++6" "zlib1g" "libunwind8" "liblttng-ust1" "libicu70" "libssl3")
+
             fi
 
             #2. Determinar los paquetes que ya estan instalados
