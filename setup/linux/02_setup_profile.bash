@@ -5,25 +5,59 @@
 #Funciones generales: determinar el tipo del SO, ...
 . ~/.files/terminal/linux/functions/func_utility.bash
 
-#Funciones de utlidad
+#Obtener informacion basica del SO
+if [ -z "$g_os_type" ]; then
+
+    #Determinar el tipo del SO con soporte a interprete shell POSIX
+    get_os_type
+    declare -r g_os_type=$?
+
+    #Obtener informacion de la distribución Linux
+    if [ $g_os_type -le 1 ]; then
+        get_linux_type_info
+    fi
+
+fi
+
+
+#Obtener informacion basica del usuario
+if [ -z "$g_user_is_root" ]; then
+
+    #Determinar si es root y el soporte de sudo
+    get_user_options
+
+    #Si el usuario no tiene permisos a sudo o el SO no implementa sudo,
+    # - Se instala/Configura los binarios a nivel usuario, las fuentes a nivel usuario.
+    # - No se instala ningun paquete/programa que requiere permiso 'root' para su instalación
+    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+        #Ruta donde se instalaran los programas CLI (tiene una estructura de folderes y generalmente incluye mas de 1 binario).
+        g_path_programs='/opt/tools'
+
+        #Rutas de binarios, archivos de help (man) y las fuentes
+        #g_path_bin='/usr/local/bin'
+        #g_path_man='/usr/local/man/man1'
+        #g_path_fonts='/usr/share/fonts'
+
+    else
+
+        #Ruta donde se instalaran los programas CLI (tiene una estructura de folderes y generalmente incluye mas de 1 binario).
+        g_path_programs=~/tools
+
+        #Rutas de binarios, archivos de help (man) y las fuentes
+        #g_path_bin=~/.local/bin
+        #g_path_man=~/.local/man/man1
+        #g_path_fonts=~/.local/share/fonts
+
+    fi
+
+fi
+
+#Flag '0' indica que vim esta instalado (los plugins de vim se puede instalar sin tener el vim instalado)
+g_is_vim_installed=0
+
+#Funciones de utilidad
 . ~/.files/setup/linux/_common_utility.bash
-
-
-#Determinar el tipo del SO con soporte a interprete shell POSIX
-get_os_type
-declare -r g_os_type=$?
-
-#Obtener informacion de la distribución Linux
-if [ $g_os_type -le 1 ]; then
-    get_linux_type_info
-fi
-
-
-#Determinar si es root
-g_is_root=1
-if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
-    g_is_root=0
-fi
 
 
 
@@ -829,13 +863,13 @@ _install_nodejs() {
     #1. Instalación de Node.JS (el gestor de paquetes npm esta incluido)
 
     #Validar si 'node' esta en el PATH
-    echo "$PATH" | grep "${g_path_programs_lnx}/nodejs/bin" &> /dev/null
+    echo "$PATH" | grep "${g_path_programs}/nodejs/bin" &> /dev/null
     l_status=$?
-    if [ $l_status -ne 0 ]; then
+    if [ $l_status -ne 0 ] && [ -f "${g_path_programs}/nodejs/bin/node" ]; then
         printf '%bNode.JS %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
             "$g_color_warning" "$l_version" "$g_color_reset"
-        printf 'Adicionando a la sesion actual: PATH=%s/nodejs/bin:$PATH\n' "${g_path_programs_lnx}"
-        export PATH=${g_path_programs_lnx}/nodejs/bin:$PATH
+        printf 'Adicionando a la sesion actual: PATH=%s/nodejs/bin:$PATH\n' "${g_path_programs}"
+        export PATH=${g_path_programs}/nodejs/bin:$PATH
     fi
 
     #Obtener la version de Node.JS actual
@@ -869,10 +903,10 @@ _install_nodejs() {
         fi
 
         #Validar si 'node' esta en el PATH
-        echo "$PATH" | grep "${g_path_programs_lnx}/nodejs/bin" &> /dev/null
+        echo "$PATH" | grep "${g_path_programs}/nodejs/bin" &> /dev/null
         l_status=$?
         if [ $l_status -ne 0 ]; then
-            export PATH=${g_path_programs_lnx}/nodejs/bin:$PATH
+            export PATH=${g_path_programs}/nodejs/bin:$PATH
         fi
 
         #Obtener la version instalada
@@ -972,23 +1006,27 @@ _install_python() {
 
     if [ $l_status -ne 0 ] || [ $l_status2 -ne 0 ]; then
 
-        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
-        echo "VIM (IDE)   > Se va instalar RTE Python3 y su gestor de paquetes Pip"
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+            echo "VIM (IDE)   > Se va instalar RTE Python3 y su gestor de paquetes Pip"
 
 
-        #Parametros:
-        # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-        # 2> Repositorios a instalar/acutalizar: 8 (RTE Python y Pip. Tiene Offset=1)
-        # 3> El estado de la credencial almacenada para el sudo
-        ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
-        l_status=$?
+            #Parametros:
+            # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
+            # 2> Repositorios a instalar/acutalizar: 8 (RTE Python y Pip. Tiene Offset=1)
+            # 3> El estado de la credencial almacenada para el sudo
+            ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
+            l_status=$?
 
-        #Si no se acepto almacenar credenciales
-        if [ $l_status -eq 120 ]; then
-            return 120
-        #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-        elif [ $l_status -eq 119 ]; then
-           g_status_crendential_storage=0
+            #Si no se acepto almacenar credenciales
+            if [ $l_status -eq 120 ]; then
+                return 120
+            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+            elif [ $l_status -eq 119 ]; then
+               g_status_crendential_storage=0
+            fi
+
         fi
 
     fi
@@ -997,7 +1035,16 @@ _install_python() {
     l_status=$?
     if [ $l_status -eq 0 ]; then
         l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-        echo "VIM (IDE)   > Python3 \"$l_version\" esta instalado"
+        printf 'VIM (IDE)   > Python3 "%s" esta instalado\n' "$l_version"
+    else
+        printf 'VIM (IDE)   > %bPython3 no esta instalado. Se recomienda instalarlo%b. Luego de ello, instale los paquetes de Python:\n' "$g_color_warning" "$g_color_reset"
+        printf '%b            > Comando jtbl      : "pip3 install jtbl" (mostrar arreglos json en tablas en consola)\n' "$g_color_opaque"
+        printf '            > Comando compiledb : "pip3 install compiledb" (utilidad para generar make file para Clang)\n'
+        printf '            > Comando rope      : "pip3 install rope" (utilidad para refactorización de Python)\n'
+        printf '            > Comando pynvim    : "pip3 install pynvim" (soporte plugin en Python para NeovIM)%b\n' "$g_color_reset"
+
+        #return 1
+        return 0
     fi
 
     l_version=$(python3 -m pip --version 2> /dev/null)
@@ -1022,7 +1069,7 @@ _install_python() {
         echo "General     > Instalando el comando 'jtbl' (modulo python) para mostrar arreglos json en una consola en formato tabular."
         
         #Se instalar a nivel usuario
-        pip3 install jtbl
+        pip3 install jtbl --break-system-packages
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1040,7 +1087,7 @@ _install_python() {
         echo "General     > Instalando el comando 'compiledb' (modulo python) para generar una base de datos de compilacion Clang desde un make file."
         
         #Se instalar a nivel usuario
-        pip3 install compiledb
+        pip3 install compiledb --break-system-packages
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1057,7 +1104,7 @@ _install_python() {
         echo "General     > Instalando la libreria python 'rope' para refactorización de Python (https://github.com/python-rope/rope)."
         
         #Se instalara a nivel usuario
-        pip3 install rope
+        pip3 install rope --break-system-packages
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1077,7 +1124,7 @@ _install_python() {
             echo "NeoVIM (IDE)> Instalando el paquete 'pynvim' de Python3 para soporte de plugins en dicho RTE"
             
             #Se instalara a nivel usuario
-            pip3 install pynvim
+            pip3 install pynvim --break-system-packages
 
         else
             l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1170,32 +1217,35 @@ function _install_vim_nvim_environment() {
 
     if [ $l_flag_developer_vim -eq 0 ] || [ $l_flag_developer_nvim -eq 0 ]; then
 
-        #echo "> Instalando los comandos/programas basicos requeridos ..."
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
-        l_version=$(xclip -version 2>&1 1> /dev/null)
-        l_status=$?
-        
-        l_version2=$(xsel --version 2> /dev/null)
-        l_status2=$?
-
-        if [ $l_status -ne 0 ] || [ $l_status2 -ne 0 ]; then
-
-            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
-            echo "General     > Se va instalar comandos para gestion de X11 Clipboard: XClip, XSel"
-
-            #Parametros:
-            # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-            # 2> Repositorios a instalar/acutalizar: 4 (herramienta de X11 clipbboard. Tiene Offset=1)
-            # 3> El estado de la credencial almacenada para el sudo
-            ~/.files/setup/linux/03_setup_packages.bash 1 4 $g_status_crendential_storage
+            #echo "> Instalando los comandos/programas basicos requeridos ..."
+            l_version=$(xclip -version 2>&1 1> /dev/null)
             l_status=$?
+            
+            l_version2=$(xsel --version 2> /dev/null)
+            l_status2=$?
 
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-               g_status_crendential_storage=0
+            if [ $l_status -ne 0 ] || [ $l_status2 -ne 0 ]; then
+
+                print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+                echo "General     > Se va instalar comandos para gestion de X11 Clipboard: XClip, XSel"
+
+                #Parametros:
+                # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
+                # 2> Repositorios a instalar/acutalizar: 4 (herramienta de X11 clipbboard. Tiene Offset=1)
+                # 3> El estado de la credencial almacenada para el sudo
+                ~/.files/setup/linux/03_setup_packages.bash 1 4 $g_status_crendential_storage
+                l_status=$?
+
+                #Si no se acepto almacenar credenciales
+                if [ $l_status -eq 120 ]; then
+                    return 120
+                #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+                elif [ $l_status -eq 119 ]; then
+                   g_status_crendential_storage=0
+                fi
+
             fi
 
         fi
@@ -1205,7 +1255,9 @@ function _install_vim_nvim_environment() {
         if [ $l_status -eq 0 ]; then
             l_version=$(echo "$l_version" | head -n 1 )
             l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-            echo "General     > XClip \"${l_version}\" esta instalado"
+            printf 'General     > XClip "%s" esta instalado\n' "$l_version"
+        else
+            printf 'General     > %bXClip no esta instalado, se recomienda instalarlo%b.\n' "$g_color_warning" "$g_color_reset"
         fi
 
         l_version=$(xsel --version 2> /dev/null)
@@ -1213,7 +1265,9 @@ function _install_vim_nvim_environment() {
         if [ $l_status -eq 0 ]; then
             l_version=$(echo "$l_version" | head -n 1 )
             l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-            echo "General     > XSel \"${l_version}\" esta instalado"
+            printf 'General     > XSel "%s" esta instalado\n' "$l_version"
+        else
+            printf 'General     > %bXSel no esta esta instalado, se recomienda instalarlo%b.\n' "$g_color_warning" "$g_color_reset"
         fi
 
     fi
@@ -1251,6 +1305,7 @@ function _install_vim_nvim_environment() {
         l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
     else
         l_version=""
+        g_is_vim_installed=1
     fi
 
     #Instalar
@@ -1259,40 +1314,48 @@ function _install_vim_nvim_environment() {
         #print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
         if [ -z "$l_version" ]; then
 
-            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
-            echo "VIM         > Se va instalar VIM-Enhaced"
+            if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+                
+                print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+                echo "VIM         > Se va instalar VIM-Enhaced"
 
-            #Parametros:
-            # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-            # 2> Repositorios a instalar/acutalizar: 8 (editor VIM. Tiene Offset=1)
-            # 3> El estado de la credencial almacenada para el sudo
-            ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
-            l_status=$?
+                #Parametros:
+                # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
+                # 2> Repositorios a instalar/acutalizar: 8 (editor VIM. Tiene Offset=1)
+                # 3> El estado de la credencial almacenada para el sudo
+                ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
+                l_status=$?
 
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-               g_status_crendential_storage=0
+                #Si no se acepto almacenar credenciales
+                if [ $l_status -eq 120 ]; then
+                    return 120
+                #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+                elif [ $l_status -eq 119 ]; then
+                   g_status_crendential_storage=0
+                fi
+
+            else
+                printf 'VIM         > %bVIM-Enhaced no esta instalado, se recomienda su instalación%b.\n' "$g_color_warning" "$g_color_reset"
+                g_is_vim_installed=1
             fi
 
         else
-            echo "VIM         > VIM-Enhaced \"${l_version}\" ya esta instalado"
+            printf 'VIM         > VIM-Enhaced "%s" ya esta instalado' "$l_version"
         fi
+
 
     fi
 
     #7. Instalar NeoVIM
 
     #Validar si 'nvim' esta en el PATH
-    echo "$PATH" | grep "${g_path_programs_lnx}/neovim/bin" &> /dev/null
+    echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
     l_status=$?
-    if [ $l_status -ne 0 ]; then
-        printf '%bNode.JS %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+    if [ $l_status -ne 0 ] && [ -f "${g_path_programs}/neovim/bin/nvim" ]; then
+        printf '%bNeoVIM %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
             "$g_color_warning" "$l_version" "$g_color_reset"
-        printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_programs_lnx}"
-        export PATH=${g_path_programs_lnx}/neovim/bin:$PATH
+        printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_programs}"
+        export PATH=${g_path_programs}/neovim/bin:$PATH
     fi
 
     #Determinar si esta instalado VIM:
@@ -1328,19 +1391,20 @@ function _install_vim_nvim_environment() {
             fi
 
             #Validar si 'nvim' esta en el PATH
-            echo "$PATH" | grep "${g_path_programs_lnx}/neovim/bin" &> /dev/null
+            echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
-                export PATH=${g_path_programs_lnx}/neovim/bin:$PATH
+                export PATH=${g_path_programs}/neovim/bin:$PATH
             fi
 
             #Obtener la version instalada
-            l_version=$(node -v 2> /dev/null)
+            l_version=$(nvim --version 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                printf 'Se instaló la Node.JS version %s\n' "$l_version"
+                l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+                printf 'Se instaló NeoVIM version "%s"\n' "$l_version"
             else
-                printf 'Ocurrio un error en la instalacion de Node.JS "%s"\n' "$l_version"
+                printf 'Ocurrio un error en la instalacion de NeoVIM "%s"\n' "$l_version"
             fi
 
         else
@@ -1389,32 +1453,15 @@ function _setup_profile() {
     print_line '─' $g_max_length_line "$g_color_opaque"
 
     
-     #if [ ! -d /u01/userkeys/ssh ]; then
 
-     #    echo "Permiso ejecucion de shell y los folderes basicos \"/u01/userkeys/ssh\""
-     #    chmod u+x ~/.files/terminal/linux/tmux/*.bash
-     #    chmod u+x ~/.files/terminal/linux/complete/*.bash
-     #    chmod u+x ~/.files/terminal/linux/keybindings/*.bash
-     #    chmod u+x ~/.files/setup/linux/0*.bash
-     #
-     #    if [ $g_is_root -eq 0 ]; then
-     #        mkdir -pm 755 /u01
-     #        mkdir -pm 755 /u01/userkeys
-     #        mkdir -pm 755 /u01/userkeys/ssh
-     #        chown -R lucianoepc:lucianoepc /u01/userkeys
-     #    else
-     #        sudo mkdir -pm 755 /u01
-     #        sudo mkdir -pm 755 /u01/userkeys
-     #        sudo chown lucianoepc:lucianoepc /u01/userkeys
-     #        mkdir -pm 755 /u01/userkeys/ssh
-     #    fi
-     #fi
-
+    #3. Creando enlaces simbolico dependientes del tipo de distribución Linux
 
     #Si es Linux WSL
     local l_link=""
     local l_object=""
     local l_aux
+
+    #Archivo de colores de la terminal usado por comandos basicos
     if [ $g_os_type -eq 1 ]; then
 
         l_link='/.dircolors'
@@ -1432,143 +1479,114 @@ function _setup_profile() {
             printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
         fi
 
-        l_link='/.gitconfig'
-        l_object='/.files/config/git/wsl2_git.toml'
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
-
-
-        l_link='/.ssh/config'
-        l_object='/.files/config/ssh/wsl2_ssh.conf'
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
-
-
-        l_link='/.config/powershell/Microsoft.PowerShell_profile.ps1'
-        l_object='/.files/terminal/powershell/profile/ubuntu_wsl.ps1'
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                mkdir -p ~/.config/powershell/
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            mkdir -p ~/.config/powershell/
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
-
-
-        l_link='/.bashrc'
-        l_object='/.files/terminal/linux/profile/ubuntu_wls.bash'
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
-
-
-    #Si es un Linux generico (NO WSL)
-    else
-
-        l_link='/.gitconfig'
-        l_object='/.files/config/git/vm_linux_git.toml'
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
-
-
-        l_link='/.ssh/config'
-        l_object='/.files/config/ssh/vm_linux_ssh.conf'
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
-
-
-        l_link='/.config/powershell/Microsoft.PowerShell_profile.ps1'
-        l_object='/.files/terminal/powershell/profile/fedora_vm.ps1'
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                mkdir -p ~/.config/powershell/
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            mkdir -p ~/.config/powershell/
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
-
-
-        l_link='/.bashrc'
-        l_object='/.files/terminal/linux/profile/fedora_vm.bash'
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
-
     fi
 
-    #8.2 Creando enlaces simbolico independiente del tipo de distribución Linux
+    #Archivo de configuración de Git
+    l_link='/.gitconfig'
+    if [ $g_os_type -eq 1 ]; then
+        l_object='/.files/config/git/linux_git_usr1.toml'
+    else
+        l_object='/.files/config/git/linux_git_usr2.toml'
+    fi
+
+    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
+        if [ $l_overwrite_ln_flag -eq 0 ]; then
+            ln -snf ${HOME}${l_object} ${HOME}${l_link}
+            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
+        else
+            l_aux=$(readlink ${HOME}${l_link})
+            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
+        fi
+    else
+        ln -snf ${HOME}${l_object} ${HOME}${l_link}
+        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
+    fi
+
+
+    #Archivo de configuración de SSH
+    l_link='/.ssh/config'
+    if [ $g_os_type -eq 1 ]; then
+        l_object='/.files/config/ssh/linux_ssh_01.conf'
+    else
+        l_object='/.files/config/ssh/linux_ssh_02.conf'
+    fi
+
+    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
+        if [ $l_overwrite_ln_flag -eq 0 ]; then
+            ln -snf ${HOME}${l_object} ${HOME}${l_link}
+            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
+        else
+            l_aux=$(readlink ${HOME}${l_link})
+            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
+        fi
+    else
+        ln -snf ${HOME}${l_object} ${HOME}${l_link}
+        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
+    fi
+
+
+    #Archivos de configuración de PowerShell
+    l_link='/.config/powershell/Microsoft.PowerShell_profile.ps1'
+    if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+            l_object='/.files/terminal/powershell/debian_non_shared.ps1'
+        else
+            l_object='/.files/terminal/powershell/fedora_non_shared.ps1'
+        fi
+    else
+        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+            l_object='/.files/terminal/powershell/debian_shared.ps1'
+        else
+            l_object='/.files/terminal/powershell/fedora_shared.ps1'
+        fi
+    fi
+
+    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
+        if [ $l_overwrite_ln_flag -eq 0 ]; then
+            mkdir -p ~/.config/powershell/
+            ln -snf ${HOME}${l_object} ${HOME}${l_link}
+            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
+        else
+            l_aux=$(readlink ${HOME}${l_link})
+            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
+        fi
+    else
+        mkdir -p ~/.config/powershell/
+        ln -snf ${HOME}${l_object} ${HOME}${l_link}
+        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
+    fi
+
+    #Creando el profile del interprete shell
+    l_link='/.bashrc'
+    if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+            l_object='/.files/terminal/linux/profile/debian_non_shared.bash'
+        else
+            l_object='/.files/terminal/linux/profile/fedora_non_shared.bash'
+        fi
+    else
+        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+            l_object='/.files/terminal/linux/profile/debian_shared.bash'
+        else
+            l_object='/.files/terminal/linux/profile/fedora_shared.bash'
+        fi
+    fi
+
+    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
+        if [ $l_overwrite_ln_flag -eq 0 ]; then
+            ln -snf ${HOME}${l_object} ${HOME}${l_link}
+            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
+        else
+            l_aux=$(readlink ${HOME}${l_link})
+            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
+        fi
+    else
+        ln -snf ${HOME}${l_object} ${HOME}${l_link}
+        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
+    fi
+
+
+    #4. Creando enlaces simbolico independiente del tipo de distribución Linux
 
     #Crear el enlace de TMUX
     l_link='/.tmux.conf'
@@ -1791,27 +1809,36 @@ function _setup() {
     #03. Actualizar los paquetes de los repositorios
     local l_title
     local l_option=1
-    local l_flag=$(( $p_opciones & $l_option ))
+    local l_flag
+    
+    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
-    if [ $l_flag -eq $l_option ]; then
+        l_flag=$(( $p_opciones & $l_option ))
+        if [ $l_flag -eq $l_option ]; then
 
-        #Solicitar credenciales de administrador y almacenarlas temporalmente
-        storage_sudo_credencial
-        g_status_crendential_storage=$?
-        #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-        if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
-            return 120
+            #Solicitar credenciales de administrador y almacenarlas temporalmente
+            if [ $g_status_crendential_storage -eq -1 ]; then
+                storage_sudo_credencial
+                g_status_crendential_storage=$?
+                #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+                #  Si es 0 o 1: la instalación/configuración es completar
+                #  Si es 2    : el usuario no acepto la instalación/configuración
+                #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
+                if [ $g_status_crendential_storage -eq 2 ]; then
+                    return 120
+                fi
+            fi
+            
+            #Actualizar los paquetes de los repositorios
+            print_line '─' $g_max_length_line  "$g_color_opaque"
+            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+            print_text_in_center2 "$l_title" $g_max_length_line 
+            print_line '─' $g_max_length_line "$g_color_opaque"
+           
+            upgrade_os_packages $g_os_subtype_id 
+
         fi
-        
-        #Actualizar los paquetes de los repositorios
-        print_line '─' $g_max_length_line  "$g_color_opaque"
-        printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
-        print_text_in_center2 "$l_title" $g_max_length_line 
-        print_line '─' $g_max_length_line "$g_color_opaque"
-       
-        upgrade_os_packages $g_os_subtype_id 
-
-    fi   
+    fi
     
     #05. Instalando los programas requeridos para usar VIM/NeoVIM
     local l_flag_title=1
@@ -1875,19 +1902,34 @@ function _show_menu_core() {
 
     local l_max_digits=4
 
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO\n" "$g_color_title" "1" "$g_color_reset"
+    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+        printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO\n" "$g_color_title" "1" "$g_color_reset"
+    fi
     printf "     (%b%0${l_max_digits}d%b) Crear los enlaces simbolicos del profile\n" "$g_color_title" "2" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Flag para %bre-crear%b un enlaces simbolicos en caso de existir\n" "$g_color_title" "4" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) VIM    - Instalar el programa '%bvim%b'\n" "$g_color_title" "8" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) VIM    - Configurar lo basico %b(configura '.vimrc', folderes y plugins que habilitan el modo basico)%b\n" "$g_color_title" "16" \
            "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(instala 'xclip', 'xsel', 'python3', 'nodejs'/configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
-           "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+
+    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+        printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(instala 'xclip', 'xsel', 'python3', 'nodejs'/configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
+               "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    else
+        printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
+               "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    fi
+
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Instalar el programa '%bnvim%b'\n" "$g_color_title" "64" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Configurar lo basico %b(configura 'init.vim', folderes y plugins que habilitan el modo basico)%b\n" "$g_color_title" "128" \
            "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(instala 'xclip', 'xsel', 'python3', 'nodejs'/configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \
-           "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+
+    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+        printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(instala 'xclip', 'xsel', 'python3', 'nodejs'/configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \
+               "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    else
+        printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \
+               "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    fi
     printf "     (%b%0${l_max_digits}d%b) VIM    - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "512" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "1024" "$g_color_reset"
 
@@ -1995,7 +2037,7 @@ function g_main() {
 _g_status=0
 
 #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
-fulfill_preconditions1 $g_os_subtype_id 0
+fulfill_preconditions $g_os_subtype_id 0 0 1
 _g_status=$?
 
 #Iniciar el procesamiento

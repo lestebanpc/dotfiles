@@ -151,10 +151,5 @@ declare -A gA_repo_config=(
 
 
 
-#Variable global ruta de los programas CLI y/o binarios en Windows desde su WSL2
-if [ $g_os_type -eq 1 ]; then
-   declare -r g_path_programs_win='/mnt/d/CLI'
-   declare -r g_path_commands_win="${g_path_programs_win}/Cmds"
-fi
 
 

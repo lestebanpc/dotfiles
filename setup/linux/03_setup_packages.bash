@@ -6,23 +6,30 @@
 #Funciones generales, determinar el tipo del SO y si es root
 . ~/.files/terminal/linux/functions/func_utility.bash
 
+#Obtener informacion basica del SO
+if [ -z "$g_os_type" ]; then
+
+    #Determinar el tipo del SO con soporte a interprete shell POSIX
+    get_os_type
+    declare -r g_os_type=$?
+
+    #Obtener informacion de la distribución Linux
+    if [ $g_os_type -le 1 ]; then
+        get_linux_type_info
+    fi
+
+fi
+
+#Obtener informacion basica del usuario
+if [ -z "$g_user_is_root" ]; then
+
+    #Determinar si es root y el soporte de sudo
+    get_user_options
+
+fi
+
 #Funciones de utilidad
 . ~/.files/setup/linux/_common_utility.bash
-
-#Determinar el tipo del SO con soporte a interprete shell POSIX
-get_os_type
-declare -r g_os_type=$?
-
-#Obtener informacion de la distribución Linux
-if [ $g_os_type -le 1 ]; then
-    get_linux_type_info
-fi
-
-#Determinar si es root
-g_is_root=1
-if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
-    g_is_root=0
-fi
 
 
 #Menu dinamico: Offset del indice donde inicia el menu dinamico.
@@ -982,8 +989,11 @@ function g_uninstall_package() {
     if [ $g_status_crendential_storage -eq -1 ]; then
         storage_sudo_credencial
         g_status_crendential_storage=$?
-        #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-        if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+        #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+        #  Si es 0 o 1: la instalación/configuración es completar
+        #  Si es 2    : el usuario no acepto la instalación/configuración
+        #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
+        if [ $g_status_crendential_storage -eq 2 ]; then
             return 120
         fi
     fi
@@ -1073,8 +1083,11 @@ function g_install_package() {
     if [ $g_status_crendential_storage -eq -1 ]; then
         storage_sudo_credencial
         g_status_crendential_storage=$?
-        #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-        if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+        #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+        #  Si es 0 o 1: la instalación/configuración es completar
+        #  Si es 2    : el usuario no acepto la instalación/configuración
+        #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
+        if [ $g_status_crendential_storage -eq 2 ]; then
             return 120
         fi
     fi
@@ -1128,8 +1141,11 @@ function g_install_packages() {
             if [ $g_status_crendential_storage -eq -1 ]; then
                 storage_sudo_credencial
                 g_status_crendential_storage=$?
-                #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-                if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+                #  Si es 0 o 1: la instalación/configuración es completar
+                #  Si es 2    : el usuario no acepto la instalación/configuración
+                #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
+                if [ $g_status_crendential_storage -eq 2 ]; then
                     return 120
                 fi
             fi
@@ -1415,7 +1431,7 @@ g_is_credential_storage_externally=1
 if [ $gp_uninstall -eq 0 ]; then
 
     #Validar los requisitos
-    fulfill_preconditions2 $g_os_subtype_id $gp_type_calling
+    fulfill_preconditions $g_os_subtype_id $gp_type_calling 1 0
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -1432,7 +1448,7 @@ else
     if [ $gp_type_calling -eq 0 ]; then
     
         #Validar los requisitos
-        fulfill_preconditions2 $g_os_subtype_id $gp_type_calling
+        fulfill_preconditions $g_os_subtype_id $gp_type_calling 1 0
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -1466,7 +1482,7 @@ else
         fi
 
         #Validar los requisitos
-        fulfill_preconditions2 $g_os_subtype_id $gp_type_calling
+        fulfill_preconditions $g_os_subtype_id $gp_type_calling 1 0
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -1507,7 +1523,7 @@ else
         fi
     
         #Validar los requisitos
-        fulfill_preconditions2 $g_os_subtype_id $gp_type_calling
+        fulfill_preconditions $g_os_subtype_id $gp_type_calling 1 0
         _g_status=$?
 
         #Iniciar el procesamiento

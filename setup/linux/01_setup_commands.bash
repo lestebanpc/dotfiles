@@ -6,43 +6,93 @@
 #Funciones generales, determinar el tipo del SO y si es root
 . ~/.files/terminal/linux/functions/func_utility.bash
 
+#Obtener informacion basica del SO
+if [ -z "$g_os_type" ]; then
+
+    #Determinar el tipo de SO compatible con interprete shell POSIX.
+    #  00 > Si es Linux no-WSL
+    #  01 > Si es Linux WSL2 (Kernel de Linux nativo sobre Windows)
+    #  02 > Si es Unix
+    #  03 > Si es MacOS
+    #  04 > Compatible en Linux en Windows: CYGWIN
+    #  05 > Compatible en Linux en Windows: MINGW
+    #  06 > Emulador Bash Termux para Linux Android
+    #  09 > No identificado
+    get_os_type
+    declare -r g_os_type=$?
+
+    #Obtener información de la distribución Linux
+    # > 'g_os_subtype_id'             : Tipo de distribucion Linux
+    #    > 0000000 : Distribución de Linux desconocidos
+    #    > 10 - 29 : Familia Fedora
+    #           10 : Fedora
+    #           11 : CoreOS Stream
+    #           12 : Red Hat Enterprise Linux
+    #           19 : Amazon Linux
+    #    > 30 - 49 : Familia Debian
+    #           30 : Debian
+    #           31 : Ubuntu
+    # > 'g_os_subtype_name'           : Nombre de distribucion Linux
+    # > 'g_os_subtype_version'        : Version extendida de la distribucion Linux
+    # > 'g_os_subtype_version_pretty' : Version corta de la distribucion Linux
+    # > 'g_os_architecture_type'      : Tipo de la arquitectura del procesador
+    if [ $g_os_type -le 1 ]; then
+        get_linux_type_info
+    fi
+
+    #Solo en WSL: Ruta de binarios y programas de Windows
+    if [ $g_os_type -eq 1 ]; then
+        declare -r g_path_programs_win='/mnt/d/CLI'
+        declare -r g_path_bin_base_win="${g_path_programs_win}/Cmds"
+    fi
+
+fi
+
+
+#Obtener informacion basica del usuario
+if [ -z "$g_user_is_root" ]; then
+
+    #Determinar si es root y el soporte de sudo
+    # > 'g_user_is_root'                : 0 si es root. Caso contrario no es root.
+    # > 'g_user_sudo_support'           : Si el so y el usuario soportan el comando 'sudo'
+    #    > 0 : se soporta el comando sudo con password
+    #    > 1 : se soporta el comando sudo sin password
+    #    > 2 : El SO no implementa el comando sudo
+    #    > 3 : El usuario no tiene permisos para ejecutar sudo
+    #    > 4 : El usuario es root (no requiere sudo)
+    get_user_options
+
+    #Si el usuario no tiene permisos a sudo o el SO no implementa sudo,
+    # - Se instala/Configura los binarios a nivel usuario, las fuentes a nivel usuario.
+    # - No se instala ningun paquete/programa que requiere permiso 'root' para su instalación
+    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+        #Ruta donde se instalaran los programas CLI (tiene una estructura de folderes y generalmente incluye mas de 1 binario).
+        g_path_programs='/opt/tools'
+
+        #Rutas de binarios, archivos de help (man) y las fuentes
+        g_path_bin='/usr/local/bin'
+        g_path_man='/usr/local/man/man1'
+        g_path_fonts='/usr/share/fonts'
+
+    else
+
+        #Ruta donde se instalaran los programas CLI (tiene una estructura de folderes y generalmente incluye mas de 1 binario).
+        g_path_programs=~/tools
+
+        #Rutas de binarios, archivos de help (man) y las fuentes
+        g_path_bin=~/.local/bin
+        g_path_man=~/.local/man/man1
+        g_path_fonts=~/.local/share/fonts
+
+    fi
+
+fi
+
+
 #Funciones de utilidad
 . ~/.files/setup/linux/_common_utility.bash
 
-#Determinar el tipo de SO compatible con interprete shell POSIX.
-#  00 > Si es Linux no-WSL
-#  01 > Si es Linux WSL2 (Kernel de Linux nativo sobre Windows)
-#  02 > Si es Unix
-#  03 > Si es MacOS
-#  04 > Compatible en Linux en Windows: CYGWIN
-#  05 > Compatible en Linux en Windows: MINGW
-#  09 > No identificado
-get_os_type 
-declare -r g_os_type=$?
-
-#Obtener información de la distribución Linux
-# > 'g_os_subtype_id'             : Tipo de distribucion Linux
-#    > 0000000 : Distribución de Linux desconocidos
-#    > 10 - 29 : Familia Fedora
-#           10 : Fedora
-#           11 : CoreOS Stream
-#           12 : Red Hat Enterprise Linux
-#           19 : Amazon Linux
-#    > 30 - 49 : Familia Debian
-#           30 : Debian
-#           31 : Ubuntu
-# > 'g_os_subtype_name'           : Nombre de distribucion Linux
-# > 'g_os_subtype_version'        : Version extendida de la distribucion Linux
-# > 'g_os_subtype_version_pretty' : Version corta de la distribucion Linux
-if [ $g_os_type -le 1 ]; then
-    get_linux_type_info
-fi
-
-#Determinar si es root
-g_is_root=1
-if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
-    g_is_root=0
-fi
 
 #Parametros (argumentos) basicos del script
 gp_uninstall=1          #(0) Para instalar/actualizar
@@ -417,7 +467,7 @@ function _install_artifacts() {
 
             #Instalar y/o actualizar el paquete si ya existe
             printf 'Instalando/Actualizando el paquete/artefacto "%b[%s]" ("%s") en el SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-            if [ $g_is_root -eq 0 ]; then
+            if [ $g_user_is_root -eq 0 ]; then
                 dpkg -i "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
             else
                 sudo dpkg -i "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
@@ -2443,8 +2493,11 @@ function g_install_repository() {
             if [ $g_status_crendential_storage -eq -1 ]; then
                 storage_sudo_credencial
                 g_status_crendential_storage=$?
-                #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-                if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+                #  Si es 0 o 1: la instalación/configuración es completar
+                #  Si es 2    : el usuario no acepto la instalación/configuración
+                #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
+                if [ $g_status_crendential_storage -eq 2 ]; then
                     return 120
                 fi
             fi
@@ -2710,8 +2763,11 @@ function g_install_repositories() {
             if [ $g_status_crendential_storage -eq -1 ]; then
                 storage_sudo_credencial
                 g_status_crendential_storage=$?
-                #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-                if [ $g_status_crendential_storage -ne 0 ] && [ $g_status_crendential_storage -ne 2 ]; then
+                #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+                #  Si es 0 o 1: la instalación/configuración es completar
+                #  Si es 2    : el usuario no acepto la instalación/configuración
+                #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
+                if [ $g_status_crendential_storage -eq 2 ]; then
                     return 120
                 fi
             fi
@@ -3005,7 +3061,7 @@ g_is_credential_storage_externally=1
 if [ $gp_uninstall -eq 0 ]; then
 
     #Validar los requisitos
-    fulfill_preconditions2 $g_os_subtype_id $gp_type_calling
+    fulfill_preconditions $g_os_subtype_id $gp_type_calling 1 1
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -3023,7 +3079,7 @@ else
     if [ $gp_type_calling -eq 0 ]; then
     
         #Validar los requisitos
-        fulfill_preconditions1 $g_os_subtype_id $gp_type_calling
+        fulfill_preconditions $g_os_subtype_id $gp_type_calling 0 1
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -3057,7 +3113,7 @@ else
         fi
 
         #Validar los requisitos
-        fulfill_preconditions1 $g_os_subtype_id $gp_type_calling
+        fulfill_preconditions $g_os_subtype_id $gp_type_calling 0 1
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -3100,7 +3156,7 @@ else
         fi
     
         #Validar los requisitos
-        fulfill_preconditions1 $g_os_subtype_id $gp_type_calling
+        fulfill_preconditions $g_os_subtype_id $gp_type_calling 0 1
         _g_status=$?
 
         #Iniciar el procesamiento

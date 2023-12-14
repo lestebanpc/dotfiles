@@ -22,8 +22,9 @@ fi
 #  01 > Si es Linux WSL2 (Kernel de Linux nativo sobre Windows)
 #  02 > Si es Unix
 #  03 > Si es MacOS
-#  04 > Compatible en Linux en Windows: CYGWIN
-#  05 > Compatible en Linux en Windows: MINGW
+#  04 > Emulador Bash CYGWIN para Windows
+#  05 > Emulador Bash MINGW  para Windows
+#  06 > Emulador Bash Termux para Linux Android
 #  09 > No identificado
 function get_os_type() {
     local l_system=$(uname -s)
@@ -42,7 +43,14 @@ function get_os_type() {
         Darwin*)  l_os_type=3;;
         CYGWIN*)  l_os_type=4;;
         MINGW*)   l_os_type=5;;
-        *)        l_os_type=9;;
+        *)
+            #Si se ejecuta en Termux
+            if echo $PREFIX | grep -o "com.termux" 2> /dev/null; then
+                l_os_type=6
+            else
+                l_os_type=9
+            fi
+            ;;
     esac
 
     return $l_os_type
@@ -66,6 +74,12 @@ function get_os_type() {
 #    > 'g_os_subtype_name'           : Nombre de distribucion Linux
 #    > 'g_os_subtype_version'        : Version extendida de la distribucion Linux
 #    > 'g_os_subtype_version_pretty' : Version corta de la distribucion Linux
+#    > 'g_os_architecture_type'      : Tipo de la arquitectura del procesador
+#       > x86_64
+#       > i686
+#       > aarch64
+#       > armv[NN]
+#
 function get_linux_type_info() {
 
     local l_info_distro
@@ -128,10 +142,69 @@ function get_linux_type_info() {
         g_os_subtype_version_pretty=$(echo "$l_distro_version" | sed -e "$g_regexp_sust_version1")
     fi
 
+    #Determinar la arquitectura del procesador
+    if ! g_os_architecture_type=$(uname -m); then
+        g_os_architecture_type=""
+    fi
+
+
     return 0
 
 }
 
+#Permite obtener informacion del usuario. Devuelve:
+# 1) Retorna 0 si se encontro informacion de la distribucion Linux, caso contrario retorna 1.
+# 2) En el flujo de salida, en variales globales:
+#    > 'g_user_is_root'                : 0 si es root. Caso contrario no es root.
+#    > 'g_user_sudo_support'           : Si el so y el usuario soportan el comando 'sudo'
+#       > 0 : se soporta el comando sudo con password
+#       > 1 : se soporta el comando sudo sin password
+#       > 2 : El SO no implementa el comando sudo
+#       > 3 : El usuario no tiene permisos para ejecutar sudo
+#       > 4 : El usuario es root (no requiere sudo)
+function get_user_options() {
+
+    #Si es root, salir
+    g_user_is_root=1
+    g_user_sudo_support=2
+    if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
+        g_user_is_root=0
+        g_user_sudo_support=4
+        return 0
+    fi
+
+    #Soporta de sudo
+    local l_status
+    local l_aux
+    if ! sudo --version 1> /dev/null 2>&1; then
+        g_user_sudo_support=2
+    else
+        l_aux=$(sudo -n true 2>&1)
+        l_status=$?
+
+        #Si el password esta en cache o el usuario no requiere password
+        if [ $l_status -eq  0 ]; then
+            if sudo -nl 2> /dev/null | grep NOPASSWD 2> /dev/null; then
+                g_user_sudo_support=1
+            else
+                g_user_sudo_support=0
+            fi
+        #Si requiere password o no tiene permiso para sudo
+        else
+
+            #Si requiere password
+            #Output: 'sudo: a password is required'
+            if echo "$l_aux" | grep -q '^sudo:'; then
+                g_user_sudo_support=0
+            else
+                g_user_sudo_support=3
+            fi
+        fi
+    fi
+
+    return 0
+
+}
 
 #}}}
 
@@ -511,11 +584,16 @@ upgrade_os_packages() {
     local p_os_subtype_id=$1
     local l_status=0
 
+    #Si no se calculo, Calcularlo 
+    if [ -z "$g_user_is_root" ]; then
+        get_user_options
+    fi
+
     #Si es un distribucion de la familia Debian
     if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
 
         #Distribución: Ubuntu
-        if [ $g_is_root -eq 0 ]; then
+        if [ $g_user_is_root -eq 0 ]; then
             apt-get update
             apt-get upgrade
         else
@@ -528,7 +606,7 @@ upgrade_os_packages() {
     elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
 
         #Distribución: Fedora
-        if [ $g_is_root -eq 0 ]; then
+        if [ $g_user_is_root -eq 0 ]; then
             dnf upgrade
         else
             sudo dnf upgrade
@@ -570,11 +648,16 @@ install_os_package() {
     local p_os_subtype_id=$2
     local l_status=0
 
+    #Si no se calculo, Calcularlo 
+    if [ -z "$g_user_is_root" ]; then
+        get_user_options
+    fi
+
     #Si es un distribucion de la familia Debian
     if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
 
         #Distribución: Ubuntu
-        if [ $g_is_root -eq 0 ]; then
+        if [ $g_user_is_root -eq 0 ]; then
            apt-get install "$p_package_name"
         else
            sudo apt-get install "$p_package_name"
@@ -585,7 +668,7 @@ install_os_package() {
     elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
 
         #Distribución: Fedora
-        if [ $g_is_root -eq 0 ]; then
+        if [ $g_user_is_root -eq 0 ]; then
            dnf install "$p_package_name"
         else
            sudo dnf install "$p_package_name"
@@ -629,12 +712,16 @@ uninstall_os_package() {
     local p_os_subtype_id=$2
     local l_status=0
 
+    #Si no se calculo, Calcularlo 
+    if [ -z "$g_user_is_root" ]; then
+        get_user_options
+    fi
 
     #Si es un distribucion de la familia Debian
     if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
 
         #Distribución: Ubuntu
-        if [ $g_is_root -eq 0 ]; then
+        if [ $g_user_is_root -eq 0 ]; then
            apt-get purge "$p_package_name"
            #apt-get autoremove
         else
@@ -647,7 +734,7 @@ uninstall_os_package() {
     elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
 
         #Distribución: Fedora
-        if [ $g_is_root -eq 0 ]; then
+        if [ $g_user_is_root -eq 0 ]; then
            dnf erase "$p_package_name"
         else
            sudo dnf erase "$p_package_name"
