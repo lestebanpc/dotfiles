@@ -44,7 +44,6 @@ function _get_repo_base_url() {
         nodejs)
             l_base_url="https://nodejs.org/dist"
             ;;
-
         *)
             l_base_url="https://github.com"
             ;;
@@ -79,7 +78,7 @@ function _get_repo_latest_version() {
     local l_repo_last_version=""
     local l_repo_last_version_pretty=""
     local l_aux=""
-    local l_arti_versions=""
+    local l_arti_subversion_versions=""
     #local l_status=0
 
     case "$p_repo_id" in
@@ -100,16 +99,6 @@ function _get_repo_latest_version() {
             l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
             ;;
         
-        
-        kustomize)
-            #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
-                return 1
-            fi
-
-            l_repo_last_version=$(kubectl version --client=true -o json  | jq -r '.kustomizeVersion' 2> /dev/null)
-            l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
-            ;;
 
         jdtls)
             l_aux=$(curl -Ls https://download.eclipse.org/jdtls/snapshots/latest.txt)
@@ -205,8 +194,9 @@ function _get_repo_latest_version() {
             #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.tag_name')
 
             l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
-            l_arti_versions=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.assets[].name' | \
-                  grep -e '^graalvm-ce-java.*-linux-amd64-.*\.tar\.gz$' | sed -e 's/graalvm-ce-java\(.*\)-linux-amd64-.*/\1/' | sort -r)
+            l_arti_subversion_versions=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.assets[].name' | \
+                grep -e '^graalvm-community-jdk-.*_linux-x64_bin\.tar\.gz$' | sed -e 's/graalvm-community-jdk-\(.*\)_linux-x64_bin.*/\1/' | sort -r)
+            #   grep -e '^graalvm-ce-java.*-linux-amd64-.*\.tar\.gz$' | sed -e 's/graalvm-ce-java\(.*\)-linux-amd64-.*/\1/' | sort -r)
             ;;
 
         #crictl)
@@ -237,7 +227,7 @@ function _get_repo_latest_version() {
     #Codificar en base64
     l_aux=$(url_encode "$l_repo_last_version")
     pna_repo_versions=("$l_aux" "$l_repo_last_version_pretty")
-    pna_arti_versions=(${l_arti_versions})
+    pna_arti_versions=(${l_arti_subversion_versions})
     return 0
 }
 
@@ -278,7 +268,7 @@ function _get_repo_current_version() {
     local l_path_file="" 
     if [ -z "$p_path_file" ]; then
         if [ $p_install_win_cmds -eq 0 ]; then
-            l_path_file="${g_path_bin_base_win}/bin/"
+            l_path_file="${g_path_bin_win}/"
         else
             l_path_file=""
         fi
@@ -511,16 +501,6 @@ function _get_repo_current_version() {
                 if [ $? -ne 0 ]; then
                     return 9;
                 fi
-            fi
-            ;;
-
-        kustomize)
-            if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}kustomize.exe version 2> /dev/null)
-                l_status=$?
-            else
-                l_tmp=$(${l_path_file}kustomize version 2> /dev/null)
-                l_status=$?
             fi
             ;;
 
@@ -801,8 +781,36 @@ function _get_repo_current_version() {
             ;;
 
 
+        llvm)
+
+            #No habilitado para Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               l_path_file="${g_path_programs}/llvm/bin/"
+            fi
+
+            #Obtener la version
+            l_tmp=$(${l_path_file}clang --version 2> /dev/null)
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            else
+                l_tmp=""
+            fi
+            ;;
+
 
         clangd)
+
+            #Solo habilitado para Windows, en Linux esta incluido en LLVM
+            if [ $p_install_win_cmds -ne 0 ]; then
+                return 9
+            fi
 
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
@@ -824,6 +832,8 @@ function _get_repo_current_version() {
 
             if [ $l_status -eq 0 ]; then
                 l_tmp=$(echo "$l_tmp" | head -n 1)
+            else
+                l_tmp=""
             fi
             ;;
 
@@ -1356,16 +1366,26 @@ function _dotnet_exist_version()
 #     Si el repositorio tiene muchos artefactos pero todos tiene la misma URL base, puede indicar
 #     solo una URL, para los demas se repitira el mismo valor
 #  6> Un arreglo de tipo de artefacto donde cada item puede ser:
-#       >  0 si es binario
-#       >  1 si es package
-#       >  2 si es un .tar.gz
-#       >  3 si es un .zip
-#       >  4 si es un .gz
-#       >  5 si es un .tgz
+#     Un archivo no comprimido
+#       >  0 si es un binario o archivo no empaquetado o comprimido
+#       >  1 si es un package
+#     Comprimidos no tan pesados (se descomprimen y copian en el lugar deseado)
+#       > 10 si es un .tar.gz
+#       > 11 si es un .zip
+#       > 12 si es un .gz
+#       > 13 si es un .tgz
+#       > 14 si es un .tar.xz
+#     Comprimidos muy pesados (se descomprimen directamente en el lugar deseado)
+#       > 20 si es un .tar.gz
+#       > 21 si es un .zip
+#       > 22 si es un .gz
+#       > 23 si es un .tgz
+#       > 24 si es un .tar.xz
+#     No definido
 #       > 99 si no se define el artefacto para el prefijo
 #  7> Un arreglo de nombre de los artectos a descargar
 #En el argumento 2 se debe pasar la version pura quitando, sin contener "v" u otras letras iniciales
-function load_artifacts() {
+function get_repo_artifacts() {
 
     #1. Argumentos
     local p_repo_id="$1"
@@ -1378,7 +1398,7 @@ function load_artifacts() {
     local p_arti_version="$8"
     local p_install_win_cmds=1         #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                        #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$9" -eq 0 2> /dev/null ]; then
+    if [ "$9" = "0" ]; then
         p_install_win_cmds=0
     fi
     
@@ -1432,8 +1452,7 @@ function load_artifacts() {
             fi
 
 
-            #Generar los datos de artefactado requeridos para su configuración:
-            #Si es actualiza
+            #Si se actualiza, generar los datos de artefactado requeridos para su configuración:
             if [ $l_nbr_versions -eq 0 ]; then
 
                 #URL base fijo     : "https://dotnetcli.azureedge.net"
@@ -1442,12 +1461,25 @@ function load_artifacts() {
 
                 #Generar la URL con el artefactado:
                 pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-                if [ $p_install_win_cmds -ne 0 ]; then
-                    pna_artifact_names=("${l_prefix_repo}-${p_repo_last_version_pretty}-linux-x64.tar.gz")
-                    pna_artifact_types=(2)
-                else
+                if [ $p_install_win_cmds -eq 0 ]; then
                     pna_artifact_names=("${l_prefix_repo}-${p_repo_last_version_pretty}-win-x64.zip")
-                    pna_artifact_types=(3)
+                    pna_artifact_types=(11)
+                else
+                    #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                    if [ $g_os_subtype_id -eq 1 ]; then
+                        if [ "$g_os_architecture_type" = "aarch64" ]; then
+                            pna_artifact_names=("${l_prefix_repo}-${p_repo_last_version_pretty}-linux-musl-arm64.tar.gz")
+                        else
+                            pna_artifact_names=("${l_prefix_repo}-${p_repo_last_version_pretty}-linux-musl-x64.tar.gz")
+                        fi
+                    else
+                        if [ "$g_os_architecture_type" = "aarch64" ]; then
+                            pna_artifact_names=("${l_prefix_repo}-${p_repo_last_version_pretty}-linux-arm64.tar.gz")
+                        else
+                            pna_artifact_names=("${l_prefix_repo}-${p_repo_last_version_pretty}-linux-x64.tar.gz")
+                        fi
+                    fi
+                    pna_artifact_types=(10)
                 fi
 
             #Si se instala, obtener la version de 2 versiones menores para que lo descargue y lo instale antes
@@ -1478,12 +1510,24 @@ function load_artifacts() {
 
                     #Generar la datos de cada artefacto:
                     pna_artifact_baseurl[$l_idx]="${l_base_url_fixed}/${l_base_url_variable}"
-                    if [ $p_install_win_cmds -ne 0 ]; then
-                        pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-linux-x64.tar.gz"
-                        pna_artifact_types[${l_idx}]=2
-                    else
+                    if [ $p_install_win_cmds -eq 0 ]; then
                         pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-win-x64.zip"
-                        pna_artifact_types[${l_idx}]=3
+                        pna_artifact_types[${l_idx}]=11
+                    else
+                        if [ $g_os_subtype_id -eq 1 ]; then
+                            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                                pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-linux-musl-arm64.tar.gz"
+                            else
+                                pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-linux-musl-x64.tar.gz"
+                            fi
+                        else
+                            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                                pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-linux-arm64.tar.gz"
+                            else
+                                pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-linux-x64.tar.gz"
+                            fi
+                        fi
+                        pna_artifact_types[${l_idx}]=10
                     fi
 
                     ((l_idx++))
@@ -1495,47 +1539,66 @@ function load_artifacts() {
 
 
         crictl)
+            
+            #No soportado para Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("crictl-v${p_repo_last_version_pretty}-linux-amd64.tar.gz" "critest-v${p_repo_last_version_pretty}-linux-amd64.tar.gz")
-                pna_artifact_types=(2 2)
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("crictl-v${p_repo_last_version_pretty}-linux-arm64.tar.gz" "critest-v${p_repo_last_version_pretty}-linux-arm64.tar.gz")
+                pna_artifact_types=(10 10)
             else
-                return 1
+                pna_artifact_names=("crictl-v${p_repo_last_version_pretty}-linux-amd64.tar.gz" "critest-v${p_repo_last_version_pretty}-linux-amd64.tar.gz")
+                pna_artifact_types=(10 10)
             fi
             ;;
 
         jq)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("jq-linux64")
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_names=("jq-windows-amd64.exe")
                 pna_artifact_types=(0)
             else
-                pna_artifact_names=("jq-win64.exe")
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("jq-linux-arm64")
+                else
+                    pna_artifact_names=("jq-linux-amd64")
+                fi
                 pna_artifact_types=(0)
             fi
             ;;
         yq)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("yq_linux_amd64.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("yq_windows_amd64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("yq_linux_arm64.tar.gz")
+                else
+                    pna_artifact_names=("yq_linux_amd64.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
         fzf)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_amd64.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("fzf-${p_repo_last_version_pretty}-windows_amd64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_arm64.tar.gz")
+                else
+                    pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_amd64.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
 
@@ -1544,118 +1607,124 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("helm-v${p_repo_last_version_pretty}-linux-amd64.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("helm-v${p_repo_last_version_pretty}-windows-amd64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("helm-v${p_repo_last_version_pretty}-linux-arm64.tar.gz")
+                else
+                    pna_artifact_names=("helm-v${p_repo_last_version_pretty}-linux-amd64.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
         delta)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                #if [ $g_os_subtype_id -eq 31 ]; then
-                #    pna_artifact_names=("git-delta_${p_repo_last_version_pretty}_amd64.deb")
-                #    pna_artifact_types=(1)
-                #else
-                #    pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
-                #    pna_artifact_types=(2)
-                #fi
-                pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("delta-${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                else
+                    pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
         ripgrep)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                #if [ $g_os_subtype_id -eq 31 ]; then
-                #    pna_artifact_names=("ripgrep_${p_repo_last_version_pretty}_amd64.deb")
-                #    pna_artifact_types=(1)
-                #else
-                #    pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
-                #    pna_artifact_types=(2)
-                #fi
-                pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                else
+                    pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
         xsv)
+            #No soportado para architecture ARM de 64 bits
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                return 1
+            fi
+
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("xsv-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("xsv-${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                pna_artifact_names=("xsv-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                pna_artifact_types=(10)
             fi
             ;;
         bat)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                #if [ $g_os_subtype_id -eq 31 ]; then
-                #    pna_artifact_names=("bat_${p_repo_last_version_pretty}_amd64.deb")
-                #    pna_artifact_types=(1)
-                #else
-                #    pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
-                #    pna_artifact_types=(2)
-                #fi
-                pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("bat-v${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                else
+                    pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
         oh-my-posh)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("posh-linux-amd64" "themes.zip")
-                pna_artifact_types=(0 3)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("posh-windows-amd64.exe" "themes.zip")
-                pna_artifact_types=(0 3)
+                pna_artifact_types=(0 11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("posh-linux-arm64" "themes.zip")
+                else
+                    pna_artifact_names=("posh-linux-amd64" "themes.zip")
+                fi
+                pna_artifact_types=(0 11)
             fi
             ;;
         fd)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
-                #if [ $g_os_subtype_id -eq 31 ]; then
-                #    pna_artifact_names=("fd_${p_repo_last_version_pretty}_amd64.deb")
-                #    pna_artifact_types=(1)
-                #else
-                #    pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
-                #    pna_artifact_types=(2)
-                #fi
-                pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
-                pna_artifact_types=(2)
-            else
                 pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("fd-v${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                else
+                    pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
 
         jwt)
+            #No soportado para architecture ARM de 64 bits
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                return 1
+            fi
+
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("jwt-linux.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("jwt-windows.tar.gz")
-                pna_artifact_types=(2)
+                pna_artifact_types=(10)
+            else
+                pna_artifact_names=("jwt-linux.tar.gz")
+                pna_artifact_types=(10)
             fi
             ;;
 
@@ -1666,43 +1735,48 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                #if [ $g_os_subtype_id -eq 31 ]; then
-                #    pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.deb")
-                #    pna_artifact_types=(1)
-                #else
-                #    pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.tar.gz")
-                #    pna_artifact_types=(2)
-                #fi
-                pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("step_windows_${p_repo_last_version_pretty}_amd64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_arm64.tar.gz")
+                else
+                    pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
 
         protoc)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("protoc-${p_repo_last_version_pretty}-linux-x86_64.zip")
-                pna_artifact_types=(3)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("protoc-${p_repo_last_version_pretty}-win64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("protoc-${p_repo_last_version_pretty}-linux-aarch_64.zip")
+                else
+                    pna_artifact_names=("protoc-${p_repo_last_version_pretty}-linux-x86_64.zip")
+                fi
+                pna_artifact_types=(11)
             fi
             ;;
 
         grpcurl)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("grpcurl_${p_repo_last_version_pretty}_linux_x86_64.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("grpcurl_${p_repo_last_version_pretty}_windows_x86_64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("grpcurl_${p_repo_last_version_pretty}_linux_arm64.tar.gz")
+                else
+                    pna_artifact_names=("grpcurl_${p_repo_last_version_pretty}_linux_x86_64.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
 
@@ -1713,24 +1787,36 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-x64.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("node-v${p_repo_last_version_pretty}-win-x64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(21)
+                #pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-arm64.tar.xz")
+                    pna_artifact_types=(24)
+                    #pna_artifact_types=(14)
+                else
+                    pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-x64.tar.gz")
+                    pna_artifact_types=(20)
+                    #pna_artifact_types=(10)
+                fi
             fi
             ;;
 
         evans)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("evans_linux_amd64.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("evans_windows_amd64.tar.gz")
-                pna_artifact_types=(2)
+                pna_artifact_types=(10)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("evans_linux_arm64.tar.gz")
+                else
+                    pna_artifact_names=("evans_linux_amd64.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
 
@@ -1740,16 +1826,20 @@ function load_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_base_url_variable="${p_repo_last_version}/bin/windows/amd64"
             else
-                l_base_url_variable="${p_repo_last_version}/bin/linux/amd64"
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    l_base_url_variable="${p_repo_last_version}/bin/linux/arm64"
+                else
+                    l_base_url_variable="${p_repo_last_version}/bin/linux/amd64"
+                fi
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("kubectl")
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_names=("kubectl.exe")
                 pna_artifact_types=(0)
             else
-                pna_artifact_names=("kubectl.exe")
+                pna_artifact_names=("kubectl")
                 pna_artifact_types=(0)
             fi
             ;;
@@ -1760,16 +1850,20 @@ function load_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_base_url_variable="${p_repo_last_version}/bin/windows/amd64"
             else
-                l_base_url_variable="${p_repo_last_version}/bin/linux/amd64"
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    l_base_url_variable="${p_repo_last_version}/bin/linux/arm64"
+                else
+                    l_base_url_variable="${p_repo_last_version}/bin/linux/amd64"
+                fi
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            else
                 pna_artifact_names=("kubelet")
                 pna_artifact_types=(0)
-            else
-                return 1
             fi
             ;;
 
@@ -1779,37 +1873,50 @@ function load_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_base_url_variable="${p_repo_last_version}/bin/windows/amd64"
             else
-                l_base_url_variable="${p_repo_last_version}/bin/linux/amd64"
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    l_base_url_variable="${p_repo_last_version}/bin/linux/arm64"
+                else
+                    l_base_url_variable="${p_repo_last_version}/bin/linux/amd64"
+                fi
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            else
                 pna_artifact_names=("kubeadm")
                 pna_artifact_types=(0)
-            else
-                return 1
             fi
             ;;
 
         pgo)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("kubectl-pgo-linux-amd64")
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_names=("kubectl-pgo-windows-386")
                 pna_artifact_types=(0)
             else
-                pna_artifact_names=("kubectl-pgo-windows-386")
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("kubectl-pgo-linux-arm64")
+                else
+                    pna_artifact_names=("kubectl-pgo-linux-amd64")
+                fi
                 pna_artifact_types=(0)
             fi
             ;;
 
         less)
+            #No soportado para architecture ARM de 64 bits
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                return 1
+            fi
+
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("less-x64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
             else
                 return 1
             fi
@@ -1817,81 +1924,89 @@ function load_artifacts() {
         k0s)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("k0s-v${p_repo_last_version_pretty}+k0s.0-amd64")
-                pna_artifact_types=(0)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("k0s-v${p_repo_last_version_pretty}+k0s.0-amd64.exe")
                 pna_artifact_types=(0)
-            fi
-            ;;
-
-        kustomize)
-            #URL base fijo     : "https://github.com"
-            #URL base variable :
-            l_base_url_variable="${p_repo_name}/releases/download/kustomize%2F${p_repo_last_version}"
-
-            #Generar los datos de artefactado requeridos para su configuración:
-            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("kustomize_v${p_repo_last_version_pretty}_linux_amd64.tar.gz")
-                pna_artifact_types=(2)
             else
-                pna_artifact_names=("kustomize_v${p_repo_last_version_pretty}_windows_amd64.tar.gz")
-                pna_artifact_types=(2)
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("k0s-v${p_repo_last_version_pretty}+k0s.0-arm64")
+                else
+                    pna_artifact_names=("k0s-v${p_repo_last_version_pretty}+k0s.0-amd64")
+                fi
+                pna_artifact_types=(0)
             fi
             ;;
 
         operator-sdk)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                #pna_artifact_names=("operator-sdk_linux_amd64" "ansible-operator_linux_amd64" "helm-operator_linux_amd64")
-                #pna_artifact_types=(0 0 0)
-                pna_artifact_names=("operator-sdk_linux_amd64" "helm-operator_linux_amd64")
-                pna_artifact_types=(0 0)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 return 1
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("operator-sdk_linux_arm64" "helm-operator_linux_arm64")
+                else
+                    pna_artifact_names=("operator-sdk_linux_amd64" "helm-operator_linux_amd64")
+                fi
+                pna_artifact_types=(0 0)
             fi
             ;;
+
         roslyn)
+
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("omnisharp-win-x64-net6.0.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
             else
-                pna_artifact_names=("omnisharp-linux-x64-net6.0.tar.gz")
-                pna_artifact_types=(2)
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("omnisharp-linux-musl-arm64-net6.0.tar.gz")
+                    else
+                        pna_artifact_names=("omnisharp-linux-musl-x64-net6.0.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("omnisharp-linux-arm64-net6.0.tar.gz")
+                    else
+                        pna_artifact_names=("omnisharp-linux-x64-net6.0.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
         netcoredbg)
+
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("netcoredbg-win64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
             else
-                pna_artifact_names=("netcoredbg-linux-amd64.tar.gz")
-                pna_artifact_types=(2)
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("netcoredbg-linux-arm64.tar.gz")
+                else
+                    pna_artifact_names=("netcoredbg-linux-amd64.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
         neovim)
+            #No soportado para architecture ARM de 64 bits
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                return 1
+            fi
+
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                #if [ $g_os_subtype_id -eq 31 ]; then
-                #    pna_artifact_names=("nvim-linux64.deb")
-                #    pna_artifact_types=(1)
-                #else
-                #    pna_artifact_names=("nvim-linux64.tar.gz")
-                #    pna_artifact_types=(2)
-                #fi
-                pna_artifact_names=("nvim-linux64.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("nvim-win64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                pna_artifact_names=("nvim-linux64.tar.gz")
+                pna_artifact_types=(10)
             fi
             ;;
         nerd-fonts)
@@ -1899,7 +2014,7 @@ function load_artifacts() {
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("JetBrainsMono.zip" "CascadiaCode.zip" "DroidSansMono.zip"
                                 "InconsolataLGC.zip" "UbuntuMono.zip" "3270.zip")
-            pna_artifact_types=(3 3 3 3 3 3)
+            pna_artifact_types=(11 11 11 11 11 11)
             ;;
 
         go)
@@ -1909,64 +2024,114 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("go${p_repo_last_version_pretty}.linux-amd64.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("go${p_repo_last_version_pretty}.windows-amd64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(21)
+                #pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("go${p_repo_last_version_pretty}.linux-arm64.tar.gz")
+                else
+                    pna_artifact_names=("go${p_repo_last_version_pretty}.linux-amd64.tar.gz")
+                fi
+                pna_artifact_types=(20)
+                #pna_artifact_types=(10)
+            fi
+            ;;
+
+        llvm)
+
+            #Solo para Linux
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("clang+llvm-${p_repo_last_version_pretty}-aarch64-linux-gnu.tar.xz")
+                #pna_artifact_types=(14)
+                pna_artifact_types=(24)
+            else
+                #TODO obtener el nombre dinamicamente
+                pna_artifact_names=("clang+llvm-${p_repo_last_version_pretty}-x86_64-linux-gnu-ubuntu-22.04.tar.xz")
+                #pna_artifact_types=(14)
+                pna_artifact_types=(24)
             fi
             ;;
 
         clangd)
+            #No soportado para architecture ARM de 64 bits
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                return 1
+            fi
+
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("clangd-linux-${p_repo_last_version_pretty}.zip")
-                pna_artifact_types=(3)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("clangd-windows-${p_repo_last_version_pretty}.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                pna_artifact_names=("clangd-linux-${p_repo_last_version_pretty}.zip")
+                pna_artifact_types=(11)
             fi
             ;;
 
         cmake)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("cmake-${p_repo_last_version#v}-linux-x86_64.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("cmake-${p_repo_last_version#v}-windows-x86_64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(21)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("cmake-${p_repo_last_version#v}-linux-aarch64.tar.gz")
+                else
+                    pna_artifact_names=("cmake-${p_repo_last_version#v}-linux-x86_64.tar.gz")
+                fi
+                pna_artifact_types=(20)
             fi
             ;;
 
         ninja)
+            #No soportado para architecture ARM de 64 bits
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                return 1
+            fi
+
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("ninja-linux.zip")
-                pna_artifact_types=(3)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("ninja-win.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                pna_artifact_names=("ninja-linux.zip")
+                pna_artifact_types=(11)
             fi
             ;;
 
         powershell)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("powershell-${p_repo_last_version_pretty}-linux-x64.tar.gz")
-                pna_artifact_types=(2)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("PowerShell-${p_repo_last_version_pretty}-win-x64.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("powershell-${p_repo_last_version_pretty}-linux-arm64.tar.gz")
+                else
+                    pna_artifact_names=("powershell-${p_repo_last_version_pretty}-linux-x64.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
 
         3scale-toolbox)
+            #No soportado para architecture ARM de 64 bits
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                return 1
+            fi
+
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -1991,28 +2156,44 @@ function load_artifacts() {
         rust-analyzer)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("rust-analyzer-x86_64-unknown-linux-gnu.gz")
-                pna_artifact_types=(4)
-            else
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("rust-analyzer-x86_64-pc-windows-msvc.zip")
-                pna_artifact_types=(3)
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("rust-analyzer-aarch64-unknown-linux-gnu.gz")
+                else
+                    pna_artifact_names=("rust-analyzer-x86_64-unknown-linux-gnu.gz")
+                fi
+                pna_artifact_types=(12)
             fi
             ;;
 
         graalvm)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
-                pna_artifact_names=("graalvm-ce-java${p_arti_version}-linux-amd64-${p_repo_last_version_pretty}.tar.gz" 
-                                    "native-image-installable-svm-java${p_arti_version}-linux-amd64-${p_repo_last_version_pretty}.jar"
-                                    "visualvm-installable-ce-java${p_arti_version}-linux-amd64-${p_repo_last_version_pretty}.jar")
-                pna_artifact_types=(2 0 0)
+
+            #JDK 21, esta diseñando una nueva forma de instalar plugins a GraalVM, dejando de usar 'GraalVM Updater'
+            if [ $p_install_win_cmds -eq 0 ]; then
+                #pna_artifact_names=("graalvm-ce-java${p_arti_version}-windows-amd64-${p_repo_last_version_pretty}.zip"
+                #                    "native-image-installable-svm-java${p_arti_version}-windows-amd64-${p_repo_last_version_pretty}.jar"
+                #                    "visualvm-installable-ce-java${p_arti_version}-windows-amd64-${p_repo_last_version_pretty}.jar")
+                #pna_artifact_types=(11 0 0)
+                pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_windows-x64_bin.zip")
+                pna_artifact_types=(21)
             else
-                pna_artifact_names=("graalvm-ce-java${p_arti_version}-windows-amd64-${p_repo_last_version_pretty}.zip"
-                                    "native-image-installable-svm-java${p_arti_version}-windows-amd64-${p_repo_last_version_pretty}.jar"
-                                    "visualvm-installable-ce-java${p_arti_version}-windows-amd64-${p_repo_last_version_pretty}.jar")
-                pna_artifact_types=(3 0 0)
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    #pna_artifact_names=("graalvm-ce-java${p_arti_version}-linux-aarch64-${p_repo_last_version_pretty}.tar.gz" 
+                    #                    "native-image-installable-svm-java${p_arti_version}-linux-aarch64-${p_repo_last_version_pretty}.jar"
+                    #                    "visualvm-installable-ce-java${p_arti_version}-linux-aarch64-${p_repo_last_version_pretty}.jar")
+                    pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_linux-aarch64_bin.tar.gz")
+                else
+                    #pna_artifact_names=("graalvm-ce-java${p_arti_version}-linux-amd64-${p_repo_last_version_pretty}.tar.gz" 
+                    #                    "native-image-installable-svm-java${p_arti_version}-linux-amd64-${p_repo_last_version_pretty}.jar"
+                    #                    "visualvm-installable-ce-java${p_arti_version}-linux-amd64-${p_repo_last_version_pretty}.jar")
+                    pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_linux-x64_bin.tar.gz")
+                fi
+                pna_artifact_types=(20)
             fi
             ;;
         
@@ -2024,7 +2205,7 @@ function load_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("jdt-language-server-${p_repo_last_version}.tar.gz")
-            pna_artifact_types=(2)
+            pna_artifact_types=(10)
             ;;
 
         butane)
@@ -2034,7 +2215,11 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            pna_artifact_names=("butane-x86_64-unknown-linux-gnu")
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("butane-aarch64-unknown-linux-gnu")
+            else
+                pna_artifact_names=("butane-x86_64-unknown-linux-gnu")
+            fi
             pna_artifact_types=(0)
             ;;
 
@@ -2045,7 +2230,11 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            pna_artifact_names=("runc.amd64")
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("runc.arm64")
+            else
+                pna_artifact_names=("runc.amd64")
+            fi
             pna_artifact_types=(0)
             ;;
 
@@ -2056,7 +2245,11 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            pna_artifact_names=("crun-${p_repo_last_version}-linux-amd64")
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("crun-${p_repo_last_version}-linux-arm64")
+            else
+                pna_artifact_names=("crun-${p_repo_last_version}-linux-amd64")
+            fi
             pna_artifact_types=(0)
             ;;
 
@@ -2067,7 +2260,11 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            pna_artifact_names=("fuse-overlayfs-x86_64")
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("fuse-overlayfs-aarch64")
+            else
+                pna_artifact_names=("fuse-overlayfs-x86_64")
+            fi
             pna_artifact_types=(0)
             ;;
 
@@ -2078,8 +2275,12 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            pna_artifact_names=("cni-plugins-linux-amd64-${p_repo_last_version}.tgz")
-            pna_artifact_types=(5)
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("cni-plugins-linux-arm64-${p_repo_last_version}.tgz")
+            else
+                pna_artifact_names=("cni-plugins-linux-amd64-${p_repo_last_version}.tgz")
+            fi
+            pna_artifact_types=(13)
             ;;
 
         slirp4netns)
@@ -2089,7 +2290,11 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            pna_artifact_names=("slirp4netns-x86_64")
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("slirp4netns-aarch64")
+            else
+                pna_artifact_names=("slirp4netns-x86_64")
+            fi
             pna_artifact_types=(0)
             ;;
 
@@ -2100,8 +2305,12 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            pna_artifact_names=("rootlesskit-x86_64.tar.gz")
-            pna_artifact_types=(2)
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("rootlesskit-aarch64.tar.gz")
+            else
+                pna_artifact_names=("rootlesskit-x86_64.tar.gz")
+            fi
+            pna_artifact_types=(10)
             ;;
 
         containerd)
@@ -2111,8 +2320,12 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            pna_artifact_names=("containerd-${p_repo_last_version_pretty}-linux-amd64.tar.gz")
-            pna_artifact_types=(2)
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("containerd-${p_repo_last_version_pretty}-linux-arm64.tar.gz")
+            else
+                pna_artifact_names=("containerd-${p_repo_last_version_pretty}-linux-amd64.tar.gz")
+            fi
+            pna_artifact_types=(10)
             ;;
 
         buildkit)
@@ -2123,7 +2336,7 @@ function load_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             pna_artifact_names=("buildkit-${p_repo_last_version}.linux-amd64.tar.gz")
-            pna_artifact_types=(2)
+            pna_artifact_types=(10)
             ;;
 
         nerdctl)
@@ -2133,8 +2346,12 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            pna_artifact_names=("nerdctl-${p_repo_last_version_pretty}-linux-amd64.tar.gz" "nerdctl-full-${p_repo_last_version_pretty}-linux-amd64.tar.gz")
-            pna_artifact_types=(2 2)
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("nerdctl-${p_repo_last_version_pretty}-linux-arm64.tar.gz" "nerdctl-full-${p_repo_last_version_pretty}-linux-arm64.tar.gz")
+            else
+                pna_artifact_names=("nerdctl-${p_repo_last_version_pretty}-linux-amd64.tar.gz" "nerdctl-full-${p_repo_last_version_pretty}-linux-amd64.tar.gz")
+            fi
+            pna_artifact_types=(10 10)
             ;;
 
 
@@ -2145,8 +2362,12 @@ function load_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            pna_artifact_names=("dive_${p_repo_last_version_pretty}_linux_amd64.tar.gz")
-            pna_artifact_types=(2)
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("dive_${p_repo_last_version_pretty}_linux_arm64.tar.gz")
+            else
+                pna_artifact_names=("dive_${p_repo_last_version_pretty}_linux_amd64.tar.gz")
+            fi
+            pna_artifact_types=(10)
             ;;
 
 
@@ -2157,120 +2378,6 @@ function load_artifacts() {
     esac
 
     return 0
-}
-
-
-
-#Si un nodo k0s esta iniciado solicitar su detención y deternerlo.
-#Parametros de entrada (argumentos y opciones):
-#Opcionales:
-#   1 > Flag '0' si se usara para desintalar, caso contrario se usara para instalar/actualizar.
-#   2 > ID del repositorio
-#   3 > Indice del artefato del repositorio que se desea instalar
-#Parametros de salida (valor de retorno):
-#   0 > El nodo no esta iniciado (no esta instalado o esta detenido).
-#   1 > El nodo está iniciado pero NO se acepto deternerlo.
-#   2 > El nodo esta iniciado y se acepto detenerlo.
-function _request_stop_k0s_node() {
-
-    #1. Argumentos
-    local p_is_uninstalling=1
-    if [ "$1" = "0" ]; then
-        p_is_uninstalling=0
-    fi
-    local p_repo_id="$2"
-    local p_artifact_index=-1
-    if [[ "$3" =~ ^[0-9]+$ ]]; then
-        p_option_relative_idx=$3
-    fi
-    
-    #2. Determinar el estado actual del demonio k0s
-    local l_option
-    local l_status
-    local l_info
-
-    #Si se no esta instalado o esta detenenido, salir
-    l_info=$(sudo k0s status 2> /dev/null)
-    l_status=$?
-    if [ $l_status -ne 0 ] || [ -z "$l_info" ]; then
-        return 0
-    fi
-
-    #Si esta detenido, salir
-    local l_aux
-    l_aux=$(echo "$l_info" | grep -e '^Process ID' 2> /dev/null)
-    l_status=$?
-    if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
-        return 0
-    fi
-
-    #Recuperar información adicional.
-    local l_node_process_id=$(echo "$l_aux" | sed 's/.*: \(.*\)/\1/' 2> /dev/null)
-    local l_nodo_type=$(echo "$l_info" | grep -e '^Role' | sed 's/.*: \(.*\)/\1/' 2> /dev/null)
-
-    #3. Solicitar la detención del servicio
-    printf "%bEl nodo k0s '%s' (PID: %s) esta iniciado y requiere detenerse para " "$g_color_warning" "$l_nodo_type" "$l_node_process_id"
-
-    if [ $p_is_uninstalling -eq 0 ]; then
-        printf 'desinstalar '
-    else
-        printf 'instalar '
-    fi
-
-    if [ $p_artifact_index -lt 0 ]; then
-        printf 'un artefacto del '
-    else
-        printf 'el artefacto[%s] del ' "$p_artifact_index"
-    fi
-
-    if [ -z "$p_repo_id" ]; then
-        printf 'resositorio.\n'
-    else
-        printf "repositorio '%s'.\n" "$p_repo_id"
-    fi
-
-
-    printf "¿Desea detener el nodo k0s?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_opaque" "$g_color_reset"
-    read -rei 's' -p ': ' l_option
-    if [ "$l_option" != "s" ]; then
-
-        if [ $p_is_uninstalling -eq 0 ]; then
-            printf '%bNo se desinstalará ' "$g_color_opaque"
-        else
-            printf '%bNo se instalará ' "$g_color_opaque"
-        fi
-
-        if [ $p_artifact_index -lt 0 ]; then
-            printf 'un artefacto del '
-        else
-            printf 'el artefacto[%s] del ' "$p_artifact_index"
-        fi
-
-        if [ -z "$p_repo_id" ]; then
-            printf "resositorio.\nDetenga el nodo k0s '%s' y vuelva ejecutar el menú o acepte su detención para su " "$l_nodo_type"
-        else
-            printf "repositorio '%s'.\nDetenga el nodo k0s '%s' y vuelva ejecutar el menú o acepte su detención para su " "$p_repo_id" "$l_nodo_type"
-        fi
-
-        if [ $p_is_uninstalling -eq 0 ]; then
-            printf 'desinstalación.%b\n' "$g_color_reset"
-        else
-            printf 'instalación.%b\n' "$g_color_reset"
-        fi
-
-        return 1
-
-    fi
-
-
-    #4. Detener el nodo k0s
-    printf 'Deteniendo el nodo k0s %s ...\n' "$l_nodo_type"
-    if [ $g_user_is_root -eq 0 ]; then
-        k0s stop
-    else
-        sudo k0s stop
-    fi
-    return 2
 }
 
 
@@ -2345,183 +2452,51 @@ _compare_version_current_with() {
 }
 
 
-#Si la unidad servicio 'containerd' esta iniciado, solicitar su detención y deternerlo
-#Parametros de entrada (argumentos y opciones):
-#   1 > Nombre completo de la unidad de systemd
-#Opcionales:
-#   2 > Flag '0' si se usara para desintalar, caso contrario se usara para instalar/actualizar.
-#   3 > ID del repositorio
-#   4 > Indice del artefato del repositorio que se desea instalar
-#Parametros de salida (valor de retorno):
-#   0 > La unidad systemd NO esta instalado y NO esta iniciado
-#   1 > La unidad systemd esta instalado pero NO esta iniciado (esta detenido)
-#   2 > La unidad systemd esta iniciado pero NO se acepto deternerlo
-#   3 > La unidad systemd iniciado se acepto detenerlo a nivel usuario
-#   4 > La unidad systemd iniciado se acepto detenerlo a nivel system
-function _request_stop_systemd_unit() {
-
-    #1. Argumentos
-    local p_unit_name="$1"
-    local p_is_uninstalling=1
-    if [ "$2" = "0" ]; then
-        p_is_uninstalling=0
-    fi
-    local p_repo_id="$3"
-    local p_artifact_index=-1
-    if [[ "$4" =~ ^[0-9]+$ ]]; then
-        p_option_relative_idx=$4
-    fi
-    
-    #2. Averigur el estado actual de la unidad systemd
-    local l_option
-    local l_status
-    local l_is_user=0
-
-    exist_systemd_unit "$p_unit_name" $l_is_user
-    l_status=$?   #  1 > La unidad instalada pero aun no esta en cache (no ha sido ejecutada desde el inicio del SO)
-                  #  2 > La unidad instalada, en cache, pero marcada para no iniciarse ('unmask', 'inactive').
-                  #  3 > La unidad instalada, en cache, pero no iniciado ('loaded', 'inactive').
-                  #  4 > La unidad instalada, en cache, iniciado y aun ejecutandose ('loaded', 'active'/'running').
-                  #  5 > La unidad instalada, en cache, iniciado y esperando peticionese ('loaded', 'active'/'waiting').
-                  #  6 > La unidad instalada, en cache, iniciado y terminado ('loaded', 'active'/'exited' or 'dead').
-                  #  7 > La unidad instalada, en cache, iniciado pero se desconoce su subestado.
-                  # 99 > La unidad instalada, en cache, pero no se puede leer su información.
-
-    if [ $l_status -eq 0 ]; then
-
-        #Averiguar si esta instalado a nivel system
-        l_is_user=1
-        exist_systemd_unit "$p_unit_name" $l_is_user
-        l_status=$?
-
-        if [ $l_status -eq 0 ]; then
-            return 0
-        fi
-    fi
-
-    #Si se no esta iniciado, salir
-    if [ $l_status -lt 4 ] || [ $l_status -gt 7 ]; then
-        return 1
-    fi
-
-    #3. Solicitar la detención del servicio
-    printf "%bLa unidad systemd '%s' esta iniciado y requiere detenerse para " "$g_color_warning" "$p_unit_name"
-
-    if [ $p_is_uninstalling -eq 0 ]; then
-        printf 'desinstalar '
-    else
-        printf 'instalar '
-    fi
-
-    if [ $p_artifact_index -lt 0 ]; then
-        printf 'un artefacto del '
-    else
-        printf 'el artefacto[%s] del ' "$p_artifact_index"
-    fi
-
-    if [ -z "$p_repo_id" ]; then
-        printf 'resositorio.\n'
-    else
-        printf "repositorio '%s'.\n" "$p_repo_id"
-    fi
-
-
-    printf "¿Desea detener la unidad systemd?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_opaque" "$g_color_reset"
-    read -rei 's' -p ': ' l_option
-    if [ "$l_option" != "s" ]; then
-
-        if [ $p_is_uninstalling -eq 0 ]; then
-            printf '%bNo se desinstalará ' "$g_color_opaque"
-        else
-            printf '%bNo se instalará ' "$g_color_opaque"
-        fi
-
-        if [ $p_artifact_index -lt 0 ]; then
-            printf 'un artefacto del '
-        else
-            printf 'el artefacto[%s] del ' "$p_artifact_index"
-        fi
-
-        if [ -z "$p_repo_id" ]; then
-            printf "resositorio.\nDetenga el servicio '%s' y vuelva ejecutar el menú o acepte su detención para su " "$p_unit_name"
-        else
-            printf "repositorio '%s'.\nDetenga el servicio '%s' y vuelva ejecutar el menú o acepte su detención para su " "$p_repo_id" "$p_unit_name"
-        fi
-
-        if [ $p_is_uninstalling -eq 0 ]; then
-            printf 'desinstalación.%b\n' "$g_color_reset"
-        else
-            printf 'instalación.%b\n' "$g_color_reset"
-        fi
-
-        return 2
-
-    fi
-
-    #4. Detener la unidad systemd
-
-    #Si la unidad systemd esta a nivel usuario
-    if [ $l_is_user -eq 0 ]; then
-        printf 'Deteniendo la unidad "%s" a nivel usuario ...\n' "$p_unit_name"
-        systemctl --user stop "$p_unit_name"
-        return 3
-    fi
-
-
-    printf 'Deteniendo la unidad "%s" a nivel sistema ...\n' "$p_unit_name"
-    if [ $g_user_is_root -eq 0 ]; then
-        systemctl stop "$p_unit_name"
-    else
-        sudo systemctl stop "$p_unit_name"
-    fi
-
-    return 4
-
-}
-
-
 function _copy_artifact_files() {
 
     #1. Argumentos
     local p_repo_id="$1"
     local p_artifact_index="$2"
-    local p_artifact_name_woext="$3"
+    local p_artifact_name="$3"
+    local p_artifact_name_woext="$4"
+    local p_artifact_type=$5
+
     local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                          #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$4" -eq 0 2> /dev/null ]; then
+    if [ "$6" = "0" ]; then
         p_install_win_cmds=0
     fi
 
-    local p_repo_current_version="$5"
-    local p_repo_last_version="$6"
-    local p_repo_last_version_pretty="$7"
-    local p_artifact_is_last=$8
+    local p_repo_current_version="$7"
+    local p_repo_last_version="$8"
+    local p_repo_last_version_pretty="$9"
+    local p_artifact_is_last=${10}
 
-    local p_arti_version="$9"
-    local p_arti_index=0
-    if [[ "${10}" =~ ^[0-9]+$ ]]; then
-        p_arti_index=${10}
+    local p_arti_subversion_version="${11}"
+    local p_arti_subversion_index=0
+    if [[ "${12}" =~ ^[0-9]+$ ]]; then
+        p_arti_subversion_index=${12}
     fi
 
     #Tag usuado para imprimir un identificador del artefacto en un log
     local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
-    if [ ! -z "${p_arti_version}" ]; then
-        l_tag="${l_tag}[${p_arti_version}]${g_color_reset}"
+    if [ ! -z "${p_arti_subversion_version}" ]; then
+        l_tag="${l_tag}[${p_arti_subversion_version}]${g_color_reset}"
     else
         l_tag="${l_tag}${g_color_reset}"
     fi
 
     #3. Copiar loa archivos del artefacto segun el prefijo
-    local l_path_temp=""
+    local l_path_source=""
 
-    local l_path_man=""
-    local l_path_bin=""
+    local l_path_target_man=""
+    local l_path_target_bin=""
     if [ $p_install_win_cmds -ne 0 ]; then
-        l_path_bin=${g_path_bin}
-        l_path_man=${g_path_man}
+        l_path_target_bin="$g_path_bin"
+        l_path_target_man="$g_path_man"
     else
-        l_path_bin="${g_path_bin_base_win}/bin"
-        l_path_man="${g_path_bin_base_win}/man"
+        l_path_target_bin="$g_path_bin_win"
+        l_path_target_man="$g_path_man_win"
     fi
 
     local l_status=0
@@ -2532,146 +2507,146 @@ function _copy_artifact_files() {
 
         bat)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"bat\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"bat\" a \"${l_path_target_bin}\" ..."
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/bat" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/bat"
-                    mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/bat" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/bat"
+                    mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/bat" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/bat"
-                    sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/bat" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/bat"
+                    sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                cp "${l_path_temp}/bat.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                cp "${l_path_source}/bat.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             
             #Copiar los archivos de ayuda man para comando
             if [ $p_install_win_cmds -ne 0 ]; then
-                echo "Copiando \"bat.1\" a \"${l_path_man}/\" ..."
+                echo "Copiando \"bat.1\" a \"${l_path_target_man}/\" ..."
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/bat.1" "${l_path_man}"
+                    cp "${l_path_source}/bat.1" "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/bat.1" "${l_path_man}"
+                    sudo cp "${l_path_source}/bat.1" "${l_path_target_man}"
                 fi
             fi
 
             #Copiar los script de completado
             if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"autocomplete/bat.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-                cp "${l_path_temp}/autocomplete/bat.bash" ~/.files/terminal/linux/complete/bat.bash
+                cp "${l_path_source}/autocomplete/bat.bash" ~/.files/terminal/linux/complete/bat.bash
                 echo "Copiando \"autocomplete/_bat.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-                cp "${l_path_temp}/autocomplete/_bat.ps1" ~/.files/terminal/powershell/complete/bat.ps1
+                cp "${l_path_source}/autocomplete/_bat.ps1" ~/.files/terminal/powershell/complete/bat.ps1
             fi
             ;;
 
         ripgrep)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"rg\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"rg\" a \"${l_path_target_bin}\" ..."
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/rg" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/rg"
-                    mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/rg" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/rg"
+                    mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/rg" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/rg"
-                    sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/rg" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/rg"
+                    sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                cp "${l_path_temp}/rg.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                cp "${l_path_source}/rg.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             
             #Copiar los archivos de ayuda man para comando
             if [ $p_install_win_cmds -ne 0 ]; then
-                echo "Copiando \"doc/rg.1\" a \""${l_path_man}"/\" ..."
+                echo "Copiando \"doc/rg.1\" a \""${l_path_target_man}"/\" ..."
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/doc/rg.1" "${l_path_man}"/
+                    cp "${l_path_source}/doc/rg.1" "${l_path_target_man}"/
                 else
-                    sudo cp "${l_path_temp}/doc/rg.1" "${l_path_man}"/
+                    sudo cp "${l_path_source}/doc/rg.1" "${l_path_target_man}"/
                 fi
             fi
 
             #Copiar los script de completado
             if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"complete/rg.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-                cp "${l_path_temp}/complete/rg.bash" ~/.files/terminal/linux/complete/rg.bash
+                cp "${l_path_source}/complete/rg.bash" ~/.files/terminal/linux/complete/rg.bash
                 echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-                cp "${l_path_temp}/complete/_rg.ps1" ~/.files/terminal/powershell/complete/rg.ps1
+                cp "${l_path_source}/complete/_rg.ps1" ~/.files/terminal/powershell/complete/rg.ps1
             fi
             ;;
 
         xsv)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"csv\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"csv\" a \"${l_path_target_bin}\" ..."
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/xsv" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/xsv"
-                    #mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/xsv" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/xsv"
+                    #mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/xsv" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/xsv"
-                    #sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/xsv" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/xsv"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                cp "${l_path_temp}/xsv.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                cp "${l_path_source}/xsv.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             ;;
 
         delta)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"delta\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"delta\" a \"${l_path_target_bin}\" ..."
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/delta" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/delta"
-                    #mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/delta" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/delta"
+                    #mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/delta" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/delta"
-                    #sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/delta" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/delta"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                cp "${l_path_temp}/delta.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                cp "${l_path_source}/delta.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             
             ##Copiar los archivos de ayuda man para comando
             #if [ $p_install_win_cmds -ne 0 ]; then
-            #    echo "Copiando \"doc/rg.1\" a \""${l_path_man}"/\" ..."
+            #    echo "Copiando \"doc/rg.1\" a \""${l_path_target_man}"/\" ..."
             #    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-            #        cp "${l_path_temp}/doc/rg.1" "${l_path_man}"/
+            #        cp "${l_path_source}/doc/rg.1" "${l_path_target_man}"/
             #    else
-            #        sudo cp "${l_path_temp}/doc/rg.1" "${l_path_man}"/
+            #        sudo cp "${l_path_source}/doc/rg.1" "${l_path_target_man}"/
             #    fi
             #fi
 
             ##Copiar los script de completado
             #if [ $p_install_win_cmds -ne 0 ]; then
             #    echo "Copiando \"complete/rg.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-            #    cp "${l_path_temp}/complete/rg.bash" ~/.files/terminal/linux/complete/rg.bash
+            #    cp "${l_path_source}/complete/rg.bash" ~/.files/terminal/linux/complete/rg.bash
             #    echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-            #    cp "${l_path_temp}/complete/_rg.ps1" ~/.files/terminal/powershell/complete/rg.ps1
+            #    cp "${l_path_source}/complete/_rg.ps1" ~/.files/terminal/powershell/complete/rg.ps1
             #fi
             ;;
 
@@ -2680,15 +2655,15 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Ruta local de los artefactos
-                #l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
-                l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+                #l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+                l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
                 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-                echo "Copiando \"less\" a \"${l_path_bin}\" ..."
+                echo "Copiando \"less\" a \"${l_path_target_bin}\" ..."
                 if [ $p_artifact_index -eq 0 ]; then
-                    cp "${l_path_temp}/less.exe" "${l_path_bin}"
+                    cp "${l_path_source}/less.exe" "${l_path_target_bin}"
                 else
-                    cp "${l_path_temp}/lesskey.exe" "${l_path_bin}"
+                    cp "${l_path_source}/lesskey.exe" "${l_path_target_bin}"
                 fi
 
             else
@@ -2702,20 +2677,20 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -ne 0 ]; then
 
                 #Ruta local de los artefactos
-                #l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
-                l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+                #l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+                l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
                 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-                echo "Copiando \"butane-x86_64-unknown-linux-gn4\" como \"${l_path_bin}/butane\" ..."
-                mv "${l_path_temp}/butane-x86_64-unknown-linux-gnu" "${l_path_temp}/butane"
+                echo "Copiando \"butane-x86_64-unknown-linux-gn4\" como \"${l_path_target_bin}/butane\" ..."
+                mv "${l_path_source}/butane-x86_64-unknown-linux-gnu" "${l_path_source}/butane"
 
-                echo "Copiando \"butane\" a \"${l_path_bin}\" ..."
+                echo "Copiando \"butane\" a \"${l_path_target_bin}\" ..."
                 if [ $g_user_is_root -eq 0 ]; then
-                    cp "${l_path_temp}/butane" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/butane"
+                    cp "${l_path_source}/butane" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/butane"
                 else
-                    sudo cp "${l_path_temp}/butane" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/butane"
+                    sudo cp "${l_path_source}/butane" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/butane"
                 fi
 
             else
@@ -2727,64 +2702,64 @@ function _copy_artifact_files() {
         fzf)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Copiar el comando fzf y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"fzf\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"fzf\" a \"${l_path_target_bin}\" ..."
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/fzf" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/fzf"
-                    mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/fzf" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/fzf"
+                    mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/fzf" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/fzf"
-                    sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/fzf" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/fzf"
+                    sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                cp "${l_path_temp}/fzf.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                cp "${l_path_source}/fzf.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             
             if [ $p_install_win_cmds -ne 0 ]; then
 
                 #Descargar archivos necesarios
                 echo "Descargando \"https://github.com/junegunn/fzf.git\" en el folder \"git/\" ..."
-                git clone --depth 1 https://github.com/junegunn/fzf.git "${l_path_temp}/git"
+                git clone --depth 1 https://github.com/junegunn/fzf.git "${l_path_source}/git"
 
                 #Copiar los archivos de ayuda man para comando fzf y el script fzf-tmux
-                echo "Copiando \"git/man/man1/fzf.1\" y \"git/man/man1/fzf-tmux.1\" a \"${l_path_man}/\" ..."
+                echo "Copiando \"git/man/man1/fzf.1\" y \"git/man/man1/fzf-tmux.1\" a \"${l_path_target_man}/\" ..."
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/git/man/man1/fzf.1" "${l_path_man}"
-                    cp "${l_path_temp}/git/man/man1/fzf-tmux.1" "${l_path_man}"
+                    cp "${l_path_source}/git/man/man1/fzf.1" "${l_path_target_man}"
+                    cp "${l_path_source}/git/man/man1/fzf-tmux.1" "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/git/man/man1/fzf.1" "${l_path_man}"
-                    sudo cp "${l_path_temp}/git/man/man1/fzf-tmux.1" "${l_path_man}"
+                    sudo cp "${l_path_source}/git/man/man1/fzf.1" "${l_path_target_man}"
+                    sudo cp "${l_path_source}/git/man/man1/fzf-tmux.1" "${l_path_target_man}"
                 fi
 
                 #Copiar los archivos requeridos por el plugin vim base "fzf"
                 #mkdir -p ~/.files/vim/packages/fzf/doc
                 #mkdir -p ~/.files/vim/packages/fzf/plugin
                 #echo "Copiando \"git/doc/fzf.txt\" a \"~/.files/vim/packages/fzf/doc/\" ..."
-                #cp "${l_path_temp}/git/doc/fzf.txt" ~/.files/vim/packages/fzf/doc/
+                #cp "${l_path_source}/git/doc/fzf.txt" ~/.files/vim/packages/fzf/doc/
                 #echo "Copiando \"git/doc/fzf.vim\" a \"~/.files/vim/packages/fzf/plugin/\" ..."
-                #cp "${l_path_temp}/git/plugin/fzf.vim" ~/.files/vim/packages/fzf/plugin/
+                #cp "${l_path_source}/git/plugin/fzf.vim" ~/.files/vim/packages/fzf/plugin/
 
                 #Copiar los archivos opcionales del plugin
                 #echo "Copiando \"git/LICENSE\" en \"~/.files/vim/packages/fzf/\" .."
-                #cp "${l_path_temp}/git/LICENSE" ~/.files/vim/packages/fzf/LICENSE
+                #cp "${l_path_source}/git/LICENSE" ~/.files/vim/packages/fzf/LICENSE
             
                 #Copiar los script de completado
                 echo "Copiando \"git/shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."
-                cp "${l_path_temp}/git/shell/completion.bash" ~/.files/terminal/linux/complete/fzf.bash
+                cp "${l_path_source}/git/shell/completion.bash" ~/.files/terminal/linux/complete/fzf.bash
             
                 #Copiar los script de keybindings
                 echo "Copiando \"git/shell/key-bindings.bash\" como \"~/.files/terminal/linux/keybindings/fzf.bash\" ..."
-                cp "${l_path_temp}/git/shell/key-bindings.bash" ~/.files/terminal/linux/keybindings/fzf.bash
+                cp "${l_path_source}/git/shell/key-bindings.bash" ~/.files/terminal/linux/keybindings/fzf.bash
             
                 # Script que se usara como comando para abrir fzf en un panel popup tmux
                 echo "Copiando \"git/bin/fzf-tmux\" como \"~/.files/terminal/linux/functions/fzf-tmux.bash\" y crear un enlace como comando \"~/.local/bin/fzf-tmux\"..."
-                cp "${l_path_temp}/git/bin/fzf-tmux" ~/.files/terminal/linux/functions/fzf-tmux.bash
+                cp "${l_path_source}/git/bin/fzf-tmux" ~/.files/terminal/linux/functions/fzf-tmux.bash
                 mkdir -p ~/.local/bin
                 ln -sfn ~/.files/terminal/linux/functions/fzf-tmux.bash ~/.local/bin/fzf-tmux
             fi
@@ -2792,79 +2767,79 @@ function _copy_artifact_files() {
 
         jq)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Renombrar el binario antes de copiarlo
             if [ $p_install_win_cmds -ne 0 ]; then
-                echo "Copiando \"jq-linux64\" como \"${l_path_bin}/jq\" ..."
-                mv "${l_path_temp}/jq-linux64" "${l_path_temp}/jq"
+                echo "Copiando \"jq-linux64\" como \"${l_path_target_bin}/jq\" ..."
+                mv "${l_path_source}/jq-linux64" "${l_path_source}/jq"
                 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/jq" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/jq"
-                    #mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/jq" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/jq"
+                    #mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/jq" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/jq"
-                    #sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/jq" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/jq"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                echo "Copiando \"jq-win64.exe\" como \"${l_path_bin}/jq.exe\" ..."
-                mv "${l_path_temp}/jq-win64.exe" "${l_path_temp}/jq.exe"
+                echo "Copiando \"jq-win64.exe\" como \"${l_path_target_bin}/jq.exe\" ..."
+                mv "${l_path_source}/jq-win64.exe" "${l_path_source}/jq.exe"
 
-                cp "${l_path_temp}/jq.exe" "${l_path_bin}"
+                cp "${l_path_source}/jq.exe" "${l_path_target_bin}"
             fi
             
             #Copiar los archivos de ayuda man para comando
-            #echo "Copiando \"jq.1\" a \"${l_path_man"/\" ..."
+            #echo "Copiando \"jq.1\" a \"${l_path_target_man"/\" ..."
             #if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-            #    cp "${l_path_temp}/jq.1" "${l_path_man}"
+            #    cp "${l_path_source}/jq.1" "${l_path_target_man}"
             #else
-            #    sudo cp "${l_path_temp}/jq.1" "${l_path_man}"
+            #    sudo cp "${l_path_source}/jq.1" "${l_path_target_man}"
             #fi
 
             #Copiar los script de completado
             #echo "Copiando \"autocomplete/jq.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-            #cp "${l_path_temp}/autocomplete/jq.bash" ~/.files/terminal/linux/complete/jq.bash
+            #cp "${l_path_source}/autocomplete/jq.bash" ~/.files/terminal/linux/complete/jq.bash
             #echo "Copiando \"autocomplete/_jq.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-            #cp "${l_path_temp}/autocomplete/jq.ps1" ~/.files/terminal/powershell/complete/jq.ps1
+            #cp "${l_path_source}/autocomplete/jq.ps1" ~/.files/terminal/powershell/complete/jq.ps1
             ;;
 
         yq)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Renombrar el binario antes de copiarlo
             if [ $p_install_win_cmds -ne 0 ]; then
 
-                echo "Copiando \"yq_linux_amd64\" como \"${l_path_bin}/yq\" ..."
-                mv "${l_path_temp}/yq_linux_amd64" "${l_path_temp}/yq"
+                echo "Copiando \"yq_linux_amd64\" como \"${l_path_target_bin}/yq\" ..."
+                mv "${l_path_source}/yq_linux_amd64" "${l_path_source}/yq"
                 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/yq" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/yq"
-                    mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/yq" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/yq"
+                    mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/yq" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/yq"
-                    sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/yq" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/yq"
+                    sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                echo "Copiando \"yq_windows_amd64.exe\" como \"${l_path_bin}/yq.exe\" ..."
-                mv "${l_path_temp}/yq_windows_amd64.exe" "${l_path_temp}/yq.exe"
+                echo "Copiando \"yq_windows_amd64.exe\" como \"${l_path_target_bin}/yq.exe\" ..."
+                mv "${l_path_source}/yq_windows_amd64.exe" "${l_path_source}/yq.exe"
 
-                cp "${l_path_temp}/yq.exe" "${l_path_bin}"
+                cp "${l_path_source}/yq.exe" "${l_path_target_bin}"
             fi
 
             #Copiar los archivos de ayuda man para comando
             if [ $p_install_win_cmds -ne 0 ]; then
-                echo "Copiando \"yq.1\" a \"${l_path_man}/\" ..."
+                echo "Copiando \"yq.1\" a \"${l_path_target_man}/\" ..."
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/yq.1" "${l_path_man}"
+                    cp "${l_path_source}/yq.1" "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/yq.1" "${l_path_man}"
+                    sudo cp "${l_path_source}/yq.1" "${l_path_target_man}"
                 fi
             fi
             ;;
@@ -2872,55 +2847,55 @@ function _copy_artifact_files() {
         oh-my-posh)
             
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Instalación de binario 'oh-my-posh'
             if [ $p_artifact_index -eq 0 ]; then
 
                 #Renombrar el binario antes de copiarlo
                 if [ $p_install_win_cmds -ne 0 ]; then
-                    echo "Copiando \"posh-linux-amd64\" como \"${l_path_bin}/oh-my-posh\" ..."
-                    mv "${l_path_temp}/posh-linux-amd64" "${l_path_temp}/oh-my-posh"
+                    echo "Copiando \"posh-linux-amd64\" como \"${l_path_target_bin}/oh-my-posh\" ..."
+                    mv "${l_path_source}/posh-linux-amd64" "${l_path_source}/oh-my-posh"
                 
                     #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                     if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        cp "${l_path_temp}/oh-my-posh" "${l_path_bin}"
-                        chmod +x "${l_path_bin}/oh-my-posh"
-                        #mkdir -pm 755 "${l_path_man}"
+                        cp "${l_path_source}/oh-my-posh" "${l_path_target_bin}"
+                        chmod +x "${l_path_target_bin}/oh-my-posh"
+                        #mkdir -pm 755 "${l_path_target_man}"
                     else
-                        sudo cp "${l_path_temp}/oh-my-posh" "${l_path_bin}"
-                        sudo chmod +x "${l_path_bin}/oh-my-posh"
-                        #sudo mkdir -pm 755 "${l_path_man}"
+                        sudo cp "${l_path_source}/oh-my-posh" "${l_path_target_bin}"
+                        sudo chmod +x "${l_path_target_bin}/oh-my-posh"
+                        #sudo mkdir -pm 755 "${l_path_target_man}"
                     fi
                 else
-                    echo "Copiando \"posh-windows-amd64.exe\" como \"${l_path_bin}/oh-my-posh.exe\" ..."
-                    mv "${l_path_temp}/posh-windows-amd64.exe" "${l_path_temp}/oh-my-posh.exe"
+                    echo "Copiando \"posh-windows-amd64.exe\" como \"${l_path_target_bin}/oh-my-posh.exe\" ..."
+                    mv "${l_path_source}/posh-windows-amd64.exe" "${l_path_source}/oh-my-posh.exe"
 
-                    cp "${l_path_temp}/oh-my-posh.exe" "${l_path_bin}"
+                    cp "${l_path_source}/oh-my-posh.exe" "${l_path_target_bin}"
                 fi
             
                 #Copiar los archivos de ayuda man para comando
-                #echo "Copiando \"yq.1\" a \"${l_path_man}/\" ..."
+                #echo "Copiando \"yq.1\" a \"${l_path_target_man}/\" ..."
                 #if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                #    cp "${l_path_temp}/yq.1" "${l_path_man}"
+                #    cp "${l_path_source}/yq.1" "${l_path_target_man}"
                 #else
-                #    sudo cp "${l_path_temp}/yq.1" "${l_path_man}"
+                #    sudo cp "${l_path_source}/yq.1" "${l_path_target_man}"
                 #fi
 
                 #Copiar los script de completado
                 #echo "Copiando \"autocomplete/yq.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-                #cp "${l_path_temp}/autocomplete/yq.bash" ~/.files/terminal/linux/complete/yq.bash
+                #cp "${l_path_source}/autocomplete/yq.bash" ~/.files/terminal/linux/complete/yq.bash
                 #echo "Copiando \"autocomplete/_yq.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-                #cp "${l_path_temp}/autocomplete/yq.ps1" ~/.files/terminal/powershell/complete/yq.ps1
+                #cp "${l_path_source}/autocomplete/yq.ps1" ~/.files/terminal/powershell/complete/yq.ps1
 
             #Instalación de los temas de 'oh-my-posh'
             else
                 if [ $p_install_win_cmds -ne 0 ]; then
                     mkdir -p ~/.files/terminal/oh-my-posh/themes
-                    cp -f ${l_path_temp}/*.json ~/.files/terminal/oh-my-posh/themes
+                    cp -f ${l_path_source}/*.json ~/.files/terminal/oh-my-posh/themes
                 else
-                    mkdir -p "${g_path_bin_base_win}/etc/oh-my-posh/themes"
-                    cp -f ${l_path_temp}/*.json "${g_path_bin_base_win}/etc/oh-my-posh/themes"
+                    mkdir -p "${g_path_etc_win}/oh-my-posh/themes"
+                    cp -f ${l_path_source}/*.json "${g_path_etc_win}/oh-my-posh/themes"
                 fi
             fi
             ;;
@@ -2928,95 +2903,95 @@ function _copy_artifact_files() {
         jwt)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"jwt\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"jwt\" a \"${l_path_target_bin}\" ..."
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/jwt" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/jwt"
-                    #mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/jwt" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/jwt"
+                    #mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/jwt" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/jwt"
-                    #sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/jwt" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/jwt"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                cp "${l_path_temp}/jwt.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                cp "${l_path_source}/jwt.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             ;;
             
         grpcurl)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"grpcurl\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"grpcurl\" a \"${l_path_target_bin}\" ..."
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/grpcurl" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/grpcurl"
-                    #mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/grpcurl" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/grpcurl"
+                    #mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/grpcurl" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/grpcurl"
-                    #sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/grpcurl" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/grpcurl"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                cp "${l_path_temp}/grpcurl.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                cp "${l_path_source}/grpcurl.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             ;;
             
         evans)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"evans\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"evans\" a \"${l_path_target_bin}\" ..."
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/evans" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/evans"
-                    #mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/evans" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/evans"
+                    #mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/evans" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/evans"
-                    #sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/evans" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/evans"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                cp "${l_path_temp}/evans.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                cp "${l_path_source}/evans.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             ;;
             
         protoc)
             
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_programs}/protoc"
+                l_path_target_bin="${g_path_programs}/protoc"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                    chmod g+rx,o+rx $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
+                    chmod g+rx,o+rx $l_path_target_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_bin}/*
+                    rm -rf ${l_path_target_bin}/*
                 fi
                     
                 #Mover todos archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                #rm "${l_path_source}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_target_bin} \;
 
                 #Validar si 'protoc' esta en el PATH
                 echo "$PATH" | grep "${g_path_programs}/protoc/bin" &> /dev/null
@@ -3030,67 +3005,67 @@ function _copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_programs_win}/ProtoC"
+                l_path_target_bin="${g_path_programs_win}/ProtoC"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_bin}/*
+                    rm -rf ${l_path_target_bin}/*
                 fi
                     
                 #Mover los archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                #rm "${l_path_source}/${p_artifact_name_woext}.zip"
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_target_bin} \;
             fi
             ;;
 
         fd)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
 
             #Copiando el binario en una ruta del path
-            echo "Copiando \"fd\" en \"${l_path_bin}\" ..."
+            echo "Copiando \"fd\" en \"${l_path_target_bin}\" ..."
             if [ $p_install_win_cmds -ne 0 ]; then
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/fd" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/fd"
-                    mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/fd" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/fd"
+                    mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/fd" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/fd"
-                    sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/fd" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/fd"
+                    sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                cp "${l_path_temp}/fd.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                cp "${l_path_source}/fd.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             
             #Copiar los archivos de ayuda man para comando
             if [ $p_install_win_cmds -ne 0 ]; then
-                echo "Copiando \"fd.1\" a \"${l_path_man}/\" ..."
+                echo "Copiando \"fd.1\" a \"${l_path_target_man}/\" ..."
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/fd.1" "${l_path_man}"
+                    cp "${l_path_source}/fd.1" "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/fd.1" "${l_path_man}"
+                    sudo cp "${l_path_source}/fd.1" "${l_path_target_man}"
                 fi
             fi
 
             #Copiar los script de completado
             if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"autocomplete/fd.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-                cp "${l_path_temp}/autocomplete/fd.bash" ~/.files/terminal/linux/complete/fd.bash
+                cp "${l_path_source}/autocomplete/fd.bash" ~/.files/terminal/linux/complete/fd.bash
                 echo "Copiando \"autocomplete/fd.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-                cp "${l_path_temp}/autocomplete/fd.ps1" ~/.files/terminal/powershell/complete/fd.ps1
+                cp "${l_path_source}/autocomplete/fd.ps1" ~/.files/terminal/powershell/complete/fd.ps1
             fi
             ;;
 
             
         crictl)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3098,25 +3073,25 @@ function _copy_artifact_files() {
                 if [ $p_artifact_index -eq 0 ]; then
 
                     if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        echo "Copiando \"crictl\" en \"${l_path_bin}/\" ..."
-                        cp "${l_path_temp}/crictl" "${l_path_bin}"
-                        chmod +x "${l_path_bin}/crictl"
+                        echo "Copiando \"crictl\" en \"${l_path_target_bin}/\" ..."
+                        cp "${l_path_source}/crictl" "${l_path_target_bin}"
+                        chmod +x "${l_path_target_bin}/crictl"
                     else
-                        echo "Copiando \"crictl\" en \"${l_path_bin}/\" ..."
-                        sudo cp "${l_path_temp}/crictl" "${l_path_bin}"
-                        sudo chmod +x "${l_path_bin}/crictl"
+                        echo "Copiando \"crictl\" en \"${l_path_target_bin}/\" ..."
+                        sudo cp "${l_path_source}/crictl" "${l_path_target_bin}"
+                        sudo chmod +x "${l_path_target_bin}/crictl"
                     fi
 
                 else
 
                     if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        echo "Copiando \"critest\" en \"${l_path_bin}/\" ..."
-                        cp "${l_path_temp}/critest" "${l_path_bin}"
-                        chmod +x "${l_path_bin}/critest"
+                        echo "Copiando \"critest\" en \"${l_path_target_bin}/\" ..."
+                        cp "${l_path_source}/critest" "${l_path_target_bin}"
+                        chmod +x "${l_path_target_bin}/critest"
                     else
-                        echo "Copiando \"critest\" en \"${l_path_bin}/\" ..."
-                        sudo cp "${l_path_temp}/critest" "${l_path_bin}"
-                        sudo chmod +x "${l_path_bin}/critest"
+                        echo "Copiando \"critest\" en \"${l_path_target_bin}/\" ..."
+                        sudo cp "${l_path_source}/critest" "${l_path_target_bin}"
+                        sudo chmod +x "${l_path_target_bin}/critest"
                     fi
 
                 fi
@@ -3129,18 +3104,18 @@ function _copy_artifact_files() {
             
         kubelet)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    echo "Copiando \"kubelet\" en \"${l_path_bin}/\" ..."
-                    cp "${l_path_temp}/kubelet" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/kubelet"
+                    echo "Copiando \"kubelet\" en \"${l_path_target_bin}/\" ..."
+                    cp "${l_path_source}/kubelet" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/kubelet"
                 else
-                    echo "Copiando \"kubelet\" en \"${l_path_bin}/\" ..."
-                    sudo cp "${l_path_temp}/kubelet" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/kubelet"
+                    echo "Copiando \"kubelet\" en \"${l_path_target_bin}/\" ..."
+                    sudo cp "${l_path_source}/kubelet" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/kubelet"
                 fi
 
                 #Desacargar archivos adicionales para su configuración
@@ -3149,7 +3124,7 @@ function _copy_artifact_files() {
                 l_status=$?
                 if [ $l_status -eq 0 ]; then
                     printf 'Creando el archivo "%b~/.files/setup/programs/kubelet/kubelet.service%b" ... \n' "$g_color_opaque" "$g_color_reset"
-                    echo "$l_aux" | sed "s:/usr/bin:${l_path_bin}:g" > ~/.files/setup/programs/kubelet/kubelet.service
+                    echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ~/.files/setup/programs/kubelet/kubelet.service
                 fi
 
             else
@@ -3161,18 +3136,18 @@ function _copy_artifact_files() {
             
         kubeadm)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    echo "Copiando \"kubeadm\" en \"${l_path_bin}/\" ..."
-                    cp "${l_path_temp}/kubeadm" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/kubeadm"
+                    echo "Copiando \"kubeadm\" en \"${l_path_target_bin}/\" ..."
+                    cp "${l_path_source}/kubeadm" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/kubeadm"
                 else
-                    echo "Copiando \"kubeadm\" en \"${l_path_bin}/\" ..."
-                    sudo cp "${l_path_temp}/kubeadm" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/kubeadm"
+                    echo "Copiando \"kubeadm\" en \"${l_path_target_bin}/\" ..."
+                    sudo cp "${l_path_source}/kubeadm" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/kubeadm"
                 fi
 
                 #Desacargar archivos adicionales para su configuración
@@ -3181,7 +3156,7 @@ function _copy_artifact_files() {
                 l_status=$?
                 if [ $l_status -eq 0 ]; then
                     printf 'Creando el archivo "%b~/.files/setup/programs/kubeadm/10-kubeadm.conf%b" ... \n' "$g_color_opaque" "$g_color_reset"
-                    echo "$l_aux" | sed "s:/usr/bin:${l_path_bin}:g" > ~/.files/setup/programs/kubeadm/10-kubeadm.conf
+                    echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ~/.files/setup/programs/kubeadm/10-kubeadm.conf
                 fi
 
             else
@@ -3193,74 +3168,74 @@ function _copy_artifact_files() {
             
         kubectl)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    echo "Copiando \"kubectl\" en \"${l_path_bin}/\" ..."
-                    cp "${l_path_temp}/kubectl" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/kubectl"
-                    #mkdir -pm 755 "${l_path_man}"
+                    echo "Copiando \"kubectl\" en \"${l_path_target_bin}/\" ..."
+                    cp "${l_path_source}/kubectl" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/kubectl"
+                    #mkdir -pm 755 "${l_path_target_man}"
                 else
-                    echo "Copiando \"kubectl\" en \"${l_path_bin}/\" ..."
-                    sudo cp "${l_path_temp}/kubectl" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/kubectl"
-                    #sudo mkdir -pm 755 "${l_path_man}"
+                    echo "Copiando \"kubectl\" en \"${l_path_target_bin}/\" ..."
+                    sudo cp "${l_path_source}/kubectl" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/kubectl"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                echo "Copiando \"kubectl.exe\" en \"${l_path_bin}/\" ..."
-                cp "${l_path_temp}/kubectl.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                echo "Copiando \"kubectl.exe\" en \"${l_path_target_bin}/\" ..."
+                cp "${l_path_source}/kubectl.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             
             ##Copiar los archivos de ayuda man para comando
-            #echo "Copiando \"fd.1\" a \"${l_path_man}/\" ..."
+            #echo "Copiando \"fd.1\" a \"${l_path_target_man}/\" ..."
             #if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-            #    cp "${l_path_temp}/fd.1" "${l_path_man}"
+            #    cp "${l_path_source}/fd.1" "${l_path_target_man}"
             #else
-            #    sudo cp "${l_path_temp}/fd.1" "${l_path_man}"
+            #    sudo cp "${l_path_source}/fd.1" "${l_path_target_man}"
             #fi
 
             ##Copiar los script de completado
             #echo "Copiando \"autocomplete/fd.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-            #cp "${l_path_temp}/autocomplete/fd.bash" ~/.files/terminal/linux/complete/fd.bash
+            #cp "${l_path_source}/autocomplete/fd.bash" ~/.files/terminal/linux/complete/fd.bash
             #echo "Copiando \"autocomplete/fd.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-            #cp "${l_path_temp}/autocomplete/fd.ps1" ~/.files/terminal/powershell/complete/fd.ps1
+            #cp "${l_path_source}/autocomplete/fd.ps1" ~/.files/terminal/powershell/complete/fd.ps1
             ;;
         
         pgo)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
 
-                echo "Renombrando \"kubectl-pgo-linux-amd64\" en \"${l_path_temp}/kubectl-pgo\" ..."
-                mv "${l_path_temp}/kubectl-pgo-linux-amd64" "${l_path_temp}/kubectl-pgo"
+                echo "Renombrando \"kubectl-pgo-linux-amd64\" en \"${l_path_source}/kubectl-pgo\" ..."
+                mv "${l_path_source}/kubectl-pgo-linux-amd64" "${l_path_source}/kubectl-pgo"
 
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    echo "Copiando \"kubectl-pgo\" en \"${l_path_bin}/\" ..."
-                    cp "${l_path_temp}/kubectl-pgo" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/kubectl-pgo"
-                    #mkdir -pm 755 "${l_path_man}"
+                    echo "Copiando \"kubectl-pgo\" en \"${l_path_target_bin}/\" ..."
+                    cp "${l_path_source}/kubectl-pgo" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/kubectl-pgo"
+                    #mkdir -pm 755 "${l_path_target_man}"
                 else
-                    echo "Copiando \"kubectl-pgo\" en \"${l_path_bin}/\" ..."
-                    sudo cp "${l_path_temp}/kubectl-pgo" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/kubectl-pgo"
-                    #sudo mkdir -pm 755 "${l_path_man}"
+                    echo "Copiando \"kubectl-pgo\" en \"${l_path_target_bin}/\" ..."
+                    sudo cp "${l_path_source}/kubectl-pgo" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/kubectl-pgo"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
                 echo "$p_repo_last_version_pretty" > "${g_path_programs}/pgo.info" 
             else
 
-                echo "Renombrando \"kubectl-pgo-windows-386\" en \"${l_path_temp}/kubectl-pgo.exe\" ..."
-                mv "${l_path_temp}/kubectl-pgo-windows-386" "${l_path_temp}/kubectl-pgo.exe"
+                echo "Renombrando \"kubectl-pgo-windows-386\" en \"${l_path_source}/kubectl-pgo.exe\" ..."
+                mv "${l_path_source}/kubectl-pgo-windows-386" "${l_path_source}/kubectl-pgo.exe"
 
-                echo "Copiando \"kubectl-pgo.exe\" en \"${l_path_bin}/\" ..."
-                cp "${l_path_temp}/kubectl-pgo.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                echo "Copiando \"kubectl-pgo.exe\" en \"${l_path_target_bin}/\" ..."
+                cp "${l_path_source}/kubectl-pgo.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
                 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
                 echo "$p_repo_last_version_pretty" > "${g_path_programs_win}/pgo.info" 
@@ -3269,55 +3244,31 @@ function _copy_artifact_files() {
             
         helm)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
-                l_path_temp="${l_path_temp}/linux-amd64"
+                l_path_source="${l_path_source}/linux-amd64"
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/helm" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/helm"
-                    #mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/helm" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/helm"
+                    #mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/helm" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/helm"
-                    #sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/helm" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/helm"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                l_path_temp="${l_path_temp}/windows-amd64"
-                cp "${l_path_temp}/helm.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                l_path_source="${l_path_source}/windows-amd64"
+                cp "${l_path_source}/helm.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             ;;
-
-        kustomize)
-            #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
-
-            #Copiando el binario en una ruta del path
-            if [ $p_install_win_cmds -ne 0 ]; then
-                #l_path_temp="${l_path_temp}/kustomize"
-                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/kustomize" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/kustomize"
-                    #mkdir -pm 755 "${l_path_man}"
-                else
-                    sudo cp "${l_path_temp}/kustomize" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/kustomize"
-                    #sudo mkdir -pm 755 "${l_path_man}"
-                fi
-            else
-                #l_path_temp="${l_path_temp}/kustomize"
-                cp "${l_path_temp}/kustomize.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
-            fi
-            ;;
-
 
         operator-sdk)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3325,43 +3276,43 @@ function _copy_artifact_files() {
                 #Instalacion del SDK para construir el operador
                 if [ $p_artifact_index -eq 0 ]; then
 
-                   mv "${l_path_temp}/operator-sdk_linux_amd64" "${l_path_temp}/operator-sdk"
+                   mv "${l_path_source}/operator-sdk_linux_amd64" "${l_path_source}/operator-sdk"
                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                      cp "${l_path_temp}/operator-sdk" "${l_path_bin}"
-                      chmod +x "${l_path_bin}/operator-sdk"
-                      #mkdir -pm 755 "${l_path_man}"
+                      cp "${l_path_source}/operator-sdk" "${l_path_target_bin}"
+                      chmod +x "${l_path_target_bin}/operator-sdk"
+                      #mkdir -pm 755 "${l_path_target_man}"
                    else
-                      sudo cp "${l_path_temp}/operator-sdk" "${l_path_bin}"
-                      sudo chmod +x "${l_path_bin}/operator-sdk"
-                      #sudo mkdir -pm 755 "${l_path_man}"
+                      sudo cp "${l_path_source}/operator-sdk" "${l_path_target_bin}"
+                      sudo chmod +x "${l_path_target_bin}/operator-sdk"
+                      #sudo mkdir -pm 755 "${l_path_target_man}"
                    fi
 
                 #Instalacion del SDK para construir el operador usando Ansible
                 #elif [ $p_artifact_index -eq 1 ]; then
 
-                #   mv "${l_path_temp}/ansible-operator_linux_amd64" "${l_path_temp}/ansible-operator"
+                #   mv "${l_path_source}/ansible-operator_linux_amd64" "${l_path_source}/ansible-operator"
                 #   if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                #      cp "${l_path_temp}/ansible-operator" "${l_path_bin}"
-                #      chmod +x "${l_path_bin}/ansible-operator"
-                #      #mkdir -pm 755 "${l_path_man}"
+                #      cp "${l_path_source}/ansible-operator" "${l_path_target_bin}"
+                #      chmod +x "${l_path_target_bin}/ansible-operator"
+                #      #mkdir -pm 755 "${l_path_target_man}"
                 #   else
-                #      sudo cp "${l_path_temp}/ansible-operator" "${l_path_bin}"
-                #      sudo chmod +x "${l_path_bin}/ansible-operator"
-                #      #sudo mkdir -pm 755 "${l_path_man}"
+                #      sudo cp "${l_path_source}/ansible-operator" "${l_path_target_bin}"
+                #      sudo chmod +x "${l_path_target_bin}/ansible-operator"
+                #      #sudo mkdir -pm 755 "${l_path_target_man}"
                 #   fi
 
                 #Instalacion del SDK para construir el operador usando Helm
                 else
 
-                   mv "${l_path_temp}/helm-operator_linux_amd64" "${l_path_temp}/helm-operator"
+                   mv "${l_path_source}/helm-operator_linux_amd64" "${l_path_source}/helm-operator"
                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                      cp "${l_path_temp}/helm-operator" "${l_path_bin}"
-                      chmod +x "${l_path_bin}/helm-operator"
-                      #mkdir -pm 755 "${l_path_man}"
+                      cp "${l_path_source}/helm-operator" "${l_path_target_bin}"
+                      chmod +x "${l_path_target_bin}/helm-operator"
+                      #mkdir -pm 755 "${l_path_target_man}"
                    else
-                      sudo cp "${l_path_temp}/helm-operator" "${l_path_bin}"
-                      sudo chmod +x "${l_path_bin}/helm-operator"
-                      #sudo mkdir -pm 755 "${l_path_man}"
+                      sudo cp "${l_path_source}/helm-operator" "${l_path_target_bin}"
+                      sudo chmod +x "${l_path_target_bin}/helm-operator"
+                      #sudo mkdir -pm 755 "${l_path_target_man}"
                    fi
 
                 fi
@@ -3373,7 +3324,7 @@ function _copy_artifact_files() {
         k0s)
 
             #1. Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
@@ -3381,7 +3332,7 @@ function _copy_artifact_files() {
             fi
 
             #2. Si la nodo k0s esta iniciado, solicitar su detención
-            _request_stop_k0s_node 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_k0s_node 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -3391,16 +3342,16 @@ function _copy_artifact_files() {
 
 
             #3. Renombrar el binario antes de copiarlo
-            echo "Copiando \"${p_artifact_name_woext}\" como \"${l_path_bin}/k0s\" ..."
-            mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_temp}/k0s"
+            echo "Copiando \"${p_artifact_name_woext}\" como \"${l_path_target_bin}/k0s\" ..."
+            mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/k0s"
 
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                cp "${l_path_temp}/k0s" "${l_path_bin}"
-                chmod +x "${l_path_bin}/k0s"
+                cp "${l_path_source}/k0s" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/k0s"
             else
-                sudo cp "${l_path_temp}/k0s" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/k0s"
-                #sudo mkdir -pm 755 "${l_path_man}"
+                sudo cp "${l_path_source}/k0s" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/k0s"
+                #sudo mkdir -pm 755 "${l_path_target_man}"
             fi
 
 
@@ -3419,58 +3370,58 @@ function _copy_artifact_files() {
         roslyn)
             
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_programs}/lsp_servers/omnisharp_roslyn"
+                l_path_target_bin="${g_path_programs}/lsp_servers/omnisharp_roslyn"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                    chmod g+rx,o+rx $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
+                    chmod g+rx,o+rx $l_path_target_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_bin}/*
+                    rm -rf ${l_path_target_bin}/*
                 fi
                     
                 #Mover todos archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                #rm "${l_path_source}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_target_bin} \;
 
             else
                 
-                l_path_bin="${g_path_programs_win}/LSP_Servers/Omnisharp_Roslyn"
+                l_path_target_bin="${g_path_programs_win}/LSP_Servers/Omnisharp_Roslyn"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_bin}/*
+                    rm -rf ${l_path_target_bin}/*
                 fi
                     
                 #Mover los archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                #rm "${l_path_source}/${p_artifact_name_woext}.zip"
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_target_bin} \;
             fi
             ;;
 
         netcoredbg)
             
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/netcoredbg"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/netcoredbg"
             l_flag_install=0            
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_programs}/dap_servers/netcoredbg"
+                l_path_target_bin="${g_path_programs}/dap_servers/netcoredbg"
 
                 #1. Comparando la version instalada con la version descargada
-                _compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
+                _compare_version_current_with "$p_repo_id" "$l_path_source" $p_install_win_cmds
                 l_status=$?
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
@@ -3484,29 +3435,29 @@ function _copy_artifact_files() {
                 if [ $l_flag_install -eq 0 ]; then
 
                     #2.1. Instalación: Limpieza del directorio del programa
-                    if  [ ! -d "$l_path_bin" ]; then
-                        mkdir -p $l_path_bin
-                        chmod g+rx,o+rx $l_path_bin
+                    if  [ ! -d "$l_path_target_bin" ]; then
+                        mkdir -p $l_path_target_bin
+                        chmod g+rx,o+rx $l_path_target_bin
                     else
                         #Limpieza
-                        rm -rf ${l_path_bin}/*
+                        rm -rf ${l_path_target_bin}/*
                     fi
                         
                     #2.2. Instalación: Mover todos archivos
-                    #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                    #rm "${l_path_source}/${p_artifact_name_woext}.tar.gz"
+                    find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_target_bin} \;
                     
                     #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
-                    echo "$p_repo_last_version_pretty" > "${l_path_bin}/netcoredbg.info" 
+                    echo "$p_repo_last_version_pretty" > "${l_path_target_bin}/netcoredbg.info" 
                 fi
 
 
             else
                 
-                l_path_bin="${g_path_programs_win}/DAP_Servers/NetCoreDbg"
+                l_path_target_bin="${g_path_programs_win}/DAP_Servers/NetCoreDbg"
 
                 #1. Comparando la version instalada con la version descargada
-                _compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
+                _compare_version_current_with "$p_repo_id" "$l_path_source" $p_install_win_cmds
                 l_status=$?
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
@@ -3520,20 +3471,20 @@ function _copy_artifact_files() {
                 if [ $l_flag_install -eq 0 ]; then
 
                     #2.1. Instalación: Limpieza del directorio del programa
-                    if  [ ! -d "$l_path_bin" ]; then
-                        mkdir -p $l_path_bin
-                        #chmod g+rx,o+rx $l_path_bin
+                    if  [ ! -d "$l_path_target_bin" ]; then
+                        mkdir -p $l_path_target_bin
+                        #chmod g+rx,o+rx $l_path_target_bin
                     else
                         #Limpieza
-                        rm -rf ${l_path_bin}/*
+                        rm -rf ${l_path_target_bin}/*
                     fi
                         
                     #2.2. Instalación: Mover todos archivos
-                    #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                    #rm "${l_path_source}/${p_artifact_name_woext}.zip"
+                    find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_target_bin} \;
 
                     #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
-                    echo "$p_repo_last_version_pretty" > "${l_path_bin}/netcoredbg.info" 
+                    echo "$p_repo_last_version_pretty" > "${l_path_target_bin}/netcoredbg.info" 
                 fi
 
             fi
@@ -3542,16 +3493,16 @@ function _copy_artifact_files() {
         neovim)
             
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
             l_flag_install=0            
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_programs}/neovim"
+                l_path_target_bin="${g_path_programs}/neovim"
 
                 #1. Comparando la version instalada con la version descargada
-                _compare_version_current_with "$p_repo_id" "$l_path_temp/bin" $p_install_win_cmds
+                _compare_version_current_with "$p_repo_id" "$l_path_source/bin" $p_install_win_cmds
                 l_status=$?
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
@@ -3565,17 +3516,17 @@ function _copy_artifact_files() {
                 if [ $l_flag_install -eq 0 ]; then
 
                     #2.1. Instalación: Limpieza del directorio del programa
-                    if  [ ! -d "$l_path_bin" ]; then
-                        mkdir -p $l_path_bin
-                        chmod g+rx,o+rx $l_path_bin
+                    if  [ ! -d "$l_path_target_bin" ]; then
+                        mkdir -p $l_path_target_bin
+                        chmod g+rx,o+rx $l_path_target_bin
                     else
                         #Limpieza
-                        rm -rf ${l_path_bin}/*
+                        rm -rf ${l_path_target_bin}/*
                     fi
                         
                     #2.2. Instalación: Mover todos archivos
-                    #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                    #rm "${l_path_source}/${p_artifact_name_woext}.tar.gz"
+                    find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_target_bin} \;
 
                     #Validar si 'nvim' esta en el PATH
                     echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
@@ -3592,10 +3543,10 @@ function _copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_programs_win}/NeoVim"
+                l_path_target_bin="${g_path_programs_win}/NeoVim"
 
                 #1. Comparando la version instalada con la version descargada
-                _compare_version_current_with "$p_repo_id" "$l_path_temp/bin" $p_install_win_cmds
+                _compare_version_current_with "$p_repo_id" "$l_path_source/bin" $p_install_win_cmds
                 l_status=$?
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
@@ -3609,17 +3560,17 @@ function _copy_artifact_files() {
                 if [ $l_flag_install -eq 0 ]; then
 
                     #2.1. Instalación: Limpieza del directorio del programa
-                    if  [ ! -d "$l_path_bin" ]; then
-                        mkdir -p $l_path_bin
-                        #chmod g+rx,o+rx $l_path_bin
+                    if  [ ! -d "$l_path_target_bin" ]; then
+                        mkdir -p $l_path_target_bin
+                        #chmod g+rx,o+rx $l_path_target_bin
                     else
                         #Limpieza
-                        rm -rf ${l_path_bin}/*
+                        rm -rf ${l_path_target_bin}/*
                     fi
                         
                     #2.2. Instalación: Mover todos archivos
-                    #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                    #rm "${l_path_source}/${p_artifact_name_woext}.zip"
+                    find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_target_bin} \;
                 fi
 
             fi
@@ -3628,28 +3579,28 @@ function _copy_artifact_files() {
         nerd-fonts)
             
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
             #Solo para Linux
             if [ $p_install_win_cmds -ne 0 ]; then
                 
                 #Copiando el binario en una ruta del path
-                l_path_bin="${g_path_fonts}/${p_artifact_name_woext}"
+                l_path_target_bin="${g_path_fonts}/${p_artifact_name_woext}"
 
                 #Instalación de la fuente
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
                     
                     #Crear la carpeta de fuente, si no existe
-                    if  [ ! -d "$l_path_bin" ]; then
-                        mkdir -p $l_path_bin
-                        chmod g+rx,o+rx $l_path_bin
+                    if  [ ! -d "$l_path_target_bin" ]; then
+                        mkdir -p $l_path_target_bin
+                        chmod g+rx,o+rx $l_path_target_bin
                     fi
 
                     #Copiar y/o sobrescribir archivos existente
-                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
+                    find "${l_path_source}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
                          ! \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
-                         -exec cp '{}' ${l_path_bin} \;
-                    chmod g+r,o+r ${l_path_bin}/*
+                         -exec cp '{}' ${l_path_target_bin} \;
+                    chmod g+r,o+r ${l_path_target_bin}/*
 
                     #Actualizar el cache de fuentes del SO
                     if [ $p_artifact_is_last -eq 0 ]; then
@@ -3659,16 +3610,16 @@ function _copy_artifact_files() {
                 else
                     
                     #Crear la carpeta de fuente, si no existe
-                    if  [ ! -d "$l_path_bin" ]; then
-                        sudo mkdir -p ${l_path_bin}
-                        sudo chmod g+rx,o+rx $l_path_bin
+                    if  [ ! -d "$l_path_target_bin" ]; then
+                        sudo mkdir -p ${l_path_target_bin}
+                        sudo chmod g+rx,o+rx $l_path_target_bin
                     fi
 
                     #Copiar y/o sobrescribir archivos existente
-                    sudo find "${l_path_temp}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
+                    sudo find "${l_path_source}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
                          ! \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
-                         -exec cp '{}' ${l_path_bin} \;
-                    sudo chmod g+r,o+r ${l_path_bin}/*
+                         -exec cp '{}' ${l_path_target_bin} \;
+                    sudo chmod g+r,o+r ${l_path_target_bin}/*
 
                     #Actualizar el cache de fuentes del SO
                     if [ $p_artifact_is_last -eq 0 ]; then
@@ -3682,75 +3633,110 @@ function _copy_artifact_files() {
                 #Si es WSL2, copiar los archivos para instalarlo manualmente.
                 if [ $g_os_type -eq 1 ]; then
                     
-                    l_path_bin="${g_path_programs_win}/NerdFonts"
-                    if  [ ! -d "$l_path_bin" ]; then
-                        mkdir -p ${l_path_bin}
+                    l_path_target_bin="${g_path_programs_win}/NerdFonts"
+                    if  [ ! -d "$l_path_target_bin" ]; then
+                        mkdir -p ${l_path_target_bin}
                     fi
 
-                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 \
+                    find "${l_path_source}" -maxdepth 1 -mindepth 1 \
                          \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
-                         -exec cp '{}' ${l_path_bin} \;
+                         -exec cp '{}' ${l_path_target_bin} \;
                     
                     #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
                     echo "$p_repo_last_version_pretty" > "${g_path_programs}/nerd-fonts.info" 
 
                     #Notas
-                    echo "Debera instalar (copiar) manualmente los archivos de '${l_path_bin}' en 'C:/Windows/Fonts'"
+                    echo "Debera instalar (copiar) manualmente los archivos de '${l_path_target_bin}' en 'C:/Windows/Fonts'"
                 fi
 
             fi
             ;;
         
+        llvm)
+           
+            #No se soportado por Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                return 40
+            fi
+                
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_target_bin="${g_path_programs}/llvm"
+
+            #Limpiar el directorio del programa
+            if  [ -d "$l_path_target_bin" ]; then
+                #Limpieza
+                rm -rf $l_path_target_bin
+            fi
+
+            #Descomprimiendo el archivo 'clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04'
+            printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "$l_path_target_bin"
+            uncompress_program "$l_path_source" "$p_artifact_name" "${g_path_programs}" $((l_artifact_type - 20))
+            #l_artifact_name_without_ext="$g_filename_without_ext"
+
+            #Obteniendo el nombre de la carpeta que genero al descromprimir
+            l_aux=$(find "$g_path_programs" -maxdepth 1 -mindepth 1 -type d -name 'clang+llvm-*' 2> /dev/null | head -n 1)
+
+            if [ -z "$l_aux" ]; then
+                printf 'El comprimido %b"LLVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_warning" \
+                    "$g_path_programs" 'clang+llvm-*' "$g_color_reset"
+                return 41
+            fi
+
+            #Acceso al folder creado
+            printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
+            mv "$l_aux" "$l_path_target_bin"
+            chmod g+rx,o+rx ${l_path_target_bin}
+
+            #Validar si 'LLVM' esta en el PATH
+            echo "$PATH" | grep "${g_path_programs}/llvm/bin" &> /dev/null
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                    "$g_color_warning" "Go"  "$p_repo_last_version_pretty" "$g_color_reset"
+                printf 'Adicionando a la sesion actual: PATH=%s/llvm/bin:$PATH\n' "${g_path_programs}"
+                export PATH=${g_path_programs}/llvm/bin:$PATH
+            fi
+            ;;
+
 
         clangd)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/clangd_${p_repo_last_version}"
-            
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/clangd_${p_repo_last_version}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_programs}/lsp_servers/clangd"
+                l_path_target_bin="${g_path_programs}/lsp_servers/clangd"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                    chmod g+rx,o+rx $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
+                    chmod g+rx,o+rx $l_path_target_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_bin}/*
+                    rm -rf ${l_path_target_bin}/*
                 fi
                     
                 #Mover todos archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_target_bin} \;
 
-               #Validar si 'clangd' esta en el PATH
-               echo "$PATH" | grep "${g_path_programs}/lsp_servers/clangd/bin" &> /dev/null
-               l_status=$?
-               if [ $l_status -ne 0 ]; then
-                   printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                       "$g_color_warning" "CLangD"  "$p_repo_last_version_pretty" "$g_color_reset"
-                   printf 'Adicionando a la sesion actual: PATH=%s/lsp_servers/clangd/bin:$PATH\n' "${g_path_programs}"
-                   export PATH=${g_path_programs}/lsp_servers/clangd/bin:$PATH
-               fi
 
             else
                 
-                l_path_bin="${g_path_programs_win}/LSP_Servers/CLangD"
+                l_path_target_bin="${g_path_programs_win}/LSP_Servers/CLangD"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_bin}/*
+                    rm -rf ${l_path_target_bin}/*
                 fi
                     
                 #Mover los archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_target_bin} \;
             fi
             ;;
 
@@ -3758,29 +3744,29 @@ function _copy_artifact_files() {
         net-sdk|net-rt-core|net-rt-aspnet)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_programs}/dotnet"
+                l_path_target_bin="${g_path_programs}/dotnet"
 
                 #Crear el directorio si no existe (no limpiar)
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                    chmod g+rx,o+rx $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
+                    chmod g+rx,o+rx $l_path_target_bin
                 #else
                     #Limpieza
-                    #rm -rf ${l_path_bin}/*
+                    #rm -rf ${l_path_target_bin}/*
                 fi
                     
                 #No es necesario eliminarlo, lo hace el metodo que lo descarga y lo descomprime
-                #find "${l_path_temp}/*.tar.gz" -maxdepth 1 -mindepth 1 -type f -exec rm '{}' \;
+                #find "${l_path_source}/*.tar.gz" -maxdepth 1 -mindepth 1 -type f -exec rm '{}' \;
                  
                 #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
                 printf '%b' "$g_color_opaque"
-                rsync -a --stats "${l_path_temp}/" "${l_path_bin}"
+                rsync -a --stats "${l_path_source}/" "${l_path_target_bin}"
                 printf '%b' "$g_color_reset"
 
                 #Validar si 'DotNet' esta en el PATH
@@ -3801,22 +3787,22 @@ function _copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_programs_win}/DotNet"
+                l_path_target_bin="${g_path_programs_win}/DotNet"
 
                 #Crear el directorio si no existe (no limpiar)
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
                 #else
                     #Limpieza
-                    #rm -rf ${l_path_bin}/*
+                    #rm -rf ${l_path_target_bin}/*
                 fi
                     
                 #No es necesario eliminarlo, lo hace el metodo que lo descarga y lo descomprime
-                #find "${l_path_temp}/*.zip" -maxdepth 1 -mindepth 1 -type f -exec rm '{}' \;
+                #find "${l_path_source}/*.zip" -maxdepth 1 -mindepth 1 -type f -exec rm '{}' \;
 
                 #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
                 printf '%b' "$g_color_opaque"
-                rsync -a --stats "${l_path_temp}/" "${l_path_bin}"
+                rsync -a --stats "${l_path_source}/" "${l_path_target_bin}"
                 printf '%b' "$g_color_reset"
             fi
             ;;
@@ -3826,26 +3812,23 @@ function _copy_artifact_files() {
         go)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/go"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
-
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
-                
-                l_path_bin="${g_path_programs}/go"
-
-                #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                    chmod g+rx,o+rx $l_path_bin
-                else
-                    #Limpieza
-                    rm -rf ${l_path_bin}/*
+               
+                #Limpiar el directorio del programa
+                if  [ -d "${g_path_programs}/go" ]; then
+                    rm -rf ${g_path_programs}/go
                 fi
                     
-                #Mover todos archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                #Descomprimiendo el archivo (descomprime en la carpeta './go')
+                printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "${g_path_programs}/go"
+                uncompress_program "${l_path_source}" "$p_artifact_name" "${g_path_programs}" $((l_artifact_type - 20))
+                #l_artifact_name_without_ext="$g_filename_without_ext"
+
+                #Acceso al folder creado
+                chmod g+rx,o+rx ${g_path_programs}/go
 
                 #Validar si 'Go' esta en el PATH
                 echo "$PATH" | grep "${g_path_programs}/go/bin" &> /dev/null
@@ -3860,19 +3843,20 @@ function _copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_programs_win}/Go"
-
-                #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                else
-                    #Limpieza
-                    rm -rf ${l_path_bin}/*
+                #Limpiar el directorio del programa
+                if  [ -d "${g_path_programs_win}/Go" ]; then
+                    rm -rf ${g_path_programs_win}/Go
                 fi
                     
-                #Mover los archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                #Descomprimiendo el archivo (descomprime en la carpeta './go')
+                printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "${g_path_programs_win}/Go"
+                uncompress_program "${l_path_source}" "$p_artifact_name" "${g_path_programs_win}" $((l_artifact_type - 20))
+                #l_artifact_name_without_ext="$g_filename_without_ext"
+
+                #Acceso al folder creado
+                mv ${g_path_programs_win}/go ${g_path_programs_win}/Go
+                #chmod g+rx,o+rx ${g_path_programs_win}/Go
+                
             fi
             ;;
 
@@ -3880,28 +3864,26 @@ function _copy_artifact_files() {
         nodejs)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
-                
-                l_path_temp="${l_path_temp}/node-${p_repo_last_version}-linux-x64"
-                l_path_bin="${g_path_programs}/nodejs"
 
-                #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                    chmod g+rx,o+rx $l_path_bin
-                else
-                    #Limpieza
-                    rm -rf ${l_path_bin}/*
+                #Limpiar el directorio del programa
+                if  [ -d "${g_path_programs}/nodejs" ]; then
+                    rm -rf ${g_path_programs}/nodejs
                 fi
                     
-                #Mover todos archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                #Descomprimiendo el archivo (descomprime en la carpeta './node-${p_repo_last_version}-linux-x64')
+                printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "${g_path_programs}/nodejs"
+                uncompress_program "${l_path_source}" "$p_artifact_name" "${g_path_programs}" $((l_artifact_type - 20))
+                #l_artifact_name_without_ext="$g_filename_without_ext"
 
+                #Acceso al folder creado
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "${g_path_programs}/node-${p_repo_last_version}-linux-x64" "$g_color_reset" "$g_color_opaque" "${g_path_programs}/nodejs" "$g_color_reset"
+                mv "${g_path_programs}/node-${p_repo_last_version}-linux-x64" "${g_path_programs}/nodejs"
+                chmod g+rx,o+rx ${g_path_programs}/nodejs
 
                 #Validar si 'Node.JS' esta en el PATH
                 echo "$PATH" | grep "${g_path_programs}/nodejs/bin" &> /dev/null
@@ -3915,43 +3897,59 @@ function _copy_artifact_files() {
 
             else
                 
-                l_path_temp="${l_path_temp}/node-${p_repo_last_version}-win-x64"
-                l_path_bin="${g_path_programs_win}/NodeJS"
-
-                #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                else
-                    #Limpieza
-                    rm -rf ${l_path_bin}/*
+                #Limpiar el directorio del programa
+                if  [ -d "${g_path_programs_win}/NodeJS" ]; then
+                    rm -rf ${g_path_programs_win}/NodeJS
                 fi
                     
-                #Mover los archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                #Descomprimiendo el archivo (descomprime en la carpeta './node-${p_repo_last_version}-linux-x64')
+                printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "${g_path_programs_win}/NodeJS"
+                uncompress_program "${l_path_source}" "$p_artifact_name" "${g_path_programs_win}" $((l_artifact_type - 20))
+                #l_artifact_name_without_ext="$g_filename_without_ext"
+
+                #Acceso al folder creado
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "${g_path_programs_win}/node-${p_repo_last_version}-win-x64" "$g_color_reset" "$g_color_opaque" "${g_path_programs_win}/NodeJS" "$g_color_reset"
+                mv "${g_path_programs_win}/node-${p_repo_last_version}-win-x64" "${g_path_programs_win}/NodeJS"
+                #chmod g+rx,o+rx ${g_path_programs_win}/NodeJS
+
             fi
             ;;
-
 
 
         cmake)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_programs}/cmake"
+                l_path_target_bin="${g_path_programs}/cmake"
 
-                #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                    chmod g+rx,o+rx $l_path_bin
-                else
-                    #Limpieza
-                    rm -rf ${l_path_bin}/*
+                #Limpiar el directorio del programa
+                if  [ -d "$l_path_target_bin" ]; then
+                    rm -rf ${l_path_target_bin}
                 fi
+                
+                #Descomprimiendo el archivo (descomprime en la carpeta cuyo nombre puede variar)
+                printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "$l_path_target_bin"
+                uncompress_program "${l_path_source}" "$p_artifact_name" "${g_path_programs}" $((l_artifact_type - 20))
+                #l_artifact_name_without_ext="$g_filename_without_ext"
+                
+                #Obteniendo el nombre de la carpeta que genero al descromprimir
+                #l_aux=$(find "$g_path_programs" -maxdepth 1 -mindepth 1 -type d -name 'cmake-*' 2> /dev/null | head -n 1)
+
+                #if [ -z "$l_aux" ]; then
+                #    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_warning" \
+                #        "$g_path_programs" 'cmake-*' "$g_color_reset"
+                #    return 41
+                #fi
+
+                #Acceso al folder creado
+                l_aux="${l_path_source}/${p_artifact_name_woext}"
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
+                mv "$l_aux" "$l_path_target_bin"
+                chmod g+rx,o+rx ${l_path_target_bin}
 
                 #Copiando los archivos de ayuda
                 #./man/man1/*.1
@@ -3961,10 +3959,6 @@ function _copy_artifact_files() {
                 #bash-completion/completions/cmake
                 #bash-completion/completions/cpack
                 #bash-completion/completions/ctest
-                    
-                #Mover todos archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
 
                 #Validar si 'CMake' esta en el PATH
                 echo "$PATH" | grep "${g_path_programs}/cmake/bin" &> /dev/null
@@ -3978,19 +3972,33 @@ function _copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_programs_win}/CMake"
+                l_path_target_bin="${g_path_programs_win}/CMake"
 
-                #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                else
-                    #Limpieza
-                    rm -rf ${l_path_bin}/*
+                #Limpiar el directorio del programa
+                if  [ -d "$l_path_target_bin" ]; then
+                    rm -rf ${l_path_target_bin}
                 fi
-                    
-                #Mover los archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                
+                #Descomprimiendo el archivo (descomprime en la carpeta cuyo nombre puede variar)
+                printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "$l_path_target_bin"
+                uncompress_program "${l_path_source}" "$p_artifact_name" "${g_path_programs_win}" $((l_artifact_type - 20))
+                #l_artifact_name_without_ext="$g_filename_without_ext"
+                
+                #Obteniendo el nombre de la carpeta que genero al descromprimir
+                #l_aux=$(find "$g_path_programs_win" -maxdepth 1 -mindepth 1 -type d -name 'cmake-*' 2> /dev/null | head -n 1)
+
+                #if [ -z "$l_aux" ]; then
+                #    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_warning" \
+                #        "$g_path_programs_win" 'cmake-*' "$g_color_reset"
+                #    return 41
+                #fi
+
+                #Acceso al folder creado
+                l_aux="${l_path_source}/${p_artifact_name_woext}"
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
+                mv "$l_aux" "$l_path_target_bin"
+                #chmod g+rx,o+rx ${l_path_target_bin}
+                
             fi
             ;;
 
@@ -3998,19 +4006,19 @@ function _copy_artifact_files() {
         step)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/step_${p_repo_last_version_pretty}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/step_${p_repo_last_version_pretty}"
             
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/bin/step" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/step"
-                    #mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/bin/step" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/step"
+                    #mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/bin/step" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/step"
-                    #sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/bin/step" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/step"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
 
                 #Copiando los archivos de ayuda
@@ -4019,12 +4027,12 @@ function _copy_artifact_files() {
 
                 #Copiando los script para el autocompletado
                 echo "Copiando \"autocomplete/bash_autocomplete\" a \"~/.files/terminal/linux/complete/\" ..."
-                cp "${l_path_temp}/autocomplete/bash_autocomplete" ~/.files/terminal/linux/complete/step.bash
+                cp "${l_path_source}/autocomplete/bash_autocomplete" ~/.files/terminal/linux/complete/step.bash
                 echo "Copiando \"autocomplete/zsh_autocomplete\" a \"~/.files/terminal/linux/complete/\" ..."
-                cp "${l_path_temp}/autocomplete/zsh_autocomplete" ~/.files/terminal/linux/complete/step.zsh
+                cp "${l_path_source}/autocomplete/zsh_autocomplete" ~/.files/terminal/linux/complete/step.zsh
 
             else
-                cp "${l_path_temp}/bin/step.exe" "${l_path_bin}"
+                cp "${l_path_source}/bin/step.exe" "${l_path_target_bin}"
             fi
             ;;
 
@@ -4032,22 +4040,22 @@ function _copy_artifact_files() {
         ninja)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_temp}/ninja" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/ninja"
-                    #mkdir -pm 755 "${l_path_man}"
+                    cp "${l_path_source}/ninja" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/ninja"
+                    #mkdir -pm 755 "${l_path_target_man}"
                 else
-                    sudo cp "${l_path_temp}/ninja" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/ninja"
-                    #sudo mkdir -pm 755 "${l_path_man}"
+                    sudo cp "${l_path_source}/ninja" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/ninja"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                cp "${l_path_temp}/ninja.exe" "${l_path_bin}"
-                #mkdir -p "${l_path_man}"
+                cp "${l_path_source}/ninja.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
             fi
             ;;
 
@@ -4055,21 +4063,21 @@ function _copy_artifact_files() {
         rust-analyzer)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             l_flag_install=0
             
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                
-                echo "Renombrando \"${l_path_temp}/${p_artifact_name_woext}\" a \"${l_path_temp}/rust-analyzer\""
-                #ls -la ${l_path_temp}
-                mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_temp}/rust-analyzer"
-                #ls -la ${l_path_temp}
+                echo "Renombrando \"${l_path_source}/${p_artifact_name_woext}\" a \"${l_path_source}/rust-analyzer\""
+                #ls -la ${l_path_source}
+                mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/rust-analyzer"
+                #ls -la ${l_path_source}
                 #id
-                chmod u+x "${l_path_temp}/rust-analyzer"
+                chmod u+x "${l_path_source}/rust-analyzer"
                 
                 #1. Comparando la version instalada con la version descargada
-                #_compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
+                #_compare_version_current_with "$p_repo_id" "$l_path_source" $p_install_win_cmds
                 #l_status=$?
 
                 ##Actualizar solo no esta configurado o tiene una version menor a la actual
@@ -4082,16 +4090,16 @@ function _copy_artifact_files() {
 
                 #2. Instalación
                 if [ $l_flag_install -eq 0 ]; then
-                    l_path_bin="${g_path_programs}/lsp_servers/rust_analyzer"
-                    mkdir -p "${l_path_bin}"
+                    l_path_target_bin="${g_path_programs}/lsp_servers/rust_analyzer"
+                    mkdir -p "${l_path_target_bin}"
 
-                    echo "Copiando \"${l_path_temp}/rust-analyzer\" a \"${l_path_bin}/\""
-                    cp "${l_path_temp}/rust-analyzer" "${l_path_bin}/"
-                    chmod +x "${l_path_bin}/rust-analyzer"
-                    #mkdir -pm 755 "${l_path_man}"
+                    echo "Copiando \"${l_path_source}/rust-analyzer\" a \"${l_path_target_bin}/\""
+                    cp "${l_path_source}/rust-analyzer" "${l_path_target_bin}/"
+                    chmod +x "${l_path_target_bin}/rust-analyzer"
+                    #mkdir -pm 755 "${l_path_target_man}"
 
                     #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
-                    echo "$p_repo_last_version_pretty" > "${l_path_bin}/rust-analyzer.info" 
+                    echo "$p_repo_last_version_pretty" > "${l_path_target_bin}/rust-analyzer.info" 
                 fi
 
 
@@ -4108,7 +4116,7 @@ function _copy_artifact_files() {
             else
 
                 #1. Comparando la version instalada con la version descargada
-                #_compare_version_current_with "$p_repo_id" "$l_path_temp" $p_install_win_cmds
+                #_compare_version_current_with "$p_repo_id" "$l_path_source" $p_install_win_cmds
                 #l_status=$?
 
                 ##Actualizar solo no esta configurado o tiene una version menor a la actual
@@ -4121,17 +4129,17 @@ function _copy_artifact_files() {
 
                 #2. Instalación
                 if [ $l_flag_install -eq 0 ]; then
-                    l_path_bin="${g_path_programs_win}/LSP_Servers/Rust_Analyzer"
-                    mkdir -p "${l_path_bin}"
+                    l_path_target_bin="${g_path_programs_win}/LSP_Servers/Rust_Analyzer"
+                    mkdir -p "${l_path_target_bin}"
 
-                    echo "Copiando \"${l_path_temp}/rust-analyzer.exe\" a \"${l_path_bin}\""
-                    cp "${l_path_temp}/rust-analyzer.exe" "${l_path_bin}"
-                    #echo "Copiando \"${l_path_temp}/rust-analyzer.pdb\" a \"${l_path_bin}\""
-                    #cp "${l_path_temp}/rust-analyzer.pdb" "${l_path_bin}"
-                    #mkdir -p "${l_path_man}"
+                    echo "Copiando \"${l_path_source}/rust-analyzer.exe\" a \"${l_path_target_bin}\""
+                    cp "${l_path_source}/rust-analyzer.exe" "${l_path_target_bin}"
+                    #echo "Copiando \"${l_path_source}/rust-analyzer.pdb\" a \"${l_path_target_bin}\""
+                    #cp "${l_path_source}/rust-analyzer.pdb" "${l_path_target_bin}"
+                    #mkdir -p "${l_path_target_man}"
                     
                     #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
-                    echo "$p_repo_last_version_pretty" > "${l_path_bin}/rust-analyzer.info" 
+                    echo "$p_repo_last_version_pretty" > "${l_path_target_bin}/rust-analyzer.info" 
                 fi
             fi
             ;;
@@ -4140,12 +4148,11 @@ function _copy_artifact_files() {
         graalvm)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
 
-            #Por ahora se instala solo las herramientas:
+            #No eso se instalaran los plugins (use 'gu install [tool-name]'):
             # Native Image
             # VisualVM
-            #No eso se instalaran los soportes a los demans lenguajes (use 'gu install [tool-name]'):
             # LLVM
             # JavaScript (GraalJS)
             # Node.js
@@ -4158,58 +4165,34 @@ function _copy_artifact_files() {
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_programs}/graalvm"
-                if [ $p_arti_index -ne 0 ]; then
-                    l_path_bin="${l_path_bin}_${p_arti_version}"
+                l_path_target_bin="${g_path_programs}/graalvm"
+                if [ $p_arti_subversion_index -ne 0 ]; then
+                    l_path_target_bin="${l_path_target_bin}_${p_arti_subversion_version}"
                 fi
 
-                #Instalación de GraalVM (Core)
-                if [ $p_artifact_index -eq 0 ]; then
-
-                    l_path_temp="${l_path_temp}/graalvm-ce-java${p_arti_version}-${p_repo_last_version_pretty}"
-
-                    #Limpieza del directorio del programa
-                    if  [ ! -d "$l_path_bin" ]; then
-                        mkdir -p $l_path_bin
-                        chmod g+rx,o+rx $l_path_bin
-                    else
-                        #Limpieza
-                        rm -rf ${l_path_bin}/*
-                    fi
+                #Limpiar el directorio del programa
+                if  [ -d "$l_path_target_bin" ]; then
+                    rm -rf ${l_path_target_bin}
+                fi
                     
-                    #Mover todos archivos
-                    #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                #Descomprimiendo el archivo (descomprime en la carpeta cuyo nombre puede variar)
+                printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "$l_path_target_bin"
+                uncompress_program "${l_path_source}" "$p_artifact_name" "${g_path_programs}" $((l_artifact_type - 20))
+                #l_artifact_name_without_ext="$g_filename_without_ext"
+                
+                #Obteniendo el nombre de la carpeta que genero al descromprimir
+                l_aux=$(find "$g_path_programs" -maxdepth 1 -mindepth 1 -type d -name 'graalvm-community-*' 2> /dev/null | head -n 1)
 
-                #Instalación del tool 'Native Image'
-                elif [ $p_artifact_index -eq 1 ]; then
-
-                    l_path_bin="${l_path_bin}/installers"
-                    mkdir -p "$l_path_bin"
-
-                    #mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_temp}/native-image"
-                    #cp "${l_path_temp}/native-image" "${l_path_bin}/"
-                    echo "Copiando el instalador \"${l_path_temp}/${p_artifact_name_woext}\" en \"${l_path_bin}/\""
-                    mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_bin}/"
-                    echo "Para instalar 'Native Image' use una de las siguientes alternativas:"
-                    echo " > gu install native-image"
-                    echo " > cd ${l_path_bin}"
-                    echo "   gu -L install ${p_artifact_name_woext}"
-
-                #Instalación de tool 'VisualVM'
-                else
-
-                    l_path_bin="${l_path_bin}/installers"
-                    mkdir -p "$l_path_bin"
-
-                    echo "Copiando el instalador \"${l_path_temp}/${p_artifact_name_woext}\" en \"${l_path_bin}/\""
-                    mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_bin}/"
-                    echo "Para instalar 'Native Image' use una de las siguientes alternativas:"
-                    echo " > gu install jvisualvm"
-                    echo " > cd ${l_path_bin}"
-                    echo "   gu -L install ${p_artifact_name_woext}"
-
+                if [ -z "$l_aux" ]; then
+                    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_warning" \
+                        "$g_path_programs" 'graalvm-community-*' "$g_color_reset"
+                    return 41
                 fi
+
+                #Acceso al folder creado
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
+                mv "$l_aux" "$l_path_target_bin"
+                chmod g+rx,o+rx ${l_path_target_bin}
 
                 #Validar si 'GraalVM' esta en el PATH
                 echo "$PATH" | grep "${g_path_programs}/graalvm/bin" &> /dev/null
@@ -4226,99 +4209,76 @@ function _copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_programs_win}/GraalVM"
-                if [ $p_arti_index -ne 0 ]; then
-                    l_path_bin="${l_path_bin}_${p_arti_version}"
+                l_path_target_bin="${g_path_programs_win}/GraalVM"
+                if [ $p_arti_subversion_index -ne 0 ]; then
+                    l_path_target_bin="${l_path_target_bin}_${p_arti_subversion_version}"
                 fi
 
-                #Instalación de GraalVM (Core)
-                if [ $p_artifact_index -eq 0 ]; then
+                #Limpiar el directorio del programa
+                if  [ -d "$l_path_target_bin" ]; then
+                    rm -rf ${l_path_target_bin}
+                fi
                     
-                    l_path_temp="${l_path_temp}/graalvm-ce-java${p_arti_version}-${p_repo_last_version_pretty}"
-
-                    #Limpieza del directorio del programa
-                    if  [ ! -d "$l_path_bin" ]; then
-                        mkdir -p $l_path_bin
-                    else
-                        #Limpieza
-                        rm -rf ${l_path_bin}/*
-                    fi
-                    
-                    #Mover los archivos
-                    #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                #Descomprimiendo el archivo (descomprime en la carpeta cuyo nombre puede variar)
+                printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "$l_path_target_bin"
+                uncompress_program "${l_path_source}" "$p_artifact_name" "${g_path_programs_win}" $((l_artifact_type - 20))
+                #l_artifact_name_without_ext="$g_filename_without_ext"
                 
-                #Instalación del tool 'Native Image'
-                elif [ $p_artifact_index -eq 1 ]; then
+                #Obteniendo el nombre de la carpeta que genero al descromprimir
+                l_aux=$(find "$g_path_programs_win" -maxdepth 1 -mindepth 1 -type d -name 'graalvm-community-*' 2> /dev/null | head -n 1)
 
-                    l_path_bin="${l_path_bin}/installers"
-                    mkdir -p "$l_path_bin"
-
-                    #mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_temp}/native-image"
-                    #cp "${l_path_temp}/native-image" "${l_path_bin}/"
-                    echo "Copiando el instalador \"${l_path_temp}/${p_artifact_name_woext}\" en \"${l_path_bin}/\""
-                    mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_bin}/"
-                    echo "Para instalar 'Native Image' use una de las siguientes alternativas:"
-                    echo " > gu install native-image"
-                    echo " > cd ${l_path_bin}"
-                    echo "   gu -L install ${p_artifact_name_woext}"
-
-                #Instalación de tool 'VisualVM'
-                else
-
-                    l_path_bin="${l_path_bin}/installers"
-                    mkdir -p "$l_path_bin"
-
-                    echo "Copiando el instalador \"${l_path_temp}/${p_artifact_name_woext}\" en \"${l_path_bin}/\""
-                    mv "${l_path_temp}/${p_artifact_name_woext}" "${l_path_bin}/"
-                    echo "Para instalar 'Native Image' use una de las siguientes alternativas:"
-                    echo " > gu install jvisualvm"
-                    printf " > cd "
-                    wslpath -w "${l_path_bin}"
-                    echo "   gu -L install ${p_artifact_name_woext}"
-
+                if [ -z "$l_aux" ]; then
+                    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_warning" \
+                        "$g_path_programs_win" 'graalvm-community-*' "$g_color_reset"
+                    return 41
                 fi
+
+                #Acceso al folder creado
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
+                mv "$l_aux" "$l_path_target_bin"
+                #chmod g+rx,o+rx ${l_path_target_bin}
+                
             fi
             ;;
 
 
         jdtls)
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_programs}/lsp_servers/jdt_ls"
+                l_path_target_bin="${g_path_programs}/lsp_servers/jdt_ls"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                    chmod g+rx,o+rx $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
+                    chmod g+rx,o+rx $l_path_target_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_bin}/*
+                    rm -rf ${l_path_target_bin}/*
                 fi
                 
                 #Mover todos archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                #rm "${l_path_source}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_target_bin} \;
 
             else
                 
-                l_path_bin="${g_path_programs_win}/LSP_Servers/JDT_LS"
+                l_path_target_bin="${g_path_programs_win}/LSP_Servers/JDT_LS"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_bin}/*
+                    rm -rf ${l_path_target_bin}/*
                 fi
                     
                 #Mover los archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.zp"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                #rm "${l_path_source}/${p_artifact_name_woext}.tar.zp"
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_target_bin} \;
             fi
             ;;
 
@@ -4326,7 +4286,7 @@ function _copy_artifact_files() {
         runc)
 
             #1. Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
@@ -4341,7 +4301,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4350,16 +4310,16 @@ function _copy_artifact_files() {
             fi
 
             #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Renombrando \"${l_path_temp}/runc.amd64\" a \"${l_path_temp}/runc\""
-            mv "${l_path_temp}/runc.amd64" "${l_path_temp}/runc"
+            echo "Renombrando \"${l_path_source}/runc.amd64\" a \"${l_path_source}/runc\""
+            mv "${l_path_source}/runc.amd64" "${l_path_source}/runc"
 
-            echo "Copiando \"runc\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"runc\" a \"${l_path_target_bin}\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                cp "${l_path_temp}/runc" "${l_path_bin}"
-                chmod +x "${l_path_bin}/runc"
+                cp "${l_path_source}/runc" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/runc"
             else
-                sudo cp "${l_path_temp}/runc" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/runc"
+                sudo cp "${l_path_source}/runc" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/runc"
             fi
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
@@ -4386,7 +4346,7 @@ function _copy_artifact_files() {
         crun)
 
             #1. Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
@@ -4401,7 +4361,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "podman" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'podman.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'podman.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4410,16 +4370,16 @@ function _copy_artifact_files() {
             fi
 
             #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Renombrando \"${l_path_temp}/crun-${p_repo_last_version_pretty}-linux-amd64\" a \"${l_path_temp}/crun\""
-            mv "${l_path_temp}/crun-${p_repo_last_version_pretty}-linux-amd64" "${l_path_temp}/crun"
+            echo "Renombrando \"${l_path_source}/crun-${p_repo_last_version_pretty}-linux-amd64\" a \"${l_path_source}/crun\""
+            mv "${l_path_source}/crun-${p_repo_last_version_pretty}-linux-amd64" "${l_path_source}/crun"
 
-            echo "Copiando \"crun\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"crun\" a \"${l_path_target_bin}\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                cp "${l_path_temp}/crun" "${l_path_bin}"
-                chmod +x "${l_path_bin}/crun"
+                cp "${l_path_source}/crun" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/crun"
             else
-                sudo cp "${l_path_temp}/crun" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/crun"
+                sudo cp "${l_path_source}/crun" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/crun"
             fi
 
             #4. Si la unidad servicio 'podman' estaba iniciando y se detuvo, iniciarlo
@@ -4440,7 +4400,7 @@ function _copy_artifact_files() {
         slirp4netns)
 
             #1. Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -4455,7 +4415,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4464,16 +4424,16 @@ function _copy_artifact_files() {
             fi
 
             #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Renombrando \"${l_path_temp}/slirp4netns-x86_64\" a \"${l_path_temp}/slirp4netns\""
-            mv "${l_path_temp}/slirp4netns-x86_64" "${l_path_temp}/slirp4netns"
+            echo "Renombrando \"${l_path_source}/slirp4netns-x86_64\" a \"${l_path_source}/slirp4netns\""
+            mv "${l_path_source}/slirp4netns-x86_64" "${l_path_source}/slirp4netns"
 
-            echo "Copiando \"${l_path_temp}/slirp4netns\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"${l_path_source}/slirp4netns\" a \"${l_path_target_bin}\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                cp "${l_path_temp}/slirp4netns" "${l_path_bin}"
-                chmod +x "${l_path_bin}/slirp4netns"
+                cp "${l_path_source}/slirp4netns" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/slirp4netns"
             else
-                sudo cp "${l_path_temp}/slirp4netns" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/slirp4netns"
+                sudo cp "${l_path_source}/slirp4netns" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/slirp4netns"
             fi
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
@@ -4499,7 +4459,7 @@ function _copy_artifact_files() {
         fuse-overlayfs)
 
             #1. Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -4514,7 +4474,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4523,16 +4483,16 @@ function _copy_artifact_files() {
             fi
 
             #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Renombrando \"${l_path_temp}/fuse-overlayfs-x86_64\" a \"${l_path_temp}/fuse-overlayfs\""
-            mv "${l_path_temp}/fuse-overlayfs-x86_64" "${l_path_temp}/fuse-overlayfs"
+            echo "Renombrando \"${l_path_source}/fuse-overlayfs-x86_64\" a \"${l_path_source}/fuse-overlayfs\""
+            mv "${l_path_source}/fuse-overlayfs-x86_64" "${l_path_source}/fuse-overlayfs"
 
-            echo "Copiando \"${l_path_temp}/fuse-overlayfs\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"${l_path_source}/fuse-overlayfs\" a \"${l_path_target_bin}\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                cp "${l_path_temp}/fuse-overlayfs" "${l_path_bin}"
-                chmod +x "${l_path_bin}/fuse-overlayfs"
+                cp "${l_path_source}/fuse-overlayfs" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/fuse-overlayfs"
             else
-                sudo cp "${l_path_temp}/fuse-overlayfs" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/fuse-overlayfs"
+                sudo cp "${l_path_source}/fuse-overlayfs" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/fuse-overlayfs"
             fi
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
@@ -4558,7 +4518,7 @@ function _copy_artifact_files() {
         rootlesskit)
 
             #1. Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -4573,7 +4533,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4584,31 +4544,31 @@ function _copy_artifact_files() {
             #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
 
-                echo "Copiando \"${l_path_temp}/rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/rootlesskit-docker-proxy" "${l_path_bin}"
-                chmod +x "${l_path_bin}/rootlesskit-docker-proxy"
+                echo "Copiando \"${l_path_source}/rootlesskit-docker-proxy\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/rootlesskit-docker-proxy" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/rootlesskit-docker-proxy"
 
-                echo "Copiando \"${l_path_temp}/rootlesskit\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/rootlesskit" "${l_path_bin}"
-                chmod +x "${l_path_bin}/rootlesskit"
+                echo "Copiando \"${l_path_source}/rootlesskit\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/rootlesskit" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/rootlesskit"
 
-                echo "Copiando \"${l_path_temp}/rootlessctl\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/rootlessctl" "${l_path_bin}"
-                chmod +x "${l_path_bin}/rootlessctl"
+                echo "Copiando \"${l_path_source}/rootlessctl\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/rootlessctl" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/rootlessctl"
 
             else
 
-                echo "Copiando \"${l_path_temp}/rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/rootlesskit-docker-proxy" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/rootlesskit-docker-proxy"
+                echo "Copiando \"${l_path_source}/rootlesskit-docker-proxy\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/rootlesskit-docker-proxy" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/rootlesskit-docker-proxy"
 
-                echo "Copiando \"${l_path_temp}/rootlesskit\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/rootlesskit" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/rootlesskit"
+                echo "Copiando \"${l_path_source}/rootlesskit\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/rootlesskit" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/rootlesskit"
 
-                echo "Copiando \"${l_path_temp}/rootlessctl\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/rootlessctl" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/rootlessctl"
+                echo "Copiando \"${l_path_source}/rootlessctl\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/rootlessctl" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/rootlessctl"
 
             fi
 
@@ -4636,8 +4596,8 @@ function _copy_artifact_files() {
         cni-plugins)
 
             #1. Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
-            l_path_bin="${g_path_programs}/cni_plugins"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_target_bin="${g_path_programs}/cni_plugins"
 
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -4653,7 +4613,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4662,45 +4622,45 @@ function _copy_artifact_files() {
             fi
 
             #3. Configurar: Si no existe el directorio
-            if  [ ! -d "$l_path_bin" ]; then
+            if  [ ! -d "$l_path_target_bin" ]; then
 
                 #Crear las carpeta
-                echo "Creando la carpeta \"${l_path_bin}\" ..."
+                echo "Creando la carpeta \"${l_path_target_bin}\" ..."
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    mkdir -pm 755 $l_path_bin
+                    mkdir -pm 755 $l_path_target_bin
                 else
-                    sudo mkdir -pm 755 $l_path_bin
+                    sudo mkdir -pm 755 $l_path_target_bin
                 fi
 
                 #Copiando los binarios
-                echo "Copiando los binarios de \"${l_path_temp}\" a \"${l_path_bin}\" ..."
+                echo "Copiando los binarios de \"${l_path_source}\" a \"${l_path_target_bin}\" ..."
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_bin} \;
-                    chmod +x ${l_path_bin}/*
+                    find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_target_bin} \;
+                    chmod +x ${l_path_target_bin}/*
                 else
-                    sudo find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_bin} \;
-                    sudo chmod +x ${l_path_bin}/*
+                    sudo find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_target_bin} \;
+                    sudo chmod +x ${l_path_target_bin}/*
                 fi
 
             #4. Configurar: Si existe el directorio: actualizar
             else
 
                 #Elimimiando los binarios
-                echo "Eliminando los binarios de \"${l_path_bin}\" ..."
+                echo "Eliminando los binarios de \"${l_path_target_bin}\" ..."
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    rm ${l_path_bin}/*
+                    rm ${l_path_target_bin}/*
                 else
-                    sudo rm ${l_path_bin}/*
+                    sudo rm ${l_path_target_bin}/*
                 fi
 
                 #Copiando los binarios
-                echo "Copiando los nuevos binarios de \"${l_path_temp}\" a \"${l_path_bin}\" ..."
+                echo "Copiando los nuevos binarios de \"${l_path_source}\" a \"${l_path_target_bin}\" ..."
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_bin} \;
-                    chmod +x ${l_path_bin}/*
+                    find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_target_bin} \;
+                    chmod +x ${l_path_target_bin}/*
                 else
-                    sudo find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_bin} \;
-                    sudo chmod +x ${l_path_bin}/*
+                    sudo find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tgz" -exec cp '{}' ${l_path_target_bin} \;
+                    sudo chmod +x ${l_path_target_bin}/*
                 fi
 
             fi
@@ -4731,7 +4691,7 @@ function _copy_artifact_files() {
         containerd)
 
             #1. Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/bin"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/bin"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -4746,7 +4706,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
             fi
 
-            _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4758,55 +4718,55 @@ function _copy_artifact_files() {
             #3. Configurar: Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
 
-                echo "Copiando \"${l_path_temp}/containerd-shim\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/containerd-shim" "${l_path_bin}"
-                chmod +x "${l_path_bin}/containerd-shim"
+                echo "Copiando \"${l_path_source}/containerd-shim\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/containerd-shim" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/containerd-shim"
 
-                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v1\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/containerd-shim-runc-v1" "${l_path_bin}"
-                chmod +x "${l_path_bin}/containerd-shim-runc-v1"
+                echo "Copiando \"${l_path_source}/containerd-shim-runc-v1\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/containerd-shim-runc-v1" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/containerd-shim-runc-v1"
 
-                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v2\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/containerd-shim-runc-v2" "${l_path_bin}"
-                chmod +x "${l_path_bin}/containerd-shim-runc-v2"
+                echo "Copiando \"${l_path_source}/containerd-shim-runc-v2\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/containerd-shim-runc-v2" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/containerd-shim-runc-v2"
 
-                echo "Copiando \"${l_path_temp}/containerd-stress\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/containerd-stress" "${l_path_bin}"
-                chmod +x "${l_path_bin}/containerd-stress"
+                echo "Copiando \"${l_path_source}/containerd-stress\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/containerd-stress" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/containerd-stress"
 
-                echo "Copiando \"${l_path_temp}/ctr\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/ctr" "${l_path_bin}"
-                chmod +x "${l_path_bin}/ctr"
+                echo "Copiando \"${l_path_source}/ctr\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/ctr" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/ctr"
 
-                echo "Copiando \"${l_path_temp}/containerd\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/containerd" "${l_path_bin}"
-                chmod +x "${l_path_bin}/containerd"
+                echo "Copiando \"${l_path_source}/containerd\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/containerd" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/containerd"
 
             else
 
-                echo "Copiando \"${l_path_temp}/containerd-shim\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/containerd-shim" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/containerd-shim"
+                echo "Copiando \"${l_path_source}/containerd-shim\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/containerd-shim" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/containerd-shim"
 
-                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v1\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/containerd-shim-runc-v1" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/containerd-shim-runc-v1"
+                echo "Copiando \"${l_path_source}/containerd-shim-runc-v1\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/containerd-shim-runc-v1" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/containerd-shim-runc-v1"
 
-                echo "Copiando \"${l_path_temp}/containerd-shim-runc-v2\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/containerd-shim-runc-v2" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/containerd-shim-runc-v2"
+                echo "Copiando \"${l_path_source}/containerd-shim-runc-v2\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/containerd-shim-runc-v2" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/containerd-shim-runc-v2"
 
-                echo "Copiando \"${l_path_temp}/containerd-stress\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/containerd-stress" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/containerd-stress"
+                echo "Copiando \"${l_path_source}/containerd-stress\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/containerd-stress" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/containerd-stress"
 
-                echo "Copiando \"${l_path_temp}/ctr\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/ctr" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/ctr"
+                echo "Copiando \"${l_path_source}/ctr\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/ctr" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/ctr"
 
-                echo "Copiando \"${l_path_temp}/containerd\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/containerd" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/containerd"
+                echo "Copiando \"${l_path_source}/containerd\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/containerd" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/containerd"
 
             fi
 
@@ -4857,7 +4817,7 @@ function _copy_artifact_files() {
         buildkit)
 
             #1. Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/bin"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/bin"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -4865,7 +4825,7 @@ function _copy_artifact_files() {
             fi
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            _request_stop_systemd_unit 'buildkit.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'buildkit.service' 1 "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4876,39 +4836,39 @@ function _copy_artifact_files() {
             #3. Configurar: Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
 
-                echo "Copiando \"${l_path_temp}/buildkit-runc\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/buildkit-runc" "${l_path_bin}"
-                chmod +x "${l_path_bin}/buildkit-runc"
+                echo "Copiando \"${l_path_source}/buildkit-runc\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/buildkit-runc" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/buildkit-runc"
 
-                echo "Copiando \"${l_path_temp}/buildkitd\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/buildkitd" "${l_path_bin}"
-                chmod +x "${l_path_bin}/buildkitd"
+                echo "Copiando \"${l_path_source}/buildkitd\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/buildkitd" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/buildkitd"
 
-                echo "Copiando \"${l_path_temp}/buildkit-qemu-*\" a \"${l_path_bin}\" ..."
-                cp ${l_path_temp}/buildkit-qemu-* "${l_path_bin}"
-                chmod +x ${l_path_bin}/buildkit-qemu-*
+                echo "Copiando \"${l_path_source}/buildkit-qemu-*\" a \"${l_path_target_bin}\" ..."
+                cp ${l_path_source}/buildkit-qemu-* "${l_path_target_bin}"
+                chmod +x ${l_path_target_bin}/buildkit-qemu-*
 
-                echo "Copiando \"${l_path_temp}/buildctl\" a \"${l_path_bin}\" ..."
-                cp "${l_path_temp}/buildctl" "${l_path_bin}"
-                chmod +x "${l_path_bin}/buildctl"
+                echo "Copiando \"${l_path_source}/buildctl\" a \"${l_path_target_bin}\" ..."
+                cp "${l_path_source}/buildctl" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/buildctl"
 
             else
 
-                echo "Copiando \"${l_path_temp}/buildkit-runc\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/buildkit-runc" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/buildkit-runc"
+                echo "Copiando \"${l_path_source}/buildkit-runc\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/buildkit-runc" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/buildkit-runc"
 
-                echo "Copiando \"${l_path_temp}/buildkitd\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/buildkitd" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/buildkitd"
+                echo "Copiando \"${l_path_source}/buildkitd\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/buildkitd" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/buildkitd"
 
-                echo "Copiando \"${l_path_temp}/buildkit-qemu-*\" a \"${l_path_bin}\" ..."
-                sudo cp ${l_path_temp}/buildkit-qemu-* "${l_path_bin}"
-                sudo chmod +x ${l_path_bin}/buildkit-qemu-*
+                echo "Copiando \"${l_path_source}/buildkit-qemu-*\" a \"${l_path_target_bin}\" ..."
+                sudo cp ${l_path_source}/buildkit-qemu-* "${l_path_target_bin}"
+                sudo chmod +x ${l_path_target_bin}/buildkit-qemu-*
 
-                echo "Copiando \"${l_path_temp}/buildctl\" a \"${l_path_bin}\" ..."
-                sudo cp "${l_path_temp}/buildctl" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/buildctl"
+                echo "Copiando \"${l_path_source}/buildctl\" a \"${l_path_target_bin}\" ..."
+                sudo cp "${l_path_source}/buildctl" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/buildctl"
 
             fi
 
@@ -4951,7 +4911,7 @@ function _copy_artifact_files() {
         nerdctl)
 
             #1. Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             local l_status_stop=-1
           
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -4966,39 +4926,39 @@ function _copy_artifact_files() {
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
 
-                    echo "Copiando \"${l_path_temp}/nerdctl\" a \"${l_path_bin}\" ..."
-                    cp "${l_path_temp}/nerdctl" "${l_path_bin}"
-                    chmod +x "${l_path_bin}/nerdctl"
+                    echo "Copiando \"${l_path_source}/nerdctl\" a \"${l_path_target_bin}\" ..."
+                    cp "${l_path_source}/nerdctl" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/nerdctl"
 
                 else
 
-                    echo "Copiando \"${l_path_temp}/nerdctl\" a \"${l_path_bin}\" ..."
-                    sudo cp "${l_path_temp}/nerdctl" "${l_path_bin}"
-                    sudo chmod +x "${l_path_bin}/nerdctl"
+                    echo "Copiando \"${l_path_source}/nerdctl\" a \"${l_path_target_bin}\" ..."
+                    sudo cp "${l_path_source}/nerdctl" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/nerdctl"
 
                 fi
 
                 mkdir -p ~/.files/setup/programs/containerd
 
                 #Archivos para instalar 'containerd' de modo rootless
-                echo "Copiando \"${l_path_temp}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/setup/programs/containerd\" ..."
-                cp "${l_path_temp}/containerd-rootless.sh" ~/.files/setup/programs/containerd
+                echo "Copiando \"${l_path_source}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/setup/programs/containerd\" ..."
+                cp "${l_path_source}/containerd-rootless.sh" ~/.files/setup/programs/containerd
                 chmod u+x ~/.files/setup/programs/containerd/containerd-rootless.sh
 
-                echo "Copiando \"${l_path_temp}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/setup/programs/containerd\" ..."
-                cp "${l_path_temp}/containerd-rootless-setuptool.sh" ~/.files/setup/programs/containerd
+                echo "Copiando \"${l_path_source}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/setup/programs/containerd\" ..."
+                cp "${l_path_source}/containerd-rootless-setuptool.sh" ~/.files/setup/programs/containerd
                 chmod u+x ~/.files/setup/programs/containerd/containerd-rootless-setuptool.sh
 
             #3. Configuración: Instalación de binarios de complementos que su reposotrio no ofrece el compilado (solo la fuente). Para ello se usa el full
             else
 
                 #3.1. Rutas de los artectos 
-                l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}/bin"
+                l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/bin"
 
                 #3.2. Configurar 'rootless-containers/bypass4netns' usado para accelar 'Slirp4netns' (NAT o port-forwading de llamadas del exterior al contenedor)
 
                 #Comparar la versión actual con la versión descargada
-                _compare_version_current_with "bypass4netns" "$l_path_temp" $p_install_win_cmds
+                _compare_version_current_with "bypass4netns" "$l_path_source" $p_install_win_cmds
                 l_status=$?
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
@@ -5015,7 +4975,7 @@ function _copy_artifact_files() {
                             printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
                         fi
 
-                        _request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+                        request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
                         l_status_stop=$?
                     fi
 
@@ -5026,23 +4986,23 @@ function _copy_artifact_files() {
                         #Instalando
                         if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
 
-                            echo "Copiando \"${l_path_temp}/bypass4netns\" a \"${l_path_bin}\" ..."
-                            cp "${l_path_temp}/bypass4netns" "${l_path_bin}"
-                            chmod +x "${l_path_bin}/bypass4netns"
+                            echo "Copiando \"${l_path_source}/bypass4netns\" a \"${l_path_target_bin}\" ..."
+                            cp "${l_path_source}/bypass4netns" "${l_path_target_bin}"
+                            chmod +x "${l_path_target_bin}/bypass4netns"
 
-                            echo "Copiando \"${l_path_temp}/bypass4netnsd\" a \"${l_path_bin}\" ..."
-                            cp "${l_path_temp}/bypass4netnsd" "${l_path_bin}"
-                            chmod +x "${l_path_bin}/bypass4netnsd"
+                            echo "Copiando \"${l_path_source}/bypass4netnsd\" a \"${l_path_target_bin}\" ..."
+                            cp "${l_path_source}/bypass4netnsd" "${l_path_target_bin}"
+                            chmod +x "${l_path_target_bin}/bypass4netnsd"
 
                         else
 
-                            echo "Copiando \"${l_path_temp}/bypass4netns\" a \"${l_path_bin}\" ..."
-                            sudo cp "${l_path_temp}/bypass4netns" "${l_path_bin}"
-                            sudo chmod +x "${l_path_bin}/bypass4netns"
+                            echo "Copiando \"${l_path_source}/bypass4netns\" a \"${l_path_target_bin}\" ..."
+                            sudo cp "${l_path_source}/bypass4netns" "${l_path_target_bin}"
+                            sudo chmod +x "${l_path_target_bin}/bypass4netns"
 
-                            echo "Copiando \"${l_path_temp}/bypass4netnsd\" a \"${l_path_bin}\" ..."
-                            sudo cp "${l_path_temp}/bypass4netnsd" "${l_path_bin}"
-                            sudo chmod +x "${l_path_bin}/bypass4netnsd"
+                            echo "Copiando \"${l_path_source}/bypass4netnsd\" a \"${l_path_target_bin}\" ..."
+                            sudo cp "${l_path_source}/bypass4netnsd" "${l_path_target_bin}"
+                            sudo chmod +x "${l_path_target_bin}/bypass4netnsd"
 
                         fi
 
@@ -5073,14 +5033,13 @@ function _copy_artifact_files() {
                 fi
 
             fi
-
             ;;
 
 
         dive)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -5088,13 +5047,13 @@ function _copy_artifact_files() {
             fi
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"${l_path_temp}/dive\" a \"${l_path_bin}\" ..."
+            echo "Copiando \"${l_path_source}/dive\" a \"${l_path_target_bin}\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                cp "${l_path_temp}/dive" "${l_path_bin}"
-                chmod +x "${l_path_bin}/dive"
+                cp "${l_path_source}/dive" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/dive"
             else
-                sudo cp "${l_path_temp}/dive" "${l_path_bin}"
-                sudo chmod +x "${l_path_bin}/dive"
+                sudo cp "${l_path_source}/dive" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/dive"
             fi
             ;;
 
@@ -5102,26 +5061,26 @@ function _copy_artifact_files() {
         powershell)
 
             #Ruta local de los artefactos
-            l_path_temp="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
             
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
-                l_path_bin="${g_path_programs}/powershell"
+                l_path_target_bin="${g_path_programs}/powershell"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
-                    chmod g+rx,o+rx $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
+                    chmod g+rx,o+rx $l_path_target_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_bin}/*
+                    rm -rf ${l_path_target_bin}/*
                 fi
                     
                 #Mover todos archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.tar.gz"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_bin} \;
+                #rm "${l_path_source}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_target_bin} \;
                 
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
                     chmod +x ${g_path_programs}/powershell/pwsh
@@ -5133,19 +5092,19 @@ function _copy_artifact_files() {
 
             else
                 
-                l_path_bin="${g_path_programs_win}/PowerShell"
+                l_path_target_bin="${g_path_programs_win}/PowerShell"
 
                 #Limpieza del directorio del programa
-                if  [ ! -d "$l_path_bin" ]; then
-                    mkdir -p $l_path_bin
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
                 else
                     #Limpieza
-                    rm -rf ${l_path_bin}/*
+                    rm -rf ${l_path_target_bin}/*
                 fi
                     
                 #Mover los archivos
-                #rm "${l_path_temp}/${p_artifact_name_woext}.zip"
-                find "${l_path_temp}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_bin} \;
+                #rm "${l_path_source}/${p_artifact_name_woext}.zip"
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_target_bin} \;
             fi
             ;;
 
@@ -5173,7 +5132,7 @@ function _copy_artifact_files() {
 #  1 > No se inicializo por opcion del usuario.
 #  2 > Hubo un error en la inicialización.
 #
-function install_initialize_menu_option() {
+install_initialize_menu_option() {
 
     #1. Argumentos
     local p_option_relative_idx=$1
@@ -5432,7 +5391,7 @@ uninstall_initialize_menu_option() {
             fi
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            _request_stop_systemd_unit 'containerd.service' 0 "$l_repo_id"
+            request_stop_systemd_unit 'containerd.service' 0 "$l_repo_id"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -5456,7 +5415,7 @@ uninstall_initialize_menu_option() {
             fi
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            _request_stop_systemd_unit 'buildkit.service' 0 "$l_repo_id"
+            request_stop_systemd_unit 'buildkit.service' 0 "$l_repo_id"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -5546,16 +5505,16 @@ _uninstall_repository() {
     local l_repo_name="${gA_packages[$p_repo_id]}"
     #local l_repo_name_aux="${l_repo_name:-$p_repo_id}"
 
-    local l_path_temp=""
+    #local l_path_source=""
 
-    local l_path_man=""
-    local l_path_bin=""
+    #local l_path_target_man=""
+    local l_path_target_bin=""
     if [ $p_install_win_cmds -ne 0 ]; then
-        l_path_bin=${g_path_bin}
-        l_path_man=${g_path_man}
+        l_path_target_bin="$g_path_bin"
+        #l_path_target_man="$g_path_man"
     else
-        l_path_bin="${g_path_bin_base_win}/bin"
-        l_path_man="${g_path_bin_base_win}/man"
+        l_path_target_bin="$g_path_bin_win"
+        #l_path_target_man="$g_path_man_win"
     fi
 
     local l_status
@@ -5574,11 +5533,11 @@ _uninstall_repository() {
             fi
 
             #2. Eliminando los archivos
-            echo "Eliminado \"runc\" de \"${l_path_bin}\" ..."
+            echo "Eliminado \"runc\" de \"${l_path_target_bin}\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                rm "${l_path_bin}/runc"
+                rm "${l_path_target_bin}/runc"
             else
-                sudo rm "${l_path_bin}/runc"
+                sudo rm "${l_path_target_bin}/runc"
             fi
             ;;
 
@@ -5592,14 +5551,14 @@ _uninstall_repository() {
             fi
 
             #2. Eliminando los archivos 
-            echo "Eliminando \"slirp4netns\" de \"${l_path_bin}\" ..."
+            echo "Eliminando \"slirp4netns\" de \"${l_path_target_bin}\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                if [ -f "${l_path_bin}/slirp4netns" ]; then
-                    rm "${l_path_bin}/slirp4netns"
+                if [ -f "${l_path_target_bin}/slirp4netns" ]; then
+                    rm "${l_path_target_bin}/slirp4netns"
                 fi
             else
-                if [ -f "${l_path_bin}/slirp4netns" ]; then
-                    sudo rm "${l_path_bin}/slirp4netns"
+                if [ -f "${l_path_target_bin}/slirp4netns" ]; then
+                    sudo rm "${l_path_target_bin}/slirp4netns"
                 fi
             fi
             ;;
@@ -5616,36 +5575,36 @@ _uninstall_repository() {
             #2. Eliminando los archivos 
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
 
-                if [ -f "${l_path_bin}/rootlesskit-docker-proxy" ]; then
-                    echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
-                    rm "${l_path_bin}/rootlesskit-docker-proxy"
+                if [ -f "${l_path_target_bin}/rootlesskit-docker-proxy" ]; then
+                    echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_target_bin}\" ..."
+                    rm "${l_path_target_bin}/rootlesskit-docker-proxy"
                 fi
 
-                if [ -f "${l_path_bin}/rootlesskit" ]; then
-                    echo "Eliminando \"rootlesskit\" a \"${l_path_bin}\" ..."
-                    rm "${l_path_bin}/rootlesskit"
+                if [ -f "${l_path_target_bin}/rootlesskit" ]; then
+                    echo "Eliminando \"rootlesskit\" a \"${l_path_target_bin}\" ..."
+                    rm "${l_path_target_bin}/rootlesskit"
                 fi
 
-                if [ -f "${l_path_bin}/rootlessctl" ]; then
-                    echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
-                    rm "${l_path_bin}/rootlessctl"
+                if [ -f "${l_path_target_bin}/rootlessctl" ]; then
+                    echo "Eliminando \"rootlessctl\" a \"${l_path_target_bin}\" ..."
+                    rm "${l_path_target_bin}/rootlessctl"
                 fi
 
             else
 
-                if [ -f "${l_path_bin}/rootlesskit-docker-proxy" ]; then
-                    echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_bin}\" ..."
-                    sudo rm "${l_path_bin}/rootlesskit-docker-proxy"
+                if [ -f "${l_path_target_bin}/rootlesskit-docker-proxy" ]; then
+                    echo "Eliminando \"rootlesskit-docker-proxy\" a \"${l_path_target_bin}\" ..."
+                    sudo rm "${l_path_target_bin}/rootlesskit-docker-proxy"
                 fi
 
-                if [ -f "${l_path_bin}/rootlesskit" ]; then
-                    echo "Eliminando\"rootlesskit\" a \"${l_path_bin}\" ..."
-                    sudo rm "${l_path_bin}/rootlesskit"
+                if [ -f "${l_path_target_bin}/rootlesskit" ]; then
+                    echo "Eliminando\"rootlesskit\" a \"${l_path_target_bin}\" ..."
+                    sudo rm "${l_path_target_bin}/rootlesskit"
                 fi
 
-                if [ -f "${l_path_bin}/rootlessctl" ]; then
-                    echo "Eliminando \"rootlessctl\" a \"${l_path_bin}\" ..."
-                    sudo rm "${l_path_bin}/rootlessctl"
+                if [ -f "${l_path_target_bin}/rootlessctl" ]; then
+                    echo "Eliminando \"rootlessctl\" a \"${l_path_target_bin}\" ..."
+                    sudo rm "${l_path_target_bin}/rootlessctl"
                 fi
 
             fi
@@ -5656,7 +5615,7 @@ _uninstall_repository() {
         cni-plugins)
 
             #1. Ruta local de los artefactos
-            l_path_bin="${g_path_programs}/cni_plugins"
+            l_path_target_bin="${g_path_programs}/cni_plugins"
 
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -5664,14 +5623,14 @@ _uninstall_repository() {
             fi
 
             #2. Eliminando los archivos
-            if  [ -d "$l_path_bin" ]; then
+            if  [ -d "$l_path_target_bin" ]; then
 
                 #Elimimiando los binarios
-                echo "Eliminando los binarios de \"${l_path_bin}\" ..."
+                echo "Eliminando los binarios de \"${l_path_target_bin}\" ..."
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    rm ${l_path_bin}/*
+                    rm ${l_path_target_bin}/*
                 else
-                    sudo rm ${l_path_bin}/*
+                    sudo rm ${l_path_target_bin}/*
                 fi
 
             fi
@@ -5693,66 +5652,66 @@ _uninstall_repository() {
             #2. Eliminando archivos 
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
 
-                if [ -f "${l_path_bin}/containerd-shim" ]; then
-                    echo "Eliminando \"${l_path_bin}/containerd-shim\"..."
-                    rm "${l_path_bin}/containerd-shim"
+                if [ -f "${l_path_target_bin}/containerd-shim" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/containerd-shim\"..."
+                    rm "${l_path_target_bin}/containerd-shim"
                 fi
 
-                if [ -f "${l_path_bin}/containerd-shim-runc-v1" ]; then
-                    echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v1\"..."
-                    rm "${l_path_bin}/containerd-shim-runc-v1"
+                if [ -f "${l_path_target_bin}/containerd-shim-runc-v1" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/containerd-shim-runc-v1\"..."
+                    rm "${l_path_target_bin}/containerd-shim-runc-v1"
                 fi
 
-                if [ -f "${l_path_bin}/containerd-shim-runc-v2" ]; then
-                    echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v2\"..."
-                    rm "${l_path_bin}/containerd-shim-runc-v2"
+                if [ -f "${l_path_target_bin}/containerd-shim-runc-v2" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/containerd-shim-runc-v2\"..."
+                    rm "${l_path_target_bin}/containerd-shim-runc-v2"
                 fi
 
-                if [ -f "${l_path_bin}/containerd-stress" ]; then
-                    echo "Eliminando \"${l_path_bin}/containerd-stress\"..."
-                    rm "${l_path_bin}/containerd-stress"
+                if [ -f "${l_path_target_bin}/containerd-stress" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/containerd-stress\"..."
+                    rm "${l_path_target_bin}/containerd-stress"
                 fi
 
-                if [ -f "${l_path_bin}/ctr" ]; then
-                    echo "Eliminando \"${l_path_bin}/ctr\"..."
-                    rm "${l_path_bin}/ctr"
+                if [ -f "${l_path_target_bin}/ctr" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/ctr\"..."
+                    rm "${l_path_target_bin}/ctr"
                 fi
 
-                if [ -f "${l_path_bin}/containerd" ]; then
-                    echo "Eliminando \"${l_path_bin}/containerd\"..."
-                    rm "${l_path_bin}/containerd"
+                if [ -f "${l_path_target_bin}/containerd" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/containerd\"..."
+                    rm "${l_path_target_bin}/containerd"
                 fi
 
             else
 
-                if [ -f "${l_path_bin}/containerd-shim" ]; then
-                    echo "Eliminando \"${l_path_bin}/containerd-shim\"..."
-                    sudo rm "${l_path_bin}/containerd-shim"
+                if [ -f "${l_path_target_bin}/containerd-shim" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/containerd-shim\"..."
+                    sudo rm "${l_path_target_bin}/containerd-shim"
                 fi
 
-                if [ -f "${l_path_bin}/containerd-shim-runc-v1" ]; then
-                    echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v1\"..."
-                    sudo rm "${l_path_bin}/containerd-shim-runc-v1"
+                if [ -f "${l_path_target_bin}/containerd-shim-runc-v1" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/containerd-shim-runc-v1\"..."
+                    sudo rm "${l_path_target_bin}/containerd-shim-runc-v1"
                 fi
 
-                if [ -f "${l_path_bin}/containerd-shim-runc-v2" ]; then
-                    echo "Eliminando \"${l_path_bin}/containerd-shim-runc-v2\"..."
-                    sudo rm "${l_path_bin}/containerd-shim-runc-v2"
+                if [ -f "${l_path_target_bin}/containerd-shim-runc-v2" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/containerd-shim-runc-v2\"..."
+                    sudo rm "${l_path_target_bin}/containerd-shim-runc-v2"
                 fi
 
-                if [ -f "${l_path_bin}/containerd-stress" ]; then
-                    echo "Eliminando \"${l_path_bin}/containerd-stress\"..."
-                    sudo rm "${l_path_bin}/containerd-stress"
+                if [ -f "${l_path_target_bin}/containerd-stress" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/containerd-stress\"..."
+                    sudo rm "${l_path_target_bin}/containerd-stress"
                 fi
 
-                if [ -f "${l_path_bin}/ctr" ]; then
-                    echo "Eliminando \"${l_path_bin}/ctr\" ..."
-                    sudo rm "${l_path_bin}/ctr"
+                if [ -f "${l_path_target_bin}/ctr" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/ctr\" ..."
+                    sudo rm "${l_path_target_bin}/ctr"
                 fi
 
-                if [ -f "${l_path_bin}/containerd" ]; then
-                    echo "Eliminando \"${l_path_bin}/containerd\"..."
-                    sudo rm "${l_path_bin}/containerd"
+                if [ -f "${l_path_target_bin}/containerd" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/containerd\"..."
+                    sudo rm "${l_path_target_bin}/containerd"
                 fi
 
             fi
@@ -5855,46 +5814,46 @@ _uninstall_repository() {
             #2. Eliminando archivos 
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
 
-                if [ -f "${l_path_bin}/buildkit-runc" ]; then
-                    echo "Eliminando \"${l_path_bin}/buildkit-runc\"..."
-                    rm "${l_path_bin}/buildkit-runc"
+                if [ -f "${l_path_target_bin}/buildkit-runc" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/buildkit-runc\"..."
+                    rm "${l_path_target_bin}/buildkit-runc"
                 fi
 
-                if [ -f "${l_path_bin}/buildkitd" ]; then
-                    echo "Eliminando \"${l_path_bin}/buildkitd\"..."
-                    rm "${l_path_bin}/buildkitd"
+                if [ -f "${l_path_target_bin}/buildkitd" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/buildkitd\"..."
+                    rm "${l_path_target_bin}/buildkitd"
                 fi
 
-                if [ -f "${l_path_bin}/buildkit-qemu-*" ]; then
-                    echo "Eliminando \"${l_path_bin}/buildkit-qemu-*\"..."
-                    rm ${l_path_bin}/buildkit-qemu-*
+                if [ -f "${l_path_target_bin}/buildkit-qemu-*" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/buildkit-qemu-*\"..."
+                    rm ${l_path_target_bin}/buildkit-qemu-*
                 fi
 
-                if [ -f "${l_path_bin}/buildctl" ]; then
-                    echo "Eliminando \"${l_path_bin}/buildctl\"..."
-                    rm "${l_path_bin}/buildctl"
+                if [ -f "${l_path_target_bin}/buildctl" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/buildctl\"..."
+                    rm "${l_path_target_bin}/buildctl"
                 fi
 
             else
 
-                if [ -f "${l_path_bin}/buildkit-runc" ]; then
-                    echo "Eliminando \"${l_path_bin}/buildkit-runc\"..."
-                    sudo rm "${l_path_bin}/buildkit-runc"
+                if [ -f "${l_path_target_bin}/buildkit-runc" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/buildkit-runc\"..."
+                    sudo rm "${l_path_target_bin}/buildkit-runc"
                 fi
 
-                if [ -f "${l_path_bin}/buildkitd" ]; then
-                    echo "Eliminando \"${l_path_bin}/buildkitd\"..."
-                    sudo rm "${l_path_bin}/buildkitd"
+                if [ -f "${l_path_target_bin}/buildkitd" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/buildkitd\"..."
+                    sudo rm "${l_path_target_bin}/buildkitd"
                 fi
 
-                if [ -f "${l_path_bin}/buildkit-qemu-*" ]; then
-                    echo "Eliminando \"${l_path_bin}/buildkit-qemu-*\"..."
-                    sudo rm ${l_path_bin}/buildkit-qemu-*
+                if [ -f "${l_path_target_bin}/buildkit-qemu-*" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/buildkit-qemu-*\"..."
+                    sudo rm ${l_path_target_bin}/buildkit-qemu-*
                 fi
 
-                if [ -f "${l_path_bin}/buildctl" ]; then
-                    echo "Eliminando \"${l_path_bin}/buildctl\"..."
-                    sudo rm "${l_path_bin}/buildctl"
+                if [ -f "${l_path_target_bin}/buildctl" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/buildctl\"..."
+                    sudo rm "${l_path_target_bin}/buildctl"
                 fi
 
             fi
@@ -5996,16 +5955,16 @@ _uninstall_repository() {
             #2. Eliminando los archivos
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
 
-                if [ -f "${l_path_bin}/nerdctl" ]; then
-                    echo "Eliminando \"${l_path_bin}/nerdctl\"..."
-                    rm "${l_path_bin}/nerdctl"
+                if [ -f "${l_path_target_bin}/nerdctl" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/nerdctl\"..."
+                    rm "${l_path_target_bin}/nerdctl"
                 fi
 
             else
 
-                if [ -f "${l_path_bin}/nerdctl" ]; then
-                    echo "Eliminando \"${l_path_bin}/nerdctl\"..."
-                    sudo rm "${l_path_bin}/nerdctl"
+                if [ -f "${l_path_target_bin}/nerdctl" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/nerdctl\"..."
+                    sudo rm "${l_path_target_bin}/nerdctl"
                 fi
 
             fi
@@ -6027,19 +5986,19 @@ _uninstall_repository() {
             #    #Instalando
             #    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
 
-            #        echo "Eliminando \"${l_path_bin}/bypass4netns\"..."
-            #        rm "${l_path_bin}/bypass4netns"
+            #        echo "Eliminando \"${l_path_target_bin}/bypass4netns\"..."
+            #        rm "${l_path_target_bin}/bypass4netns"
 
-            #        echo "Eliminando \"${l_path_bin}/bypass4netnsd\"..."
-            #        rm "${l_path_bin}/bypass4netnsd"
+            #        echo "Eliminando \"${l_path_target_bin}/bypass4netnsd\"..."
+            #        rm "${l_path_target_bin}/bypass4netnsd"
 
             #    else
 
-            #        echo "Eliminando \"${l_path_bin}/bypass4netns\"..."
-            #        sudo rm "${l_path_bin}/bypass4netns"
+            #        echo "Eliminando \"${l_path_target_bin}/bypass4netns\"..."
+            #        sudo rm "${l_path_target_bin}/bypass4netns"
 
-            #        echo "Eliminando \"${l_path_bin}/bypass4netnsd\"..."
-            #        sudo rm "${l_path_bin}/bypass4netnsd"
+            #        echo "Eliminando \"${l_path_target_bin}/bypass4netnsd\"..."
+            #        sudo rm "${l_path_target_bin}/bypass4netnsd"
 
             #    fi
 
@@ -6056,19 +6015,19 @@ _uninstall_repository() {
             fi
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Eliminando \"${l_path_bin}/dive\"..."
+            echo "Eliminando \"${l_path_target_bin}/dive\"..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
 
-                if [ -f "${l_path_bin}/dive" ]; then
-                    echo "Eliminando \"${l_path_bin}/dive\"..."
-                    rm "${l_path_bin}/dive"
+                if [ -f "${l_path_target_bin}/dive" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/dive\"..."
+                    rm "${l_path_target_bin}/dive"
                 fi
 
             else
 
-                if [ -f "${l_path_bin}/dive" ]; then
-                    echo "Eliminando \"${l_path_bin}/dive\"..."
-                    sudo rm "${l_path_bin}/dive"
+                if [ -f "${l_path_target_bin}/dive" ]; then
+                    echo "Eliminando \"${l_path_target_bin}/dive\"..."
+                    sudo rm "${l_path_target_bin}/dive"
                 fi
 
             fi

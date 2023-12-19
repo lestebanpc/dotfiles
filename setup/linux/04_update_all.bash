@@ -354,30 +354,36 @@ function _update_all() {
     local l_title
     local l_opcion=1
     local l_status
-    local l_flag=$(( $p_opciones & $l_opcion ))
-    if [ $l_flag -eq $l_opcion ]; then
+    local l_flag
 
-    
-        #Solicitar credenciales de administrador y almacenarlas temporalmente
-        if [ $g_status_crendential_storage -eq -1 ]; then
-            storage_sudo_credencial
-            g_status_crendential_storage=$?
-            #Se requiere almacenar las credenciales para realizar cambio con sudo. 
-            #  Si es 0 o 1: la instalación/configuración es completar
-            #  Si es 2    : el usuario no acepto la instalación/configuración
-            #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
-            if [ $g_status_crendential_storage -eq 2 ]; then
-                return 120
+    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+        l_flag=$(( $p_opciones & $l_opcion ))
+        if [ $l_flag -eq $l_opcion ]; then
+
+        
+            #Solicitar credenciales de administrador y almacenarlas temporalmente
+            if [ $g_status_crendential_storage -eq -1 ]; then
+                storage_sudo_credencial
+                g_status_crendential_storage=$?
+                #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+                #  Si es 0 o 1: la instalación/configuración es completar
+                #  Si es 2    : el usuario no acepto la instalación/configuración
+                #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
+                if [ $g_status_crendential_storage -eq 2 ]; then
+                    return 120
+                fi
             fi
+
+            print_line '─' $g_max_length_line  "$g_color_opaque"
+            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+            print_text_in_center2 "$l_title" $g_max_length_line 
+            print_line '─' $g_max_length_line "$g_color_opaque"
+
+            upgrade_os_packages $g_os_subtype_id     
+            echo ""
+
         fi
-
-        print_line '─' $g_max_length_line  "$g_color_opaque"
-        printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
-        print_text_in_center2 "$l_title" $g_max_length_line 
-        print_line '─' $g_max_length_line "$g_color_opaque"
-
-        upgrade_os_packages $g_os_subtype_id     
-        echo ""
 
     fi
 
@@ -420,13 +426,20 @@ function _show_menu_core() {
     print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_title"
     print_line '-' $g_max_length_line  "$g_color_opaque"
     printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
-    printf " (%ba%b) Actualizar los artefactos existentes: paquetes del SO y VIM/NeoVIM (update & config plugins) \n" "$g_color_title" "$g_color_reset"
-    printf " (%bb%b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y VIM/NeoVIM (update & config plugins)\n" "$g_color_title" "$g_color_reset"
+    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+        printf " (%ba%b) Actualizar los artefactos existentes: paquetes del SO y VIM/NeoVIM (update & config plugins) \n" "$g_color_title" "$g_color_reset"
+        printf " (%bb%b) Actualizar los artefactos existentes: paquetes del SO, binarios de GIT y VIM/NeoVIM (update & config plugins)\n" "$g_color_title" "$g_color_reset"
+    else
+        printf " (%ba%b) Actualizar los artefactos existentes: VIM/NeoVIM (update & config plugins) \n" "$g_color_title" "$g_color_reset"
+        printf " (%bb%b) Actualizar los artefactos existentes: Binarios de GIT y VIM/NeoVIM (update & config plugins)\n" "$g_color_title" "$g_color_reset"
+    fi
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     local l_max_digits=$?
 
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes\n" "$g_color_title" "1" "$g_color_reset"
+    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+        printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes\n" "$g_color_title" "1" "$g_color_reset"
+    fi
     printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de VIM/NeoVim existentes y configurarlos\n" "$g_color_title" "2" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Actualizar los binarios instalados de un repositorio de comandos como GitHub\n" "$g_color_title" "4" "$g_color_reset"
 

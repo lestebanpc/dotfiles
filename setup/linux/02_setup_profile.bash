@@ -55,6 +55,7 @@ fi
 
 #Flag '0' indica que vim esta instalado (los plugins de vim se puede instalar sin tener el vim instalado)
 g_is_vim_installed=0
+g_is_nvim_installed=0
 
 #Funciones de utilidad
 . ~/.files/setup/linux/_common_utility.bash
@@ -93,7 +94,6 @@ declare -A gA_repos_type=(
         ['OmniSharp/omnisharp-vim']=4
         ['SirVer/ultisnips']=4
         ['honza/vim-snippets']=4
-        #['nickspoons/vim-sharpenup']=4
         ['puremourning/vimspector']=4
     )
 
@@ -1363,8 +1363,10 @@ function _install_vim_nvim_environment() {
     l_status=$?
     if [ $l_status -eq 0 ]; then
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+        g_is_vim_installed=0
     else
         l_version=""
+        g_is_vim_installed=1
     fi
 
     #Instalar
@@ -1375,26 +1377,49 @@ function _install_vim_nvim_environment() {
             print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
             echo "NeoVIM      > Se va instalar NeoVIM"
 
-            #Parametros:
-            # 1> Tipo de ejecución: 2 (ejecución no-interactiva para instalar/actualizar un respositorio especifico)
-            # 2> Repsositorio a instalar/acutalizar: "neovim" (actualizar solo los comandos instalados)
-            # 3> El estado de la credencial almacenada para el sudo
-            ~/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage            
-            l_status=$?
+            #Los binarios para arm64, se debera usar los repositorios de los SO
+            if [ "$g_os_architecture_type" = "aarch64"]; then
 
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-               g_status_crendential_storage=0
-            fi
+                #Parametros:
+                # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
+                # 2> Repositorios a instalar/acutalizar: 16 (editor NeoVIM. Tiene Offset=1)
+                # 3> El estado de la credencial almacenada para el sudo
+                ~/.files/setup/linux/03_setup_packages.bash 1 16 $g_status_crendential_storage
+                l_status=$?
 
-            #Validar si 'nvim' esta en el PATH
-            echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
-            l_status=$?
-            if [ $l_status -ne 0 ]; then
-                export PATH=${g_path_programs}/neovim/bin:$PATH
+                #Si no se acepto almacenar credenciales
+                if [ $l_status -eq 120 ]; then
+                    return 120
+                #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+                elif [ $l_status -eq 119 ]; then
+                   g_status_crendential_storage=0
+                fi
+
+            #Actualmente (2023), en github solo existe binarios para x64 y no para arm64
+            else
+
+                #Parametros:
+                # 1> Tipo de ejecución: 2 (ejecución no-interactiva para instalar/actualizar un respositorio especifico)
+                # 2> Repsositorio a instalar/acutalizar: "neovim" (actualizar solo los comandos instalados)
+                # 3> El estado de la credencial almacenada para el sudo
+                ~/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage            
+                l_status=$?
+
+                #Si no se acepto almacenar credenciales
+                if [ $l_status -eq 120 ]; then
+                    return 120
+                #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+                elif [ $l_status -eq 119 ]; then
+                   g_status_crendential_storage=0
+                fi
+
+                #Validar si 'nvim' esta en el PATH
+                echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    export PATH=${g_path_programs}/neovim/bin:$PATH
+                fi
+
             fi
 
             #Obtener la version instalada
@@ -1404,7 +1429,8 @@ function _install_vim_nvim_environment() {
                 l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
                 printf 'Se instaló NeoVIM version "%s"\n' "$l_version"
             else
-                printf 'Ocurrio un error en la instalacion de NeoVIM "%s"\n' "$l_version"
+                printf 'NeoVIM      > %bNeoVIM no esta instalado, se recomienda su instalación%b.\n' "$g_color_warning" "$g_color_reset"
+                g_is_vim_installed=1
             fi
 
         else

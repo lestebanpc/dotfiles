@@ -43,8 +43,8 @@ PATH=$PATH:${l_program_path}/neovim/bin
 #Rust - LSP server
 #[ -d "${l_program_path}/lsp_servers/rust_analyzer" ] && PATH=$PATH:${l_program_path}/lsp_servers/rust_analyzer
 
-#LLVM/ClangD - LSP server
-[ -d "${l_program_path}/lsp_servers/clangd" ] && PATH=$PATH:${l_program_path}/lsp_servers/clangd/bin
+#LLVM/Clang
+[ -d "${l_program_path}/llvm/bin" ] && PATH=$PATH:${l_program_path}/llvm/bin
 
 #Ruta del builder Apache Maven
 [ -d "${l_program_path}/maven/bin" ] && PATH=${l_program_path}/maven/bin:$PATH

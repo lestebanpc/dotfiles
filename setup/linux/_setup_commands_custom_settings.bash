@@ -27,7 +27,6 @@ gA_packages=(
         ['kubectl']=''
         ['pgo']='CrunchyData/postgres-operator-client'
         ['helm']='helm/helm'
-        ['kustomize']='kubernetes-sigs/kustomize'
         ['operator-sdk']='operator-framework/operator-sdk'
         ['k0s']='k0sproject/k0s'
         ['3scale-toolbox']='3scale-labs/3scale_toolbox_packaging'
@@ -38,6 +37,7 @@ gA_packages=(
         ['go']='golang'
         ['cmake']='Kitware/CMake'
         ['ninja']='ninja-build/ninja'
+        ['llvm']='llvm/llvm-project'
         ['clangd']='clangd/clangd'
         ['rust-analyzer']='rust-lang/rust-analyzer'
         ['graalvm']='graalvm/graalvm-ce-builds'
@@ -84,7 +84,7 @@ ga_menu_options_title=(
     "RTE .NET"
     "RTE y SDK .NET"
     "LSP y DAP server de .Net"
-    "LSP y building tools de C/C++"
+    "LLVM/CLang ('clang', 'clang++', 'lld', 'lldb') y tools para C/C++"
     "LSP server de Rust"
     "LSP y DAP server de Java"
     )
@@ -115,20 +115,22 @@ ga_menu_options_packages=(
     "net-rt-core,net-rt-aspnet"
     "net-sdk"
     "roslyn,netcoredbg"
-    "clangd,cmake,ninja"
+    "llvm,cmake,ninja,clangd"
     "rust-analyzer"
     "jdtls"
     )
 
-#Opciones de configuración de los repositorio 
-# > Por defecto los repositorios son instalados en todo los permitido (valor por defecto es 11)
+#Tipos de SO donde se puede configurar los repositorio 
+# > Por defecto los repositorios son instalados en todo los tipos SO habilitados: Linux, Windows (valor por defecto es 11)
 # > Las opciones puede ser uno o la suma de los siguientes valores:
-#   1 (00001) Linux que no WSL2
+#   1 (00001) Linux non-WSL2
 #   2 (00010) Linux WSL2
 #   8 (00100) Windows vinculado al Linux WSL2
 #
-declare -A gA_repo_config=(
+declare -A gA_repo_config_os_type=(
         ['less']=8
+        ['llvm']=3
+        ['clangd']=8
         ['k0s']=1
         ['operator-sdk']=3
         ['nerd-fonts']=3
@@ -149,6 +151,20 @@ declare -A gA_repo_config=(
         ['crictl']=3
     )
 
+
+#Tipos de  donde se puede configurar los repositorio 
+# > Por defecto los repositorios son instalados en todo los tipos SO habilitados: x86_64 y arm64 (valor por defecto es 3)
+# > Las opciones puede ser uno o la suma de los siguientes valores:
+#   1 (00001) x86_64
+#   2 (00010) aarch64 (arm64)
+#
+declare -A gA_repo_config_proc_type=(
+        ['xsv']=1
+        ['jwt']=1
+        ['less']=1
+        ['clangd']=1
+        ['neovim']=1
+    )
 
 
 

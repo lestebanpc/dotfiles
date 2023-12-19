@@ -13,6 +13,7 @@ gA_packages=(
         ['xclip']='xclip'
         ['xsel']='xsel'
         ['vim']='vim-enhanced'
+        ['nvim']='neovim'
         ['python']='python3'
         ['python-pip']='python3-pip'
         ['skopeo']='skopeo'
@@ -28,6 +29,7 @@ ga_menu_options_title=(
     "CLI para portapales X11"
     "RTE Python3"
     "Editor VIM"
+    "Editor NeoVIM"
     "Gestión de imagenes de contenedores"
     )
 
@@ -44,6 +46,7 @@ ga_menu_options_packages=(
     "xclip,xsel"
     "python,python-pip"
     "vim"
+    "nvim"
     "skopeo"
     )
 

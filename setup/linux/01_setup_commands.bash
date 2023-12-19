@@ -24,6 +24,7 @@ if [ -z "$g_os_type" ]; then
     #Obtener información de la distribución Linux
     # > 'g_os_subtype_id'             : Tipo de distribucion Linux
     #    > 0000000 : Distribución de Linux desconocidos
+    #    > 0000001 : Alpine Linux
     #    > 10 - 29 : Familia Fedora
     #           10 : Fedora
     #           11 : CoreOS Stream
@@ -43,7 +44,10 @@ if [ -z "$g_os_type" ]; then
     #Solo en WSL: Ruta de binarios y programas de Windows
     if [ $g_os_type -eq 1 ]; then
         declare -r g_path_programs_win='/mnt/d/CLI'
-        declare -r g_path_bin_base_win="${g_path_programs_win}/Cmds"
+        declare -r g_path_bin_win="${g_path_programs_win}/Cmds/bin"
+        declare -r g_path_man_win="${g_path_programs_win}/Cmds/man"
+        declare -r g_path_doc_win="${g_path_programs_win}/Cmds/doc"
+        declare -r g_path_etc_win="${g_path_programs_win}/Cmds/etc"
     fi
 
 fi
@@ -158,17 +162,28 @@ _can_setup_repository_in_this_so() {
     fi
 
 
-    #2. Obtener las opciones de configuración del repositorio. 
+    #2. Obtener las opciones de configuración del repositorio.
+
+    #¿Se puede instalar en este tipo de SO?
     #  > Puede ser uno o la suma de los siguientes valores:
     #    1 (00001) Linux No-WSL2 (que no WSL2)
     #    2 (00010) Linux WSL2
     #    8 (00100) Windows vinculado al Linux WSL2
-    #  > Si no se especifica, su valor es 11 (se instala en todo lo permitido.
-    local l_repo_config=${gA_repo_config[${p_repo_id}]:-11}
+    #  > Si no se especifica, su valor es 11.
+    local l_repo_config_os_type=${gA_repo_config_os_type[${p_repo_id}]:-11}
 
-    #3. Repositorios especiales que no deberia instalarse segun el tipo de distribución Linux
+    #¿Se puede instalar en este tipo de arquitectura de procesador?
+    # > Por defecto, valor por defecto es 3.
+    # > Las opciones puede ser uno o la suma de los siguientes valores:
+    #   1 (00001) x86_64
+    #   2 (00010) aarch64 (arm64)
+    local l_repo_config_proc_type=${gA_repo_config_proc_type[${p_repo_id}]:-3}
+
+    #3. Repositorios especiales que no deberia instalarse segun el tipo de SO o arquitectura de procesador.
     local l_repo_can_setup=1  #(1) No debe configurarse, (0) Debe configurarse (instalarse/actualizarse)
-    local l_flag
+    #local l_flag
+
+    #Validar el tipo de SO
     if [ $p_install_win_cmds -ne 0 ]; then
 
         #Si es Linux
@@ -178,7 +193,7 @@ _can_setup_repository_in_this_so() {
             if [ $g_os_type -eq 1 ]; then
 
                 #Si se usa el flag '2' (Linux WSL2), configurarlo
-                if [ $((l_repo_config & 2)) -eq 2 ]; then
+                if [ $((l_repo_config_os_type & 2)) -eq 2 ]; then
                     l_repo_can_setup=0
                 fi
 
@@ -186,7 +201,7 @@ _can_setup_repository_in_this_so() {
             else
 
                 #Si se usa el flag '1' (Linux No-WSL2), configurarlo
-                if [ $((l_repo_config & 1)) -eq 1 ]; then
+                if [ $((l_repo_config_os_type & 1)) -eq 1 ]; then
                     l_repo_can_setup=0
                 fi
             fi
@@ -201,12 +216,33 @@ _can_setup_repository_in_this_so() {
         if [ $g_os_type -eq 1 ]; then
 
             #Si se usa el flag '8' (Windows vinculado al Linux WSL2), configurarlo
-            if [ $((l_repo_config & 8)) -eq 8 ]; then
+            if [ $((l_repo_config_os_type & 8)) -eq 8 ]; then
                 l_repo_can_setup=0
             fi
 
         fi
 
+    fi
+
+    #Validar el tipo de arquitectura del procesador
+    if [ $l_repo_can_setup -eq 0 ]; then
+
+        #Si es x86_64
+        if [ $g_os_architecture_type = "x86_64" ]; then
+            
+            if [ $((l_repo_config_proc_type & 1)) -ne 1 ]; then
+                l_repo_can_setup=1
+            fi
+
+        elif [ $g_os_architecture_type = "aarch64" ]; then
+            
+            if [ $((l_repo_config_proc_type & 2)) -ne 2 ]; then
+                l_repo_can_setup=1
+            fi
+
+        else
+            l_repo_can_setup=1
+        fi
     fi
 
     return $l_repo_can_setup
@@ -273,7 +309,7 @@ function _download_artifacts() {
     local p_repo_id="$1"
     declare -nr pnra_artifact_baseurl=$2
     declare -nr pnra_artifact_names=$3   #Parametro por referencia: Arreglo de los nombres de los artefactos
-    local p_arti_version="$4"    
+    local p_arti_subversion_version="$4"    
 
 
     #2. Descargar los artectos del repositorio
@@ -288,8 +324,8 @@ function _download_artifacts() {
     mkdir -p "/tmp/${p_repo_id}"
 
     local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
-    if [ ! -z "${p_arti_version}" ]; then
-        l_tag="${l_tag}[${p_arti_version}]${g_color_reset}"
+    if [ ! -z "${p_arti_subversion_version}" ]; then
+        l_tag="${l_tag}[${p_arti_subversion_version}]${g_color_reset}"
     else
         l_tag="${l_tag}${g_color_reset}"
     fi
@@ -323,6 +359,24 @@ function _download_artifacts() {
     return 0
 }
 
+# > El tipo de item de cada artefacto puede ser:
+#   Un archivo no comprimido
+#     >  0 si es un binario o archivo no empaquetado o comprimido
+#     >  1 si es un package
+#   Comprimidos no tan pesados (se descomprimen y copian en el lugar deseado)
+#     > 10 si es un .tar.gz
+#     > 11 si es un .zip
+#     > 12 si es un .gz
+#     > 13 si es un .tgz
+#     > 14 si es un .tar.xz
+#   Comprimidos muy pesados (se descomprimen directamente en el lugar deseado)
+#     > 20 si es un .tar.gz
+#     > 21 si es un .zip
+#     > 22 si es un .gz
+#     > 23 si es un .tgz
+#     > 24 si es un .tar.xz
+#   No definido
+#     > 99 si no se define el artefacto para el prefijo
 function _install_artifacts() {
 
     #1. Argumentos
@@ -335,10 +389,10 @@ function _install_artifacts() {
     local p_repo_last_version="$6"
     local p_repo_last_version_pretty="$7"
 
-    local p_arti_version="$8"    
-    local p_arti_index=0
+    local p_arti_subversion_version="$8"    
+    local p_arti_subversion_index=0
     if [[ "$9" =~ ^[0-9]+$ ]]; then
-        p_arti_index=$9
+        p_arti_subversion_index=$9
     fi
 
     local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
@@ -360,12 +414,13 @@ function _install_artifacts() {
     mkdir -p "/tmp/${p_repo_id}"
 
     local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
-    if [ ! -z "${p_arti_version}" ]; then
-        l_tag="${l_tag}[${p_arti_version}]${g_color_reset}"
+    if [ ! -z "${p_arti_subversion_version}" ]; then
+        l_tag="${l_tag}[${p_arti_subversion_version}]${g_color_reset}"
     else
         l_tag="${l_tag}${g_color_reset}"
     fi
 
+    local l_artifact_name_without_ext=""
     for ((l_i=0; l_i<$l_n; l_i++)); do
 
         l_artifact_name="${pnra_artifact_names[$l_i]}"
@@ -374,89 +429,28 @@ function _install_artifacts() {
         printf 'Artefacto "%b[%s]" a configurar - Type   : %s\n' "${l_tag}" "${l_i}" "${l_artifact_type}"
 
 
+        l_artifact_name_without_ext=""
         if [ $l_i -eq $l_n ]; then
             l_is_last=0
         fi
 
-        if [ $l_artifact_type -eq 2 ]; then
-
-            #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
-            printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}" "/tmp/${p_repo_id}/${l_i}"
-            #tar -xvf "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -C "/tmp/${p_repo_id}/${l_i}"
-            tar -xf "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -C "/tmp/${p_repo_id}/${l_i}"
-            rm "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
-            chmod u+rw /tmp/${p_repo_id}/${l_i}/*
-
-            #Copiar los archivos necesarios
-            printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-            _copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.tar.gz}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
-                "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
-            #l_status=0
-            printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-
-        elif [ $l_artifact_type -eq 5 ]; then
-
-            #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
-            printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}" "/tmp/${p_repo_id}/${l_i}"
-            #tar -xvf "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -C "/tmp/${p_repo_id}/${l_i}"
-            tar -xf "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -C "/tmp/${p_repo_id}/${l_i}"
-            rm "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
-            chmod u+rw /tmp/${p_repo_id}/${l_i}/*
-
-            #Copiar los archivos necesarios
-            printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-            _copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.tgz}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
-                "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
-            #l_status=0
-            printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-
-        elif [ $l_artifact_type -eq 4 ]; then
-
-            #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
-            l_tmp="${l_artifact_name%.gz}"
-            printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") como el archivo "%s" ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}" "/tmp/${p_repo_id}/${l_i}/${l_tmp}"
-            gunzip -q "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
-            #gunzip "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
-            #rm -f "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
-            chmod u+rw /tmp/${p_repo_id}/${l_i}/*
-
-            #Copiar los archivos necesarios
-            printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-            _copy_artifact_files "$p_repo_id" $l_i "${l_tmp}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
-                "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
-            #l_status=0
-            printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-
-        elif [ $l_artifact_type -eq 3 ]; then
-
-            #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
-            printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}" "/tmp/${p_repo_id}/${l_i}"
-            #unzip "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -d "/tmp/${p_repo_id}/${l_i}"
-            unzip -q "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" -d "/tmp/${p_repo_id}/${l_i}"
-            rm "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
-            chmod u+rw /tmp/${p_repo_id}/${l_i}/*
-
-            #Copiar los archivos necesarios
-            printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-            _copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.zip}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
-                "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
-            #l_status=0
-            printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
-
-        elif [ $l_artifact_type -eq 0 ]; then
+        #Si el tipo de item es 0 si es binario
+        if [ $l_artifact_type -eq 0 ]; then
 
             #Copiar los archivos necesarios
             printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
             if [ $p_install_win_cmds -eq 0 ]; then
-                _copy_artifact_files "$p_repo_id" $l_i "${l_artifact_name%.exe}" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
-                    "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
+                l_artifact_name_without_ext="${l_artifact_name%.exe}"
             else
-                _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
-                    "$p_repo_last_version_pretty" $l_is_last "$p_arti_version" $p_arti_index
+                l_artifact_name_without_ext="$l_artifact_name"
             fi
+
+            _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
+                "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index
             #l_status=0
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
+        #Si el tipo de item es 1 si es package
         elif [ $l_artifact_type -eq 1 ]; then
 
             #Si no es de la familia Debian
@@ -475,6 +469,38 @@ function _install_artifacts() {
             #l_status=0
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
+        #Si el tipo de item es un paquete
+        elif [ $l_artifact_type -ge 10 ] && [ $l_artifact_type -le 14 ]; then
+
+
+            #Descomprimiendo el archivo
+            printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}" "/tmp/${p_repo_id}/${l_i}"
+            uncompress_program "/tmp/${p_repo_id}/${l_i}" "${l_artifact_name}" "/tmp/${p_repo_id}/${l_i}" $((l_artifact_type - 10))
+            l_artifact_name_without_ext="$g_filename_without_ext"
+
+
+            #Copiar los archivos necesarios
+            printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
+            _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
+                "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index
+            #l_status=0
+            printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
+
+        #Si el tipo de item es un paquete
+        elif [ $l_artifact_type -ge 20 ] && [ $l_artifact_type -le 24 ]; then
+
+            #Obteniendo el nombre del archivo comprimido sin extensión
+            l_artifact_name_without_ext=$(compressed_program_name "${l_artifact_name}" $((l_artifact_type - 20)))
+
+            #Copiar los archivos necesarios
+            printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
+            _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
+                "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index
+            #l_status=0
+            printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
+
+
+        #Si el tipo de item es deconocido
         else
             printf 'ERROR (%s): El tipo del artefacto "%b[%s]" ("%s") no esta implementado "%s"\n\n' "21" "${l_tag}" "${l_i}" "${l_artifact_name}" "${l_artifact_type}"
             return 21
@@ -494,10 +520,10 @@ function _install_repository_internal() {
     local p_repo_last_version="$4"
     local p_repo_last_version_pretty="$5"
 
-    local p_arti_version="$6"    
-    local p_arti_index=0
+    local p_arti_subversion_version="$6"    
+    local p_arti_subversion_index=0
     if [[ "$7" =~ ^[0-9]+$ ]]; then
-        p_arti_index=$7
+        p_arti_subversion_index=$7
     fi
 
     local p_install_win_cmds=1            #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
@@ -517,8 +543,8 @@ function _install_repository_internal() {
 
     #4. Obtener el los artefacto que se instalaran del repositorio
     local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
-    if [ ! -z "${p_arti_version}" ]; then
-        l_tag="${l_tag}[${p_arti_version}]${g_color_reset}"
+    if [ ! -z "${p_arti_subversion_version}" ]; then
+        l_tag="${l_tag}[${p_arti_subversion_version}]${g_color_reset}"
     else
         l_tag="${l_tag}${g_color_reset}"
     fi
@@ -528,8 +554,8 @@ function _install_repository_internal() {
     local la_artifact_baseurl
     local la_artifact_names
     local la_artifact_types
-    load_artifacts "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$p_repo_last_version_pretty" la_artifact_baseurl la_artifact_names la_artifact_types \
-                    "$p_arti_version" $p_install_win_cmds $p_flag_install
+    get_repo_artifacts "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$p_repo_last_version_pretty" la_artifact_baseurl la_artifact_names la_artifact_types \
+                    "$p_arti_subversion_version" $p_install_win_cmds $p_flag_install
     l_status=$?    
     if [ $l_status -ne 0 ]; then
         printf 'ERROR: No esta configurado correctamente los artefactos para el repositorio "%b"\n' ${l_tag}
@@ -571,7 +597,7 @@ function _install_repository_internal() {
     fi
 
     #5. Descargar el artifacto en la carpeta
-    if ! _download_artifacts "$p_repo_id" la_artifact_baseurl la_artifact_names "$p_arti_version"; then
+    if ! _download_artifacts "$p_repo_id" la_artifact_baseurl la_artifact_names "$p_arti_subversion_version"; then
         printf 'ERROR: No se ha podido descargar los artefactos del repositorio "%b".\n' ${l_tag}
         _clean_temp "$p_repo_id"
         return 23
@@ -579,13 +605,13 @@ function _install_repository_internal() {
 
     #6. Instalar segun el tipo de artefecto
     if ! _install_artifacts "${p_repo_id}" "${p_repo_name}" la_artifact_names la_artifact_types "${p_repo_current_version}" "${p_repo_last_version}" \
-        "$p_repo_last_version_pretty" "$p_arti_version" $p_arti_index $p_install_win_cmds; then
+        "$p_repo_last_version_pretty" "$p_arti_subversion_version" $p_arti_subversion_index $p_install_win_cmds; then
         printf 'ERROR: No se ha podido instalar los artefecto de repositorio "%b".\n' ${l_tag}
         _clean_temp "$p_repo_id"
         return 24
     fi
 
-    _show_final_message "$p_repo_id" "$p_repo_last_version_pretty" "$p_arti_version" $p_install_win_cmds
+    _show_final_message "$p_repo_id" "$p_repo_last_version_pretty" "$p_arti_subversion_version" $p_install_win_cmds
     _clean_temp "$p_repo_id"
     return 0
 
@@ -722,8 +748,9 @@ _validate_versions_to_install() {
     local l_artifact_subversions_nbr=${#_ga_artifact_subversions[@]} 
     if [ $l_artifact_subversions_nbr -ne 0 ]; then
         for ((l_n=0; l_n< ${l_artifact_subversions_nbr}; l_n++)); do
-            printf 'Repositorio "%s%b[%s]%b" actual tiene la versión disponible "%s%b[%s]%b" con subversiones: Subversion[%s] es "%s"\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" \
-                   "${p_repo_id}" "$g_color_opaque" "${p_repo_last_version_pretty}" "$g_color_reset" "${l_n}" "${_ga_artifact_subversions[${l_n}]}"
+            printf 'Repositorio "%s%b[%s]%b" actual tiene la versión disponible "%s%b[%s]%b" con subversiones: Subversion[%s] es "%s"\n' "${p_repo_id}" "$g_color_opaque" \
+                "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" "${p_repo_id}" "$g_color_opaque" "${p_repo_last_version_pretty}" "$g_color_reset" "${l_n}" \
+                "${_ga_artifact_subversions[${l_n}]}"
         done
     fi
 
@@ -1108,7 +1135,8 @@ function _install_menu_options() {
 
         la_previous_options_idx=(${la_aux[1]})
         l_title_template=""
-        #echo "Index '${p_option_relative_idx}/${l_j}', RepoID '${l_repo_id}', ProcessThisRepo '${l_flag_process_next_repo}', FisrtSetupStatus '${l_status_first_setup}', PreviousOptions '${la_previous_options_idx[@]}'"
+        #echo "Index '${p_option_relative_idx}/${l_j}', RepoID '${l_repo_id}', ProcessThisRepo '${l_flag_process_next_repo}', FisrtSetupStatus '${l_status_first_setup}', \
+        #     PreviousOptions '${la_previous_options_idx[@]}'"
 
         #4.2. Si el repositorio ya ha pasado por el analisis para determinar si debe ser procesado o no
         if [ $l_status_first_setup -ne -1 ]; then
@@ -2010,7 +2038,8 @@ function _uninstall_menu_options() {
 
         la_previous_options_idx=(${la_aux[1]})
         l_title_template=""
-        #echo "Index '${p_option_relative_idx}/${l_j}', RepoID '${l_repo_id}', ProcessThisRepo '${l_flag_process_next_repo}', FisrtSetupStatus '${l_status_first_setup}', PreviousOptions '${la_previous_options_idx[@]}'"
+        #echo "Index '${p_option_relative_idx}/${l_j}', RepoID '${l_repo_id}', ProcessThisRepo '${l_flag_process_next_repo}', FisrtSetupStatus '${l_status_first_setup}', \
+        #     PreviousOptions '${la_previous_options_idx[@]}'"
 
         #4.2. Si el repositorio ya ha pasado por el analisis para determinar si debe ser procesado o no
         if [ $l_status_first_setup -ne -1 ]; then

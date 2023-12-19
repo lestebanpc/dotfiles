@@ -63,6 +63,7 @@ function get_os_type() {
 # 2) En el flujo de salida, en variales globales:
 #    > 'g_os_subtype_id'             : Tipo de distribucion Linux
 #       > 0000000 : Distribución de Linux desconocidos
+#       > 0000001 : Alpine Linux
 #       > 10 - 29 : Familia Fedora
 #              10 : Fedora
 #              11 : CoreOS Stream
@@ -94,6 +95,8 @@ function get_linux_type_info() {
     #   NAME="Fedora Linux"
     # Amazon Linux 2023
     #   NAME="Amazon Linux"
+    # Alpine Linux
+    #   NAME="Alpine Linux"
     #
     local l_tag="NAME"
     local l_distro_type=$(echo "$l_info_distro" | grep -e "^${l_tag}=" | sed 's/'"$l_tag"'="\(.*\)"/\1/')
@@ -112,6 +115,9 @@ function get_linux_type_info() {
             ;;
         Amazon*)
             l_value=19
+            ;;
+        Alpine*)
+            l_value=1
             ;;
         *)
             l_value=0

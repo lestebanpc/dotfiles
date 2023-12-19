@@ -63,21 +63,36 @@ function fulfill_preconditions() {
         return 1
     fi
 
-    #1. Validar el SO
-    local l_status=0
+    #2. Validar el SO
+    if [ -z "$g_os_type" ]; then
+        printf 'No es definido el tipo de SO\n' "$p_os_subtype_id"
+        return 1
+    fi
 
-    if [ ! -z "$p_os_subtype_id" ]; then
-        #Actualmente solo esta habilitado para distribucion de la familia Debian y Fedora.
-        if [ $p_os_subtype_id -lt 10 ] || [ $p_os_subtype_id -ge 50 ]; then
-            printf 'No esta implementado operaciones para SO Linux de tipo "%s"\n' "$p_os_subtype_id"
-            return 1
-        fi
-    else
+    if [ -z "$p_os_subtype_id" ]; then
         printf 'No es definido el tipo de distribucion Linux\n' "$p_os_subtype_id"
         return 1
     fi
 
-    #2. Si se instala para todos los usuarios, validar si los folderes requeridos existen si no crearlos
+    if [ $g_os_type -ne 0 ] && [ $g_os_type -ne 1 ]; then
+        printf 'No esta implementado para el tipo SO "%s"\n' "$p_os_subtype_id"
+        return 1
+    fi
+
+    #Actualmente solo esta habilitado para distribucion de la familia Debian y Fedora.
+    if [ $p_os_subtype_id -lt 10 ] || [ $p_os_subtype_id -ge 50 ]; then
+        printf 'No esta implementado para SO Linux de tipo "%s"\n' "$p_os_subtype_id"
+        return 1
+    fi
+
+    #3. Validar la arquitectura de procesador
+    if [ ! "$g_os_architecture_type" = "x86_64" ] && [ ! "$g_os_architecture_type" = "aarch64"]; then
+        printf 'No esta implementado para la arquitectura de procesador "%s"\n' "$g_os_architecture_type"
+        return 1
+    fi
+
+    #4. Si se instala para todos los usuarios, validar si los folderes requeridos existen si no crearlos
+    local l_status=0
     local l_group_name
     if [ ! -z "$g_path_programs" ] && [ ! -d "$g_path_programs" ]; then
 
@@ -110,14 +125,13 @@ function fulfill_preconditions() {
 
     if [ $g_os_type -eq 1 ] && [ ! -z "$g_path_programs_win" ] && [ ! -d "$g_path_programs_win" ]; then
         mkdir -p "$g_path_programs_win"
-        mkdir -p "$g_path_bin_base_win"
-        mkdir -p "$g_path_bin_base_win/bin"
-        mkdir -p "$g_path_bin_base_win/doc"
-        mkdir -p "$g_path_bin_base_win/etc"
-        mkdir -p "$g_path_bin_base_win/man"
+        mkdir -p "$g_path_bin_win"
+        mkdir -p "$g_path_man_win"
+        mkdir -p "$g_path_etc_win"
+        mkdir -p "$g_path_doc_win"
     fi
 
-    #3. El programa instalados: ¿Esta 'curl' instalado?
+    #5. El programa instalados: ¿Esta 'curl' instalado?
     local l_curl_version
     if [ $p_require_curl -eq 0 ]; then
         l_curl_version=$(curl --version 2> /dev/null)
@@ -134,7 +148,7 @@ function fulfill_preconditions() {
         fi
     fi
 
-    #4. Lo que se instalar requiere permisos de root.
+    #6. Lo que se instalar requiere permisos de root.
     if [ $p_require_root -eq 0 ]; then
         if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
             printf 'ERROR: el usuario no tiene permisos para ejecutar sudo (o el SO no tiene implementa sudo y el usuario no es root).'
@@ -142,11 +156,11 @@ function fulfill_preconditions() {
         fi
     fi
 
-    #5. Mostar información adicional (Solo mostrar info adicional si la ejecución es interactiva)
+    #7. Mostar información adicional (Solo mostrar info adicional si la ejecución es interactiva)
     if [ $p_type_calling -eq 0 ]; then
         printf '%bLinux distribution - Name   : (%s) %s\n' "$g_color_opaque" "${g_os_subtype_id}" "${g_os_subtype_name}"
         printf 'Linux distribution - Version: (%s) %s (%s)\n' "$g_os_subtype_id" "$g_os_subtype_version" "$g_os_subtype_version_pretty"
-        printf 'Processor architecture type : (%s) %s\n' "$g_os_subtype_id" "$g_os_architecture_type"
+        printf 'Processor architecture type : %s\n' "$g_os_architecture_type"
 
         if [ ! -z "$g_path_programs" ]; then
             printf 'Default program path        : "%s"' "$g_path_programs"
@@ -159,8 +173,8 @@ function fulfill_preconditions() {
 
         if [ ! -z "$g_path_bin" ]; then
             printf 'Default command path        : "%s"' "$g_path_bin"
-            if [ $g_os_type -eq 1 ] && [ ! -z "$g_path_bin_base_win" ]; then
-                printf ' (Windows "%s/bin")\n' "$g_path_bin_base_win"
+            if [ $g_os_type -eq 1 ] && [ ! -z "$g_path_bin_win" ]; then
+                printf ' (Windows "%s/bin")\n' "$g_path_bin_win"
             else
                 printf '\n'
             fi
@@ -168,22 +182,22 @@ function fulfill_preconditions() {
 
         local l_aux='Root ('
         if [ $g_user_is_root -eq 0 ]; then
-            l_aux="${l_aux}Yes), Sudo Support ("
+            l_aux="${l_aux}Yes)"
         else
             l_aux="${l_aux}No), Sudo Support ("
+            if [ $g_user_sudo_support -eq 0 ]; then
+                l_aux="${l_aux}Sudo with password)"
+            elif [ $g_user_sudo_support -eq 1 ]; then
+                l_aux="${l_aux}Sudo without password)"
+            elif [ $g_user_sudo_support -eq 2 ]; then
+                l_aux="${l_aux}OS not support sudo)"
+            elif [ $g_user_sudo_support -eq 3 ]; then
+                l_aux="${l_aux}No access to run sudo)"
+            else
+                l_aux="${l_aux}User is root. Don't need sudo"
+            fi
         fi
 
-        if [ $g_user_sudo_support -eq 0 ]; then
-            l_aux="${l_aux}Sudo with password)"
-        elif [ $g_user_sudo_support -eq 1 ]; then
-            l_aux="${l_aux}Sudo without password)"
-        elif [ $g_user_sudo_support -eq 2 ]; then
-            l_aux="${l_aux}OS not support sudo)"
-        elif [ $g_user_sudo_support -eq 3 ]; then
-            l_aux="${l_aux}No access to run sudo)"
-        else
-            l_aux="${l_aux}User is root. Don't need sudo"
-        fi
         printf 'User info                   : %s\n' "$l_aux"
 
         if [ $p_require_curl -eq 0 ]; then
@@ -264,6 +278,391 @@ function clean_sudo_credencial() {
     return 0
 }
 
+#Parametros de entrada
+#  1> Ruta del origin donde esta el comprimido
+#  2> Nombre de archivo comprimido
+#  3> Ruta destino donde se descromprimira el archivo
+#  4> El tipo de item de cada artefacto puede ser:
+#     Comprimidos no tan pesados (se descomprimen y copian en el lugar deseado)
+#       > 0 si es un .tar.gz
+#       > 1 si es un .zip
+#       > 2 si es un .gz
+#       > 3 si es un .tgz
+#       > 4 si es un .tar.xz
+#Parametros de salida
+#   > Valor de retorno: 0 si es exitoso
+#   > Variable global 'g_filename_without_ext' con el nombre del archivo comprimido sin su extension
+uncompress_program() {
+
+    local p_path_source="$1"
+    local p_compressed_filename="$2"
+    local p_path_destination="$3"
+    local p_compressed_filetype="$4"
+
+    g_filename_without_ext=""
+
+    # Si el tipo de item es 10 si es un comprimido '.tar.gz' no muy pesado (se descomprime en una ruta local y luego se copia a su destino)
+    if [ $p_compressed_filetype -eq 0 ]; then
+
+        #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+        tar -xf "${p_path_source}/${p_compressed_filename}" -C "${p_path_destination}"
+        rm "${p_path_source}/${p_compressed_filename}"
+        chmod u+rw ${p_path_destination}/*
+
+        g_filename_without_ext="${p_compressed_filename%.tar.gz}"
+
+    # Si el tipo de item es 11 si es un comprimido '.zip' no muy pesado (se descomprime en una ruta local y luego se copia a su destino)
+    elif [ $p_compressed_filetype -eq 1 ]; then
+
+        #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+        unzip -q "${p_path_source}/${p_compressed_filename}" -d "${p_path_destination}"
+        rm "${p_path_source}/${p_compressed_filename}"
+        chmod u+rw ${p_path_destination}/*
+
+        g_filename_without_ext="${p_compressed_filename%.zip}"
+
+
+    # Si el tipo de item es 12 si es un comprimido '.gz' no muy pesado (se descomprime en una ruta local y luego se copia a su destino)
+    elif [ $p_compressed_filetype -eq 2 ]; then
+
+        #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+        cd "${p_path_destination}"
+        gunzip -q "${p_path_source}/${p_compressed_filename}"
+        #Elimina el comprimido cuando el comando termina en exito.
+        #rm "${p_path_source}/${p_compressed_filename}"
+        chmod u+rw ${p_path_destination}/*
+
+        g_filename_without_ext="${p_compressed_filename%.gz}"
+
+
+    # Si el tipo de item es 13 si es un comprimido '.tgz' no muy pesado (se descomprime en una ruta local y luego se copia a su destino)
+    elif [ $p_compressed_filetype -eq 3 ]; then
+
+        #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+        tar -xf "${p_path_source}/${p_compressed_filename}" -C "${p_path_destination}"
+        rm "${p_path_source}/${p_compressed_filename}"
+        chmod u+rw ${p_path_destination}/*
+
+        g_filename_without_ext="${p_compressed_filename%.tgz}"
+
+    # Si el tipo de item es 14 si es un comprimido '.tar.xz' no muy pesado (se descomprime en una ruta local y luego se copia a su destino)
+    elif [ $p_compressed_filetype -eq 4 ]; then
+
+        #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+        tar -xJf "${p_path_source}/${p_compressed_filename}" -C "${p_path_destination}"
+        rm "${p_path_source}/${p_compressed_filename}"
+        chmod u+rw ${p_path_destination}/*
+
+        g_filename_without_ext="${p_compressed_filename%.tar.xz}"
+
+    else
+        return 1
+    fi
+
+    return 0
+}
+
+#Parametros de entrada
+#  1> Nombre de archivo comprimido
+#  2> El tipo de item de cada artefacto puede ser:
+#     Comprimidos no tan pesados (se descomprimen y copian en el lugar deseado)
+#       > 0 si es un .tar.gz
+#       > 1 si es un .zip
+#       > 2 si es un .gz
+#       > 3 si es un .tgz
+#       > 4 si es un .tar.xz
+#Parametros de salida
+#   > Valor de retorno: 0 si es exitoso
+#   > STDOUT          : Nombre del archivo sin extension  
+function compressed_program_name() {
+
+    local p_compressed_filename="$1"
+    local p_compressed_filetype="$2"
+
+    local l_filename_without_ext=""
+
+
+    # Si el tipo de item es 20, es un comprimido '.tar.gz' pesado por lo que se descomprimira directamente en el lugar deseado.
+    if [ $p_compressed_filetype -eq 0 ]; then
+
+        l_filename_without_ext="${p_compressed_filename%.tar.gz}"
+
+    # Si el tipo de item es 21, es un comprimido '.zip' pesado por lo que se descomprimira directamente en el lugar deseado.
+    elif [ $p_compressed_filetype -eq 1 ]; then
+
+        l_filename_without_ext="${p_compressed_filename%.zip}"
+
+    # Si el tipo de item es 22, es un comprimido '.gz' pesado por lo que se descomprimira directamente en el lugar deseado.
+    elif [ $p_compressed_filetype -eq 2 ]; then
+
+        l_filename_without_ext="${p_compressed_filename%.gz}"
+
+    # Si el tipo de item es 23, es un comprimido '.tgz' pesado por lo que se descomprimira directamente en el lugar deseado.
+    elif [ $p_compressed_filetype -eq 3 ]; then
+
+        l_filename_without_ext="${p_compressed_filename%.tgz}"
+
+    # Si el tipo de item es 24, es un comprimido '.tar.xz' pesado por lo que se descomprimira directamente en el lugar deseado.
+    elif [ $p_compressed_filetype -eq 4 ]; then
+
+        l_filename_without_ext="${p_compressed_filename%.tar.xz}"
+
+    else
+        return 1
+    fi
+
+    echo "$l_filename_without_ext"
+    return 0
+}
+
+
+#Si la unidad servicio 'containerd' esta iniciado, solicitar su detención y deternerlo
+#Parametros de entrada (argumentos y opciones):
+#   1 > Nombre completo de la unidad de systemd
+#Opcionales:
+#   2 > Flag '0' si se usara para desintalar, caso contrario se usara para instalar/actualizar.
+#   3 > ID del repositorio
+#   4 > Indice del artefato del repositorio que se desea instalar
+#Parametros de salida (valor de retorno):
+#   0 > La unidad systemd NO esta instalado y NO esta iniciado
+#   1 > La unidad systemd esta instalado pero NO esta iniciado (esta detenido)
+#   2 > La unidad systemd esta iniciado pero NO se acepto deternerlo
+#   3 > La unidad systemd iniciado se acepto detenerlo a nivel usuario
+#   4 > La unidad systemd iniciado se acepto detenerlo a nivel system
+function request_stop_systemd_unit() {
+
+    #1. Argumentos
+    local p_unit_name="$1"
+    local p_is_uninstalling=1
+    if [ "$2" = "0" ]; then
+        p_is_uninstalling=0
+    fi
+    local p_repo_id="$3"
+    local p_artifact_index=-1
+    if [[ "$4" =~ ^[0-9]+$ ]]; then
+        p_option_relative_idx=$4
+    fi
+    
+    #2. Averigur el estado actual de la unidad systemd
+    local l_option
+    local l_status
+    local l_is_user=0
+
+    exist_systemd_unit "$p_unit_name" $l_is_user
+    l_status=$?   #  1 > La unidad instalada pero aun no esta en cache (no ha sido ejecutada desde el inicio del SO)
+                  #  2 > La unidad instalada, en cache, pero marcada para no iniciarse ('unmask', 'inactive').
+                  #  3 > La unidad instalada, en cache, pero no iniciado ('loaded', 'inactive').
+                  #  4 > La unidad instalada, en cache, iniciado y aun ejecutandose ('loaded', 'active'/'running').
+                  #  5 > La unidad instalada, en cache, iniciado y esperando peticionese ('loaded', 'active'/'waiting').
+                  #  6 > La unidad instalada, en cache, iniciado y terminado ('loaded', 'active'/'exited' or 'dead').
+                  #  7 > La unidad instalada, en cache, iniciado pero se desconoce su subestado.
+                  # 99 > La unidad instalada, en cache, pero no se puede leer su información.
+
+    if [ $l_status -eq 0 ]; then
+
+        #Averiguar si esta instalado a nivel system
+        l_is_user=1
+        exist_systemd_unit "$p_unit_name" $l_is_user
+        l_status=$?
+
+        if [ $l_status -eq 0 ]; then
+            return 0
+        fi
+    fi
+
+    #Si se no esta iniciado, salir
+    if [ $l_status -lt 4 ] || [ $l_status -gt 7 ]; then
+        return 1
+    fi
+
+    #3. Solicitar la detención del servicio
+    printf "%bLa unidad systemd '%s' esta iniciado y requiere detenerse para " "$g_color_warning" "$p_unit_name"
+
+    if [ $p_is_uninstalling -eq 0 ]; then
+        printf 'desinstalar '
+    else
+        printf 'instalar '
+    fi
+
+    if [ $p_artifact_index -lt 0 ]; then
+        printf 'un artefacto del '
+    else
+        printf 'el artefacto[%s] del ' "$p_artifact_index"
+    fi
+
+    if [ -z "$p_repo_id" ]; then
+        printf 'resositorio.\n'
+    else
+        printf "repositorio '%s'.\n" "$p_repo_id"
+    fi
+
+
+    printf "¿Desea detener la unidad systemd?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_opaque" "$g_color_reset"
+    read -rei 's' -p ': ' l_option
+    if [ "$l_option" != "s" ]; then
+
+        if [ $p_is_uninstalling -eq 0 ]; then
+            printf '%bNo se desinstalará ' "$g_color_opaque"
+        else
+            printf '%bNo se instalará ' "$g_color_opaque"
+        fi
+
+        if [ $p_artifact_index -lt 0 ]; then
+            printf 'un artefacto del '
+        else
+            printf 'el artefacto[%s] del ' "$p_artifact_index"
+        fi
+
+        if [ -z "$p_repo_id" ]; then
+            printf "resositorio.\nDetenga el servicio '%s' y vuelva ejecutar el menú o acepte su detención para su " "$p_unit_name"
+        else
+            printf "repositorio '%s'.\nDetenga el servicio '%s' y vuelva ejecutar el menú o acepte su detención para su " "$p_repo_id" "$p_unit_name"
+        fi
+
+        if [ $p_is_uninstalling -eq 0 ]; then
+            printf 'desinstalación.%b\n' "$g_color_reset"
+        else
+            printf 'instalación.%b\n' "$g_color_reset"
+        fi
+
+        return 2
+
+    fi
+
+    #4. Detener la unidad systemd
+
+    #Si la unidad systemd esta a nivel usuario
+    if [ $l_is_user -eq 0 ]; then
+        printf 'Deteniendo la unidad "%s" a nivel usuario ...\n' "$p_unit_name"
+        systemctl --user stop "$p_unit_name"
+        return 3
+    fi
+
+
+    printf 'Deteniendo la unidad "%s" a nivel sistema ...\n' "$p_unit_name"
+    if [ $g_user_is_root -eq 0 ]; then
+        systemctl stop "$p_unit_name"
+    else
+        sudo systemctl stop "$p_unit_name"
+    fi
+
+    return 4
+
+}
+
+
+
+#Si un nodo k0s esta iniciado solicitar su detención y deternerlo.
+#Parametros de entrada (argumentos y opciones):
+#Opcionales:
+#   1 > Flag '0' si se usara para desintalar, caso contrario se usara para instalar/actualizar.
+#   2 > ID del repositorio
+#   3 > Indice del artefato del repositorio que se desea instalar
+#Parametros de salida (valor de retorno):
+#   0 > El nodo no esta iniciado (no esta instalado o esta detenido).
+#   1 > El nodo está iniciado pero NO se acepto deternerlo.
+#   2 > El nodo esta iniciado y se acepto detenerlo.
+function request_stop_k0s_node() {
+
+    #1. Argumentos
+    local p_is_uninstalling=1
+    if [ "$1" = "0" ]; then
+        p_is_uninstalling=0
+    fi
+    local p_repo_id="$2"
+    local p_artifact_index=-1
+    if [[ "$3" =~ ^[0-9]+$ ]]; then
+        p_option_relative_idx=$3
+    fi
+    
+    #2. Determinar el estado actual del demonio k0s
+    local l_option
+    local l_status
+    local l_info
+
+    #Si se no esta instalado o esta detenenido, salir
+    l_info=$(sudo k0s status 2> /dev/null)
+    l_status=$?
+    if [ $l_status -ne 0 ] || [ -z "$l_info" ]; then
+        return 0
+    fi
+
+    #Si esta detenido, salir
+    local l_aux
+    l_aux=$(echo "$l_info" | grep -e '^Process ID' 2> /dev/null)
+    l_status=$?
+    if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
+        return 0
+    fi
+
+    #Recuperar información adicional.
+    local l_node_process_id=$(echo "$l_aux" | sed 's/.*: \(.*\)/\1/' 2> /dev/null)
+    local l_nodo_type=$(echo "$l_info" | grep -e '^Role' | sed 's/.*: \(.*\)/\1/' 2> /dev/null)
+
+    #3. Solicitar la detención del servicio
+    printf "%bEl nodo k0s '%s' (PID: %s) esta iniciado y requiere detenerse para " "$g_color_warning" "$l_nodo_type" "$l_node_process_id"
+
+    if [ $p_is_uninstalling -eq 0 ]; then
+        printf 'desinstalar '
+    else
+        printf 'instalar '
+    fi
+
+    if [ $p_artifact_index -lt 0 ]; then
+        printf 'un artefacto del '
+    else
+        printf 'el artefacto[%s] del ' "$p_artifact_index"
+    fi
+
+    if [ -z "$p_repo_id" ]; then
+        printf 'resositorio.\n'
+    else
+        printf "repositorio '%s'.\n" "$p_repo_id"
+    fi
+
+
+    printf "¿Desea detener el nodo k0s?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_opaque" "$g_color_reset"
+    read -rei 's' -p ': ' l_option
+    if [ "$l_option" != "s" ]; then
+
+        if [ $p_is_uninstalling -eq 0 ]; then
+            printf '%bNo se desinstalará ' "$g_color_opaque"
+        else
+            printf '%bNo se instalará ' "$g_color_opaque"
+        fi
+
+        if [ $p_artifact_index -lt 0 ]; then
+            printf 'un artefacto del '
+        else
+            printf 'el artefacto[%s] del ' "$p_artifact_index"
+        fi
+
+        if [ -z "$p_repo_id" ]; then
+            printf "resositorio.\nDetenga el nodo k0s '%s' y vuelva ejecutar el menú o acepte su detención para su " "$l_nodo_type"
+        else
+            printf "repositorio '%s'.\nDetenga el nodo k0s '%s' y vuelva ejecutar el menú o acepte su detención para su " "$p_repo_id" "$l_nodo_type"
+        fi
+
+        if [ $p_is_uninstalling -eq 0 ]; then
+            printf 'desinstalación.%b\n' "$g_color_reset"
+        else
+            printf 'instalación.%b\n' "$g_color_reset"
+        fi
+
+        return 1
+
+    fi
+
+
+    #4. Detener el nodo k0s
+    printf 'Deteniendo el nodo k0s %s ...\n' "$l_nodo_type"
+    if [ $g_user_is_root -eq 0 ]; then
+        k0s stop
+    else
+        sudo k0s stop
+    fi
+    return 2
+}
 
 
 
@@ -299,6 +698,8 @@ get_length_menu_option() {
     return ${#l_max_digits_aux}
 }
 
+
+#Menu dinamico: Listado de repositorios que son instalados por las opcion de menu dinamicas
 #El menu dinamico muestra una opción de menú que es:
 #   ([Correlativo]) [Etiquete del opción de menu] [Titulo de la opción de menu]: [Listado de los repositorio que se configurará]
 #Parametros de entrada:
@@ -317,8 +718,6 @@ show_dynamic_menu() {
     local p_offset_option_index=$2
     local p_max_digits=$3
 
-
-#Menu dinamico: Listado de repositorios que son instalados por las opcion de menu dinamicas
 
     #Espacios vacios al inicio del menu
     local l_empty_space
