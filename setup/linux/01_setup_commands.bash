@@ -532,7 +532,7 @@ function _install_repository_internal() {
 
     local p_install_win_cmds=1            #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                           #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$8" -eq 0 2> /dev/null ]; then
+    if [ "$8" = "0" ]; then
         p_install_win_cmds=0
     fi
 
@@ -546,6 +546,7 @@ function _install_repository_internal() {
     #echo "p_repo_current_version = ${p_repo_current_version}"
 
     #4. Obtener el los artefacto que se instalaran del repositorio
+    local l_status
     local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
     if [ ! -z "${p_arti_subversion_version}" ]; then
         l_tag="${l_tag}[${p_arti_subversion_version}]${g_color_reset}"
@@ -553,8 +554,17 @@ function _install_repository_internal() {
         l_tag="${l_tag}${g_color_reset}"
     fi
 
-    
-    #Vriables de referencias a arreglos que se crearan dentro de la funcion '_load_artifacts'
+    #Validar si la subversion del artfacto esta instalado
+    if [ ! -z "${p_arti_subversion_version}" ]; then
+        is_installed_repo_subversion "$p_repo_id" "$p_arti_subversion_version" $p_install_win_cmds
+        l_status=$?    
+        if [ $l_status -eq 0 ]; then
+            printf 'La subversion[%s] "%b[%s]" ya esta instalado. Se continurá con el siguiente.\n' "$p_arti_subversion_index" "$l_tag"
+            return 99
+        fi
+    fi
+
+    #Obtener la URLs y otras variables de un artectado de una subversion de un repositorio o un repositorio
     local la_artifact_baseurl
     local la_artifact_names
     local la_artifact_types

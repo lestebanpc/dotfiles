@@ -5,6 +5,144 @@
 declare -r g_version_none='0.0.0'
 
 
+
+#Funciones modificables (Nivel 2) {{{
+
+
+#Obtener 2 versiones menores a la actual
+#Parametros de salida:
+#  > Valor de retorno:
+#    0 - OK
+#    1 - No OK
+#  > STDOUT: Las 2 versiones separadas por ' '
+function _dotnet_get_subversions()
+{
+    local p_repo_name="$1"
+    local p_version_pretty="$2"
+
+    #Cortar y obtener 1er numero
+    IFS='.'
+    la_numbers=($p_version_pretty)
+    unset IFS
+
+    local l_n=${#la_numbers[@]}
+
+    #Version enviada es incorrecta
+    if [ $l_n -le 1 ]; then
+        return 1
+    fi
+
+    local l_number=${la_numbers[0]}
+    local l_status
+    local l_aux
+    local l_versions="$p_version_pretty"
+
+    for ((l_i=1; l_i<=2; l_i++)); do
+
+        l_aux=""
+        ((l_n=${l_number} - ${l_i}))
+
+        #El artefacto se obtiene del repositorio de Microsoft y usando una version especifica
+        #No se usa la version LTS
+        l_aux=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/${l_n}.0/latest.version")
+        l_status=$?
+        l_aux=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
+
+        if [ $l_status -eq 0 ] && [ ! -z "$l_aux" ]; then
+            l_versions="${l_aux} ${l_versions}"
+        fi
+
+    done 
+
+    if [ -z "$l_versions" ]; then
+        return 1
+    fi
+
+    echo "$l_versions"
+    return 0
+
+}
+
+#Validar si una version esta instalada
+#Parametros de salida:
+#  > Valor de retorno:
+#    0 - Existe
+#    1 - No existe
+function _dotnet_exist_version()
+{
+    local p_repo_id="$1"
+    local p_version="$2"
+    local p_install_win_cmds=1          #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                        #(0) Los binarios de los comandos se estan instalando en Linux
+    if [ "$2" = "0" ]; then
+        p_install_win_cmds=0
+    fi
+
+    #Calcular la ruta de archivo/comando donde se obtiene la version
+    local l_path_file=""
+    if [ $p_install_win_cmds -eq 0 ]; then
+       l_path_file="${g_path_programs_win}/DotNet/"
+    else
+       l_path_file="${g_path_programs}/dotnet/"
+    fi
+
+    #Prefijo del nombre del artefacto
+    local l_cmd_option=''
+    if [ "p_repo_id" = "dotnet-sdk" ]; then
+        l_cmd_option='--list-sdks'
+    else
+        l_cmd_option='--list-runtimes'
+    fi
+
+    #Obtener las versiones instaladas
+    local l_info=""
+    local l_status
+    if [ $p_install_win_cmds -eq 0 ]; then
+        l_info=$(${l_path_file}dotnet.exe ${l_cmd_option} version 2> /dev/null)
+        l_status=$?
+    else
+        l_info=$(${l_path_file}dotnet ${l_cmd_option} version 2> /dev/null)
+        l_status=$?
+    fi
+
+    if [ $l_status -eq 0 ] && [ ! -z "$l_info" ]; then
+
+        if [ "$p_repo_id" = "dotnet-sdk" ]; then
+
+            l_info=$(echo "$l_info" | grep "$p_version" | head -n 1)
+            l_status=$?
+
+        elif [ "$p_repo_id" = "net-rt-core" ]; then
+
+            l_info=$(echo "$l_info" | grep 'Microsoft.NETCore.App' | grep "$p_version" | head -n 1)
+            l_status=$?
+
+        else
+            l_info=$(echo "$l_info" | grep 'Microsoft.AspNetCore.App' | grep "$p_version" | head -n 1)
+            l_status=$?
+
+        fi
+
+        if [ $l_status -ne 0 ]; then
+            l_info=""
+        fi
+
+    fi
+
+    #Resultados
+    if [ -z "$l_info" ]; then
+        return 1
+    fi
+
+    return 0
+}
+
+
+#}}}
+
+
+
+
 #Funciones modificables (Nivel 2) {{{
 
 
@@ -97,6 +235,13 @@ function _get_repo_latest_version() {
             #l_repo_last_version=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/LTS/latest.version")
 
             l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
+            
+            l_arti_subversion_versions=$(_dotnet_get_subversions "$p_repo_name" "$l_repo_last_version_pretty")
+
+            #Si solo tiene uns subversion y es la misma que la version, no existe subversiones
+            if [ "$l_repo_last_version_pretty" = "$l_arti_subversion_versions" ]; then
+                l_arti_subversion_versions=""
+            fi
             ;;
         
 
@@ -199,6 +344,12 @@ function _get_repo_latest_version() {
 
             #l_arti_subversion_versions=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.assets[].name' | \
             #   grep -e '^graalvm-ce-java.*-linux-amd64-.*\.tar\.gz$' | sed -e 's/graalvm-ce-java\(.*\)-linux-amd64-.*/\1/' | sort -r)
+
+            #Si solo tiene uns subversion y es la misma que la version, no existe subversiones
+            if [ "$l_repo_last_version_pretty" = "$l_arti_subversion_versions" ]; then
+                l_arti_subversion_versions=""
+            fi
+
             ;;
 
         #crictl)
@@ -1229,138 +1380,42 @@ function _get_repo_current_version() {
 
 }
 
-#Obtener 2 versiones menores a la actual
-#
+
+#Validar si una subversion de un repositorio esta instalada
 #Parametros de salida:
 #  > Valor de retorno:
-#    0 - OK
-#    1 - No OK
-#  > STDOUT: Las 2 versiones separadas por '|'
-function _dotnet_get_minor_version()
-{
-    local p_repo_name="$1"
-    local p_version_pretty="$2"
-
-    #Cortar y obtener 1er numero
-    IFS='.'
-    la_numbers=($p_version_pretty)
-    unset IFS
-
-    local l_n=${#la_numbers[@]}
-
-    #Version enviada es incorrecta
-    if [ $l_n -le 1 ]; then
-        return 1
-    fi
-
-    local l_number=${la_numbers[0]}
-    local l_status
-    local l_aux
-    local l_versions=""
-
-    for ((l_i=1; l_i<=2; l_i++)); do
-
-        l_aux=""
-        ((l_n=${l_number} - ${l_i}))
-
-        #El artefacto se obtiene del repositorio de Microsoft y usando una version especifica
-        l_aux=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/${l_n}.0/latest.version")
-        l_status=$?
-        l_aux=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
-
-        if [ $l_status -eq 0 ] && [ ! -z "$l_aux" ]; then
-
-            if [ -z "$l_versions" ]; then
-                l_versions="${l_aux}"
-            else
-                l_versions="${l_aux}|${l_versions}"
-            fi
-        fi
-
-    done 
-
-    if [ -z "$l_versions" ]; then
-        return 1
-    fi
-
-    echo "$l_versions"
-    return 0
-
-}
-
-#Obtener 2 versiones menores a la actual
-#
-#Parametros de salida:
-#  > Valor de retorno:
-#    0 - Existe
-#    1 - No existe
-function _dotnet_exist_version()
+#    0 - Esta instalado (Existe)
+#    1 - NO esta instalado (No existe)
+function is_installed_repo_subversion()
 {
     local p_repo_id="$1"
-    local p_version="$2"
+    local p_arti_subversion_version="$2"
     local p_install_win_cmds=1          #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                         #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "$2" = "0" ]; then
+    if [ "$3" = "0" ]; then
         p_install_win_cmds=0
     fi
 
-    #Calcular la ruta de archivo/comando donde se obtiene la version
-    local l_path_file=""
-    if [ $p_install_win_cmds -eq 0 ]; then
-       l_path_file="${g_path_programs_win}/DotNet/"
-    else
-       l_path_file="${g_path_programs}/dotnet/"
-    fi
+    #Por defecto las subversiones de un repositorio no esta intalado
+    local l_is_instelled=1
 
-    #Prefijo del nombre del artefacto
-    local l_cmd_option=''
-    if [ "p_repo_id" = "dotnet-sdk" ]; then
-        l_cmd_option='--list-sdks'
-    else
-        l_cmd_option='--list-runtimes'
-    fi
+    #Indicar si alguna subversion ya esta instalado
+    case "$p_repo_id" in
 
-    #Obtener las versiones instaladas
-    local l_info=""
-    local l_status
-    if [ $p_install_win_cmds -eq 0 ]; then
-        l_info=$(${l_path_file}dotnet.exe ${l_cmd_option} version 2> /dev/null)
-        l_status=$?
-    else
-        l_info=$(${l_path_file}dotnet ${l_cmd_option} version 2> /dev/null)
-        l_status=$?
-    fi
+        net-sdk|net-rt-core|net-rt-aspnet)
 
-    if [ $l_status -eq 0 ] && [ ! -z "$l_info" ]; then
-
-        if [ "$p_repo_id" = "dotnet-sdk" ]; then
-
-            l_info=$(echo "$l_info" | grep "$p_version" | head -n 1)
+            #Validar que existe la version no esta instalado
+            _dotnet_exist_version "$p_repo_id" "$l_arti_subversion_versions" $p_install_win_cmds
             l_status=$?
+            if [ $l_status -eq 0 ]; then
+                l_is_instelled=0
+            fi
+            ;;
+    
+    esac
 
-        elif [ "$p_repo_id" = "net-rt-core" ]; then
+    return $l_is_instelled
 
-            l_info=$(echo "$l_info" | grep 'Microsoft.NETCore.App' | grep "$p_version" | head -n 1)
-            l_status=$?
-
-        else
-            l_info=$(echo "$l_info" | grep 'Microsoft.AspNetCore.App' | grep "$p_version" | head -n 1)
-            l_status=$?
-
-        fi
-
-        if [ $l_status -ne 0 ]; then
-            l_info=""
-        fi
-
-    fi
-
-    #Resultados
-    if [ -z "$l_info" ]; then
-        return 1
-    fi
-
-    return 0
 }
 
 #Devuelve un arreglo de artefectos, usando los argumentos 3 y 4 como de referencia:
@@ -1397,7 +1452,7 @@ function get_repo_artifacts() {
     declare -n pna_artifact_baseurl=$5   #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
     declare -n pna_artifact_names=$6     #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
     declare -n pna_artifact_types=$7     #Parametro por referencia: Se devuelve un arreglo de los tipos de los artefactos
-    local p_arti_version="$8"
+    local p_arti_subversion_version="$8"
     local p_install_win_cmds=1         #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                        #(0) Los binarios de los comandos se estan instalando en Linux
     if [ "$9" = "0" ]; then
@@ -1433,29 +1488,8 @@ function get_repo_artifacts() {
                 l_prefix_repo='aspnetcore-runtime'
             fi
 
-            #Si es instalacion obtener la 2 versiones menores a la actual
-            local l_aux=""
-            local l_nbr_versions=0
-            local la_versions
-            if [ $l_flag_install -ne 0 ]; then
-                l_aux=$(_dotnet_get_minor_version "$p_repo_name" "$p_repo_last_version_pretty")
-                l_status=$?
-
-                if [ $l_status -ne 0 ]; then
-                    l_nbr_versions=0
-                else
-                    #Cortar y obtener las versiones
-                    IFS='|'
-                    la_versions=($l_aux)
-                    unset IFS
-
-                    l_nbr_versions=${#la_versions[@]}
-                fi
-            fi
-
-
-            #Si se actualiza, generar los datos de artefactado requeridos para su configuración:
-            if [ $l_nbr_versions -eq 0 ]; then
+            #Si no existe subversiones un repositorio
+            if [ -z "$p_arti_subversion_version" ]; then
 
                 #URL base fijo     : "https://dotnetcli.azureedge.net"
                 #URL base variable :
@@ -1484,57 +1518,35 @@ function get_repo_artifacts() {
                     pna_artifact_types=(10)
                 fi
 
-            #Si se instala, obtener la version de 2 versiones menores para que lo descargue y lo instale antes
+            #Si existe subversiones en un repositorios
             else
 
-                local l_version
-                local l_idx=0
-                for ((l_i=0; l_i<=l_nbr_versions; l_i++)); do
+                #URL base fijo     : "https://dotnetcli.azureedge.net"
+                #URL base variable :
+                l_base_url_variable="${p_repo_name}/${p_arti_subversion_version}"
 
-                    #Obtener la version a usar
-                    if [ $l_i -eq $l_nbr_versions ]; then
-                        l_version="$p_repo_last_version"
-                    else
-
-                        l_version="${la_versions[${l_i}]}"
-
-                        #Validar que existe la version no esta instalado
-                        _dotnet_exist_version "$p_repo_id" "$l_version" p_install_win_cmds
-                        l_status=$?
-                        if [ $l_status -eq 0 ]; then
-                            continue
-                        fi
-                    fi
-
-                    #URL base fijo     : "https://dotnetcli.azureedge.net"
-                    #URL base variable :
-                    l_base_url_variable="${p_repo_name}/${l_version}"
-
-                    #Generar la datos de cada artefacto:
-                    pna_artifact_baseurl[$l_idx]="${l_base_url_fixed}/${l_base_url_variable}"
-                    if [ $p_install_win_cmds -eq 0 ]; then
-                        pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-win-x64.zip"
-                        pna_artifact_types[${l_idx}]=11
-                    else
-                        if [ $g_os_subtype_id -eq 1 ]; then
-                            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                                pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-linux-musl-arm64.tar.gz"
-                            else
-                                pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-linux-musl-x64.tar.gz"
-                            fi
+                #Generar la URL con el artefactado:
+                pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
+                if [ $p_install_win_cmds -eq 0 ]; then
+                    pna_artifact_names=("${l_prefix_repo}-${p_arti_subversion_version}-win-x64.zip")
+                    pna_artifact_types=(11)
+                else
+                    #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                    if [ $g_os_subtype_id -eq 1 ]; then
+                        if [ "$g_os_architecture_type" = "aarch64" ]; then
+                            pna_artifact_names=("${l_prefix_repo}-${p_arti_subversion_version}-linux-musl-arm64.tar.gz")
                         else
-                            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                                pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-linux-arm64.tar.gz"
-                            else
-                                pna_artifact_names[${l_idx}]="${l_prefix_repo}-${l_version}-linux-x64.tar.gz"
-                            fi
+                            pna_artifact_names=("${l_prefix_repo}-${p_arti_subversion_version}-linux-musl-x64.tar.gz")
                         fi
-                        pna_artifact_types[${l_idx}]=10
+                    else
+                        if [ "$g_os_architecture_type" = "aarch64" ]; then
+                            pna_artifact_names=("${l_prefix_repo}-${p_arti_subversion_version}-linux-arm64.tar.gz")
+                        else
+                            pna_artifact_names=("${l_prefix_repo}-${p_arti_subversion_version}-linux-x64.tar.gz")
+                        fi
                     fi
-
-                    ((l_idx++))
-
-                done
+                    pna_artifact_types=(10)
+                fi
 
             fi
             ;;
@@ -2177,22 +2189,22 @@ function get_repo_artifacts() {
 
             #JDK 21, esta diseñando una nueva forma de instalar plugins a GraalVM, dejando de usar 'GraalVM Updater'
             if [ $p_install_win_cmds -eq 0 ]; then
-                #pna_artifact_names=("graalvm-ce-java${p_arti_version}-windows-amd64-${p_repo_last_version_pretty}.zip"
-                #                    "native-image-installable-svm-java${p_arti_version}-windows-amd64-${p_repo_last_version_pretty}.jar"
-                #                    "visualvm-installable-ce-java${p_arti_version}-windows-amd64-${p_repo_last_version_pretty}.jar")
+                #pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-windows-amd64-${p_repo_last_version_pretty}.zip"
+                #                    "native-image-installable-svm-java${p_arti_subversion_version}-windows-amd64-${p_repo_last_version_pretty}.jar"
+                #                    "visualvm-installable-ce-java${p_arti_subversion_version}-windows-amd64-${p_repo_last_version_pretty}.jar")
                 #pna_artifact_types=(11 0 0)
                 pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_windows-x64_bin.zip")
                 pna_artifact_types=(21)
             else
                 if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    #pna_artifact_names=("graalvm-ce-java${p_arti_version}-linux-aarch64-${p_repo_last_version_pretty}.tar.gz" 
-                    #                    "native-image-installable-svm-java${p_arti_version}-linux-aarch64-${p_repo_last_version_pretty}.jar"
-                    #                    "visualvm-installable-ce-java${p_arti_version}-linux-aarch64-${p_repo_last_version_pretty}.jar")
+                    #pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-linux-aarch64-${p_repo_last_version_pretty}.tar.gz" 
+                    #                    "native-image-installable-svm-java${p_arti_subversion_version}-linux-aarch64-${p_repo_last_version_pretty}.jar"
+                    #                    "visualvm-installable-ce-java${p_arti_subversion_version}-linux-aarch64-${p_repo_last_version_pretty}.jar")
                     pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_linux-aarch64_bin.tar.gz")
                 else
-                    #pna_artifact_names=("graalvm-ce-java${p_arti_version}-linux-amd64-${p_repo_last_version_pretty}.tar.gz" 
-                    #                    "native-image-installable-svm-java${p_arti_version}-linux-amd64-${p_repo_last_version_pretty}.jar"
-                    #                    "visualvm-installable-ce-java${p_arti_version}-linux-amd64-${p_repo_last_version_pretty}.jar")
+                    #pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-linux-amd64-${p_repo_last_version_pretty}.tar.gz" 
+                    #                    "native-image-installable-svm-java${p_arti_subversion_version}-linux-amd64-${p_repo_last_version_pretty}.jar"
+                    #                    "visualvm-installable-ce-java${p_arti_subversion_version}-linux-amd64-${p_repo_last_version_pretty}.jar")
                     pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_linux-x64_bin.tar.gz")
                 fi
                 pna_artifact_types=(20)
