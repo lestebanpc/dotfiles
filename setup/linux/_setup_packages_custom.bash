@@ -93,6 +93,10 @@ get_package_name() {
             fi 
             ;;
 
+        python-pip)
+            l_search_type=1
+            ;;
+
         *)
             l_package_name_custom="$p_package_name"
             l_search_type=0
