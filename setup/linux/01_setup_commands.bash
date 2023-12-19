@@ -2519,7 +2519,7 @@ function g_install_repository() {
         if [ -z "$l_status_process_lnx" ]; then
 
             #Solicitar credenciales para sudo y almacenarlas temporalmente
-            if [ $g_status_crendential_storage -eq -1 ]; then
+            if [ $g_status_crendential_storage -eq 0 ]; then
                 storage_sudo_credencial
                 g_status_crendential_storage=$?
                 #Se requiere almacenar las credenciales para realizar cambio con sudo. 
@@ -2789,7 +2789,7 @@ function g_install_repositories() {
         if [ $g_opt_update_installed_pckg -eq $l_flag ]; then
 
             #Solicitar credenciales para sudo y almacenarlas temporalmente
-            if [ $g_status_crendential_storage -eq -1 ]; then
+            if [ $g_status_crendential_storage -eq 0 ]; then
                 storage_sudo_credencial
                 g_status_crendential_storage=$?
                 #Se requiere almacenar las credenciales para realizar cambio con sudo. 

@@ -5250,7 +5250,7 @@ install_initialize_menu_option() {
                 printf 'Se requiere instalar los paquetes "%b%s%b".\n' "$g_color_opaque" "$l_packages" "$g_color_reset"
 
                 #Solicitar credenciales de administrador y almacenarlas temporalmente
-                if [ $g_status_crendential_storage -eq -1 ]; then
+                if [ $g_status_crendential_storage -eq 0 ]; then
 
                     #Solicitar credenciales de administrador y almacenarlas temporalmente
                     storage_sudo_credencial

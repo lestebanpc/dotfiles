@@ -363,7 +363,7 @@ function _update_all() {
 
         
             #Solicitar credenciales de administrador y almacenarlas temporalmente
-            if [ $g_status_crendential_storage -eq -1 ]; then
+            if [ $g_status_crendential_storage -eq 0 ]; then
                 storage_sudo_credencial
                 g_status_crendential_storage=$?
                 #Se requiere almacenar las credenciales para realizar cambio con sudo. 
