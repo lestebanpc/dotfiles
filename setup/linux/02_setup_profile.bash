@@ -1939,7 +1939,7 @@ function _show_menu_core() {
            "$g_color_reset" "$g_color_opaque" "$g_color_reset"
 
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-        printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(instala 'xclip', 'xsel', 'python3', 'nodejs'/configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
+        printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(instala 'xsel', 'python3', 'nodejs'/configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
                "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
     else
         printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
@@ -1951,7 +1951,7 @@ function _show_menu_core() {
            "$g_color_reset" "$g_color_opaque" "$g_color_reset"
 
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-        printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(instala 'xclip', 'xsel', 'python3', 'nodejs'/configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \
+        printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(instala 'xsel', 'python3', 'nodejs'/configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \
                "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
     else
         printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \

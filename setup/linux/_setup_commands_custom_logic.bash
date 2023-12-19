@@ -5188,6 +5188,7 @@ install_initialize_menu_option() {
             #Si es de la familia Debian
             elif [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
 
+                #TODO Existe diferentes paquetes para Debian y para Ubuntu que depende de la version
                 #libc6
                 #
                 #libgcc1
@@ -5249,26 +5250,31 @@ install_initialize_menu_option() {
             #3. Instalar los paquetes
             if [ ! -z "$l_packages" ]; then
 
-                printf 'Se requiere instalar los paquetes "%b%s%b".\n' "$g_color_opaque" "$l_packages" "$g_color_reset"
-
-                #Solicitar credenciales de administrador y almacenarlas temporalmente
-                if [ $g_status_crendential_storage -eq 0 ]; then
+                if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
+                    printf '%bNo esta habilitada para instalar paquetes%b. Se recomienda que Instalé los paquetes "%b%s%b".\n' "$g_color_warning" "$g_color_reset" \
+                        "$g_color_opaque" "$l_packages" "$g_color_reset"
+                else
+                    printf 'Se requiere instalar los paquetes "%b%s%b".\n' "$g_color_opaque" "$l_packages" "$g_color_reset"
 
                     #Solicitar credenciales de administrador y almacenarlas temporalmente
-                    storage_sudo_credencial
-                    g_status_crendential_storage=$?
-                    #Se requiere almacenar las credenciales para realizar cambio con sudo. 
-                    #  Si es 0 o 1: la instalación/configuración es completar
-                    #  Si es 2    : el usuario no acepto la instalación/configuración
-                    #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
-                    if [ $g_status_crendential_storage -eq 2 ]; then
-                        #return 120
-                        return 2
-                    fi
-                fi
+                    if [ $g_status_crendential_storage -eq 0 ]; then
 
-                #Instalar los paquetes
-                install_os_package "$l_packages" $g_os_subtype_id
+                        #Solicitar credenciales de administrador y almacenarlas temporalmente
+                        storage_sudo_credencial
+                        g_status_crendential_storage=$?
+                        #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+                        #  Si es 0 o 1: la instalación/configuración es completar
+                        #  Si es 2    : el usuario no acepto la instalación/configuración
+                        #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
+                        if [ $g_status_crendential_storage -eq 2 ]; then
+                            #return 120
+                            return 2
+                        fi
+                    fi
+
+                    #Instalar los paquetes
+                    install_os_package "$l_packages" $g_os_subtype_id
+                fi
             fi
 
             return 0
