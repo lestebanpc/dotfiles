@@ -26,7 +26,8 @@ gA_packages=(
 #  - Cada entrada define un opcion de menú. Su valor define el titulo.
 ga_menu_options_title=(
     "Basicos"
-    "CLI para portapales X11"
+    "CLI de portapales X11 'xsel'"
+    "CLI de portapales X11 'xclip'"
     "RTE Python3"
     "Editor VIM"
     "Editor NeoVIM"
@@ -43,7 +44,8 @@ ga_menu_options_title=(
 #    El binario se puede encontrar en nerdctl-full.
 ga_menu_options_packages=(
     "curl,openssl"
-    "xclip,xsel"
+    "xsel"
+    "xclip"
     "python,python-pip"
     "vim"
     "nvim"
@@ -175,7 +177,7 @@ install_finalize_menu_option() {
     case "$p_option_relative_idx" in
 
         #RTE Python
-        2)
+        3)
 
             #Adicionar packetes basicos al python instalado
             local l_aux=$(pip3 list 2> /dev/null)

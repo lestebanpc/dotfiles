@@ -1014,9 +1014,9 @@ _install_python() {
 
             #Parametros:
             # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-            # 2> Repositorios a instalar/acutalizar: 8 (RTE Python y Pip. Tiene Offset=1)
+            # 2> Repositorios a instalar/acutalizar: 16 (RTE Python y Pip. Tiene Offset=1)
             # 3> El estado de la credencial almacenada para el sudo
-            ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
+            ~/.files/setup/linux/03_setup_packages.bash 1 16 $g_status_crendential_storage
             l_status=$?
 
             #Si no se acepto almacenar credenciales
@@ -1209,7 +1209,7 @@ function _install_vim_nvim_environment() {
     print_line '─' $g_max_length_line "$g_color_opaque"
 
 
-    #4. Para developer: Instalar utilitarios para gestion de "clipbboard" (X11 Selection): XClip, XSel
+    #4. Para developer: Instalar utilitarios para gestion de "clipbboard" (X11 Selection): XSel
     local l_version
     local l_version2
     local l_status
@@ -1220,20 +1220,21 @@ function _install_vim_nvim_environment() {
         if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
             #echo "> Instalando los comandos/programas basicos requeridos ..."
-            l_version=$(xclip -version 2>&1 1> /dev/null)
-            l_status=$?
+            #l_version2=$(xclip -version 2>&1 1> /dev/null)
+            #l_status2=$?
             
-            l_version2=$(xsel --version 2> /dev/null)
-            l_status2=$?
+            l_version=$(xsel --version 2> /dev/null)
+            l_status=$?
 
-            if [ $l_status -ne 0 ] || [ $l_status2 -ne 0 ]; then
+            #if [ $l_status -ne 0 ] || [ $l_status2 -ne 0 ]; then
+            if [ $l_status -ne 0 ]; then
 
                 print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
-                echo "General     > Se va instalar comandos para gestion de X11 Clipboard: XClip, XSel"
+                echo "General     > Se va instalar un comando para gestion de X11 Clipboard: XSel"
 
                 #Parametros:
                 # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-                # 2> Repositorios a instalar/acutalizar: 4 (herramienta de X11 clipbboard. Tiene Offset=1)
+                # 2> Repositorios a instalar/acutalizar: 4 (herramienta de X11 clipbboard 'XSel'. Tiene Offset=1)
                 # 3> El estado de la credencial almacenada para el sudo
                 ~/.files/setup/linux/03_setup_packages.bash 1 4 $g_status_crendential_storage
                 l_status=$?
@@ -1250,15 +1251,15 @@ function _install_vim_nvim_environment() {
 
         fi
 
-        l_version=$(xclip -version 2>&1 1> /dev/null)
-        l_status=$?
-        if [ $l_status -eq 0 ]; then
-            l_version=$(echo "$l_version" | head -n 1 )
-            l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-            printf 'General     > XClip "%s" esta instalado\n' "$l_version"
-        else
-            printf 'General     > %bXClip no esta instalado, se recomienda instalarlo%b.\n' "$g_color_warning" "$g_color_reset"
-        fi
+        #l_version=$(xclip -version 2>&1 1> /dev/null)
+        #l_status=$?
+        #if [ $l_status -eq 0 ]; then
+        #    l_version=$(echo "$l_version" | head -n 1 )
+        #    l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+        #    printf 'General     > XClip "%s" esta instalado\n' "$l_version"
+        #else
+        #    printf 'General     > %bXClip no esta instalado, se recomienda instalarlo%b.\n' "$g_color_warning" "$g_color_reset"
+        #fi
 
         l_version=$(xsel --version 2> /dev/null)
         l_status=$?
@@ -1321,9 +1322,9 @@ function _install_vim_nvim_environment() {
 
                 #Parametros:
                 # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-                # 2> Repositorios a instalar/acutalizar: 8 (editor VIM. Tiene Offset=1)
+                # 2> Repositorios a instalar/acutalizar: 32 (editor VIM. Tiene Offset=1)
                 # 3> El estado de la credencial almacenada para el sudo
-                ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
+                ~/.files/setup/linux/03_setup_packages.bash 1 32 $g_status_crendential_storage
                 l_status=$?
 
                 #Si no se acepto almacenar credenciales
@@ -1382,9 +1383,9 @@ function _install_vim_nvim_environment() {
 
                 #Parametros:
                 # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-                # 2> Repositorios a instalar/acutalizar: 16 (editor NeoVIM. Tiene Offset=1)
+                # 2> Repositorios a instalar/acutalizar: 64 (editor NeoVIM. Tiene Offset=1)
                 # 3> El estado de la credencial almacenada para el sudo
-                ~/.files/setup/linux/03_setup_packages.bash 1 16 $g_status_crendential_storage
+                ~/.files/setup/linux/03_setup_packages.bash 1 64 $g_status_crendential_storage
                 l_status=$?
 
                 #Si no se acepto almacenar credenciales

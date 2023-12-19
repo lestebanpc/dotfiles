@@ -190,7 +190,7 @@ function get_user_options() {
 
         #Si el password esta en cache o el usuario no requiere password
         if [ $l_status -eq  0 ]; then
-            if sudo -nl 2> /dev/null | grep NOPASSWD 2> /dev/null; then
+            if sudo -nl 2> /dev/null | grep NOPASSWD &> /dev/null; then
                 g_user_sudo_support=1
             else
                 g_user_sudo_support=0
