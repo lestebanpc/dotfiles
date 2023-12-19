@@ -330,6 +330,8 @@ function _download_artifacts() {
         l_tag="${l_tag}${g_color_reset}"
     fi
 
+    local l_path_target
+
     for ((l_i=0; l_i<$l_n; l_i++)); do
 
         l_artifact_name="${pnra_artifact_names[$l_i]}"
@@ -340,17 +342,19 @@ function _download_artifacts() {
 
         
         #Descargar la artefacto
-        mkdir -p "/tmp/${p_repo_id}/${l_i}"
+        l_path_target="/tmp/${p_repo_id}/${l_i}"
+        mkdir -p "${l_path_target}"
 
         printf "$g_color_opaque"
-        curl -fLo "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}" "$l_artifact_url"
+        curl -fLo "${l_path_target}/${l_artifact_name}" "$l_artifact_url"
         l_status=$?
         printf "$g_color_reset"
 
         if [ $l_status -eq 0 ]; then
-            printf 'Artefacto "%b[%s]" descargado en         : "/tmp/%s/%s/%s"\n\n' "$l_tag" "${l_i}" "${p_repo_id}" "${l_i}" "${l_artifact_name}"
+            printf 'Artefacto "%b[%s]" descargado en         : "%s/%s"\n\n' "$l_tag" "${l_i}" "${l_path_target}" "${l_artifact_name}"
         else
-            printf 'Artefacto "%b[%s]" no se pudo descargar  : ERROR(%s)\n\n' "$l_tag" "${l_i}" "${l_status}"
+            printf 'Artefacto "%b[%s]" %bNO se descargó%b en    : "%s/%s" (ERROR %s)\n\n' "$l_tag" "${l_i}" "$g_color_warning" "$g_color_reset" \
+                   "${l_path_target}" "${l_artifact_name}" "${l_status}"
             return $l_status
         fi
 

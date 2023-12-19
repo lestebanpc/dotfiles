@@ -72,7 +72,7 @@ function _get_repo_latest_version() {
     local p_repo_id="$1"
     local p_repo_name="$2"
     declare -n pna_repo_versions=$3   #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
-    declare -n pna_arti_versions=$4
+    declare -n pna_arti_subversion_versions=$4
     
     #2. Obtener la version
     local l_repo_last_version=""
@@ -229,7 +229,7 @@ function _get_repo_latest_version() {
     #Codificar en base64
     l_aux=$(url_encode "$l_repo_last_version")
     pna_repo_versions=("$l_aux" "$l_repo_last_version_pretty")
-    pna_arti_versions=(${l_arti_subversion_versions})
+    pna_arti_subversion_versions=(${l_arti_subversion_versions})
     return 0
 }
 
