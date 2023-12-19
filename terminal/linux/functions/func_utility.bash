@@ -521,7 +521,7 @@ exist_systemd_unit() {
 
 
 #Parametros de entrada - Agumentos y opciones:
-#  1 > Nombre del paquete (no requiere especificar la plataforma del paquete)
+#  1 > Nombre del paquete. Si es Linux de la familia Fedora, se debe especificar el tipo de arquitectura: '.noarch', '.x86_64', etc.
 #  2 > El tipo de distribucion Linux (variable global 'g_os_subtype_id' generado por la funcion 'get_linux_type_info') 
 #  3 > Use '1' si es una busqueda exacta de nombre del paquete. Por defecto, su valor es '0', se busca el(los) paquete(s)
 #      que contiene la cadena ingresada en el parametro 1.
@@ -547,6 +547,11 @@ is_package_installed() {
     if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
         
         #Si es Ubuntu
+        #
+        #dpkg -l | grep python3-pip
+        #ii  python3-pip                       23.0.1+dfsg-1ubuntu0.2                  all          Python package installer
+        #ii  python3-pip-whl                   23.0.1+dfsg-1ubuntu0.2                  all          Python package installer (pip wheel)
+        #
         l_aux=$(dpkg -l | grep "$p_package_name_part" 2> /dev/null)
         l_status=$?
         
@@ -558,12 +563,17 @@ is_package_installed() {
     elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
         
         #Si es Fedora
+        #
+        #En fodora, el nombre del paquete incluye el tipo de arquitectura. Por ejemplo el paquete 'python3-pip':
+        #dnf list installed | grep python3-pip
+        #python3-pip.noarch                     21.3.1-2.amzn2023.0.5              @amazonlinux
+        #python3-pip-wheel.noarch               21.3.1-2.amzn2023.0.5              @System
+        #containerd.io.x86_64                   1.6.20-3.1.fc36                    @docker-ce-stable
+        #
+        
         l_aux=$(dnf list installed | grep "$p_package_name_part" 2> /dev/null)
         l_status=$?
 
-        #Ejemplo:
-        #containerd.io.x86_64                                 1.6.20-3.1.fc36                     @docker-ce-stable
-        
         if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
             return 1
         fi

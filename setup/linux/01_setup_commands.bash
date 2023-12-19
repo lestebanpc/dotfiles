@@ -748,7 +748,7 @@ _validate_versions_to_install() {
     local l_artifact_subversions_nbr=${#_ga_artifact_subversions[@]} 
     if [ $l_artifact_subversions_nbr -ne 0 ]; then
         for ((l_n=0; l_n< ${l_artifact_subversions_nbr}; l_n++)); do
-            printf 'Repositorio "%s%b[%s]%b" actual tiene la versión disponible "%s%b[%s]%b" con subversiones: Subversion[%s] es "%s"\n' "${p_repo_id}" "$g_color_opaque" \
+            printf 'Repositorio "%s%b[%s]%b" actual tiene la versión disponible "%s%b[%s]%b" (Subversion[%s] es "%s")\n' "${p_repo_id}" "$g_color_opaque" \
                 "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" "${p_repo_id}" "$g_color_opaque" "${p_repo_last_version_pretty}" "$g_color_reset" "${l_n}" \
                 "${_ga_artifact_subversions[${l_n}]}"
         done

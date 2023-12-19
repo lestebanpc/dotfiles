@@ -1040,9 +1040,6 @@ function g_install_package() {
     local p_package_title_template="$2"
 
     #1. Inicializaciones
-    local l_status=0
-    local l_package_name_default="${gA_packages[$p_package_id]}"
-    local l_package_name
 
     #3. Mostrar el titulo
     if [ ! -z "$p_package_title_template" ]; then
@@ -1054,27 +1051,58 @@ function g_install_package() {
     fi
 
     #2. Obtener el nombre del paquete para el sistema operativo
+    local l_package_name_default="${gA_packages[$p_package_id]}"
+    local l_package_name
+    local l_search_type
     l_package_name=$(get_package_name "$p_package_id" "$l_package_name_default" ${g_os_subtype_id})
-    l_status=$?
+    l_search_type=$?
     #echo "Package> ID: ${p_package_id} - NameGeneral: ${l_package_name_default} - Name: ${l_package_name} - SearchType: ${l_status}"
 
-    if [ $l_status -eq 9 ]; then
+    if [ $l_search_type -eq 9 ]; then
         printf 'No se pudo obtener el nombre real del paquete "%s"\n' "$l_package_name_default"
         return 3
     fi
     
-    #3. ¿El paquete esta instalado?
-    is_package_installed "$l_package_name" $g_os_subtype_id $l_status
-    l_status=$?
-    #echo "Package ${l_package_name} installing - Status: ${l_status} - OS: ${g_os_subtype_id}"
 
-    if [ $l_status -eq 9 ]; then
-        printf 'No se pudo obtener información del  paquete "%s"\n' "$l_package_name"
-        return 4
+    #3. El paquete ¿esta instalado?
+    
+    #Determinar si el programa del paquete existe
+    local l_status=1
+    local l_program_name=$(get_main_binary_of_package "$p_package_id")
 
-    elif [ $l_status -eq 0 ]; then
+    #printf 'El programa del paquete: "%s"\n' "$l_program_name"
+    
+    if [ ! -z "$l_program_name" ]; then
+
+        #Validar si el programa existe
+        #${l_program_name} --version
+        ${l_program_name} --version &> /dev/null
+        l_status=$?
+
+    fi
+
+    #Si el paquete ya esta instalado
+    if [ $l_status -eq 0 ]; then
         #printf 'El paquete "%s" ya esta instalado\n' "$l_package_name"
         return 2
+    fi
+
+    #Si el programa del paquete NO existe, determinar si el paquete existe
+    if [ $l_status -ne 0 ]; then
+
+        is_package_installed "$l_package_name" $g_os_subtype_id $l_search_type
+        l_status=$?
+        #echo "Package ${l_package_name} installing - Status: ${l_status} - OS: ${g_os_subtype_id}"
+
+        if [ $l_status -eq 9 ]; then
+            printf 'No se pudo obtener información del  paquete "%s"\n' "$l_package_name"
+            return 4
+
+        #Si el paquete ya esta instalado
+        elif [ $l_status -eq 0 ]; then
+            #printf 'El paquete "%s" ya esta instalado\n' "$l_package_name"
+            return 2
+        fi
     fi
 
     #4. Instalar el paquete    

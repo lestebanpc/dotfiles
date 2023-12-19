@@ -52,8 +52,37 @@ ga_menu_options_packages=(
     "skopeo"
     )
 
-#Podman: Instalar antes las herramientas de lower level de Container Runtime, para evitar que Podman lo instale
-#CRI-O
+
+#Permite analizar si el binario existe en el SO, para determinar si el paquete esta instalado
+#Parametros de entrada - Agumentos y opciones:
+#  1 > ID de paquete
+#Parametros de salida :
+#  > STDOUT : El nombre del programa principal del paquete.
+#    Si es empty, no se encuentra uno.
+get_main_binary_of_package() {
+
+    #Parametros
+    local p_package_id="$1"
+
+
+    #Obtener el nombre del programa asociado del paquete
+    local l_program_name="$p_package_id"
+
+    case "$p_package_id" in
+
+        python)
+            l_program_name="python3"
+            ;;
+        
+        python-pip)
+            l_program_name="pip3"
+            ;;
+
+    esac
+
+    echo "$l_program_name" 
+
+}
 
 
 #Parametros de entrada - Agumentos y opciones:
@@ -61,7 +90,7 @@ ga_menu_options_packages=(
 #  2 > Nombre por defecto del paquete
 #  3 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
 #Parametros de salida :
-#  > STDOUT           : El nombre real del paquete (segun el sistema operativo indicado
+#  > STDOUT           : El nombre real del paquete (segun el sistema operativo indicado)
 #  > Valor de retorno : Tipo de busqueda del paquete
 #    0 > Busqueda inexacta (texto buscado tiene que estar en cualquier parte del nombre del paquete)
 #    1 > Busqueda exacta
@@ -108,7 +137,6 @@ get_package_name() {
 
 
 }
-
 
 
 #
