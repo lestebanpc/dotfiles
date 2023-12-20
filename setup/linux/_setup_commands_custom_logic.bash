@@ -1414,7 +1414,7 @@ function is_installed_repo_subversion()
         net-sdk|net-rt-core|net-rt-aspnet)
 
             #Validar que existe la version no esta instalado
-            _dotnet_exist_version "$p_repo_id" "$p_arti_subversion_versions" $p_install_win_cmds
+            _dotnet_exist_version "$p_repo_id" "$p_arti_subversion_version" $p_install_win_cmds
             l_status=$?
             if [ $l_status -eq 0 ]; then
                 l_is_instelled=0
