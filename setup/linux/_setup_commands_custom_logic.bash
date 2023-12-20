@@ -105,6 +105,9 @@ function _dotnet_exist_version()
         l_status=$?
     fi
 
+    echo "RepoID: ${p_repo_id}"
+    echo "Info: ${l_info}"
+
     if [ $l_status -eq 0 ] && [ ! -z "$l_info" ]; then
 
         if [ "$p_repo_id" = "net-sdk" ]; then
@@ -130,6 +133,8 @@ function _dotnet_exist_version()
     else
         l_info=""
     fi
+
+    echo "Info: ${l_info}"
 
     #Resultados
     if [ -z "$l_info" ]; then
