@@ -983,9 +983,9 @@ function _get_repo_current_version() {
         clangd)
 
             #Solo habilitado para Windows, en Linux esta incluido en LLVM
-            if [ $p_install_win_cmds -ne 0 ]; then
-                return 9
-            fi
+            #if [ $p_install_win_cmds -ne 0 ]; then
+            #    return 9
+            #fi
 
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
