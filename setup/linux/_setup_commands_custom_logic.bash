@@ -88,7 +88,7 @@ function _dotnet_exist_version()
 
     #Prefijo del nombre del artefacto
     local l_cmd_option=''
-    if [ "p_repo_id" = "net-sdk" ]; then
+    if [ "$p_repo_id" = "net-sdk" ]; then
         l_cmd_option='--list-sdks'
     else
         l_cmd_option='--list-runtimes'
