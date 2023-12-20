@@ -105,8 +105,8 @@ function _dotnet_exist_version()
         l_status=$?
     fi
 
-    echo "RepoID: ${p_repo_id}, Version: ${p_version}"
-    echo "Info: ${l_info}"
+    #echo "RepoID: ${p_repo_id}, Version: ${p_version}"
+    #echo "Info: ${l_info}"
 
     if [ $l_status -eq 0 ] && [ ! -z "$l_info" ]; then
 
@@ -134,7 +134,7 @@ function _dotnet_exist_version()
         l_info=""
     fi
 
-    echo "Info: ${l_info}"
+    #echo "Info: ${l_info}"
 
     #Resultados
     if [ -z "$l_info" ]; then
@@ -224,6 +224,7 @@ function _get_repo_latest_version() {
     local l_repo_last_version=""
     local l_repo_last_version_pretty=""
     local l_aux=""
+    local l_aux2=""
     local l_arti_subversion_versions=""
     #local l_status=0
 
@@ -238,12 +239,25 @@ function _get_repo_latest_version() {
         net-sdk|net-rt-core|net-rt-aspnet)
 
             #El artefacto se obtiene del repositorio de Microsoft
-            #Obtener la maximo version de STS (standar term support) y LTS (long term support)
-            l_repo_last_version=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/STS/latest.version")
-            #l_repo_last_version=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/LTS/latest.version")
 
+            #1. Obtener la maximo version encontrada, ya sea STS (standar term support) o LTS (long term support)
+            l_repo_last_version=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/STS/latest.version")
             l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
-            
+
+            l_aux=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/LTS/latest.version")
+            l_aux2=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
+
+
+            compare_version "${l_repo_last_version_pretty}" "${l_aux2}"
+            l_status=$?
+
+            #Si es 1ro es < que el 2do
+            if [ $l_status -eq 2 ]; then
+                l_repo_last_version="$l_aux"
+                l_repo_last_version_pretty="$l_aux2"
+            fi
+
+            #Obtener las subversiones: estara formado por la ultima version y 2 versiones inferiores 
             l_arti_subversion_versions=$(_dotnet_get_subversions "$p_repo_name" "$l_repo_last_version_pretty")
 
             #Si solo tiene uns subversion y es la misma que la version, no existe subversiones

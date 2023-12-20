@@ -219,9 +219,9 @@ function get_user_options() {
 
 #Compara 2 versiones cuyo separador es '.' o '-'
 #Retorna:
-#   0 si es =
-#   1 si es >
-#   2 si es <
+#   0 si es el 1er operando es = que el 2do
+#   1 si es el 1er operando es > que el 2do
+#   2 si es el 1er operando es < que el 2do
 function compare_version() {
 
     #1. Argumentos
