@@ -559,7 +559,7 @@ function _install_repository_internal() {
         is_installed_repo_subversion "$p_repo_id" "$p_arti_subversion_version" $p_install_win_cmds
         l_status=$?    
         if [ $l_status -eq 0 ]; then
-            printf 'La subversion[%s] "%b[%s]" ya esta instalado. Se continurá con el siguiente.\n' "$p_arti_subversion_index" "$l_tag"
+            printf 'La subversion[%s] "%b" ya esta instalado. Se continurá con el proceso.\n' "$p_arti_subversion_index" "$l_tag"
             return 99
         fi
     fi

@@ -74,7 +74,7 @@ function _dotnet_exist_version()
     local p_version="$2"
     local p_install_win_cmds=1          #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                         #(1) Los binarios de los comandos se estan instalando en Linux
-    if [ "$2" = "0" ]; then
+    if [ "$3" = "0" ]; then
         p_install_win_cmds=0
     fi
 
@@ -98,10 +98,10 @@ function _dotnet_exist_version()
     local l_info=""
     local l_status
     if [ $p_install_win_cmds -eq 0 ]; then
-        l_info=$(${l_path_file}dotnet.exe ${l_cmd_option} version 2> /dev/null)
+        l_info=$(${l_path_file}dotnet.exe ${l_cmd_option} 2> /dev/null)
         l_status=$?
     else
-        l_info=$(${l_path_file}dotnet ${l_cmd_option} version 2> /dev/null)
+        l_info=$(${l_path_file}dotnet ${l_cmd_option} 2> /dev/null)
         l_status=$?
     fi
 
@@ -135,6 +135,7 @@ function _dotnet_exist_version()
     fi
 
     return 0
+
 }
 
 
@@ -1398,6 +1399,7 @@ function is_installed_repo_subversion()
 
     #Por defecto las subversiones de un repositorio no esta intalado
     local l_is_instelled=1
+    local l_status
 
     #Indicar si alguna subversion ya esta instalado
     case "$p_repo_id" in
@@ -1405,7 +1407,7 @@ function is_installed_repo_subversion()
         net-sdk|net-rt-core|net-rt-aspnet)
 
             #Validar que existe la version no esta instalado
-            _dotnet_exist_version "$p_repo_id" "$l_arti_subversion_versions" $p_install_win_cmds
+            _dotnet_exist_version "$p_repo_id" "$p_arti_subversion_versions" $p_install_win_cmds
             l_status=$?
             if [ $l_status -eq 0 ]; then
                 l_is_instelled=0
