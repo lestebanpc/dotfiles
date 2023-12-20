@@ -54,11 +54,11 @@ _fd() {
                     return 0
                     ;;
                 --type)
-                    COMPREPLY=($(compgen -W "file directory symlink executable empty socket pipe" -- "${cur}"))
+                    COMPREPLY=($(compgen -W "file directory symlink block-device char-device executable empty socket pipe" -- "${cur}"))
                     return 0
                     ;;
                 -t)
-                    COMPREPLY=($(compgen -W "file directory symlink executable empty socket pipe" -- "${cur}"))
+                    COMPREPLY=($(compgen -W "file directory symlink block-device char-device executable empty socket pipe" -- "${cur}"))
                     return 0
                     ;;
                 --extension)

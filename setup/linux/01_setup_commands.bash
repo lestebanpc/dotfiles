@@ -257,8 +257,8 @@ function _show_final_message() {
     local p_repo_id="$1"
     local p_repo_last_version_pretty="$2"
     local p_arti_version="$3"    
-    local p_install_win_cmds=1         #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                       #(0) Los binarios de los comandos se estan instalando en Linux
+    local p_install_win_cmds=1         #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                       #(1) Los binarios de los comandos se estan instalando en Linux
     if [ "$4" -eq 0 2> /dev/null ]; then
         p_install_win_cmds=0
     fi
@@ -299,8 +299,8 @@ function _clean_temp() {
     local p_repo_id="$1"
 
     #2. Eliminar los archivos de trabajo temporales
-    echo "Eliminado archivos temporales \"/tmp/${p_repo_id}\" ..."
-    rm -rf "/tmp/${p_repo_id}"
+    echo "Eliminado archivos temporales \"${g_path_temp}/${p_repo_id}\" ..."
+    rm -rf "${g_path_temp}/${p_repo_id}"
 }
 
 function _download_artifacts() {
@@ -321,7 +321,7 @@ function _download_artifacts() {
     local l_i=0
     local l_status=0
 
-    mkdir -p "/tmp/${p_repo_id}"
+    mkdir -p "${g_path_temp}/${p_repo_id}"
 
     local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
     if [ ! -z "${p_arti_subversion_version}" ]; then
@@ -342,7 +342,7 @@ function _download_artifacts() {
 
         
         #Descargar la artefacto
-        l_path_target="/tmp/${p_repo_id}/${l_i}"
+        l_path_target="${g_path_temp}/${p_repo_id}/${l_i}"
         mkdir -p "${l_path_target}"
 
         printf "$g_color_opaque"
@@ -399,9 +399,9 @@ function _install_artifacts() {
         p_arti_subversion_index=$9
     fi
 
-    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                         #(0) Los binarios de los comandos se estan instalando en Linux
-    if [ "${10}" -eq 0 2> /dev/null ]; then
+    local p_install_win_cmds=1           #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                         #(1) Los binarios de los comandos se estan instalando en Linux
+    if [ "${10}" = "0" ]; then
         p_install_win_cmds=0
     fi
 
@@ -415,7 +415,7 @@ function _install_artifacts() {
     #3. Instalación de los artectactos
     local l_is_last=1
     local l_tmp=""
-    mkdir -p "/tmp/${p_repo_id}"
+    mkdir -p "${g_path_temp}/${p_repo_id}"
 
     local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
     if [ ! -z "${p_arti_subversion_version}" ]; then
@@ -449,8 +449,8 @@ function _install_artifacts() {
                 l_artifact_name_without_ext="$l_artifact_name"
             fi
 
-            _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds "$p_repo_current_version" "$p_repo_last_version" \
-                "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index
+            _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
+                "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index
             #l_status=0
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
@@ -466,9 +466,9 @@ function _install_artifacts() {
             #Instalar y/o actualizar el paquete si ya existe
             printf 'Instalando/Actualizando el paquete/artefacto "%b[%s]" ("%s") en el SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
             if [ $g_user_is_root -eq 0 ]; then
-                dpkg -i "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
+                dpkg -i "${g_path_temp}/${p_repo_id}/${l_i}/${l_artifact_name}"
             else
-                sudo dpkg -i "/tmp/${p_repo_id}/${l_i}/${l_artifact_name}"
+                sudo dpkg -i "${g_path_temp}/${p_repo_id}/${l_i}/${l_artifact_name}"
             fi
             #l_status=0
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
@@ -478,8 +478,8 @@ function _install_artifacts() {
 
 
             #Descomprimiendo el archivo
-            printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}" "/tmp/${p_repo_id}/${l_i}"
-            uncompress_program "/tmp/${p_repo_id}/${l_i}" "${l_artifact_name}" "/tmp/${p_repo_id}/${l_i}" $((l_artifact_type - 10))
+            printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}" "${g_path_temp}/${p_repo_id}/${l_i}"
+            uncompress_program "${g_path_temp}/${p_repo_id}/${l_i}" "${l_artifact_name}" "${g_path_temp}/${p_repo_id}/${l_i}" $((l_artifact_type - 10))
             l_artifact_name_without_ext="$g_filename_without_ext"
 
 
@@ -530,8 +530,8 @@ function _install_repository_internal() {
         p_arti_subversion_index=$7
     fi
 
-    local p_install_win_cmds=1            #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                          #(0) Los binarios de los comandos se estan instalando en Linux
+    local p_install_win_cmds=1            #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                          #(1) Los binarios de los comandos se estan instalando en Linux
     if [ "$8" = "0" ]; then
         p_install_win_cmds=0
     fi
@@ -762,9 +762,9 @@ _validate_versions_to_install() {
     local l_artifact_subversions_nbr=${#_ga_artifact_subversions[@]} 
     if [ $l_artifact_subversions_nbr -ne 0 ]; then
         for ((l_n=0; l_n< ${l_artifact_subversions_nbr}; l_n++)); do
-            printf 'Repositorio "%s%b[%s]%b" actual tiene la versión disponible "%s%b[%s]%b" (Subversion[%s] es "%s")\n' "${p_repo_id}" "$g_color_opaque" \
-                "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" "${p_repo_id}" "$g_color_opaque" "${p_repo_last_version_pretty}" "$g_color_reset" "${l_n}" \
-                "${_ga_artifact_subversions[${l_n}]}"
+            printf 'Repositorio "%s%b[%s]%b" actual habilita la sub-version%b[%s]%b  "%s%b[%s][%s]%b" ("%s")\n' "${p_repo_id}" "$g_color_opaque" \
+                "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" "$g_color_opaque" "$l_n" "$g_color_reset" "${p_repo_id}" "$g_color_opaque" \
+                "${p_repo_last_version_pretty}" "${_ga_artifact_subversions[${l_n}]}" "$g_color_reset" "${_ga_artifact_subversions[${l_n}]}"
         done
     fi
 

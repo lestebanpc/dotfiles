@@ -72,8 +72,8 @@ function _dotnet_exist_version()
 {
     local p_repo_id="$1"
     local p_version="$2"
-    local p_install_win_cmds=1          #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                        #(0) Los binarios de los comandos se estan instalando en Linux
+    local p_install_win_cmds=1          #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                        #(1) Los binarios de los comandos se estan instalando en Linux
     if [ "$2" = "0" ]; then
         p_install_win_cmds=0
     fi
@@ -401,8 +401,8 @@ function _get_repo_current_version() {
 
     #1. Argumentos
     local p_repo_id="$1"
-    local p_install_win_cmds=1          #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                        #(0) Los binarios de los comandos se estan instalando en Linux
+    local p_install_win_cmds=1          #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                        #(1) Los binarios de los comandos se estan instalando en Linux
     if [ "$2" = "0" ]; then
         p_install_win_cmds=0
     fi
@@ -1390,8 +1390,8 @@ function is_installed_repo_subversion()
 {
     local p_repo_id="$1"
     local p_arti_subversion_version="$2"
-    local p_install_win_cmds=1          #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                        #(0) Los binarios de los comandos se estan instalando en Linux
+    local p_install_win_cmds=1          #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                        #(1) Los binarios de los comandos se estan instalando en Linux
     if [ "$3" = "0" ]; then
         p_install_win_cmds=0
     fi
@@ -1453,8 +1453,8 @@ function get_repo_artifacts() {
     declare -n pna_artifact_names=$6     #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
     declare -n pna_artifact_types=$7     #Parametro por referencia: Se devuelve un arreglo de los tipos de los artefactos
     local p_arti_subversion_version="$8"
-    local p_install_win_cmds=1         #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                       #(0) Los binarios de los comandos se estan instalando en Linux
+    local p_install_win_cmds=1         #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                       #(1) Los binarios de los comandos se estan instalando en Linux
     if [ "$9" = "0" ]; then
         p_install_win_cmds=0
     fi
@@ -1712,7 +1712,7 @@ function get_repo_artifacts() {
         fd)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
-            if [ $p_install_win_cmds -ne 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(11)
             else
@@ -2188,26 +2188,34 @@ function get_repo_artifacts() {
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
 
             #JDK 21, esta diseñando una nueva forma de instalar plugins a GraalVM, dejando de usar 'GraalVM Updater'
-            if [ $p_install_win_cmds -eq 0 ]; then
-                #pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-windows-amd64-${p_repo_last_version_pretty}.zip"
-                #                    "native-image-installable-svm-java${p_arti_subversion_version}-windows-amd64-${p_repo_last_version_pretty}.jar"
-                #                    "visualvm-installable-ce-java${p_arti_subversion_version}-windows-amd64-${p_repo_last_version_pretty}.jar")
-                #pna_artifact_types=(11 0 0)
-                pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_windows-x64_bin.zip")
-                pna_artifact_types=(21)
-            else
-                if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    #pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-linux-aarch64-${p_repo_last_version_pretty}.tar.gz" 
-                    #                    "native-image-installable-svm-java${p_arti_subversion_version}-linux-aarch64-${p_repo_last_version_pretty}.jar"
-                    #                    "visualvm-installable-ce-java${p_arti_subversion_version}-linux-aarch64-${p_repo_last_version_pretty}.jar")
-                    pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_linux-aarch64_bin.tar.gz")
+
+            #Si no existe subversiones un repositorio
+            if [ -z "$p_arti_subversion_version" ]; then
+                if [ $p_install_win_cmds -eq 0 ]; then
+                    pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_windows-x64_bin.zip")
+                    pna_artifact_types=(21)
                 else
-                    #pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-linux-amd64-${p_repo_last_version_pretty}.tar.gz" 
-                    #                    "native-image-installable-svm-java${p_arti_subversion_version}-linux-amd64-${p_repo_last_version_pretty}.jar"
-                    #                    "visualvm-installable-ce-java${p_arti_subversion_version}-linux-amd64-${p_repo_last_version_pretty}.jar")
-                    pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_linux-x64_bin.tar.gz")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_linux-aarch64_bin.tar.gz")
+                    else
+                        pna_artifact_names=("graalvm-community-jdk-${p_repo_last_version_pretty}_linux-x64_bin.tar.gz")
+                    fi
+                    pna_artifact_types=(20)
                 fi
-                pna_artifact_types=(20)
+            #Si existe subversiones en el repositorio
+            #TODO Corregir las URLs
+            else
+                if [ $p_install_win_cmds -eq 0 ]; then
+                    pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-windows-amd64-${p_repo_last_version_pretty}.zip")
+                    pna_artifact_types=(21)
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-linux-aarch64-${p_repo_last_version_pretty}.tar.gz")
+                    else
+                        pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-linux-amd64-${p_repo_last_version_pretty}.tar.gz")
+                    fi
+                    pna_artifact_types=(20)
+                fi
             fi
             ;;
         
@@ -2521,7 +2529,7 @@ function _copy_artifact_files() {
 
         bat)
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"bat\" a \"${l_path_target_bin}\" ..."
@@ -2562,7 +2570,7 @@ function _copy_artifact_files() {
         ripgrep)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"rg\" a \"${l_path_target_bin}\" ..."
@@ -2603,7 +2611,7 @@ function _copy_artifact_files() {
         xsv)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"csv\" a \"${l_path_target_bin}\" ..."
@@ -2626,7 +2634,7 @@ function _copy_artifact_files() {
         delta)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"delta\" a \"${l_path_target_bin}\" ..."
@@ -2669,8 +2677,8 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Ruta local de los artefactos
-                #l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
-                l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+                #l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+                l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
                 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                 echo "Copiando \"less\" a \"${l_path_target_bin}\" ..."
@@ -2691,8 +2699,8 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -ne 0 ]; then
 
                 #Ruta local de los artefactos
-                #l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
-                l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+                #l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+                l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
                 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                 echo "Copiando \"butane-x86_64-unknown-linux-gn4\" como \"${l_path_target_bin}/butane\" ..."
@@ -2716,7 +2724,7 @@ function _copy_artifact_files() {
         fzf)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Copiar el comando fzf y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"fzf\" a \"${l_path_target_bin}\" ..."
@@ -2781,7 +2789,7 @@ function _copy_artifact_files() {
 
         jq)
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Renombrar el binario antes de copiarlo
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -2822,7 +2830,7 @@ function _copy_artifact_files() {
 
         yq)
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Renombrar el binario antes de copiarlo
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -2861,13 +2869,14 @@ function _copy_artifact_files() {
         oh-my-posh)
             
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
-            #Instalación de binario 'oh-my-posh'
-            if [ $p_artifact_index -eq 0 ]; then
+            #En Linux
+            if [ $p_install_win_cmds -ne 0 ]; then
 
-                #Renombrar el binario antes de copiarlo
-                if [ $p_install_win_cmds -ne 0 ]; then
+                #Instalación de binario 'oh-my-posh'
+                if [ $p_artifact_index -eq 0 ]; then
+
                     echo "Copiando \"posh-linux-amd64\" como \"${l_path_target_bin}/oh-my-posh\" ..."
                     mv "${l_path_source}/posh-linux-amd64" "${l_path_source}/oh-my-posh"
                 
@@ -2881,32 +2890,41 @@ function _copy_artifact_files() {
                         sudo chmod +x "${l_path_target_bin}/oh-my-posh"
                         #sudo mkdir -pm 755 "${l_path_target_man}"
                     fi
+
+                    #Copiar los archivos de ayuda man para comando
+                    #echo "Copiando \"yq.1\" a \"${l_path_target_man}/\" ..."
+                    #if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    #    cp "${l_path_source}/yq.1" "${l_path_target_man}"
+                    #else
+                    #    sudo cp "${l_path_source}/yq.1" "${l_path_target_man}"
+                    #fi
+
+                    #Copiar los script de completado
+                    #echo "Copiando \"autocomplete/yq.bash\" a \"~/.files/terminal/linux/complete/\" ..."
+                    #cp "${l_path_source}/autocomplete/yq.bash" ~/.files/terminal/linux/complete/yq.bash
+                    #echo "Copiando \"autocomplete/_yq.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
+                    #cp "${l_path_source}/autocomplete/yq.ps1" ~/.files/terminal/powershell/complete/yq.ps1
+
+                #Instalación del tema
                 else
+
+                    mkdir -p ~/.files/terminal/oh-my-posh/themes
+                    cp -f ${l_path_source}/*.json ~/.files/terminal/oh-my-posh/themes
+
+                fi
+
+            #En Windows
+            else
+
+                #Instalación de binario 'oh-my-posh'
+                if [ $p_artifact_index -eq 0 ]; then
+
                     echo "Copiando \"posh-windows-amd64.exe\" como \"${l_path_target_bin}/oh-my-posh.exe\" ..."
                     mv "${l_path_source}/posh-windows-amd64.exe" "${l_path_source}/oh-my-posh.exe"
 
                     cp "${l_path_source}/oh-my-posh.exe" "${l_path_target_bin}"
-                fi
-            
-                #Copiar los archivos de ayuda man para comando
-                #echo "Copiando \"yq.1\" a \"${l_path_target_man}/\" ..."
-                #if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                #    cp "${l_path_source}/yq.1" "${l_path_target_man}"
-                #else
-                #    sudo cp "${l_path_source}/yq.1" "${l_path_target_man}"
-                #fi
 
-                #Copiar los script de completado
-                #echo "Copiando \"autocomplete/yq.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-                #cp "${l_path_source}/autocomplete/yq.bash" ~/.files/terminal/linux/complete/yq.bash
-                #echo "Copiando \"autocomplete/_yq.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-                #cp "${l_path_source}/autocomplete/yq.ps1" ~/.files/terminal/powershell/complete/yq.ps1
-
-            #Instalación de los temas de 'oh-my-posh'
-            else
-                if [ $p_install_win_cmds -ne 0 ]; then
-                    mkdir -p ~/.files/terminal/oh-my-posh/themes
-                    cp -f ${l_path_source}/*.json ~/.files/terminal/oh-my-posh/themes
+                #Instalación del tema
                 else
                     mkdir -p "${g_path_etc_win}/oh-my-posh/themes"
                     cp -f ${l_path_source}/*.json "${g_path_etc_win}/oh-my-posh/themes"
@@ -2917,7 +2935,7 @@ function _copy_artifact_files() {
         jwt)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"jwt\" a \"${l_path_target_bin}\" ..."
@@ -2940,7 +2958,7 @@ function _copy_artifact_files() {
         grpcurl)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"grpcurl\" a \"${l_path_target_bin}\" ..."
@@ -2963,7 +2981,7 @@ function _copy_artifact_files() {
         evans)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"evans\" a \"${l_path_target_bin}\" ..."
@@ -2986,7 +3004,7 @@ function _copy_artifact_files() {
         protoc)
             
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
 
             #Copiando el binario en una ruta del path
@@ -3037,7 +3055,7 @@ function _copy_artifact_files() {
 
         fd)
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
 
             #Copiando el binario en una ruta del path
             echo "Copiando \"fd\" en \"${l_path_target_bin}\" ..."
@@ -3079,7 +3097,7 @@ function _copy_artifact_files() {
             
         crictl)
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3118,7 +3136,7 @@ function _copy_artifact_files() {
             
         kubelet)
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3150,7 +3168,7 @@ function _copy_artifact_files() {
             
         kubeadm)
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3182,7 +3200,7 @@ function _copy_artifact_files() {
             
         kubectl)
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3220,7 +3238,7 @@ function _copy_artifact_files() {
         
         pgo)
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3258,7 +3276,7 @@ function _copy_artifact_files() {
             
         helm)
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3282,7 +3300,7 @@ function _copy_artifact_files() {
         operator-sdk)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3338,7 +3356,7 @@ function _copy_artifact_files() {
         k0s)
 
             #1. Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
@@ -3384,7 +3402,7 @@ function _copy_artifact_files() {
         roslyn)
             
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
 
             #Copiando el binario en una ruta del path
@@ -3426,7 +3444,7 @@ function _copy_artifact_files() {
         netcoredbg)
             
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/netcoredbg"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/netcoredbg"
             l_flag_install=0            
 
             #Copiando el binario en una ruta del path
@@ -3507,7 +3525,7 @@ function _copy_artifact_files() {
         neovim)
             
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
             l_flag_install=0            
 
             #Copiando el binario en una ruta del path
@@ -3593,7 +3611,7 @@ function _copy_artifact_files() {
         nerd-fonts)
             
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Solo para Linux
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3674,7 +3692,7 @@ function _copy_artifact_files() {
                 return 40
             fi
                 
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             l_path_target_bin="${g_path_programs}/llvm"
 
             #Limpiar el directorio del programa
@@ -3717,7 +3735,7 @@ function _copy_artifact_files() {
         clangd)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/clangd_${p_repo_last_version}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/clangd_${p_repo_last_version}"
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3758,7 +3776,7 @@ function _copy_artifact_files() {
         net-sdk|net-rt-core|net-rt-aspnet)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
 
             #Copiando el binario en una ruta del path
@@ -3826,7 +3844,7 @@ function _copy_artifact_files() {
         go)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -3878,7 +3896,7 @@ function _copy_artifact_files() {
         nodejs)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
 
             #Copiando el binario en una ruta del path
@@ -3933,7 +3951,7 @@ function _copy_artifact_files() {
         cmake)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -4020,7 +4038,7 @@ function _copy_artifact_files() {
         step)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/step_${p_repo_last_version_pretty}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/step_${p_repo_last_version_pretty}"
             
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -4054,7 +4072,7 @@ function _copy_artifact_files() {
         ninja)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -4077,7 +4095,7 @@ function _copy_artifact_files() {
         rust-analyzer)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             l_flag_install=0
             
             #Copiando el binario en una ruta del path
@@ -4162,7 +4180,7 @@ function _copy_artifact_files() {
         graalvm)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #No eso se instalaran los plugins (use 'gu install [tool-name]'):
             # Native Image
@@ -4258,7 +4276,7 @@ function _copy_artifact_files() {
 
         jdtls)
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -4300,7 +4318,7 @@ function _copy_artifact_files() {
         runc)
 
             #1. Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
@@ -4360,7 +4378,7 @@ function _copy_artifact_files() {
         crun)
 
             #1. Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
@@ -4414,7 +4432,7 @@ function _copy_artifact_files() {
         slirp4netns)
 
             #1. Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -4473,7 +4491,7 @@ function _copy_artifact_files() {
         fuse-overlayfs)
 
             #1. Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -4532,7 +4550,7 @@ function _copy_artifact_files() {
         rootlesskit)
 
             #1. Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -4610,7 +4628,7 @@ function _copy_artifact_files() {
         cni-plugins)
 
             #1. Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             l_path_target_bin="${g_path_programs}/cni_plugins"
 
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -4705,7 +4723,7 @@ function _copy_artifact_files() {
         containerd)
 
             #1. Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/bin"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/bin"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -4831,7 +4849,7 @@ function _copy_artifact_files() {
         buildkit)
 
             #1. Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/bin"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/bin"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -4925,7 +4943,7 @@ function _copy_artifact_files() {
         nerdctl)
 
             #1. Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             local l_status_stop=-1
           
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -4967,7 +4985,7 @@ function _copy_artifact_files() {
             else
 
                 #3.1. Rutas de los artectos 
-                l_path_source="/tmp/${p_repo_id}/${p_artifact_index}/bin"
+                l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/bin"
 
                 #3.2. Configurar 'rootless-containers/bypass4netns' usado para accelar 'Slirp4netns' (NAT o port-forwading de llamadas del exterior al contenedor)
 
@@ -5053,7 +5071,7 @@ function _copy_artifact_files() {
         dive)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -5075,7 +5093,7 @@ function _copy_artifact_files() {
         powershell)
 
             #Ruta local de los artefactos
-            l_path_source="/tmp/${p_repo_id}/${p_artifact_index}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
 
             #Copiando el binario en una ruta del path

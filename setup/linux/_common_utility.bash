@@ -14,6 +14,8 @@ g_color_warning="\x1b[31m"
 #Tamaño de la linea del menu
 g_max_length_line=130
 
+declare -r g_path_temp='/tmp'
+
 #}}}
 
 
