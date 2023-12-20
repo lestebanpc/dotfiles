@@ -81,14 +81,14 @@ function _dotnet_exist_version()
     #Calcular la ruta de archivo/comando donde se obtiene la version
     local l_path_file=""
     if [ $p_install_win_cmds -eq 0 ]; then
-       l_path_file="${g_path_programs_win}/DotNet/"
+       l_path_file="${g_path_programs_win}/DotNet"
     else
-       l_path_file="${g_path_programs}/dotnet/"
+       l_path_file="${g_path_programs}/dotnet"
     fi
 
     #Prefijo del nombre del artefacto
     local l_cmd_option=''
-    if [ "p_repo_id" = "dotnet-sdk" ]; then
+    if [ "p_repo_id" = "net-sdk" ]; then
         l_cmd_option='--list-sdks'
     else
         l_cmd_option='--list-runtimes'
@@ -98,16 +98,16 @@ function _dotnet_exist_version()
     local l_info=""
     local l_status
     if [ $p_install_win_cmds -eq 0 ]; then
-        l_info=$(${l_path_file}dotnet.exe ${l_cmd_option} 2> /dev/null)
+        l_info=$(${l_path_file}/dotnet.exe ${l_cmd_option} 2> /dev/null)
         l_status=$?
     else
-        l_info=$(${l_path_file}dotnet ${l_cmd_option} 2> /dev/null)
+        l_info=$(${l_path_file}/dotnet ${l_cmd_option} 2> /dev/null)
         l_status=$?
     fi
 
     if [ $l_status -eq 0 ] && [ ! -z "$l_info" ]; then
 
-        if [ "$p_repo_id" = "dotnet-sdk" ]; then
+        if [ "$p_repo_id" = "net-sdk" ]; then
 
             l_info=$(echo "$l_info" | grep "$p_version" | head -n 1)
             l_status=$?
@@ -127,6 +127,8 @@ function _dotnet_exist_version()
             l_info=""
         fi
 
+    else
+        l_info=""
     fi
 
     #Resultados
@@ -231,7 +233,7 @@ function _get_repo_latest_version() {
         net-sdk|net-rt-core|net-rt-aspnet)
 
             #El artefacto se obtiene del repositorio de Microsoft
-            #Usar la version STS (standar term support) y no LTS (long term support)
+            #Obtener la maximo version de STS (standar term support) y LTS (long term support)
             l_repo_last_version=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/STS/latest.version")
             #l_repo_last_version=$(curl -Ls "https://dotnetcli.azureedge.net/${p_repo_name}/LTS/latest.version")
 
