@@ -5222,12 +5222,11 @@ install_initialize_menu_option() {
             ;;
 
         #Instalacion de DotNet (runtime o SDK o ambos)
-        14|15)
+        11|12)
 
             #Validar si algunos paquees necesarios estan instalados
             #https://learn.microsoft.com/en-us/dotnet/core/install/linux-fedora#dependencies
             #https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu#dependencies
-            
             
             #1. Obtener los paquetes que requeridos
             local la_packages_needed=()
@@ -5241,33 +5240,86 @@ install_initialize_menu_option() {
             #Si es de la familia Debian
             elif [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
 
-                #TODO Existe diferentes paquetes para Debian y para Ubuntu que depende de la version
+                #Existe diferentes paquetes para Debian y para Ubuntu que depende de la version
+                
                 #libc6
-                #
-                #libgcc1
-                #libgcc-s1 (for 22.x)
-                #
                 #libgssapi-krb5-2
-                #
-                #libicu55 (for 16.x)
-                #libicu60 (for 18.x)
-                #libicu66 (for 20.x)
-                #libicu70 (for 22.04)
-                #libicu71 (for 22.10)
-                #libicu72 (for 23.04)
-                #
-                #liblttng-ust1 (for 22.x)
-                #
-                #libssl1.0.0 (for 16.x)
-                #libssl1.1 (for 18.x, 20.x)
-                #libssl3 (for 22.x)
-                #
                 #libstdc++6
-                #libunwind8 (for 22.x)
                 #zlib1g
+                #
+                la_packages_needed=("libc6" "libgssapi-krb5-2" "libstdc++6" "zlib1g")
 
-                #Por ahora solo esta soportando Ubuntu 22.04
-                la_packages_needed=("libc6" "libgssapi-krb5-2" "libstdc++6" "zlib1g" "libunwind8" "liblttng-ust1" "libicu70" "libssl3")
+                #libicu55          (Ubuntu 16.x)
+                #libicu60          (Ubuntu 18.x)
+                #libicu66          (Ubuntu 20.x)
+                #libicu70          (Ubuntu 22.04)
+                #libicu71          (Ubuntu 22.10)
+                #libicu72          (Ubuntu 23.04, 23.10)
+                #libicu63          (Debian 10.x)
+                #libicu67          (Debian 11.x)
+                #libicu72          (Debian 12.x)
+                #
+                if [ $g_os_subtype_id -eq 31 ]; then
+                    if [[ "$g_os_subtype_version" =~ ^16\..+$ ]]; then
+                        la_packages_needed+=("libicu55")
+                    elif [[ "$g_os_subtype_version" =~ ^18\..+$ ]]; then
+                        la_packages_needed+=("libicu60")
+                    elif [[ "$g_os_subtype_version" =~ ^20\..+$ ]]; then
+                        la_packages_needed+=("libicu66")
+                    elif [ "$g_os_subtype_version" = "22.04" ]; then
+                        la_packages_needed+=("libicu70")
+                    elif [ "$g_os_subtype_version" = "22.10" ]; then
+                        la_packages_needed+=("libicu71")
+                    elif [[ "$g_os_subtype_version" =~ ^23\..+$ ]]; then
+                        la_packages_needed+=("libicu72")
+                    fi
+                else
+                    if [[ "$g_os_subtype_version" =~ ^10\..+$ ]]; then
+                        la_packages_needed+=("libicu63")
+                    elif [[ "$g_os_subtype_version" =~ ^11\..+$ ]]; then
+                        la_packages_needed+=("libicu67")
+                    elif [[ "$g_os_subtype_version" =~ ^12\..+$ ]]; then
+                        la_packages_needed+=("libicu72")
+                    fi
+                fi
+
+                #libssl1.0.0       (Ubuntu 16.x)
+                #libssl1.1         (Debian/Ubuntu 18.x, 20.x)
+                #libssl3           (Ubuntu 22.x, 23.x)
+                #
+                if [ $g_os_subtype_id -eq 31 ]; then
+                    if [[ "$g_os_subtype_version" =~ ^16\..+$ ]]; then
+                        la_packages_needed+=("libssl1.0.0")
+                    elif [[ "$g_os_subtype_version" =~ ^18\..+$ ]]; then
+                        la_packages_needed+=("libssl1.1")
+                    elif [[ "$g_os_subtype_version" =~ ^20\..+$ ]]; then
+                        la_packages_needed+=("libssl1.1")
+                    elif [[ "$g_os_subtype_version" =~ ^22\..+$ ]]; then
+                        la_packages_needed+=("libssl3")
+                    elif [[ "$g_os_subtype_version" =~ ^23\..+$ ]]; then
+                        la_packages_needed+=("libssl3")
+                    fi
+                else
+                    la_packages_needed+=("libssl1.1")
+                fi
+
+                #libgcc1           (Debian/Ubuntu 16.x, 18.x, 20.x, 22.x)
+                #libgcc-s1         (Debian/Ubuntu 22.x, 23.x)
+                #liblttng-ust1     (Ubuntu 22.x, 23.x)
+                #libunwind8        (Ubuntu 22.x, 23.x)
+                #
+                if [ $g_os_subtype_id -eq 31 ]; then
+                    if [[ "$g_os_subtype_version" =~ ^22\..+$ ]]; then
+                        la_packages_needed+=("libgcc1" "libgcc-s1" "liblttng-ust1" "libunwind8")
+                    elif [[ "$g_os_subtype_version" =~ ^23\..+$ ]]; then
+                        la_packages_needed+=("libgcc-s1" "liblttng-ust1" "libunwind8")
+                    else
+                        la_packages_needed+=("libgcc1" "libgcc-s1")
+                    fi
+                else
+                    la_packages_needed+=("libgcc1" "libgcc-s1")
+                fi
+
 
             fi
 
