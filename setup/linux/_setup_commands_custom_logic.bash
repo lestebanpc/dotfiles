@@ -3481,9 +3481,9 @@ function _copy_artifact_files() {
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
                 if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                    $l_flag_install=0
+                    l_flag_install=0
                 else
-                    $l_flag_install=1
+                    l_flag_install=1
                 fi
 
                 #2. Instalación
@@ -3517,9 +3517,9 @@ function _copy_artifact_files() {
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
                 if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                    $l_flag_install=0
+                    l_flag_install=0
                 else
-                    $l_flag_install=1
+                    l_flag_install=1
                 fi
 
                 #2. Instalación
@@ -3562,9 +3562,9 @@ function _copy_artifact_files() {
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
                 if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                    $l_flag_install=0
+                    l_flag_install=0
                 else
-                    $l_flag_install=1
+                    l_flag_install=1
                 fi
 
                 #2. Instalación
@@ -3606,9 +3606,9 @@ function _copy_artifact_files() {
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
                 if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                    $l_flag_install=0
+                    l_flag_install=0
                 else
-                    $l_flag_install=1
+                    l_flag_install=1
                 fi
 
                 #2. Instalación
@@ -3936,7 +3936,8 @@ function _copy_artifact_files() {
                 #l_artifact_name_without_ext="$g_filename_without_ext"
 
                 #Acceso al folder creado
-                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "${g_path_programs}/node-${p_repo_last_version}-linux-x64" "$g_color_reset" "$g_color_opaque" "${g_path_programs}/nodejs" "$g_color_reset"
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "${g_path_programs}/node-${p_repo_last_version}-linux-x64" "$g_color_reset" "$g_color_opaque" \
+                       "${g_path_programs}/nodejs" "$g_color_reset"
                 mv "${g_path_programs}/node-${p_repo_last_version}-linux-x64" "${g_path_programs}/nodejs"
                 chmod g+rx,o+rx ${g_path_programs}/nodejs
 
@@ -3963,7 +3964,8 @@ function _copy_artifact_files() {
                 #l_artifact_name_without_ext="$g_filename_without_ext"
 
                 #Acceso al folder creado
-                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "${g_path_programs_win}/node-${p_repo_last_version}-win-x64" "$g_color_reset" "$g_color_opaque" "${g_path_programs_win}/NodeJS" "$g_color_reset"
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "${g_path_programs_win}/node-${p_repo_last_version}-win-x64" "$g_color_reset" "$g_color_opaque" \
+                       "${g_path_programs_win}/NodeJS" "$g_color_reset"
                 mv "${g_path_programs_win}/node-${p_repo_last_version}-win-x64" "${g_path_programs_win}/NodeJS"
                 #chmod g+rx,o+rx ${g_path_programs_win}/NodeJS
 
@@ -4137,9 +4139,9 @@ function _copy_artifact_files() {
 
                 ##Actualizar solo no esta configurado o tiene una version menor a la actual
                 #if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                #    $l_flag_install=0
+                #    l_flag_install=0
                 #else
-                #    $l_flag_install=1
+                #    l_flag_install=1
                 #fi
 
 
@@ -4176,9 +4178,9 @@ function _copy_artifact_files() {
 
                 ##Actualizar solo no esta configurado o tiene una version menor a la actual
                 #if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                #    $l_flag_install=0
+                #    l_flag_install=0
                 #else
-                #    $l_flag_install=1
+                #    l_flag_install=1
                 #fi
 
 

@@ -132,7 +132,6 @@ ga_menu_options_packages=(
 declare -A gA_repo_config_os_type=(
         ['less']=8
         ['llvm']=3
-        ['clangd']=8
         ['k0s']=1
         ['operator-sdk']=3
         ['nerd-fonts']=3
