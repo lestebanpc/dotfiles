@@ -190,6 +190,11 @@ function _get_repo_base_url() {
         nodejs)
             l_base_url="https://nodejs.org/dist"
             ;;
+
+        rust)
+            l_base_url="https://static.rust-lang.org/dist"
+            ;;
+
         *)
             l_base_url="https://github.com"
             ;;
@@ -372,6 +377,12 @@ function _get_repo_latest_version() {
                 l_arti_subversion_versions=""
             fi
 
+            ;;
+
+        rust)
+            
+            l_repo_last_version=$(curl -Ls "https://static.rust-lang.org/dist/channel-rust-stable.toml" | grep -A 2 '\[pkg.rust\]' | grep "version" | sed -e "$g_regexp_sust_version1")
+            l_repo_last_version_pretty="$l_repo_last_version"
             ;;
 
         #crictl)
@@ -872,6 +883,23 @@ function _get_repo_current_version() {
             fi
             ;;
 
+
+        rust)
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            #Obtener la version
+            l_tmp=$(${l_path_file}cargo --version 2> /dev/null)
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            else
+                l_tmp=""
+            fi
+            ;;
 
        net-sdk)
 
@@ -2064,7 +2092,6 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("go${p_repo_last_version_pretty}.windows-amd64.zip")
                 pna_artifact_types=(21)
-                #pna_artifact_types=(11)
             else
                 if [ "$g_os_architecture_type" = "aarch64" ]; then
                     pna_artifact_names=("go${p_repo_last_version_pretty}.linux-arm64.tar.gz")
@@ -2072,8 +2099,38 @@ function get_repo_artifacts() {
                     pna_artifact_names=("go${p_repo_last_version_pretty}.linux-amd64.tar.gz")
                 fi
                 pna_artifact_types=(20)
-                #pna_artifact_types=(10)
             fi
+            ;;
+
+        rust)
+            #Solo para Linux
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 1
+            fi
+
+            #URL base fijo     : "https://static.rust-lang.org/dist"
+            #URL base variable :
+            #l_base_url_variable="${p_repo_name}"
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}")
+            #pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
+
+            #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+            if [ $g_os_subtype_id -eq 1 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-aarch64-unknown-linux-musl.tar.gz")
+                else
+                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                fi
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                else
+                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                fi
+            fi
+            pna_artifact_types=(10)
             ;;
 
         llvm)
@@ -3864,6 +3921,29 @@ function _copy_artifact_files() {
 
 
 
+        rust)
+
+            #No habilitado para Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                return 40
+            fi
+
+            #Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+           
+            #Ejecutar el 'instalador' (copiador) de archivos en los diferentes directorio del SO
+            chmod u+x "${l_path_source}/install.sh"
+            #cd "$l_path_source"
+            printf 'Ejecutando el instalador "%s"...\n' "${l_path_source}/install.sh"
+            if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                "${l_path_source}/install.sh"
+            else
+                sudo "${l_path_source}/install.sh"
+            fi
+            ;;
+
+
         go)
 
             #Ruta local de los artefactos
@@ -3914,7 +3994,6 @@ function _copy_artifact_files() {
                 
             fi
             ;;
-
 
         nodejs)
 

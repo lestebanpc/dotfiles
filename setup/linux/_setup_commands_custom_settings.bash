@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#TODO incluir maven
+#TODO si se incluye .net runtime con el SDK podria actualizarse un runtime independientemente de su SDK.
+#     por ello se esta desabilitando la instalacion de runtime por aqui
+
 #ID de los repositorios y sus rutas bases
 #Menu dinamico: Listado de repositorios que son instalados por las opcion de menu dinamicas
 #  - Cada repositorio tiene un ID interno del un repositorios y un identifificador realizar: 
@@ -59,8 +63,9 @@ gA_packages=(
         ['kubeadm']=''
         ['kubelet']=''
         ['crictl']='kubernetes-sigs/cri-tools'
+        ['rust']=''
     )
-#TODO incluir maven
+
 
 #WARNING: Un cambio en el orden implica modificar los indices de los eventos:
 #         'install_initialize_menu_option', 'install_finalize_menu_option', 'uninstall_initialize_menu_option' y 'uninstall_finalize_menu_option'
@@ -78,16 +83,17 @@ ga_menu_options_title=(
     "Tools para K8S"
     "Binarios para un nodo K8S de 'K0S'"
     "Binarios para un nodo K8S de 'KubeAdm'"
-    ".NET  > RTE"
+    #".NET  > RTE"
     ".NET  > RTE y SDK"
     ".NET  > LSP y DAP server"
     "Java  > RTE 'GraalVM CE'"
     "Java  > LSP y DAP server"
-    "C/C++ > LLVM/CLang ('clang', 'clang++', 'lld', 'lldb', 'clangd')"
+    "C/C++ > Compiler LLVM/CLang ('clang', 'clang++', 'lld', 'lldb', 'clangd')"
     "C/C++ > Developments tools"
     "NodeJS> RTE"
-    "Go    > RTE"
+    "Rust  > Compiler"
     "Rust  > LSP server"
+    "Go    > RTE"
     )
 
 #WARNING: Un cambio en el orden implica modificar los indices de los eventos:
@@ -110,7 +116,7 @@ ga_menu_options_packages=(
     "kubectl,helm,operator-sdk,3scale-toolbox,pgo"
     "k0s"
     "cni-plugins,kubectl,kubelet,crictl,kubeadm"
-    "net-rt-core,net-rt-aspnet"
+    #"net-rt-core,net-rt-aspnet"
     "net-sdk"
     "roslyn,netcoredbg"
     "graalvm"
@@ -118,8 +124,9 @@ ga_menu_options_packages=(
     "llvm"
     "clangd,cmake,ninja"
     "nodejs"
-    "go"
+    "rust"
     "rust-analyzer"
+    "go"
     )
 
 #Tipos de SO donde se puede configurar los repositorio 
@@ -132,6 +139,7 @@ ga_menu_options_packages=(
 declare -A gA_repo_config_os_type=(
         ['less']=8
         ['llvm']=3
+        ['rust']=3
         ['k0s']=1
         ['operator-sdk']=3
         ['nerd-fonts']=3

@@ -754,7 +754,7 @@ show_dynamic_menu() {
         la_repos=(${l_aux})
         IFS=$' \t\n'
 
-        printf "     (%b%0${p_max_digits}d%b) %s \"%b%s%b\": " "$g_color_title" "$l_option_value" "$g_color_reset" \
+        printf "     (%b%0${p_max_digits}d%b) %s %b%s%b: " "$g_color_title" "$l_option_value" "$g_color_reset" \
                "$p_option_tag" "$g_color_title" "${ga_menu_options_title[$l_i]}" "$g_color_reset"
 
         l_n=${#la_repos[@]}
