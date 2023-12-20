@@ -105,7 +105,7 @@ function _dotnet_exist_version()
         l_status=$?
     fi
 
-    echo "RepoID: ${p_repo_id}"
+    echo "RepoID: ${p_repo_id}, Version: ${p_version}"
     echo "Info: ${l_info}"
 
     if [ $l_status -eq 0 ] && [ ! -z "$l_info" ]; then
