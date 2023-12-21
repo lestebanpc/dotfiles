@@ -1,45 +1,44 @@
 {
-    "diagnostic.displayByAle": true,
-    "codeLens.enable": true,
-    "python.pythonPath": "python",
-    "rust-analyzer.server.path": "D:/CLI/LSP_Servers/Rust_Analyzer/rust-analyzer.exe",
-    "powershell.integratedConsole.showOnStartup": false,
-    "languageserver": {
-        "golang": {
-            "command": "gopls",
-            "rootPatterns": ["go.work", "go.mod", ".vim/", ".git/", ".hg/"],
-            "filetypes": ["go"],
-            "initializationOptions": {
-                "usePlaceholders": true
-            }
-        }
-    },
-    "suggest.completionItemKindLabels": {
-        "method": "  ",
-        "function": "  ",
-        "variable": "[]",
-        "field": "  ",
-        "typeParameter": "<>",
-        "constant": "  ",
-        "class": " פּ ",
-        "interface": " 蘒",
-        "struct": "  ",
-        "event": "  ",
-        "operator": "  ",
-        "module": "  ",
-        "property": "  ",
-        "enum": " 練",
-        "reference": "  ",
-        "keyword": "  ",
-        "file": "  ",
-        "folder": " ﱮ ",
-        "color": "  ",
-        "unit": " 塞 ",
-        "snippet": "  ",
-        "text": "  ",
-        "constructor": "  ",
-        "value": "  ",
-        "enumMember": "  ",
-        "default": "  "
+  "diagnostic.displayByAle": true,
+  "codeLens.enable": true,
+  "python.pythonPath": "python",
+  "powershell.integratedConsole.showOnStartup": false,
+  "languageserver": {
+    "golang": {
+      "command": "gopls",
+      "rootPatterns": ["go.work", "go.mod", ".vim/", ".git/", ".hg/"],
+      "filetypes": ["go"],
+      "initializationOptions": {
+        "usePlaceholders": true
+      }
     }
+  },
+  "suggest.completionItemKindLabels": {
+    "method": "  ",
+    "function": "  ",
+    "variable": "[]",
+    "field": "  ",
+    "typeParameter": "<>",
+    "constant": "  ",
+    "class": " פּ ",
+    "interface": " 蘒",
+    "struct": "  ",
+    "event": "  ",
+    "operator": "  ",
+    "module": "  ",
+    "property": "  ",
+    "enum": " 練",
+    "reference": "  ",
+    "keyword": "  ",
+    "file": "  ",
+    "folder": " ﱮ ",
+    "color": "  ",
+    "unit": " 塞 ",
+    "snippet": "  ",
+    "text": "  ",
+    "constructor": "  ",
+    "value": "  ",
+    "enumMember": "  ",
+    "default": "  "
+  }
 }
