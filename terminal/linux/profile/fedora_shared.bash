@@ -35,7 +35,8 @@ PATH=$PATH:${l_program_path}/neovim/bin
 [ -d ~/go/bin ] && PATH=$PATH:~/go/bin
 
 #Rust - Tools para desarrollo
-[ -d ~/.cargo/bin ] && PATH=$PATH:~/.cargo/bin
+[ -d "${l_program_path}/rust/bin" ] && PATH=$PATH:${l_program_path}/rust/bin
+#[ -d ~/.cargo/bin ] && PATH=$PATH:~/.cargo/bin
 
 #GraalVM - RTE y Herramientas de desarrollo para Java y otros
 [ -d "${JAVA_HOME}/bin" ] && PATH=$PATH:${JAVA_HOME}/bin

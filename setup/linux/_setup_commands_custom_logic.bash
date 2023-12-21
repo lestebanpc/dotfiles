@@ -381,7 +381,7 @@ function _get_repo_latest_version() {
 
         rust)
             
-            l_repo_last_version=$(curl -Ls "https://static.rust-lang.org/dist/channel-rust-stable.toml" | grep -A 2 '\[pkg.rust\]' | grep "version" | sed -e "$g_regexp_sust_version1")
+            l_repo_last_version=$(curl -Ls "https://static.rust-lang.org/dist/channel-rust-stable.toml" | grep -A 2 '\[pkg.rust\]' | grep "^version =" | sed -e "$g_regexp_sust_version1")
             l_repo_last_version_pretty="$l_repo_last_version"
             ;;
 
@@ -1108,30 +1108,33 @@ function _get_repo_current_version() {
 
         rust-analyzer)
 
-            #Calcular la ruta de archivo/comando donde se obtiene la version
-            if [ -z "$p_path_file" ]; then
-               if [ $p_install_win_cmds -eq 0 ]; then
-                  l_path_file="${g_path_programs_win}/LSP_Servers/Rust_Analyzer/"
-               else
-                  l_path_file="${g_path_programs}/lsp_servers/rust_analyzer/"
-               fi
-            fi
-
             #Obtener la version
-            if [ -f "${l_path_file}rust-analyzer.info" ]; then
-                l_tmp=$(cat "${l_path_file}rust-analyzer.info" | head -n 1)
-            else
-                if [ $p_install_win_cmds -eq 0 ]; then
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_path_programs_win}/rust-analyzer.info" ]; then
+                    l_tmp=$(cat "${g_path_programs_win}/rust-analyzer.info" | head -n 1)
+                    l_status=$?
+                else
                     l_tmp=$(${l_path_file}rust-analyzer.exe --version 2> /dev/null)
+                    l_status=$?
+                fi
+
+            else
+
+                if [ -f "${g_path_programs}/rust-analyzer.info" ]; then
+                    l_tmp=$(cat "${g_path_programs}/rust-analyzer.info" | head -n 1)
                     l_status=$?
                 else
                     l_tmp=$(${l_path_file}rust-analyzer --version 2> /dev/null)
                     l_status=$?
                 fi
 
-                if [ $l_status -eq 0 ]; then
-                    l_tmp=$(echo "$l_tmp" | head -n 1)
-                fi
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            else
+                l_tmp=""
             fi
             ;;
 
@@ -1471,8 +1474,8 @@ function is_installed_repo_subversion()
 
 #Devuelve un arreglo de artefectos, usando los argumentos 3 y 4 como de referencia:
 #  5> Un arrego de bases URL del los artefactos. 
-#     Si el repositorio tiene muchos artefactos pero todos tiene la misma URL base, puede indicar
-#     solo una URL, para los demas se repitira el mismo valor
+#     Si el repositorio tiene muchos artefactos pero todos tiene la misma URL base, solo se puede indicar
+#     solo una URL, la misma URL se replicara para los demas se repitira el mismo valor
 #  6> Un arreglo de tipo de artefacto donde cada item puede ser:
 #     Un archivo no comprimido
 #       >  0 si es un binario o archivo no empaquetado o comprimido
@@ -1520,6 +1523,8 @@ function get_repo_artifacts() {
     local l_artifact_name=""
     local l_artifact_type=99
     local l_status
+    local l_aux1
+    local l_aux2
 
     #URL base por defecto a usar
     #URL base fijo     :  Usuarlmente "https://github.com"
@@ -2109,28 +2114,33 @@ function get_repo_artifacts() {
             fi
 
             #URL base fijo     : "https://static.rust-lang.org/dist"
-            #URL base variable :
-            #l_base_url_variable="${p_repo_name}"
+            #URL base variable : <emtpy>
+
+            #URL completo del componente 'rust-src'
+            l_aux1=$(curl -Ls "https://static.rust-lang.org/dist/channel-rust-stable.toml" | grep -A 5 '\[pkg.rust-src.target."\*"\]' | grep '^url =' | sed -e 's/^url = "\(.*\)".*/\1/')
+            #URL base del componente 'rust-src'
+            l_aux2="${l_aux1%/*}"
+            #Nombre del componente 'rust-src'
+            l_aux1="${l_aux1##*/}"
 
             #Generar los datos de artefactado requeridos para su configuración:
-            pna_artifact_baseurl=("${l_base_url_fixed}")
-            #pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
+            pna_artifact_baseurl=("${l_base_url_fixed}" "$l_aux2")
 
             #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
             if [ $g_os_subtype_id -eq 1 ]; then
                 if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-aarch64-unknown-linux-musl.tar.gz")
+                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-aarch64-unknown-linux-musl.tar.gz" "$l_aux1")
                 else
-                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz" "$l_aux1")
                 fi
             else
                 if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz" "$l_aux1")
                 else
-                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                    pna_artifact_names=("rust-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz" "$l_aux1")
                 fi
             fi
-            pna_artifact_types=(10)
+            pna_artifact_types=(10 10)
             ;;
 
         llvm)
@@ -3930,16 +3940,59 @@ function _copy_artifact_files() {
             fi
 
             #Ruta local de los artefactos
-            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
-           
-            #Ejecutar el 'instalador' (copiador) de archivos en los diferentes directorio del SO
-            chmod u+x "${l_path_source}/install.sh"
-            #cd "$l_path_source"
-            printf 'Ejecutando el instalador "%s"...\n' "${l_path_source}/install.sh"
-            if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                "${l_path_source}/install.sh"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
+            mkdir -pm 775 "${g_path_programs}/rust"
+
+            #Las componente por defecto del instalador 'standalone' (no incluye 'rust-src')
+            if [ $p_artifact_index -eq 0 ]; then
+
+                l_path_source="${l_path_source}/${p_artifact_name_woext}"
+
+                #Ejecutar el 'instalador' (copiador) de archivos en los diferentes directorio del SO
+                printf 'Ejecutando el instalador "%s"...\n%b' "${l_path_source}/install.sh" "$g_color_opaque"
+
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    chmod u+x "${l_path_source}/install.sh"
+                    "${l_path_source}/install.sh" --without='rust-analyzer-preview,llvm-tools-preview' --prefix="${g_path_programs}/rust"
+                    #"${l_path_source}/install.sh" --without='rust-analyzer-preview,llvm-tools-preview' --prefix="${g_path_programs}/rust" --verbose
+                else
+                    sudo "${l_path_source}/install.sh" --without='rust-analyzer-preview,llvm-tools-preview' --prefix="${g_path_programs}/rust"
+                    #sudo "${l_path_source}/install.sh" --without='rust-analyzer-preview,llvm-tools-preview' --prefix="${g_path_programs}/rust" --verbose
+                fi
+
+                printf '%b' "$g_color_reset"
+
+                #Validar si 'DotNet' esta en el PATH
+                echo "$PATH" | grep "${g_path_programs}/rust/bin" &> /dev/null
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                        "$g_color_warning" "Rust"  "$p_repo_last_version_pretty" "$g_color_reset"
+                    printf 'Adicionando a la sesion actual: PATH=%s/rust/bin:$PATH\n' "${g_path_programs}"
+
+                    PATH="${g_path_programs}/rust/bin:$PATH"
+                    export PATH
+                fi
+
+            #Las componente por defecto de 'rust-src'
             else
-                sudo "${l_path_source}/install.sh"
+
+                l_path_source="${l_path_source}/${p_artifact_name_woext}"
+
+                #Ejecutar el 'instalador' (copiador) de archivos en los diferentes directorio del SO
+                printf 'Ejecutando el instalador "%s"...\n%b' "${l_path_source}/install.sh" "$g_color_opaque"
+
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    chmod u+x "${l_path_source}/install.sh"
+                    #"${l_path_source}/install.sh" --prefix="${g_path_programs}/rust" --verbose
+                    "${l_path_source}/install.sh" --prefix="${g_path_programs}/rust"
+                else
+                    #sudo "${l_path_source}/install.sh" --prefix="${g_path_programs}/rust" --verbose
+                    sudo "${l_path_source}/install.sh" --prefix="${g_path_programs}/rust"
+                fi
+
+                printf '%b' "$g_color_reset"
+
             fi
             ;;
 
@@ -4200,83 +4253,37 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
-            l_flag_install=0
             
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                
                 echo "Renombrando \"${l_path_source}/${p_artifact_name_woext}\" a \"${l_path_source}/rust-analyzer\""
-                #ls -la ${l_path_source}
                 mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/rust-analyzer"
-                #ls -la ${l_path_source}
-                #id
-                chmod u+x "${l_path_source}/rust-analyzer"
-                
-                #1. Comparando la version instalada con la version descargada
-                #_compare_version_current_with "$p_repo_id" "$l_path_source" $p_install_win_cmds
-                #l_status=$?
 
-                ##Actualizar solo no esta configurado o tiene una version menor a la actual
-                #if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                #    l_flag_install=0
-                #else
-                #    l_flag_install=1
-                #fi
-
-
-                #2. Instalación
-                if [ $l_flag_install -eq 0 ]; then
-                    l_path_target_bin="${g_path_programs}/lsp_servers/rust_analyzer"
-                    mkdir -p "${l_path_target_bin}"
-
-                    echo "Copiando \"${l_path_source}/rust-analyzer\" a \"${l_path_target_bin}/\""
-                    cp "${l_path_source}/rust-analyzer" "${l_path_target_bin}/"
+                #Instalación
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    cp "${l_path_source}/rust-analyzer" "${l_path_target_bin}"
                     chmod +x "${l_path_target_bin}/rust-analyzer"
-                    #mkdir -pm 755 "${l_path_target_man}"
-
-                    #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
-                    echo "$p_repo_last_version_pretty" > "${l_path_target_bin}/rust-analyzer.info" 
+                else
+                    sudo cp "${l_path_source}/rust-analyzer" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/rust-analyzer"
                 fi
 
-
-                #Validar si 'Rust Analizer' esta en el PATH
-                #echo "$PATH" | grep "${g_path_programs}/lsp_servers/rust_analyzer" &> /dev/null
-                #l_status=$?
-                #if [ $l_status -ne 0 ]; then
-                #    printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                #        "$g_color_warning" "Rust-Analizer"  "$p_repo_last_version_pretty" "$g_color_reset"
-                #    printf 'Adicionando a la sesion actual: PATH=%s/lsp_servers/rust_analyzer:$PATH\n' "${g_path_programs}"
-                #    export PATH=${g_path_programs}/lsp_servers/rust_analyzer:$PATH
-                #fi
+                #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
+                echo "$p_repo_last_version_pretty" > "${g_path_programs}/rust-analyzer.info" 
 
             else
 
-                #1. Comparando la version instalada con la version descargada
-                #_compare_version_current_with "$p_repo_id" "$l_path_source" $p_install_win_cmds
-                #l_status=$?
+                #Instalación
+                echo "Copiando \"${l_path_source}/rust-analyzer.exe\" a \"${l_path_target_bin}\""
+                cp "${l_path_source}/rust-analyzer.exe" "${l_path_target_bin}"
+                #echo "Copiando \"${l_path_source}/rust-analyzer.pdb\" a \"${l_path_target_bin}\""
+                #cp "${l_path_source}/rust-analyzer.pdb" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
+                
+                #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
+                echo "$p_repo_last_version_pretty" > "${g_path_programs_win}/rust-analyzer.info"
 
-                ##Actualizar solo no esta configurado o tiene una version menor a la actual
-                #if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                #    l_flag_install=0
-                #else
-                #    l_flag_install=1
-                #fi
-
-
-                #2. Instalación
-                if [ $l_flag_install -eq 0 ]; then
-                    l_path_target_bin="${g_path_programs_win}/LSP_Servers/Rust_Analyzer"
-                    mkdir -p "${l_path_target_bin}"
-
-                    echo "Copiando \"${l_path_source}/rust-analyzer.exe\" a \"${l_path_target_bin}\""
-                    cp "${l_path_source}/rust-analyzer.exe" "${l_path_target_bin}"
-                    #echo "Copiando \"${l_path_source}/rust-analyzer.pdb\" a \"${l_path_target_bin}\""
-                    #cp "${l_path_source}/rust-analyzer.pdb" "${l_path_target_bin}"
-                    #mkdir -p "${l_path_target_man}"
-                    
-                    #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
-                    echo "$p_repo_last_version_pretty" > "${l_path_target_bin}/rust-analyzer.info" 
-                fi
             fi
             ;;
 
