@@ -357,6 +357,11 @@ function get_repo_latest_version() {
                 return 1
             fi
 
+            #Caso especial: Todos excepto los binarios estan en github
+            if [ "$p_repo_id" = "helm" ]; then
+                l_base_url_fixed="https://github.com"
+            fi
+
             #Usando el API resumido del repositorio de GitHub
             l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | jq -r '.tag_name')
             #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
