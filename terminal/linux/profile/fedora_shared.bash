@@ -22,9 +22,6 @@ export GRAALVM_HOME JAVA_HOME
 # Rutas por defecto: Adicionando rutas de programas especificos
 PATH=$PATH:${l_program_path}/neovim/bin
 
-#RH-OCP - CLI
-[ -d "${l_program_path}/rh-ocp-cli" ] && PATH=$PATH:${l_program_path}/rh-ocp-cli
-
 #CMake - Sistema de contrucción para C/C++ y otros
 [ -d "${l_program_path}/cmake" ] && PATH=$PATH:${l_program_path}/cmake/bin
 
@@ -45,7 +42,7 @@ PATH=$PATH:${l_program_path}/neovim/bin
 #[ -d "${l_program_path}/lsp_servers/rust_analyzer" ] && PATH=$PATH:${l_program_path}/lsp_servers/rust_analyzer
 
 #LLVM/Clang
-[ -d "${l_program_path}/llvm/bin" ] && PATH=$PATH:${l_program_path}/llvm/bin
+[ -d "${l_program_path}/llvm/bin" ] && PATH=${l_program_path}/llvm/bin:$PATH
 
 #Ruta del builder Apache Maven
 [ -d "${l_program_path}/maven/bin" ] && PATH=${l_program_path}/maven/bin:$PATH

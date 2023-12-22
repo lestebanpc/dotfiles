@@ -179,6 +179,9 @@ function get_user_options() {
         return 0
     fi
 
+    #TODO Si forzar la instalación local descomente este linea.
+    #return 3
+
     #Soporta de sudo
     local l_status
     local l_aux
@@ -231,8 +234,16 @@ function compare_version() {
     local p_operating_2="${2//-/.}"
 
     #2. Si son textos iguales retornar 0
-    if [[ "$p_operating_1" == "$p_operating_2" ]]; then
+    if [ "$p_operating_1" = "$p_operating_2" ]; then
         return 0
+    fi
+
+    if [ -z "$p_operating_1" ]; then
+        return 2
+    fi
+
+    if [ -z "$p_operating_2" ]; then
+        return 1
     fi
 
     #3.Generar un arreglo de enteros de una cadena usando sepador de campo .

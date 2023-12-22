@@ -64,6 +64,7 @@ gA_packages=(
         ['kubelet']=''
         ['crictl']='kubernetes-sigs/cri-tools'
         ['rust']=''
+        ['oc']=''
     )
 
 
@@ -72,28 +73,29 @@ gA_packages=(
 #Menu dinamico: Titulos de las opciones del menú
 #  - Cada entrada define un opcion de menú. Su valor define el titulo.
 ga_menu_options_title=(
-    "Los repositorios basicos"
-    "El editor 'NeoVim'"
+    "Comandos basicos"
+    "Comandos alternativos"
+    "Comandos para gRPC"
     "Las fuentes 'Nerd Fonts'"
+    "El editor 'NeoVim'"
     "Shell 'Powershell'"
-    "Tools para gRPC"
     "LL Container Runtine, comandos root-less, CNI plugins"
-    "HL Container Runtime 'ContainerD', BuildKit y NerdCtl"
-    "Tools para gestionar containers"
-    "Tools para K8S"
+    "HL Container Runtime ContainerD: ContainerD, BuildKit y NerdCtl"
+    "HL Container Runtime CRI-O: CriCtl"
+    "Tools para gestionar containers: Dive"
+    "Tools para K8S: kubectl, oc, helm, operator-sdk, ..."
     "Binarios para un nodo K8S de 'K0S'"
     "Binarios para un nodo K8S de 'KubeAdm'"
-    #".NET  > RTE"
-    ".NET  > RTE y SDK"
-    ".NET  > LSP y DAP server"
-    "Java  > RTE 'GraalVM CE'"
-    "Java  > LSP y DAP server"
-    "C/C++ > Compiler LLVM/CLang ('clang', 'clang++', 'lld', 'lldb', 'clangd')"
-    "C/C++ > Developments tools"
-    "NodeJS> RTE"
-    "Rust  > Compiler"
-    "Rust  > LSP server"
-    "Go    > RTE"
+    ".NET  ${g_color_reset}>${g_color_title} RTE y SDK"
+    ".NET  ${g_color_reset}>${g_color_title} LSP y DAP server"
+    "Java  ${g_color_reset}>${g_color_title} RTE 'GraalVM CE'"
+    "Java  ${g_color_reset}>${g_color_title} LSP y DAP server"
+    "C/C++ ${g_color_reset}>${g_color_title} Compiler LLVM/CLang: 'clang', 'clang++', 'lld', 'lldb', 'clangd'"
+    "C/C++ ${g_color_reset}>${g_color_title} Developments tools"
+    "NodeJS${g_color_reset}>${g_color_title} RTE"
+    "Rust  ${g_color_reset}>${g_color_title} Compiler"
+    "Rust  ${g_color_reset}>${g_color_title} LSP server"
+    "Go    ${g_color_reset}>${g_color_title} RTE"
     )
 
 #WARNING: Un cambio en el orden implica modificar los indices de los eventos:
@@ -105,18 +107,19 @@ ga_menu_options_title=(
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
 ga_menu_options_packages=(
-    "jq,yq,bat,ripgrep,xsv,delta,fzf,less,fd,oh-my-posh,jwt,step,butane"
-    "neovim"
-    "nerd-fonts"
-    "powershell"
+    "jq,yq,bat,ripgrep,xsv,delta,fzf,less,fd,oh-my-posh"
+    "jwt,step,butane"
     "protoc,grpcurl,evans"
+    "nerd-fonts"
+    "neovim"
+    "powershell"
     "runc,crun,rootlesskit,slirp4netns,fuse-overlayfs,cni-plugins"
     "containerd,buildkit,nerdctl"
+    "crictl"
     "dive"
-    "kubectl,helm,operator-sdk,3scale-toolbox,pgo"
+    "kubectl,oc,helm,operator-sdk,3scale-toolbox,pgo"
     "k0s"
-    "cni-plugins,kubectl,kubelet,crictl,kubeadm"
-    #"net-rt-core,net-rt-aspnet"
+    "cni-plugins,kubectl,kubelet,kubeadm"
     "net-sdk"
     "roslyn,netcoredbg"
     "graalvm"
@@ -173,6 +176,22 @@ declare -A gA_repo_config_proc_type=(
         ['less']=1
         ['clangd']=1
         ['neovim']=1
+    )
+
+#URL base del repositorio por defecto es 'https://github.com'.
+#Si no usan el repositorio por defecto, se debe especificarlo en este diccionario:
+declare -A gA_repo_base_url=(
+        ['kubectl']='https://dl.k8s.io/release'
+        ['kubelet']='https://dl.k8s.io/release'
+        ['kubeadm']='https://dl.k8s.io/release'
+        ['net-sdk']='https://dotnetcli.azureedge.net'
+        ['net-rt-core']='https://dotnetcli.azureedge.net'
+        ['net-rt-aspnet']='https://dotnetcli.azureedge.net'
+        ['go']='https://storage.googleapis.com'
+        ['jdtls']='https://download.eclipse.org'
+        ['nodejs']='https://nodejs.org/dist'
+        ['rust']='https://static.rust-lang.org/dist'
+        ['oc']='https://mirror.openshift.com/pub/openshift-v4'
     )
 
 

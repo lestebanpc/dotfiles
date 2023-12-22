@@ -120,14 +120,14 @@ g_status_crendential_storage=-1
 g_is_credential_storage_externally=1
 
 
-#Valores de la opcion especiales del menu (no estan vinculado a un repositorio especifico):
+#Menu personalizado: Opciones iniciales y especiales del menu (no estan vinculado al menu dinamico):
 # > Actualizar todos paquetes del sistema operativo (Opción 1 del arreglo del menu)
 g_opt_update_installed_pckg=$((1 << 0))
 # > Actualizar todos los repositorios instalados (Opción 2 del arreglo del menu)
 g_opt_update_installed_repo=$((1 << 1))
 
 
-#Menu dinamico: Offset del indice donde inicia el menu dinamico.
+#Menu dinamico: Offset (desface) del indice del menu dinamico respecto a menu personalizado.
 #               Generalmente el menu dinamico no inicia desde la primera opcion personalizado del menú.
 g_offset_option_index_menu_install=2
 g_offset_option_index_menu_uninstall=0
@@ -2425,7 +2425,7 @@ function g_install_repository() {
     #Estado de instalación del respositorio
     _g_install_repo_status=(0 0)
 
-    _get_repo_latest_version "$p_repo_id" "$l_repo_name" la_repo_versions _ga_artifact_subversions
+    get_repo_latest_version "$p_repo_id" "$l_repo_name" la_repo_versions _ga_artifact_subversions
     l_status=$?
 
     #Si ocurrio un error al obtener la versión
@@ -2885,8 +2885,10 @@ function _show_menu_install_core() {
     print_text_in_center "Menu de Opciones (Install/Update)" $g_max_length_line "$g_color_title"
     print_line '-' $g_max_length_line  "$g_color_opaque"
     printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
-    printf " (%ba%b) Actualizar los paquetes existentes del SO y los binarios de los repositorios existentes\n" "$g_color_title" "$g_color_reset"
-    printf " (%bb%b) Actualizar los paquetes existentes del SO y los binarios basicos para 'VM Template'\n" "$g_color_title" "$g_color_reset"
+    printf " (%ba%b) Actualizar los paquetes del SO existentes y los binarios/programas ya instalados\n" "$g_color_title" "$g_color_reset"
+    printf " (%bb%b) Instalar o actualizar: Binarios basicos, 'Nerd Fonts', NeoVim\n" "$g_color_title" "$g_color_reset"
+    printf " (%bc%b) Instalar o actualizar: Binarios basicos, 'Nerd Fonts', NeoVim, .NET SDK/LSP/DAP, PowerShell\n" "$g_color_title" "$g_color_reset"
+    printf " (%bd%b) Instalar o actualizar los runtime, SDK, LSP y DAP: .NET, Java, NodeJS, C/C++, Rust, Go\n" "$g_color_title" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     get_length_menu_option $g_offset_option_index_menu_install
@@ -2931,10 +2933,41 @@ function g_install_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
                 printf '\n'
-                #1 + 4 + 16 + 32 + 64 + 262144
-                g_install_repositories 262261 0
+                #    4> Binarios basicos
+                #   32> Fuente 'Nerd Fonts'
+                #   64> Editor NeoVIM
+                g_install_repositories 100 0
                 ;;
 
+            c)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_title" 
+                printf '\n'
+                #    4> Binarios basicos
+                #   32> Fuente 'Nerd Fonts'
+                #   64> Editor NeoVIM
+                #  128> PowerShell
+                #32768> .NET SDK 
+                #65536> .NET LSP/DAP
+                g_install_repositories 98532 0
+                ;;
+
+            d)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_title" 
+                printf '\n'
+                #   32768> .NET  : RTE y SDK
+                #   65536> .NET  : LSP y DAP server
+                #  131072> Java  : RTE 'GraalVM CE'
+                #  262144> Java  : LSP y DAP server
+                #  524288> C/C++ : Compiler LLVM/CLang ('clang', 'clang++', 'lld', 'lldb', 'clangd')
+                # 1048576> C/C++ : Developments tools
+                # 2097152> NodeJS: RTE
+                # 4194304> Rust  : Compiler
+                # 8388608> Rust  : LSP server
+                #16777216> Go    : RTE
+                g_install_repositories 33521664 0
+                ;;
             q)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_title" 
