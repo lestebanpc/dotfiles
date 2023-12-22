@@ -1654,6 +1654,11 @@ function get_repo_artifacts() {
 
         helm)
 
+            #Caso especial: en github, se encuentra casi todos menos lo binarios
+            #URL base fijo     : "https://get.helm.sh"
+            #URL base variable : None
+
+            pna_artifact_baseurl=("${l_base_url_fixed}")
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("helm-v${p_repo_last_version_pretty}-windows-amd64.zip")

@@ -192,6 +192,7 @@ declare -A gA_repo_base_url=(
         ['nodejs']='https://nodejs.org/dist'
         ['rust']='https://static.rust-lang.org/dist'
         ['oc']='https://mirror.openshift.com/pub/openshift-v4'
+        ['helm']='https://get.helm.sh'
     )
 
 
