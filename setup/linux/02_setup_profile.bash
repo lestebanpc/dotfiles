@@ -273,7 +273,11 @@ function _config_nvim() {
 
 
         l_link='/.config/nvim/coc-settings.json'
-        l_object='/.files/nvim/ide_coc/coc-settings_lnx.json'
+        if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+            l_object='/.files/nvim/ide_coc/coc-settings_lnx_non_shared.json'
+        else
+            l_object='/.files/nvim/ide_coc/coc-settings_lnx_shared.json'
+        fi
         if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -290,7 +294,11 @@ function _config_nvim() {
 
 
         l_link='/.config/nvim/init.vim'
-        l_object='/.files/nvim/init_linux_ide.vim'
+        if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+            l_object='/.files/nvim/init_ide_linux_non_shared.vim'
+        else
+            l_object='/.files/nvim/init_ide_linux_shared.vim'
+        fi
         if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -385,7 +393,7 @@ function _config_nvim() {
     else
 
         l_link='/.config/nvim/init.vim'
-        l_object='/.files/nvim/init_linux_basic.vim'
+        l_object='/.files/nvim/init_basic_linux.vim'
         if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -661,7 +669,11 @@ function _config_vim() {
 
         #Creando enlaces simbolicos
         l_link='/.vim/coc-settings.json'
-        l_object='/.files/vim/ide_coc/coc-settings_lnx.json'
+        if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+            l_object='/.files/vim/ide_coc/coc-settings_lnx_non_shared.json'
+        else
+            l_object='/.files/vim/ide_coc/coc-settings_lnx_shared.json'
+        fi
         if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -695,7 +707,11 @@ function _config_vim() {
 
 
         l_link='/.vimrc'
-        l_object='/.files/vim/vimrc_linux_ide.vim'
+        if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+            l_object='/.files/vim/vimrc_ide_linux_non_shared.vim'
+        else
+            l_object='/.files/vim/vimrc_ide_linux_shared.vim'
+        fi
         if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}
@@ -714,7 +730,7 @@ function _config_vim() {
     else
 
         l_link='/.vimrc'
-        l_object='/.files/vim/vimrc_linux_basic.vim'
+        l_object='/.files/vim/vimrc_basic_linux.vim'
         if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
             if [ $l_overwrite_ln_flag -eq 0 ]; then
                 ln -snf ${HOME}${l_object} ${HOME}${l_link}

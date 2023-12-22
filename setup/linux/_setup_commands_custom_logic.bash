@@ -3939,6 +3939,11 @@ function _copy_artifact_files() {
                 return 40
             fi
 
+            #Limpiar el contenido, si existe (el 'install.sh' puede eliminar versiones anteriores)
+            #if  [ -d "${g_path_programs}/rust" ]; then
+            #    rm -rf ${g_path_programs}/rust
+            #fi
+
             #Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             mkdir -pm 775 "${g_path_programs}/rust"

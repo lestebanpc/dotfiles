@@ -1,8 +1,8 @@
 {
   "diagnostic.displayByAle": true,
   "codeLens.enable": true,
-  "python.pythonPath": "python",
-  "rust-analyzer.server.path": "rust-analyzer.exe",
+  "python.pythonPath": "python3",
+  "rust-analyzer.server.path": "rust-analyzer",
   "powershell.integratedConsole.showOnStartup": false,
   "languageserver": {
     "golang": {
