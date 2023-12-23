@@ -4082,7 +4082,7 @@ function _copy_artifact_files() {
                 #Instalar o actualizar el modulo go: DAP 'delve'
                 printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'DAP "delve"' "$g_color_opaque" "$g_color_reset"
                 go install github.com/go-delve/delve/cmd/dlv@latest
-                l_aux=$(gdlv version | grep 'Version:' | sed "$g_regexp_sust_version1" 2> /dev/null)
+                l_aux=$(dlv version | grep 'Version:' | sed "$g_regexp_sust_version1" 2> /dev/null)
                 printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'DAP "delve"' "$g_color_opaque" "$l_aux" "$g_color_reset" 
 
 

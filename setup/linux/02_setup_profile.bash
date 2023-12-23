@@ -273,7 +273,7 @@ function _config_nvim() {
 
 
         l_link='/.config/nvim/coc-settings.json'
-        if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
             l_object='/.files/nvim/ide_coc/coc-settings_lnx_non_shared.json'
         else
             l_object='/.files/nvim/ide_coc/coc-settings_lnx_shared.json'
@@ -294,7 +294,7 @@ function _config_nvim() {
 
 
         l_link='/.config/nvim/init.vim'
-        if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
             l_object='/.files/nvim/init_ide_linux_non_shared.vim'
         else
             l_object='/.files/nvim/init_ide_linux_shared.vim'
@@ -669,7 +669,7 @@ function _config_vim() {
 
         #Creando enlaces simbolicos
         l_link='/.vim/coc-settings.json'
-        if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
             l_object='/.files/vim/ide_coc/coc-settings_lnx_non_shared.json'
         else
             l_object='/.files/vim/ide_coc/coc-settings_lnx_shared.json'
@@ -707,7 +707,7 @@ function _config_vim() {
 
 
         l_link='/.vimrc'
-        if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
             l_object='/.files/vim/vimrc_ide_linux_non_shared.vim'
         else
             l_object='/.files/vim/vimrc_ide_linux_shared.vim'
@@ -1066,7 +1066,7 @@ _install_python() {
     l_version=$(python3 -m pip --version 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ]; then
-        printf 'VIM (IDE)   > Comando "%bpip%b" (modulo python) %bno se ha instalado correctamente%b. Corrija el error y vuelva configurar el profile.\n' \
+        printf 'VIM (IDE)   > Comando "%bpip%b" (modulo python) %bno se esta instalado%b. Corrija el error y vuelva configurar el profile.\n' \
             "$g_color_warning" "$g_color_reset" "$g_color_warning" "$g_color_reset"
         return 1
     fi
@@ -1570,7 +1570,7 @@ function _setup_profile() {
 
     #Archivos de configuración de PowerShell
     l_link='/.config/powershell/Microsoft.PowerShell_profile.ps1'
-    if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+    if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
             l_object='/.files/terminal/powershell/debian_non_shared.ps1'
         else
@@ -1601,7 +1601,7 @@ function _setup_profile() {
 
     #Creando el profile del interprete shell
     l_link='/.bashrc'
-    if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+    if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
             l_object='/.files/terminal/linux/profile/debian_non_shared.bash'
         else

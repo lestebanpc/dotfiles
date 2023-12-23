@@ -180,7 +180,8 @@ function get_user_options() {
     fi
 
     #TODO Si forzar la instalación local descomente este linea.
-    #return 3
+    #g_user_sudo_support=2
+    #return 0
 
     #Soporta de sudo
     local l_status
