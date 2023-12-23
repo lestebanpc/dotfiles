@@ -105,8 +105,15 @@ function fulfill_preconditions() {
             l_status=$?
 
             #Obtener el grupo primario
-            if ! l_group_name=$(id -gn 2> /dev/null); then
+            if l_group_name=$(id -gn 2> /dev/null); then
+
                 sudo chown ${USER}:${l_group_name} "$g_path_programs"
+
+                #Creando subdirectorios opcionales
+                mkdir -p "$g_path_programs/userkeys"
+                mkdir -p "$g_path_programs/userkeys/tls"
+                mkdir -p "$g_path_programs/userkeys/ssh"
+
             fi
         else 
             mkdir -pm 755 "$g_path_programs"
@@ -117,11 +124,6 @@ function fulfill_preconditions() {
             printf 'Se requiere que la carpeta "%s" de programas este creado y se tenga acceso de escritura.\n' "$g_path_programs"
             return 1
         fi
-
-        #Creando subdirectorios opcionales
-        mkdir -p "$g_path_programs/userkeys"
-        mkdir -p "$g_path_programs/userkeys/tls"
-        mkdir -p "$g_path_programs/userkeys/ssh"
 
     fi
 
