@@ -161,8 +161,10 @@ _can_setup_repository_in_this_so() {
         p_install_win_cmds=0
     fi
 
+    local l_repo_can_setup=1  #(1) No debe configurarse, (0) Debe configurarse (instalarse/actualizarse)
+    #local l_flag
 
-    #2. Obtener las opciones de configuración del repositorio.
+    #2. Repositorios especiales que no deberia instalarse segun el tipo de SO o arquitectura de procesador.
 
     #¿Se puede instalar en este tipo de SO?
     #  > Puede ser uno o la suma de los siguientes valores:
@@ -172,18 +174,6 @@ _can_setup_repository_in_this_so() {
     #  > Si no se especifica, su valor es 11.
     local l_repo_config_os_type=${gA_repo_config_os_type[${p_repo_id}]:-11}
 
-    #¿Se puede instalar en este tipo de arquitectura de procesador?
-    # > Por defecto, valor por defecto es 3.
-    # > Las opciones puede ser uno o la suma de los siguientes valores:
-    #   1 (00001) x86_64
-    #   2 (00010) aarch64 (arm64)
-    local l_repo_config_proc_type=${gA_repo_config_proc_type[${p_repo_id}]:-3}
-
-    #3. Repositorios especiales que no deberia instalarse segun el tipo de SO o arquitectura de procesador.
-    local l_repo_can_setup=1  #(1) No debe configurarse, (0) Debe configurarse (instalarse/actualizarse)
-    #local l_flag
-
-    #Validar el tipo de SO
     if [ $p_install_win_cmds -ne 0 ]; then
 
         #Si es Linux
@@ -208,9 +198,7 @@ _can_setup_repository_in_this_so() {
             
         fi
 
-    #4. Repositorios especiales que no deberia instalarse en Windows (siempre vinculado a un Linux WSL2)
     else
-
 
         #Si es Linux WSL2
         if [ $g_os_type -eq 1 ]; then
@@ -224,8 +212,15 @@ _can_setup_repository_in_this_so() {
 
     fi
 
-    #Validar el tipo de arquitectura del procesador
+    #3. Repositorios especiales que no deberia instalarse segun el tipo arquitectura de procesador.
     if [ $l_repo_can_setup -eq 0 ]; then
+
+        #¿Se puede instalar en este tipo de arquitectura de procesador?
+        # > Por defecto, valor por defecto es 3.
+        # > Las opciones puede ser uno o la suma de los siguientes valores:
+        #   1 (00001) x86_64
+        #   2 (00010) aarch64 (arm64)
+        local l_repo_config_proc_type=${gA_repo_config_proc_type[${p_repo_id}]:-3}
 
         #Si es x86_64
         if [ $g_os_architecture_type = "x86_64" ]; then
@@ -243,6 +238,21 @@ _can_setup_repository_in_this_so() {
         else
             l_repo_can_setup=1
         fi
+    fi
+
+    #4. Si el usuario no soporta sudo, no permitir instalacion de paquetes de SO
+    if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
+
+        if [ $l_repo_can_setup -eq 0 ]; then
+
+            #Es '0' si el repo instala paquetes de SO
+            local l_repo_is_os_package=${gA_repo_is_os_package[${p_repo_id}]:-1}
+
+            if [ $l_repo_is_os_package -eq 0 ]; then
+                l_repo_can_setup=1
+            fi
+       fi
+
     fi
 
     return $l_repo_can_setup

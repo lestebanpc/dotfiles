@@ -4060,6 +4060,7 @@ function _copy_artifact_files() {
 
                 #Acceso al folder creado
                 chmod g+rx,o+rx ${g_path_programs}/go
+                mkdir -p ~/go/bin
 
                 #Validar si 'Go' esta en el PATH
                 echo "$PATH" | grep "${g_path_programs}/go/bin" &> /dev/null
@@ -4068,9 +4069,22 @@ function _copy_artifact_files() {
                     printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
                         "$g_color_warning" "Go"  "$p_repo_last_version_pretty" "$g_color_reset"
                     printf 'Adicionando a la sesion actual: PATH=%s/go/bin:$PATH\n' "${g_path_programs}"
-                    export PATH=${g_path_programs}/go/bin:$PATH
-                    [ -d ~/go/bin ] && PATH=$PATH:~/go/bin
+                    PATH=${g_path_programs}/go/bin:$PATH
+                    export PATH=$PATH:~/go/bin
                 fi
+
+                #Instalar o actualizar el modulo go: LSP 'gopls'
+                printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'LSP "gopls"' "$g_color_opaque" "$g_color_reset"
+                go install golang.org/x/tools/gopls@latest
+                l_aux=$(gopls version | grep 'gopls v' | sed "$g_regexp_sust_version1" 2> /dev/null)
+                printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'LSP "gopls"' "$g_color_opaque" "$l_aux" "$g_color_reset" 
+
+                #Instalar o actualizar el modulo go: DAP 'delve'
+                printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'DAP "delve"' "$g_color_opaque" "$g_color_reset"
+                go install github.com/go-delve/delve/cmd/dlv@latest
+                l_aux=$(gdlv version | grep 'Version:' | sed "$g_regexp_sust_version1" 2> /dev/null)
+                printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'DAP "delve"' "$g_color_opaque" "$l_aux" "$g_color_reset" 
+
 
             else
                 
@@ -4087,6 +4101,11 @@ function _copy_artifact_files() {
                 #Acceso al folder creado
                 mv ${g_path_programs_win}/go ${g_path_programs_win}/Go
                 #chmod g+rx,o+rx ${g_path_programs_win}/Go
+
+                printf 'Instalé/actualizé el modulo go %s ejecutando:  %b%s%b\n' 'LSP "gopls"' "$g_color_info" \
+                       'go install golang.org/x/tools/gopls@latest' "$g_color_reset"
+                printf 'Instalé/actualizé el modulo go %s ejecutando:  %b%s%b\n' 'DAP "delve"' "$g_color_info" \
+                       'go install github.com/go-delve/delve/cmd/dlv@latest' "$g_color_reset"
                 
             fi
             ;;

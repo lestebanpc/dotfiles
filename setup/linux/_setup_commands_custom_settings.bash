@@ -195,6 +195,14 @@ declare -A gA_repo_base_url=(
         ['helm']='https://get.helm.sh'
     )
 
+#Si el repositorio es un paquete del SO (esto no se puede instalar si no es root o se tiene acceso a sudo)
+
+declare -A gA_repo_is_os_package=(
+        ['3scale-toolbox']=0
+    )
+
+
+
 
 
 
