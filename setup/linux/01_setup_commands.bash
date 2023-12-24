@@ -67,7 +67,7 @@ if [ -z "$g_user_is_root" ]; then
     get_user_options
 
     #Si el usuario no tiene permisos a sudo o el SO no implementa sudo,
-    # - Se instala/Configura los binarios a nivel usuario, las fuentes a nivel usuario.
+    # - Se instala/configura los binarios a nivel usuario, las fuentes a nivel usuario.
     # - No se instala ningun paquete/programa que requiere permiso 'root' para su instalación
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 

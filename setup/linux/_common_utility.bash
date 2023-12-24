@@ -93,39 +93,70 @@ function fulfill_preconditions() {
         return 1
     fi
 
-    #4. Si se instala para todos los usuarios, validar si los folderes requeridos existen si no crearlos
+    #4. Validar si existen el folder de programas
     local l_status=0
     local l_group_name
     if [ ! -z "$g_path_programs" ] && [ ! -d "$g_path_programs" ]; then
 
         printf 'La carpeta "%s" de programas no existe, se creará...\n' "$g_path_programs"
         
-        if [ $g_user_sudo_support -eq 0 ] || [ $g_user_sudo_support -eq 1 ]; then
-            sudo mkdir -pm 755 "$g_path_programs"
-            l_status=$?
+        #Ruta de programas: '~/tools'
+        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
 
-            #Obtener el grupo primario
-            if l_group_name=$(id -gn 2> /dev/null); then
-
-                sudo chown ${USER}:${l_group_name} "$g_path_programs"
-
-                #Creando subdirectorios opcionales
-                mkdir -p "$g_path_programs/userkeys"
-                mkdir -p "$g_path_programs/userkeys/tls"
-                mkdir -p "$g_path_programs/userkeys/ssh"
-
-            fi
-        else 
-            mkdir -p "$g_path_bin"
-            mkdir -p "$g_path_man"
-            mkdir -p "$g_path_fonts"
             mkdir -pm 755 "$g_path_programs"
             l_status=$?
+
+            mkdir -p "$g_path_programs/userkeys"
+            mkdir -p "$g_path_programs/userkeys/tls"
+            mkdir -p "$g_path_programs/userkeys/ssh"
+
+        #Ruta de programas: '/opt/tools'
+        else
+
+            if [ $g_user_sudo_support -eq 4 ]; then
+
+                mkdir -pm 755 "$g_path_programs"
+                l_status=$?
+
+                mkdir -pm 755 "$g_path_programs/userkeys"
+                mkdir -pm 755 "$g_path_programs/userkeys/tls"
+                mkdir -pm 755 "$g_path_programs/userkeys/ssh"
+
+            else
+
+                sudo mkdir -pm 755 "$g_path_programs"
+                l_status=$?
+
+                #Obtener el grupo primario
+                if l_group_name=$(id -gn 2> /dev/null); then
+
+                    sudo chown ${USER}:${l_group_name} "$g_path_programs"
+
+                    #Creando subdirectorios opcionales
+                    mkdir -p "$g_path_programs/userkeys"
+                    mkdir -p "$g_path_programs/userkeys/tls"
+                    mkdir -p "$g_path_programs/userkeys/ssh"
+
+                fi
+
+            fi
         fi
 
         if [ $l_status -ne 0 ]; then
             printf 'Se requiere que la carpeta "%s" de programas este creado y se tenga acceso de escritura.\n' "$g_path_programs"
             return 1
+        fi
+
+    fi
+
+    #5. Validar si existen el folder de comandos/binarios
+    if [ ! -z "$g_path_bin" ] && [ ! -d "$g_path_bin" ]; then
+
+        #Ruta de programas: '~/.local/bin'
+        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
+            mkdir -p "$g_path_bin"
+            mkdir -p "$g_path_man"
+            mkdir -p "$g_path_fonts"
         fi
 
     fi
@@ -138,7 +169,7 @@ function fulfill_preconditions() {
         mkdir -p "$g_path_doc_win"
     fi
 
-    #5. El programa instalados: ¿Esta 'curl' instalado?
+    #6. El programa instalados: ¿Esta 'curl' instalado?
     local l_curl_version
     if [ $p_require_curl -eq 0 ]; then
         l_curl_version=$(curl --version 2> /dev/null)
@@ -155,7 +186,7 @@ function fulfill_preconditions() {
         fi
     fi
 
-    #6. Lo que se instalar requiere permisos de root.
+    #7. Lo que se instalar requiere permisos de root.
     if [ $p_require_root -eq 0 ]; then
         if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
             printf 'ERROR: el usuario no tiene permisos para ejecutar sudo (o el SO no tiene implementa sudo y el usuario no es root).'
@@ -163,8 +194,9 @@ function fulfill_preconditions() {
         fi
     fi
 
-    #7. Mostar información adicional (Solo mostrar info adicional si la ejecución es interactiva)
+    #8. Mostar información adicional (Solo mostrar info adicional si la ejecución es interactiva)
     if [ $p_type_calling -eq 0 ]; then
+
         printf '%bLinux distribution - Name   : (%s) %s\n' "$g_color_opaque" "${g_os_subtype_id}" "${g_os_subtype_name}"
         printf 'Linux distribution - Version: (%s) %s (%s)\n' "$g_os_subtype_id" "$g_os_subtype_version" "$g_os_subtype_version_pretty"
         printf 'Processor architecture type : %s\n' "$g_os_architecture_type"
@@ -211,6 +243,7 @@ function fulfill_preconditions() {
             l_curl_version=$(echo "$l_curl_version" | head -n 1 | sed "$g_regexp_sust_version1")
             printf '%bCURL version                : %s%b\n' "$g_color_opaque" "$l_curl_version" "$g_color_reset"
         fi
+
     fi
     return 0
 
