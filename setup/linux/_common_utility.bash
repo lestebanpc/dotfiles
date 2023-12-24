@@ -88,7 +88,7 @@ function fulfill_preconditions() {
     fi
 
     #3. Validar la arquitectura de procesador
-    if [ ! "$g_os_architecture_type" = "x86_64" ] && [ ! "$g_os_architecture_type" = "aarch64"]; then
+    if [ ! "$g_os_architecture_type" = "x86_64" ] && [ ! "$g_os_architecture_type" = "aarch64" ]; then
         printf 'No esta implementado para la arquitectura de procesador "%s"\n' "$g_os_architecture_type"
         return 1
     fi
