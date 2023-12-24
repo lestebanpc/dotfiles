@@ -116,6 +116,9 @@ function fulfill_preconditions() {
 
             fi
         else 
+            mkdir -p "$g_path_bin"
+            mkdir -p "$g_path_man"
+            mkdir -p "$g_path_fonts"
             mkdir -pm 755 "$g_path_programs"
             l_status=$?
         fi
