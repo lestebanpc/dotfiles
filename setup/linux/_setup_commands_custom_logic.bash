@@ -2808,12 +2808,11 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -ne 0 ]; then
 
                 #Ruta local de los artefactos
-                #l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
                 l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
                 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-                echo "Copiando \"butane-x86_64-unknown-linux-gn4\" como \"${l_path_target_bin}/butane\" ..."
-                mv "${l_path_source}/butane-x86_64-unknown-linux-gnu" "${l_path_source}/butane"
+                echo "Copiando \"${p_artifact_name_woext}\" como \"${l_path_target_bin}/butane\" ..."
+                mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/butane"
 
                 echo "Copiando \"butane\" a \"${l_path_target_bin}\" ..."
                 if [ $g_user_is_root -eq 0 ]; then
@@ -2902,9 +2901,10 @@ function _copy_artifact_files() {
 
             #Renombrar el binario antes de copiarlo
             if [ $p_install_win_cmds -ne 0 ]; then
-                echo "Copiando \"jq-linux64\" como \"${l_path_target_bin}/jq\" ..."
-                mv "${l_path_source}/jq-linux64" "${l_path_source}/jq"
-                
+
+                echo "Copiando \"${p_artifact_name_woext}\" como \"${l_path_target_bin}/jq\" ..."
+                mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/jq"
+
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
                     cp "${l_path_source}/jq" "${l_path_target_bin}"
@@ -2916,8 +2916,8 @@ function _copy_artifact_files() {
                     #sudo mkdir -pm 755 "${l_path_target_man}"
                 fi
             else
-                echo "Copiando \"jq-win64.exe\" como \"${l_path_target_bin}/jq.exe\" ..."
-                mv "${l_path_source}/jq-win64.exe" "${l_path_source}/jq.exe"
+                echo "Copiando \"jq-windows-amd64.exe\" como \"${l_path_target_bin}/jq.exe\" ..."
+                mv "${l_path_source}/jq-windows-amd64.exe" "${l_path_source}/jq.exe"
 
                 cp "${l_path_source}/jq.exe" "${l_path_target_bin}"
             fi
@@ -2944,8 +2944,13 @@ function _copy_artifact_files() {
             #Renombrar el binario antes de copiarlo
             if [ $p_install_win_cmds -ne 0 ]; then
 
-                echo "Copiando \"yq_linux_amd64\" como \"${l_path_target_bin}/yq\" ..."
-                mv "${l_path_source}/yq_linux_amd64" "${l_path_source}/yq"
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    echo "Copiando \"yq_linux_arm64\" como \"${l_path_target_bin}/yq\" ..."
+                    mv "${l_path_source}/yq_linux_arm64" "${l_path_source}/yq"
+                else
+                    echo "Copiando \"yq_linux_amd64\" como \"${l_path_target_bin}/yq\" ..."
+                    mv "${l_path_source}/yq_linux_amd64" "${l_path_source}/yq"
+                fi
                 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
@@ -2986,8 +2991,8 @@ function _copy_artifact_files() {
                 #Instalación de binario 'oh-my-posh'
                 if [ $p_artifact_index -eq 0 ]; then
 
-                    echo "Copiando \"posh-linux-amd64\" como \"${l_path_target_bin}/oh-my-posh\" ..."
-                    mv "${l_path_source}/posh-linux-amd64" "${l_path_source}/oh-my-posh"
+                    echo "Copiando \"${p_artifact_name_woext}\" como \"${l_path_target_bin}/oh-my-posh\" ..."
+                    mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/oh-my-posh"
                 
                     #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                     if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
@@ -3363,8 +3368,8 @@ function _copy_artifact_files() {
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
 
-                echo "Renombrando \"kubectl-pgo-linux-amd64\" en \"${l_path_source}/kubectl-pgo\" ..."
-                mv "${l_path_source}/kubectl-pgo-linux-amd64" "${l_path_source}/kubectl-pgo"
+                echo "Renombrando \"${p_artifact_name_woext}\" en \"${l_path_source}/kubectl-pgo\" ..."
+                mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/kubectl-pgo"
 
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
                     echo "Copiando \"kubectl-pgo\" en \"${l_path_target_bin}/\" ..."
@@ -3382,8 +3387,8 @@ function _copy_artifact_files() {
                 echo "$p_repo_last_version_pretty" > "${g_path_programs}/pgo.info" 
             else
 
-                echo "Renombrando \"kubectl-pgo-windows-386\" en \"${l_path_source}/kubectl-pgo.exe\" ..."
-                mv "${l_path_source}/kubectl-pgo-windows-386" "${l_path_source}/kubectl-pgo.exe"
+                echo "Renombrando \"${p_artifact_name_woext}\" en \"${l_path_source}/kubectl-pgo.exe\" ..."
+                mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/kubectl-pgo.exe"
 
                 echo "Copiando \"kubectl-pgo.exe\" en \"${l_path_target_bin}/\" ..."
                 cp "${l_path_source}/kubectl-pgo.exe" "${l_path_target_bin}"
@@ -3428,44 +3433,36 @@ function _copy_artifact_files() {
                 #Instalacion del SDK para construir el operador
                 if [ $p_artifact_index -eq 0 ]; then
 
-                   mv "${l_path_source}/operator-sdk_linux_amd64" "${l_path_source}/operator-sdk"
-                   if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                      cp "${l_path_source}/operator-sdk" "${l_path_target_bin}"
-                      chmod +x "${l_path_target_bin}/operator-sdk"
-                      #mkdir -pm 755 "${l_path_target_man}"
-                   else
-                      sudo cp "${l_path_source}/operator-sdk" "${l_path_target_bin}"
-                      sudo chmod +x "${l_path_target_bin}/operator-sdk"
-                      #sudo mkdir -pm 755 "${l_path_target_man}"
-                   fi
+                    echo "Renombrando \"${p_artifact_name_woext}\" en \"${l_path_source}/operator-sdk\" ..."
+                    mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/operator-sdk"
 
-                #Instalacion del SDK para construir el operador usando Ansible
-                #elif [ $p_artifact_index -eq 1 ]; then
-
-                #   mv "${l_path_source}/ansible-operator_linux_amd64" "${l_path_source}/ansible-operator"
-                #   if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                #      cp "${l_path_source}/ansible-operator" "${l_path_target_bin}"
-                #      chmod +x "${l_path_target_bin}/ansible-operator"
-                #      #mkdir -pm 755 "${l_path_target_man}"
-                #   else
-                #      sudo cp "${l_path_source}/ansible-operator" "${l_path_target_bin}"
-                #      sudo chmod +x "${l_path_target_bin}/ansible-operator"
-                #      #sudo mkdir -pm 755 "${l_path_target_man}"
-                #   fi
+                    echo "Copiando \"operator-sdk\" en \"${l_path_target_bin}/\" ..."
+                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                        cp "${l_path_source}/operator-sdk" "${l_path_target_bin}"
+                        chmod +x "${l_path_target_bin}/operator-sdk"
+                        #mkdir -pm 755 "${l_path_target_man}"
+                    else
+                        sudo cp "${l_path_source}/operator-sdk" "${l_path_target_bin}"
+                         sudo chmod +x "${l_path_target_bin}/operator-sdk"
+                        #sudo mkdir -pm 755 "${l_path_target_man}"
+                    fi
 
                 #Instalacion del SDK para construir el operador usando Helm
                 else
 
-                   mv "${l_path_source}/helm-operator_linux_amd64" "${l_path_source}/helm-operator"
-                   if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                      cp "${l_path_source}/helm-operator" "${l_path_target_bin}"
-                      chmod +x "${l_path_target_bin}/helm-operator"
-                      #mkdir -pm 755 "${l_path_target_man}"
-                   else
-                      sudo cp "${l_path_source}/helm-operator" "${l_path_target_bin}"
-                      sudo chmod +x "${l_path_target_bin}/helm-operator"
-                      #sudo mkdir -pm 755 "${l_path_target_man}"
-                   fi
+                    echo "Renombrando \"${p_artifact_name_woext}\" en \"${l_path_source}/helm-operator\" ..."
+                    mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/helm-operator"
+
+                    echo "Copiando \"operator-sdk\" en \"${l_path_target_bin}/\" ..."
+                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                        cp "${l_path_source}/helm-operator" "${l_path_target_bin}"
+                        chmod +x "${l_path_target_bin}/helm-operator"
+                        #mkdir -pm 755 "${l_path_target_man}"
+                    else
+                        sudo cp "${l_path_source}/helm-operator" "${l_path_target_bin}"
+                        sudo chmod +x "${l_path_target_bin}/helm-operator"
+                        #sudo mkdir -pm 755 "${l_path_target_man}"
+                    fi
 
                 fi
 
@@ -3475,13 +3472,13 @@ function _copy_artifact_files() {
 
         k0s)
 
-            #1. Ruta local de los artefactos
-            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
-
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
                 return 40
             fi
+
+            #1. Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #2. Si la nodo k0s esta iniciado, solicitar su detención
             request_stop_k0s_node 1 "$p_repo_id" "$p_artifact_index"
@@ -4490,13 +4487,14 @@ function _copy_artifact_files() {
 
         runc)
 
-            #1. Ruta local de los artefactos
-            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
-            
+            #No se soportado por Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
                 return 40
             fi
+                
+            #1. Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
             is_package_installed 'containerd' $g_os_subtype_id
@@ -4515,8 +4513,8 @@ function _copy_artifact_files() {
             fi
 
             #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Renombrando \"${l_path_source}/runc.amd64\" a \"${l_path_source}/runc\""
-            mv "${l_path_source}/runc.amd64" "${l_path_source}/runc"
+            echo "Renombrando \"${l_path_source}/${p_artifact_name_woext}\" a \"${l_path_source}/runc\""
+            mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/runc"
 
             echo "Copiando \"runc\" a \"${l_path_target_bin}\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
@@ -4550,13 +4548,14 @@ function _copy_artifact_files() {
 
         crun)
 
-            #1. Ruta local de los artefactos
-            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
-            
+            #No se soportado por Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
                 return 40
             fi
+                
+            #1. Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
             is_package_installed 'podman' $g_os_subtype_id
@@ -4575,8 +4574,8 @@ function _copy_artifact_files() {
             fi
 
             #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Renombrando \"${l_path_source}/crun-${p_repo_last_version_pretty}-linux-amd64\" a \"${l_path_source}/crun\""
-            mv "${l_path_source}/crun-${p_repo_last_version_pretty}-linux-amd64" "${l_path_source}/crun"
+            echo "Renombrando \"${l_path_source}/${p_artifact_name_woext}\" a \"${l_path_source}/crun\""
+            mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/crun"
 
             echo "Copiando \"crun\" a \"${l_path_target_bin}\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
@@ -4604,13 +4603,14 @@ function _copy_artifact_files() {
 
         slirp4netns)
 
-            #1. Ruta local de los artefactos
-            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
-            
+            #No se soportado por Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
-                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
                 return 40
             fi
+                
+            #1. Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
             is_package_installed 'containerd.io' $g_os_subtype_id
@@ -4629,8 +4629,8 @@ function _copy_artifact_files() {
             fi
 
             #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Renombrando \"${l_path_source}/slirp4netns-x86_64\" a \"${l_path_source}/slirp4netns\""
-            mv "${l_path_source}/slirp4netns-x86_64" "${l_path_source}/slirp4netns"
+            echo "Renombrando \"${l_path_source}/${p_artifact_name_woext}\" a \"${l_path_source}/slirp4netns\""
+            mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/slirp4netns"
 
             echo "Copiando \"${l_path_source}/slirp4netns\" a \"${l_path_target_bin}\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
@@ -4663,13 +4663,14 @@ function _copy_artifact_files() {
 
         fuse-overlayfs)
 
-            #1. Ruta local de los artefactos
-            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
-            
+            #No se soportado por Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
-                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
                 return 40
             fi
+                
+            #1. Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
             is_package_installed 'containerd.io' $g_os_subtype_id
@@ -4688,8 +4689,8 @@ function _copy_artifact_files() {
             fi
 
             #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            echo "Renombrando \"${l_path_source}/fuse-overlayfs-x86_64\" a \"${l_path_source}/fuse-overlayfs\""
-            mv "${l_path_source}/fuse-overlayfs-x86_64" "${l_path_source}/fuse-overlayfs"
+            echo "Renombrando \"${l_path_source}/${p_artifact_name_woext}\" a \"${l_path_source}/fuse-overlayfs\""
+            mv "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/fuse-overlayfs"
 
             echo "Copiando \"${l_path_source}/fuse-overlayfs\" a \"${l_path_target_bin}\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
@@ -4722,13 +4723,14 @@ function _copy_artifact_files() {
 
         rootlesskit)
 
-            #1. Ruta local de los artefactos
-            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
-            
+            #No se soportado por Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
-                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
                 return 40
             fi
+                
+            #1. Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
             is_package_installed 'containerd' $g_os_subtype_id
@@ -4800,15 +4802,16 @@ function _copy_artifact_files() {
 
         cni-plugins)
 
+            #No se soportado por Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                return 40
+            fi
+                
             #1. Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             l_path_target_bin="${g_path_programs}/cni_plugins"
 
-            if [ $p_install_win_cmds -eq 0 ]; then
-                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
-                return 40
-            fi
-            
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
             is_package_installed 'containerd' $g_os_subtype_id
@@ -4895,13 +4898,14 @@ function _copy_artifact_files() {
 
         containerd)
 
-            #1. Ruta local de los artefactos
-            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/bin"
-            
+            #No se soportado por Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
-                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
                 return 40
             fi
+                
+            #1. Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/bin"
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
             is_package_installed 'containerd' $g_os_subtype_id
@@ -5021,13 +5025,14 @@ function _copy_artifact_files() {
 
         buildkit)
 
-            #1. Ruta local de los artefactos
-            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/bin"
-            
+            #No se soportado por Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
-                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
                 return 40
             fi
+
+            #1. Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/bin"
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
             request_stop_systemd_unit 'buildkit.service' 1 "$p_repo_id" "$p_artifact_index"
@@ -5115,15 +5120,16 @@ function _copy_artifact_files() {
 
         nerdctl)
 
+            #No se soportado por Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                return 40
+            fi
+
             #1. Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             local l_status_stop=-1
           
-            if [ $p_install_win_cmds -eq 0 ]; then
-                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
-                return 40
-            fi
-
 
             #2. Configuración: Instalación de binario basico
             if [ $p_artifact_index -eq 0 ]; then
@@ -5243,13 +5249,14 @@ function _copy_artifact_files() {
 
         dive)
 
-            #Ruta local de los artefactos
-            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
-            
+            #No se soportado por Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
-                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
                 return 40
             fi
+
+            #Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             echo "Copiando \"${l_path_source}/dive\" a \"${l_path_target_bin}\" ..."
