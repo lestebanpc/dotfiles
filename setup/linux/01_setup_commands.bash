@@ -444,7 +444,7 @@ function _install_artifacts() {
 
 
         l_artifact_name_without_ext=""
-        if [ $l_i -eq $l_n ]; then
+        if [ $l_i -eq $((l_n - 1)) ]; then
             l_is_last=0
         fi
 

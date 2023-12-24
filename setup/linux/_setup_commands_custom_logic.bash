@@ -3756,6 +3756,7 @@ function _copy_artifact_files() {
 
                 #Actualizar el cache de fuentes del SO
                 if [ $p_artifact_is_last -eq 0 ]; then
+                    printf 'Actualizando el cache de fuentes: "fc-cache -v"...\n'
                     fc-cache -v
                 fi
 
@@ -3775,6 +3776,7 @@ function _copy_artifact_files() {
 
                 #Actualizar el cache de fuentes del SO
                 if [ $p_artifact_is_last -eq 0 ]; then
+                    printf 'Actualizando el cache de fuentes: "sudo fc-cache -v"...\n'
                     sudo fc-cache -v
                 fi
 
