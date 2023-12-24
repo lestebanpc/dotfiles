@@ -3726,79 +3726,84 @@ function _copy_artifact_files() {
             ;;
 
         nerd-fonts)
+
+            #No habilitado para Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                return 40
+            fi
             
             #Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
+            
+            #Copiando el binario en una ruta del path
+            l_path_target_bin="${g_path_fonts}/${p_artifact_name_woext}"
 
-            #Solo para Linux
-            if [ $p_install_win_cmds -ne 0 ]; then
+            #Instalación de la fuente
+            if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
                 
-                #Copiando el binario en una ruta del path
-                l_path_target_bin="${g_path_fonts}/${p_artifact_name_woext}"
-
-                #Instalación de la fuente
-                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    
-                    #Crear la carpeta de fuente, si no existe
-                    if  [ ! -d "$l_path_target_bin" ]; then
-                        mkdir -p $l_path_target_bin
-                        chmod g+rx,o+rx $l_path_target_bin
-                    fi
-
-                    #Copiar y/o sobrescribir archivos existente
-                    find "${l_path_source}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
-                         ! \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
-                         -exec cp '{}' ${l_path_target_bin} \;
-                    chmod g+r,o+r ${l_path_target_bin}/*
-
-                    #Actualizar el cache de fuentes del SO
-                    if [ $p_artifact_is_last -eq 0 ]; then
-                        fc-cache -v
-                    fi
-
-                else
-                    
-                    #Crear la carpeta de fuente, si no existe
-                    if  [ ! -d "$l_path_target_bin" ]; then
-                        sudo mkdir -p ${l_path_target_bin}
-                        sudo chmod g+rx,o+rx $l_path_target_bin
-                    fi
-
-                    #Copiar y/o sobrescribir archivos existente
-                    sudo find "${l_path_source}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
-                         ! \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
-                         -exec cp '{}' ${l_path_target_bin} \;
-                    sudo chmod g+r,o+r ${l_path_target_bin}/*
-
-                    #Actualizar el cache de fuentes del SO
-                    if [ $p_artifact_is_last -eq 0 ]; then
-                        sudo fc-cache -v
-                    fi
-
-                    #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                    echo "$p_repo_last_version_pretty" > "${g_path_programs}/nerd-fonts.info" 
+                #Crear la carpeta de fuente, si no existe
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
+                    chmod g+rx,o+rx $l_path_target_bin
                 fi
-                    
-                #Si es WSL2, copiar los archivos para instalarlo manualmente.
-                if [ $g_os_type -eq 1 ]; then
-                    
-                    l_path_target_bin="${g_path_programs_win}/NerdFonts"
-                    if  [ ! -d "$l_path_target_bin" ]; then
-                        mkdir -p ${l_path_target_bin}
-                    fi
 
-                    find "${l_path_source}" -maxdepth 1 -mindepth 1 \
-                         \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
-                         -exec cp '{}' ${l_path_target_bin} \;
-                    
-                    #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                    echo "$p_repo_last_version_pretty" > "${g_path_programs}/nerd-fonts.info" 
+                #Copiar y/o sobrescribir archivos existente
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
+                     ! \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
+                     -exec cp '{}' ${l_path_target_bin} \;
+                chmod g+r,o+r ${l_path_target_bin}/*
 
-                    #Notas
-                    echo "Debera instalar (copiar) manualmente los archivos de '${l_path_target_bin}' en 'C:/Windows/Fonts'"
+                #Actualizar el cache de fuentes del SO
+                if [ $p_artifact_is_last -eq 0 ]; then
+                    fc-cache -v
+                fi
+
+            else
+                
+                #Crear la carpeta de fuente, si no existe
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    sudo mkdir -p ${l_path_target_bin}
+                    sudo chmod g+rx,o+rx $l_path_target_bin
+                fi
+
+                #Copiar y/o sobrescribir archivos existente
+                sudo find "${l_path_source}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
+                     ! \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
+                     -exec cp '{}' ${l_path_target_bin} \;
+                sudo chmod g+r,o+r ${l_path_target_bin}/*
+
+                #Actualizar el cache de fuentes del SO
+                if [ $p_artifact_is_last -eq 0 ]; then
+                    sudo fc-cache -v
                 fi
 
             fi
+                
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            if [ $p_artifact_is_last -eq 0 ]; then
+                echo "$p_repo_last_version_pretty" > "${g_path_programs}/nerd-fonts.info" 
+            fi
+
+            #Si es WSL2, copiar los archivos para instalarlo manualmente.
+            if [ $g_os_type -eq 1 ]; then
+                
+                l_path_target_bin="${g_path_programs_win}/NerdFonts"
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p ${l_path_target_bin}
+                fi
+
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 \
+                     \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
+                     -exec cp '{}' ${l_path_target_bin} \;
+                
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                echo "$p_repo_last_version_pretty" > "${g_path_programs}/nerd-fonts.info" 
+
+                #Notas
+                echo "Debera instalar (copiar) manualmente los archivos de '${l_path_target_bin}' en 'C:/Windows/Fonts'"
+            fi
+
             ;;
         
         llvm)
