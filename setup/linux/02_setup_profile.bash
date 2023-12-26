@@ -1305,7 +1305,7 @@ function _install_vim_nvim_environment() {
     #7. Instalar NeoVIM
 
     #Validar si 'nvim' esta en el PATH
-    if [ ! "$g_os_architecture_type" = "aarch64"]; then
+    if [ ! "$g_os_architecture_type" = "aarch64" ]; then
         echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
         l_status=$?
         if [ $l_status -ne 0 ] && [ -f "${g_path_programs}/neovim/bin/nvim" ]; then
@@ -1336,7 +1336,7 @@ function _install_vim_nvim_environment() {
             echo "NeoVIM      > Se va instalar NeoVIM"
 
             #Los binarios para arm64, se debera usar los repositorios de los SO
-            if [ "$g_os_architecture_type" = "aarch64"]; then
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
 
                 #Parametros:
                 # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
