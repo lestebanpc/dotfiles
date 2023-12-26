@@ -1002,7 +1002,8 @@ _install_python() {
         return 0
     fi
 
-    l_version=$(python3 -m pip --version 2> /dev/null)
+    #l_version=$(python3 -m pip --version 2> /dev/null)
+    l_version=$(pip3 --version 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ]; then
         printf 'VIM (IDE)   > Comando "%bpip%b" (modulo python) %bno se esta instalado%b. Corrija el error y vuelva configurar el profile.\n' \
