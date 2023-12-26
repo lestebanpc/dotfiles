@@ -2087,9 +2087,9 @@ function get_repo_artifacts() {
 
         nerd-fonts)
             #Generar los datos de artefactado requeridos para su configuración:
-            pna_artifact_names=("JetBrainsMono.zip" "CascadiaCode.zip" "DroidSansMono.zip"
-                                "InconsolataLGC.zip" "UbuntuMono.zip" "3270.zip")
-            pna_artifact_types=(11 11 11 11 11 11)
+            pna_artifact_names=("JetBrainsMono.tar.xz" "CascadiaCode.tar.xz" "DroidSansMono.tar.xz"
+                                "InconsolataLGC.tar.xz" "UbuntuMono.tar.xz" "3270.tar.xz")
+            pna_artifact_types=(14 14 14 14 14 14)
             ;;
 
         go)
@@ -3750,7 +3750,6 @@ function _copy_artifact_files() {
 
                 #Copiar y/o sobrescribir archivos existente
                 find "${l_path_source}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
-                     ! \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
                      -exec cp '{}' ${l_path_target_bin} \;
                 chmod g+r,o+r ${l_path_target_bin}/*
 
@@ -3770,7 +3769,6 @@ function _copy_artifact_files() {
 
                 #Copiar y/o sobrescribir archivos existente
                 sudo find "${l_path_source}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
-                     ! \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
                      -exec cp '{}' ${l_path_target_bin} \;
                 sudo chmod g+r,o+r ${l_path_target_bin}/*
 
@@ -3791,19 +3789,23 @@ function _copy_artifact_files() {
             if [ $g_os_type -eq 1 ]; then
                 
                 l_path_target_bin="${g_path_programs_win}/NerdFonts"
-                if  [ ! -d "$l_path_target_bin" ]; then
-                    mkdir -p ${l_path_target_bin}
+
+                if [ $p_artifact_index -eq 0 ] && [ -d "$l_path_target_bin" ]; then
+                    rm -rf ${l_path_target_bin} 
                 fi
 
-                find "${l_path_source}" -maxdepth 1 -mindepth 1 \
-                     \( -name '*Windows Compatible*.otf' -o -name '*Windows Compatible*.ttf' \) \
+                mkdir -p ${l_path_target_bin}
+
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 \( -iname '*.otf' -o -iname '*.ttf' \) \
                      -exec cp '{}' ${l_path_target_bin} \;
                 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                echo "$p_repo_last_version_pretty" > "${g_path_programs}/nerd-fonts.info" 
+                if [ $p_artifact_is_last -eq 0 ]; then
 
-                #Notas
-                echo "Debera instalar (copiar) manualmente los archivos de '${l_path_target_bin}' en 'C:/Windows/Fonts'"
+                    echo "$p_repo_last_version_pretty" > "${g_path_programs_win}/nerd-fonts.info"
+                    printf '%bDeberá instalar (copiar) manualmente los archivos%b de "%s" en "%s".\n' "$g_color_info" "$g_color_reset" "${l_path_target_bin}" "C:/Windows/Fonts'"
+                fi
+
             fi
 
             ;;

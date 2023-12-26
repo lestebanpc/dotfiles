@@ -97,11 +97,16 @@ declare -A gA_repos_type=(
         ['puremourning/vimspector']=4
     )
 
+# Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
+#  1 - Para VIM
+#  2 - Para NeoVIM
+declare -A gA_repos_scope=(
+    )
+
 # Repositorios Git - Branch donde esta el plugin no es el por defecto
 declare -A gA_repos_branch=(
         ['neoclide/coc.nvim']='release'
     )
-
 
 # Repositorios Git - Deep de la clonacion del repositorio que no es el por defecto
 declare -A gA_repos_depth=(
@@ -110,8 +115,289 @@ declare -A gA_repos_depth=(
     )
 
 
-
 #}}}
+
+function _create_file_link() {
+
+    local p_source_path="$1"
+    local p_source_filename="$2"
+    local p_target_link="$3"
+    local p_tag="$4"
+    local p_override_target_link=1
+    if [ "$5" = "0" ]; then
+        p_override_target_link=0
+    fi
+
+    local l_source_fullfilename="${p_source_path}/${p_source_filename}"
+    local l_aux
+    if [ -h "$p_target_link" ] && [ -f "$p_target_link" ]; then
+        if [ $p_override_target_link -eq 0 ]; then
+            mkdir -p "$p_source_path"
+            ln -snf "$l_source_fullfilename" "$p_target_link"
+            printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$l_source_fullfilename" "$g_color_reset"
+        else
+            l_aux=$(readlink "${l_source_fullfilename}")
+            printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
+        fi
+    else
+        mkdir -p "$p_source_path"
+        ln -snf "$l_source_fullfilename" "$p_target_link"
+        printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$l_source_fullfilename" "$g_color_reset"
+    fi
+
+}
+
+function _create_folder_link() {
+
+    local p_source_path="$1"
+    local p_target_link="$2"
+    local p_tag="$3"
+    local p_override_target_link=1
+    if [ "$4" = "0" ]; then
+        p_override_target_link=0
+    fi
+
+    local l_aux
+    if [ -h "$p_target_link" ] && [ -d "$p_target_link" ]; then
+        if [ $p_override_target_link -eq 0 ]; then
+            mkdir -p "$p_source_path"
+            ln -snf "${p_source_path}/" "$p_target_link"
+            printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$p_source_path" "$g_color_reset"
+        else
+            l_aux=$(readlink "${p_source_path}")
+            printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
+        fi
+    else
+        mkdir -p "$p_source_path"
+        ln -snf "${p_source_path}/" "$p_target_link"
+        printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$p_source_path" "$g_color_reset"
+    fi
+
+}
+
+
+# Parametros:
+#  1> Flag configurar como Developer (si es '0')
+function _setup_vim_packages() {
+
+    #1. Argumentos
+    local p_is_neovim=1
+    if [ "$1" = "0" ]; then
+        p_is_neovim=0
+    fi
+
+    local p_flag_developer=1
+    if [ "$2" = "0" ]; then
+        p_flag_developer=0
+    fi
+
+    #2. Ruta base donde se instala el plugins/paquete
+    local l_tag="VIM"
+    local l_current_scope=1
+    local l_base_plugins="${HOME}/.vim/pack"
+    if [ $p_is_neovim -eq 0  ]; then
+        l_base_plugins="${HOME}/.local/share/nvim/site/pack"
+        l_current_scope=2
+        l_tag="NeoVIM"
+    fi
+
+
+    #2. Crear las carpetas de basicas
+    printf 'Instalando los paquetes usados por %s en %b%s%b...\n' "$l_tag" "$g_color_opaque" "$l_base_plugins" "$g_color_reset"
+
+    mkdir -p ${l_base_plugins}
+    mkdir -p ${l_base_plugins}/themes/start
+    mkdir -p ${l_base_plugins}/themes/opt
+    mkdir -p ${l_base_plugins}/ui/start
+    mkdir -p ${l_base_plugins}/ui/opt
+    if [ $p_flag_developer -eq 0 ]; then
+        mkdir -p ${l_base_plugins}/typing/start
+        mkdir -p ${l_base_plugins}/typing/opt
+        mkdir -p ${l_base_plugins}/ide/start
+        mkdir -p ${l_base_plugins}/ide/opt
+    fi
+   
+    
+    #4. Instalar el plugins que se instalan manualmente
+    local l_base_path
+    local l_repo_git
+    local l_repo_name
+    local l_repo_type=1
+    local l_repo_url
+    local l_repo_branch
+    local l_repo_depth
+    local l_repo_scope
+    local l_aux
+
+    for l_repo_git in "${!gA_repos_type[@]}"; do
+
+        #4.1 Configurar el repositorio
+        l_repo_scope="${gA_repos_scope[${l_repo_git}]:-3}"
+        l_repo_type=${gA_repos_type[$l_repo_git]}
+        l_repo_name=${l_repo_git#*/}
+
+        #Si el repositorio no esta habilitido para su scope, continuar con el siguiente
+        if [ $((l_repo_scope & l_current_scope)) -ne $l_current_scope ]; then
+            continue
+        fi
+
+        #4.2 Obtener la ruta base donde se clorara el paquete
+        l_base_path=""
+        case "$l_repo_type" in 
+            1)
+                l_base_path=${l_base_plugins}/themes/opt
+                ;;
+            2)
+                l_base_path=${l_base_plugins}/ui/opt
+                ;;
+            3)
+                l_base_path=${l_base_plugins}/typing/opt
+                ;;
+            4)
+                l_base_path=${l_base_plugins}/ide/opt
+                ;;
+            *)
+                
+                #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
+                printf 'Paquete %s (%s) "%s": No tiene tipo valido\n' "$l_tag" "${l_repo_type}" "${l_repo_git}"
+                continue
+                ;;
+        esac
+
+        #Si es un repositorio para developer no debe instalarse en el perfil basico
+        if [ $p_flag_developer -eq 1 ] && [ $l_repo_type -eq 3 -o $l_repo_type -eq 4 ]; then
+            continue
+        fi
+
+        #echo "${l_base_path}/${l_repo_name}/.git"
+
+        #4.3 Validar si el paquete ya esta instalado
+        if [ -d ${l_base_path}/${l_repo_name}/.git ]; then
+             #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
+             printf 'Paquete %s (%s) "%b%s%b": Ya esta instalado\n' "$l_tag" "${l_repo_type}" "$g_color_opaque" "${l_repo_git}" "$g_color_reset"
+             continue
+        fi
+
+        #4.5 Instalando el paquete
+        cd ${l_base_path}
+        printf '\n'
+        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
+        printf 'Paquete %s (%b%s%b) "%b%s%b": Se esta instalando\n' "$l_tag" "$g_color_subtitle" "${l_repo_type}" "$g_color_reset" "$g_color_subtitle" "${l_repo_git}" "$g_color_reset"
+        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
+
+        l_aux=""
+
+        l_repo_branch=${gA_repos_branch[$l_repo_git]}
+        if [ ! -z "$l_repo_branch" ]; then
+            l_aux="--branch ${l_repo_branch}"
+        fi
+
+        l_repo_depth=${gA_repos_depth[$l_repo_git]}
+        if [ ! -z "$l_repo_depth" ]; then
+            if [ -z "$l_aux" ]; then
+                l_aux="--depth ${l_repo_depth}"
+            else
+                l_aux="${l_aux} --depth ${l_repo_depth}"
+            fi
+        fi
+
+        if [ -z "$l_aux" ]; then
+            printf 'Ejecutando "git clone https://github.com/%s.git"\n' "$l_repo_git"
+            git clone https://github.com/${l_repo_git}.git
+        else
+            printf 'Ejecutando "git clone %s https://github.com/%s.git"\n' "$l_aux" "$l_repo_git"
+            git clone ${l_aux} https://github.com/${l_repo_git}.git
+        fi
+
+        #4.6 Actualizar la documentación de VIM (Los plugins VIM que no tiene documentación, no requieren indexar)
+        if [ -d "${l_base_path}/${l_repo_name}/doc" ]; then
+
+            #Indexar la documentación de plugins
+            printf 'Indexar la documentación del plugin en %s: "%bhelptags %s/%s/doc%b"\n' "$l_tag" "$g_color_opaque" "${l_base_path}" "${l_repo_name}" "$g_color_reset"
+            if [ $p_is_neovim -eq 0  ]; then
+                nvim --headless -c "helptags ${l_base_path}/${l_repo_name}/doc" -c qa
+            else
+                vim -u NONE -esc "helptags ${l_base_path}/${l_repo_name}/doc" -c qa
+            fi
+        fi
+
+        printf '\n'
+
+    done;
+
+    #5. Instalar los paquetes/plugin que se instana por comandos de Vim
+    if [ $p_flag_developer -eq 0 ]; then
+
+        printf 'Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
+        printf 'Configurando los plugins usados para IDE ...\n' 
+
+        if [ $p_is_neovim -eq 0  ]; then
+            printf 'NeoVIM por defecto usa el adaptador LSP nativo pero puedo usar CoC. Configurando a NeoVIM para permitir usar CoC:\n' "$g_color_opaque" "$g_color_reset"
+        fi
+
+        #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
+        printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) "%b:CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh%b"\n' \
+            "$g_color_opaque" "$g_color_reset"
+        if [ $p_is_neovim -ne 0  ]; then
+            vim -esc 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
+        else
+            USE_COC=1 nvim --headless -c 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
+        fi
+
+        #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
+        printf '  Instalando extensiones de CoC (Motor de snippets "UtilSnips") "%b:CocInstall coc-ultisnips%b" (%bno se esta usando el nativo de CoC%b)\n' \
+            "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        if [ $p_is_neovim -ne 0  ]; then
+            vim -esc 'CocInstall coc-update' -c 'qa'
+        else
+            USE_COC=1 nvim --headless -c 'CocInstall coc-update' -c 'qa'
+        fi
+
+        #Actualizar las extensiones de CoC
+        printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
+        if [ $p_is_neovim -ne 0  ]; then
+            vim -esc 'CocUpdate' -c 'qa'
+        else
+            USE_COC=1 nvim --headless -c 'CocUpdate' -c 'qa'
+        fi
+
+        #Actualizando los gadgets de 'VimSpector'
+        if [ $p_is_neovim -ne 0  ]; then
+            printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando "%b:VimspectorUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
+            vim -esc 'VimspectorUpdate' -c 'qa'
+        fi
+
+
+        printf '\nRecomendaciones:\n'
+        if [ $p_is_neovim -ne 0  ]; then
+
+            printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
+            printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
+
+        else
+
+            printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
+            printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+            printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+
+            printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
+
+       fi
+
+       echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
+       echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
+       echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+       echo "               { \"diagnostic.displayByAle\": true }"
+       echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+       echo "               Si esta instalado esta extension, desintalarlo."
+
+    else
+        printf 'Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Editor" "$g_color_reset"
+    fi
+
+    return 0
+
+}
 
 
 # Parametros:
@@ -132,12 +418,6 @@ function _neovim_config_plugins() {
 
     local path_data=~/.local/share
 
-    #2. Instalar el gestor de plugin/paquetes 'Vim-Plug' (no se usara este gestor)
-    #echo "Instalar el gestor de paquetes Vim-Plug"
-    #if [ ! -f ${path_data}/nvim/site/autoload/plug.vim ]; then
-    #    mkdir -p ${path_data}/nvim/site/autoload
-    #    curl -fLo ${path_data}/nvim/site/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-    #fi
     
     #2. Instalar el gestor de paquetes 'Packer' (cambiarlo por lazy)
     local l_base_path="${path_data}/nvim/site/pack/packer/start"
@@ -153,20 +433,14 @@ function _neovim_config_plugins() {
         git clone --depth 1 https://github.com/${l_repo_git}.git
     else
         #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-        printf 'Paquete VIM "%b%s%b" ya esta instalado\n' "$g_color_opaque" "$l_repo_git" "$g_color_reset"
+        printf 'Paquete NeoVIM "%b%s%b" ya esta instalado\n' "$g_color_opaque" "$l_repo_git" "$g_color_reset"
     fi
 
     #3. Instalar el gestor de paquetes 'Lazy'
 
     #4. Actualizar los paquetes/plugin de NeoVim
-    #echo 'Instalando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugInstall"'
-    #nvim --headless -c 'PlugInstall' -c 'qa'
-
     printf 'Instalando los plugins "Packer" de NeoVIM, ejecutando el comando "%b:PackerInstall%b"\n' "$g_color_opaque" "$g_color_reset"
     nvim --headless -c 'PackerInstall' -c 'qa'
-
-    #echo 'Actualizando los plugins "Vim-Plug" de NeoVIM, ejecutando el comando ":PlugUpdate"'
-    #nvim --headless -c 'PlugUpdate' -c 'qa'
 
     printf 'Actualizando los plugins "Packer" de NeoVIM, ejecutando el comando "%b:PackerUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
     nvim --headless -c 'PackerUpdate' -c 'qa'
@@ -267,369 +541,84 @@ function _config_nvim() {
     mkdir -p ~/.config/nvim/
     
     #2. Creando los enalces simbolicos
+    local l_target_link
+    local l_source_path
+    local l_source_filename
 
     #Configurar NeoVIM como IDE (Developer)
     if [ $p_flag_developer -eq 0 ]; then
 
 
-        l_link='/.config/nvim/coc-settings.json'
+        l_target_link="${HOME}/.config/nvim/coc-settings.json"
+        l_source_path="${HOME}/.files/nvim/ide_coc"
         if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
-            l_object='/.files/nvim/ide_coc/coc-settings_lnx_non_shared.json'
+            l_source_filename='coc-settings_lnx_non_shared.json'
         else
-            l_object='/.files/nvim/ide_coc/coc-settings_lnx_shared.json'
+            l_source_filename='coc-settings_lnx_shared.json'
         fi
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
 
-
-        l_link='/.config/nvim/init.vim'
+        l_target_link="${HOME}/.config/nvim/init.vim"
+        l_source_path="${HOME}/.files/nvim"
         if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
-            l_object='/.files/nvim/init_ide_linux_non_shared.vim'
+            l_source_filename='init_ide_linux_non_shared.vim'
         else
-            l_object='/.files/nvim/init_ide_linux_shared.vim'
+            l_source_filename='init_ide_linux_shared.vim'
         fi
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
-        l_link='/.config/nvim/lua'
-        l_object='/.files/nvim/lua'
-        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        l_target_link="${HOME}/.config/nvim/lua"
+        l_source_path="${HOME}/.files/nvim/lua"
+        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
         
         #El codigo open/close asociado a los 'file types'
-        l_link='/.config/nvim/ftplugin'
-        l_object='/.files/nvim/ide_commom/ftplugin/'
-        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        l_target_link="${HOME}/.config/nvim/ftplugin"
+        l_source_path="${HOME}/.files/nvim/ide_commom/ftplugin"
+        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
-
-
-        if [ ! -d ~/.config/nvim/runtime_coc ]; then
-            mkdir -p ~/.config/nvim/runtime_coc
-            printf "NeoVIM (IDE)> Se ha creado la carpeta '%s' para colocar archivos/folderes especificos de un runtime para CoC\n" "~/.config/nvim/runtime_coc"
-        fi        
 
         #Para el codigo open/close asociado a los 'file types' de CoC
-        l_link='/.config/nvim/runtime_coc/ftplugin'
-        l_object='/.files/vim/ide_coc/ftplugin/'
-        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
-
-        if [ ! -d ~/.config/nvim/runtime_nococ ]; then
-            mkdir -p ~/.config/nvim/runtime_nococ
-            printf "NeoVIM (IDE)> Se ha creado la carpeta '%s' para colocar archivos/folderes especificos de un runtime que no sean CoC\n" "~/.config/nvim/runtime_nococ"
-        fi
+        l_target_link="${HOME}/.config/nvim/runtime_coc/ftplugin"
+        l_source_path="${HOME}/.files/nvim/ide_coc/ftplugin"
+        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
 
         #Para el codigo open/close asociado a los 'file types' que no sean CoC
-        l_link='/.config/nvim/runtime_nococ/ftplugin'
-        l_object='/.files/nvim/ide_nococ/ftplugin'
-        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        l_target_link="${HOME}/.config/nvim/runtime_nococ/ftplugin"
+        l_source_path="${HOME}/.files/nvim/ide_nococ/ftplugin"
+        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
     #Configurar NeoVIM como Editor
     else
 
-        l_link='/.config/nvim/init.vim'
-        l_object='/.files/nvim/init_basic_linux.vim'
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        l_target_link="${HOME}/.config/nvim/init.vim"
+        l_source_path="${HOME}/.files/nvim"
+        l_source_filename='init_basic_linux.vim'
+        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
         
-        l_link='/.config/nvim/lua'
-        l_object='/.files/nvim/lua'
-        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        l_target_link="${HOME}/.config/nvim/lua"
+        l_source_path="${HOME}/.files/nvim/lua"
+        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
 
         #El codigo open/close asociado a los 'file types' como Editor
-        l_link='/.config/nvim/ftplugin'
-        l_object='/.files/nvim/editor/ftplugin/'
-        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "NeoVIM (IDE)> El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "NeoVIM (IDE)> El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        l_target_link="${HOME}/.config/nvim/ftplugin"
+        l_source_path="${HOME}/.files/nvim/editor/ftplugin"
+        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
 
     fi
 
     #6. Instalando paquetes
     _neovim_config_plugins $p_flag_developer $p_flag_developer_vim
+    #_setup_vim_packages 0 $p_flag_developer
 
 
 }
 
-
-# Parametros:
-#  1> Flag configurar como Developer (si es '0')
-function _vim_config_plugins() {
-
-    #1. Argumentos
-    local p_flag_developer=1
-    if [ "$1" = "0" ]; then
-        p_flag_developer=0
-    fi
-
-    #2. Crear las carpetas de basicas
-    echo "Instalar los paquetes usados por VIM"
-    mkdir -p ~/.vim/pack/themes/start
-    mkdir -p ~/.vim/pack/themes/opt
-    mkdir -p ~/.vim/pack/ui/start
-    mkdir -p ~/.vim/pack/ui/opt
-    if [ $p_flag_developer -eq 0 ]; then
-        mkdir -p ~/.vim/pack/typing/start
-        mkdir -p ~/.vim/pack/typing/opt
-        mkdir -p ~/.vim/pack/ide/start
-        mkdir -p ~/.vim/pack/ide/opt
-    fi
-   
-    #3. Instalar el gestor de paquetes (no se usara gestor de paquetes para VIM)
-    #if [ ! -f ~/.vim/autoload/plug.vim ]; then
-    #    echo "Instalar el gestor de paquetes Vim-Plug"
-    #    mkdir -p ~/.vim/autoload
-    #    curl -fLo ~/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-    #fi
-    
-    #4. Instalar el plugins que se instalan manualmente
-    local l_base_path
-    local l_repo_git
-    local l_repo_name
-    local l_repo_type=1
-    local l_repo_url
-    local l_repo_branch
-    local l_repo_depth
-    local l_aux
-    for l_repo_git in "${!gA_repos_type[@]}"; do
-
-        #4.1 Configurar el repositorio
-        l_repo_type=${gA_repos_type[$l_repo_git]}
-        l_repo_name=${l_repo_git#*/}
-
-        #4.2 Obtener la ruta base donde se clorara el paquete
-        l_base_path=""
-        case "$l_repo_type" in 
-            1)
-                l_base_path=~/.vim/pack/themes/opt
-                ;;
-            2)
-                l_base_path=~/.vim/pack/ui/opt
-                ;;
-            3)
-                l_base_path=~/.vim/pack/typing/opt
-                ;;
-            4)
-                l_base_path=~/.vim/pack/ide/opt
-                ;;
-            *)
-                
-                #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-                printf 'Paquete VIM (%s) "%s": No tiene tipo valido\n' "${l_repo_type}" "${l_repo_git}"
-                continue
-                ;;
-        esac
-
-        #Si es un repositorio para developer no debe instalarse en el perfil basico
-        if [ $p_flag_developer -eq 1 ] && [ $l_repo_type -eq 3 -o $l_repo_type -eq 4 ]; then
-            continue
-        fi
-
-        #echo "${l_base_path}/${l_repo_name}/.git"
-
-        #4.3 Validar si el paquete ya esta instalado
-        if [ -d ${l_base_path}/${l_repo_name}/.git ]; then
-             #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-             printf 'Paquete VIM (%s) "%b%s%b": Ya esta instalado\n' "${l_repo_type}" "$g_color_opaque" "${l_repo_git}" "$g_color_reset"
-             continue
-        fi
-
-        #4.5 Instalando el paquete
-        cd ${l_base_path}
-        printf '\n'
-        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-        printf 'Paquete VIM (%b%s%b) "%b%s%b": Se esta instalando\n' "$g_color_subtitle" "${l_repo_type}" "$g_color_reset" "$g_color_subtitle" "${l_repo_git}" "$g_color_reset"
-        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-
-        l_aux=""
-
-        l_repo_branch=${gA_repos_branch[$l_repo_git]}
-        if [ ! -z "$l_repo_branch" ]; then
-            l_aux="--branch ${l_repo_branch}"
-        fi
-
-        l_repo_depth=${gA_repos_depth[$l_repo_git]}
-        if [ ! -z "$l_repo_depth" ]; then
-            if [ -z "$l_aux" ]; then
-                l_aux="--depth ${l_repo_depth}"
-            else
-                l_aux="${l_aux} --depth ${l_repo_depth}"
-            fi
-        fi
-
-        if [ -z "$l_aux" ]; then
-            printf 'Ejecutando "git clone https://github.com/%s.git"\n' "$l_repo_git"
-            git clone https://github.com/${l_repo_git}.git
-        else
-            printf 'Ejecutando "git clone %s https://github.com/%s.git"\n' "$l_aux" "$l_repo_git"
-            git clone ${l_aux} https://github.com/${l_repo_git}.git
-        fi
-
-        #4.6 Actualizar la documentación de VIM
-
-        #Los plugins VIM que no tiene documentación, no requieren indexar
-        if [ "$l_repo_name" = "molokai" ]; then
-            printf '\n'
-            continue
-        fi
-        
-        #Indexar la documentación de plugins
-        printf 'Indexar la documentación del plugin: "%bhelptags %s/%s/doc%b"\n' "$g_color_opaque" "${l_base_path}" "${l_repo_name}" "$g_color_reset"
-        vim -u NONE -esc "helptags ${l_base_path}/${l_repo_name}/doc" -c qa    
-
-        printf '\n'
-
-    done;
-
-    #5. Instalar los paquetes/plugin que se instana por comandos de Vim
-    #echo 'Instalando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugInstall"'
-    #vim -esc 'PlugInstall' -c 'qa'
-
-    #echo 'Actualizando los plugins "Vim-Plug" de VIM, ejecutando el comando ":PlugUpdate"'
-    #vim -esc 'PlugUpdate' -c 'qa'
-
-    if [ $p_flag_developer -eq 0 ]; then
-
-        printf 'Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "VIM" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
-        printf 'Configurando los plugins usados para IDE ...\n' 
-
-
-        #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
-        printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) "%b:CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh%b"\n' \
-            "$g_color_opaque" "$g_color_reset"
-        vim -esc 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
-
-        #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
-        printf '  Instalando extensiones de CoC (Motor de snippets "UtilSnips") "%b:CocInstall coc-ultisnips%b" (%bno se esta usando el nativo de CoC%b)\n' \
-            "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-        vim -esc 'CocInstall coc-update' -c 'qa'
-
-        #Actualizar las extensiones de CoC
-        printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
-        vim -esc 'CocUpdate' -c 'qa'
-
-        #Actualizando los gadgets de 'VimSpector'
-        printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando "%b:VimspectorUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
-        vim -esc 'VimspectorUpdate' -c 'qa'
-
-
-
-        printf '\nRecomendaciones:\n'
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
-        printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
-        echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
-        echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
-        echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-        echo "               { \"diagnostic.displayByAle\": true }"
-        echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-        echo "               Si esta instalado esta extension, desintalarlo."
-        l_repo_branch=${gA_repos_branch[$l_repo_git]}
-
-    else
-        printf 'Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "VIM" "$g_color_reset" "$g_color_subtitle" "Editor" "$g_color_reset"
-    fi
-
-    return 0
-
-}
 
 # Parametros:
 #  1> Flag configurar como Developer (si es '0')
@@ -663,108 +652,58 @@ function _config_vim() {
     mkdir -p ~/.vim/
 
     #3. Crear los enlaces simbolicos de VIM
+    local l_target_link
+    local l_source_path
+    local l_source_filename
+
 
     #Configurar VIM como IDE (Developer)
     if [ $p_flag_developer -eq 0 ]; then
 
         #Creando enlaces simbolicos
-        l_link='/.vim/coc-settings.json'
+        l_target_link="${HOME}/.vim/coc-settings.json"
+        l_source_path="${HOME}/.files/vim/ide_coc"
         if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
-            l_object='/.files/vim/ide_coc/coc-settings_lnx_non_shared.json'
+            l_source_filename='coc-settings_lnx_non_shared.json'
         else
-            l_object='/.files/vim/ide_coc/coc-settings_lnx_shared.json'
+            l_source_filename='coc-settings_lnx_shared.json'
         fi
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "VIM (IDE)   > El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "VIM (IDE)   > El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "VIM (IDE)   > El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
-
+        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 
         
-        l_link='/.vim/ftplugin'
-        l_object='/.files/vim/ide_coc/ftplugin/'
-        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "VIM (IDE)   > El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "VIM (IDE)   > El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "VIM (IDE)   > El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        l_target_link="${HOME}/.vim/ftplugin"
+        l_source_path="${HOME}/.files/vim/ide_coc/ftplugin"
+        _create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 
 
-
-        l_link='/.vimrc'
+        l_target_link="${HOME}/.vimrc"
+        l_source_path="${HOME}/.files/vim"
         if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
-            l_object='/.files/vim/vimrc_ide_linux_non_shared.vim'
+            l_source_filename='vimrc_ide_linux_non_shared.vim'
         else
-            l_object='/.files/vim/vimrc_ide_linux_shared.vim'
+            l_source_filename='vimrc_ide_linux_shared.vim'
         fi
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "VIM (IDE)   > El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "VIM (IDE)   > El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "VIM (IDE)   > El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 
 
     #Configurar VIM como Editor basico
     else
 
-        l_link='/.vimrc'
-        l_object='/.files/vim/vimrc_basic_linux.vim'
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "VIM (IDE)   > El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "VIM (IDE)   > El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "VIM (IDE)   > El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        l_target_link="${HOME}/.vimrc"
+        l_source_path="${HOME}/.files/vim"
+        l_source_filename='vimrc_basic_linux.vim'
+        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 
 
-        l_link='/.vim/ftplugin'
-        l_object='/.files/vim/editor/ftplugin/'
-        if [ -h ${HOME}${l_link} ] && [ -d ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "VIM (IDE)   > El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "VIM (IDE)   > El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "VIM (IDE)   > El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        l_target_link="${HOME}/.vim/ftplugin"
+        l_source_path="${HOME}/.files/vim/editor/ftplugin"
+        _create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 
 
     fi
 
     #Instalar los plugins
-    _vim_config_plugins $p_flag_developer
+    _setup_vim_packages 1 $p_flag_developer
 
 }
 
@@ -1366,13 +1305,15 @@ function _install_vim_nvim_environment() {
     #7. Instalar NeoVIM
 
     #Validar si 'nvim' esta en el PATH
-    echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
-    l_status=$?
-    if [ $l_status -ne 0 ] && [ -f "${g_path_programs}/neovim/bin/nvim" ]; then
-        printf '%bNeoVIM %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-            "$g_color_warning" "$l_version" "$g_color_reset"
-        printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_programs}"
-        export PATH=${g_path_programs}/neovim/bin:$PATH
+    if [ ! "$g_os_architecture_type" = "aarch64"]; then
+        echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
+        l_status=$?
+        if [ $l_status -ne 0 ] && [ -f "${g_path_programs}/neovim/bin/nvim" ]; then
+            printf '%bNeoVIM %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                "$g_color_warning" "$l_version" "$g_color_reset"
+            printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_programs}"
+            export PATH=${g_path_programs}/neovim/bin:$PATH
+        fi
     fi
 
     #Determinar si esta instalado VIM:
@@ -1500,266 +1441,126 @@ function _setup_profile() {
     #3. Creando enlaces simbolico dependientes del tipo de distribución Linux
 
     #Si es Linux WSL
-    local l_link=""
-    local l_object=""
-    local l_aux
+    local l_target_link
+    local l_source_path
+    local l_source_filename
 
     #Archivo de colores de la terminal usado por comandos basicos
     if [ $g_os_type -eq 1 ]; then
 
-        l_link='/.dircolors'
-        l_object='/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf'
-        if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-            if [ $l_overwrite_ln_flag -eq 0 ]; then
-                ln -snf ${HOME}${l_object} ${HOME}${l_link}
-                printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-            else
-                l_aux=$(readlink ${HOME}${l_link})
-                printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-            fi
-        else
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        fi
+        l_target_link="${HOME}/.dircolors"
+        l_source_path="${HOME}/.files/terminal/linux/profile"
+        l_source_filename='ubuntu_wls_dircolors.conf'
+        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
     fi
 
     #Archivo de configuración de Git
-    l_link='/.gitconfig'
+    l_target_link="${HOME}/.gitconfig"
+    l_source_path="${HOME}/.files/config/git"
     if [ $g_os_type -eq 1 ]; then
-        l_object='/.files/config/git/linux_git_usr1.toml'
+        l_source_filename='linux_git_usr1.toml'
     else
-        l_object='/.files/config/git/linux_git_usr2.toml'
+        l_source_filename='linux_git_usr2.toml'
     fi
-
-    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-        if [ $l_overwrite_ln_flag -eq 0 ]; then
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
-            l_aux=$(readlink ${HOME}${l_link})
-            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-        fi
-    else
-        ln -snf ${HOME}${l_object} ${HOME}${l_link}
-        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-    fi
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 
     #Archivo de configuración de SSH
-    l_link='/.ssh/config'
+    l_target_link="${HOME}/.ssh/config"
+    l_source_path="${HOME}/.files/config/ssh"
     if [ $g_os_type -eq 1 ]; then
-        l_object='/.files/config/ssh/linux_ssh_01.conf'
+        l_source_filename='linux_ssh_01.conf'
     else
-        l_object='/.files/config/ssh/linux_ssh_02.conf'
+        l_source_filename='linux_ssh_02.conf'
     fi
-
-    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-        if [ $l_overwrite_ln_flag -eq 0 ]; then
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
-            l_aux=$(readlink ${HOME}${l_link})
-            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-        fi
-    else
-        ln -snf ${HOME}${l_object} ${HOME}${l_link}
-        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-    fi
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 
     #Archivos de configuración de PowerShell
-    l_link='/.config/powershell/Microsoft.PowerShell_profile.ps1'
+    l_target_link="${HOME}/.config/powershell/Microsoft.PowerShell_profile.ps1"
+    l_source_path="${HOME}/.files/terminal/powershell"
     if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            l_object='/.files/terminal/powershell/debian_non_shared.ps1'
+            l_source_filename='debian_non_shared.ps1'
         else
-            l_object='/.files/terminal/powershell/fedora_non_shared.ps1'
+            l_source_filename='fedora_non_shared.ps1'
         fi
     else
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            l_object='/.files/terminal/powershell/debian_shared.ps1'
+            l_source_filename='debian_shared.ps1'
         else
-            l_object='/.files/terminal/powershell/fedora_shared.ps1'
+            l_source_filename='fedora_shared.ps1'
         fi
     fi
-
-    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-        if [ $l_overwrite_ln_flag -eq 0 ]; then
-            mkdir -p ~/.config/powershell/
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
-            l_aux=$(readlink ${HOME}${l_link})
-            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-        fi
-    else
-        mkdir -p ~/.config/powershell/
-        ln -snf ${HOME}${l_object} ${HOME}${l_link}
-        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-    fi
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
     #Creando el profile del interprete shell
-    l_link='/.bashrc'
+    l_target_link="${HOME}/.bashrc"
+    l_source_path="${HOME}/.files/terminal/linux/profile"
     if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            l_object='/.files/terminal/linux/profile/debian_non_shared.bash'
+            l_source_filename='debian_non_shared.bash'
         else
-            l_object='/.files/terminal/linux/profile/fedora_non_shared.bash'
+            l_source_filename='fedora_non_shared.bash'
         fi
     else
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            l_object='/.files/terminal/linux/profile/debian_shared.bash'
+            l_source_filename='debian_shared.bash'
         else
-            l_object='/.files/terminal/linux/profile/fedora_shared.bash'
+            l_source_filename='fedora_shared.bash'
         fi
     fi
-
-    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-        if [ $l_overwrite_ln_flag -eq 0 ]; then
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
-            l_aux=$(readlink ${HOME}${l_link})
-            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-        fi
-    else
-        ln -snf ${HOME}${l_object} ${HOME}${l_link}
-        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-    fi
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 
     #4. Creando enlaces simbolico independiente del tipo de distribución Linux
 
     #Crear el enlace de TMUX
-    l_link='/.tmux.conf'
-    l_object='/.files/terminal/linux/tmux/tmux.conf'
-    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-        if [ $l_overwrite_ln_flag -eq 0 ]; then
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
-            l_aux=$(readlink ${HOME}${l_link})
-            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-        fi
-    else
-        ln -snf ${HOME}${l_object} ${HOME}${l_link}
-        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-    fi
+    l_target_link="${HOME}/.tmux.conf"
+    l_source_path="${HOME}/.files/terminal/linux/tmux"
+    l_source_filename='tmux.conf'
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
     #Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD': nerdctl
-    l_link='/.config/nerdctl/nerdctl.toml'
-    l_object='/.files/config/nerdctl/default_config.toml'
-    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-        if [ $l_overwrite_ln_flag -eq 0 ]; then
-            mkdir -p ~/.config/nerdctl/
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
-            l_aux=$(readlink ${HOME}${l_link})
-            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-        fi
-    else
-        mkdir -p ~/.config/nerdctl/
-        ln -snf ${HOME}${l_object} ${HOME}${l_link}
-        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-    fi
+    l_target_link="${HOME}/.config/nerdctl/nerdctl.toml"
+    l_source_path="${HOME}/.files/config/nerdctl"
+    l_source_filename='default_config.toml'
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 
     #Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless'): Podman
-    l_link='/.config/containers/containers.conf'
-    l_object='/.files/config/podman/default_config.toml'
-    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-        if [ $l_overwrite_ln_flag -eq 0 ]; then
-            mkdir -p ~/.config/containers/ 
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
-            l_aux=$(readlink ${HOME}${l_link})
-            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-        fi
-    else
-        mkdir -p ~/.config/containers/
-        ln -snf ${HOME}${l_object} ${HOME}${l_link}
-        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-    fi
+    l_target_link="${HOME}/.config/containers/containers.conf"
+    l_source_path="${HOME}/.files/config/podman"
+    l_source_filename='default_config.toml'
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
     #Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless'): Podman
-    l_link='/.config/containers/registries.conf'
-    l_object='/.files/config/podman/default_registries.toml'
-    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-        if [ $l_overwrite_ln_flag -eq 0 ]; then
-            mkdir -p ~/.config/containers/ 
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
-            l_aux=$(readlink ${HOME}${l_link})
-            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-        fi
-    else
-        mkdir -p ~/.config/containers/ 
-        ln -snf ${HOME}${l_object} ${HOME}${l_link}
-        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-    fi
+    l_target_link="${HOME}/.config/containers/registries.conf"
+    l_source_path="${HOME}/.files/config/podman"
+    l_source_filename='default_registries.toml'
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 
     #Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
-    l_link='/.config/containerd/config.toml'
-    l_object='/.files/config/containerd/default_config.toml'
-    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-        if [ $l_overwrite_ln_flag -eq 0 ]; then
-            mkdir -p ~/.config/containerd/
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
-            l_aux=$(readlink ${HOME}${l_link})
-            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-        fi
-    else
-        mkdir -p ~/.config/containerd/
-        ln -snf ${HOME}${l_object} ${HOME}${l_link}
-        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-    fi
-
-
+    l_target_link="${HOME}/.config/containerd/config.toml"
+    l_source_path="${HOME}/.files/config/containerd"
+    l_source_filename='default_config.toml'
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 
     #Configuración del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
-    l_link='/.config/buildkit/buildkitd.toml'
-    l_object='/.files/config/buildkit/default_config.toml'
-    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-        if [ $l_overwrite_ln_flag -eq 0 ]; then
-            mkdir -p ~/.config/buildkit/
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
-            l_aux=$(readlink ${HOME}${l_link})
-            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-        fi
-    else
-        mkdir -p ~/.config/buildkit/
-        ln -snf ${HOME}${l_object} ${HOME}${l_link}
-        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-    fi
+    l_target_link="${HOME}/.config/buildkit/buildkitd.toml"
+    l_source_path="${HOME}/.files/config/buildkit"
+    l_source_filename='default_config.toml'
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 
     #Configuracion por defecto para un Cluster de Kubernates
-    l_link='/.kube/config'
-    l_object='/.files/config/kubectl/default_config.yaml'
-    if [ -h ${HOME}${l_link} ] && [ -f ${HOME}${l_link} ]; then
-        if [ $l_overwrite_ln_flag -eq 0 ]; then
-            mkdir -p ~/.kube/
-            ln -snf ${HOME}${l_object} ${HOME}${l_link}
-            printf "El enlace simbolico '~%s' se ha re-creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-        else
-            l_aux=$(readlink ${HOME}${l_link})
-            printf "El enlace simbolico '~%s' ya existe %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
-        fi
-    else
-        mkdir -p ~/.kube/
-        ln -snf ${HOME}${l_object} ${HOME}${l_link}
-        printf "El enlace simbolico '~%s' se ha creado %b(ruta real '~%s')%b\n" "$l_link" "$g_color_opaque" "$l_object" "$g_color_reset"
-    fi
+    l_target_link="${HOME}/.kube/config"
+    l_source_path="${HOME}/.files/config/kubectl"
+    l_source_filename='default_config.yaml'
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
     return 0
 
