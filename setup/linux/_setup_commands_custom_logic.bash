@@ -4203,7 +4203,7 @@ function _copy_artifact_files() {
                 #fi
 
                 #Acceso al folder creado
-                l_aux="${l_path_source}/${p_artifact_name_woext}"
+                l_aux="${g_path_programs}/${p_artifact_name_woext}"
                 printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
                 mv "$l_aux" "$l_path_target_bin"
                 chmod g+rx,o+rx ${l_path_target_bin}
@@ -4251,7 +4251,7 @@ function _copy_artifact_files() {
                 #fi
 
                 #Acceso al folder creado
-                l_aux="${l_path_source}/${p_artifact_name_woext}"
+                l_aux="${g_path_programs_win}/${p_artifact_name_woext}"
                 printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
                 mv "$l_aux" "$l_path_target_bin"
                 #chmod g+rx,o+rx ${l_path_target_bin}
