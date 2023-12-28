@@ -25,7 +25,7 @@ null_ls.setup({
 
 if (vim.g.os_type == 0) then
     --Si es Windows
-    lsp_server_path = vim.g.home_path_lsp_server .. '/Omnisharp_Roslyn/OmniSharp.exe'
+    lsp_server_path = vim.g.home_path_lsp_server_win .. '/Omnisharp_Roslyn/OmniSharp.exe'
 else
     lsp_server_path = vim.g.home_path_lsp_server .. '/omnisharp_roslyn/OmniSharp'
 end
