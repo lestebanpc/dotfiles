@@ -1,17 +1,4 @@
 "####################################################################################
-" Registro de plugins en el gestor de paquetes y carga automatica de algunos de ellos
-"####################################################################################
-
-"Solo se esta usando gestor de paquetes para NeoVim
-if g:is_neovim
-
-    "Registro de los plugin en el gestor de packetes 'Packer'
-     lua require('packer.plugin_register')
-endif
-
-
-
-"####################################################################################
 " Carga manual de plugin
 "####################################################################################
 
@@ -21,16 +8,18 @@ endif
 if g:is_neovim
 
     "El ESQUEMA DE COLOR del tema SIEMPRE debera configurarse antes de la carga de una UI
-    
+
+    packadd nvim-web-devicons
+    packadd plenary.nvim    
 
     "Plug-In> UI> CORE> Tema 'Tokyo Night' (carga automatica)
-    "packadd tokyonight.nvim
+    packadd tokyonight.nvim
 
     "Esquema de color del tema usuado por NeoVim
     colorscheme tokyonight-night
 
     "Plug-In> UI> CORE> Barra de estado o 'SatusLine' (carga automatica)
-    "packadd lualine.nvim
+    packadd lualine.nvim
 
     if g:use_tabline
     
@@ -38,7 +27,9 @@ if g:is_neovim
         packadd bufferline.nvim
     
     endif
-    
+   
+    packadd telescope.nvim
+
     "Package UI> EXTENDED> Explorador de archivos (deben cargarse antes de 'Vim-DevIcons')
     packadd nvim-tree.lua
 

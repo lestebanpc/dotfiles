@@ -75,11 +75,11 @@ function m_fix_fzf()
     git pull origin master
     git restore autoload\fzf\vim.vim
 
-    cd ${env:LOCALAPPDATA}\nvim-data\site\pack\packer\opt\fzf
+    cd ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf
     git pull origin master
     git restore plugin\fzf.vim
 
-    cd ${env:LOCALAPPDATA}\nvim-data\site\pack\packer\opt\fzf.vim
+    cd ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim
     git pull origin master
     git restore autoload\fzf\vim.vim
 
@@ -93,16 +93,16 @@ function m_fix_fzf()
     Write-Host ""
     Write-Host "Fixing NeoVim ..."
     Write-Host "Last vs Fixed (fzf)     : Use 'diffget' para corregir la version ultima, 'windo diffoff' para ingresar al modo normal, luego guarde y salga"
-    Write-Host "     vim -d `$`{env:LOCALAPPDATA`}\nvim-data\site\pack\packer\opt\fzf\plugin\fzf.vim `$`{env:USERPROFILE`}\.files\vim\packages\fixes\fzf\plugin\fzf.vim"
+    Write-Host "     vim -d `$`{env:LOCALAPPDATA`}\nvim-data\site\pack\ui\opt\fzf\plugin\fzf.vim `$`{env:USERPROFILE`}\.files\vim\packages\fixes\fzf\plugin\fzf.vim"
     Write-Host "Last vs Fixed (fzf.vim) : Use 'diffget' para corregir la version ultima, 'windo diffoff' para ingresar al modo normal, luego guarde y salga"
-    Write-Host "     vim -d `$`{env:LOCALAPPDATA`}\nvim-data\site\pack\packer\opt\fzf.vim\autoload\fzf\vim.vim `$`{env:USERPROFILE`}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim"
+    Write-Host "     vim -d `$`{env:LOCALAPPDATA`}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\vim.vim `$`{env:USERPROFILE`}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim"
     
     Write-Host ""
     Write-Host "Revise los singuientes enlaces simbolicos al script '%USERPROFILE%\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1':"
     Write-Host "En Vim   : dir `$`{env:USERPROFILE`}\vimfiles\pack\ui\opt\fzf.vim\bin\preview.ps1"
     Write-Host "     MKLINK %USERPROFILE%\vimfiles\pack\ui\opt\fzf.vim\bin\preview.ps1 %USERPROFILE%\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1"
-    Write-Host "En NeoVim: dir %LOCALAPPDATA%\nvim-data\site\pack\packer\opt\fzf.vim\bin\preview.ps1"
-    Write-Host "     MKLINK %LOCALAPPDATA%\nvim-data\site\pack\packer\opt\fzf.vim\bin\preview.ps1 %USERPROFILE%\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1"
+    Write-Host "En NeoVim: dir %LOCALAPPDATA%\nvim-data\site\pack\ui\opt\fzf.vim\bin\preview.ps1"
+    Write-Host "     MKLINK %LOCALAPPDATA%\nvim-data\site\pack\ui\opt\fzf.vim\bin\preview.ps1 %USERPROFILE%\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1"
 
 }
 

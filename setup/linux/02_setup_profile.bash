@@ -56,6 +56,8 @@ fi
 #Flag '0' indica que vim esta instalado (los plugins de vim se puede instalar sin tener el vim instalado)
 g_is_vim_installed=0
 g_is_nvim_installed=0
+g_is_nodejs_installed=0
+g_is_python_installed=0
 
 #Funciones de utilidad
 . ~/.files/setup/linux/_common_utility.bash
@@ -95,12 +97,65 @@ declare -A gA_repos_type=(
         ['SirVer/ultisnips']=4
         ['honza/vim-snippets']=4
         ['puremourning/vimspector']=4
+        ['folke/tokyonight.nvim']=1
+        ['kyazdani42/nvim-web-devicons']=2
+        ['nvim-lualine/lualine.nvim']=2
+        ['akinsho/bufferline.nvim']=2
+        ['nvim-lua/plenary.nvim']=2
+        ['nvim-telescope/telescope.nvim']=2
+        ['nvim-tree/nvim-tree.lua']=2
+        ['nvim-treesitter/nvim-treesitter']=4
+        ['jose-elias-alvarez/null-ls.nvim']=4
+        ['neovim/nvim-lspconfig']=4
+        ['hrsh7th/nvim-cmp']=4
+        ['ray-x/lsp_signature.nvim']=4
+        ['hrsh7th/cmp-nvim-lsp']=4
+        ['hrsh7th/cmp-buffer']=4
+        ['hrsh7th/cmp-path']=4
+        ['L3MON4D3/LuaSnip']=4
+        ['rafamadriz/friendly-snippets']=4
+        ['saadparwaiz1/cmp_luasnip']=4
+        ['kosayoda/nvim-lightbulb']=4
+        ['mfussenegger/nvim-dap']=4
+        ['theHamsta/nvim-dap-virtual-text']=4
+        ['rcarriga/nvim-dap-ui']=4
+        ['nvim-telescope/telescope-dap.nvim']=4
     )
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
 #  1 - Para VIM
 #  2 - Para NeoVIM
 declare -A gA_repos_scope=(
+        ['tomasr/molokai']=1
+        ['dracula/vim']=1
+        ['vim-airline/vim-airline']=1
+        ['vim-airline/vim-airline-themes']=1
+        ['ryanoasis/vim-devicons']=1
+        ['preservim/nerdtree']=1
+        ['puremourning/vimspector']=1
+        ['folke/tokyonight.nvim']=2
+        ['kyazdani42/nvim-web-devicons']=2
+        ['nvim-lualine/lualine.nvim']=2
+        ['akinsho/bufferline.nvim']=2
+        ['nvim-lua/plenary.nvim']=2
+        ['nvim-telescope/telescope.nvim']=2
+        ['nvim-tree/nvim-tree.lua']=2
+        ['nvim-treesitter/nvim-treesitter']=2
+        ['jose-elias-alvarez/null-ls.nvim']=2
+        ['neovim/nvim-lspconfig']=2
+        ['hrsh7th/nvim-cmp']=2
+        ['ray-x/lsp_signature.nvim']=2
+        ['hrsh7th/cmp-nvim-lsp']=2
+        ['hrsh7th/cmp-buffer']=2
+        ['hrsh7th/cmp-path']=2
+        ['L3MON4D3/LuaSnip']=2
+        ['rafamadriz/friendly-snippets']=2
+        ['saadparwaiz1/cmp_luasnip']=2
+        ['kosayoda/nvim-lightbulb']=2
+        ['mfussenegger/nvim-dap']=2
+        ['theHamsta/nvim-dap-virtual-text']=2
+        ['rcarriga/nvim-dap-ui']=2
+        ['nvim-telescope/telescope-dap.nvim']=2
     )
 
 # Repositorios Git - Branch donde esta el plugin no es el por defecto
@@ -116,6 +171,25 @@ declare -A gA_repos_depth=(
 
 
 #}}}
+
+
+#Parametros de salida (SDTOUT): Version de compilador c/c++ instalado
+#Parametros de salida (valores de retorno):
+# 0 > Se obtuvo la version
+# 1 > No se obtuvo la version
+function _get_gcc_version() {
+
+    #Obtener la version instalada
+    l_version=$(gcc --version 2> /dev/null)
+    l_status=$?
+    if [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+    echo "$l_version"
+    return 0
+}
 
 function _create_file_link() {
 
@@ -136,7 +210,7 @@ function _create_file_link() {
             ln -snf "$l_source_fullfilename" "$p_target_link"
             printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$l_source_fullfilename" "$g_color_reset"
         else
-            l_aux=$(readlink "${l_source_fullfilename}")
+            l_aux=$(readlink "$p_target_link")
             printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
         fi
     else
@@ -146,6 +220,8 @@ function _create_file_link() {
     fi
 
 }
+
+
 
 function _create_folder_link() {
 
@@ -164,7 +240,7 @@ function _create_folder_link() {
             ln -snf "${p_source_path}/" "$p_target_link"
             printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$p_source_path" "$g_color_reset"
         else
-            l_aux=$(readlink "${p_source_path}")
+            l_aux=$(readlink "$p_target_link")
             printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
         fi
     else
@@ -229,6 +305,9 @@ function _setup_vim_packages() {
     local l_repo_scope
     local l_aux
 
+    local la_doc_paths=()
+    local la_doc_repos=()
+
     for l_repo_git in "${!gA_repos_type[@]}"; do
 
         #4.1 Configurar el repositorio
@@ -241,7 +320,7 @@ function _setup_vim_packages() {
             continue
         fi
 
-        #4.2 Obtener la ruta base donde se clorara el paquete
+        #4.2 Obtener la ruta base donde se clonara el paquete (todos los paquetes son opcionale, se inicia bajo configuración)
         l_base_path=""
         case "$l_repo_type" in 
             1)
@@ -282,7 +361,11 @@ function _setup_vim_packages() {
         cd ${l_base_path}
         printf '\n'
         print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-        printf 'Paquete %s (%b%s%b) "%b%s%b": Se esta instalando\n' "$l_tag" "$g_color_subtitle" "${l_repo_type}" "$g_color_reset" "$g_color_subtitle" "${l_repo_git}" "$g_color_reset"
+        if [ $p_is_neovim -eq 0  ]; then
+            printf 'NeoVIM> Plugin (%b%s%b) "%b%s%b": Se esta instalando\n' "$g_color_subtitle" "${l_repo_type}" "$g_color_reset" "$g_color_subtitle" "${l_repo_git}" "$g_color_reset"
+        else
+            printf 'VIM   > Plugin (%b%s%b) "%b%s%b": Se esta instalando\n' "$g_color_subtitle" "${l_repo_type}" "$g_color_reset" "$g_color_subtitle" "${l_repo_git}" "$g_color_reset"
+        fi
         print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
 
         l_aux=""
@@ -309,204 +392,151 @@ function _setup_vim_packages() {
             git clone ${l_aux} https://github.com/${l_repo_git}.git
         fi
 
-        #4.6 Actualizar la documentación de VIM (Los plugins VIM que no tiene documentación, no requieren indexar)
+        #4.6 Almacenando las ruta de documentacion a indexar 
         if [ -d "${l_base_path}/${l_repo_name}/doc" ]; then
 
             #Indexar la documentación de plugins
-            printf 'Indexar la documentación del plugin en %s: "%bhelptags %s/%s/doc%b"\n' "$l_tag" "$g_color_opaque" "${l_base_path}" "${l_repo_name}" "$g_color_reset"
-            if [ $p_is_neovim -eq 0  ]; then
-                nvim --headless -c "helptags ${l_base_path}/${l_repo_name}/doc" -c qa
-            else
-                vim -u NONE -esc "helptags ${l_base_path}/${l_repo_name}/doc" -c qa
-            fi
+            la_doc_paths+=("${l_base_path}/${l_repo_name}/doc")
+            la_doc_repos+=("${l_repo_name}")
+
         fi
 
         printf '\n'
 
     done;
 
-    #5. Instalar los paquetes/plugin que se instana por comandos de Vim
-    if [ $p_flag_developer -eq 0 ]; then
+    #5. Actualizar la documentación de VIM (Los plugins VIM que no tiene documentación, no requieren indexar)
+    local l_doc_path
+    local l_n=${#la_doc_paths[@]}
+    local l_i
+    if [ $l_n -gt 0 ]; then
 
-        printf 'Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
-        printf 'Configurando los plugins usados para IDE ...\n' 
-
+        printf '\n'
+        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
         if [ $p_is_neovim -eq 0  ]; then
-            printf 'NeoVIM por defecto usa el adaptador LSP nativo pero puedo usar CoC. Configurando a NeoVIM para permitir usar CoC:\n' "$g_color_opaque" "$g_color_reset"
-        fi
-
-        #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
-        printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) "%b:CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh%b"\n' \
-            "$g_color_opaque" "$g_color_reset"
-        if [ $p_is_neovim -ne 0  ]; then
-            vim -esc 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
+            printf 'NeoVIM> %bIndexando las documentación%b de los plugins en %s\n' "$g_color_subtitle" "$g_color_reset"
         else
-            USE_COC=1 nvim --headless -c 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
+            printf 'VIM   > %bIndexando las documentación%b de los plugins en %s\n' "$g_color_subtitle" "$g_color_reset"
         fi
+        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
 
-        #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
-        printf '  Instalando extensiones de CoC (Motor de snippets "UtilSnips") "%b:CocInstall coc-ultisnips%b" (%bno se esta usando el nativo de CoC%b)\n' \
-            "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-        if [ $p_is_neovim -ne 0  ]; then
-            vim -esc 'CocInstall coc-update' -c 'qa'
-        else
-            USE_COC=1 nvim --headless -c 'CocInstall coc-update' -c 'qa'
-        fi
+        for ((l_i=0; l_i< ${l_n}; l_i++)); do
+            
+            l_doc_path="${la_doc_paths[${l_i}]}"
+            l_repo_name="${la_doc_repos[${l_i}]}"
+            printf '(%s/%s) Indexando la documentación del plugin %b%s%b en %s: "%bhelptags %s%b"\n' "$((l_i + 1))" "$l_n" "$g_color_opaque" "$l_repo_name" \
+                   "$g_color_reset" "$l_tag" "$g_color_opaque" "$l_doc_path" "$g_color_reset"
+            if [ $p_is_neovim -eq 0  ]; then
+                nvim --headless -c "helptags ${l_doc_path}" -c qa
+            else
+                vim -u NONE -esc "helptags ${l_doc_path}" -c qa
+            fi
 
-        #Actualizar las extensiones de CoC
-        printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
-        if [ $p_is_neovim -ne 0  ]; then
-            vim -esc 'CocUpdate' -c 'qa'
-        else
-            USE_COC=1 nvim --headless -c 'CocUpdate' -c 'qa'
-        fi
+        done
 
-        #Actualizando los gadgets de 'VimSpector'
-        if [ $p_is_neovim -ne 0  ]; then
-            printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando "%b:VimspectorUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
-            vim -esc 'VimspectorUpdate' -c 'qa'
-        fi
+        printf '\n'
 
+    fi
 
-        printf '\nRecomendaciones:\n'
-        if [ $p_is_neovim -ne 0  ]; then
-
-            printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
-            printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
-
-        else
-
-            printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
-            printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
-            printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
-
-            printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
-
-       fi
-
-       echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
-       echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
-       echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-       echo "               { \"diagnostic.displayByAle\": true }"
-       echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-       echo "               Si esta instalado esta extension, desintalarlo."
-
-    else
+    #6. Inicializar los paquetes/plugin de VIM/NeoVIM que lo requieren.
+    if [ $p_flag_developer -ne 0 ]; then
         printf 'Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Editor" "$g_color_reset"
+        return 0
     fi
 
-    return 0
+    printf 'Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
+    if [ $g_is_nodejs_installed -ne 0  ]; then
 
-}
-
-
-# Parametros:
-#  1> Flag configurar como Developer (si es '0')
-function _neovim_config_plugins() {
-
-    #1. Argumentos
-    local p_flag_developer=1
-    if [ "$1" = "0" ]; then
-        p_flag_developer=0
-    fi
-
-    local p_flag_developer_vim=1
-    if [ "$2" = "0" ]; then
-        p_flag_developer_vim=0
-    fi
-
-
-    local path_data=~/.local/share
-
-    
-    #2. Instalar el gestor de paquetes 'Packer' (cambiarlo por lazy)
-    local l_base_path="${path_data}/nvim/site/pack/packer/start"
-    mkdir -p $l_base_path
-    cd ${l_base_path}
-
-    local l_repo_name="packer.nvim"
-    local l_repo_git="wbthomason/${l_repo_name}"
-    if [ ! -d ${l_base_path}/${l_repo_name}/.git ]; then
-        #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-        printf 'Instalando el paquete NeoVim "%b%s%b"\n' "$g_color_opaque" "$l_repo_git" "$g_color_reset"
-        #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-        git clone --depth 1 https://github.com/${l_repo_git}.git
-    else
-        #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-        printf 'Paquete NeoVIM "%b%s%b" ya esta instalado\n' "$g_color_opaque" "$l_repo_git" "$g_color_reset"
-    fi
-
-    #3. Instalar el gestor de paquetes 'Lazy'
-
-    #4. Actualizar los paquetes/plugin de NeoVim
-    printf 'Instalando los plugins "Packer" de NeoVIM, ejecutando el comando "%b:PackerInstall%b"\n' "$g_color_opaque" "$g_color_reset"
-    nvim --headless -c 'PackerInstall' -c 'qa'
-
-    printf 'Actualizando los plugins "Packer" de NeoVIM, ejecutando el comando "%b:PackerUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
-    nvim --headless -c 'PackerUpdate' -c 'qa'
-
-    if [ $p_flag_developer -eq 0 ]; then
-
-
-        printf 'Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "NeoVIM" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
-
-
-        if [ $p_flag_developer_vim -eq 0 ]; then
-
-            printf '%bVIM esta como IDE y usa COC.%b Configurando a NeoVIM, para permitir usar CoC en NeoVIM:\n' "$g_color_opaque" "$g_color_reset"
-
-            #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
-            printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) "%b:CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh%b"\n' \
-                "$g_color_opaque" "$g_color_reset"
-            USE_COC=1 nvim --headless -c 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
-
-            #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
-            printf '  Instalando extensiones de CoC (Motor de snippets "UtilSnips") "%b:CocInstall coc-ultisnips%b" (%bno se esta usando el nativo de CoC%b)\n' \
-                "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-            USE_COC=1 nvim --headless -c 'CocInstall coc-update' -c 'qa'
-
-            #Instalando los gadgets basicos de 'VimSpector'
-            #printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
-            #USE_COC=1 nvim --headless -c 'VimspectorUpdate' -c 'qa'
-
-            #Actualizar las extensiones de CoC
-            printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
-            USE_COC=1 nvim --headless -c 'CocUpdate' -c 'qa'
-
-            #Actualizando los gadgets de 'VimSpector'
-            #printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando ":VimspectorUpdate"\n'
-            #USE_COC=1 nvim --headless -c 'VimspectorUpdate' -c 'qa'
-
-            #printf 'Configurando los plugins usados para el IDE vinculado al LSP nativo de NeoVIM ...\n' 
-
-            printf '\nRecomendaciones:\n'
-            printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
-            printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
-            printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
-
-            printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
-            echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
-            echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
-            echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-            echo "               { \"diagnostic.displayByAle\": true }"
-            echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-            echo "               Si esta instalado esta extension, desintalarlo."
-
+        printf 'Recomendaciones:\n'
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
+        if [ $p_is_neovim -eq 0  ]; then
+            printf '    > NeoVIM como developer por defecto usa el adaptador LSP y autocompletado nativo. %bNo esta habilitado el uso de CoC%b\n' "$g_color_opaque" "$g_color_reset" 
         else
-
-            printf '\nRecomendaciones:\n'
-            printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
-            printf '  > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
-
+            printf '    > VIM esta como developer pero NO puede usar CoC  %b(requiere que NodeJS este instalado)%b\n' "$g_color_opaque" "$g_color_reset" 
         fi
+        return 0
+
+    fi
+        
+    printf 'Los plugins del IDE CoC de %s tiene componentes que requieren inicialización para su uso. Inicilizando dichas componentes del plugins...\n' "$l_tag"
+
+    #Instalando los parseadores de lenguaje de 'nvim-treesitter'
+    if [ $p_is_neovim -eq 0  ]; then
+
+        #Requiere un compilador C/C++ y NodeJS: https://tree-sitter.github.io/tree-sitter/creating-parsers#installation
+        local l_version=$(_get_gcc_version)
+        if [ ! -z "$l_version" ]; then
+            printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash%b"\n' \
+                   "$g_color_opaque" "$g_color_reset"
+            nvim --headless -c 'TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash' -c 'qa'
+
+            printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall java kotlin llvm lua rust swift c cpp go c_sharp%b"\n' \
+                   "$g_color_opaque" "$g_color_reset"
+            nvim --headless -c 'TSInstall java kotlin llvm lua rust swift c cpp go c_sharp' -c 'qa'
+        fi
+    fi
+
+    #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
+    printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) "%b:CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh%b"\n' \
+           "$g_color_opaque" "$g_color_reset"
+    if [ $p_is_neovim -ne 0  ]; then
+        vim -esc 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
+    else
+        USE_COC=1 nvim --headless -c 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
+    fi
+
+    #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
+    printf '  Instalando extensiones de CoC (Motor de snippets "UtilSnips") "%b:CocInstall coc-ultisnips%b" (%bno se esta usando el nativo de CoC%b)\n' \
+           "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    if [ $p_is_neovim -ne 0  ]; then
+        vim -esc 'CocInstall coc-ultisnips' -c 'qa'
+    else
+        USE_COC=1 nvim --headless -c 'CocInstall coc-ultisnips' -c 'qa'
+    fi
+
+    #Actualizar las extensiones de CoC
+    printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
+    if [ $p_is_neovim -ne 0  ]; then
+        vim -esc 'CocUpdate' -c 'qa'
+    else
+        USE_COC=1 nvim --headless -c 'CocUpdate' -c 'qa'
+    fi
+
+    #Actualizando los gadgets de 'VimSpector'
+    if [ $p_is_neovim -ne 0  ]; then
+        printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando "%b:VimspectorUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
+        vim -esc 'VimspectorUpdate' -c 'qa'
+    fi
+
+
+    printf '\nRecomendaciones:\n'
+    if [ $p_is_neovim -ne 0  ]; then
+
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
+        printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
 
     else
 
-        printf 'Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "NeoVIM" "$g_color_reset" "$g_color_subtitle" "Editor" "$g_color_reset"
+        printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
+        printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+
+        printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
+
     fi
 
+    echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
+    echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
+    echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+    echo "               { \"diagnostic.displayByAle\": true }"
+    echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+    echo "               Si esta instalado esta extension, desintalarlo."
+
+
     return 0
+
 }
+
 
 # Parametros:
 #  1> Flag configurar como Developer (si es '0')
@@ -521,11 +551,6 @@ function _config_nvim() {
     local p_flag_developer=1
     if [ "$2" = "0" ]; then
         p_flag_developer=0
-    fi
-
-    local p_flag_developer_vim=1
-    if [ "$3" = "0" ]; then
-        p_flag_developer_vim=0
     fi
 
 
@@ -613,8 +638,7 @@ function _config_nvim() {
     fi
 
     #6. Instalando paquetes
-    _neovim_config_plugins $p_flag_developer $p_flag_developer_vim
-    #_setup_vim_packages 0 $p_flag_developer
+    _setup_vim_packages 0 $p_flag_developer
 
 
 }
@@ -795,7 +819,7 @@ function _config_vim_nvim() {
 
     #5. Configurar NeoVIM 
     if [ $l_flag_config_nvim -eq 0 ]; then
-        _config_nvim $p_opciones $l_flag_developer_nvim $l_flag_developer_nvim
+        _config_nvim $p_opciones $l_flag_developer_nvim
     fi
 
     return 0
@@ -816,6 +840,7 @@ _install_nodejs() {
     fi
 
     #1. Instalación de Node.JS (el gestor de paquetes npm esta incluido)
+    g_is_nodejs_installed=1
 
     #Validar si 'node' esta en el PATH
     echo "$PATH" | grep "${g_path_programs}/nodejs/bin" &> /dev/null
@@ -869,26 +894,46 @@ _install_nodejs() {
         l_status=$?
         if [ $l_status -eq 0 ]; then
             printf 'Se instaló la Node.JS version %s\n' "$l_version"
+            g_is_nodejs_installed=0
         else
             printf 'Ocurrio un error en la instalacion de Node.JS "%s"\n' "$l_version"
+            g_is_nodejs_installed=1
         fi
 
     #Si esta instalado
     else
         l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
         echo "VIM (IDE)   > Node.JS \"$l_version\" ya esta instalado"
+        g_is_nodejs_installed=0
     fi
 
-    #2. Instalación de Herramienta Prettier para formateo de archivos como json, yaml, js, ...
-    l_version=$(prettier --version 2> /dev/null)
+    #2. Node.JS> Instalación paquetes requeridos para VIM/NeoVIM
+    local l_temp
+    l_temp=$(npm list -g --depth=0 2> /dev/null) 
     l_status=$?
-    if [ $l_status -ne 0 ]; then
+    if [ $l_status -ne 0 ]; then           
+        echo "ERROR: No esta instalado correctamente NodeJS (No se encuentra el gestor de paquetes 'npm'). No se instalaran paquetes basicos."
+        return 1
+    fi
+
+    #2.1. Paquete 'Prettier' para formateo de archivos como json, yaml, js, ...
+
+    #Obtener la version
+    if [ -z "$l_temp" ]; then
+        l_version="" 
+    else
+        l_version=$(echo "$l_temp" | grep prettier)
+    fi
+
+    #l_version=$(prettier --version 2> /dev/null)
+    #l_status=$?
+    #if [ $l_status -ne 0 ]; then
+    if [ -z "$l_version" ]; then
 
         print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
-
         echo "VIM (IDE)   > Instalando el comando 'prettier' (como paquete global Node.JS)  para formatear archivos json, yaml, js, ..."
 
-        #Se instalara a nivel glabal (puede ser usado por todos los usuarios)
+        #Se instalara a nivel glabal (puede ser usado por todos los usuarios) y para entornos de desarrallo
         npm install -g --save-dev prettier
 
     else
@@ -902,36 +947,53 @@ _install_nodejs() {
 
 
     #3. Node.JS> Instalando paquete requeridos por NeoVIM
-    local l_temp
     if [ $p_flag_developer_nvim -eq 0 ]; then
 
-        l_temp=$(npm list -g --depth=0 2> /dev/null) 
-        l_status=$?
-        if [ $l_status -ne 0 ]; then           
-           echo "ERROR: No esta instalado correctamente NodeJS. No se encuentra el gestor de paquetes 'npm'."
+
+        #3.1. Paquete 'NeoVIM' que ofrece soporte a NeoVIM plugin creados en RTE Node.JS
+
+        #Obtener la version
+        if [ -z "$l_temp" ]; then
+            l_version="" 
         else
-
-            #Obtener la version
-            if [ -z "$l_temp" ]; then
-                l_version="" 
-            else
-                l_version=$(echo "$l_temp" | grep neovim)
-            fi
-
-            #Paquete Node.JS (a nivel usuario)> Permitir NeoVIM soporte a NeoVIM plugin creados en RTE Node.JS
-            if [ -z "$l_version" ]; then
-
-                print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
-                echo "NeoVIM (IDE)> Instalando el paquete 'neovim' de Node.JS para soporte de plugins en dicho RTE"
-
-                npm install -g neovim
-
-            else
-                l_version=$(echo "$l_version" | head -n 1 )
-                l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-                echo "NeoVIM (IDE)> Paquete 'neovim' de Node.JS para soporte de plugins con NeoVIM, ya esta instalado: versión \"${l_version}\""
-            fi
+            l_version=$(echo "$l_temp" | grep neovim)
         fi
+
+        if [ -z "$l_version" ]; then
+
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+            echo "NeoVIM (IDE)> Instalando el paquete 'neovim' de Node.JS para soporte de plugins en dicho RTE"
+
+            npm install -g neovim
+
+        else
+            l_version=$(echo "$l_version" | head -n 1 )
+            l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+            echo "NeoVIM (IDE)> Paquete 'neovim' de Node.JS para soporte de plugins con NeoVIM, ya esta instalado: versión \"${l_version}\""
+        fi
+
+        #3.1. Paquete 'TreeSitter CLI' que ofrece soporte al 'Tree-sitter grammar'
+
+        #Obtener la version
+        if [ -z "$l_temp" ]; then
+            l_version="" 
+        else
+            l_version=$(echo "$l_temp" | grep tree-sitter-cli)
+        fi
+
+        if [ -z "$l_version" ]; then
+
+            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+            echo "NeoVIM (IDE)> Instalando el paquete 'tree-sitter-cli' de Node.JS para soporte de TreeSitter"
+
+            npm install -g tree-sitter-cli
+
+        else
+            l_version=$(echo "$l_version" | head -n 1 )
+            l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+            echo "NeoVIM (IDE)> Paquete 'tree-sitter-cli' de Node.JS para soporte a TreeSitter, ya esta instalado: versión \"${l_version}\""
+        fi
+
 
     fi
 
@@ -953,6 +1015,7 @@ _install_python() {
 
 
     #1. Instalación de Python3 y el modulo 'pip' (gestor de paquetes)
+    g_is_python_installed=1
     l_version=$(python3 --version 2> /dev/null)
     l_status=$?
 
@@ -991,6 +1054,7 @@ _install_python() {
     if [ $l_status -eq 0 ]; then
         l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
         printf 'VIM (IDE)   > Python3 "%s" esta instalado\n' "$l_version"
+        g_is_python_installed=0
     else
         printf 'VIM (IDE)   > %bPython3 no esta instalado. Se recomienda instalarlo%b. Luego de ello, instale los paquetes de Python:\n' "$g_color_warning" "$g_color_reset"
         printf '%b            > Comando jtbl      : "pip3 install jtbl" (mostrar arreglos json en tablas en consola)\n' "$g_color_opaque"
@@ -998,6 +1062,7 @@ _install_python() {
         printf '            > Comando rope      : "pip3 install rope" (utilidad para refactorización de Python)\n'
         printf '            > Comando pynvim    : "pip3 install pynvim" (soporte plugin en Python para NeovIM)%b\n' "$g_color_reset"
 
+        g_is_python_installed=1
         #return 1
         return 0
     fi
@@ -1167,17 +1232,11 @@ function _install_vim_nvim_environment() {
 
     #4. Para developer: Instalar utilitarios para gestion de "clipbboard" (X11 Selection): XSel
     local l_version
-    local l_version2
     local l_status
-    local l_status2
 
     if [ $l_flag_developer_vim -eq 0 ] || [ $l_flag_developer_nvim -eq 0 ]; then
 
         if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-
-            #echo "> Instalando los comandos/programas basicos requeridos ..."
-            #l_version2=$(xclip -version 2>&1 1> /dev/null)
-            #l_status2=$?
             
             l_version=$(xsel --version 2> /dev/null)
             l_status=$?
@@ -1207,15 +1266,6 @@ function _install_vim_nvim_environment() {
 
         fi
 
-        #l_version=$(xclip -version 2>&1 1> /dev/null)
-        #l_status=$?
-        #if [ $l_status -eq 0 ]; then
-        #    l_version=$(echo "$l_version" | head -n 1 )
-        #    l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-        #    printf 'General     > XClip "%s" esta instalado\n' "$l_version"
-        #else
-        #    printf 'General     > %bXClip no esta instalado, se recomienda instalarlo%b.\n' "$g_color_warning" "$g_color_reset"
-        #fi
 
         l_version=$(xsel --version 2> /dev/null)
         l_status=$?
@@ -1569,8 +1619,8 @@ function _setup_profile() {
 
 
 
-# Remover el gestor de paquetes VIM-Plug en VIM y NeoVIM
-function _remove_vim_plug() {
+# Remover el gestor de paquetes VIM-Plug en VIM/NeoVIM y Packer en NeoVIM
+function _remove_vim_plugin_manager() {
 
     #1. Argumentos
     local p_opciones=0
@@ -1578,7 +1628,7 @@ function _remove_vim_plug() {
         p_opciones=$1
     fi
 
-    #Eliminar en VIM
+    #Eliminar VIM-Plug en VIM
     local l_option=512
     local l_flag=$(( $p_opciones & $l_option ))
 
@@ -1605,7 +1655,7 @@ function _remove_vim_plug() {
     fi
 
 
-    #Eliminar en NeoVIM
+    #Eliminar VIM-Plug en NeoVIM
     l_option=1024
     l_flag=$(( $p_opciones & $l_option ))
 
@@ -1627,6 +1677,31 @@ function _remove_vim_plug() {
 
         if [ $l_flag_removed -ne 0 ]; then
             printf 'No esta instalado el gestor de paquetes "VIM-Plug" en NeoVIM\n'
+        fi
+
+    fi
+
+    #Eliminar Packer en NeoVIM
+    l_option=2048
+    l_flag=$(( $p_opciones & $l_option ))
+
+    l_flag_removed=1
+    if [ $l_flag -eq $l_option ]; then
+
+        #if [ -d ~/.local/share/nvim/site/pack/packer/start/packer.nvim ]; then
+        #    echo "Eliminado '~/.local/share/nvim/site/pack/packer/start/packer.nvim' ..."
+        #    rm -rf ~/.local/share/nvim/site/pack/packer/start/packer.nvim
+        #    l_flag_removed=0
+        #fi
+
+        if [ -d ~/.local/share/nvim/site/pack/packer/ ]; then
+            echo "Eliminado el folder '~/.local/share/nvim/site/pack/packer/' ..."
+            rm -rf ~/.local/share/nvim/site/pack/packer/
+            l_flag_removed=0
+        fi
+
+        if [ $l_flag_removed -ne 0 ]; then
+            printf 'No esta instalado el gestor de paquetes "Packer" en NeoVIM\n'
         fi
 
     fi
@@ -1715,8 +1790,8 @@ function _setup() {
         return 120
     fi
 
-    #08. Eliminar el gestor 'VIM-Plug'
-    _remove_vim_plug $p_opciones
+    #08. Eliminar el gestor 'VIM-Plug' y Packer
+    _remove_vim_plugin_manager $p_opciones
     l_status=$?
     #Se requiere almacenar las credenciales para realizar cambiso con sudo.
     if [ $l_status -eq 120 ]; then
@@ -1777,6 +1852,7 @@ function _show_menu_core() {
     fi
     printf "     (%b%0${l_max_digits}d%b) VIM    - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "512" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "1024" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'Packer'\n" "$g_color_title" "2048" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_opaque"
 
