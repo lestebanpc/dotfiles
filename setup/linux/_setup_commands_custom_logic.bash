@@ -4138,7 +4138,7 @@ function _copy_artifact_files() {
                 #Acceso al folder creado
                 printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "${g_path_programs}/node-${p_repo_last_version}-linux-x64" "$g_color_reset" "$g_color_opaque" \
                        "${g_path_programs}/nodejs" "$g_color_reset"
-                mv "${g_path_programs}/node-${p_repo_last_version}-linux-x64" "${g_path_programs}/nodejs"
+                mv "${g_path_programs}/${p_artifact_name_woext}" "${g_path_programs}/nodejs"
                 chmod g+rx,o+rx ${g_path_programs}/nodejs
 
                 #Validar si 'Node.JS' esta en el PATH
@@ -4166,7 +4166,7 @@ function _copy_artifact_files() {
                 #Acceso al folder creado
                 printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "${g_path_programs_win}/node-${p_repo_last_version}-win-x64" "$g_color_reset" "$g_color_opaque" \
                        "${g_path_programs_win}/NodeJS" "$g_color_reset"
-                mv "${g_path_programs_win}/node-${p_repo_last_version}-win-x64" "${g_path_programs_win}/NodeJS"
+                mv "${g_path_programs_win}/${p_artifact_name_woext}" "${g_path_programs_win}/NodeJS"
                 #chmod g+rx,o+rx ${g_path_programs_win}/NodeJS
 
             fi
