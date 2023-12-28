@@ -1533,15 +1533,31 @@ function _setup_profile() {
     l_source_path="${HOME}/.files/terminal/powershell"
     if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            l_source_filename='debian_non_shared.ps1'
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='debian_aarch64_local.ps1'
+            else
+                l_source_filename='debian_x64_local.ps1'
+            fi
         else
-            l_source_filename='fedora_non_shared.ps1'
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='fedora_aarch64_local.ps1'
+            else
+                l_source_filename='fedora_x64_local.ps1'
+            fi
         fi
     else
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            l_source_filename='debian_shared.ps1'
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='debian_aarch64_shared.ps1'
+            else
+                l_source_filename='debian_x64_shared.ps1'
+            fi
         else
-            l_source_filename='fedora_shared.ps1'
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='fedora_aarch64_shared.ps1'
+            else
+                l_source_filename='fedora_x64_shared.ps1'
+            fi
         fi
     fi
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
@@ -1551,15 +1567,31 @@ function _setup_profile() {
     l_source_path="${HOME}/.files/terminal/linux/profile"
     if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            l_source_filename='debian_non_shared.bash'
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='debian_aarch64_local.bash'
+            else
+                l_source_filename='debian_x64_local.bash'
+            fi
         else
-            l_source_filename='fedora_non_shared.bash'
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='fedora_aarch64_local.bash'
+            else
+                l_source_filename='fedora_x64_local.bash'
+            fi
         fi
     else
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            l_source_filename='debian_shared.bash'
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='debian_aarch64_shared.bash'
+            else
+                l_source_filename='debian_x64_shared.bash'
+            fi
         else
-            l_source_filename='fedora_shared.bash'
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='fedora_aarch64_shared.bash'
+            else
+                l_source_filename='fedora_x64_shared.bash'
+            fi
         fi
     fi
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag

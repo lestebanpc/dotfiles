@@ -112,52 +112,50 @@ if [ -f ~/.bash_aliases ]; then
 fi
 
 #Ruta por defecto donde se instalan los programas (incluye, entre otros, 1 o mas comandos)
-l_program_path=~/tools
-
-# GraalVM (rutas)
-GRAALVM_HOME=${l_program_path}/graalvm
-JAVA_HOME=${GRAALVM_HOME}
-export GRAALVM_HOME JAVA_HOME
-
-# Rutas por defecto: Adicionando rutas de programas especificos
-PATH=$PATH:${l_program_path}/neovim/bin
-
-#CMake - Sistema de contrucción para C/C++ y otros
-[ -d "${l_program_path}/cmake" ] && PATH=$PATH:${l_program_path}/cmake/bin
-
-#Go - Tools estandar para desarrollo
-[ -d "${l_program_path}/go/bin" ] && PATH=$PATH:${l_program_path}/go/bin
-
-#Go - Tools adicionales
-[ -d ~/go/bin ] && PATH=$PATH:~/go/bin
-
-#Rust - Tools para desarrollo
-[ -d "${l_program_path}/rust/bin" ] && PATH=$PATH:${l_program_path}/rust/bin
-#[ -d ~/.cargo/bin ] && PATH=$PATH:~/.cargo/bin
+l_program_path='/opt/tools'
 
 #GraalVM - RTE y Herramientas de desarrollo para Java y otros
-[ -d "${JAVA_HOME}/bin" ] && PATH=$PATH:${JAVA_HOME}/bin
+if [ -d "${l_program_path}/graalvm" ]; then
+    GRAALVM_HOME="${l_program_path}/graalvm"
+    JAVA_HOME="${GRAALVM_HOME}"
+    export GRAALVM_HOME JAVA_HOME
+    PATH="$PATH:${JAVA_HOME}/bin"
+fi
 
-#Rust - LSP server
-#[ -d "${l_program_path}/lsp_servers/rust_analyzer" ] && PATH=$PATH:${l_program_path}/lsp_servers/rust_analyzer
+# Rutas por defecto: Adicionando rutas de programas especificos
+[ -d "${l_program_path}/neovim/bin" ] && PATH="$PATH:${l_program_path}/neovim/bin"
+
+#CMake - Sistema de contrucción para C/C++ y otros
+[ -d "${l_program_path}/cmake" ] && PATH="$PATH:${l_program_path}/cmake/bin"
+
+#Go - Tools estandar para desarrollo
+[ -d "${l_program_path}/go/bin" ] && PATH="$PATH:${l_program_path}/go/bin"
+
+#Go - Tools adicionales
+[ -d ~/go/bin ] && PATH="$PATH:${HOME}/go/bin"
+
+#Rust - Tools para desarrollo
+[ -d "${l_program_path}/rust/bin" ] && PATH="$PATH:${l_program_path}/rust/bin"
+#[ -d ~/.cargo/bin ] && PATH="$PATH:${HOME}/.cargo/bin"
 
 #LLVM/Clang
-[ -d "${l_program_path}/llvm/bin" ] && PATH=${l_program_path}/llvm/bin:$PATH
+[ -d "${l_program_path}/llvm/bin" ] && PATH="${l_program_path}/llvm/bin:$PATH"
 
 #Ruta del builder Apache Maven
-[ -d "${l_program_path}/maven/bin" ] && PATH=${l_program_path}/maven/bin:$PATH
+[ -d "${l_program_path}/maven/bin" ] && PATH="${l_program_path}/maven/bin:$PATH"
 
 #Ruta del compilador de ProtoBuffer de gRPC
-[ -d "${l_program_path}/protoc/bin" ] && PATH=${l_program_path}/protoc/bin:$PATH
+[ -d "${l_program_path}/protoc/bin" ] && PATH="${l_program_path}/protoc/bin:$PATH"
 
 #Node.Js (RTE)
-[ -d "${l_program_path}/nodejs/bin" ] && PATH=${l_program_path}/nodejs/bin:$PATH
+[ -d "${l_program_path}/nodejs/bin" ] && PATH="${l_program_path}/nodejs/bin:$PATH"
 
 #DotNet
-export DOTNET_ROOT=${l_program_path}/dotnet
-[ -d "$DOTNET_ROOT" ] && PATH=${DOTNET_ROOT}:$PATH
-[ -d "$DOTNET_ROOT/tools" ] && PATH=${DOTNET_ROOT}/tools:$PATH
-
+if [ -d "${l_program_path}/dotnet" ]; then
+    export DOTNET_ROOT="${l_program_path}/dotnet"
+    PATH="${DOTNET_ROOT}:$PATH"
+    [ -d "$DOTNET_ROOT/tools" ] && PATH="${DOTNET_ROOT}/tools:$PATH"
+fi
 
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
