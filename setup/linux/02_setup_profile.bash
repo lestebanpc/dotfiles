@@ -202,6 +202,11 @@ function _create_file_link() {
         p_override_target_link=0
     fi
 
+    local l_target_base="${p_target_link%/*}"
+    if [ ! -d "$l_target_base" ]; then
+        mkdir -p "$l_target_base"
+    fi
+
     local l_source_fullfilename="${p_source_path}/${p_source_filename}"
     local l_aux
     if [ -h "$p_target_link" ] && [ -f "$p_target_link" ]; then
@@ -231,6 +236,11 @@ function _create_folder_link() {
     local p_override_target_link=1
     if [ "$4" = "0" ]; then
         p_override_target_link=0
+    fi
+
+    local l_target_base="${p_target_link%/*}"
+    if [ ! -d "$l_target_base" ]; then
+        mkdir -p "$l_target_base"
     fi
 
     local l_aux
