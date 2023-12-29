@@ -1,0 +1,26 @@
+192.168.30.201    nasphoenix.quyllur.home
+192.168.30.201    nas30.quyllur.home
+192.168.10.201    nas10.quyllur.home
+192.168.10.200    dnspihole.quyllur.home
+192.168.30.99     vmfedora.quyllur.home
+192.168.30.98     vmlnx01.quyllur.home
+192.168.30.97     vmlnx02.quyllur.home
+192.168.30.96     vmlnx03.quyllur.home
+192.168.30.95     vmlnx04.quyllur.home
+192.168.30.89     vmk8s1master1.quyllur.home
+192.168.30.88     vmk8s1master2.quyllur.home
+192.168.30.87     vmk8s1master3.quyllur.home
+192.168.30.86     vmk8s1worker1.quyllur.home
+192.168.30.85     vmk8s1worker2.quyllur.home
+192.168.30.84     vmk8s1worker3.quyllur.home
+192.168.30.83     vmk8s1worker4.quyllur.home
+192.168.30.89     api.k8s1.quyllur.home
+192.168.30.82     vmk8s2master1.quyllur.home
+192.168.30.81     vmk8s2master2.quyllur.home
+192.168.30.80     vmk8s2master3.quyllur.home
+192.168.30.79     vmk8s2worker1.quyllur.home
+192.168.30.78     vmk8s2worker2.quyllur.home
+192.168.30.76     vmk8s2worker3.quyllur.home
+192.168.30.75     vmk8s2worker4.quyllur.home
+192.168.30.82     api.k8s2.quyllur.home
+

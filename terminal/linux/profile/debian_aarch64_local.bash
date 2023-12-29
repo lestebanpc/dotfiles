@@ -138,8 +138,12 @@ fi
 [ -d "${l_program_path}/rust/bin" ] && PATH="$PATH:${l_program_path}/rust/bin"
 #[ -d ~/.cargo/bin ] && PATH="$PATH:~/.cargo/bin"
 
-#LLVM/Clang
-[ -d "${l_program_path}/llvm/bin" ] && PATH="${l_program_path}/llvm/bin:$PATH"
+#LLVM/Clang/Clangd
+if [ -d "${l_program_path}/llvm/bin" ]; then
+    PATH="${l_program_path}/llvm/bin:$PATH"
+else
+    PATH="${l_program_path}/lsp_servers/clangd/bin:$PATH"
+fi
 
 #Ruta del builder Apache Maven
 [ -d "${l_program_path}/maven/bin" ] && PATH="${l_program_path}/maven/bin:$PATH"

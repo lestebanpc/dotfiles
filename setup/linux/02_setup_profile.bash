@@ -1510,9 +1510,9 @@ function _setup_profile() {
     l_target_link="${HOME}/.gitconfig"
     l_source_path="${HOME}/.files/config/git"
     if [ $g_os_type -eq 1 ]; then
-        l_source_filename='linux_git_usr1.toml'
+        l_source_filename='git_linux_usr1.toml'
     else
-        l_source_filename='linux_git_usr2.toml'
+        l_source_filename='git_linux_usr2.toml'
     fi
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
@@ -1521,9 +1521,9 @@ function _setup_profile() {
     l_target_link="${HOME}/.ssh/config"
     l_source_path="${HOME}/.files/config/ssh"
     if [ $g_os_type -eq 1 ]; then
-        l_source_filename='linux_ssh_01.conf'
+        l_source_filename='ssh_linux_01.conf'
     else
-        l_source_filename='linux_ssh_02.conf'
+        l_source_filename='ssh_linux_02.conf'
     fi
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
