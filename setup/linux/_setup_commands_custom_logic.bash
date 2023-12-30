@@ -256,6 +256,21 @@ function get_repo_latest_version() {
             fi
             ;;
 
+        awscli)
+            #Si no esta instalado 'jq' no continuar
+            if ! command -v jq &> /dev/null; then
+                return 1
+            fi
+
+            l_aux=$(curl -LsH "Accept: application/json" "https://api.github.com/repos/aws/aws-cli/tags" | jq -r '.[0].name')
+            if [ $? -eq 0 ]; then
+                l_repo_last_version=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
+                l_repo_last_version_pretty="$l_repo_last_version"
+            else
+                l_repo_last_version=""
+            fi
+            ;;
+
         jq)
             #Si no esta instalado 'jq' usar expresiones regulares
             if ! command -v jq &> /dev/null; then
@@ -545,6 +560,7 @@ function _get_repo_current_version() {
                 l_sustitution_regexp="$g_regexp_sust_version3"
             fi
             ;;
+           
         jwt)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}jwt.exe --version 2> /dev/null)
@@ -554,6 +570,7 @@ function _get_repo_current_version() {
                 l_status=$?
             fi
             ;;
+           
         step)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}step.exe --version 2> /dev/null)
@@ -569,7 +586,6 @@ function _get_repo_current_version() {
             ;;
 
         protoc)
-           
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
@@ -610,6 +626,20 @@ function _get_repo_current_version() {
             else
                 l_tmp=$(${l_path_file}evans --version 2> /dev/null)
                 l_status=$?
+            fi
+            ;;
+
+        awscli)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}aws --version 2> /dev/null)
+            l_status=$?
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            else
+                l_tmp=""
             fi
             ;;
 
@@ -1867,6 +1897,27 @@ function get_repo_artifacts() {
             fi
             ;;
 
+        awscli)
+            #URL base fijo     : "https://awscli.amazonaws.com"
+            #URL base variable : <none>
+
+            #No soportado para Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 1
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}")
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("awscli-exe-linux-aarch64.zip")
+            else
+                pna_artifact_names=("awscli-exe-linux-x86_64.zip")
+            fi
+            pna_artifact_types=(11)
+            ;;
+
         oc)
             #URL base fijo     : "https://mirror.openshift.com"
             #URL base variable :
@@ -2592,8 +2643,8 @@ function _copy_artifact_files() {
     local p_artifact_name_woext="$4"
     local p_artifact_type=$5
 
-    local p_install_win_cmds=1           #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                         #(0) Los binarios de los comandos se estan instalando en Linux
+    local p_install_win_cmds=1      #(1) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                    #(0) Los binarios de los comandos se estan instalando en Linux
     if [ "$6" = "0" ]; then
         p_install_win_cmds=0
     fi
@@ -2607,6 +2658,11 @@ function _copy_artifact_files() {
     local p_arti_subversion_index=0
     if [[ "${12}" =~ ^[0-9]+$ ]]; then
         p_arti_subversion_index=${12}
+    fi
+
+    local p_flag_install=1          #Si se estan instalando (la primera vez) es '0', caso contrario es otro valor (se actualiza o se desconoce el estado)
+    if [ "${13}" = "0" ]; then
+        p_flag_install=0
     fi
 
     #Tag usuado para imprimir un identificador del artefacto en un log
@@ -3209,6 +3265,67 @@ function _copy_artifact_files() {
             ;;
 
             
+        awscli)
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
+                return 40
+            fi
+
+            #Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
+
+
+            #Instalando 
+            if [ $p_flag_install -eq 0 ]; then
+
+                #Si se configura localmente
+                if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+
+                    printf 'Instalando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" \n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
+                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+
+                #Instalando como root
+                elif [ $g_user_sudo_support -eq 4 ]; then
+
+                    printf 'Instalando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" \n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
+                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+
+                #Instalando usando sudo
+                else
+
+                    printf 'Instalando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" \n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
+                    sudo ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+
+                fi
+
+            #Actualizando
+            else
+
+                #Si se configura localmente
+                if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
+
+                    printf 'Actualizando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" --update\n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
+                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+
+                #Actualizando como root
+                elif [ $g_user_sudo_support -eq 4 ]; then
+
+                    printf 'Actualizando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" --update\n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
+                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+
+                #Actualizando usando sudo
+                else
+
+                    printf 'Actualizando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" --update\n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
+                    sudo ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+
+                fi
+            fi
+
+            ;;
+
+
         crictl)
             #Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
@@ -3248,34 +3365,35 @@ function _copy_artifact_files() {
             ;;
 
             
+            
         kubelet)
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
+                return 40
+            fi
+
             #Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
-            if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    echo "Copiando \"kubelet\" en \"${l_path_target_bin}/\" ..."
-                    cp "${l_path_source}/kubelet" "${l_path_target_bin}"
-                    chmod +x "${l_path_target_bin}/kubelet"
-                else
-                    echo "Copiando \"kubelet\" en \"${l_path_target_bin}/\" ..."
-                    sudo cp "${l_path_source}/kubelet" "${l_path_target_bin}"
-                    sudo chmod +x "${l_path_target_bin}/kubelet"
-                fi
-
-                #Desacargar archivos adicionales para su configuración
-                mkdir -p ~/.files/setup/programs/kubelet
-                l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubelet/kubelet.service 2> /dev/null)
-                l_status=$?
-                if [ $l_status -eq 0 ]; then
-                    printf 'Creando el archivo "%b~/.files/setup/programs/kubelet/kubelet.service%b" ... \n' "$g_color_opaque" "$g_color_reset"
-                    echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ~/.files/setup/programs/kubelet/kubelet.service
-                fi
-
+            if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                echo "Copiando \"kubelet\" en \"${l_path_target_bin}/\" ..."
+                cp "${l_path_source}/kubelet" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/kubelet"
             else
-                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Windows"
-                return 40
+                echo "Copiando \"kubelet\" en \"${l_path_target_bin}/\" ..."
+                sudo cp "${l_path_source}/kubelet" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/kubelet"
+            fi
+
+            #Desacargar archivos adicionales para su configuración
+            mkdir -p ~/.files/setup/programs/kubelet
+            l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubelet/kubelet.service 2> /dev/null)
+            l_status=$?
+            if [ $l_status -eq 0 ]; then
+                printf 'Creando el archivo "%b~/.files/setup/programs/kubelet/kubelet.service%b" ... \n' "$g_color_opaque" "$g_color_reset"
+                echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ~/.files/setup/programs/kubelet/kubelet.service
             fi
             ;;
 

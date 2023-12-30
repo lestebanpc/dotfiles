@@ -409,12 +409,17 @@ function _install_artifacts() {
         p_arti_subversion_index=$9
     fi
 
-    local p_install_win_cmds=1           #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                         #(1) Los binarios de los comandos se estan instalando en Linux
+    local p_install_win_cmds=1      #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                    #(1) Los binarios de los comandos se estan instalando en Linux
     if [ "${10}" = "0" ]; then
         p_install_win_cmds=0
     fi
 
+    local p_flag_install=1          #Si se estan instalando (la primera vez) es '0', caso contrario es otro valor (se actualiza o se desconoce el estado)
+    if [ "${11}" = "0" ]; then
+        p_flag_install=0
+    fi
+    
     #2. Descargar los artectos del repositorio
     local l_n=${#pnra_artifact_names[@]}
 
@@ -460,7 +465,7 @@ function _install_artifacts() {
             fi
 
             _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
-                "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index
+                "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index $p_flag_install
             #l_status=0
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
@@ -496,7 +501,7 @@ function _install_artifacts() {
             #Copiar los archivos necesarios
             printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
             _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
-                "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index
+                "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index $p_flag_install
             #l_status=0
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
@@ -509,7 +514,7 @@ function _install_artifacts() {
             #Copiar los archivos necesarios
             printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
             _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
-                "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index
+                "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index $p_flag_install
             #l_status=0
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
@@ -540,14 +545,13 @@ function _install_repository_internal() {
         p_arti_subversion_index=$7
     fi
 
-    local p_install_win_cmds=1            #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                          #(1) Los binarios de los comandos se estan instalando en Linux
+    local p_install_win_cmds=1      #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                    #(1) Los binarios de los comandos se estan instalando en Linux
     if [ "$8" = "0" ]; then
         p_install_win_cmds=0
     fi
 
-    #Si se estan instalando (la primera vez) es '0', caso contrario es otro valor (se actualiza o se desconoce el estado)
-    local p_flag_install=1
+    local p_flag_install=1          #Si se estan instalando (la primera vez) es '0', caso contrario es otro valor (se actualiza o se desconoce el estado)
     if [ "$9" = "0" ]; then
         p_flag_install=0
     fi
@@ -629,7 +633,7 @@ function _install_repository_internal() {
 
     #6. Instalar segun el tipo de artefecto
     if ! _install_artifacts "${p_repo_id}" "${p_repo_name}" la_artifact_names la_artifact_types "${p_repo_current_version}" "${p_repo_last_version}" \
-        "$p_repo_last_version_pretty" "$p_arti_subversion_version" $p_arti_subversion_index $p_install_win_cmds; then
+        "$p_repo_last_version_pretty" "$p_arti_subversion_version" $p_arti_subversion_index $p_install_win_cmds $p_flag_install; then
         printf 'ERROR: No se ha podido instalar los artefecto de repositorio "%b".\n' ${l_tag}
         _clean_temp "$p_repo_id"
         return 24

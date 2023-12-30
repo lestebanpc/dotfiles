@@ -1895,6 +1895,11 @@ function _show_menu_core() {
     printf "     (%b%0${l_max_digits}d%b) VIM    - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "512" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "1024" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'Packer'\n" "$g_color_title" "2048" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Configurar el '%bServidor SSH%b' para '%bX11 forwading%b' %b(instala paquete 'xsel', 'xorg-x11-xauth' y configurar OpenSSH server)%b\n" "$g_color_title" "4096" "$g_color_reset" \
+           "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Configurar el '%bCliente  SSH%b' instalando  %bX11 server%b '%bXvfb%b' en un '%bheadless servers%b' %b(instala 'Xvfb' e inicia este servidor X11)%b\n" \
+           "$g_color_title" "8192" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" \
+           "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_opaque"
 

@@ -65,6 +65,7 @@ gA_packages=(
         ['crictl']='kubernetes-sigs/cri-tools'
         ['rust']=''
         ['oc']=''
+        ['awscli']=''
     )
 
 
@@ -96,6 +97,7 @@ ga_menu_options_title=(
     "Rust  ${g_color_reset}>${g_color_title} Compiler"
     "Rust  ${g_color_reset}>${g_color_title} LSP server"
     "Go    ${g_color_reset}>${g_color_title} RTE"
+    "AWS CLI v2"
     )
 
 #WARNING: Un cambio en el orden implica modificar los indices de los eventos:
@@ -130,6 +132,7 @@ ga_menu_options_packages=(
     "rust"
     "rust-analyzer"
     "go"
+    "awscli"
     )
 
 #Tipos de SO donde se puede configurar los repositorio 
@@ -161,6 +164,7 @@ declare -A gA_repo_config_os_type=(
         ['kubeadm']=3
         ['kubelet']=3
         ['crictl']=3
+        ['awscli']=3
     )
 
 
@@ -193,6 +197,7 @@ declare -A gA_repo_base_url=(
         ['rust']='https://static.rust-lang.org/dist'
         ['oc']='https://mirror.openshift.com/pub/openshift-v4'
         ['helm']='https://get.helm.sh'
+        ['awscli']='https://awscli.amazonaws.com'
     )
 
 #Si el repositorio es un paquete del SO (esto no se puede instalar si no es root o se tiene acceso a sudo)
