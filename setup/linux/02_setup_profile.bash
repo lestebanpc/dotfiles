@@ -1637,7 +1637,7 @@ function _sutup_support_x11_clipboard() {
 
         else
 
-            printf 'X forwarding> El archivo "%b%s%b" ya esta configurado (su campo "%b%s%b" con el valor "%b%s%b").\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
+            printf 'X forwarding> El archivo "%b%s%b" ya esta configurado (su campo "%b%s%b" tiene el valor "%b%s%b").\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
                    "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "yes" "$g_color_reset"
 
         fi
