@@ -874,6 +874,11 @@ _install_nodejs() {
         l_version=""
     fi
 
+    local l_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_noninteractive=0
+    fi
+
     #Si no esta instalando
     if [ -z "$l_version" ]; then
 
@@ -886,8 +891,13 @@ _install_nodejs() {
         # 1> Tipo de ejecución: 2 (ejecución no-interactiva para instalar/actualizar un respositorio especifico)
         # 2> Repositorio a instalar/acutalizar: "nodejs" (actualizar solo los comandos instalandos)
         # 3> El estado de la credencial almacenada para el sudo
-        ~/.files/setup/linux/01_setup_commands.bash 2 "nodejs" $g_status_crendential_storage
-        l_status=$?
+        if [ $l_noninteractive -eq 1 ]; then
+            ~/.files/setup/linux/01_setup_commands.bash 2 "nodejs" $g_status_crendential_storage
+            l_status=$?
+        else
+            ~/.files/setup/linux/01_setup_commands.bash 4 "nodejs" $g_status_crendential_storage
+            l_status=$?
+        fi
 
         #Si no se acepto almacenar credenciales
         if [ $l_status -eq 120 ]; then
@@ -1037,6 +1047,11 @@ _install_python() {
     l_version2=$(python3 -m pip --version 2> /dev/null)
     l_status2=$?
 
+    local l_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_noninteractive=0
+    fi
+    
     if [ $l_status -ne 0 ] || [ $l_status2 -ne 0 ]; then
 
         if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
@@ -1049,8 +1064,13 @@ _install_python() {
             # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
             # 2> Repositorios a instalar/acutalizar: 16 (RTE Python y Pip. Tiene Offset=1)
             # 3> El estado de la credencial almacenada para el sudo
-            ~/.files/setup/linux/03_setup_packages.bash 1 16 $g_status_crendential_storage
-            l_status=$?
+            if [ $l_noninteractive -eq 1 ]; then
+                ~/.files/setup/linux/03_setup_packages.bash 1 16 $g_status_crendential_storage
+                l_status=$?
+            else
+                ~/.files/setup/linux/03_setup_packages.bash 3 16 $g_status_crendential_storage
+                l_status=$?
+            fi
 
             #Si no se acepto almacenar credenciales
             if [ $l_status -eq 120 ]; then
@@ -1270,6 +1290,10 @@ function _install_vim_nvim_environment() {
 
 
     #6. Instalar VIM
+    local l_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_noninteractive=0
+    fi
     
     #Determinar si esta instalando VIM
     l_version=$(vim --version 2> /dev/null)
@@ -1297,8 +1321,13 @@ function _install_vim_nvim_environment() {
                 # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
                 # 2> Repositorios a instalar/acutalizar: 4 (editor VIM. Tiene Offset=1)
                 # 3> El estado de la credencial almacenada para el sudo
-                ~/.files/setup/linux/03_setup_packages.bash 1 4 $g_status_crendential_storage
-                l_status=$?
+                if [ $l_noninteractive -eq 1 ]; then
+                    ~/.files/setup/linux/03_setup_packages.bash 1 4 $g_status_crendential_storage
+                    l_status=$?
+                else
+                    ~/.files/setup/linux/03_setup_packages.bash 3 4 $g_status_crendential_storage
+                    l_status=$?
+                fi
 
                 #Si no se acepto almacenar credenciales
                 if [ $l_status -eq 120 ]; then
@@ -1360,8 +1389,13 @@ function _install_vim_nvim_environment() {
                 # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
                 # 2> Repositorios a instalar/acutalizar: 8 (editor NeoVIM. Tiene Offset=1)
                 # 3> El estado de la credencial almacenada para el sudo
-                ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
-                l_status=$?
+                if [ $l_noninteractive -eq 1 ]; then
+                    ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
+                    l_status=$?
+                else
+                    ~/.files/setup/linux/03_setup_packages.bash 3 8 $g_status_crendential_storage
+                    l_status=$?
+                fi
 
                 #Si no se acepto almacenar credenciales
                 if [ $l_status -eq 120 ]; then
@@ -1378,8 +1412,14 @@ function _install_vim_nvim_environment() {
                 # 1> Tipo de ejecución: 2 (ejecución no-interactiva para instalar/actualizar un respositorio especifico)
                 # 2> Repsositorio a instalar/acutalizar: "neovim" (actualizar solo los comandos instalandos)
                 # 3> El estado de la credencial almacenada para el sudo
-                ~/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage            
-                l_status=$?
+                if [ $l_noninteractive -eq 1 ]; then
+                    
+                    ~/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage            
+                    l_status=$?
+                else
+                    ~/.files/setup/linux/01_setup_commands.bash 4 "neovim" $g_status_crendential_storage            
+                    l_status=$?
+                fi
 
                 #Si no se acepto almacenar credenciales
                 if [ $l_status -eq 120 ]; then
@@ -1525,6 +1565,11 @@ function _sutup_support_x11_clipboard() {
     #3. Instalar los programas requeridos 
     local l_version
     local l_status
+    local l_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_noninteractive=0
+    fi
+
 
     printf 'X forwarding> Iniciando la %s...n' "$l_tmp"
 
@@ -1532,8 +1577,13 @@ function _sutup_support_x11_clipboard() {
     # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
     # 2> Repositorios a instalar/acutalizar: 
     # 3> El estado de la credencial almacenada para el sudo
-    ~/.files/setup/linux/03_setup_packages.bash 1 $l_pkg_options $g_status_crendential_storage
-    l_status=$?
+    if [ $l_noninteractive -eq 1 ]; then
+        ~/.files/setup/linux/03_setup_packages.bash 1 $l_pkg_options $g_status_crendential_storage
+        l_status=$?
+    else
+        ~/.files/setup/linux/03_setup_packages.bash 3 $l_pkg_options $g_status_crendential_storage
+        l_status=$?
+    fi
 
     #Si no se acepto almacenar credenciales
     if [ $l_status -eq 120 ]; then
@@ -1885,6 +1935,9 @@ function _setup() {
     local l_option=1
     local l_flag
     local l_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_noninteractive=0
+    fi
     
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
@@ -1910,10 +1963,6 @@ function _setup() {
             print_text_in_center2 "$l_title" $g_max_length_line 
             print_line '─' $g_max_length_line "$g_color_opaque"
            
-            l_noninteractive=1
-            if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
-                l_noninteractive=0
-            fi
             upgrade_os_packages $g_os_subtype_id $l_noninteractive 
 
         fi

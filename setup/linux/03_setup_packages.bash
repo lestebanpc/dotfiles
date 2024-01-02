@@ -1169,6 +1169,10 @@ function g_install_packages() {
     local l_flag=0
     local l_title
     local l_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
+        l_noninteractive=0
+    fi
+
     if [ $gp_type_calling -eq 0 ]; then
 
 
@@ -1194,10 +1198,6 @@ function g_install_packages() {
             print_text_in_center2 "$l_title" $g_max_length_line 
             print_line '─' $g_max_length_line "$g_color_opaque"
 
-            l_noninteractive=1
-            if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
-                l_noninteractive=0
-            fi
             upgrade_os_packages $g_os_subtype_id $l_noninteractive
 
         fi

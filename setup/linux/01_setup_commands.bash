@@ -2812,6 +2812,9 @@ function g_install_repositories() {
     local l_status
     local l_title
     local l_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
+        l_noninteractive=0
+    fi
 
     #Si se muestra el menu
     if [ $gp_type_calling -eq 0 ]; then
@@ -2837,12 +2840,7 @@ function g_install_repositories() {
             printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
             print_text_in_center2 "$l_title" $g_max_length_line 
             print_line '─' $g_max_length_line "$g_color_opaque"
-
             
-            l_noninteractive=1
-            if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
-                l_noninteractive=0
-            fi
             upgrade_os_packages $g_os_subtype_id $l_noninteractive
 
         fi

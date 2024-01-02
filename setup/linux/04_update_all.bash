@@ -452,6 +452,9 @@ function _update_all() {
     local l_flag
     local l_opcion=1
     local l_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_noninteractive=0
+    fi
 
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
@@ -477,10 +480,6 @@ function _update_all() {
             print_text_in_center2 "$l_title" $g_max_length_line 
             print_line '─' $g_max_length_line "$g_color_opaque"
 
-            l_noninteractive=1
-            if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
-                l_noninteractive=0
-            fi
             upgrade_os_packages $g_os_subtype_id $l_noninteractive
             echo ""
 
@@ -492,13 +491,18 @@ function _update_all() {
     l_opcion=2
     l_flag=$(( $p_opciones & $l_opcion ))
     if [ $l_flag -eq $l_opcion ]; then
-    
+
         #Parametros:
         # 1> Tipo de ejecución: 1 (ejecución no-interactiva para actualizar un conjuentos de respositorios)
         # 2> Opciones de menu seleccionados para instalar/actualizar: 2 (instalar/actualizar solo los comandos instalados)
         # 3> El estado de la credencial almacenada para el sudo
-        ~/.files/setup/linux/01_setup_commands.bash 1 2 $g_status_crendential_storage
-        l_status=$?
+        if [ $l_noninteractive -eq 1 ]; then
+            ~/.files/setup/linux/01_setup_commands.bash 1 2 $g_status_crendential_storage
+            l_status=$?
+        else
+            ~/.files/setup/linux/01_setup_commands.bash 3 2 $g_status_crendential_storage
+            l_status=$?
+        fi
 
         #Si no se acepto almacenar credenciales
         if [ $l_status -eq 120 ]; then
