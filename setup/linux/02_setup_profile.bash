@@ -1571,7 +1571,7 @@ function _sutup_support_x11_clipboard() {
     fi
 
 
-    printf 'X forwarding> Iniciando %s...\n' "$l_tmp"
+    printf 'X forwarding> Iniciando %s...\n\n' "$l_tmp"
 
     #Parametros:
     # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
@@ -1607,14 +1607,17 @@ function _sutup_support_x11_clipboard() {
             l_status=$?
         fi
 
+        print_line '-' $g_max_length_line  "$g_color_opaque"
+        printf '%bX forwarding%b> Configurando el servidor OpenSSH...\n' "$g_color_opaque" "$g_color_reset"
+        print_line '-' $g_max_length_line "$g_color_opaque"
+
         if [ $l_status -ne 0 ]; then
-            printf 'No se obtuvo información del archivo "%b%s%b".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset"
+            printf 'No se obtuvo información del archivo "%b%s%b".\n' "$g_color_warning" "/etc/ssh/sshd_config" "$g_color_reset"
             return 1
         fi
 
         if ! echo "$l_ssh_config_data"  | grep '^X11Forwarding\s\+yes\s*$' &> /dev/null; then
     
-            printf 'X forwarding> Configurando el servidor OpenSSH...\n'
 
             printf 'X forwarding> Editando el archivo "%b%s%b" y modifique el campo "%b%s%b" a "%b%s%b".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
                    "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "yes" "$g_color_reset"
@@ -1623,7 +1626,7 @@ function _sutup_support_x11_clipboard() {
                 echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
                     > /etc/ssh/sshd_config
             else
-                sudo echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
+                echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sudo sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
                     > /etc/ssh/sshd_config
             fi
 
