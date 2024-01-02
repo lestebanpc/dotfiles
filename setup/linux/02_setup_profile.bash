@@ -1520,12 +1520,12 @@ function _sutup_support_x11_clipboard() {
 
     if [ $l_flag_ssh_srv -eq 0 ]; then
         printf -v l_tmp "%s, '%bxorg-x11-xauth%b', configurar el OpenSSH server" "$l_tmp" "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-        l_pkg_options=$((l_options + 128))
+        l_pkg_options=$((l_pkg_options + 128))
     fi
 
     if [ $l_flag_ssh_clt_without_xsrv -eq 0 ]; then
         printf -v l_tmp "%s, X virtual server '%bXvfb%b'" "$l_tmp" "$g_color_opaque" "$g_color_reset"
-        l_pkg_options=$((l_options + 256))
+        l_pkg_options=$((l_pkg_options + 256))
     fi
 
     printf -v l_title '%s: %s' "$l_title" "$l_tmp"
