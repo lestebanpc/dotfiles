@@ -1519,12 +1519,12 @@ function _sutup_support_x11_clipboard() {
     printf -v l_tmp "instalar '%bxclip%b'" "$g_color_opaque" "$g_color_reset"
 
     if [ $l_flag_ssh_srv -eq 0 ]; then
-        printf -v l_tmp "%s, '%bxorg-x11-xauth%b', configurar el OpenSSH server" "$l_aux" "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        printf -v l_tmp "%s, '%bxorg-x11-xauth%b', configurar el OpenSSH server" "$l_tmp" "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
         l_pkg_options=$((l_options + 128))
     fi
 
     if [ $l_flag_ssh_clt_without_xsrv -eq 0 ]; then
-        printf -v l_tmp "%s, X virtual server '%bXvfb%b'" "$l_aux" "$g_color_opaque" "$g_color_reset"
+        printf -v l_tmp "%s, X virtual server '%bXvfb%b'" "$l_tmp" "$g_color_opaque" "$g_color_reset"
         l_pkg_options=$((l_options + 256))
     fi
 
@@ -1535,7 +1535,7 @@ function _sutup_support_x11_clipboard() {
     print_line '─' $g_max_length_line "$g_color_opaque"
 
     #2. Si no se tiene permisos para root, solo avisar
-    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+    if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
 
         printf '%bNo tiene soporte para ejecutar en modo "root"%b. Para usar el clipbboard de su servidor remotos linux, usando el "%bX11 forwading for SSH%b".\n' \
                "$g_color_warning" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
