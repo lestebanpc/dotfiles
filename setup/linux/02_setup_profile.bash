@@ -1598,6 +1598,10 @@ function _sutup_support_x11_clipboard() {
     local l_ssh_config_data=""
     if [ $l_flag_ssh_srv -eq 0 ]; then
 
+        print_line '-' $g_max_length_line  "$g_color_opaque"
+        printf '%bX forwarding%b> Configurando el servidor OpenSSH...\n' "$g_color_opaque" "$g_color_reset"
+        print_line '-' $g_max_length_line "$g_color_opaque"
+
         #Obtener la data del SSH config del servidor OpenSSH
         if [ $g_user_sudo_support -eq 4 ]; then
             l_ssh_config_data=$(cat /etc/ssh/sshd_config 2> /dev/null)
@@ -1607,27 +1611,23 @@ function _sutup_support_x11_clipboard() {
             l_status=$?
         fi
 
-        print_line '-' $g_max_length_line  "$g_color_opaque"
-        printf '%bX forwarding%b> Configurando el servidor OpenSSH...\n' "$g_color_opaque" "$g_color_reset"
-        print_line '-' $g_max_length_line "$g_color_opaque"
-
         if [ $l_status -ne 0 ]; then
             printf 'No se obtuvo información del archivo "%b%s%b".\n' "$g_color_warning" "/etc/ssh/sshd_config" "$g_color_reset"
             return 1
         fi
 
-        if ! echo "$l_ssh_config_data"  | grep '^X11Forwarding\s\+yes\s*$' &> /dev/null; then
     
+        if ! echo "$l_ssh_config_data"  | grep '^X11Forwarding\s\+yes\s*$' &> /dev/null; then
 
-            printf 'X forwarding> Editando el archivo "%b%s%b" y modifique el campo "%b%s%b" a "%b%s%b".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
+            printf 'X forwarding> Modificando el archivo "%b%s%b": editanto el campo "%b%s%b" con el valor "%b%s%b".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
                    "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "yes" "$g_color_reset"
 
             if [ $g_user_sudo_support -eq 4 ]; then
                 echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
                     > /etc/ssh/sshd_config
             else
-                echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sudo sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
-                    > /etc/ssh/sshd_config
+                echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' | \
+                    sudo tee /etc/ssh/sshd_config > /dev/null
             fi
 
             if [ $g_user_sudo_support -eq 4 ]; then
