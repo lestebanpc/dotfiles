@@ -1512,14 +1512,14 @@ function _sutup_support_x11_clipboard() {
         fi
     fi
 
-    printf -v l_title "Soporte a %bX11 forwarding%b sobre '%b%s%b'" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$l_tmp" "$g_color_reset"
+    printf -v l_title "%bX11 forwarding%b sobre '%b%s%b'" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$l_tmp" "$g_color_reset"
 
     #Obtener lo que se va configurar/instalar
     local l_pkg_options=32
     printf -v l_tmp "instalar '%bxclip%b'" "$g_color_opaque" "$g_color_reset"
 
     if [ $l_flag_ssh_srv -eq 0 ]; then
-        printf -v l_tmp "%s, '%bxorg-x11-xauth%b', configurar el OpenSSH server" "$l_tmp" "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        printf -v l_tmp "%s, '%bxorg-x11-xauth%b', configurar el %bOpenSSH server%b" "$l_tmp" "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
         l_pkg_options=$((l_pkg_options + 128))
     fi
 
@@ -1571,7 +1571,7 @@ function _sutup_support_x11_clipboard() {
     fi
 
 
-    printf 'X forwarding> Iniciando la %s...n' "$l_tmp"
+    printf 'X forwarding> Iniciando la %s...\n' "$l_tmp"
 
     #Parametros:
     # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
@@ -1595,28 +1595,50 @@ function _sutup_support_x11_clipboard() {
 
 
     #5. Configurar OpenSSH server para soportar el 'X11 forwading'
+    local l_ssh_config_data=""
     if [ $l_flag_ssh_srv -eq 0 ]; then
 
-        if ! cat /etc/ssh/sshd_config | grep '^X11Forwarding\s\+yes\s*$' &> /dev/null; then
+        #Obtener la data del SSH config del servidor OpenSSH
+        if [ $g_user_sudo_support -eq 4 ]; then
+            l_ssh_config_data=$(cat /etc/ssh/sshd_config 2> /dev/null)
+            l_status=$?
+        else
+            l_ssh_config_data=$(sudo cat /etc/ssh/sshd_config 2> /dev/null)
+            l_status=$?
+        fi
+
+        if [ $l_status -ne 0 ]; then
+            printf 'No se obtuvo información del archivo "%b%s%b".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset"
+            return 1
+        fi
+
+        if ! echo "$l_ssh_config_data"  | grep '^X11Forwarding\s\+yes\s*$' &> /dev/null; then
     
-            printf 'X forwarding> Configurando el servidor OpenSSH %s...n' "$l_tmp"
+            printf 'X forwarding> Configurando el servidor OpenSSH...\n'
 
             printf 'X forwarding> Editando el archivo "%b%s%b" y modifique el campo "%b%s%b" a "%b%sb".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
                    "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "yes" "$g_color_reset"
+
             if [ $g_user_sudo_support -eq 4 ]; then
-                cat /etc/ssh/sshd_config | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
+                echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
                     > /etc/ssh/sshd_config
             else
-                sudo cat /etc/ssh/sshd_config | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
+                sudo echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
                     > /etc/ssh/sshd_config
             fi
 
-            printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "systemctl restart sshd.service" "$g_color_reset"
             if [ $g_user_sudo_support -eq 4 ]; then
+                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "systemctl restart sshd.service" "$g_color_reset"
                 systemctl restart sshd.service
             else
+                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "sudo systemctl restart sshd.service" "$g_color_reset"
                 sudo systemctl restart sshd.service
             fi
+
+        else
+
+            printf 'X forwarding> El archivo "%b%s%b" ya tiene el campo "%b%s%b" con el valor "%b%sb".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
+                   "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "yes" "$g_color_reset"
 
         fi
 
