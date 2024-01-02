@@ -27,16 +27,16 @@ nnoremap <Leader>vv :set cursorcolumn!<CR>
 if (g:os_type == 2) || (g:os_type == 3)
 
    "Copiar el ultimo yank realizado al portapapeles ('CLIPBOARD' selecction)
-   nnoremap <Leader>cy :<C-u>call system('xsel -ib', @0)<CR>
+   nnoremap <Leader>cy :<C-u>call system('xclip -selection clipboard', @0)<CR>
 
    "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
-   nnoremap <Leader>cd :<C-u>call system('xsel -ib', @1)<CR>
+   nnoremap <Leader>cd :<C-u>call system('xclip -selection clipboard', @1)<CR>
 
    "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
-   vnoremap <Leader>cc :w !xsel -ib<CR><CR>
+   vnoremap <Leader>cl :w !xclip -selection clipboard<CR><CR>
 
    "Pegar del portapapeles ('CLIPBOARD' selecction) en nuevas lineas siguientes
-   nnoremap <Leader>cp :<C-u>r !xsel -ob<CR>
+   nnoremap <Leader>pl :<C-u>r !xclip -o -selection clipboard<CR>
 
 "elseif g:os_type == 0
 "elseif g:os_type == 3

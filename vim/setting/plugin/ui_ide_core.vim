@@ -415,7 +415,7 @@ command! -nargs=0 OR     :call CocActionAsync('runCommand', 'editor.action.organ
 nmap <Leader>ol <Plug>(coc-openlink)
 
 "3. CodeLens: Listas, Selecionar y Ejecutar acciones personalizadas asociadas a una linea:
-nmap <Leader>cl <Plug>(coc-codelens-action)
+nmap <Leader>le <Plug>(coc-codelens-action)
 
 "-----------------------------------------------------------------------------------
 " CoC> IDE>  Integración con barra de estado (Status Line)

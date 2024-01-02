@@ -36,6 +36,11 @@ fi
 #Tamaño de la linea del menu
 g_max_length_line=130
 
+#Tipo de ejecucion del script principal
+gp_type_calling=0       #(0) Ejecución mostrando el menu del opciones (siempre es interactiva).
+                        #(1) Ejecución sin el menu de opciones, interactivo    - configurar un conjunto de opciones del menú
+                        #(2) Ejecución sin el menu de opciones, no-interactivo - configurar un conjunto de opciones del menú
+
 #Estado del almacenado temporalmente de las credenciales para sudo
 # -1 - No se solicito el almacenamiento de las credenciales
 #  0 - No es root: se almaceno las credenciales
@@ -431,9 +436,7 @@ function _update_vim() {
 
 #
 # Argumentos:
-# 1) Repositorios que se se instalaran basicos y opcionales (flag en binario. entero que es suma de 2^n).
-# 2) -
-#
+#  1> Las opciones de menu elejidas. 
 function _update_all() {
 
     #1. Argumentos
@@ -448,6 +451,7 @@ function _update_all() {
     local l_status
     local l_flag
     local l_opcion=1
+    local l_noninteractive=1
 
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
@@ -473,7 +477,11 @@ function _update_all() {
             print_text_in_center2 "$l_title" $g_max_length_line 
             print_line '─' $g_max_length_line "$g_color_opaque"
 
-            upgrade_os_packages $g_os_subtype_id     
+            l_noninteractive=1
+            if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
+                l_noninteractive=0
+            fi
+            upgrade_os_packages $g_os_subtype_id $l_noninteractive
             echo ""
 
         fi
@@ -721,16 +729,60 @@ function g_main() {
 
 }
 
+g_usage() {
+
+    printf '%bUsage:\n\n' "$g_color_opaque"
+    printf '  > Configurar el profile mostrando el menú de opciones (interactivo):\n'
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash\n%b' "$g_color_info" "$g_color_opaque"
+    printf '  > Configurar un grupo de opciones del menú sin mostrarlo pero en modo interactivo:\n'
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash 1 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
+    printf '  > Configurar un grupo de opciones del menú sin mostrarlo pero en modo no-interactivo:\n'
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash 2 MENU-OPTIONS%b\n\n' "$g_color_info" "$g_color_reset"
+
+}
+
+
 #1. Logica principal del script (incluyendo los argumentos variables)
-_g_status=0
 
-#Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
-fulfill_preconditions $g_os_subtype_id 0 0 1
-_g_status=$?
+#Argumento 1: el modo de ejecución del script
+if [ -z "$1" ]; then
+    gp_type_calling=0
+elif [[ "$1" =~ ^[0-9]+$ ]]; then
+    gp_type_calling=$1
+else
+    printf 'Argumentos invalidos.\n\n'
+    g_usage
+    exit 110
+fi
 
-#Iniciar el procesamiento
-if [ $_g_status -eq 0 ]; then
-    g_main
+#1.1. Mostrar el menu para escoger lo que se va instalar
+if [ $gp_type_calling -eq 0 ]; then
+
+    #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
+    _g_status=0
+    fulfill_preconditions $g_os_subtype_id 0 0 1
+    _g_status=$?
+
+    #Iniciar el procesamiento
+    if [ $_g_status -eq 0 ]; then
+        g_main
+    fi
+
+#1.2. No mostrar el menu, la opcion del menu a ejecutar se envia como parametro
+else
+
+    #Argumento 2: las opcione de menu a ejecutar
+    gp_menu_options=0
+    if [[ "$2" =~ ^[0-9]+$ ]]; then
+        gp_menu_options=$2
+    else
+        echo "Parametro 2 \"$2\" debe ser una opción valida."
+        exit 110
+    fi
+
+    #Ejecutar las opciones de menu escogidas
+    _update_all $gp_menu_options
+
 fi
 
 

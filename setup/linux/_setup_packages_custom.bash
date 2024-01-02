@@ -9,7 +9,10 @@
 #    ['jq']='stedolan/jq'
 gA_packages=(
         ['curl']='curl'
+        ['tmux']='tmux'
+        ['git']='git'
         ['openssl']='openssl'
+        ['rsync']='rsync'
         ['xclip']='xclip'
         ['xsel']='xsel'
         ['vim']='vim-enhanced'
@@ -17,6 +20,8 @@ gA_packages=(
         ['python']='python3'
         ['python-pip']='python3-pip'
         ['skopeo']='skopeo'
+        ['xauth']='xorg-x11-xauth'
+        ['xvfb']='xorg-x11-server-Xvfb'
     )
 
 
@@ -26,11 +31,13 @@ gA_packages=(
 #  - Cada entrada define un opcion de menú. Su valor define el titulo.
 ga_menu_options_title=(
     "Basicos"
-    "CLI de portapales X11 'xsel'"
-    "CLI de portapales X11 'xclip'"
-    "RTE Python3"
     "Editor VIM"
     "Editor NeoVIM"
+    "RTE Python3"
+    "X11 client> Portapales 'xclip'"
+    "X11 client> Portapales 'xsel'"
+    "X11 module> Autorización 'xauth'"
+    "X11 server> Virtual X11 server 'Xvfb'"
     "Gestión de imagenes de contenedores"
     )
 
@@ -43,12 +50,14 @@ ga_menu_options_title=(
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
 ga_menu_options_packages=(
-    "curl,openssl"
-    "xsel"
-    "xclip"
-    "python,python-pip"
+    "curl,openssl,git,tmux,rsync"
     "vim"
     "nvim"
+    "python,python-pip"
+    "xclip"
+    "xsel"
+    "xauth"
+    "xvfb"
     "skopeo"
     )
 
@@ -124,6 +133,26 @@ get_package_name() {
 
         python-pip)
             l_search_type=1
+            ;;
+
+        xvfb)
+
+            #Si es un distribucion de la familia Debian
+            if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
+                #Si es Ubuntu
+                l_package_name_custom="Xvfb"
+                l_search_type=1
+            fi 
+            ;;
+
+        xauth)
+
+            #Si es un distribucion de la familia Debian
+            if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
+                #Si es Ubuntu
+                l_package_name_custom="xauth"
+                l_search_type=1
+            fi 
             ;;
 
         *)
@@ -233,7 +262,8 @@ install_finalize_menu_option() {
                 echo "Instalando el comando 'jtbl' (modulo python) para mostrar arreglos json en una consola en formato tabular."
                 
                 #Se instalar a nivel usuario
-                pip3 install jtbl
+                #pip3 install jtbl
+                pip3 install jtbl --break-system-packages
             fi
 
             #2. Instalación de Herramienta para generar la base de compilacion de Clang desde un make file
@@ -247,7 +277,8 @@ install_finalize_menu_option() {
                 echo "Instalando el comando 'compiledb' (modulo python) para generar una base de datos de compilacion Clang desde un make file."
                 
                 #Se instalar a nivel usuario
-                pip3 install compiledb
+                #pip3 install compiledb
+                pip3 install compiledb --break-system-packages
             fi
 
             #3. Instalación de la libreria de refactorización de Python (https://github.com/python-rope/rope)
@@ -259,7 +290,8 @@ install_finalize_menu_option() {
                 echo "Instalando la libreria python 'rope' para refactorización de Python (https://github.com/python-rope/rope)."
                 
                 #Se instalara a nivel usuario
-                pip3 install rope
+                #pip3 install rope
+                pip3 install rope --break-system-packages
             fi
 
             ;;

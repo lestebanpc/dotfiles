@@ -5480,6 +5480,7 @@ install_initialize_menu_option() {
     local l_status
     local l_repo_id
     local l_artifact_index
+    local l_noninteractive=1
     #local l_aux
     #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
@@ -5662,7 +5663,11 @@ install_initialize_menu_option() {
                     fi
 
                     #Instalar los paquetes
-                    install_os_package "$l_packages" $g_os_subtype_id
+                    l_noninteractive=1
+                    if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
+                        l_noninteractive=0
+                    fi
+                    install_os_package "$l_packages" $g_os_subtype_id $l_noninteractive
                 fi
             fi
 

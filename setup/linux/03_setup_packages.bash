@@ -47,9 +47,11 @@ gp_uninstall=1          #(0) Para instalar/actualizar
                         #(1) Para desintalar
 
 #Tipo de ejecucion del script principal
-gp_type_calling=0       #(0) Ejecución interactiva del script (muestra el menu).
-                        #(1) Ejecución no-interactiva del script para instalar/actualizar un conjunto de respositorios
-                        #(2) Ejecución no-interactiva del script para instalar/actualizar un solo paquete
+gp_type_calling=0       #(0) Ejecución mostrando el menu del opciones (siempre es interactiva).
+                        #(1) Ejecución sin el menu de opciones, interactivo - instalar/actualizar un conjunto de paquetes
+                        #(2) Ejecución sin el menu de opciones, interactivo - instalar/actualizar un solo paquete
+                        #(3) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar un conjunto de paquetes
+                        #(4) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar un solo paquete
 
 #Estado del almacenado temporalmente de las credenciales para sudo
 # -1 - No se solicito el almacenamiento de las credenciales
@@ -174,10 +176,10 @@ function _install_menu_options() {
         #3.1. Mostrar el titulo
         print_line '─' $g_max_length_line  "$g_color_opaque"
 
-        #Si se ejecuta en forma interactiva
+        #Si se ejecuta muestra el menú
         if [ $gp_type_calling -eq 0 ]; then
             printf -v l_title_template 'Opción %b%s%b: %b%s%b' "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
-        #Si se ejecuta en forma no-interactiva
+        #Si se ejecuta cuando no se muestra el menú
         else
             printf -v l_title_template 'Grupo de paquetes: %b%s%b' "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         fi
@@ -267,11 +269,11 @@ function _install_menu_options() {
 
             #4.2.4. Calcular la plantilla del titulo.
 
-            #Si se ejecuta en forma interactiva
+            #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
                 printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
                       "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
-            #Si se ejecuta en forma no-interactiva
+            #Si se ejecuta sin usar el menu
             else
                 printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
                       "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
@@ -342,11 +344,11 @@ function _install_menu_options() {
 
         if [ -z "$l_title_template" ]; then
 
-            #Si se ejecuta en forma interactiva
+            #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
                 printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
                       "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
-            #Si se ejecuta en forma no-interactiva
+            #Si se ejecuta sin usar el menú
             else
                 printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
                       "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
@@ -584,10 +586,10 @@ function _uninstall_menu_options() {
         #3.1. Mostrar el titulo
         print_line '─' $g_max_length_line  "$g_color_opaque"
 
-        #Si se ejecuta en forma interactiva
+        #Si se ejecuta usando el menu
         if [ $gp_type_calling -eq 0 ]; then
             printf -v l_title_template "Opción %s%s%s '%s%s%s'" "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
-        #Si se ejecuta en forma no-interactiva
+        #Si se ejecuta sin usar el menu
         else
             printf -v l_title_template "Grupo de paquetes: '%s%s%s'" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         fi
@@ -675,11 +677,11 @@ function _uninstall_menu_options() {
             fi
 
             #4.2.4. Calcular la plantilla del titulo.
-            #Si se ejecuta en forma interactiva
+            #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
                 printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
                       "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
-            #Si se ejecuta en forma no interactiva
+            #Si se ejecuta sin usar el menu
             else
                 printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
                       "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
@@ -750,11 +752,11 @@ function _uninstall_menu_options() {
 
         if [ -z "$l_title_template" ]; then
 
-            #Si se ejecuta en forma interactiva
+            #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
                 printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
                       "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
-            #Si se ejecuta en forma no interactiva
+            #Si se ejecuta sin usar el menu
             else
                 printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
                       "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
@@ -998,7 +1000,11 @@ function g_uninstall_package() {
         fi
     fi
 
-    uninstall_os_package "$l_package_name" $g_os_subtype_id
+    local l_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
+        l_noninteractive=0
+    fi
+    uninstall_os_package "$l_package_name" $g_os_subtype_id $l_noninteractive
     l_status=$?
 
     #Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
@@ -1120,7 +1126,11 @@ function g_install_package() {
         fi
     fi
 
-    install_os_package "$l_package_name" $g_os_subtype_id
+    local l_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
+        l_noninteractive=0
+    fi
+    install_os_package "$l_package_name" $g_os_subtype_id $l_noninteractive
     l_status=$?
 
     #Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
@@ -1158,6 +1168,7 @@ function g_install_packages() {
     #3. Inicializaciones cuando se invoca directamente el script
     local l_flag=0
     local l_title
+    local l_noninteractive=1
     if [ $gp_type_calling -eq 0 ]; then
 
 
@@ -1183,7 +1194,11 @@ function g_install_packages() {
             print_text_in_center2 "$l_title" $g_max_length_line 
             print_line '─' $g_max_length_line "$g_color_opaque"
 
-            upgrade_os_packages $g_os_subtype_id            
+            l_noninteractive=1
+            if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
+                l_noninteractive=0
+            fi
+            upgrade_os_packages $g_os_subtype_id $l_noninteractive
 
         fi
     fi
@@ -1208,7 +1223,7 @@ function g_install_packages() {
 
 
     #6. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
-    #   Si no se invoca interactivamente y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
+    #   Si no se invoca usando el menú y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
     if [ $g_status_crendential_storage -eq 0 ] && [ $gp_type_calling -eq 0 ]; then
     #if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
         clean_sudo_credencial
@@ -1233,7 +1248,7 @@ function g_uninstall_packages() {
         return 99
     fi
 
-    #3. Inicializaciones cuando se invoca directamente el script
+    #3. Inicializaciones cuando se muestra el menú
     #local l_flag=0
     #if [ $gp_type_calling -eq 0 ]; then
 
@@ -1259,7 +1274,7 @@ function g_uninstall_packages() {
 
 
     #6. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
-    #   Si no se invoca interactivamente y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
+    #   Si no se invoca usando el menú y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
     if [ $g_status_crendential_storage -eq 0 ] && [ $gp_type_calling -eq 0 ]; then
     #if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
         clean_sudo_credencial
@@ -1413,14 +1428,22 @@ function g_uninstall_main() {
 g_usage() {
 
     printf '%bUsage:\n\n' "$g_color_opaque"
-    printf '  > Desintalar paquetes de manera interactiva (muestra el menú):\n'
+    printf '  > Desintalar paquetes mostrando el menú de opciones:\n'
     printf '    %b~/.files/setup/linux/03_setup_packages.bash uninstall\n%b' "$g_color_info" "$g_color_opaque"
-    printf '  > Instalar/Actualizar los paquetes de manera interactiva (muestra el menú):\n'
+    printf '  > Instalar paquetes mostrando el menú de opciones (interactivo):\n'
     printf '    %b~/.files/setup/linux/03_setup_packages.bash\n%b' "$g_color_info" "$g_color_opaque"
-    printf '  > Instalar/Actualizar uno o mas paquetes en forma no interactiva (sin menú):\n'
+    printf '  > Instalar/Actualizar un grupo de paquetes sin mostrar el menú, pero interactivo:\n'
     printf '    %b~/.files/setup/linux/03_setup_packages.bash 1 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
-    printf '  > Instalar/Actualizar un paquete en forma no interactiva (sin menú):\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 2 PACKAGE-ID%b\n\n' "$g_color_info" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 1 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
+    printf '  > Instalar/Actualizar un paquete sin mostrar el menú, pero interactivo:\n'
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 2 REPO-ID%b\n' "$g_color_info" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 2 PACKAGE-ID SUDO-STORAGE-OPTIONS%b\n' "$g_color_info" "$g_color_reset"
+    printf '  > Instalar/Actualizar un grupo de paquetes sin mostrar el menú, pero no-interactivo:\n'
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 3 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 3 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
+    printf '  > Instalar/Actualizar un paquete sin mostrar el menú, pero no-interactivo:\n'
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 4 REPO-ID%b\n' "$g_color_info" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 4 PACKAGE-ID SUDO-STORAGE-OPTIONS%b\n\n' "$g_color_info" "$g_color_reset"
 
 }
 
@@ -1487,7 +1510,7 @@ else
         fi
     
     #2.2.2. No mostrar el menu. Instalando los paquetes especificados por las opciones indicas en '$2'
-    elif [ $gp_type_calling -eq 1 ]; then
+    elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
     
         #Parametros del script usados hasta el momento:
         # 1> Tipo de configuración: 1 (instalación/actualización).

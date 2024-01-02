@@ -53,7 +53,7 @@ if [ -z "$g_user_is_root" ]; then
 
 fi
 
-#Flag '0' indica que vim esta instalado (los plugins de vim se puede instalar sin tener el vim instalado)
+#Flag '0' indica que vim esta instalando (los plugins de vim se puede instalar sin tener el vim instalando)
 g_is_vim_installed=0
 g_is_nvim_installed=0
 g_is_nodejs_installed=0
@@ -62,6 +62,11 @@ g_is_python_installed=0
 #Funciones de utilidad
 . ~/.files/setup/linux/_common_utility.bash
 
+
+#Tipo de ejecucion del script principal
+gp_type_calling=0       #(0) Ejecución mostrando el menu del opciones (siempre es interactiva).
+                        #(1) Ejecución sin el menu de opciones, interactivo    - configurar un conjunto de opciones del menú
+                        #(2) Ejecución sin el menu de opciones, no-interactivo - configurar un conjunto de opciones del menú
 
 
 #Estado del almacenado temporalmente de las credenciales para sudo
@@ -173,7 +178,7 @@ declare -A gA_repos_depth=(
 #}}}
 
 
-#Parametros de salida (SDTOUT): Version de compilador c/c++ instalado
+#Parametros de salida (SDTOUT): Version de compilador c/c++ instalando
 #Parametros de salida (valores de retorno):
 # 0 > Se obtuvo la version
 # 1 > No se obtuvo la version
@@ -360,10 +365,10 @@ function _setup_vim_packages() {
 
         #echo "${l_base_path}/${l_repo_name}/.git"
 
-        #4.3 Validar si el paquete ya esta instalado
+        #4.3 Validar si el paquete ya esta instalando
         if [ -d ${l_base_path}/${l_repo_name}/.git ]; then
              #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-             printf 'Paquete %s (%s) "%b%s%b": Ya esta instalado\n' "$l_tag" "${l_repo_type}" "$g_color_opaque" "${l_repo_git}" "$g_color_reset"
+             printf 'Paquete %s (%s) "%b%s%b": Ya esta instalando\n' "$l_tag" "${l_repo_type}" "$g_color_opaque" "${l_repo_git}" "$g_color_reset"
              continue
         fi
 
@@ -450,11 +455,11 @@ function _setup_vim_packages() {
 
     #6. Inicializar los paquetes/plugin de VIM/NeoVIM que lo requieren.
     if [ $p_flag_developer -ne 0 ]; then
-        printf 'Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Editor" "$g_color_reset"
+        printf 'Se ha instalando los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Editor" "$g_color_reset"
         return 0
     fi
 
-    printf 'Se ha instalado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
+    printf 'Se ha instalando los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
     if [ $g_is_nodejs_installed -ne 0  ]; then
 
         printf 'Recomendaciones:\n'
@@ -462,7 +467,7 @@ function _setup_vim_packages() {
         if [ $p_is_neovim -eq 0  ]; then
             printf '    > NeoVIM como developer por defecto usa el adaptador LSP y autocompletado nativo. %bNo esta habilitado el uso de CoC%b\n' "$g_color_opaque" "$g_color_reset" 
         else
-            printf '    > VIM esta como developer pero NO puede usar CoC  %b(requiere que NodeJS este instalado)%b\n' "$g_color_opaque" "$g_color_reset" 
+            printf '    > VIM esta como developer pero NO puede usar CoC  %b(requiere que NodeJS este instalando)%b\n' "$g_color_opaque" "$g_color_reset" 
         fi
         return 0
 
@@ -540,7 +545,7 @@ function _setup_vim_packages() {
     echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
     echo "               { \"diagnostic.displayByAle\": true }"
     echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-    echo "               Si esta instalado esta extension, desintalarlo."
+    echo "               Si esta instalando esta extension, desintalarlo."
 
 
     return 0
@@ -856,7 +861,7 @@ _install_nodejs() {
     echo "$PATH" | grep "${g_path_programs}/nodejs/bin" &> /dev/null
     l_status=$?
     if [ $l_status -ne 0 ] && [ -f "${g_path_programs}/nodejs/bin/node" ]; then
-        printf '%bNode.JS %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+        printf '%bNode.JS %s esta instalando pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
             "$g_color_warning" "$l_version" "$g_color_reset"
         printf 'Adicionando a la sesion actual: PATH=%s/nodejs/bin:$PATH\n' "${g_path_programs}"
         export PATH=${g_path_programs}/nodejs/bin:$PATH
@@ -869,7 +874,7 @@ _install_nodejs() {
         l_version=""
     fi
 
-    #Si no esta instalado
+    #Si no esta instalando
     if [ -z "$l_version" ]; then
 
         print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
@@ -879,7 +884,7 @@ _install_nodejs() {
 
         #Parametros:
         # 1> Tipo de ejecución: 2 (ejecución no-interactiva para instalar/actualizar un respositorio especifico)
-        # 2> Repositorio a instalar/acutalizar: "nodejs" (actualizar solo los comandos instalados)
+        # 2> Repositorio a instalar/acutalizar: "nodejs" (actualizar solo los comandos instalandos)
         # 3> El estado de la credencial almacenada para el sudo
         ~/.files/setup/linux/01_setup_commands.bash 2 "nodejs" $g_status_crendential_storage
         l_status=$?
@@ -910,10 +915,10 @@ _install_nodejs() {
             g_is_nodejs_installed=1
         fi
 
-    #Si esta instalado
+    #Si esta instalando
     else
         l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-        echo "VIM (IDE)   > Node.JS \"$l_version\" ya esta instalado"
+        echo "VIM (IDE)   > Node.JS \"$l_version\" ya esta instalando"
         g_is_nodejs_installed=0
     fi
 
@@ -922,7 +927,7 @@ _install_nodejs() {
     l_temp=$(npm list -g --depth=0 2> /dev/null) 
     l_status=$?
     if [ $l_status -ne 0 ]; then           
-        echo "ERROR: No esta instalado correctamente NodeJS (No se encuentra el gestor de paquetes 'npm'). No se instalaran paquetes basicos."
+        echo "ERROR: No esta instalando correctamente NodeJS (No se encuentra el gestor de paquetes 'npm'). No se instalaran paquetes basicos."
         return 1
     fi
 
@@ -948,7 +953,7 @@ _install_nodejs() {
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-        echo "VIM (IDE)   > Comando 'prettier' (paquete global Node.JS) \"$l_version\" ya esta instalado"
+        echo "VIM (IDE)   > Comando 'prettier' (paquete global Node.JS) \"$l_version\" ya esta instalando"
         echo "              Si usa JS o TS, se recomienda instalar de manera local los paquetes Node.JS para Linter EsLint:"
         echo "                 > npm install --save-dev eslint"
         echo "                 > npm install --save-dev eslint-plugin-prettier"
@@ -979,7 +984,7 @@ _install_nodejs() {
         else
             l_version=$(echo "$l_version" | head -n 1 )
             l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-            echo "NeoVIM (IDE)> Paquete 'neovim' de Node.JS para soporte de plugins con NeoVIM, ya esta instalado: versión \"${l_version}\""
+            echo "NeoVIM (IDE)> Paquete 'neovim' de Node.JS para soporte de plugins con NeoVIM, ya esta instalando: versión \"${l_version}\""
         fi
 
         #3.1. Paquete 'TreeSitter CLI' que ofrece soporte al 'Tree-sitter grammar'
@@ -1001,7 +1006,7 @@ _install_nodejs() {
         else
             l_version=$(echo "$l_version" | head -n 1 )
             l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-            echo "NeoVIM (IDE)> Paquete 'tree-sitter-cli' de Node.JS para soporte a TreeSitter, ya esta instalado: versión \"${l_version}\""
+            echo "NeoVIM (IDE)> Paquete 'tree-sitter-cli' de Node.JS para soporte a TreeSitter, ya esta instalando: versión \"${l_version}\""
         fi
 
 
@@ -1063,10 +1068,10 @@ _install_python() {
     l_status=$?
     if [ $l_status -eq 0 ]; then
         l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-        printf 'VIM (IDE)   > Python3 "%s" esta instalado\n' "$l_version"
+        printf 'VIM (IDE)   > Python3 "%s" esta instalando\n' "$l_version"
         g_is_python_installed=0
     else
-        printf 'VIM (IDE)   > %bPython3 no esta instalado. Se recomienda instalarlo%b. Luego de ello, instale los paquetes de Python:\n' "$g_color_warning" "$g_color_reset"
+        printf 'VIM (IDE)   > %bPython3 no esta instalando. Se recomienda instalarlo%b. Luego de ello, instale los paquetes de Python:\n' "$g_color_warning" "$g_color_reset"
         printf '%b            > Comando jtbl      : "pip3 install jtbl" (mostrar arreglos json en tablas en consola)\n' "$g_color_opaque"
         printf '            > Comando compiledb : "pip3 install compiledb" (utilidad para generar make file para Clang)\n'
         printf '            > Comando rope      : "pip3 install rope" (utilidad para refactorización de Python)\n'
@@ -1081,13 +1086,13 @@ _install_python() {
     l_version=$(pip3 --version 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ]; then
-        printf 'VIM (IDE)   > Comando "%bpip%b" (modulo python) %bno se esta instalado%b. Corrija el error y vuelva configurar el profile.\n' \
+        printf 'VIM (IDE)   > Comando "%bpip%b" (modulo python) %bno se esta instalando%b. Corrija el error y vuelva configurar el profile.\n' \
             "$g_color_warning" "$g_color_reset" "$g_color_warning" "$g_color_reset"
         return 1
     fi
 
     l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-    echo "VIM (IDE)   > Comando 'pip' (modulo python) \"$l_version\" ya esta instalado"
+    echo "VIM (IDE)   > Comando 'pip' (modulo python) \"$l_version\" ya esta instalando"
 
     #2. Instalación de Herramienta para mostrar arreglo json al formato tabular
     l_version=$(pip3 list | grep jtbl 2> /dev/null)
@@ -1104,7 +1109,7 @@ _install_python() {
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-        echo "General     > Comando 'jtbl' (modulo python) \"$l_version\" ya esta instalado"
+        echo "General     > Comando 'jtbl' (modulo python) \"$l_version\" ya esta instalando"
     fi
 
     #3. Instalación de Herramienta para generar la base de compilacion de Clang desde un make file
@@ -1122,8 +1127,8 @@ _install_python() {
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-        echo "General     > Comando 'compiladb' (modulo python) \"$l_version\" ya esta instalado"
-        #echo "Tools> 'compiledb' ya esta instalado"
+        echo "General     > Comando 'compiladb' (modulo python) \"$l_version\" ya esta instalando"
+        #echo "Tools> 'compiledb' ya esta instalando"
     fi
 
     #4. Instalación de la libreria de refactorización de Python (https://github.com/python-rope/rope)
@@ -1139,8 +1144,8 @@ _install_python() {
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-        echo "General     > Libreria 'rope' (modulo python) \"$l_version\" ya esta instalado"
-        #echo "Tools> 'compiledb' ya esta instalado"
+        echo "General     > Libreria 'rope' (modulo python) \"$l_version\" ya esta instalando"
+        #echo "Tools> 'compiledb' ya esta instalando"
     fi
 
     #5. Instalando paquete requeridos por NeoVIM
@@ -1159,8 +1164,8 @@ _install_python() {
 
         else
             l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-            echo "NeoVIM (IDE)> Libreria 'pynvim' (modulo python) \"$l_version\" ya esta instalado"
-            #echo "Tools> 'pynvim' ya esta instalado"
+            echo "NeoVIM (IDE)> Libreria 'pynvim' (modulo python) \"$l_version\" ya esta instalando"
+            #echo "Tools> 'pynvim' ya esta instalando"
         fi
     fi
 
@@ -1239,57 +1244,9 @@ function _install_vim_nvim_environment() {
     print_text_in_center2 "$l_title" $g_max_length_line 
     print_line '─' $g_max_length_line "$g_color_opaque"
 
-
-    #4. Para developer: Instalar utilitarios para gestion de "clipbboard" (X11 Selection): XSel
+    #5. Si se requiere VIM como IDE, usara CoC, por lo que requiere: Node.JS y Python
     local l_version
     local l_status
-
-    if [ $l_flag_developer_vim -eq 0 ] || [ $l_flag_developer_nvim -eq 0 ]; then
-
-        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-            
-            l_version=$(xsel --version 2> /dev/null)
-            l_status=$?
-
-            #if [ $l_status -ne 0 ] || [ $l_status2 -ne 0 ]; then
-            if [ $l_status -ne 0 ]; then
-
-                print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
-                echo "General     > Se va instalar un comando para gestion de X11 Clipboard: XSel"
-
-                #Parametros:
-                # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-                # 2> Repositorios a instalar/acutalizar: 4 (herramienta de X11 clipbboard 'XSel'. Tiene Offset=1)
-                # 3> El estado de la credencial almacenada para el sudo
-                ~/.files/setup/linux/03_setup_packages.bash 1 4 $g_status_crendential_storage
-                l_status=$?
-
-                #Si no se acepto almacenar credenciales
-                if [ $l_status -eq 120 ]; then
-                    return 120
-                #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-                elif [ $l_status -eq 119 ]; then
-                   g_status_crendential_storage=0
-                fi
-
-            fi
-
-        fi
-
-
-        l_version=$(xsel --version 2> /dev/null)
-        l_status=$?
-        if [ $l_status -eq 0 ]; then
-            l_version=$(echo "$l_version" | head -n 1 )
-            l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-            printf 'General     > XSel "%s" esta instalado\n' "$l_version"
-        else
-            printf 'General     > %bXSel no esta esta instalado, se recomienda instalarlo%b.\n' "$g_color_warning" "$g_color_reset"
-        fi
-
-    fi
-
-    #5. Si se requiere VIM como IDE, usara CoC, por lo que requiere: Node.JS y Python
     if [ $l_flag_install_vim -eq 0 ] && [ $l_flag_developer_vim -eq 0 ]; then
 
         #5.1 Instalación de Node.JS (el gestor de paquetes npm esta incluido)
@@ -1314,7 +1271,7 @@ function _install_vim_nvim_environment() {
 
     #6. Instalar VIM
     
-    #Determinar si esta instalado VIM
+    #Determinar si esta instalando VIM
     l_version=$(vim --version 2> /dev/null)
     l_status=$?
     if [ $l_status -eq 0 ]; then
@@ -1338,9 +1295,9 @@ function _install_vim_nvim_environment() {
 
                 #Parametros:
                 # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-                # 2> Repositorios a instalar/acutalizar: 32 (editor VIM. Tiene Offset=1)
+                # 2> Repositorios a instalar/acutalizar: 4 (editor VIM. Tiene Offset=1)
                 # 3> El estado de la credencial almacenada para el sudo
-                ~/.files/setup/linux/03_setup_packages.bash 1 32 $g_status_crendential_storage
+                ~/.files/setup/linux/03_setup_packages.bash 1 4 $g_status_crendential_storage
                 l_status=$?
 
                 #Si no se acepto almacenar credenciales
@@ -1352,12 +1309,12 @@ function _install_vim_nvim_environment() {
                 fi
 
             else
-                printf 'VIM         > %bVIM-Enhaced no esta instalado, se recomienda su instalación%b.\n' "$g_color_warning" "$g_color_reset"
+                printf 'VIM         > %bVIM-Enhaced no esta instalando, se recomienda su instalación%b.\n' "$g_color_warning" "$g_color_reset"
                 g_is_vim_installed=1
             fi
 
         else
-            printf 'VIM         > VIM-Enhaced "%s" ya esta instalado' "$l_version"
+            printf 'VIM         > VIM-Enhaced "%s" ya esta instalando' "$l_version"
         fi
 
 
@@ -1370,14 +1327,14 @@ function _install_vim_nvim_environment() {
         echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
         l_status=$?
         if [ $l_status -ne 0 ] && [ -f "${g_path_programs}/neovim/bin/nvim" ]; then
-            printf '%bNeoVIM %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+            printf '%bNeoVIM %s esta instalando pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
                 "$g_color_warning" "$l_version" "$g_color_reset"
             printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_programs}"
             export PATH=${g_path_programs}/neovim/bin:$PATH
         fi
     fi
 
-    #Determinar si esta instalado VIM:
+    #Determinar si esta instalando VIM:
     l_version=$(nvim --version 2> /dev/null)
     l_status=$?
     if [ $l_status -eq 0 ]; then
@@ -1401,9 +1358,9 @@ function _install_vim_nvim_environment() {
 
                 #Parametros:
                 # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-                # 2> Repositorios a instalar/acutalizar: 64 (editor NeoVIM. Tiene Offset=1)
+                # 2> Repositorios a instalar/acutalizar: 8 (editor NeoVIM. Tiene Offset=1)
                 # 3> El estado de la credencial almacenada para el sudo
-                ~/.files/setup/linux/03_setup_packages.bash 1 64 $g_status_crendential_storage
+                ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
                 l_status=$?
 
                 #Si no se acepto almacenar credenciales
@@ -1419,7 +1376,7 @@ function _install_vim_nvim_environment() {
 
                 #Parametros:
                 # 1> Tipo de ejecución: 2 (ejecución no-interactiva para instalar/actualizar un respositorio especifico)
-                # 2> Repsositorio a instalar/acutalizar: "neovim" (actualizar solo los comandos instalados)
+                # 2> Repsositorio a instalar/acutalizar: "neovim" (actualizar solo los comandos instalandos)
                 # 3> El estado de la credencial almacenada para el sudo
                 ~/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage            
                 l_status=$?
@@ -1448,16 +1405,173 @@ function _install_vim_nvim_environment() {
                 l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
                 printf 'Se instaló NeoVIM version "%s"\n' "$l_version"
             else
-                printf 'NeoVIM      > %bNeoVIM no esta instalado, se recomienda su instalación%b.\n' "$g_color_warning" "$g_color_reset"
+                printf 'NeoVIM      > %bNeoVIM no esta instalando, se recomienda su instalación%b.\n' "$g_color_warning" "$g_color_reset"
                 g_is_vim_installed=1
             fi
 
         else
-            echo "NeoVIM      > NeoVIM '$l_version' esta instalado. Si desea actualizarlo a la ultima version, use:"
+            echo "NeoVIM      > NeoVIM '$l_version' esta instalando. Si desea actualizarlo a la ultima version, use:"
             echo "               > '~/.files/setup/linux/01_setup_commands.bash'"
             echo "               > '~/.files/setup/linux/04_update_all.bash'"
         fi
+
+
     fi
+
+
+}
+
+
+
+# Parametros:
+# > Opcion ingresada por el usuario.
+function _sutup_support_x11_clipboard() {
+
+    #1. Argumentos
+    local p_opciones=0
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_opciones=$1
+    fi
+
+    #2. Determinar si se requiere instalar VIM/NeoVIM
+    local l_flag_ssh_srv=1
+    local l_flag_ssh_clt_without_xsrv=1
+    local l_flag_ssh_clt_with_xsrv=1
+
+    local l_option=4096
+    local l_flag=$(( $p_opciones & $l_option ))
+    if [ $l_flag -eq $l_option ]; then l_flag_ssh_srv=0; fi
+    
+    l_option=8192
+    l_flag=$(( $p_opciones & $l_option ))
+    if [ $l_flag -eq $l_option ]; then l_flag_ssh_clt_without_xsrv=0; fi
+
+    l_option=16384
+    l_flag=$(( $p_opciones & $l_option ))
+    if [ $l_flag -eq $l_option ]; then l_flag_ssh_clt_with_xsrv=0; fi
+
+    #Si no se solicitar instalar VIM o NeoVIM no instalar ningun comando
+    if [ $l_flag_ssh_srv -ne 0 ] && [ $l_flag_ssh_clt_with_xsrv -ne 0 ] && [ $l_flag_ssh_clt_without_xsrv -ne 0 ]; then
+        return 99
+    fi
+   
+    #3. Mostrar el titulo de instalacion
+    local l_title
+
+    #Obtener a quien aplica la configuración
+    local l_tmp=""
+    if [ $l_flag_ssh_srv -eq 0 ]; then
+        l_tmp="SSH Server"
+    fi
+
+    if [ $l_flag_ssh_clt_with_xsrv -eq 0 ] || [ $l_flag_ssh_clt_without_xsrv -eq 0 ]; then
+        if [ -z "$l_aux" ]; then
+            l_tmp="SSH Client"
+        else
+            l_tmp="${l_aux}/Client"
+        fi
+    fi
+
+    printf -v l_title "Soporte a %bX11 forwarding%b sobre '%b%s%b'" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$l_tmp" "$g_color_reset"
+
+    #Obtener lo que se va configurar/instalar
+    local l_pkg_options=32
+    printf -v l_tmp "instalar '%bxclip%b'" "$g_color_opaque" "$g_color_reset"
+
+    if [ $l_flag_ssh_srv -eq 0 ]; then
+        printf -v l_tmp "%s, '%bxorg-x11-xauth%b', configurar el OpenSSH server" "$l_aux" "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        l_pkg_options=$((l_options + 128))
+    fi
+
+    if [ $l_flag_ssh_clt_without_xsrv -eq 0 ]; then
+        printf -v l_tmp "%s, X virtual server '%bXvfb%b'" "$l_aux" "$g_color_opaque" "$g_color_reset"
+        l_pkg_options=$((l_options + 256))
+    fi
+
+    print -v l_title '%s: %s' "$l_title" "$l_tmp"
+
+    print_line '─' $g_max_length_line  "$g_color_opaque"
+    print_text_in_center2 "$l_title" $g_max_length_line 
+    print_line '─' $g_max_length_line "$g_color_opaque"
+
+    #2. Si no se tiene permisos para root, solo avisar
+    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+        printf '%bNo tiene soporte para ejecutar en modo "root"%b. Para usar el clipbboard de su servidor remotos linux, usando el "%bX11 forwading for SSH%b".\n' \
+               "$g_color_warning" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        printf 'Se recomienda usar la siguiente configuración:\n'
+
+        printf ' > Instale el X cliente "XClip"\n'
+
+        if [ $l_flag_ssh_srv -eq 0 ]; then
+
+            printf ' > Configure el servidor SSH server %b(donde se ejecutará X client)%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '   > Configure el servidor OpenSSH server:\n'
+            printf '     > Edite el archivo "%b%s%b" y modifique el campo  "%b%s%b" a "%b%sb".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
+                   "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "yes"
+            printf '     > Reiniciar el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "systemctl restart sshd.service" "$g_color_reset"
+            printf '   > Validar si la componente "%bxorg-x11-xauth%b" de autorizacion de X11 esta instalando.\n' "$g_color_opaque" "$g_color_reset"
+
+        fi
+
+        if [ $l_flag_ssh_clt_without_xsrv -eq 0 ]; then
+            printf ' > Configure el cliente SSH server en un "%bHeadless Server%b" %b(donde se ejecutará X server)%b\n' "$g_color_info" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+            printf '   > Instale el servidor X virtual "%bXvfb%b".\n' "$g_color_opaque" "$g_color_reset"
+        fi
+
+        return 1
+    fi
+
+    #3. Instalar los programas requeridos 
+    local l_version
+    local l_status
+
+    printf 'X forwarding> Iniciando la %s...n' "$l_tmp"
+
+    #Parametros:
+    # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
+    # 2> Repositorios a instalar/acutalizar: 
+    # 3> El estado de la credencial almacenada para el sudo
+    ~/.files/setup/linux/03_setup_packages.bash 1 $l_pkg_options $g_status_crendential_storage
+    l_status=$?
+
+    #Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+       g_status_crendential_storage=0
+    fi
+
+
+    #5. Configurar OpenSSH server para soportar el 'X11 forwading'
+    if [ $l_flag_ssh_srv -eq 0 ]; then
+
+        if ! cat /etc/ssh/sshd_config | grep '^X11Forwarding\s\+yes\s*$' &> /dev/null; then
+    
+            printf 'X forwarding> Configurando el servidor OpenSSH %s...n' "$l_tmp"
+
+            printf 'X forwarding> Editando el archivo "%b%s%b" y modifique el campo "%b%s%b" a "%b%sb".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
+                   "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "yes" "$g_color_reset"
+            if [ $g_user_sudo_support -eq 4 ]; then
+                cat /etc/ssh/sshd_config | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
+                    > /etc/ssh/sshd_config
+            else
+                sudo cat /etc/ssh/sshd_config | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
+                    > /etc/ssh/sshd_config
+            fi
+
+            printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "systemctl restart sshd.service" "$g_color_reset"
+            if [ $g_user_sudo_support -eq 4 ]; then
+                systemctl restart sshd.service
+            else
+                sudo systemctl restart sshd.service
+            fi
+
+        fi
+
+    fi
+
 
 }
 
@@ -1691,7 +1805,7 @@ function _remove_vim_plugin_manager() {
         fi
 
         if [ $l_flag_removed -ne 0 ]; then
-            printf 'No esta instalado el gestor de paquetes "VIM-Plug" en VIM\n'
+            printf 'No esta instalando el gestor de paquetes "VIM-Plug" en VIM\n'
         fi
 
     fi
@@ -1718,7 +1832,7 @@ function _remove_vim_plugin_manager() {
         fi
 
         if [ $l_flag_removed -ne 0 ]; then
-            printf 'No esta instalado el gestor de paquetes "VIM-Plug" en NeoVIM\n'
+            printf 'No esta instalando el gestor de paquetes "VIM-Plug" en NeoVIM\n'
         fi
 
     fi
@@ -1743,7 +1857,7 @@ function _remove_vim_plugin_manager() {
         fi
 
         if [ $l_flag_removed -ne 0 ]; then
-            printf 'No esta instalado el gestor de paquetes "Packer" en NeoVIM\n'
+            printf 'No esta instalando el gestor de paquetes "Packer" en NeoVIM\n'
         fi
 
     fi
@@ -1754,9 +1868,7 @@ function _remove_vim_plugin_manager() {
 
 
 # Opciones:
-#   (  1) Actualizar los paquetes del SO 
-#   (  2) Crear los enlaces simbolicos (siempre se ejecutara)
-#   (  8) Forzar el actualizado de los enlaces simbolicos del profile
+# 1> Opción de menu a ejecutar
 function _setup() {
 
     #01. Argumentos
@@ -1772,6 +1884,7 @@ function _setup() {
     local l_title
     local l_option=1
     local l_flag
+    local l_noninteractive=1
     
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
@@ -1797,7 +1910,11 @@ function _setup() {
             print_text_in_center2 "$l_title" $g_max_length_line 
             print_line '─' $g_max_length_line "$g_color_opaque"
            
-            upgrade_os_packages $g_os_subtype_id 
+            l_noninteractive=1
+            if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
+                l_noninteractive=0
+            fi
+            upgrade_os_packages $g_os_subtype_id $l_noninteractive 
 
         fi
     fi
@@ -1840,6 +1957,14 @@ function _setup() {
         return 120
     fi
 
+    #09. Eliminar el gestor 'VIM-Plug' y Packer
+    _sutup_support_x11_clipboard $p_opciones
+    l_status=$?
+    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+    if [ $l_status -eq 120 ]; then
+        return 120
+    fi
+
     #09. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_status_crendential_storage -eq 0 ]; then
         clean_sudo_credencial
@@ -1862,7 +1987,7 @@ function _show_menu_core() {
     printf " (%bf%b) Configurar todo el profile como %bdeveloper%b (VIM/NeoVIM como IDE) y re-crear enlaces simbolicos\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
-    local l_max_digits=4
+    local l_max_digits=5
 
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
         printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO\n" "$g_color_title" "1" "$g_color_reset"
@@ -1874,7 +1999,7 @@ function _show_menu_core() {
            "$g_color_reset" "$g_color_opaque" "$g_color_reset"
 
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-        printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(instala 'xsel', 'python3', 'nodejs'/configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
+        printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(instala 'python3', 'nodejs'/configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
                "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
     else
         printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
@@ -1886,7 +2011,7 @@ function _show_menu_core() {
            "$g_color_reset" "$g_color_opaque" "$g_color_reset"
 
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-        printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(instala 'xsel', 'python3', 'nodejs'/configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \
+        printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(instala 'python3', 'nodejs'/configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \
                "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
     else
         printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \
@@ -1895,11 +2020,13 @@ function _show_menu_core() {
     printf "     (%b%0${l_max_digits}d%b) VIM    - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "512" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "1024" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'Packer'\n" "$g_color_title" "2048" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Configurar el '%bServidor SSH%b' para '%bX11 forwading%b' %b(instala paquete 'xsel', 'xorg-x11-xauth' y configurar OpenSSH server)%b\n" "$g_color_title" "4096" "$g_color_reset" \
-           "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Configurar el '%bCliente  SSH%b' instalando  %bX11 server%b '%bXvfb%b' en un '%bheadless servers%b' %b(instala 'Xvfb' e inicia este servidor X11)%b\n" \
-           "$g_color_title" "8192" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" \
-           "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bServidor SSH%b> %bX11 forwading%b> Configurar OpenSSH server e instalar 'xclip', 'xorg-x11-xauth'\n" "$g_color_title" \
+           "4096" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bCliente  SSH%b> %bX11 forwading%b> %bHeadless Server%b> Instalar el servidor X virtual '%bXvfb%b' e instalar 'xclip'\n" \
+           "$g_color_title" "8192" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" \
+           "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bCliente  SSH%b> %bX11 forwading%b> server with %bX Server%b> Instalar 'xclip'\n" \
+           "$g_color_title" "16384" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_opaque"
 
@@ -2000,17 +2127,60 @@ function g_main() {
 
 }
 
+g_usage() {
+
+    printf '%bUsage:\n\n' "$g_color_opaque"
+    printf '  > Configurar el profile mostrando el menú de opciones (interactivo):\n'
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash\n%b' "$g_color_info" "$g_color_opaque"
+    printf '  > Configurar un grupo de opciones del menú sin mostrarlo pero en modo interactivo:\n'
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash 1 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
+    printf '  > Configurar un grupo de opciones del menú sin mostrarlo pero en modo no-interactivo:\n'
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash 2 MENU-OPTIONS%b\n\n' "$g_color_info" "$g_color_reset"
+
+}
+
 
 #1. Logica principal del script (incluyendo los argumentos variables)
-_g_status=0
 
-#Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
-fulfill_preconditions $g_os_subtype_id 0 0 1
-_g_status=$?
+#Argumento 1: el modo de ejecución del script
+if [ -z "$1" ]; then
+    gp_type_calling=0
+elif [[ "$1" =~ ^[0-9]+$ ]]; then
+    gp_type_calling=$1
+else
+    printf 'Argumentos invalidos.\n\n'
+    g_usage
+    exit 110
+fi
 
-#Iniciar el procesamiento
-if [ $_g_status -eq 0 ]; then
-    g_main
+#1.1. Mostrar el menu para escoger lo que se va instalar
+if [ $gp_type_calling -eq 0 ]; then
+
+    #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
+    _g_status=0
+    fulfill_preconditions $g_os_subtype_id 0 0 1
+    _g_status=$?
+
+    #Iniciar el procesamiento
+    if [ $_g_status -eq 0 ]; then
+        g_main
+    fi
+
+#1.2. No mostrar el menu, la opcion del menu a ejecutar se envia como parametro
+else
+
+    #Argumento 2: las opcione de menu a ejecutar
+    gp_menu_options=0
+    if [[ "$2" =~ ^[0-9]+$ ]]; then
+        gp_menu_options=$2
+    else
+        echo "Parametro 2 \"$2\" debe ser una opción valida."
+        exit 110
+    fi
+
+    #Ejecutar las opciones de menu escogidas
+    _setup $gp_menu_options
+
 fi
 
 

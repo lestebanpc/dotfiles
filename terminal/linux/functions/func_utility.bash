@@ -543,15 +543,22 @@ exist_systemd_unit() {
 #  9 > No se puede determinar 
 is_package_installed() {
 
-    #Parametros
+    #1. Parametros
     local p_package_name_part="$1"
-    if [ "$3" = "1" ]; then
-        p_package_name_part="${1} "
-    fi
-
     local p_os_subtype_id=$2
 
-    #Buscar el paquete
+    #Busqueda exacta del paquete
+    if [ "$3" = "1" ]; then
+        #Si es un distribucion de la familia Debian
+        if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
+            p_package_name_part=" ${1} "
+        elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
+            p_package_name_part="^${1}."
+        fi
+    fi
+
+
+    #2. Buscar el paquete
     local l_status
     local l_aux
 
@@ -574,7 +581,7 @@ is_package_installed() {
     #Si es un distribucion de la familia Fedora
     elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
         
-        #Si es Fedora
+        #Si es Fedora, usaremos 'dnf list intalled | grep package' y no 'rpm -qa | grep package'
         #
         #En fodora, el nombre del paquete incluye el tipo de arquitectura. Por ejemplo el paquete 'python3-pip':
         #dnf list installed | grep python3-pip
@@ -602,6 +609,7 @@ is_package_installed() {
 #Actualizar los paquete del SO
 #Parametros de entrada - Agumentos y opciones:
 #  1 > El tipo de distribucion Linux (variable global 'g_os_subtype_id' generado por la funcion 'get_linux_type_info') 
+#  2 > Flag es 0, si es modo no-interactivo (asume 'yes' siempre que se instanta preguntar en forma interactiva)
 #Parametros de salida :
 #  Valor de retorno :
 #    0 > OK
@@ -611,6 +619,12 @@ upgrade_os_packages() {
 
     local p_os_subtype_id=$1
     local l_status=0
+
+    #Opcion de modo non-interactive
+    local p_non_interative=''
+    if [ "$3" = "0" ]; then
+        p_non_interative='-y '
+    fi
 
     #Si no se calculo, Calcularlo 
     if [ -z "$g_user_is_root" ]; then
@@ -622,11 +636,11 @@ upgrade_os_packages() {
 
         #Distribución: Ubuntu
         if [ $g_user_is_root -eq 0 ]; then
-            apt-get update
-            apt-get upgrade
+            apt-get $p_non_interative update
+            apt-get $p_non_interative upgrade
         else
-            sudo apt-get update
-            sudo apt-get upgrade
+            sudo apt-get $p_non_interative update
+            sudo apt-get $p_non_interative upgrade
         fi
         l_status=$?
 
@@ -635,9 +649,9 @@ upgrade_os_packages() {
 
         #Distribución: Fedora
         if [ $g_user_is_root -eq 0 ]; then
-            dnf upgrade
+            dnf $p_non_interative upgrade
         else
-            sudo dnf upgrade
+            sudo dnf $p_non_interative upgrade
         fi
         l_status=$?
 
@@ -665,6 +679,7 @@ upgrade_os_packages() {
 #      00 : Distribución de Linux desconocido
 #      01 : Ubuntu
 #      02 : Fedora
+#  3 > Flag es 0, si es modo no-interactivo (asume 'yes' siempre que se instanta preguntar en forma interactiva)
 #Parametros de salida :
 #  Valor de retorno :
 #    0 > OK
@@ -674,6 +689,13 @@ install_os_package() {
 
     local p_package_name=$1
     local p_os_subtype_id=$2
+
+    #Opcion de modo non-interactive
+    local p_non_interative=''
+    if [ "$3" = "0" ]; then
+        p_non_interative='-y '
+    fi
+
     local l_status=0
 
     #Si no se calculo, Calcularlo 
@@ -686,9 +708,9 @@ install_os_package() {
 
         #Distribución: Ubuntu
         if [ $g_user_is_root -eq 0 ]; then
-           apt-get install "$p_package_name"
+           apt-get $p_non_interative install "$p_package_name"
         else
-           sudo apt-get install "$p_package_name"
+           sudo apt-get $p_non_interative install "$p_package_name"
         fi
         l_status=$?
 
@@ -697,9 +719,9 @@ install_os_package() {
 
         #Distribución: Fedora
         if [ $g_user_is_root -eq 0 ]; then
-           dnf install "$p_package_name"
+           dnf $p_non_interative install "$p_package_name"
         else
-           sudo dnf install "$p_package_name"
+           sudo dnf $p_non_interative install "$p_package_name"
         fi
         l_status=$?
 
@@ -729,6 +751,7 @@ install_os_package() {
 #      00 : Distribución de Linux desconocido
 #      01 : Ubuntu
 #      02 : Fedora
+#  3 > Flag es 0, si es modo no-interactivo (asume 'yes' siempre que se instanta preguntar en forma interactiva)
 #Parametros de salida :
 #  Valor de retorno :
 #    0 > OK
@@ -740,6 +763,12 @@ uninstall_os_package() {
     local p_os_subtype_id=$2
     local l_status=0
 
+    #Opcion de modo non-interactive
+    local p_non_interative=''
+    if [ "$3" = "0" ]; then
+        p_non_interative='-y '
+    fi
+
     #Si no se calculo, Calcularlo 
     if [ -z "$g_user_is_root" ]; then
         get_user_options
@@ -750,10 +779,10 @@ uninstall_os_package() {
 
         #Distribución: Ubuntu
         if [ $g_user_is_root -eq 0 ]; then
-           apt-get purge "$p_package_name"
+           apt-get $p_non_interative purge "$p_package_name"
            #apt-get autoremove
         else
-           sudo apt-get purge "$p_package_name"
+           sudo apt-get $p_non_interative purge "$p_package_name"
            #sudo apt-get autoremove
         fi
         l_status=$?
@@ -763,9 +792,9 @@ uninstall_os_package() {
 
         #Distribución: Fedora
         if [ $g_user_is_root -eq 0 ]; then
-           dnf erase "$p_package_name"
+           dnf $p_non_interative erase "$p_package_name"
         else
-           sudo dnf erase "$p_package_name"
+           sudo dnf $p_non_interative erase "$p_package_name"
         fi
         l_status=$?
 
