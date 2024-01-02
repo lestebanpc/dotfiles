@@ -1528,7 +1528,7 @@ function _sutup_support_x11_clipboard() {
         l_pkg_options=$((l_options + 256))
     fi
 
-    print -v l_title '%s: %s' "$l_title" "$l_tmp"
+    printf -v l_title '%s: %s' "$l_title" "$l_tmp"
 
     print_line '─' $g_max_length_line  "$g_color_opaque"
     print_text_in_center2 "$l_title" $g_max_length_line 
