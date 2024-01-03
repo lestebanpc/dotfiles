@@ -475,10 +475,10 @@ function _update_all() {
                 fi
             fi
 
-            print_line '─' $g_max_length_line  "$g_color_opaque"
+            print_line '─' $g_max_length_line  "$g_color_blue"
             printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
             print_text_in_center2 "$l_title" $g_max_length_line 
-            print_line '─' $g_max_length_line "$g_color_opaque"
+            print_line '─' $g_max_length_line "$g_color_blue"
 
             upgrade_os_packages $g_os_subtype_id $l_noninteractive
             echo ""
@@ -544,9 +544,9 @@ function _update_all() {
             printf -v l_aux "%sVIM%s %s(%s)%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_version" "$g_color_reset"
             printf -v l_title "Actualizar los paquetes de %s" "$l_aux"
 
-            print_line '─' $g_max_length_line  "$g_color_opaque"
+            print_line '─' $g_max_length_line  "$g_color_blue"
             print_text_in_center2 "$l_title" $g_max_length_line
-            print_line '─' $g_max_length_line "$g_color_opaque"
+            print_line '─' $g_max_length_line "$g_color_blue"
 
             #Determinar si esta instalado en modo developer
             l_is_coc_installed=1
@@ -594,9 +594,9 @@ function _update_all() {
             printf -v l_aux "%sNeoVIM%s %s(%s)%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_version" "$g_color_reset"
             printf -v l_title "Actualizar los paquetes de %s" "$l_aux"
 
-            print_line '─' $g_max_length_line  "$g_color_opaque"
+            print_line '─' $g_max_length_line  "$g_color_blue"
             print_text_in_center2 "$l_title" $g_max_length_line
-            print_line '─' $g_max_length_line "$g_color_opaque"
+            print_line '─' $g_max_length_line "$g_color_blue"
 
             #Determinar si esta instalado en modo developer
             l_is_coc_installed=1

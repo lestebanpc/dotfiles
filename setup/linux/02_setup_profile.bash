@@ -821,9 +821,9 @@ function _config_vim_nvim() {
         printf -v l_title "Instalando programas requeridos para %s" "$l_aux"
 
 
-        print_line '─' $g_max_length_line  "$g_color_opaque"
+        print_line '─' $g_max_length_line  "$g_color_blue"
         print_text_in_center2 "$l_title" $g_max_length_line 
-        print_line '─' $g_max_length_line "$g_color_opaque"
+        print_line '─' $g_max_length_line "$g_color_blue"
 
     fi
 
@@ -1260,9 +1260,9 @@ function _install_vim_nvim_environment() {
     printf -v l_title "Instalando programas requeridos para %s" "$l_aux"
 
 
-    print_line '─' $g_max_length_line  "$g_color_opaque"
+    print_line '─' $g_max_length_line  "$g_color_blue"
     print_text_in_center2 "$l_title" $g_max_length_line 
-    print_line '─' $g_max_length_line "$g_color_opaque"
+    print_line '─' $g_max_length_line "$g_color_blue"
 
     #5. Si se requiere VIM como IDE, usara CoC, por lo que requiere: Node.JS y Python
     local l_version
@@ -1478,7 +1478,7 @@ function _sutup_support_x11_clipboard() {
     local l_flag_ssh_clt_without_xsrv=1
     local l_flag_ssh_clt_with_xsrv=1
 
-    local l_option=4096
+    local l_option=16384
     local l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then l_flag_ssh_srv=0; fi
     
@@ -1486,7 +1486,7 @@ function _sutup_support_x11_clipboard() {
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then l_flag_ssh_clt_without_xsrv=0; fi
 
-    l_option=16384
+    l_option=4096
     l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then l_flag_ssh_clt_with_xsrv=0; fi
 
@@ -1530,9 +1530,9 @@ function _sutup_support_x11_clipboard() {
 
     printf -v l_title '%s: %s' "$l_title" "$l_tmp"
 
-    print_line '─' $g_max_length_line  "$g_color_opaque"
+    print_line '─' $g_max_length_line  "$g_color_blue"
     print_text_in_center2 "$l_title" $g_max_length_line 
-    print_line '─' $g_max_length_line "$g_color_opaque"
+    print_line '─' $g_max_length_line "$g_color_blue"
 
     #2. Si no se tiene permisos para root, solo avisar
     if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
@@ -1653,6 +1653,107 @@ function _sutup_support_x11_clipboard() {
 
 # Parametros:
 # > Opcion ingresada por el usuario.
+function _uninstall_support_x11_clipboard() {
+
+    #1. Argumentos
+    local p_opciones=0
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        p_opciones=$1
+    fi
+
+    #2. Determinar si se requiere instalar VIM/NeoVIM
+    local l_flag_ssh_srv=1
+
+    local l_option=32768
+    local l_flag=$(( $p_opciones & $l_option ))
+    if [ $l_flag -eq $l_option ]; then l_flag_ssh_srv=0; fi
+    
+    #Si no se solicitar instalar VIM o NeoVIM no instalar ningun comando
+    if [ $l_flag_ssh_srv -ne 0 ]; then
+        return 99
+    fi
+   
+    #3. Mostrar el titulo de instalacion
+    local l_title
+
+    #Obtener a quien aplica la configuración
+    local l_tmp="SSH Server"
+    printf -v l_title "Remover la configuración del %bX11 forwarding%b en '%b%s%b'" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$l_tmp" "$g_color_reset"
+    #printf -v l_title '%s: %s' "$l_title" "$l_tmp"
+
+    print_line '─' $g_max_length_line  "$g_color_blue"
+    print_text_in_center2 "$l_title" $g_max_length_line 
+    print_line '─' $g_max_length_line "$g_color_blue"
+
+    #2. Si no se tiene permisos para root, solo avisar
+    if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
+
+        printf '%bNo tiene soporte para ejecutar en modo "root"%b. Para remover la configuración "%bX11 forwading%b" del OpenSSH Server.\n' \
+               "$g_color_warning" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        printf 'Se recomienda usar la siguiente configuración:\n'
+        printf ' > Edite el archivo "%b%s%b" y modifique el campo  "%b%s%b" a "%b%sb".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
+               "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "no"
+
+        return 1
+    fi
+
+    #3. Configurar OpenSSH server para soportar el 'X11 forwading'
+    local l_ssh_config_data=""
+    if [ $l_flag_ssh_srv -eq 0 ]; then
+
+        printf '%bX forwarding%b> Configurando el servidor OpenSSH...\n' "$g_color_opaque" "$g_color_reset"
+
+        #Obtener la data del SSH config del servidor OpenSSH
+        if [ $g_user_sudo_support -eq 4 ]; then
+            l_ssh_config_data=$(cat /etc/ssh/sshd_config 2> /dev/null)
+            l_status=$?
+        else
+            l_ssh_config_data=$(sudo cat /etc/ssh/sshd_config 2> /dev/null)
+            l_status=$?
+        fi
+
+        if [ $l_status -ne 0 ]; then
+            printf 'No se obtuvo información del archivo "%b%s%b".\n' "$g_color_warning" "/etc/ssh/sshd_config" "$g_color_reset"
+            return 1
+        fi
+
+    
+        if ! echo "$l_ssh_config_data"  | grep '^X11Forwarding\s\+no\s*$' &> /dev/null; then
+
+            printf 'X forwarding> Modificando el archivo "%b%s%b": editanto el campo "%b%s%b" con el valor "%b%s%b".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
+                   "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "no" "$g_color_reset"
+
+            if [ $g_user_sudo_support -eq 4 ]; then
+                echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding no/' | sed 's/^X11Forwarding\s\+yes\s*$/X11Forwarding no/' \
+                    > /etc/ssh/sshd_config
+            else
+                echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding no/' | sed 's/^X11Forwarding\s\+yes\s*$/X11Forwarding no/' | \
+                    sudo tee /etc/ssh/sshd_config > /dev/null
+            fi
+
+            if [ $g_user_sudo_support -eq 4 ]; then
+                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "systemctl restart sshd.service" "$g_color_reset"
+                systemctl restart sshd.service
+            else
+                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "sudo systemctl restart sshd.service" "$g_color_reset"
+                sudo systemctl restart sshd.service
+            fi
+
+        else
+
+            printf 'X forwarding> El archivo "%b%s%b" ya esta configurado (su campo "%b%s%b" tiene el valor "%b%s%b").\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
+                   "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "no" "$g_color_reset"
+
+        fi
+
+    fi
+
+
+}
+
+
+# Parametros:
+# > Opcion ingresada por el usuario.
 function _setup_profile() {
 
     #1. Argumentos
@@ -1676,7 +1777,7 @@ function _setup_profile() {
 
 
     #2. Mostrar el titulo 
-    print_line '─' $g_max_length_line  "$g_color_opaque"
+    print_line '─' $g_max_length_line  "$g_color_blue"
 
     if [ $l_overwrite_ln_flag -eq 0 ]; then
         printf -v l_title "Creando los %senlaces simbolicos%s del perfil %s(sobrescribir lo existente)%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
@@ -1684,7 +1785,7 @@ function _setup_profile() {
         printf -v l_title "Creando los %senlaces simbolicos%s del perfil %s(solo crar si no existe)%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
     fi
     print_text_in_center2 "$l_title" $g_max_length_line 
-    print_line '─' $g_max_length_line "$g_color_opaque"
+    print_line '─' $g_max_length_line "$g_color_blue"
 
     
 
@@ -1983,10 +2084,10 @@ function _setup() {
             fi
             
             #Actualizar los paquetes de los repositorios
-            print_line '─' $g_max_length_line  "$g_color_opaque"
+            print_line '─' $g_max_length_line  "$g_color_blue"
             printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
             print_text_in_center2 "$l_title" $g_max_length_line 
-            print_line '─' $g_max_length_line "$g_color_opaque"
+            print_line '─' $g_max_length_line "$g_color_blue"
            
             upgrade_os_packages $g_os_subtype_id $l_noninteractive 
 
@@ -2031,7 +2132,7 @@ function _setup() {
         return 120
     fi
 
-    #09. Eliminar el gestor 'VIM-Plug' y Packer
+    #09. Configurar para tener el soporte a 'X11 forwarding for SSH Server'
     _sutup_support_x11_clipboard $p_opciones
     l_status=$?
     #Se requiere almacenar las credenciales para realizar cambiso con sudo.
@@ -2039,7 +2140,15 @@ function _setup() {
         return 120
     fi
 
-    #09. Caducar las credecinales de root almacenadas temporalmente
+    #10. Configurar para tener el soporte a 'X11 forwarding for SSH Server'
+    _uninstall_support_x11_clipboard $p_opciones
+    l_status=$?
+    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
+    if [ $l_status -eq 120 ]; then
+        return 120
+    fi
+
+    #11. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_status_crendential_storage -eq 0 ]; then
         clean_sudo_credencial
     fi
@@ -2094,13 +2203,15 @@ function _show_menu_core() {
     printf "     (%b%0${l_max_digits}d%b) VIM    - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "512" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "1024" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'Packer'\n" "$g_color_title" "2048" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bServidor SSH%b> %bX11 forwading%b> Configurar OpenSSH server e instalar 'xclip', 'xorg-x11-xauth'\n" "$g_color_title" \
-           "4096" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bCliente  SSH%b> %bX11 forwading%b> server with %bX Server%b> Instalar 'xclip'\n" \
+           "$g_color_title" "4096" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) %bCliente  SSH%b> %bX11 forwading%b> %bHeadless Server%b> Instalar el servidor X virtual '%bXvfb%b' e instalar 'xclip'\n" \
            "$g_color_title" "8192" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" \
            "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bCliente  SSH%b> %bX11 forwading%b> server with %bX Server%b> Instalar 'xclip'\n" \
-           "$g_color_title" "16384" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bServidor SSH%b> %bX11 forwading%b> Configurar OpenSSH server e instalar 'xclip', 'xorg-x11-xauth'\n" "$g_color_title" \
+           "16384" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bServidor SSH%b> Eliminar el %bX11 forwading%b del OpenSSH server\n" "$g_color_title" "32768" "$g_color_reset" \
+           "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_opaque"
 

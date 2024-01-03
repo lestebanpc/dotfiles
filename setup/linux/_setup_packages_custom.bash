@@ -140,7 +140,7 @@ get_package_name() {
             #Si es un distribucion de la familia Debian
             if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
                 #Si es Ubuntu
-                l_package_name_custom="Xvfb"
+                l_package_name_custom="xvfb"
                 l_search_type=1
             fi 
             ;;

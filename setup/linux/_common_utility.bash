@@ -10,6 +10,7 @@ g_color_title="\x1b[32m"
 g_color_subtitle="\x1b[36m"
 g_color_info="\x1b[33m"
 g_color_warning="\x1b[31m"
+g_color_blue="\x1b[34m"
 
 #Tamaño de la linea del menu
 g_max_length_line=130
