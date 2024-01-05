@@ -537,9 +537,13 @@ function request_stop_systemd_unit() {
         printf "repositorio '%s'.\n" "$p_repo_id"
     fi
 
+    if [ $gp_type_calling -ne 3 ] && [ $gp_type_calling -ne 4 ]; then
+        printf "¿Desea detener la unidad systemd?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_opaque" "$g_color_reset"
+        read -rei 's' -p ': ' l_option
+    else
+        l_option='s'
+    fi
 
-    printf "¿Desea detener la unidad systemd?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_opaque" "$g_color_reset"
-    read -rei 's' -p ': ' l_option
     if [ "$l_option" != "s" ]; then
 
         if [ $p_is_uninstalling -eq 0 ]; then

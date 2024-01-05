@@ -5766,11 +5766,13 @@ uninstall_initialize_menu_option() {
     done
     printf '%b\n' "$l_repo_names"
 
-    printf "%b¿Desea continuar con la desinstalación de estos repositorios?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_warning" "$g_color_opaque" "$g_color_reset"
-    read -rei 's' -p ': ' l_option
-    if [ "$l_option" != "s" ]; then
-        printf 'Se cancela la desinstalación de los repositorios\n'
-        return 1
+    if [ $gp_type_calling -ne 3 ] && [ $gp_type_calling -ne 4 ]; then
+        printf "%b¿Desea continuar con la desinstalación de estos repositorios?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_warning" "$g_color_opaque" "$g_color_reset"
+        read -rei 's' -p ': ' l_option
+        if [ "$l_option" != "s" ]; then
+            printf 'Se cancela la desinstalación de los repositorios\n'
+            return 1
+        fi
     fi
 
     #4. Realizar validaciones segun la opcion de menu escogida
