@@ -4,13 +4,13 @@
 
 
 #Colores principales usados para presentar información (menu,...)
-g_color_opaque="\x1b[90m"
 g_color_reset="\x1b[0m"
-g_color_title="\x1b[32m"
-g_color_subtitle="\x1b[36m"
-g_color_info="\x1b[33m"
-g_color_warning="\x1b[31m"
-g_color_blue="\x1b[34m"
+g_color_green1="\x1b[32m"
+g_color_gray1="\x1b[90m"
+g_color_cian1="\x1b[36m"
+g_color_yellow1="\x1b[33m"
+g_color_red1="\x1b[31m"
+g_color_blue1="\x1b[34m"
 
 #Tamaño de la linea del menu
 g_max_length_line=130
@@ -177,7 +177,7 @@ function fulfill_preconditions() {
         if [ -z "$l_curl_version" ]; then
 
             printf '\nERROR: CURL no esta instalado, debe instalarlo para descargar los artefactos a instalar/actualizar.\n'
-            printf '%bBinarios: https://curl.se/download.html\n' "$g_color_opaque"
+            printf '%bBinarios: https://curl.se/download.html\n' "$g_color_gray1"
             printf 'Paquete Ubuntu/Debian:\n'
             printf '          apt-get install curl\n'
             printf 'Paquete CentOS/Fedora:\n'
@@ -198,7 +198,7 @@ function fulfill_preconditions() {
     #8. Mostar información adicional (Solo mostrar info adicional si la ejecución es interactiva)
     if [ $p_type_calling -eq 0 ]; then
 
-        printf '%bLinux distribution - Name   : (%s) %s\n' "$g_color_opaque" "${g_os_subtype_id}" "${g_os_subtype_name}"
+        printf '%bLinux distribution - Name   : (%s) %s\n' "$g_color_gray1" "${g_os_subtype_id}" "${g_os_subtype_name}"
         printf 'Linux distribution - Version: (%s) %s (%s)\n' "$g_os_subtype_id" "$g_os_subtype_version" "$g_os_subtype_version_pretty"
         printf 'Processor architecture type : %s\n' "$g_os_architecture_type"
 
@@ -242,7 +242,7 @@ function fulfill_preconditions() {
 
         if [ $p_require_curl -eq 0 ]; then
             l_curl_version=$(echo "$l_curl_version" | head -n 1 | sed "$g_regexp_sust_version1")
-            printf '%bCURL version                : %s%b\n' "$g_color_opaque" "$l_curl_version" "$g_color_reset"
+            printf '%bCURL version                : %s%b\n' "$g_color_gray1" "$l_curl_version" "$g_color_reset"
         fi
 
     fi
@@ -270,12 +270,12 @@ function storage_sudo_credencial() {
     # > 3 : El usuario no tiene permisos para ejecutar sudo
     elif [ $g_user_sudo_support -eq 3 ]; then
         printf 'El usuario no tiene permiso para ejecutar sudo. %bSolo se va instalar/configurar paquetes/programas que no requieren acceso de "root"%b\n' \
-               "$g_color_warning" "$g_color_reset"
+               "$g_color_red1" "$g_color_reset"
         return 3
     # > 2 : El SO no implementa el comando sudo
     elif [ $g_user_sudo_support -eq 4 ]; then
         printf 'El SO no implementa el comando sudo. %bSolo se va instalar/configurar paquetes/programas que no requieren acceso de "root"%b\n' \
-               "$g_color_warning" "$g_color_reset"
+               "$g_color_red1" "$g_color_reset"
         return 4
     fi
 
@@ -517,7 +517,7 @@ function request_stop_systemd_unit() {
     fi
 
     #3. Solicitar la detención del servicio
-    printf "%bLa unidad systemd '%s' esta iniciado y requiere detenerse para " "$g_color_warning" "$p_unit_name"
+    printf "%bLa unidad systemd '%s' esta iniciado y requiere detenerse para " "$g_color_red1" "$p_unit_name"
 
     if [ $p_is_uninstalling -eq 0 ]; then
         printf 'desinstalar '
@@ -538,7 +538,7 @@ function request_stop_systemd_unit() {
     fi
 
     if [ $gp_type_calling -ne 3 ] && [ $gp_type_calling -ne 4 ]; then
-        printf "¿Desea detener la unidad systemd?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_opaque" "$g_color_reset"
+        printf "¿Desea detener la unidad systemd?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_gray1" "$g_color_reset"
         read -rei 's' -p ': ' l_option
     else
         l_option='s'
@@ -547,9 +547,9 @@ function request_stop_systemd_unit() {
     if [ "$l_option" != "s" ]; then
 
         if [ $p_is_uninstalling -eq 0 ]; then
-            printf '%bNo se desinstalará ' "$g_color_opaque"
+            printf '%bNo se desinstalará ' "$g_color_gray1"
         else
-            printf '%bNo se instalará ' "$g_color_opaque"
+            printf '%bNo se instalará ' "$g_color_gray1"
         fi
 
         if [ $p_artifact_index -lt 0 ]; then
@@ -645,7 +645,7 @@ function request_stop_k0s_node() {
     local l_nodo_type=$(echo "$l_info" | grep -e '^Role' | sed 's/.*: \(.*\)/\1/' 2> /dev/null)
 
     #3. Solicitar la detención del servicio
-    printf "%bEl nodo k0s '%s' (PID: %s) esta iniciado y requiere detenerse para " "$g_color_warning" "$l_nodo_type" "$l_node_process_id"
+    printf "%bEl nodo k0s '%s' (PID: %s) esta iniciado y requiere detenerse para " "$g_color_red1" "$l_nodo_type" "$l_node_process_id"
 
     if [ $p_is_uninstalling -eq 0 ]; then
         printf 'desinstalar '
@@ -666,14 +666,14 @@ function request_stop_k0s_node() {
     fi
 
 
-    printf "¿Desea detener el nodo k0s?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_opaque" "$g_color_reset"
+    printf "¿Desea detener el nodo k0s?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_gray1" "$g_color_reset"
     read -rei 's' -p ': ' l_option
     if [ "$l_option" != "s" ]; then
 
         if [ $p_is_uninstalling -eq 0 ]; then
-            printf '%bNo se desinstalará ' "$g_color_opaque"
+            printf '%bNo se desinstalará ' "$g_color_gray1"
         else
-            printf '%bNo se instalará ' "$g_color_opaque"
+            printf '%bNo se instalará ' "$g_color_gray1"
         fi
 
         if [ $p_artifact_index -lt 0 ]; then
@@ -788,7 +788,7 @@ show_dynamic_menu() {
 
         l_aux="${ga_menu_options_packages[$l_i]}"
         #if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
-        #    printf "     (%b%0${p_max_digits}d%b) %s\n" "$g_color_title" "$l_option_value" "$g_color_reset" "${ga_menu_options_title[$l_i]}"
+        #    printf "     (%b%0${p_max_digits}d%b) %s\n" "$g_color_green1" "$l_option_value" "$g_color_reset" "${ga_menu_options_title[$l_i]}"
         #    continue
         #fi
 
@@ -797,8 +797,8 @@ show_dynamic_menu() {
         la_repos=(${l_aux})
         IFS=$' \t\n'
 
-        printf "     (%b%0${p_max_digits}d%b) %s %b%b%b> " "$g_color_title" "$l_option_value" "$g_color_reset" \
-               "$p_option_tag" "$g_color_title" "${ga_menu_options_title[$l_i]}" "$g_color_reset"
+        printf "     (%b%0${p_max_digits}d%b) %s %b%b%b> " "$g_color_green1" "$l_option_value" "$g_color_reset" \
+               "$p_option_tag" "$g_color_green1" "${ga_menu_options_title[$l_i]}" "$g_color_reset"
 
         l_n=${#la_repos[@]}
         if [ $l_n -gt 3 ]; then
@@ -815,12 +815,12 @@ show_dynamic_menu() {
             fi
 
             if [ $l_j -eq 0 ]; then
-                l_repo_names="'${g_color_opaque}${l_aux}${g_color_reset}'" 
+                l_repo_names="'${g_color_gray1}${l_aux}${g_color_reset}'" 
             else
                 if [ $l_j -eq 6 ]; then
-                    l_repo_names="${l_repo_names},\n${l_empty_space}'${g_color_opaque}${l_aux}${g_color_reset}'"
+                    l_repo_names="${l_repo_names},\n${l_empty_space}'${g_color_gray1}${l_aux}${g_color_reset}'"
                 else
-                    l_repo_names="${l_repo_names}, '${g_color_opaque}${l_aux}${g_color_reset}'"
+                    l_repo_names="${l_repo_names}, '${g_color_gray1}${l_aux}${g_color_reset}'"
                 fi
             fi
 

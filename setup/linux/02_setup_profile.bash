@@ -218,15 +218,15 @@ function _create_file_link() {
         if [ $p_override_target_link -eq 0 ]; then
             mkdir -p "$p_source_path"
             ln -snf "$l_source_fullfilename" "$p_target_link"
-            printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$l_source_fullfilename" "$g_color_reset"
+            printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$l_source_fullfilename" "$g_color_reset"
         else
             l_aux=$(readlink "$p_target_link")
-            printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
+            printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$l_aux" "$g_color_reset"
         fi
     else
         mkdir -p "$p_source_path"
         ln -snf "$l_source_fullfilename" "$p_target_link"
-        printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$l_source_fullfilename" "$g_color_reset"
+        printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$l_source_fullfilename" "$g_color_reset"
     fi
 
 }
@@ -253,15 +253,15 @@ function _create_folder_link() {
         if [ $p_override_target_link -eq 0 ]; then
             mkdir -p "$p_source_path"
             ln -snf "${p_source_path}/" "$p_target_link"
-            printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$p_source_path" "$g_color_reset"
+            printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$p_source_path" "$g_color_reset"
         else
             l_aux=$(readlink "$p_target_link")
-            printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$l_aux" "$g_color_reset"
+            printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$l_aux" "$g_color_reset"
         fi
     else
         mkdir -p "$p_source_path"
         ln -snf "${p_source_path}/" "$p_target_link"
-        printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_opaque" "$p_source_path" "$g_color_reset"
+        printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$p_source_path" "$g_color_reset"
     fi
 
 }
@@ -294,7 +294,7 @@ function _setup_vim_packages() {
 
 
     #2. Crear las carpetas de basicas
-    printf 'Instalando los paquetes usados por %s en %b%s%b...\n' "$l_tag" "$g_color_opaque" "$l_base_plugins" "$g_color_reset"
+    printf 'Instalando los paquetes usados por %s en %b%s%b...\n' "$l_tag" "$g_color_gray1" "$l_base_plugins" "$g_color_reset"
 
     mkdir -p ${l_base_plugins}
     mkdir -p ${l_base_plugins}/themes/start
@@ -352,7 +352,7 @@ function _setup_vim_packages() {
                 ;;
             *)
                 
-                #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
+                #print_line '- ' $((g_max_length_line/2)) "$g_color_gray1" 
                 printf 'Paquete %s (%s) "%s": No tiene tipo valido\n' "$l_tag" "${l_repo_type}" "${l_repo_git}"
                 continue
                 ;;
@@ -367,21 +367,21 @@ function _setup_vim_packages() {
 
         #4.3 Validar si el paquete ya esta instalando
         if [ -d ${l_base_path}/${l_repo_name}/.git ]; then
-             #print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
-             printf 'Paquete %s (%s) "%b%s%b": Ya esta instalando\n' "$l_tag" "${l_repo_type}" "$g_color_opaque" "${l_repo_git}" "$g_color_reset"
+             #print_line '- ' $((g_max_length_line/2)) "$g_color_gray1" 
+             printf 'Paquete %s (%s) "%b%s%b": Ya esta instalando\n' "$l_tag" "${l_repo_type}" "$g_color_gray1" "${l_repo_git}" "$g_color_reset"
              continue
         fi
 
         #4.5 Instalando el paquete
         cd ${l_base_path}
         printf '\n'
-        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
+        print_line '- ' $((g_max_length_line/2)) "$g_color_gray1" 
         if [ $p_is_neovim -eq 0  ]; then
-            printf 'NeoVIM> Plugin (%b%s%b) "%b%s%b": Se esta instalando\n' "$g_color_subtitle" "${l_repo_type}" "$g_color_reset" "$g_color_subtitle" "${l_repo_git}" "$g_color_reset"
+            printf 'NeoVIM> Plugin (%b%s%b) "%b%s%b": Se esta instalando\n' "$g_color_cian1" "${l_repo_type}" "$g_color_reset" "$g_color_cian1" "${l_repo_git}" "$g_color_reset"
         else
-            printf 'VIM   > Plugin (%b%s%b) "%b%s%b": Se esta instalando\n' "$g_color_subtitle" "${l_repo_type}" "$g_color_reset" "$g_color_subtitle" "${l_repo_git}" "$g_color_reset"
+            printf 'VIM   > Plugin (%b%s%b) "%b%s%b": Se esta instalando\n' "$g_color_cian1" "${l_repo_type}" "$g_color_reset" "$g_color_cian1" "${l_repo_git}" "$g_color_reset"
         fi
-        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
+        print_line '- ' $((g_max_length_line/2)) "$g_color_gray1" 
 
         l_aux=""
 
@@ -427,20 +427,20 @@ function _setup_vim_packages() {
     if [ $l_n -gt 0 ]; then
 
         printf '\n'
-        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
+        print_line '- ' $((g_max_length_line/2)) "$g_color_gray1" 
         if [ $p_is_neovim -eq 0  ]; then
-            printf 'NeoVIM> %bIndexando las documentación%b de los plugins en %s\n' "$g_color_subtitle" "$g_color_reset"
+            printf 'NeoVIM> %bIndexando las documentación%b de los plugins en %s\n' "$g_color_cian1" "$g_color_reset"
         else
-            printf 'VIM   > %bIndexando las documentación%b de los plugins en %s\n' "$g_color_subtitle" "$g_color_reset"
+            printf 'VIM   > %bIndexando las documentación%b de los plugins en %s\n' "$g_color_cian1" "$g_color_reset"
         fi
-        print_line '- ' $((g_max_length_line/2)) "$g_color_opaque" 
+        print_line '- ' $((g_max_length_line/2)) "$g_color_gray1" 
 
         for ((l_i=0; l_i< ${l_n}; l_i++)); do
             
             l_doc_path="${la_doc_paths[${l_i}]}"
             l_repo_name="${la_doc_repos[${l_i}]}"
-            printf '(%s/%s) Indexando la documentación del plugin %b%s%b en %s: "%bhelptags %s%b"\n' "$((l_i + 1))" "$l_n" "$g_color_opaque" "$l_repo_name" \
-                   "$g_color_reset" "$l_tag" "$g_color_opaque" "$l_doc_path" "$g_color_reset"
+            printf '(%s/%s) Indexando la documentación del plugin %b%s%b en %s: "%bhelptags %s%b"\n' "$((l_i + 1))" "$l_n" "$g_color_gray1" "$l_repo_name" \
+                   "$g_color_reset" "$l_tag" "$g_color_gray1" "$l_doc_path" "$g_color_reset"
             if [ $p_is_neovim -eq 0  ]; then
                 nvim --headless -c "helptags ${l_doc_path}" -c qa
             else
@@ -455,19 +455,19 @@ function _setup_vim_packages() {
 
     #6. Inicializar los paquetes/plugin de VIM/NeoVIM que lo requieren.
     if [ $p_flag_developer -ne 0 ]; then
-        printf 'Se ha instalando los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Editor" "$g_color_reset"
+        printf 'Se ha instalando los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_cian1" "$l_tag" "$g_color_reset" "$g_color_cian1" "Editor" "$g_color_reset"
         return 0
     fi
 
-    printf 'Se ha instalando los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
+    printf 'Se ha instalando los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_cian1" "$l_tag" "$g_color_reset" "$g_color_cian1" "Developer" "$g_color_reset"
     if [ $g_is_nodejs_installed -ne 0  ]; then
 
         printf 'Recomendaciones:\n'
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_cian1" "$g_color_reset"
         if [ $p_is_neovim -eq 0  ]; then
-            printf '    > NeoVIM como developer por defecto usa el adaptador LSP y autocompletado nativo. %bNo esta habilitado el uso de CoC%b\n' "$g_color_opaque" "$g_color_reset" 
+            printf '    > NeoVIM como developer por defecto usa el adaptador LSP y autocompletado nativo. %bNo esta habilitado el uso de CoC%b\n' "$g_color_gray1" "$g_color_reset" 
         else
-            printf '    > VIM esta como developer pero NO puede usar CoC  %b(requiere que NodeJS este instalando)%b\n' "$g_color_opaque" "$g_color_reset" 
+            printf '    > VIM esta como developer pero NO puede usar CoC  %b(requiere que NodeJS este instalando)%b\n' "$g_color_gray1" "$g_color_reset" 
         fi
         return 0
 
@@ -482,18 +482,18 @@ function _setup_vim_packages() {
         local l_version=$(_get_gcc_version)
         if [ ! -z "$l_version" ]; then
             printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash%b"\n' \
-                   "$g_color_opaque" "$g_color_reset"
+                   "$g_color_gray1" "$g_color_reset"
             nvim --headless -c 'TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash' -c 'qa'
 
             printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall java kotlin llvm lua rust swift c cpp go c_sharp%b"\n' \
-                   "$g_color_opaque" "$g_color_reset"
+                   "$g_color_gray1" "$g_color_reset"
             nvim --headless -c 'TSInstall java kotlin llvm lua rust swift c cpp go c_sharp' -c 'qa'
         fi
     fi
 
     #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
     printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) "%b:CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh%b"\n' \
-           "$g_color_opaque" "$g_color_reset"
+           "$g_color_gray1" "$g_color_reset"
     if [ $p_is_neovim -ne 0  ]; then
         vim -esc 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
     else
@@ -502,7 +502,7 @@ function _setup_vim_packages() {
 
     #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
     printf '  Instalando extensiones de CoC (Motor de snippets "UtilSnips") "%b:CocInstall coc-ultisnips%b" (%bno se esta usando el nativo de CoC%b)\n' \
-           "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     if [ $p_is_neovim -ne 0  ]; then
         vim -esc 'CocInstall coc-ultisnips' -c 'qa'
     else
@@ -510,7 +510,7 @@ function _setup_vim_packages() {
     fi
 
     #Actualizar las extensiones de CoC
-    printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
+    printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_gray1" "$g_color_reset"
     if [ $p_is_neovim -ne 0  ]; then
         vim -esc 'CocUpdate' -c 'qa'
     else
@@ -519,7 +519,7 @@ function _setup_vim_packages() {
 
     #Actualizando los gadgets de 'VimSpector'
     if [ $p_is_neovim -ne 0  ]; then
-        printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando "%b:VimspectorUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
+        printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando "%b:VimspectorUpdate%b"\n' "$g_color_gray1" "$g_color_reset"
         vim -esc 'VimspectorUpdate' -c 'qa'
     fi
 
@@ -527,14 +527,14 @@ function _setup_vim_packages() {
     printf '\nRecomendaciones:\n'
     if [ $p_is_neovim -ne 0  ]; then
 
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_cian1" "$g_color_reset"
         printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
 
     else
 
         printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
-        printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+        printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_cian1" "$g_color_reset"
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_cian1" "$g_color_reset"
 
         printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
 
@@ -576,7 +576,7 @@ function _config_nvim() {
     if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
 
     printf '\n'
-    print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+    print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
 
     mkdir -p ~/.config/nvim/
     
@@ -682,12 +682,12 @@ function _config_vim() {
 
     #2. Crear el subtitulo
 
-    #print_line '-' $g_max_length_line "$g_color_opaque" 
+    #print_line '-' $g_max_length_line "$g_color_gray1" 
     #echo "> Configuración de VIM-Enhanced"
-    #print_line '-' $g_max_length_line "$g_color_opaque" 
+    #print_line '-' $g_max_length_line "$g_color_gray1" 
 
     printf '\n'
-    print_line '. ' $((g_max_length_line/2)) "$g_color_opaque"
+    print_line '. ' $((g_max_length_line/2)) "$g_color_gray1"
     mkdir -p ~/.vim/
 
     #3. Crear los enlaces simbolicos de VIM
@@ -801,9 +801,9 @@ function _config_vim_nvim() {
 
         if [ $l_flag_config_vim -eq 0 ]; then
             if [ $l_flag_developer_vim -eq 0 ]; then
-                printf -v l_aux "%sVIM%s %sdeveloper%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+                printf -v l_aux "%sVIM%s %sdeveloper%s" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
             else
-                printf -v l_aux "%sVIM%s %seditor%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+                printf -v l_aux "%sVIM%s %seditor%s" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
             fi
         fi
 
@@ -812,18 +812,18 @@ function _config_vim_nvim() {
                 l_aux="${l_aux} y "
             fi
             if [ $l_flag_developer_vim -eq 0 ]; then
-                printf -v l_aux "%s%sNeoVIM%s %sdeveloper%s" "$l_aux" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+                printf -v l_aux "%s%sNeoVIM%s %sdeveloper%s" "$l_aux" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
             else
-                printf -v l_aux "%s%sNeoVIM%s %seditor%s" "$l_aux" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+                printf -v l_aux "%s%sNeoVIM%s %seditor%s" "$l_aux" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
             fi
         fi
 
         printf -v l_title "Instalando programas requeridos para %s" "$l_aux"
 
 
-        print_line '─' $g_max_length_line  "$g_color_blue"
+        print_line '─' $g_max_length_line  "$g_color_blue1"
         print_text_in_center2 "$l_title" $g_max_length_line 
-        print_line '─' $g_max_length_line "$g_color_blue"
+        print_line '─' $g_max_length_line "$g_color_blue1"
 
     fi
 
@@ -862,7 +862,7 @@ _install_nodejs() {
     l_status=$?
     if [ $l_status -ne 0 ] && [ -f "${g_path_programs}/nodejs/bin/node" ]; then
         printf '%bNode.JS %s esta instalando pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-            "$g_color_warning" "$l_version" "$g_color_reset"
+            "$g_color_red1" "$l_version" "$g_color_reset"
         printf 'Adicionando a la sesion actual: PATH=%s/nodejs/bin:$PATH\n' "${g_path_programs}"
         export PATH=${g_path_programs}/nodejs/bin:$PATH
     fi
@@ -882,7 +882,7 @@ _install_nodejs() {
     #Si no esta instalando
     if [ -z "$l_version" ]; then
 
-        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+        print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
         echo "VIM (IDE)   > Se va instalar el scripts NVM y con ello se instalar RTE Node.JS"
 
         #Instalando NodeJS
@@ -955,7 +955,7 @@ _install_nodejs() {
     #if [ $l_status -ne 0 ]; then
     if [ -z "$l_version" ]; then
 
-        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+        print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
         echo "VIM (IDE)   > Instalando el comando 'prettier' (como paquete global Node.JS)  para formatear archivos json, yaml, js, ..."
 
         #Se instalara a nivel glabal (puede ser usado por todos los usuarios) y para entornos de desarrallo
@@ -986,7 +986,7 @@ _install_nodejs() {
 
         if [ -z "$l_version" ]; then
 
-            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+            print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
             echo "NeoVIM (IDE)> Instalando el paquete 'neovim' de Node.JS para soporte de plugins en dicho RTE"
 
             npm install -g neovim
@@ -1008,7 +1008,7 @@ _install_nodejs() {
 
         if [ -z "$l_version" ]; then
 
-            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+            print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
             echo "NeoVIM (IDE)> Instalando el paquete 'tree-sitter-cli' de Node.JS para soporte de TreeSitter"
 
             npm install -g tree-sitter-cli
@@ -1056,7 +1056,7 @@ _install_python() {
 
         if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
-            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+            print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
             echo "VIM (IDE)   > Se va instalar RTE Python3 y su gestor de paquetes Pip"
 
 
@@ -1091,8 +1091,8 @@ _install_python() {
         printf 'VIM (IDE)   > Python3 "%s" esta instalando\n' "$l_version"
         g_is_python_installed=0
     else
-        printf 'VIM (IDE)   > %bPython3 no esta instalando. Se recomienda instalarlo%b. Luego de ello, instale los paquetes de Python:\n' "$g_color_warning" "$g_color_reset"
-        printf '%b            > Comando jtbl      : "pip3 install jtbl" (mostrar arreglos json en tablas en consola)\n' "$g_color_opaque"
+        printf 'VIM (IDE)   > %bPython3 no esta instalando. Se recomienda instalarlo%b. Luego de ello, instale los paquetes de Python:\n' "$g_color_red1" "$g_color_reset"
+        printf '%b            > Comando jtbl      : "pip3 install jtbl" (mostrar arreglos json en tablas en consola)\n' "$g_color_gray1"
         printf '            > Comando compiledb : "pip3 install compiledb" (utilidad para generar make file para Clang)\n'
         printf '            > Comando rope      : "pip3 install rope" (utilidad para refactorización de Python)\n'
         printf '            > Comando pynvim    : "pip3 install pynvim" (soporte plugin en Python para NeovIM)%b\n' "$g_color_reset"
@@ -1107,7 +1107,7 @@ _install_python() {
     l_status=$?
     if [ $l_status -ne 0 ]; then
         printf 'VIM (IDE)   > Comando "%bpip%b" (modulo python) %bno se esta instalando%b. Corrija el error y vuelva configurar el profile.\n' \
-            "$g_color_warning" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            "$g_color_red1" "$g_color_reset" "$g_color_red1" "$g_color_reset"
         return 1
     fi
 
@@ -1121,7 +1121,7 @@ _install_python() {
     #if [ $l_status -ne 0 ]; then
     if [ -z "$l_version" ]; then
 
-        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+        print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
         echo "General     > Instalando el comando 'jtbl' (modulo python) para mostrar arreglos json en una consola en formato tabular."
         
         #Se instalar a nivel usuario
@@ -1139,7 +1139,7 @@ _install_python() {
     #if [ $l_status -ne 0 ] || [ -z "$l_version"]; then
     if [ -z "$l_version" ]; then
 
-        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+        print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
         echo "General     > Instalando el comando 'compiledb' (modulo python) para generar una base de datos de compilacion Clang desde un make file."
         
         #Se instalar a nivel usuario
@@ -1156,7 +1156,7 @@ _install_python() {
     l_status=$?
     if [ -z "$l_version" ]; then
 
-        print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+        print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
         echo "General     > Instalando la libreria python 'rope' para refactorización de Python (https://github.com/python-rope/rope)."
         
         #Se instalara a nivel usuario
@@ -1176,7 +1176,7 @@ _install_python() {
         l_status=$?
         if [ -z "$l_version" ]; then
 
-            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+            print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
             echo "NeoVIM (IDE)> Instalando el paquete 'pynvim' de Python3 para soporte de plugins en dicho RTE"
             
             #Se instalara a nivel usuario
@@ -1240,9 +1240,9 @@ function _install_vim_nvim_environment() {
 
     if [ $l_flag_install_vim -eq 0 ]; then
         if [ $l_flag_developer_vim -eq 0 ]; then
-            printf -v l_aux "%sVIM%s %sdeveloper%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+            printf -v l_aux "%sVIM%s %sdeveloper%s" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
         else
-            printf -v l_aux "%sVIM%s %seditor%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+            printf -v l_aux "%sVIM%s %seditor%s" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
         fi
     fi
 
@@ -1251,18 +1251,18 @@ function _install_vim_nvim_environment() {
             l_aux="${l_aux} y "
         fi
         if [ $l_flag_developer_vim -eq 0 ]; then
-            printf -v l_aux "%s%sNeoVIM%s %sdeveloper%s" "$l_aux" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+            printf -v l_aux "%s%sNeoVIM%s %sdeveloper%s" "$l_aux" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
         else
-            printf -v l_aux "%s%sNeoVIM%s %seditor%s" "$l_aux" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+            printf -v l_aux "%s%sNeoVIM%s %seditor%s" "$l_aux" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
         fi
     fi
 
     printf -v l_title "Instalando programas requeridos para %s" "$l_aux"
 
 
-    print_line '─' $g_max_length_line  "$g_color_blue"
+    print_line '─' $g_max_length_line  "$g_color_blue1"
     print_text_in_center2 "$l_title" $g_max_length_line 
-    print_line '─' $g_max_length_line "$g_color_blue"
+    print_line '─' $g_max_length_line "$g_color_blue1"
 
     #5. Si se requiere VIM como IDE, usara CoC, por lo que requiere: Node.JS y Python
     local l_version
@@ -1309,23 +1309,25 @@ function _install_vim_nvim_environment() {
     #Instalar
     if [ $l_flag_install_vim -eq 0 ]; then
 
-        #print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+        #print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
         if [ -z "$l_version" ]; then
 
             if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
                 
-                print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
-                echo "VIM         > Se va instalar VIM-Enhaced"
+                #print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
+                print_line '-' $g_max_length_line  "$g_color_gray1"
+                printf 'VIM         > Se va instalar %bVIM-Enhaced%b\n' "$g_color_cian1" "$g_color_reset"
+                print_line '-' $g_max_length_line  "$g_color_gray1"
 
                 #Parametros:
-                # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-                # 2> Repositorios a instalar/acutalizar: 4 (editor VIM. Tiene Offset=1)
+                # 1> Tipo de ejecución: 2/4 (ejecución no-interactiva/interactiva para instalar/actualizar un solo paquetes)
+                # 2> Packete a instalar/acutalizar.
                 # 3> El estado de la credencial almacenada para el sudo
                 if [ $l_noninteractive -eq 1 ]; then
-                    ~/.files/setup/linux/03_setup_packages.bash 1 4 $g_status_crendential_storage
+                    ~/.files/setup/linux/03_setup_packages.bash 2 'vim' $g_status_crendential_storage
                     l_status=$?
                 else
-                    ~/.files/setup/linux/03_setup_packages.bash 3 4 $g_status_crendential_storage
+                    ~/.files/setup/linux/03_setup_packages.bash 4 'vim' $g_status_crendential_storage
                     l_status=$?
                 fi
 
@@ -1338,7 +1340,7 @@ function _install_vim_nvim_environment() {
                 fi
 
             else
-                printf 'VIM         > %bVIM-Enhaced no esta instalando, se recomienda su instalación%b.\n' "$g_color_warning" "$g_color_reset"
+                printf 'VIM         > %bVIM-Enhaced no esta instalando, se recomienda su instalación%b.\n' "$g_color_red1" "$g_color_reset"
                 g_is_vim_installed=1
             fi
 
@@ -1357,7 +1359,7 @@ function _install_vim_nvim_environment() {
         l_status=$?
         if [ $l_status -ne 0 ] && [ -f "${g_path_programs}/neovim/bin/nvim" ]; then
             printf '%bNeoVIM %s esta instalando pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                "$g_color_warning" "$l_version" "$g_color_reset"
+                "$g_color_red1" "$l_version" "$g_color_reset"
             printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_programs}"
             export PATH=${g_path_programs}/neovim/bin:$PATH
         fi
@@ -1379,21 +1381,23 @@ function _install_vim_nvim_environment() {
 
         if [ -z "$l_version" ]; then
 
-            print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
-            echo "NeoVIM      > Se va instalar NeoVIM"
+            #print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
+            print_line '-' $g_max_length_line  "$g_color_gray1"
+            printf 'NeoVIM      > Se va instalar %bNeoVIM%b\n' "$g_color_cian1" "$g_color_reset"
+            print_line '-' $g_max_length_line  "$g_color_gray1"
 
             #Los binarios para arm64, se debera usar los repositorios de los SO
             if [ "$g_os_architecture_type" = "aarch64" ]; then
 
                 #Parametros:
-                # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-                # 2> Repositorios a instalar/acutalizar: 8 (editor NeoVIM. Tiene Offset=1)
+                # 1> Tipo de ejecución: 2/4 (ejecución no-interactiva/interactiva para instalar/actualizar un solo paquete)
+                # 2> Paquete a instalar/acutalizar.
                 # 3> El estado de la credencial almacenada para el sudo
                 if [ $l_noninteractive -eq 1 ]; then
-                    ~/.files/setup/linux/03_setup_packages.bash 1 8 $g_status_crendential_storage
+                    ~/.files/setup/linux/03_setup_packages.bash 2 "nvim" $g_status_crendential_storage
                     l_status=$?
                 else
-                    ~/.files/setup/linux/03_setup_packages.bash 3 8 $g_status_crendential_storage
+                    ~/.files/setup/linux/03_setup_packages.bash 4 "nvim" $g_status_crendential_storage
                     l_status=$?
                 fi
 
@@ -1445,7 +1449,7 @@ function _install_vim_nvim_environment() {
                 l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
                 printf 'Se instaló NeoVIM version "%s"\n' "$l_version"
             else
-                printf 'NeoVIM      > %bNeoVIM no esta instalando, se recomienda su instalación%b.\n' "$g_color_warning" "$g_color_reset"
+                printf 'NeoVIM      > %bNeoVIM no esta instalando, se recomienda su instalación%b.\n' "$g_color_red1" "$g_color_reset"
                 g_is_vim_installed=1
             fi
 
@@ -1512,51 +1516,51 @@ function _sutup_support_x11_clipboard() {
         fi
     fi
 
-    printf -v l_title "%bX11 forwarding%b sobre '%b%s%b'" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$l_tmp" "$g_color_reset"
+    printf -v l_title "%bX11 forwarding%b sobre '%b%s%b'" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_tmp" "$g_color_reset"
 
     #Obtener lo que se va configurar/instalar
     local l_pkg_options=32
-    printf -v l_tmp "instalar '%bxclip%b'" "$g_color_opaque" "$g_color_reset"
+    printf -v l_tmp "instalar '%bxclip%b'" "$g_color_gray1" "$g_color_reset"
 
     if [ $l_flag_ssh_srv -eq 0 ]; then
-        printf -v l_tmp "%s, '%bxorg-x11-xauth%b', configurar el %bOpenSSH server%b" "$l_tmp" "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        printf -v l_tmp "%s, '%bxorg-x11-xauth%b', configurar el %bOpenSSH server%b" "$l_tmp" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
         l_pkg_options=$((l_pkg_options + 128))
     fi
 
     if [ $l_flag_ssh_clt_without_xsrv -eq 0 ]; then
-        printf -v l_tmp "%s, X virtual server '%bXvfb%b'" "$l_tmp" "$g_color_opaque" "$g_color_reset"
+        printf -v l_tmp "%s, X virtual server '%bXvfb%b'" "$l_tmp" "$g_color_gray1" "$g_color_reset"
         l_pkg_options=$((l_pkg_options + 256))
     fi
 
     printf -v l_title '%s: %s' "$l_title" "$l_tmp"
 
-    print_line '─' $g_max_length_line  "$g_color_blue"
+    print_line '─' $g_max_length_line  "$g_color_blue1"
     print_text_in_center2 "$l_title" $g_max_length_line 
-    print_line '─' $g_max_length_line "$g_color_blue"
+    print_line '─' $g_max_length_line "$g_color_blue1"
 
     #2. Si no se tiene permisos para root, solo avisar
     if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
 
         printf '%bNo tiene soporte para ejecutar en modo "root"%b. Para usar el clipbboard de su servidor remotos linux, usando el "%bX11 forwading for SSH%b".\n' \
-               "$g_color_warning" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+               "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
         printf 'Se recomienda usar la siguiente configuración:\n'
 
         printf ' > Instale el X cliente "XClip"\n'
 
         if [ $l_flag_ssh_srv -eq 0 ]; then
 
-            printf ' > Configure el servidor SSH server %b(donde se ejecutará X client)%b\n' "$g_color_opaque" "$g_color_reset"
+            printf ' > Configure el servidor SSH server %b(donde se ejecutará X client)%b\n' "$g_color_gray1" "$g_color_reset"
             printf '   > Configure el servidor OpenSSH server:\n'
-            printf '     > Edite el archivo "%b%s%b" y modifique el campo  "%b%s%b" a "%b%sb".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
-                   "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "yes"
-            printf '     > Reiniciar el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "systemctl restart sshd.service" "$g_color_reset"
-            printf '   > Validar si la componente "%bxorg-x11-xauth%b" de autorizacion de X11 esta instalando.\n' "$g_color_opaque" "$g_color_reset"
+            printf '     > Edite el archivo "%b%s%b" y modifique el campo  "%b%s%b" a "%b%sb".\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
+                   "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "yes"
+            printf '     > Reiniciar el servidor OpenSSH server: %b%s%b\n' "$g_color_gray1" "systemctl restart sshd.service" "$g_color_reset"
+            printf '   > Validar si la componente "%bxorg-x11-xauth%b" de autorizacion de X11 esta instalando.\n' "$g_color_gray1" "$g_color_reset"
 
         fi
 
         if [ $l_flag_ssh_clt_without_xsrv -eq 0 ]; then
-            printf ' > Configure el cliente SSH server en un "%bHeadless Server%b" %b(donde se ejecutará X server)%b\n' "$g_color_info" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
-            printf '   > Instale el servidor X virtual "%bXvfb%b".\n' "$g_color_opaque" "$g_color_reset"
+            printf ' > Configure el cliente SSH server en un "%bHeadless Server%b" %b(donde se ejecutará X server)%b\n' "$g_color_yellow1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+            printf '   > Instale el servidor X virtual "%bXvfb%b".\n' "$g_color_gray1" "$g_color_reset"
         fi
 
         return 1
@@ -1598,9 +1602,9 @@ function _sutup_support_x11_clipboard() {
     local l_ssh_config_data=""
     if [ $l_flag_ssh_srv -eq 0 ]; then
 
-        print_line '-' $g_max_length_line  "$g_color_opaque"
-        printf '%bX forwarding%b> Configurando el servidor OpenSSH...\n' "$g_color_opaque" "$g_color_reset"
-        print_line '-' $g_max_length_line "$g_color_opaque"
+        print_line '-' $g_max_length_line  "$g_color_gray1"
+        printf '%bX forwarding%b> Configurando el servidor OpenSSH...\n' "$g_color_gray1" "$g_color_reset"
+        print_line '-' $g_max_length_line "$g_color_gray1"
 
         #Obtener la data del SSH config del servidor OpenSSH
         if [ $g_user_sudo_support -eq 4 ]; then
@@ -1612,15 +1616,15 @@ function _sutup_support_x11_clipboard() {
         fi
 
         if [ $l_status -ne 0 ]; then
-            printf 'No se obtuvo información del archivo "%b%s%b".\n' "$g_color_warning" "/etc/ssh/sshd_config" "$g_color_reset"
+            printf 'No se obtuvo información del archivo "%b%s%b".\n' "$g_color_red1" "/etc/ssh/sshd_config" "$g_color_reset"
             return 1
         fi
 
     
         if ! echo "$l_ssh_config_data"  | grep '^X11Forwarding\s\+yes\s*$' &> /dev/null; then
 
-            printf 'X forwarding> Modificando el archivo "%b%s%b": editanto el campo "%b%s%b" con el valor "%b%s%b".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
-                   "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "yes" "$g_color_reset"
+            printf 'X forwarding> Modificando el archivo "%b%s%b": editanto el campo "%b%s%b" con el valor "%b%s%b".\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
+                   "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "yes" "$g_color_reset"
 
             if [ $g_user_sudo_support -eq 4 ]; then
                 echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
@@ -1631,17 +1635,17 @@ function _sutup_support_x11_clipboard() {
             fi
 
             if [ $g_user_sudo_support -eq 4 ]; then
-                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "systemctl restart sshd.service" "$g_color_reset"
+                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_gray1" "systemctl restart sshd.service" "$g_color_reset"
                 systemctl restart sshd.service
             else
-                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "sudo systemctl restart sshd.service" "$g_color_reset"
+                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_gray1" "sudo systemctl restart sshd.service" "$g_color_reset"
                 sudo systemctl restart sshd.service
             fi
 
         else
 
-            printf 'X forwarding> El archivo "%b%s%b" ya esta configurado (su campo "%b%s%b" tiene el valor "%b%s%b").\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
-                   "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "yes" "$g_color_reset"
+            printf 'X forwarding> El archivo "%b%s%b" ya esta configurado (su campo "%b%s%b" tiene el valor "%b%s%b").\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
+                   "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "yes" "$g_color_reset"
 
         fi
 
@@ -1678,21 +1682,21 @@ function _uninstall_support_x11_clipboard() {
 
     #Obtener a quien aplica la configuración
     local l_tmp="SSH Server"
-    printf -v l_title "Remover la configuración del %bX11 forwarding%b en '%b%s%b'" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$l_tmp" "$g_color_reset"
+    printf -v l_title "Remover la configuración del %bX11 forwarding%b en '%b%s%b'" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_tmp" "$g_color_reset"
     #printf -v l_title '%s: %s' "$l_title" "$l_tmp"
 
-    print_line '─' $g_max_length_line  "$g_color_blue"
+    print_line '─' $g_max_length_line  "$g_color_blue1"
     print_text_in_center2 "$l_title" $g_max_length_line 
-    print_line '─' $g_max_length_line "$g_color_blue"
+    print_line '─' $g_max_length_line "$g_color_blue1"
 
     #2. Si no se tiene permisos para root, solo avisar
     if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
 
         printf '%bNo tiene soporte para ejecutar en modo "root"%b. Para remover la configuración "%bX11 forwading%b" del OpenSSH Server.\n' \
-               "$g_color_warning" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+               "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
         printf 'Se recomienda usar la siguiente configuración:\n'
-        printf ' > Edite el archivo "%b%s%b" y modifique el campo  "%b%s%b" a "%b%sb".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
-               "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "no"
+        printf ' > Edite el archivo "%b%s%b" y modifique el campo  "%b%s%b" a "%b%sb".\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
+               "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "no"
 
         return 1
     fi
@@ -1701,7 +1705,7 @@ function _uninstall_support_x11_clipboard() {
     local l_ssh_config_data=""
     if [ $l_flag_ssh_srv -eq 0 ]; then
 
-        printf '%bX forwarding%b> Configurando el servidor OpenSSH...\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bX forwarding%b> Configurando el servidor OpenSSH...\n' "$g_color_gray1" "$g_color_reset"
 
         #Obtener la data del SSH config del servidor OpenSSH
         if [ $g_user_sudo_support -eq 4 ]; then
@@ -1713,15 +1717,15 @@ function _uninstall_support_x11_clipboard() {
         fi
 
         if [ $l_status -ne 0 ]; then
-            printf 'No se obtuvo información del archivo "%b%s%b".\n' "$g_color_warning" "/etc/ssh/sshd_config" "$g_color_reset"
+            printf 'No se obtuvo información del archivo "%b%s%b".\n' "$g_color_red1" "/etc/ssh/sshd_config" "$g_color_reset"
             return 1
         fi
 
     
         if ! echo "$l_ssh_config_data"  | grep '^X11Forwarding\s\+no\s*$' &> /dev/null; then
 
-            printf 'X forwarding> Modificando el archivo "%b%s%b": editanto el campo "%b%s%b" con el valor "%b%s%b".\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
-                   "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "no" "$g_color_reset"
+            printf 'X forwarding> Modificando el archivo "%b%s%b": editanto el campo "%b%s%b" con el valor "%b%s%b".\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
+                   "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "no" "$g_color_reset"
 
             if [ $g_user_sudo_support -eq 4 ]; then
                 echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding no/' | sed 's/^X11Forwarding\s\+yes\s*$/X11Forwarding no/' \
@@ -1732,17 +1736,17 @@ function _uninstall_support_x11_clipboard() {
             fi
 
             if [ $g_user_sudo_support -eq 4 ]; then
-                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "systemctl restart sshd.service" "$g_color_reset"
+                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_gray1" "systemctl restart sshd.service" "$g_color_reset"
                 systemctl restart sshd.service
             else
-                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_opaque" "sudo systemctl restart sshd.service" "$g_color_reset"
+                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_gray1" "sudo systemctl restart sshd.service" "$g_color_reset"
                 sudo systemctl restart sshd.service
             fi
 
         else
 
-            printf 'X forwarding> El archivo "%b%s%b" ya esta configurado (su campo "%b%s%b" tiene el valor "%b%s%b").\n' "$g_color_opaque" "/etc/ssh/sshd_config" "$g_color_reset" \
-                   "$g_color_opaque" "X11Forwarding" "$g_color_reset" "$g_color_opaque" "no" "$g_color_reset"
+            printf 'X forwarding> El archivo "%b%s%b" ya esta configurado (su campo "%b%s%b" tiene el valor "%b%s%b").\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
+                   "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "no" "$g_color_reset"
 
         fi
 
@@ -1777,15 +1781,15 @@ function _setup_profile() {
 
 
     #2. Mostrar el titulo 
-    print_line '─' $g_max_length_line  "$g_color_blue"
+    print_line '─' $g_max_length_line  "$g_color_blue1"
 
     if [ $l_overwrite_ln_flag -eq 0 ]; then
-        printf -v l_title "Creando los %senlaces simbolicos%s del perfil %s(sobrescribir lo existente)%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        printf -v l_title "Creando los %senlaces simbolicos%s del perfil %s(sobrescribir lo existente)%s" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     else
-        printf -v l_title "Creando los %senlaces simbolicos%s del perfil %s(solo crar si no existe)%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        printf -v l_title "Creando los %senlaces simbolicos%s del perfil %s(solo crar si no existe)%s" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     fi
     print_text_in_center2 "$l_title" $g_max_length_line 
-    print_line '─' $g_max_length_line "$g_color_blue"
+    print_line '─' $g_max_length_line "$g_color_blue1"
 
     
 
@@ -2084,10 +2088,10 @@ function _setup() {
             fi
             
             #Actualizar los paquetes de los repositorios
-            print_line '─' $g_max_length_line  "$g_color_blue"
-            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+            print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_cian1" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
             print_text_in_center2 "$l_title" $g_max_length_line 
-            print_line '─' $g_max_length_line "$g_color_blue"
+            print_line '─' $g_max_length_line "$g_color_blue1"
            
             upgrade_os_packages $g_os_subtype_id $l_noninteractive 
 
@@ -2159,61 +2163,61 @@ function _setup() {
 function _show_menu_core() {
 
 
-    print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_title"
-    print_line '-' $g_max_length_line  "$g_color_opaque"
-    printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
-    printf " (%ba%b) Instalación y configuración de VIM/NeoVIM como %beditor%b basico\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
-    printf " (%bb%b) Instalación y configuración de VIM/NeoVIM como %bIDE%b\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
-    printf " (%bc%b) Configurar todo el profile como %bbasico%b    (VIM/NeoVIM como editor basico)\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
-    printf " (%bd%b) Configurar todo el profile como %bdeveloper%b (VIM/NeoVIM como IDE)\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
-    printf " (%be%b) Configurar todo el profile como %bbasico%b    (VIM/NeovIM como editor basico) y re-crear enlaces simbolicos\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
-    printf " (%bf%b) Configurar todo el profile como %bdeveloper%b (VIM/NeoVIM como IDE) y re-crear enlaces simbolicos\n" "$g_color_title" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+    print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_green1"
+    print_line '-' $g_max_length_line  "$g_color_gray1"
+    printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
+    printf " (%ba%b) Instalación y configuración de VIM/NeoVIM como %beditor%b basico\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf " (%bb%b) Instalación y configuración de VIM/NeoVIM como %bIDE%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf " (%bc%b) Configurar todo el profile como %bbasico%b    (VIM/NeoVIM como editor basico)\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf " (%bd%b) Configurar todo el profile como %bdeveloper%b (VIM/NeoVIM como IDE)\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf " (%be%b) Configurar todo el profile como %bbasico%b    (VIM/NeovIM como editor basico) y re-crear enlaces simbolicos\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf " (%bf%b) Configurar todo el profile como %bdeveloper%b (VIM/NeoVIM como IDE) y re-crear enlaces simbolicos\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     local l_max_digits=5
 
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-        printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO\n" "$g_color_title" "1" "$g_color_reset"
+        printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO\n" "$g_color_green1" "1" "$g_color_reset"
     fi
-    printf "     (%b%0${l_max_digits}d%b) Crear los enlaces simbolicos del profile\n" "$g_color_title" "2" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Flag para %bre-crear%b un enlaces simbolicos en caso de existir\n" "$g_color_title" "4" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM    - Instalar el programa '%bvim%b'\n" "$g_color_title" "8" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) VIM    - Configurar lo basico %b(configura '.vimrc', folderes y plugins que habilitan el modo basico)%b\n" "$g_color_title" "16" \
-           "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Crear los enlaces simbolicos del profile\n" "$g_color_green1" "2" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Flag para %bre-crear%b un enlaces simbolicos en caso de existir\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Instalar el programa '%bvim%b'\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Configurar lo basico %b(configura '.vimrc', folderes y plugins que habilitan el modo basico)%b\n" "$g_color_green1" "16" \
+           "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-        printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(instala 'python3', 'nodejs'/configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
-               "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(instala 'python3', 'nodejs'/configura '.vimrc' y plugins para developers)%b\n" "$g_color_green1" "32" \
+               "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     else
-        printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(configura '.vimrc' y plugins para developers)%b\n" "$g_color_title" "32" \
-               "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        printf "     (%b%0${l_max_digits}d%b) VIM    - Flag habilitar como %bIDE%b %b(configura '.vimrc' y plugins para developers)%b\n" "$g_color_green1" "32" \
+               "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     fi
 
-    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Instalar el programa '%bnvim%b'\n" "$g_color_title" "64" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Configurar lo basico %b(configura 'init.vim', folderes y plugins que habilitan el modo basico)%b\n" "$g_color_title" "128" \
-           "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Instalar el programa '%bnvim%b'\n" "$g_color_green1" "64" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Configurar lo basico %b(configura 'init.vim', folderes y plugins que habilitan el modo basico)%b\n" "$g_color_green1" "128" \
+           "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-        printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(instala 'python3', 'nodejs'/configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \
-               "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(instala 'python3', 'nodejs'/configura 'init.vim' y plugins para developers)%b\n" "$g_color_green1" "256" \
+               "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     else
-        printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(configura 'init.vim' y plugins para developers)%b\n" "$g_color_title" "256" \
-               "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+        printf "     (%b%0${l_max_digits}d%b) NeoVIM - Flag habilitar como %bIDE%b %b(configura 'init.vim' y plugins para developers)%b\n" "$g_color_green1" "256" \
+               "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     fi
-    printf "     (%b%0${l_max_digits}d%b) VIM    - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "512" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_title" "1024" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'Packer'\n" "$g_color_title" "2048" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) VIM    - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_green1" "512" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'VIM-Plug'\n" "$g_color_green1" "1024" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) NeoVIM - Eliminar el gestor de paquetes 'Packer'\n" "$g_color_green1" "2048" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) %bCliente  SSH%b> %bX11 forwading%b> server with %bX Server%b> Instalar 'xclip'\n" \
-           "$g_color_title" "4096" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+           "$g_color_green1" "4096" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) %bCliente  SSH%b> %bX11 forwading%b> %bHeadless Server%b> Instalar el servidor X virtual '%bXvfb%b' e instalar 'xclip'\n" \
-           "$g_color_title" "8192" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" \
-           "$g_color_opaque" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bServidor SSH%b> %bX11 forwading%b> Configurar OpenSSH server e instalar 'xclip', 'xorg-x11-xauth'\n" "$g_color_title" \
-           "16384" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bServidor SSH%b> Eliminar el %bX11 forwading%b del OpenSSH server\n" "$g_color_title" "32768" "$g_color_reset" \
-           "$g_color_opaque" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+           "$g_color_green1" "8192" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bServidor SSH%b> %bX11 forwading%b> Configurar OpenSSH server e instalar 'xclip', 'xorg-x11-xauth'\n" "$g_color_green1" \
+           "16384" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bServidor SSH%b> Eliminar el %bX11 forwading%b del OpenSSH server\n" "$g_color_green1" "32768" "$g_color_reset" \
+           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
-    print_line '-' $g_max_length_line "$g_color_opaque"
+    print_line '-' $g_max_length_line "$g_color_gray1"
 
 }
 
@@ -2222,20 +2226,20 @@ function g_main() {
     #1. Pre-requisitos
     
     #2. Mostrar el Menu
-    print_line '─' $g_max_length_line "$g_color_title" 
+    print_line '─' $g_max_length_line "$g_color_green1" 
     _show_menu_core
     
     local l_flag_continue=0
     local l_options=""
     while [ $l_flag_continue -eq 0 ]; do
 
-        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_opaque" "$g_color_reset"
+        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
         read -r l_options
 
         case "$l_options" in
             a)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 #8 + 16 + 64 + 128
                 _setup 216
@@ -2244,7 +2248,7 @@ function g_main() {
 
             b)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 #8 + 16 + 32 + 64 + 128 + 256
                 _setup 504
@@ -2252,7 +2256,7 @@ function g_main() {
 
             c)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 #8 + 16 + 64 + 128 + 2
                 _setup 218
@@ -2260,7 +2264,7 @@ function g_main() {
 
             d)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 #8 + 16 + 32 + 64 + 128 + 256 + 2
                 _setup 506
@@ -2268,7 +2272,7 @@ function g_main() {
 
             e)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 #8 + 16 + 64 + 128 + 2 + 4
                 _setup 222
@@ -2276,7 +2280,7 @@ function g_main() {
 
             f)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 #8 + 16 + 32 + 64 + 128 + 256 + 2 + 4
                 _setup 510
@@ -2284,27 +2288,27 @@ function g_main() {
 
             q)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 ;;
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '─' $g_max_length_line "$g_color_title" 
+                    print_line '─' $g_max_length_line "$g_color_green1" 
                     printf '\n'
                     _setup $l_options
                 else
                     l_flag_continue=0
-                    printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                    print_line '-' $g_max_length_line "$g_color_opaque" 
+                    printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                    print_line '-' $g_max_length_line "$g_color_gray1" 
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
-                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_opaque" 
+                printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_gray1" 
                 ;;
         esac
         
@@ -2314,13 +2318,13 @@ function g_main() {
 
 g_usage() {
 
-    printf '%bUsage:\n\n' "$g_color_opaque"
+    printf '%bUsage:\n\n' "$g_color_gray1"
     printf '  > Configurar el profile mostrando el menú de opciones (interactivo):\n'
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Configurar un grupo de opciones del menú sin mostrarlo pero en modo interactivo:\n'
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash 1 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash 1 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Configurar un grupo de opciones del menú sin mostrarlo pero en modo no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash 2 MENU-OPTIONS%b\n\n' "$g_color_info" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash 2 MENU-OPTIONS%b\n\n' "$g_color_yellow1" "$g_color_reset"
 
 }
 

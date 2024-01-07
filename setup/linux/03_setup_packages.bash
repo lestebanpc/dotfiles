@@ -174,18 +174,18 @@ function _install_menu_options() {
     if [ -z "$l_result" ]; then
    
         #3.1. Mostrar el titulo
-        print_line '─' $g_max_length_line  "$g_color_opaque"
+        print_line '─' $g_max_length_line  "$g_color_gray1"
 
         #Si se ejecuta muestra el menú
         if [ $gp_type_calling -eq 0 ]; then
-            printf -v l_title_template 'Opción %b%s%b: %b%s%b' "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+            printf -v l_title_template 'Opción %b%s%b: %b%s%b' "$g_color_gray1" "$l_option_value" "$g_color_reset" "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         #Si se ejecuta cuando no se muestra el menú
         else
-            printf -v l_title_template 'Grupo de paquetes: %b%s%b' "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+            printf -v l_title_template 'Grupo de paquetes: %b%s%b' "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         fi
 
         print_text_in_center2 "$l_title_template" $g_max_length_line 
-        print_line '─' $g_max_length_line "$g_color_opaque"
+        print_line '─' $g_max_length_line "$g_color_gray1"
 
         #3.2. Inicializar la opcion si aun no ha sido inicializado.
         install_initialize_menu_option $p_option_relative_idx
@@ -271,12 +271,12 @@ function _install_menu_options() {
 
             #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
-                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_option_value" "$g_color_reset"
             #Si se ejecuta sin usar el menu
             else
-                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
 
             #El primer package donde se ha analizado si se puede o no ser procesado.
@@ -292,18 +292,18 @@ function _install_menu_options() {
             #  3 > Al package tiene parametros invalidos que impiden su analisis.
             if [ $l_status_first_setup -eq 3 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El package "%s" tiene parametros invalido que impiden su analisis. Se analizó al procesar la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
             #  2 > El package ya esta instalado.
             elif [ $l_status_first_setup -eq 2 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El package "%s" ya esta instalado. Se analizó al procesar la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
@@ -311,18 +311,18 @@ function _install_menu_options() {
             #  0 > El paquete inicio la instalación y lo termino con exito.
             elif [ $l_status_first_setup -eq 0 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "se acaba de instalar"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El package "%s" se acaba de instalar cuando se proceso la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
             #  1 > El paquete inicio la instalación y lo termino con error.
             elif [ $l_status_first_setup -eq 1 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "se acaba de instalar con error"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El package "%s" se acaba de instalar con error cuando se proceso la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
@@ -346,12 +346,12 @@ function _install_menu_options() {
 
             #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
-                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_option_value" "$g_color_reset"
             #Si se ejecuta sin usar el menú
             else
-                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
         fi
         
@@ -383,7 +383,7 @@ function _install_menu_options() {
             _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido no se establecio el nombre real de paquete a instalar.\n' \
-                   "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                   "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con configuración de los demas paquetes de la opción del menú.\n\n'
 
             #echo "C > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
@@ -401,7 +401,7 @@ function _install_menu_options() {
             _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido no se pudo obtener informacion del paquete en el SO.\n' \
-                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                          "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con configuración de los demas packages de la opción del menú.\n\n'
 
             #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
@@ -420,7 +420,7 @@ function _install_menu_options() {
             _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido parametros invalidos del paquete en el SO.\n' \
-                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                          "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con configuración de los demas packages de la opción del menú.\n\n'
 
             #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
@@ -458,7 +458,7 @@ function _install_menu_options() {
             l_flag_process_next_repo=1
             l_exits_error=0
 
-            printf '%bError al instalar el paquete%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf '%bError al instalar el paquete%b "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
             printf 'Corrija el error para continuar con configuración de los demas paquetes de la opción del menú.\n\n'
 
         #   0 > El paquete inicio la instalación y lo termino con error.
@@ -584,18 +584,18 @@ function _uninstall_menu_options() {
     if [ -z "$l_result" ]; then
    
         #3.1. Mostrar el titulo
-        print_line '─' $g_max_length_line  "$g_color_opaque"
+        print_line '─' $g_max_length_line  "$g_color_gray1"
 
         #Si se ejecuta usando el menu
         if [ $gp_type_calling -eq 0 ]; then
-            printf -v l_title_template "Opción %s%s%s '%s%s%s'" "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+            printf -v l_title_template "Opción %s%s%s '%s%s%s'" "$g_color_gray1" "$l_option_value" "$g_color_reset" "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         #Si se ejecuta sin usar el menu
         else
-            printf -v l_title_template "Grupo de paquetes: '%s%s%s'" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+            printf -v l_title_template "Grupo de paquetes: '%s%s%s'" "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         fi
 
         print_text_in_center2 "$l_title_template" $g_max_length_line 
-        print_line '─' $g_max_length_line "$g_color_opaque"
+        print_line '─' $g_max_length_line "$g_color_gray1"
 
         #3.2. Inicializar la opcion si aun no ha sido inicializado.
         uninstall_initialize_menu_option $p_option_relative_idx
@@ -679,12 +679,12 @@ function _uninstall_menu_options() {
             #4.2.4. Calcular la plantilla del titulo.
             #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
-                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_option_value" "$g_color_reset"
             #Si se ejecuta sin usar el menu
             else
-                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
 
             #El primer paquete donde se ha analizado si se puede o no ser procesado.
@@ -698,18 +698,18 @@ function _uninstall_menu_options() {
             #  3 > Al paquete tiene parametros invalidos que impiden su procesamiento.
             if [ $l_status_first_setup -eq 3 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El paquete "%s" tiene parametros invalidos que impiden su procesamiento. Se analizó con la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
             #  2 > El paquete no esta instalado.
             elif [ $l_status_first_setup -eq 2 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El paquete "%s" ya esta instalado. Se analizó con la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
@@ -717,9 +717,9 @@ function _uninstall_menu_options() {
             #  0 > El paquete inicio la desinstalación y lo termino con exito.
             elif [ $l_status_first_setup -eq 0 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "se acaba de instalar"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El paquete "%s" se acaba de desinstalar en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
@@ -727,9 +727,9 @@ function _uninstall_menu_options() {
             #  1 > El paquete inicio la desinstalación y lo termino con error.
             elif [ $l_status_first_setup -eq 1 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "se acaba de instalar con error"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El paquete "%s" se acaba de desinstalar con error en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
@@ -754,12 +754,12 @@ function _uninstall_menu_options() {
 
             #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
-                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_option_value" "$g_color_reset"
             #Si se ejecuta sin usar el menu
             else
-                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
         fi
         
@@ -792,7 +792,7 @@ function _uninstall_menu_options() {
             _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido a los parametros incorrectos enviados.\n' \
-                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                          "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con desinstalación de los demas paquetes de la opción del menú.\n\n'
 
             #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
@@ -811,7 +811,7 @@ function _uninstall_menu_options() {
             _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido a no se pudo determinar si este esta instalado o no.\n' \
-                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                          "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con desinstalación de los demas paquetes de la opción del menú.\n\n'
 
             #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
@@ -831,7 +831,7 @@ function _uninstall_menu_options() {
             _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido a no se obtuvo el nombre real del paquete.\n' \
-                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                          "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con desinstalación de los demas paquetes de la opción del menú.\n\n'
 
             #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
@@ -867,7 +867,7 @@ function _uninstall_menu_options() {
             l_flag_process_next_repo=1
             l_exits_error=0
 
-            printf '%bError al desintalar %b el respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf '%bError al desintalar %b el respositorio "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
             printf 'Corrija el error para continuar con desinstalación de los demas paquetes de la opción del menú.\n\n'
 
         #   0 > El paquete inicio la desinstalación y lo termino con exito.
@@ -956,9 +956,9 @@ function g_uninstall_package() {
     #3. Mostrar el titulo
     if [ ! -z "$p_package_title_template" ]; then
 
-        print_line '-' $g_max_length_line  "$g_color_opaque"
+        print_line '-' $g_max_length_line  "$g_color_gray1"
         printf "${p_package_title_template}\n" "se desinstalará"
-        print_line '-' $g_max_length_line  "$g_color_opaque"
+        print_line '-' $g_max_length_line  "$g_color_gray1"
 
     fi
 
@@ -1050,9 +1050,9 @@ function g_install_package() {
     #3. Mostrar el titulo
     if [ ! -z "$p_package_title_template" ]; then
 
-        print_line '-' $g_max_length_line  "$g_color_opaque"
+        print_line '-' $g_max_length_line  "$g_color_gray1"
         printf "${p_package_title_template}\n" "se instalará"
-        print_line '-' $g_max_length_line  "$g_color_opaque"
+        print_line '-' $g_max_length_line  "$g_color_gray1"
 
     fi
 
@@ -1193,10 +1193,10 @@ function g_install_packages() {
                 fi
             fi
 
-            print_line '─' $g_max_length_line  "$g_color_opaque"
-            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+            print_line '─' $g_max_length_line  "$g_color_gray1"
+            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_cian1" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
             print_text_in_center2 "$l_title" $g_max_length_line 
-            print_line '─' $g_max_length_line "$g_color_opaque"
+            print_line '─' $g_max_length_line "$g_color_gray1"
 
             upgrade_os_packages $g_os_subtype_id $l_noninteractive
 
@@ -1288,20 +1288,20 @@ function g_install_main() {
     #1. Pre-requisitos
    
     #2. Mostrar el Menu
-    print_line '─' $g_max_length_line "$g_color_title" 
-    print_text_in_center "Menu de Opciones (Install/Upgrade)" $g_max_length_line "$g_color_title"
-    print_line '-' $g_max_length_line  "$g_color_opaque"
-    printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
-    printf " (%ba%b) Actualizar los paquetes existentes del SO y los binarios de los paquetes existentes\n" "$g_color_title" "$g_color_reset"
+    print_line '─' $g_max_length_line "$g_color_green1" 
+    print_text_in_center "Menu de Opciones (Install/Upgrade)" $g_max_length_line "$g_color_green1"
+    print_line '-' $g_max_length_line  "$g_color_gray1"
+    printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
+    printf " (%ba%b) Actualizar los paquetes existentes del SO y los binarios de los paquetes existentes\n" "$g_color_green1" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     get_length_menu_option $g_offset_option_index_menu_install
     local l_max_digits=$?
 
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes existentes del sistema operativo\n" "$g_color_title" "$g_opt_update_installed_pckg" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes existentes del sistema operativo\n" "$g_color_green1" "$g_opt_update_installed_pckg" "$g_color_reset"
 
     show_dynamic_menu 'Instalar' $g_offset_option_index_menu_install $l_max_digits
-    print_line '-' $g_max_length_line "$g_color_opaque"
+    print_line '-' $g_max_length_line "$g_color_gray1"
 
     #3. Mostrar la ultima parte del menu y capturar la opcion elegida
     local l_flag_continue=0
@@ -1309,47 +1309,47 @@ function g_install_main() {
     local l_value_option_a=$g_opt_update_installed_pckg
     while [ $l_flag_continue -eq 0 ]; do
 
-        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_opaque" "$g_color_reset"
+        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
         read -r l_options
 
         case "$l_options" in
             a)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 g_install_packages $l_value_option_a 0
                 ;;
 
             q)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 ;;
 
 
             0)
                 l_flag_continue=0
-                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_opaque" 
+                printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_gray1" 
                 ;;
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '─' $g_max_length_line "$g_color_title" 
+                    print_line '─' $g_max_length_line "$g_color_green1" 
                     printf '\n'
                     g_install_packages $l_options 0
                 else
                     l_flag_continue=0
-                    printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                    print_line '-' $g_max_length_line "$g_color_opaque" 
+                    printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                    print_line '-' $g_max_length_line "$g_color_gray1" 
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
-                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_opaque" 
+                printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_gray1" 
                 ;;
         esac
         
@@ -1362,61 +1362,61 @@ function g_uninstall_main() {
 
 
     #Mostar el menu principal 
-    print_line '─' $g_max_length_line "$g_color_title" 
+    print_line '─' $g_max_length_line "$g_color_green1" 
 
-    print_text_in_center "Menu de Opciones (Uninstall)" $g_max_length_line "$g_color_title"
-    print_line '-' $g_max_length_line  "$g_color_opaque"
-    printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
+    print_text_in_center "Menu de Opciones (Uninstall)" $g_max_length_line "$g_color_green1"
+    print_line '-' $g_max_length_line  "$g_color_gray1"
+    printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
     printf " ( ) Para desintalar ingrese un opción o la suma de las opciones que desea configurar:\n"
 
     get_length_menu_option $g_offset_option_index_menu_uninstall
     local l_max_digits=$?
 
     show_dynamic_menu 'Desinstalar' $g_offset_option_index_menu_uninstall $l_max_digits
-    print_line '-' $g_max_length_line "$g_color_opaque"
+    print_line '-' $g_max_length_line "$g_color_gray1"
 
     #Capturar la opcion de menu y completar el menu
     local l_flag_continue=0
     local l_options=""
     while [ $l_flag_continue -eq 0 ]; do
 
-        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_opaque" "$g_color_reset"
+        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
         read -r l_options
 
         case "$l_options" in
 
             q)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 ;;
 
 
             0)
                 l_flag_continue=0
-                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
+                printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
 
-                print_line '-' $g_max_length_line "$g_color_opaque" 
+                print_line '-' $g_max_length_line "$g_color_gray1" 
                 ;;
 
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '─' $g_max_length_line "$g_color_title" 
+                    print_line '─' $g_max_length_line "$g_color_green1" 
                     printf '\n'
                     g_uninstall_packages $l_options 0
                 else
                     l_flag_continue=0
-                    printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                    print_line '-' $g_max_length_line "$g_color_opaque" 
+                    printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                    print_line '-' $g_max_length_line "$g_color_gray1" 
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
-                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_opaque" 
+                printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_gray1" 
                 ;;
         esac
         
@@ -1427,23 +1427,23 @@ function g_uninstall_main() {
 
 g_usage() {
 
-    printf '%bUsage:\n\n' "$g_color_opaque"
+    printf '%bUsage:\n\n' "$g_color_gray1"
     printf '  > Desintalar paquetes mostrando el menú de opciones:\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash uninstall\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash uninstall\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Instalar paquetes mostrando el menú de opciones (interactivo):\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Instalar/Actualizar un grupo de paquetes sin mostrar el menú, pero interactivo:\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 1 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 1 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 1 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 1 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Instalar/Actualizar un paquete sin mostrar el menú, pero interactivo:\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 2 REPO-ID%b\n' "$g_color_info" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 2 PACKAGE-ID SUDO-STORAGE-OPTIONS%b\n' "$g_color_info" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 2 PACKAGE-ID%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 2 PACKAGE-ID SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
     printf '  > Instalar/Actualizar un grupo de paquetes sin mostrar el menú, pero no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 3 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 3 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 3 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 3 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Instalar/Actualizar un paquete sin mostrar el menú, pero no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 4 REPO-ID%b\n' "$g_color_info" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 4 PACKAGE-ID SUDO-STORAGE-OPTIONS%b\n\n' "$g_color_info" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 4 PACKAGE-ID%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 4 PACKAGE-ID SUDO-STORAGE-OPTIONS%b\n\n' "$g_color_yellow1" "$g_color_reset"
 
 }
 

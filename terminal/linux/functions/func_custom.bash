@@ -1,6 +1,6 @@
 #!/bin/bash
 
-g_color_opaque="\x1b[90m"
+g_color_gray1="\x1b[90m"
 g_color_reset="\x1b[0m"
 
 #Obtener el comando bat: 'bat' y 'batcat'
@@ -52,7 +52,7 @@ xvfb_start() {
     fi
 
     if [ $p_display_number -lt 0 ] || [ $p_flag_use_tcp -lt 0 ]; then
-        printf '%bUse:\n' "$g_color_opaque"
+        printf '%bUse:\n' "$g_color_gray1"
         printf '    xvfb_start\n'
         printf '    xvfb_start DISPLAY_NUMBER\n'
         printf '    xvfb_start DISPLAY_NUMBER FLAG_ENABLE_TCP\n'
@@ -78,8 +78,8 @@ xvfb_start() {
     fi 
 
     if [ -e /tmp/.X11-unix/X${p_display_number} ]; then
-        printf 'Existe un servidor x11 iniciado en display number %s %b(vea: /tmp/.X11-unix/X%s)%b\n' "$p_display_number" "$g_color_opaque" "$p_display_number" "$g_color_reset"
-        printf 'Para ejecutar un cliente en este servidor de visualizacion, defina antes: %bexport DISPLAY=%s%b\n' "$g_color_opaque" "$l_display_value" "$g_color_reset"
+        printf 'Existe un servidor x11 iniciado en display number %s %b(vea: /tmp/.X11-unix/X%s)%b\n' "$p_display_number" "$g_color_gray1" "$p_display_number" "$g_color_reset"
+        printf 'Para ejecutar un cliente en este servidor de visualizacion, defina antes: %bexport DISPLAY=%s%b\n' "$g_color_gray1" "$l_display_value" "$g_color_reset"
         return 3
     fi
 
@@ -95,7 +95,7 @@ xvfb_start() {
 
             #Si esta montado en modo lecutura
             if l_info=$(echo "$l_info" | grep -P '\sro[\s,]'); then
-                printf 'Su WSL tiene montado "%b%s%b" en modo lectura. Intentando montarlo en modo escritura ...\n' "$g_color_opaque" "/tmp/.X11-unix" "$g_color_reset"
+                printf 'Su WSL tiene montado "%b%s%b" en modo lectura. Intentando montarlo en modo escritura ...\n' "$g_color_gray1" "/tmp/.X11-unix" "$g_color_reset"
                 sudo mount -o remount,rw /tmp/.X11-unix
                 l_status=$?
 
@@ -111,15 +111,15 @@ xvfb_start() {
     #5. Iniciar el servidor X11
     local l_log_file="${_g_tmp_data_path}/xvfb_${UID}.log"
     local l_pid
-    printf 'Iniciando el servidor de visualizacion virtual "%bXvfb %s -screen 0 1920x1080x24 > %s 2>&1 &%b" ...\n' "$g_color_opaque" "$l_cmd_options" "$l_log_file" "$g_color_reset"
+    printf 'Iniciando el servidor de visualizacion virtual "%bXvfb %s -screen 0 1920x1080x24 > %s 2>&1 &%b" ...\n' "$g_color_gray1" "$l_cmd_options" "$l_log_file" "$g_color_reset"
     Xvfb ${l_cmd_options} -screen 0 1920x1080x24 > ${l_log_file} 2>&1 &
     l_status=$?
     l_pid=$!
     #l_info=$(echo "$l_info" | sed 's/\[[0-9]\+\]\s\([0-9]\+\)/\1/')
 
-    printf 'Status: %b%s%b, PID: %b%s%b\n' "$g_color_opaque" "$l_status" "$g_color_reset" "$g_color_opaque" "$l_pid" "$g_color_reset"
-    printf 'Para ejecutar un cliente en este servidor de visualizacion, defina antes: %bexport DISPLAY=%s%b\n' "$g_color_opaque" "$l_display_value" "$g_color_reset"
-    printf 'Para detener el servidor de visualizacion, use: %bkill %s%b\n' "$g_color_opaque" "$l_pid" "$g_color_reset"
+    printf 'Status: %b%s%b, PID: %b%s%b\n' "$g_color_gray1" "$l_status" "$g_color_reset" "$g_color_gray1" "$l_pid" "$g_color_reset"
+    printf 'Para ejecutar un cliente en este servidor de visualizacion, defina antes: %bexport DISPLAY=%s%b\n' "$g_color_gray1" "$l_display_value" "$g_color_reset"
+    printf 'Para detener el servidor de visualizacion, use: %bkill %s%b\n' "$g_color_gray1" "$l_pid" "$g_color_reset"
     return 0
         
 }

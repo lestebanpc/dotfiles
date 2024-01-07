@@ -2612,18 +2612,18 @@ _compare_version_current_with() {
 
     if [ $l_status -eq 0 ]; then
 
-        printf '   La versión actual "%s" ya esta actualizado %b(= "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
+        printf '   La versión actual "%s" ya esta actualizado %b(= "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_gray1" \
                "$l_other_version" "$p_path" "$g_color_reset"
 
     elif [ $l_status -eq 1 ]; then
 
-        printf '   La versión actual "%s" ya esta actualizado %b(> "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
+        printf '   La versión actual "%s" ya esta actualizado %b(> "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_gray1" \
                "$l_other_version" "$p_path" "$g_color_reset"
 
 
     else
 
-        printf '   La versión actual "%s" requiere ser actualizado %b(= "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_opaque" \
+        printf '   La versión actual "%s" requiere ser actualizado %b(= "%s" que es la versión ubicada en "%s")%b\n' "$l_current_version" "$g_color_gray1" \
                "$l_other_version" "$p_path" "$g_color_reset"
 
     fi
@@ -2666,7 +2666,7 @@ function _copy_artifact_files() {
     fi
 
     #Tag usuado para imprimir un identificador del artefacto en un log
-    local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
+    local l_tag="${p_repo_id}${g_color_gray1}[${p_repo_last_version_pretty}]"
     if [ ! -z "${p_arti_subversion_version}" ]; then
         l_tag="${l_tag}[${p_arti_subversion_version}]${g_color_reset}"
     else
@@ -3200,7 +3200,7 @@ function _copy_artifact_files() {
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                        "$g_color_warning" "ProtoC"  "$p_repo_last_version_pretty" "$g_color_reset"
+                        "$g_color_red1" "ProtoC"  "$p_repo_last_version_pretty" "$g_color_reset"
                     printf 'Adicionando a la sesion actual: PATH=%s/protoc/bin:$PATH\n' "${g_path_programs}"
                     export PATH=${g_path_programs}/protoc/bin:$PATH
                 fi
@@ -3392,7 +3392,7 @@ function _copy_artifact_files() {
             l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubelet/kubelet.service 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                printf 'Creando el archivo "%b~/.files/setup/programs/kubelet/kubelet.service%b" ... \n' "$g_color_opaque" "$g_color_reset"
+                printf 'Creando el archivo "%b~/.files/setup/programs/kubelet/kubelet.service%b" ... \n' "$g_color_gray1" "$g_color_reset"
                 echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ~/.files/setup/programs/kubelet/kubelet.service
             fi
             ;;
@@ -3419,7 +3419,7 @@ function _copy_artifact_files() {
                 l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubeadm/10-kubeadm.conf 2> /dev/null)
                 l_status=$?
                 if [ $l_status -eq 0 ]; then
-                    printf 'Creando el archivo "%b~/.files/setup/programs/kubeadm/10-kubeadm.conf%b" ... \n' "$g_color_opaque" "$g_color_reset"
+                    printf 'Creando el archivo "%b~/.files/setup/programs/kubeadm/10-kubeadm.conf%b" ... \n' "$g_color_gray1" "$g_color_reset"
                     echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ~/.files/setup/programs/kubeadm/10-kubeadm.conf
                 fi
 
@@ -3800,7 +3800,7 @@ function _copy_artifact_files() {
                     l_status=$?
                     if [ $l_status -ne 0 ]; then
                         printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                            "$g_color_warning" "NeoVIM"  "$p_repo_last_version_pretty" "$g_color_reset"
+                            "$g_color_red1" "NeoVIM"  "$p_repo_last_version_pretty" "$g_color_reset"
                         printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_programs}"
                         export PATH=${g_path_programs}/neovim/bin:$PATH
                     fi
@@ -3921,7 +3921,7 @@ function _copy_artifact_files() {
                 if [ $p_artifact_is_last -eq 0 ]; then
 
                     echo "$p_repo_last_version_pretty" > "${g_path_programs_win}/nerd-fonts.info"
-                    printf '%bDeberá instalar (copiar) manualmente los archivos%b de "%s" en "%s".\n' "$g_color_info" "$g_color_reset" "${l_path_target_bin}" "C:/Windows/Fonts'"
+                    printf '%bDeberá instalar (copiar) manualmente los archivos%b de "%s" en "%s".\n' "$g_color_yellow1" "$g_color_reset" "${l_path_target_bin}" "C:/Windows/Fonts'"
                 fi
 
             fi
@@ -3954,13 +3954,13 @@ function _copy_artifact_files() {
             l_aux=$(find "$g_path_programs" -maxdepth 1 -mindepth 1 -type d -name 'clang+llvm-*' 2> /dev/null | head -n 1)
 
             if [ -z "$l_aux" ]; then
-                printf 'El comprimido %b"LLVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_warning" \
+                printf 'El comprimido %b"LLVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_red1" \
                     "$g_path_programs" 'clang+llvm-*' "$g_color_reset"
                 return 41
             fi
 
             #Acceso al folder creado
-            printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
+            printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$l_path_target_bin" "$g_color_reset"
             mv "$l_aux" "$l_path_target_bin"
             chmod g+rx,o+rx ${l_path_target_bin}
 
@@ -3969,7 +3969,7 @@ function _copy_artifact_files() {
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                    "$g_color_warning" "Go"  "$p_repo_last_version_pretty" "$g_color_reset"
+                    "$g_color_red1" "Go"  "$p_repo_last_version_pretty" "$g_color_reset"
                 printf 'Adicionando a la sesion actual: PATH=%s/llvm/bin:$PATH\n' "${g_path_programs}"
                 export PATH=${g_path_programs}/llvm/bin:$PATH
             fi
@@ -4041,7 +4041,7 @@ function _copy_artifact_files() {
                 #find "${l_path_source}/*.tar.gz" -maxdepth 1 -mindepth 1 -type f -exec rm '{}' \;
                  
                 #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
-                printf '%b' "$g_color_opaque"
+                printf '%b' "$g_color_gray1"
                 rsync -a --stats "${l_path_source}/" "${l_path_target_bin}"
                 printf '%b' "$g_color_reset"
 
@@ -4050,7 +4050,7 @@ function _copy_artifact_files() {
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                        "$g_color_warning" "DotNet"  "$p_repo_last_version_pretty" "$g_color_reset"
+                        "$g_color_red1" "DotNet"  "$p_repo_last_version_pretty" "$g_color_reset"
                     printf 'Adicionando a la sesion actual: PATH=%s/dotnet:$PATH\n' "${g_path_programs}"
 
                     export DOTNET_ROOT=${g_path_programs}/dotnet
@@ -4077,7 +4077,7 @@ function _copy_artifact_files() {
                 #find "${l_path_source}/*.zip" -maxdepth 1 -mindepth 1 -type f -exec rm '{}' \;
 
                 #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
-                printf '%b' "$g_color_opaque"
+                printf '%b' "$g_color_gray1"
                 rsync -a --stats "${l_path_source}/" "${l_path_target_bin}"
                 printf '%b' "$g_color_reset"
             fi
@@ -4108,7 +4108,7 @@ function _copy_artifact_files() {
                 l_path_source="${l_path_source}/${p_artifact_name_woext}"
 
                 #Ejecutar el 'instalador' (copiador) de archivos en los diferentes directorio del SO
-                printf 'Ejecutando el instalador "%s"...\n%b' "${l_path_source}/install.sh" "$g_color_opaque"
+                printf 'Ejecutando el instalador "%s"...\n%b' "${l_path_source}/install.sh" "$g_color_gray1"
 
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
                     chmod u+x "${l_path_source}/install.sh"
@@ -4134,7 +4134,7 @@ function _copy_artifact_files() {
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                        "$g_color_warning" "Rust"  "$p_repo_last_version_pretty" "$g_color_reset"
+                        "$g_color_red1" "Rust"  "$p_repo_last_version_pretty" "$g_color_reset"
                     printf 'Adicionando a la sesion actual: PATH=%s/rust/bin:$PATH\n' "${g_path_programs}"
 
                     PATH="${g_path_programs}/rust/bin:$PATH"
@@ -4147,7 +4147,7 @@ function _copy_artifact_files() {
                 l_path_source="${l_path_source}/${p_artifact_name_woext}"
 
                 #Ejecutar el 'instalador' (copiador) de archivos en los diferentes directorio del SO
-                printf 'Ejecutando el instalador "%s"...\n%b' "${l_path_source}/install.sh" "$g_color_opaque"
+                printf 'Ejecutando el instalador "%s"...\n%b' "${l_path_source}/install.sh" "$g_color_gray1"
 
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
                     chmod u+x "${l_path_source}/install.sh"
@@ -4191,23 +4191,23 @@ function _copy_artifact_files() {
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                        "$g_color_warning" "Go"  "$p_repo_last_version_pretty" "$g_color_reset"
+                        "$g_color_red1" "Go"  "$p_repo_last_version_pretty" "$g_color_reset"
                     printf 'Adicionando a la sesion actual: PATH=%s/go/bin:$PATH\n' "${g_path_programs}"
                     PATH=${g_path_programs}/go/bin:$PATH
                     export PATH=$PATH:~/go/bin
                 fi
 
                 #Instalar o actualizar el modulo go: LSP 'gopls'
-                printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'LSP "gopls"' "$g_color_opaque" "$g_color_reset"
+                printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'LSP "gopls"' "$g_color_gray1" "$g_color_reset"
                 go install golang.org/x/tools/gopls@latest
                 l_aux=$(gopls version | grep 'gopls v' | sed "$g_regexp_sust_version1" 2> /dev/null)
-                printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'LSP "gopls"' "$g_color_opaque" "$l_aux" "$g_color_reset" 
+                printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'LSP "gopls"' "$g_color_gray1" "$l_aux" "$g_color_reset" 
 
                 #Instalar o actualizar el modulo go: DAP 'delve'
-                printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'DAP "delve"' "$g_color_opaque" "$g_color_reset"
+                printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'DAP "delve"' "$g_color_gray1" "$g_color_reset"
                 go install github.com/go-delve/delve/cmd/dlv@latest
                 l_aux=$(dlv version | grep 'Version:' | sed "$g_regexp_sust_version1" 2> /dev/null)
-                printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'DAP "delve"' "$g_color_opaque" "$l_aux" "$g_color_reset" 
+                printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'DAP "delve"' "$g_color_gray1" "$l_aux" "$g_color_reset" 
 
 
             else
@@ -4226,9 +4226,9 @@ function _copy_artifact_files() {
                 mv ${g_path_programs_win}/go ${g_path_programs_win}/Go
                 #chmod g+rx,o+rx ${g_path_programs_win}/Go
 
-                printf 'Instalé/actualizé el modulo go %s ejecutando:  %b%s%b\n' 'LSP "gopls"' "$g_color_info" \
+                printf 'Instalé/actualizé el modulo go %s ejecutando:  %b%s%b\n' 'LSP "gopls"' "$g_color_yellow1" \
                        'go install golang.org/x/tools/gopls@latest' "$g_color_reset"
-                printf 'Instalé/actualizé el modulo go %s ejecutando:  %b%s%b\n' 'DAP "delve"' "$g_color_info" \
+                printf 'Instalé/actualizé el modulo go %s ejecutando:  %b%s%b\n' 'DAP "delve"' "$g_color_yellow1" \
                        'go install github.com/go-delve/delve/cmd/dlv@latest' "$g_color_reset"
                 
             fi
@@ -4254,7 +4254,7 @@ function _copy_artifact_files() {
                 #l_artifact_name_without_ext="$g_filename_without_ext"
 
                 #Acceso al folder creado
-                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "${g_path_programs}/node-${p_repo_last_version}-linux-x64" "$g_color_reset" "$g_color_opaque" \
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "${g_path_programs}/node-${p_repo_last_version}-linux-x64" "$g_color_reset" "$g_color_gray1" \
                        "${g_path_programs}/nodejs" "$g_color_reset"
                 mv "${g_path_programs}/${p_artifact_name_woext}" "${g_path_programs}/nodejs"
                 chmod g+rx,o+rx ${g_path_programs}/nodejs
@@ -4264,7 +4264,7 @@ function _copy_artifact_files() {
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                        "$g_color_warning" "Node.JS"  "$p_repo_last_version_pretty" "$g_color_reset"
+                        "$g_color_red1" "Node.JS"  "$p_repo_last_version_pretty" "$g_color_reset"
                     printf 'Adicionando a la sesion actual: PATH=%s/nodejs/bin:$PATH\n' "${g_path_programs}"
                     export PATH=${g_path_programs}/nodejs/bin:$PATH
                 fi
@@ -4282,7 +4282,7 @@ function _copy_artifact_files() {
                 #l_artifact_name_without_ext="$g_filename_without_ext"
 
                 #Acceso al folder creado
-                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "${g_path_programs_win}/node-${p_repo_last_version}-win-x64" "$g_color_reset" "$g_color_opaque" \
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "${g_path_programs_win}/node-${p_repo_last_version}-win-x64" "$g_color_reset" "$g_color_gray1" \
                        "${g_path_programs_win}/NodeJS" "$g_color_reset"
                 mv "${g_path_programs_win}/${p_artifact_name_woext}" "${g_path_programs_win}/NodeJS"
                 #chmod g+rx,o+rx ${g_path_programs_win}/NodeJS
@@ -4315,14 +4315,14 @@ function _copy_artifact_files() {
                 #l_aux=$(find "$g_path_programs" -maxdepth 1 -mindepth 1 -type d -name 'cmake-*' 2> /dev/null | head -n 1)
 
                 #if [ -z "$l_aux" ]; then
-                #    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_warning" \
+                #    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_red1" \
                 #        "$g_path_programs" 'cmake-*' "$g_color_reset"
                 #    return 41
                 #fi
 
                 #Acceso al folder creado
                 l_aux="${g_path_programs}/${p_artifact_name_woext}"
-                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$l_path_target_bin" "$g_color_reset"
                 mv "$l_aux" "$l_path_target_bin"
                 chmod g+rx,o+rx ${l_path_target_bin}
 
@@ -4340,7 +4340,7 @@ function _copy_artifact_files() {
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                        "$g_color_warning" "CMake"  "$p_repo_last_version_pretty" "$g_color_reset"
+                        "$g_color_red1" "CMake"  "$p_repo_last_version_pretty" "$g_color_reset"
                     printf 'Adicionando a la sesion actual: PATH=%s/cmake/bin:$PATH\n' "${g_path_programs}"
                     export PATH=${g_path_programs}/cmake/bin:$PATH
                 fi
@@ -4363,14 +4363,14 @@ function _copy_artifact_files() {
                 #l_aux=$(find "$g_path_programs_win" -maxdepth 1 -mindepth 1 -type d -name 'cmake-*' 2> /dev/null | head -n 1)
 
                 #if [ -z "$l_aux" ]; then
-                #    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_warning" \
+                #    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_red1" \
                 #        "$g_path_programs_win" 'cmake-*' "$g_color_reset"
                 #    return 41
                 #fi
 
                 #Acceso al folder creado
                 l_aux="${g_path_programs_win}/${p_artifact_name_woext}"
-                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$l_path_target_bin" "$g_color_reset"
                 mv "$l_aux" "$l_path_target_bin"
                 #chmod g+rx,o+rx ${l_path_target_bin}
                 
@@ -4513,13 +4513,13 @@ function _copy_artifact_files() {
                 l_aux=$(find "$g_path_programs" -maxdepth 1 -mindepth 1 -type d -name 'graalvm-community-*' 2> /dev/null | head -n 1)
 
                 if [ -z "$l_aux" ]; then
-                    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_warning" \
+                    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_red1" \
                         "$g_path_programs" 'graalvm-community-*' "$g_color_reset"
                     return 41
                 fi
 
                 #Acceso al folder creado
-                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$l_path_target_bin" "$g_color_reset"
                 mv "$l_aux" "$l_path_target_bin"
                 chmod g+rx,o+rx ${l_path_target_bin}
 
@@ -4528,7 +4528,7 @@ function _copy_artifact_files() {
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                        "$g_color_warning" "GraalVM"  "$p_repo_last_version_pretty" "$g_color_reset"
+                        "$g_color_red1" "GraalVM"  "$p_repo_last_version_pretty" "$g_color_reset"
                     printf 'Adicionando a la sesion actual: PATH=%s/graalvm/bin:$PATH\n' "${g_path_programs}"
                     export PATH=${g_path_programs}/graalvm/bin:$PATH
                     GRAALVM_HOME=${g_path_programs}/graalvm
@@ -4557,13 +4557,13 @@ function _copy_artifact_files() {
                 l_aux=$(find "$g_path_programs_win" -maxdepth 1 -mindepth 1 -type d -name 'graalvm-community-*' 2> /dev/null | head -n 1)
 
                 if [ -z "$l_aux" ]; then
-                    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_warning" \
+                    printf 'El comprimido %b"GraalVM" se debio descromprimir en un carpeta que inicia con "%s/%s", pero no existe%b.\n' "$g_color_red1" \
                         "$g_path_programs_win" 'graalvm-community-*' "$g_color_reset"
                     return 41
                 fi
 
                 #Acceso al folder creado
-                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_opaque" "$l_aux" "$g_color_reset" "$g_color_opaque" "$l_path_target_bin" "$g_color_reset"
+                printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$l_path_target_bin" "$g_color_reset"
                 mv "$l_aux" "$l_path_target_bin"
                 #chmod g+rx,o+rx ${l_path_target_bin}
                 
@@ -4628,7 +4628,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
@@ -4689,7 +4689,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "podman" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "podman" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'podman.service' 1 "$p_repo_id" "$p_artifact_index"
@@ -4744,7 +4744,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
@@ -4804,7 +4804,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
@@ -4864,7 +4864,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
@@ -4945,7 +4945,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
@@ -5039,7 +5039,7 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
@@ -5135,16 +5135,16 @@ function _copy_artifact_files() {
 
                 printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "containerd.service"
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
-                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "containerd.service" "$g_color_info" "$g_color_reset"
-                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/containerd"%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
-                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
-                printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
-                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "containerd.service" "$g_color_info" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
-                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   sudo systemctl start containerd%b\n' "$g_color_info" "$g_color_reset"                 
+                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "containerd.service" "$g_color_yellow1" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   Opcional:%b\n' "$g_color_gray1" "$g_color_reset"
+                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
+                printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
+                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "containerd.service" "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
+                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo systemctl start containerd%b\n' "$g_color_yellow1" "$g_color_reset"                 
 
             fi
             ;;
@@ -5229,17 +5229,17 @@ function _copy_artifact_files() {
 
                 printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "buildkit.service"
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
-                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_info" "$g_color_opaque" "buildkit.service" "$g_color_info" "$g_color_reset"
-                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/containerd"%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   containerd-rootless-setuptool.sh install-buildkit%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   Opcional:%b\n' "$g_color_opaque" "$g_color_reset"
-                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
-                printf '%b      > Establezca el servicio buildkit para inicio manual:%b systemctl --user disable buildkit.service%b\n' "$g_color_opaque" "$g_color_info" "$g_color_reset"
-                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_info" "$g_color_opaque" "buildkit.service" "$g_color_info" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.socket /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.service /usr/lib/systemd/system/%b\n' "$g_color_info" "$g_color_reset"
-                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_info" "$g_color_reset"
-                printf '%b   sudo systemctl start buildkit.service%b\n' "$g_color_info" "$g_color_reset"                 
+                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "buildkit.service" "$g_color_yellow1" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   containerd-rootless-setuptool.sh install-buildkit%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   Opcional:%b\n' "$g_color_gray1" "$g_color_reset"
+                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
+                printf '%b      > Establezca el servicio buildkit para inicio manual:%b systemctl --user disable buildkit.service%b\n' "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
+                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "buildkit.service" "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.socket /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
+                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo systemctl start buildkit.service%b\n' "$g_color_yellow1" "$g_color_reset"                 
 
             fi
             ;;
@@ -5310,7 +5310,7 @@ function _copy_artifact_files() {
                         l_status_stop=$?
 
                         if [ $l_status_stop -eq 0 ]; then
-                            printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                            printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
                         fi
 
                         request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
@@ -5504,7 +5504,7 @@ install_initialize_menu_option() {
 
             #Si existe el paquete no instalar nada
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
                 printf 'Solo se puede instalar si no se instalo usando el repositorio de github. No se puede desintalar si se instalo usando repositorio de paquetes del SO.\n'
                 return 2
             fi
@@ -5635,7 +5635,7 @@ install_initialize_menu_option() {
                             l_packages="${l_package} ${l_packages}"
                         fi
                     else
-                        printf '%bEl paquete "%s" requerido por .NET ya esta instalado.%b\n' "$g_color_opaque" "$l_package" "$g_color_reset"
+                        printf '%bEl paquete "%s" requerido por .NET ya esta instalado.%b\n' "$g_color_gray1" "$l_package" "$g_color_reset"
                     fi
 
                 done
@@ -5645,10 +5645,10 @@ install_initialize_menu_option() {
             if [ ! -z "$l_packages" ]; then
 
                 if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
-                    printf '%bNo esta habilitada para instalar paquetes%b. Se recomienda que Instalé los paquetes "%b%s%b".\n' "$g_color_warning" "$g_color_reset" \
-                        "$g_color_opaque" "$l_packages" "$g_color_reset"
+                    printf '%bNo esta habilitada para instalar paquetes%b. Se recomienda que Instalé los paquetes "%b%s%b".\n' "$g_color_red1" "$g_color_reset" \
+                        "$g_color_gray1" "$l_packages" "$g_color_reset"
                 else
-                    printf 'Se requiere instalar los paquetes "%b%s%b".\n' "$g_color_opaque" "$l_packages" "$g_color_reset"
+                    printf 'Se requiere instalar los paquetes "%b%s%b".\n' "$g_color_gray1" "$l_packages" "$g_color_reset"
 
                     #Solicitar credenciales de administrador y almacenarlas temporalmente
                     if [ $g_status_crendential_storage -eq 0 ]; then
@@ -5758,16 +5758,16 @@ uninstall_initialize_menu_option() {
         fi
 
         if [ $l_j -eq 0 ]; then
-            l_repo_names="'${g_color_opaque}${l_aux}${g_color_reset}'" 
+            l_repo_names="'${g_color_gray1}${l_aux}${g_color_reset}'" 
         else
-            l_repo_names="${l_repo_names}, '${g_color_opaque}${l_aux}${g_color_reset}'"
+            l_repo_names="${l_repo_names}, '${g_color_gray1}${l_aux}${g_color_reset}'"
         fi
 
     done
     printf '%b\n' "$l_repo_names"
 
     if [ $gp_type_calling -ne 3 ] && [ $gp_type_calling -ne 4 ]; then
-        printf "%b¿Desea continuar con la desinstalación de estos repositorios?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_warning" "$g_color_opaque" "$g_color_reset"
+        printf "%b¿Desea continuar con la desinstalación de estos repositorios?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_red1" "$g_color_gray1" "$g_color_reset"
         read -rei 's' -p ': ' l_option
         if [ "$l_option" != "s" ]; then
             printf 'Se cancela la desinstalación de los repositorios\n'
@@ -5789,7 +5789,7 @@ uninstall_initialize_menu_option() {
 
             #Si existe el paquete no desintalar nada
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
                 printf 'Solo se puede desinstalar si no se instalo usando el repositorio de github. No se puede desintalar si se instalo usando repositorio de paquetes del SO.\n'
                 return 2
             fi
@@ -5813,7 +5813,7 @@ uninstall_initialize_menu_option() {
 
             #Si existe el paquete no desintalar nada
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "buildkit" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "buildkit" "$g_color_reset" "$g_color_red1" "$g_color_reset"
                 printf 'Solo se puede desinstalar si no se instalo usando el repositorio de github. No se puede desintalar si se instalo usando repositorio de paquetes del SO.\n'
                 return 2
             fi
@@ -6379,7 +6379,7 @@ _uninstall_repository() {
 
             #if [ $l_status -eq 0 ]; then
 
-            #    printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_warning" "containerd.io" "$g_color_reset" "$g_color_warning" "$g_color_reset"
+            #    printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             #    printf 'No se desinstalará el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s.\n' "$p_artifact_index" "$p_repo_id"
             #    return 0
 

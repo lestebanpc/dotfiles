@@ -245,7 +245,7 @@ install_finalize_menu_option() {
             l_status=$?
 
             if [ $l_status -ne 0 ]; then
-                printf 'Python: %bNo esta instalado el gestor de paquetes "pip"%b. Instale/Actualize el profile para instalar paquetes basicos.\n' "$g_color_warning" "$g_color_reset"
+                printf 'Python: %bNo esta instalado el gestor de paquetes "pip"%b. Instale/Actualize el profile para instalar paquetes basicos.\n' "$g_color_red1" "$g_color_reset"
                 #return 1
                 return 0
             fi
@@ -258,7 +258,7 @@ install_finalize_menu_option() {
             #if [ $l_status -ne 0 ]; then
             if [ -z "$l_version" ]; then
 
-                print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+                print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
                 echo "Instalando el comando 'jtbl' (modulo python) para mostrar arreglos json en una consola en formato tabular."
                 
                 #Se instalar a nivel usuario
@@ -273,7 +273,7 @@ install_finalize_menu_option() {
             #if [ $l_status -ne 0 ] || [ -z "$l_version"]; then
             if [ -z "$l_version" ]; then
 
-                print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+                print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
                 echo "Instalando el comando 'compiledb' (modulo python) para generar una base de datos de compilacion Clang desde un make file."
                 
                 #Se instalar a nivel usuario
@@ -286,7 +286,7 @@ install_finalize_menu_option() {
             l_status=$?
             if [ -z "$l_version" ]; then
 
-                print_line '. ' $((g_max_length_line/2)) "$g_color_opaque" 
+                print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
                 echo "Instalando la libreria python 'rope' para refactorización de Python (https://github.com/python-rope/rope)."
                 
                 #Se instalara a nivel usuario
@@ -350,16 +350,16 @@ uninstall_initialize_menu_option() {
         fi
 
         if [ $l_j -eq 0 ]; then
-            l_repo_names="'${g_color_opaque}${l_aux}${g_color_reset}'" 
+            l_repo_names="'${g_color_gray1}${l_aux}${g_color_reset}'" 
         else
-            l_repo_names="${l_repo_names}, '${g_color_opaque}${l_aux}${g_color_reset}'"
+            l_repo_names="${l_repo_names}, '${g_color_gray1}${l_aux}${g_color_reset}'"
         fi
 
     done
     printf '%b\n' "$l_repo_names"
 
     if [ $gp_type_calling -ne 3 ] && [ $gp_type_calling -ne 4 ]; then
-        printf "%b¿Desea continuar con la desinstalación de estos packages?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_warning" "$g_color_opaque" "$g_color_reset"
+        printf "%b¿Desea continuar con la desinstalación de estos packages?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_red1" "$g_color_gray1" "$g_color_reset"
         read -rei 's' -p ': ' l_option
         if [ "$l_option" != "s" ]; then
             printf 'Se cancela la desinstalación de los packages\n'

@@ -32,6 +32,9 @@ if (g:os_type == 2) || (g:os_type == 3)
    "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
    nnoremap <Leader>cd :<C-u>call system('xclip -selection clipboard', @1)<CR>
 
+   "Pagar el portapapeles al ultimo yank ('CLIPBOARD' selecction)
+   nnoremap <Leader>py :<C-u>let @0=system('xclip -o -selection clipboard 2> /dev/null')<CR>
+
    "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
    vnoremap <Leader>cl :w !xclip -selection clipboard<CR><CR>
 

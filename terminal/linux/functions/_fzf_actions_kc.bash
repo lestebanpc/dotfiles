@@ -3,10 +3,10 @@
 #. ~/.files/terminal/linux/functions/func_utility.bash
 
 #Colores principales usados para presentar en FZF
-g_color_opaque="\x1b[90m"
 g_color_reset="\x1b[0m"
-g_color_title="\x1b[32m"
-g_color_subtitle="\x1b[36m"
+g_color_gray1="\x1b[90m"
+g_color_green1="\x1b[32m"
+g_color_cyan1="\x1b[36m"
 
 #Uso interno: compartir data entre funciones para evitar pasarselos por argumentos
 _g_data_object_json=""
@@ -142,18 +142,18 @@ open_terminal1() {
     if [ $l_n -gt 1 ]; then
 
         printf 'Ingrese valores de los parametros requeridos para mostrar el log:\n\n'
-        printf "> Choose the container %bthe following table%b:\n\n" "$g_color_opaque" "$g_color_reset"
+        printf "> Choose the container %bthe following table%b:\n\n" "$g_color_gray1" "$g_color_reset"
 
         #Mostrando la tabla con los contenodores
         l_jq_query='[. | to_entries[] | { IDX: .key, NAME: .value.spec.name, PORTS: (if .value.spec.ports == null then "" else ([.value.spec.ports[] | select(.protocol == "TCP") | .containerPort] | join(",")) end), IMAGE: .value.spec.image }]'        
         l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
         if [ $? -ne 0 ]; then
-            printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
             return 5
         fi
 
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
             return 6
         else
             echo "$l_data" | jtbl -n
@@ -165,7 +165,7 @@ open_terminal1() {
         while [ $l_i -lt 0  ]; do
             
             #
-            printf "  Choose IDX container %b(Ingrese un entero desde 0 hasta %s)%b" "$g_color_opaque" "$((l_n - 1))" "$g_color_reset"
+            printf "  Choose IDX container %b(Ingrese un entero desde 0 hasta %s)%b" "$g_color_gray1" "$((l_n - 1))" "$g_color_reset"
             read -r -p ": " l_in_option
             
             if [[ "$l_in_option" =~ ^[0-9]+$ ]]; then
@@ -173,11 +173,11 @@ open_terminal1() {
 
                 if [ $l_i -ge $l_n  ] || [ $l_i -lt 0 ]; then
                     l_i=-1
-                    printf "  %bEl entero debe ser 0 hasta %s inclusive%b\n" "$g_color_opaque" "$((l_n - 1))" "$g_color_reset"
+                    printf "  %bEl entero debe ser 0 hasta %s inclusive%b\n" "$g_color_gray1" "$((l_n - 1))" "$g_color_reset"
                 fi
 
             else
-                printf "  %bIngrese un entero desde 0 hasta %s inclusive%b\n" "$g_color_opaque" "$((l_n - 1))" "$g_color_reset"
+                printf "  %bIngrese un entero desde 0 hasta %s inclusive%b\n" "$g_color_gray1" "$((l_n - 1))" "$g_color_reset"
                 l_i=-1
             fi
 
@@ -350,18 +350,18 @@ _choose_container_for_log() {
 
     if [ $l_n -gt 1 ]; then
 
-        printf "> Choose the container %bthe following table%b:\n\n" "$g_color_opaque" "$g_color_reset"
+        printf "> Choose the container %bthe following table%b:\n\n" "$g_color_gray1" "$g_color_reset"
 
         #Mostrando la tabla con los contenodores
         l_jq_query='[. | to_entries[] | { IDX: .key, NAME: .value.name, PORTS: (if .value.ports == null then "" else ([.value.ports[] | select(.protocol == "TCP") | .containerPort] | join(",")) end), IMAGE: .value.image }]'        
         l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
         if [ $? -ne 0 ]; then
-            printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
             return 5
         fi
 
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
             return 6
         else
             echo "$l_data" | jtbl -n
@@ -374,7 +374,7 @@ _choose_container_for_log() {
             
             #
             printf "  Choose %bContainer IDX%b (de 0 hasta %s asociado a un contenedor)%b or Enter %b'--all'%b (para seleccionar todos los contenedores)%b [ ]" \
-                   "$g_color_subtitle" "$g_color_opaque" "$((l_n - 1))" "$g_color_reset" "$g_color_subtitle" "$g_color_opaque" "$g_color_reset"
+                   "$g_color_cyan1" "$g_color_gray1" "$((l_n - 1))" "$g_color_reset" "$g_color_cyan1" "$g_color_gray1" "$g_color_reset"
             read -re -p ": " l_in_option
             
             if [[ "$l_in_option" =~ ^[0-9]+$ ]]; then
@@ -382,7 +382,7 @@ _choose_container_for_log() {
 
                 if [ $l_i -ge $l_n  ] || [ $l_i -lt 0 ]; then
                     l_i=-1
-                    printf "  %bEl entero debe ser 0 hasta %s inclusive%b\n" "$g_color_opaque" "$((l_n - 1))" "$g_color_reset"
+                    printf "  %bEl entero debe ser 0 hasta %s inclusive%b\n" "$g_color_gray1" "$((l_n - 1))" "$g_color_reset"
                 fi
 
             else
@@ -391,7 +391,7 @@ _choose_container_for_log() {
                 if [ "$l_in_option" = "--all" ]; then
                     break
                 else
-                    printf "  %bIngrese un entero desde 0 hasta %s inclusive o ingrese '--all'%b\n" "$g_color_opaque" "$((l_n - 1))" "$g_color_reset"
+                    printf "  %bIngrese un entero desde 0 hasta %s inclusive o ingrese '--all'%b\n" "$g_color_gray1" "$((l_n - 1))" "$g_color_reset"
                 fi
             fi
 
@@ -441,7 +441,7 @@ _choose_and_show_logs() {
 
     #2.2. Leer el flag show timestamp
     local l_show_timestamp=0
-    printf "> Show the timestamps %b('n' para desactivarlo. 's' u otro valor para activarlo)%b [s]" "$g_color_opaque" "$g_color_reset"
+    printf "> Show the timestamps %b('n' para desactivarlo. 's' u otro valor para activarlo)%b [s]" "$g_color_gray1" "$g_color_reset"
     read -rei 's' -p ": " l_in_option
     
     if [ "$l_in_option" = "n" ]; then
@@ -460,7 +460,7 @@ _choose_and_show_logs() {
         l_filter_lines=$5
     fi
 
-    printf "> Filter > Show last number lines %b(un entero positivo para activar el filtro, entero negativo para desabilitarlo, otro valor se considera '%s' lineas)%b [%s]" "$g_color_opaque" \
+    printf "> Filter > Show last number lines %b(un entero positivo para activar el filtro, entero negativo para desabilitarlo, otro valor se considera '%s' lineas)%b [%s]" "$g_color_gray1" \
            "$l_filter_lines" "$g_color_reset" "$l_filter_lines"
     read -rei "$l_filter_lines" -p ": " l_in_option
 
@@ -473,7 +473,7 @@ _choose_and_show_logs() {
     #2.5. Filtro de un rango de tiempo relativo
     local l_filter_time=""
 
-    printf "> Filter > Show last log since %b(un entero positivo seguido de 's' para segundos, 'm' para minutos y 'h' para horas; caso contrario se desactiva el filtro)%b [ ]" "$g_color_opaque" "$g_color_reset"
+    printf "> Filter > Show last log since %b(un entero positivo seguido de 's' para segundos, 'm' para minutos y 'h' para horas; caso contrario se desactiva el filtro)%b [ ]" "$g_color_gray1" "$g_color_reset"
     read -re -p ": " l_in_option
 
     if [[ "$l_in_option" =~ ^[1-9][0-9]+[smh]$ ]]; then
@@ -660,7 +660,7 @@ _show_pod_info() {
         l_root=".spec.template."
     fi
 
-    printf '\n%bInformacion general de Pod:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bInformacion general de Pod:%b\n' "$g_color_cyan1" "$g_color_reset"
     if [ $p_is_template -ne 0 ]; then
         l_jq_query='{ UID: .metadata.uid, Phase: .status.phase, PodIP: .status.podIP, Owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), StartTime: .status.startTime, NodeName: .spec.nodeName, DnsPolicy: .spec.dnsPolicy, RestartPolicy: .spec.restartPolicy, SchedulerName: .spec.schedulerName, Priority: .spec.priority, ServiceAccount: .spec.serviceAccount, ServiceAccountName: .spec.serviceAccountName, ImagePullSecrets: ([.spec.imagePullSecrets[]?.name] | join(", ")), ActiveDeadlineSeconds: .spec.activeDeadlineSeconds, TerminationGracePeriodSeconds:  .spec.terminationGracePeriodSeconds } | to_entries[] | "\t\(.key)\t: \(.value)"'
     else
@@ -670,146 +670,146 @@ _show_pod_info() {
 
     if [ $p_is_template -ne 0 ]; then
     
-        printf "\n%bPod's Contitions:%b\n" "$g_color_subtitle" "$g_color_reset"
+        printf "\n%bPod's Contitions:%b\n" "$g_color_cyan1" "$g_color_reset"
         l_jq_query='[.status.conditions[]? | { TYPE: .type, STATUS: .status, TIME: .lastTransitionTime, REASON: .reason, MESSAGGE: .message }]'
     
         l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
         if [ $? -eq 0 ]; then
             if [ "$l_data" = "[]" ]; then
-                printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+                printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
             else
                 echo "$l_data" | jtbl -n
             fi
         else
-            printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
         fi
 
     
 
-        printf '\n%bStatus de los contenedores del pod:%b\n' "$g_color_subtitle" "$g_color_reset"
+        printf '\n%bStatus de los contenedores del pod:%b\n' "$g_color_cyan1" "$g_color_reset"
         l_jq_query='[.status.containerStatuses[]? | . as $item | (.imageID/"/") as $imgIdParts | (.image/"/") as $imgParts | (((.state? | to_entries[]) + {type: "Current"}), ((.lastState? | to_entries[]) + { type: "Previous"})) | { CONTAINER: $item.name, POSITION: .type, TYPE: .key, "STARTED-AT": .value?.startedAt, "FINISHED-AT": .value?.finishedAt, "CONTAINER-ID": (if .type == "Current" then $item.containerID else .value?.containerID end), "REASON": .value?.reason, "EXITCODE": .value?.exitCode, "MESSAGE": .value?.message, "IMAGE-HASH": (if .type == "Current" then $imgIdParts[2] else "" end), "IMAGE-TAG": (if .type == "Current" and $imgParts[2] != $imgIdParts[2] then $imgParts[2] else "" end) }]'
     
         l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
         if [ $? -eq 0 ]; then
             if [ "$l_data" = "[]" ]; then
-                printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+                printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
             else
                 echo "$l_data" | jtbl -n
             fi
         else
-            printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
         fi
 
     fi    
 
     
-    printf '\n%bContenedores principales:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bContenedores principales:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[ '"${l_root}"'spec.containers[] | { NAME: .name, PORTS: ( [ (.ports[]? | "\(.containerPort)/\(.protocol)") ] | join(", ")), IMAGE: .image } ]'
     echo "$_g_data_object_json" | jq "$l_jq_query" | jtbl -n
 
 
 
-    printf '\n%bContenedores de inicialización:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bContenedores de inicialización:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[ '"${l_root}"'spec.initContainers[]? | { NAME: .name, PORTS: ( [ .ports[]?.containerPort ] | join(", ")), IMAGE: .image } ]'
     
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
 
 
-    printf '\n%bVariables de contenedores principales:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bVariables de contenedores principales:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[ '"${l_root}"'spec.containers[] | { name: .name, env: .env[]? } | { CONTAINER: .name, VARIABLE: .env.name, TYPE: (if .env.value? != null then "VALUE" elif .env.valueFrom?.fieldRef != null then "FROM-FIELDREF" elif .env.valueFrom?.secretKeyRef != null then "FROM-SECRET-REF" else "UNKNOWN" end), VALUE: (if .env.value? != null then .env.value? elif .env.valueFrom?.fieldRef != null then .env.valueFrom?.fieldRef.fieldPath elif .env.valueFrom?.secretKeyRef != null then "[SecretName: \(.env.valueFrom?.secretKeyRef.name)] \(.env.valueFrom?.secretKeyRef.key)" else "..." end) }]'
     
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
     
-    printf '\n%bVolumenes montados por los contenedores:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bVolumenes montados por los contenedores:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[ '"${l_root}"'spec.volumes as $vols | '"${l_root}"'spec.containers[] | {name: .name, volumeMount: .volumeMounts[]? } | .volumeMount.name as $volName | { name: .name, volumeMount: .volumeMount, volume: ($vols[]? | select(.name == $volName))} | { CONTAINER: .name, "VOL-NAME": .volumeMount.name, "VOL-TYPE": (if .volume.persistentVolumeClaim?.claimName != null then "PVC" elif .volume.configMap?.name then "CONFIG-MAP" elif .volume.secret?.secretName then "SECRET" elif .volume.hostPath?.path != null then "HOST-PATH" elif .volume.emptyDir? != null then "EMPTY-DIR" elif .volume.downwardAPI?.items != null then "DONWWARD-API" elif .volume.projected?.sources != null then "PROJECTED" else "UNKNOWN" end), "MOUNT-PATH": .volumeMount.mountPath, READONLY: .volumeMount.readOnly?, "VOL-VALUE": (if .volume.persistentVolumeClaim?.claimName != null then .volume.persistentVolumeClaim?.claimName elif .volume.configMap?.name then .volume.configMap?.name elif .volume.secret?.secretName then .volume.secret?.secretName elif .volume.hostPath?.path != null then .volume.hostPath?.path elif .volume.emptyDir? != null then "..." elif .volume.downwardAPI?.items != null then "..." elif .volume.projected?.sources != null then "..." else "???" end) }]'
     
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
     
 
-    printf '\n%bEtiquetas del pod:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bEtiquetas del pod:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[ '"${l_root}"'metadata.labels | to_entries[] | { KEY: .key, VALUE: .value }]'
     
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
-    printf '\n%bTolerancias del pod:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bTolerancias del pod:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[ '"${l_root}"'spec.tolerations[]? | {KEY: .key, OPERATOR: .operator, VALUE: .value, EFFECT: .effect, SECONDS: .tolerationSeconds }]'
     
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
 
 
-    printf '\n%bNode Selector usados por el pods:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bNode Selector usados por el pods:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='if '"${l_root}"'spec.nodeSelector == null then null else ('"${l_root}"'spec.nodeSelector | to_entries[] | "\t\(.key)\t: \(.value)") end'
     l_data=$(echo "$_g_data_object_json" | jq -r "$l_jq_query")
     if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
-        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
     else
         echo "$l_data"
     fi
 
 
-    printf '\n%bPod Affinity:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bPod Affinity:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query="${l_root}"'spec.affinity?.podAffinity'
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
-        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
     else
         echo "$l_data" | yq -p json -o yaml
     fi
 
-    printf '\n%bPod Anti-Affinity:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bPod Anti-Affinity:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query="${l_root}"'spec.affinity?.podAntiAffinity'
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
-        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
     else
         echo "$l_data" | yq -p json -o yaml
     fi
@@ -835,52 +835,52 @@ show_deployment_info() {
 
 
     #1. Información especifica del deployment
-    printf '%bDeployment :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$2"
-    printf '%bNamespace  :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$3"
-    printf '%bList pods  :%b oc get pod -n %s -l %s\n' "$g_color_subtitle" "$g_color_reset" "$3" "$4"
+    printf '%bDeployment :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$2"
+    printf '%bNamespace  :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$3"
+    printf '%bList pods  :%b oc get pod -n %s -l %s\n' "$g_color_cyan1" "$g_color_reset" "$3" "$4"
     
 
-    printf '%bInformación adicional:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '%bInformación adicional:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='{ UID: .metadata.uid, Owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), Revision: .metadata.annotations."deployment.kubernetes.io/revision", Generation: .metadata.generation, DesiredReplicas: .spec.replicas, ReadyReplicas: .status.readyReplicas, CurrentReplicas: .status.replicas, UpdatedReplicas: .status.updatedReplicas, AvailableReplicas: .status.availableReplicas, ObservedGeneration: .status.observedGeneration, RevisionHistoryLimit: .spec.revisionHistoryLimit, ProgressDeadlineSeconds: .spec.progressDeadlineSeconds } | to_entries[] | "\t\(.key)\t: \(.value)"'
     echo "$_g_data_object_json" | jq -r "$l_jq_query"
 
 
-    printf '\n%bEstrategias del Deployment:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bEstrategias del Deployment:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='.spec.strategy?'
     
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
-        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
     else
         echo "$l_data" | yq -p json -o yaml
     fi
 
 
-    printf '\n%bSelector de pods usados:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bSelector de pods usados:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='.spec.selector.matchLabels | to_entries[] | "\t\(.key)\t: \(.value)"'
     echo "$_g_data_object_json" | jq -r "$l_jq_query"
 
 
 
-    printf '\n%bStatus del Deployment (Contitions):%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bStatus del Deployment (Contitions):%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[.status.conditions[]? | { TYPE: .type, STATUS: .status, "TRANSITION-TIME": .lastTransitionTime, "UPDATE-TIME": .lastUpdateTime , REASON: .reason, MESSAGGE: .message }]'
     
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
     
 
     #2. Informacion general del Pod
-    printf '\n\n%b########################################################################################\n' "$g_color_opaque" 
-    printf '%bPOD TEMPLATE INFO%b\n' "$g_color_title" "$g_color_opaque"
+    printf '\n\n%b########################################################################################\n' "$g_color_gray1" 
+    printf '%bPOD TEMPLATE INFO%b\n' "$g_color_green1" "$g_color_gray1"
     printf '########################################################################################%b\n' "$g_color_reset"
 
     _show_pod_info 0
@@ -906,42 +906,42 @@ show_replicaset_info() {
 
 
     #1. Información especifica del contenedor
-    printf '%bReplicaSet :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$2"
-    printf '%bNamespace  :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$3"
-    printf '%bList pods  :%b oc get pod -n %s -l %s\n' "$g_color_subtitle" "$g_color_reset" "$3" "$4"
+    printf '%bReplicaSet :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$2"
+    printf '%bNamespace  :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$3"
+    printf '%bList pods  :%b oc get pod -n %s -l %s\n' "$g_color_cyan1" "$g_color_reset" "$3" "$4"
     
 
-    printf '%bInformación adicional:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '%bInformación adicional:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='{ UID: .metadata.uid, Owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), DesiredReplicas: .spec.replicas, ReadyReplicas: .status.readyReplicas, CurrentReplicas: .status.replicas, AvailableReplicas: .status.availableReplicas, FullyLabeledReplicas: .status.fullyLabeledReplicas, DeploymentRevision: .metadata.annotations."deployment.kubernetes.io/revision", DeploymentMaxReplicas: .metadata.annotations."deployment.kubernetes.io/max-replicas", DeploymentDesiredReplicas: .metadata.annotations."deployment.kubernetes.io/desired-replicas" } | to_entries[] | "\t\(.key)\t: \(.value)"'
     echo "$_g_data_object_json" | jq -r "$l_jq_query"
 
 
 
-    printf '\n%bSelector de pods usados:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bSelector de pods usados:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='.spec.selector.matchLabels | to_entries[] | "\t\(.key)\t: \(.value)"'
     echo "$_g_data_object_json" | jq -r "$l_jq_query"
 
 
 
-    printf '\n%bStatus del Deployment (Contitions):%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bStatus del Deployment (Contitions):%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[.status.conditions[]? | { TYPE: .type, STATUS: .status, "TRANSITION-TIME": .lastTransitionTime, "UPDATE-TIME": .lastUpdateTime , REASON: .reason, MESSAGGE: .message }]'
     
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
     
 
     #2. Informacion general del Pod
-    printf '\n\n%b########################################################################################\n' "$g_color_opaque" 
-    printf '%bPOD TEMPLATE INFO%b\n' "$g_color_title" "$g_color_opaque"
+    printf '\n\n%b########################################################################################\n' "$g_color_gray1" 
+    printf '%bPOD TEMPLATE INFO%b\n' "$g_color_green1" "$g_color_gray1"
     printf '########################################################################################%b\n' "$g_color_reset"
 
     _show_pod_info 0
@@ -967,8 +967,8 @@ show_pod_info() {
 
 
     #1. Información especifica del Pod
-    printf '%bPod        :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$2"
-    printf '%bNamespace  :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$3"
+    printf '%bPod        :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$2"
+    printf '%bNamespace  :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$3"
 
 
     #2. Informacion general del Pod
@@ -997,10 +997,10 @@ show_container_info() {
 
 
     #1. Información especifica del contenedor
-    printf '%bContainer  :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$4"
-    printf '%bPod        :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$2"
-    printf '%bNamespace  :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$3"
-    #printf '%bContainers Log    :%b oc logs pod/%s -n %s -c %s --tail=500 -f\n' "$g_color_subtitle" "$g_color_reset" "$2" "$3" "$4"
+    printf '%bContainer  :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$4"
+    printf '%bPod        :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$2"
+    printf '%bNamespace  :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$3"
+    #printf '%bContainers Log    :%b oc logs pod/%s -n %s -c %s --tail=500 -f\n' "$g_color_cyan1" "$g_color_reset" "$2" "$3" "$4"
 
     local l_data_subobject_json=""
     l_jq_query='{ spec: ( .spec.containers[] | select(.name == $objName)), status: (.status.containerStatuses[]? | select(.name == $objName)), volumes: .spec.volumes }'
@@ -1011,91 +1011,91 @@ show_container_info() {
         return 2
     fi
 
-    printf '%bInformación adicional:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '%bInformación adicional:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='{ Image: .spec.image, ImageID: .status.imageID, ContainerID: .status.containerID, Ready: .status.ready, Started: .status.started, RestartCount: .status.restartCount, Command: ((.spec.command//[]) | join(" ")), Arguments: ((.spec.args//[]) | join(" ")), ImagePullPolicy: .spec.imagePullPolicy } | to_entries[] | "\t\(.key)\t: \(.value)"'
     echo "$l_data_subobject_json" | jq -r "$l_jq_query"
 
 
-    printf '\n%bVariables:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bVariables:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[.spec.env[]? | { VARIABLE: .name, TYPE: (if .value? != null then "VALUE" elif .valueFrom?.fieldRef != null then "FROM-FIELDREF" elif .valueFrom?.secretKeyRef != null then "FROM-SECRET-REF" else "UNKNOWN" end), VALUE: (if .value? != null then .value? elif .valueFrom?.fieldRef != null then .valueFrom?.fieldRef.fieldPath elif .valueFrom?.secretKeyRef != null then "\(.valueFrom?.secretKeyRef.key) [SecretName: \(.valueFrom?.secretKeyRef.name)]" else "..." end) }]'
     
     l_data=$(echo "$l_data_subobject_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
     
-    printf '\n%bPuertos:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bPuertos:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[.spec.ports[]? | { NAME: .name, "PORT-HOST": .hostPort, "PORT-CONTAINER": .containerPort, "PROTOCOL": .protocol }]'
     
     l_data=$(echo "$l_data_subobject_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
 
-    printf '\n%bVolumenes montados:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bVolumenes montados:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[ .volumes as $vols | .spec.volumeMounts[]? | .name as $volName | {name: .name, mountPath: .mountPath, readOnly: .readOnly, volume: ($vols[]? | select(.name == $volName))} | { "VOL-NAME": .name, "VOL-TYPE": (if .volume.persistentVolumeClaim?.claimName != null then "PVC" elif .volume.configMap?.name then "CONFIG-MAP" elif .volume.secret?.secretName then "SECRET" elif .volume.hostPath?.path != null then "HOST-PATH" elif .volume.emptyDir? != null then "EMPTY-DIR" elif .volume.downwardAPI?.items != null then "DONWWARD-API" elif .volume.projected?.sources != null then "PROJECTED" else "UNKNOWN" end), "MOUNT-PATH": .mountPath, READONLY: .readOnly?, "VOL-VALUE": (if .volume.persistentVolumeClaim?.claimName != null then .volume.persistentVolumeClaim?.claimName elif .volume.configMap?.name then .volume.configMap?.name elif .volume.secret?.secretName then .volume.secret?.secretName elif .volume.hostPath?.path != null then .volume.hostPath?.path elif .volume.emptyDir? != null then "..." elif .volume.downwardAPI?.items != null then "..." elif .volume.projected?.sources != null then "..." else "???" end) }]'
     
     l_data=$(echo "$l_data_subobject_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
 
     
-    printf '\n%bResources:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bResources:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[.spec.resources? | ({ TYPE: "Requests", CPU: .requests?.cpu, MEMORY: .requests?.memory }, { TYPE: "Limits", CPU: .limits?.cpu, MEMORY: .limits?.memory })]'
     
     l_data=$(echo "$l_data_subobject_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
 
-    printf '\n%bStatus:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bStatus:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[.status | .containerID as $id | (((.state? | to_entries[]) + {type: "Current"}), ((.lastState? | to_entries[]) + { type: "Previous"})) | { POSITION: .type, TYPE: .key, "STARTED-AT": .value?.startedAt, "FINISHED-AT": .value?.finishedAt, "CONTAINER-ID": (if .type == "Current" then $id else .value?.containerID end), "REASON": .value?.reason, "EXITCODE": .value?.exitCode, "MESSAGE": .value?.message }]'  
 
     l_data=$(echo "$l_data_subobject_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
     
 
     #2. Informacion general del Pod
-    printf '\n\n%b########################################################################################\n' "$g_color_opaque" 
-    printf '%bADDITIONAL INFO ABOUT POD%b\n' "$g_color_title" "$g_color_opaque"
+    printf '\n\n%b########################################################################################\n' "$g_color_gray1" 
+    printf '%bADDITIONAL INFO ABOUT POD%b\n' "$g_color_green1" "$g_color_gray1"
     printf '########################################################################################%b\n' "$g_color_reset"
 
     _show_pod_info 1
@@ -1125,7 +1125,7 @@ show_namespace_info() {
 
 
     #1. Información especifica del Pod
-    printf '%bNamespace    :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$2"   
+    printf '%bNamespace    :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$2"   
 
     l_jq_query='"\(.metadata.uid)|\(.metadata.creationTimestamp)|\(.status.phase)"'
 
@@ -1135,38 +1135,38 @@ show_namespace_info() {
     IFS=$' \t\n'
     #local l_n=${#la_info[@]}
      
-    printf '%bUID          :%b %s\n' "$g_color_subtitle" "$g_color_reset" "${la_info[0]}"   
-    printf '%bCreation Time:%b %s\n' "$g_color_subtitle" "$g_color_reset" "${la_info[1]}"   
-    printf '%bSatus        :%b %s\n' "$g_color_subtitle" "$g_color_reset" "${la_info[2]}"   
+    printf '%bUID          :%b %s\n' "$g_color_cyan1" "$g_color_reset" "${la_info[0]}"   
+    printf '%bCreation Time:%b %s\n' "$g_color_cyan1" "$g_color_reset" "${la_info[1]}"   
+    printf '%bSatus        :%b %s\n' "$g_color_cyan1" "$g_color_reset" "${la_info[2]}"   
 
     #2. Informacion general del Pod
     if [ $l_is_project -eq 0 ]; then
-        printf '%bInformación adicional:%b\n' "$g_color_subtitle" "$g_color_reset"
+        printf '%bInformación adicional:%b\n' "$g_color_cyan1" "$g_color_reset"
         l_jq_query=' { Description: (.metadata.annotations."openshift.io/description"//""), DisplayName: (.metadata.annotations."openshift.io/display-name"//"") } | to_entries[] | "\t\(.key)\t: \(.value)"'
         echo "$l_data_object_json" | jq -r "$l_jq_query"
     fi
 
     #3. Obtener las etiquetas de la metadata
-    printf '\n%bEtiquetas:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bEtiquetas:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='[ .metadata.labels | to_entries[] | { KEY: .key, VALUE: .value }]'
 
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
         if [ "$l_data" = "[]" ]; then
-            printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+            printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         else
             echo "$l_data" | jtbl -n
         fi
     else
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
     fi
 
     #4. Obtener las anotaciones de la metadata
-    printf '\n%bAnotaciones:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bAnotaciones:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='.metadata.annotations'
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
-        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
     else
         echo "$l_data" | yq -p json -o yaml
     fi
@@ -1174,11 +1174,11 @@ show_namespace_info() {
     #5. Mostrar otros detalles de las especificaciones:
     #resource quota.
     #LimitRange resource.
-    printf '\n%bSpecifications:%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bSpecifications:%b\n' "$g_color_cyan1" "$g_color_reset"
     l_jq_query='.spec'
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ -z "$l_data" ] || [ "$l_data" == "null" ]; then
-        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
     else
         echo "$l_data" | yq -p json -o yaml
     fi
@@ -1302,12 +1302,12 @@ port_forward_pod() {
     l_jq_query='[. | to_entries[] | { ID: .key, NAME: .value.name, PORTS: (if .value.ports == null then "" else ([.value.ports[] | select(.protocol == "TCP") | .containerPort] | join(",")) end), IMAGE: .value.image }]'        
     l_data=$(echo "$l_data_object_json" | jq "$l_jq_query")
     if [ $? -ne 0 ]; then
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
         return 7
     fi
 
     if [ "$l_data" = "[]" ]; then
-        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         return 8
     fi
     
@@ -1328,8 +1328,8 @@ port_forward_pod() {
     local l_availables_ports=0
 
     printf '\nIngrese valores de los parametros requeridos para realizar el port-forward:\n\n'
-    printf "> Local's ports %bthat is linking to a container's port%b:\n" "$g_color_opaque" "$g_color_reset"
-    printf '  %bEl puerto a ingresar debe ser un entero positivo, caso contrario se omitirá en el port-forwarding.%b\n\n' "$g_color_opaque" "$g_color_reset"
+    printf "> Local's ports %bthat is linking to a container's port%b:\n" "$g_color_gray1" "$g_color_reset"
+    printf '  %bEl puerto a ingresar debe ser un entero positivo, caso contrario se omitirá en el port-forwarding.%b\n\n' "$g_color_gray1" "$g_color_reset"
 
     for ((l_i=0; l_i < ${l_n}; l_i++)); do
 
@@ -1345,7 +1345,7 @@ port_forward_pod() {
         if [ $l_n -gt 1 ] && [ $l_m -gt 1 ]; then
             IFS=$' \t\n'
             printf "\t> %bInclude%b ports of '%b%s%b' container %b('n' si no se incluye. Si desea inclurlos use 's' o cualquier otro valor)%b [s]" "$l_color_2" "$g_color_reset" "$l_color_1" \
-                   "$l_container" "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+                   "$l_container" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
             read -rei "s" -p ": " l_in_opcion
 
             if [ "$l_in_opcion" = "n" ]; then
@@ -1362,7 +1362,7 @@ port_forward_pod() {
             #Obteniendo el puerto local
             IFS=$' \t\n'
             printf "\t> Local's port of %b%s%b's port %b%s%b %b(ingrese un puerto disponible de su computador)%b [ ]" "$l_color_2" "$l_container" "$g_color_reset" "$l_color_1" "$l_port" \
-                   "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+                   "$g_color_reset" "$g_color_gray1" "$g_color_reset"
             read -rei "$l_port" -p ": " l_in_opcion
             
             if [[ "$l_in_opcion" =~ ^[1-9][0-9]+$ ]]; then
@@ -1433,13 +1433,13 @@ port_forward_container() {
 
     printf 'Ingrese valores de los parametros requeridos para realizar el port-forward:\n\n'
 
-    printf "> Local's Ports %bthat is linking a Container's Port%b:\n" "$g_color_opaque" "$g_color_reset"
-    printf '  %bEl puerto a ingresar debe ser un entero positivo, caso contrario se omitirá en el port-forwarding.%b\n\n' "$g_color_opaque" "$g_color_reset"
+    printf "> Local's Ports %bthat is linking a Container's Port%b:\n" "$g_color_gray1" "$g_color_reset"
+    printf '  %bEl puerto a ingresar debe ser un entero positivo, caso contrario se omitirá en el port-forwarding.%b\n\n' "$g_color_gray1" "$g_color_reset"
 
     for ((l_i=0; l_i < ${#la_container_ports[@]}; l_i++)); do
 
         printf "\t> Local's port of %b%s%b's port %b%s%b %b(ingrese un puerto disponible de su computador)%b [ ]" "$l_color_2" "$3" "$g_color_reset" "$l_color_1" "${la_container_ports[$l_i]}" \
-               "$g_color_reset" "$g_color_opaque" "$g_color_reset"
+               "$g_color_reset" "$g_color_gray1" "$g_color_reset"
         read -rei "${la_container_ports[$l_i]}" -p ": " l_input
 
         if [[ "$l_input" =~ ^[1-9][0-9]+$ ]]; then
@@ -1478,11 +1478,11 @@ port_forward_container() {
 _show_compare_revision() {
 
     if [ ! -z "$1" ]; then
-        printf '%b(*)                :%b Indicador de la revisión actual (ReplicaSet "%s")\n' "$g_color_subtitle" "$g_color_reset" "$1"
+        printf '%b(*)                :%b Indicador de la revisión actual (ReplicaSet "%s")\n' "$g_color_cyan1" "$g_color_reset" "$1"
     fi
 
     #1. Mostrar las revisiones encontradas
-    printf '\n%bRevisiones         :%b\n' "$g_color_subtitle" "$g_color_reset"
+    printf '\n%bRevisiones         :%b\n' "$g_color_cyan1" "$g_color_reset"
     local l_data
     local l_status
 
@@ -1499,12 +1499,12 @@ _show_compare_revision() {
     fi
 
     if [ $l_status -ne 0 ]; then
-        printf '%bError in getting data%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting data%b\n' "$g_color_gray1" "$g_color_reset"
         return 1
     fi
 
     if [ "$l_data" = "[]" ]; then
-        printf '%bNo data found%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bNo data found%b\n' "$g_color_gray1" "$g_color_reset"
         return 2
     fi
 
@@ -1533,7 +1533,7 @@ _show_compare_revision() {
     #echo "${la_rev_dates[@]}"
 
     if [ $l_n -le 0 ]; then
-        printf '%bError in getting revisions names%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bError in getting revisions names%b\n' "$g_color_gray1" "$g_color_reset"
         return 3
     fi
 
@@ -1561,30 +1561,30 @@ _show_compare_revision() {
         l_date="${la_rev_dates[$l_idx_revision]}"
         l_name="${la_rev_names[$l_idx_revision]}"
         l_revision_flag='(*)'
-        printf '\n%bUltima revisión%s :%b %s %b(ReplicaSet "%s" creado el "%s")%b\n' "$g_color_subtitle" "${l_revision_flag}" \
-               "$g_color_reset" "${la_rev_nbrs[$l_idx_revision]}" "$g_color_opaque" "$l_name" "$l_date" "$g_color_reset"
+        printf '\n%bUltima revisión%s :%b %s %b(ReplicaSet "%s" creado el "%s")%b\n' "$g_color_cyan1" "${l_revision_flag}" \
+               "$g_color_reset" "${la_rev_nbrs[$l_idx_revision]}" "$g_color_gray1" "$l_name" "$l_date" "$g_color_reset"
 
     elif [ $l_idx_revision -gt 0 ]; then
 
         l_date="${la_rev_dates[$l_idx_revision]}"
         l_name="${la_rev_names[$l_idx_revision]}"
         l_revision_flag='(*)'
-        printf '\n%bActual revisión%s :%b %s %b(ReplicaSet "%s" creado el "%s")%b\n' "$g_color_subtitle" "${l_revision_flag}" \
-               "$g_color_reset" "${la_rev_nbrs[$l_idx_revision]}" "$g_color_opaque" "$l_name" "$l_date" "$g_color_reset"
+        printf '\n%bActual revisión%s :%b %s %b(ReplicaSet "%s" creado el "%s")%b\n' "$g_color_cyan1" "${l_revision_flag}" \
+               "$g_color_reset" "${la_rev_nbrs[$l_idx_revision]}" "$g_color_gray1" "$l_name" "$l_date" "$g_color_reset"
 
         l_date="${la_rev_dates[0]}"
         l_name="${la_rev_names[0]}"
         l_revision_flag='   '
-        printf '%bUltima revisión%s :%b %s %b(ReplicaSet "%s" creado el "%s")%b\n' "$g_color_subtitle" "${l_revision_flag}" \
-               "$g_color_reset" "${la_rev_nbrs[0]}" "$g_color_opaque" "$l_name" "$l_date" "$g_color_reset"
+        printf '%bUltima revisión%s :%b %s %b(ReplicaSet "%s" creado el "%s")%b\n' "$g_color_cyan1" "${l_revision_flag}" \
+               "$g_color_reset" "${la_rev_nbrs[0]}" "$g_color_gray1" "$l_name" "$l_date" "$g_color_reset"
 
     else
 
         l_date="${la_rev_dates[0]}"
         l_name="${la_rev_names[0]}"
         l_revision_flag='   '
-        printf '\n%bUltima revisión%s :%b %s %b(ReplicaSet "%s" creado el "%s")%b\n' "$g_color_subtitle" "${l_revision_flag}" \
-               "$g_color_reset" "${la_rev_nbrs[0]}" "$g_color_opaque" "$l_name" "$l_date" "$g_color_reset"
+        printf '\n%bUltima revisión%s :%b %s %b(ReplicaSet "%s" creado el "%s")%b\n' "$g_color_cyan1" "${l_revision_flag}" \
+               "$g_color_reset" "${la_rev_nbrs[0]}" "$g_color_gray1" "$l_name" "$l_date" "$g_color_reset"
 
     fi
 
@@ -1615,14 +1615,14 @@ _show_compare_revision() {
         fi
 
         #Mostrar como tabla, con texto rojo y verde
-        printf '\n\n%bCambios %s%s -> %s%s :%b ' "$g_color_subtitle" "${la_rev_nbrs[$((i + 1))]}" "$l_revision_flag_next" \
+        printf '\n\n%bCambios %s%s -> %s%s :%b ' "$g_color_cyan1" "${la_rev_nbrs[$((i + 1))]}" "$l_revision_flag_next" \
                "${la_rev_nbrs[$i]}" "$l_revision_flag" "$g_color_reset" 
         printf 'Realizados el "%s" en la revisión %b%s%b%s ("%b%s%b") ' "$l_date" "$l_color_old" "${la_rev_nbrs[$((i + 1))]}" \
                "$g_color_reset" "$l_revision_flag_next" "$l_color_old" "$l_name_next" "$g_color_reset"
         printf 'para llegar a ser revisión %b%s%b%s ("%b%s%b")\n' "$l_color_new" "${la_rev_nbrs[$i]}" \
                "$g_color_reset" "$l_revision_flag" "$l_color_new" "$l_name" "$g_color_reset"
 
-        printf "%bThe following field are not considered: '.metadata.name', '.metadata.uid', '.metadata.creationTimestamp', '.metadata.resourceVersion', '.metadata.annotations.\"deployment.kubernetes.io/revision\"', '.metadata.ownerReferences[].uid', '.metadata.labels.\"pod-template-hash\", '.spec.selector.matchLabels.\"pod-template-hash\"' and '.spec.template.metadata.labels.\"pod-template-hash\"'%b\\n" "$g_color_opaque" "$g_color_reset"
+        printf "%bThe following field are not considered: '.metadata.name', '.metadata.uid', '.metadata.creationTimestamp', '.metadata.resourceVersion', '.metadata.annotations.\"deployment.kubernetes.io/revision\"', '.metadata.ownerReferences[].uid', '.metadata.labels.\"pod-template-hash\", '.spec.selector.matchLabels.\"pod-template-hash\"' and '.spec.template.metadata.labels.\"pod-template-hash\"'%b\\n" "$g_color_gray1" "$g_color_reset"
        
         #Mostrar la diferencias sin mostrar el paginado (mostrar el pager muestra UI interactiva que detendria el proceso hasta que el usuario termine a revisarlo) 
         delta --paging never <(echo "$_g_data_object_json" | jq --argjson index "$((i + 1))" "$l_jq_query") <(echo "$_g_data_object_json" | jq --argjson index "$i" "$l_jq_query")
@@ -1641,26 +1641,26 @@ show_dply_revision1() {
     #1. Información basica del Deployment
     #¿Why show a TAB in the beginning?
     printf '\n'
-    printf '%bDeployment         :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$2"
-    printf '%bNamespace          :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$3"
+    printf '%bDeployment         :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$2"
+    printf '%bNamespace          :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$3"
     
     #2. Obtener información del los replicaset asociado a las revisiones dle deployment
     local l_data_json=""
     l_data_json=$(kubectl get replicaset -n ${3} -o json 2> /dev/null)
     if [ $? -ne 0 ]; then
-        printf '%b\tNo se puede conectarse con el cluster de Kubernates, revise la conexión.%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%b\tNo se puede conectarse con el cluster de Kubernates, revise la conexión.%b\n' "$g_color_gray1" "$g_color_reset"
         return 1
     fi
 
     local l_jq_query='[.items[] | select(any(.metadata.ownerReferences[]; .kind == "Deployment" and .name == $objName)) ] | sort_by(.metadata.annotations."deployment.kubernetes.io/revision") | reverse'
     _g_data_object_json=$(echo "$l_data_json" | jq --arg objName "$2" "$l_jq_query" 2> /dev/null)
     if [ $? -ne 0 ]; then
-        printf '%b\tError al obtener la data de los ReplicaSet.%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%b\tError al obtener la data de los ReplicaSet.%b\n' "$g_color_gray1" "$g_color_reset"
         return 2
     fi
 
     if [ -z "$_g_data_object_json" ] || [ "$_g_data_object_json" = "null" ] || [ "$_g_data_object_json" = "[]" ]; then
-        printf '%bNo se han encontrado revisiones para el deployment.%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%bNo se han encontrado revisiones para el deployment.%b\n' "$g_color_gray1" "$g_color_reset"
         return 3
     fi
 
@@ -1679,8 +1679,8 @@ show_dply_revision2() {
     #1. Información basica del Deployment
     #¿Why show a TAB in the beginning?
     printf '\n'
-    printf '%bReplicaSet         :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$2"
-    printf '%bNamespace          :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$3"
+    printf '%bReplicaSet         :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$2"
+    printf '%bNamespace          :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$3"
    
     #2. Obtener informacion del replicaset: ¿tiene como owner un deployment?  
     local l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | { owner: (.metadata.ownerReferences[]? | select(.kind == "Deployment") | .name), revision: .metadata.annotations."deployment.kubernetes.io/revision", creationTime: .metadata.creationTimestamp } | "\(.owner)|\(.revision)|\(.creationTime)"'
@@ -1688,7 +1688,7 @@ show_dply_revision2() {
 
     l_data=$(jq -r --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
     if [ $? -ne 0 ]; then
-        printf '%b\tError al obtener información del replicaset.%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%b\tError al obtener información del replicaset.%b\n' "$g_color_gray1" "$g_color_reset"
         return 1
     fi
 
@@ -1698,28 +1698,28 @@ show_dply_revision2() {
     local l_n=${#la_data[@]}
 
     if [ $l_n -le 0 ]; then
-        printf '%b\tEl replicaset no esta vinculado a un Deployment.%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%b\tEl replicaset no esta vinculado a un Deployment.%b\n' "$g_color_gray1" "$g_color_reset"
         return 2
     fi
 
     local l_deployment_name="${la_data[0]}"
     if [ -z "$l_deployment_name" ]; then
-        printf '%b\tEl replicaset no tiene owner a un Deployment.%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%b\tEl replicaset no tiene owner a un Deployment.%b\n' "$g_color_gray1" "$g_color_reset"
         return 3
     fi
 
-    printf '%bDeployment         :%b %s\n' "$g_color_subtitle" "$g_color_reset" "$l_deployment_name"
+    printf '%bDeployment         :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$l_deployment_name"
 
     #2. Obtener información del los replicaset asociado a las revisiones dle deployment
     local l_jq_query='[.items[] | select(any(.metadata.ownerReferences[]; .kind == "Deployment" and .name == $objName)) ] | sort_by(.metadata.annotations."deployment.kubernetes.io/revision") | reverse'
     _g_data_object_json=$(jq --arg objName "$l_deployment_name" "$l_jq_query" "$1" 2> /dev/null)
     if [ $? -ne 0 ]; then
-        printf '%b\tError al obtener la data de las revisiones.%b\n' "$g_color_opaque" "$g_color_reset"
+        printf '%b\tError al obtener la data de las revisiones.%b\n' "$g_color_gray1" "$g_color_reset"
         return 4
     fi
 
     if [ -z "$_g_data_object_json" ] || [ "$_g_data_object_json" = "null" ] || [ "$_g_data_object_json" = "[]" ]; then
-        printf '%bNo se han encontrado revisiones para el deployment %s.%b\n' "$g_color_opaque" "$l_deployment_name" "$g_color_reset"
+        printf '%bNo se han encontrado revisiones para el deployment %s.%b\n' "$g_color_gray1" "$l_deployment_name" "$g_color_reset"
         return 5
     fi
 

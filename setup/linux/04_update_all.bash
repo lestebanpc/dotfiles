@@ -164,13 +164,13 @@ function _update_repository() {
     #2. Mostando el titulo
 
     printf '\n'
-    print_line '-' $g_max_length_line "$g_color_opaque" 
+    print_line '-' $g_max_length_line "$g_color_gray1" 
     if [ $p_is_neovim -eq 0  ]; then
-        printf 'NeoVIM> Git repository "%b%s%b" %b(%s)%b\n' "$g_color_subtitle" "$p_repo_name" "$g_color_reset" "$g_color_opaque" "$p_repo_path" "$g_color_opaque"
+        printf 'NeoVIM> Git repository "%b%s%b" %b(%s)%b\n' "$g_color_cian1" "$p_repo_name" "$g_color_reset" "$g_color_gray1" "$p_repo_path" "$g_color_gray1"
     else
-        printf 'VIM   > Git repository "%b%s%b" %b(%s)%b\n' "$g_color_subtitle" "$p_repo_name" "$g_color_reset" "$g_color_opaque" "$p_repo_path" "$g_color_opaque"
+        printf 'VIM   > Git repository "%b%s%b" %b(%s)%b\n' "$g_color_cian1" "$p_repo_name" "$g_color_reset" "$g_color_gray1" "$p_repo_path" "$g_color_gray1"
     fi
-    print_line '-' $g_max_length_line "$g_color_opaque" 
+    print_line '-' $g_max_length_line "$g_color_gray1" 
 
     #1. Validar si existe directorio
     if [ ! -d $p_repo_path ]; then
@@ -192,19 +192,19 @@ function _update_repository() {
     local l_status
 
     #3. Actualizando la rama remota del repositorio local desde el repositorio remoto
-    printf 'Fetching from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_opaque" "$l_remote"  "$g_color_reset" "$g_color_opaque" \
+    printf 'Fetching from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_gray1" "$l_remote"  "$g_color_reset" "$g_color_gray1" \
            "$l_remote_branch" "$g_color_reset"
     git fetch ${l_remote}
     l_status=$?
 
     if [ $l_status -ne 0 ]; then
-        printf '%bError (%s) on Fetching%b from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_warning" "$l_status" "$g_color_reset" \
-               "$g_color_opaque" "$l_remote" "$g_color_reset" "$g_color_opaque" "$l_remote_branch" "$g_color_reset"
+        printf '%bError (%s) on Fetching%b from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_red1" "$l_status" "$g_color_reset" \
+               "$g_color_gray1" "$l_remote" "$g_color_reset" "$g_color_gray1" "$l_remote_branch" "$g_color_reset"
         return 3
     fi 
 
     #4. Si la rama local es igual a la rama remota
-    printf 'Updating local branch "%b%s%b" form remote branch "%b%s%b"...\n' "$g_color_opaque" "$l_local_branch"  "$g_color_reset" "$g_color_opaque" \
+    printf 'Updating local branch "%b%s%b" form remote branch "%b%s%b"...\n' "$g_color_gray1" "$l_local_branch"  "$g_color_reset" "$g_color_gray1" \
            "$l_remote_branch" "$g_color_reset"
     if git merge-base --is-ancestor ${l_remote_branch} HEAD; then
         echo 'Already up-to-date'
@@ -221,8 +221,8 @@ function _update_repository() {
 
         l_status=$?
         if [ $l_status -ne 0 ]; then
-            printf '%bError (%s) on Merging%b from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_warning" "$l_status" "$g_color_reset" \
-                   "$g_color_opaque" "$l_remote" "$g_color_reset" "$g_color_opaque" "$l_remote_branch" "$g_color_reset"
+            printf '%bError (%s) on Merging%b from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_red1" "$l_status" "$g_color_reset" \
+                   "$g_color_gray1" "$l_remote" "$g_color_reset" "$g_color_gray1" "$l_remote_branch" "$g_color_reset"
             return 4
         fi
 
@@ -235,8 +235,8 @@ function _update_repository() {
 
     l_status=$?
     if [ $l_status -ne 0 ]; then
-        printf '%bError (%s) on Rebasing%b from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_warning" "$l_status" "$g_color_reset" \
-               "$g_color_opaque" "$l_remote" "$g_color_reset" "$g_color_opaque" "$l_remote_branch" "$g_color_reset"
+        printf '%bError (%s) on Rebasing%b from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_red1" "$l_status" "$g_color_reset" \
+               "$g_color_gray1" "$l_remote" "$g_color_reset" "$g_color_gray1" "$l_remote_branch" "$g_color_reset"
         return 5
     fi
 
@@ -316,20 +316,20 @@ function _update_vim_package() {
     if [ $l_n -gt 0 ]; then
 
         printf '\n'
-        print_line '-' $g_max_length_line "$g_color_opaque" 
+        print_line '-' $g_max_length_line "$g_color_gray1" 
         if [ $p_is_neovim -eq 0  ]; then
-            printf 'NeoVIM> %bIndexando las documentación%b de los plugins\n' "$g_color_subtitle" "$g_color_reset"
+            printf 'NeoVIM> %bIndexando las documentación%b de los plugins\n' "$g_color_cian1" "$g_color_reset"
         else
-            printf 'VIM   > %bIndexando las documentación%b de los plugins\n' "$g_color_subtitle" "$g_color_reset"
+            printf 'VIM   > %bIndexando las documentación%b de los plugins\n' "$g_color_cian1" "$g_color_reset"
         fi
-        print_line '-' $g_max_length_line "$g_color_opaque" 
+        print_line '-' $g_max_length_line "$g_color_gray1" 
 
         for ((l_i=0; l_i< ${l_n}; l_i++)); do
             
             l_doc_path="${la_doc_paths[${l_i}]}"
             l_repo_name="${la_doc_repos[${l_i}]}"
-            printf '(%s/%s) Indexando la documentación del plugin %b%s%b en %s: "%bhelptags %s%b"\n' "$((l_i + 1))" "$l_n" "$g_color_opaque" "$l_repo_name" \
-                   "$g_color_reset" "$l_tag" "$g_color_opaque" "$l_doc_path" "$g_color_reset"
+            printf '(%s/%s) Indexando la documentación del plugin %b%s%b en %s: "%bhelptags %s%b"\n' "$((l_i + 1))" "$l_n" "$g_color_gray1" "$l_repo_name" \
+                   "$g_color_reset" "$l_tag" "$g_color_gray1" "$l_doc_path" "$g_color_reset"
             if [ $p_is_neovim -eq 0  ]; then
                 nvim --headless -c "helptags ${l_doc_path}" -c qa
             else
@@ -344,11 +344,11 @@ function _update_vim_package() {
 
     #5. Actauliar los modulos de los  paquetes/plugin de VIM/NeoVIM que lo requieren.
     if [ $p_is_coc_installed -ne 0 ]; then
-        printf 'Se ha actualizado los plugin/paquetes de %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset"
+        printf 'Se ha actualizado los plugin/paquetes de %b%s%b.\n' "$g_color_cian1" "$l_tag" "$g_color_reset"
         return 0
     fi
 
-    printf 'Se ha actualizado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_subtitle" "$l_tag" "$g_color_reset" "$g_color_subtitle" "Developer" "$g_color_reset"
+    printf 'Se ha actualizado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_cian1" "$l_tag" "$g_color_reset" "$g_color_cian1" "Developer" "$g_color_reset"
     printf 'Los plugins del IDE CoC de %s tiene componentes que requieren actualizarlo. Actualizando dichas componentes del plugins...\n' "$l_tag"
 
     #Actualizando los parseadores de lenguaje de 'nvim-treesitter'
@@ -358,14 +358,14 @@ function _update_vim_package() {
         local l_version=$(_get_gcc_version)
         if [ ! -z "$l_version" ]; then
             printf '  Actualizando los "language parsers" de TreeSitter "%b:TSUpdate all%b"\n' \
-                   "$g_color_opaque" "$g_color_reset"
+                   "$g_color_gray1" "$g_color_reset"
             nvim --headless -c 'TSUpdate all' -c 'qa'
             printf '\n'
         fi
     fi
 
     #Actualizar las extensiones de CoC
-    printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
+    printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_gray1" "$g_color_reset"
     if [ $p_is_neovim -ne 0  ]; then
         vim -esc 'CocUpdate' -c 'qa'
     else
@@ -374,7 +374,7 @@ function _update_vim_package() {
 
     #Actualizando los gadgets de 'VimSpector'
     if [ $p_is_neovim -ne 0  ]; then
-        printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando "%b:VimspectorUpdate%b"\n' "$g_color_opaque" "$g_color_reset"
+        printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando "%b:VimspectorUpdate%b"\n' "$g_color_gray1" "$g_color_reset"
         vim -esc 'VimspectorUpdate' -c 'qa'
     fi
 
@@ -382,14 +382,14 @@ function _update_vim_package() {
     printf '\nRecomendaciones:\n'
     if [ $p_is_neovim -ne 0  ]; then
 
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_subtitle" "$g_color_reset"
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_cian1" "$g_color_reset"
         printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
 
     else
 
         printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
-        printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_subtitle" "$g_color_reset"
+        printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_cian1" "$g_color_reset"
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_cian1" "$g_color_reset"
 
         printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
 
@@ -475,10 +475,10 @@ function _update_all() {
                 fi
             fi
 
-            print_line '─' $g_max_length_line  "$g_color_blue"
-            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+            print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_cian1" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
             print_text_in_center2 "$l_title" $g_max_length_line 
-            print_line '─' $g_max_length_line "$g_color_blue"
+            print_line '─' $g_max_length_line "$g_color_blue1"
 
             upgrade_os_packages $g_os_subtype_id $l_noninteractive
             echo ""
@@ -541,12 +541,12 @@ function _update_all() {
         if [ ! -z "$l_version" ]; then
 
             #Mostrar el titulo
-            printf -v l_aux "%sVIM%s %s(%s)%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_version" "$g_color_reset"
+            printf -v l_aux "%sVIM%s %s(%s)%s" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
             printf -v l_title "Actualizar los paquetes de %s" "$l_aux"
 
-            print_line '─' $g_max_length_line  "$g_color_blue"
+            print_line '─' $g_max_length_line  "$g_color_blue1"
             print_text_in_center2 "$l_title" $g_max_length_line
-            print_line '─' $g_max_length_line "$g_color_blue"
+            print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Determinar si esta instalado en modo developer
             l_is_coc_installed=1
@@ -554,10 +554,10 @@ function _update_all() {
             l_status=$?
             if [ $l_status -eq 1 ]; then
                 if [ -z "$l_nodejs_version" ]; then
-                    printf 'Se actualizará los paquetes/plugins de VIM %s %b(Modo developer, %bNodeJS no intalado%b)%b ...\n' "${l_version}" "$g_color_opaque" \
-                           "$g_color_warning" "$g_color_opaque" "$g_color_reset"
+                    printf 'Se actualizará los paquetes/plugins de VIM %s %b(Modo developer, %bNodeJS no intalado%b)%b ...\n' "${l_version}" "$g_color_gray1" \
+                           "$g_color_red1" "$g_color_gray1" "$g_color_reset"
                 else
-                    printf 'Se actualizará los paquetes/plugins de VIM %s %b(Modo developer, NodeJS "%s")%b ...\n' "${l_version}" "$g_color_opaque" \
+                    printf 'Se actualizará los paquetes/plugins de VIM %s %b(Modo developer, NodeJS "%s")%b ...\n' "${l_version}" "$g_color_gray1" \
                            "$l_nodejs_version" "$g_color_reset"
                     l_is_coc_installed=0
                 fi
@@ -591,12 +591,12 @@ function _update_all() {
         if [ ! -z "$l_version" ]; then
 
             #Mostrar el titulo
-            printf -v l_aux "%sNeoVIM%s %s(%s)%s" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_version" "$g_color_reset"
+            printf -v l_aux "%sNeoVIM%s %s(%s)%s" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
             printf -v l_title "Actualizar los paquetes de %s" "$l_aux"
 
-            print_line '─' $g_max_length_line  "$g_color_blue"
+            print_line '─' $g_max_length_line  "$g_color_blue1"
             print_text_in_center2 "$l_title" $g_max_length_line
-            print_line '─' $g_max_length_line "$g_color_blue"
+            print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Determinar si esta instalado en modo developer
             l_is_coc_installed=1
@@ -604,10 +604,10 @@ function _update_all() {
             l_status=$?
             if [ $l_status -eq 1 ]; then
                 if [ -z "$l_nodejs_version" ]; then
-                    printf 'Se actualizará los paquetes/plugins de NeoVIM %s %b(Modo developer, %bNodeJS no intalado%b)%b ...\n' "${l_version}" "$g_color_opaque" \
-                           "$g_color_warning" "$g_color_opaque" "$g_color_reset"
+                    printf 'Se actualizará los paquetes/plugins de NeoVIM %s %b(Modo developer, %bNodeJS no intalado%b)%b ...\n' "${l_version}" "$g_color_gray1" \
+                           "$g_color_red1" "$g_color_gray1" "$g_color_reset"
                 else
-                    printf 'Se actualizará los paquetes/plugins de NeoVIM %s %b(Modo developer, NodeJS "%s")%b ...\n' "${l_version}" "$g_color_opaque" \
+                    printf 'Se actualizará los paquetes/plugins de NeoVIM %s %b(Modo developer, NodeJS "%s")%b ...\n' "${l_version}" "$g_color_gray1" \
                            "$l_nodejs_version" "$g_color_reset"
                     l_is_coc_installed=0
                 fi
@@ -634,28 +634,28 @@ function _update_all() {
 function _show_menu_core() {
 
 
-    print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_title"
-    print_line '-' $g_max_length_line  "$g_color_opaque"
-    printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
+    print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_green1"
+    print_line '-' $g_max_length_line  "$g_color_gray1"
+    printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-        printf " (%ba%b) Actualizar los artefactos existentes: Paquetes del SO y plugin VIM/NeoVIM\n" "$g_color_title" "$g_color_reset"
-        printf " (%bb%b) Actualizar los artefactos existentes: Paquetes del SO, binarios de GIT y plugins VIM/NeoVIM\n" "$g_color_title" "$g_color_reset"
+        printf " (%ba%b) Actualizar los artefactos existentes: Paquetes del SO y plugin VIM/NeoVIM\n" "$g_color_green1" "$g_color_reset"
+        printf " (%bb%b) Actualizar los artefactos existentes: Paquetes del SO, binarios de GIT y plugins VIM/NeoVIM\n" "$g_color_green1" "$g_color_reset"
     else
-        printf " (%ba%b) Actualizar los artefactos existentes: Plugins VIM/NeoVIM\n" "$g_color_title" "$g_color_reset"
-        printf " (%bb%b) Actualizar los artefactos existentes: Binarios de GIT y VIM/NeoVIM\n" "$g_color_title" "$g_color_reset"
+        printf " (%ba%b) Actualizar los artefactos existentes: Plugins VIM/NeoVIM\n" "$g_color_green1" "$g_color_reset"
+        printf " (%bb%b) Actualizar los artefactos existentes: Binarios de GIT y VIM/NeoVIM\n" "$g_color_green1" "$g_color_reset"
     fi
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     local l_max_digits=$?
 
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-        printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes\n" "$g_color_title" "1" "$g_color_reset"
+        printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes\n" "$g_color_green1" "1" "$g_color_reset"
     fi
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los comandos/programas descargdos de repositorio como GitHub\n" "$g_color_title" "2" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de VIM    existentes e inicializarlos\n" "$g_color_title" "4" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de NeoVIM existentes e inicializarlos\n" "$g_color_title" "8" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los comandos/programas descargdos de repositorio como GitHub\n" "$g_color_green1" "2" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de VIM    existentes e inicializarlos\n" "$g_color_green1" "4" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de NeoVIM existentes e inicializarlos\n" "$g_color_green1" "8" "$g_color_reset"
 
-    print_line '-' $g_max_length_line "$g_color_opaque" 
+    print_line '-' $g_max_length_line "$g_color_gray1" 
 
 }
 
@@ -663,20 +663,20 @@ function g_main() {
 
   
     #Mostar el menu principal 
-    print_line '─' $g_max_length_line "$g_color_title" 
+    print_line '─' $g_max_length_line "$g_color_green1" 
     _show_menu_core
 
     local l_flag_continue=0
     local l_options=""
     while [ $l_flag_continue -eq 0 ]; do
 
-        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_opaque" "$g_color_reset"
+        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
         read -r l_options
 
         case "$l_options" in
             a)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
 
                 printf '\n'
                 if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
@@ -690,7 +690,7 @@ function g_main() {
 
             b)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 
                 printf '\n'
                 if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
@@ -705,27 +705,27 @@ function g_main() {
 
             q)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 ;;
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '─' $g_max_length_line "$g_color_title" 
+                    print_line '─' $g_max_length_line "$g_color_green1" 
                     printf '\n'
                     _update_all $l_options
                 else
                     l_flag_continue=0
-                    printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                    print_line '-' $g_max_length_line "$g_color_opaque" 
+                    printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                    print_line '-' $g_max_length_line "$g_color_gray1" 
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
-                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_opaque" 
+                printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_gray1" 
                 ;;
         esac
         
@@ -735,13 +735,13 @@ function g_main() {
 
 g_usage() {
 
-    printf '%bUsage:\n\n' "$g_color_opaque"
+    printf '%bUsage:\n\n' "$g_color_gray1"
     printf '  > Configurar el profile mostrando el menú de opciones (interactivo):\n'
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Configurar un grupo de opciones del menú sin mostrarlo pero en modo interactivo:\n'
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash 1 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash 1 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Configurar un grupo de opciones del menú sin mostrarlo pero en modo no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash 2 MENU-OPTIONS%b\n\n' "$g_color_info" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash 2 MENU-OPTIONS%b\n\n' "$g_color_yellow1" "$g_color_reset"
 
 }
 

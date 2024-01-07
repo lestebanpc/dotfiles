@@ -287,10 +287,10 @@ function _show_final_message() {
 
     local l_tag
     if [ ! -z "${p_repo_last_version_pretty}" ]; then
-        l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
+        l_tag="${p_repo_id}${g_color_gray1}[${p_repo_last_version_pretty}]"
     else
         printf -v l_empty_version ' %.0s' $(seq ${#_g_repo_current_version})
-        l_tag="${p_repo_id}${g_color_opaque}[${l_empty_version}]"
+        l_tag="${p_repo_id}${g_color_gray1}[${l_empty_version}]"
     fi
 
     if [ ! -z "${p_arti_version}" ]; then
@@ -335,7 +335,7 @@ function _download_artifacts() {
 
     mkdir -p "${g_path_temp}/${p_repo_id}"
 
-    local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
+    local l_tag="${p_repo_id}${g_color_gray1}[${p_repo_last_version_pretty}]"
     if [ ! -z "${p_arti_subversion_version}" ]; then
         l_tag="${l_tag}[${p_arti_subversion_version}]${g_color_reset}"
     else
@@ -357,7 +357,7 @@ function _download_artifacts() {
         l_path_target="${g_path_temp}/${p_repo_id}/${l_i}"
         mkdir -p "${l_path_target}"
 
-        printf "$g_color_opaque"
+        printf "$g_color_gray1"
         curl -fLo "${l_path_target}/${l_artifact_name}" "$l_artifact_url"
         l_status=$?
         printf "$g_color_reset"
@@ -365,7 +365,7 @@ function _download_artifacts() {
         if [ $l_status -eq 0 ]; then
             printf 'Artefacto "%b[%s]" descargado en         : "%s/%s"\n\n' "$l_tag" "${l_i}" "${l_path_target}" "${l_artifact_name}"
         else
-            printf 'Artefacto "%b[%s]" %bNO se descargó%b en    : "%s/%s" (ERROR %s)\n\n' "$l_tag" "${l_i}" "$g_color_warning" "$g_color_reset" \
+            printf 'Artefacto "%b[%s]" %bNO se descargó%b en    : "%s/%s" (ERROR %s)\n\n' "$l_tag" "${l_i}" "$g_color_red1" "$g_color_reset" \
                    "${l_path_target}" "${l_artifact_name}" "${l_status}"
             return $l_status
         fi
@@ -434,7 +434,7 @@ function _install_artifacts() {
     local l_tmp=""
     mkdir -p "${g_path_temp}/${p_repo_id}"
 
-    local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
+    local l_tag="${p_repo_id}${g_color_gray1}[${p_repo_last_version_pretty}]"
     if [ ! -z "${p_arti_subversion_version}" ]; then
         l_tag="${l_tag}[${p_arti_subversion_version}]${g_color_reset}"
     else
@@ -563,7 +563,7 @@ function _install_repository_internal() {
 
     #4. Obtener el los artefacto que se instalaran del repositorio
     local l_status
-    local l_tag="${p_repo_id}${g_color_opaque}[${p_repo_last_version_pretty}]"
+    local l_tag="${p_repo_id}${g_color_gray1}[${p_repo_last_version_pretty}]"
     if [ ! -z "${p_arti_subversion_version}" ]; then
         l_tag="${l_tag}[${p_arti_subversion_version}]${g_color_reset}"
     else
@@ -732,7 +732,7 @@ _validate_versions_to_install() {
 
     if [ ! -z "$p_title_template" ]; then
 
-        print_line '-' $g_max_length_line  "$g_color_opaque"
+        print_line '-' $g_max_length_line  "$g_color_gray1"
 
         if [ $l_status -eq 0 -o $l_status -eq 2 ]; then
             printf "${p_title_template}\n" "se actualizará"
@@ -742,19 +742,19 @@ _validate_versions_to_install() {
             printf "${p_title_template}\n" "se configurará"
         fi
 
-        print_line '-' $g_max_length_line  "$g_color_opaque"
+        print_line '-' $g_max_length_line  "$g_color_gray1"
 
     fi
 
 
     if [ $p_install_win_cmds -eq 0 ]; then
-        printf 'Analizando el repositorio "%s" en el %bWindows%b vinculado a este Linux WSL...\n' "$p_repo_id" "$g_color_subtitle" "$g_color_reset"
+        printf 'Analizando el repositorio "%s" en el %bWindows%b vinculado a este Linux WSL...\n' "$p_repo_id" "$g_color_cian1" "$g_color_reset"
     fi
 
 
     #5. Mostar información de la versión actual.
     if [ $l_status -ne 0 ]; then
-        printf 'Repositorio "%s%b[%s]%b" ' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset"
+        printf 'Repositorio "%s%b[%s]%b" ' "${p_repo_id}" "$g_color_gray1" "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset"
     fi
 
     if [ $l_status -eq 9 ]; then
@@ -771,15 +771,15 @@ _validate_versions_to_install() {
     fi
 
     #4. Mostrar información de la ultima versión.
-    printf 'Repositorio "%s%b[%s]%b" actual tiene la versión disponible "%s%b[%s]%b" (%s)\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" \
-            "${p_repo_id}" "$g_color_opaque" "${p_repo_last_version_pretty}" "$g_color_reset" "${p_repo_last_version}" 
+    printf 'Repositorio "%s%b[%s]%b" actual tiene la versión disponible "%s%b[%s]%b" (%s)\n' "${p_repo_id}" "$g_color_gray1" "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" \
+            "${p_repo_id}" "$g_color_gray1" "${p_repo_last_version_pretty}" "$g_color_reset" "${p_repo_last_version}" 
 
     #Si el artefacto tiene Subversiones, mostrarlos.
     local l_artifact_subversions_nbr=${#_ga_artifact_subversions[@]} 
     if [ $l_artifact_subversions_nbr -ne 0 ]; then
         for ((l_n=0; l_n< ${l_artifact_subversions_nbr}; l_n++)); do
-            printf 'Repositorio "%s%b[%s]%b" actual habilita la sub-version%b[%s]%b  "%s%b[%s][%s]%b" ("%s")\n' "${p_repo_id}" "$g_color_opaque" \
-                "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" "$g_color_opaque" "$l_n" "$g_color_reset" "${p_repo_id}" "$g_color_opaque" \
+            printf 'Repositorio "%s%b[%s]%b" actual habilita la sub-version%b[%s]%b  "%s%b[%s][%s]%b" ("%s")\n' "${p_repo_id}" "$g_color_gray1" \
+                "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" "$g_color_gray1" "$l_n" "$g_color_reset" "${p_repo_id}" "$g_color_gray1" \
                 "${p_repo_last_version_pretty}" "${_ga_artifact_subversions[${l_n}]}" "$g_color_reset" "${_ga_artifact_subversions[${l_n}]}"
         done
     fi
@@ -826,7 +826,7 @@ _validate_versions_to_install() {
     #8. Si no esta instalado, INICIAR su instalación.
     if [ -z "${l_repo_current_version}" ]; then
 
-        printf 'Repositorio "%s%b[%s]%b" se instalará\n' "${p_repo_id}" "$g_color_opaque" "$l_empty_version" "$g_color_reset"
+        printf 'Repositorio "%s%b[%s]%b" se instalará\n' "${p_repo_id}" "$g_color_gray1" "$l_empty_version" "$g_color_reset"
         return 0
     fi
 
@@ -838,18 +838,18 @@ _validate_versions_to_install() {
     #Si ya esta actualizado
     if [ $l_status -eq 0 ]; then
 
-        printf 'Repositorio "%s%b[%s]%b" actual ya esta actualizado (= "%s")\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
+        printf 'Repositorio "%s%b[%s]%b" actual ya esta actualizado (= "%s")\n' "${p_repo_id}" "$g_color_gray1" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
         return 10
 
     elif [ $l_status -eq 1 ]; then
 
-        printf 'Repositorio "%s%b[%s]%b" actual ya esta actualizado (> "%s")\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
+        printf 'Repositorio "%s%b[%s]%b" actual ya esta actualizado (> "%s")\n' "${p_repo_id}" "$g_color_gray1" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
         return 11
 
     fi
 
     #Si requiere actualizarse
-    printf 'Repositorio "%s%b[%s]%b" se actualizará a la versión "%s"\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
+    printf 'Repositorio "%s%b[%s]%b" se actualizará a la versión "%s"\n' "${p_repo_id}" "$g_color_gray1" "${l_repo_current_version}" "$g_color_reset" "${p_repo_last_version_pretty}"
 
     return 5
 
@@ -910,17 +910,17 @@ _validate_versions_to_uninstall() {
     #3. Mostrar el titulo
     if [ ! -z "$p_title_template" ]; then
 
-        print_line '-' $g_max_length_line  "$g_color_opaque"
+        print_line '-' $g_max_length_line  "$g_color_gray1"
 
         printf "${p_title_template}\n" "se desinstalará"
 
-        print_line '-' $g_max_length_line  "$g_color_opaque"
+        print_line '-' $g_max_length_line  "$g_color_gray1"
 
     fi
 
 
     if [ $p_install_win_cmds -eq 0 ]; then
-        printf 'Analizando el repositorio "%s" en el %bWindows%b vinculado a este Linux WSL...\n' "$p_repo_id" "$g_color_subtitle" "$g_color_reset"
+        printf 'Analizando el repositorio "%s" en el %bWindows%b vinculado a este Linux WSL...\n' "$p_repo_id" "$g_color_cian1" "$g_color_reset"
     fi
 
 
@@ -930,14 +930,14 @@ _validate_versions_to_uninstall() {
     printf -v l_empty_version ' %.0s' $(seq 3)
 
     if [ $l_status -eq 9 ]; then
-        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_opaque" "$l_empty_version" "$g_color_reset" "No implementado"
+        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_gray1" "$l_empty_version" "$g_color_reset" "No implementado"
     elif [ $l_status -eq 1 ]; then
-        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_opaque" "$l_empty_version" "$g_color_reset" "No instalado"
+        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_gray1" "$l_empty_version" "$g_color_reset" "No instalado"
     elif [ $l_status -eq 2 ]; then
-        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_opaque" "$l_repo_current_version" "$g_color_reset" "Formato invalido"
+        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_gray1" "$l_repo_current_version" "$g_color_reset" "Formato invalido"
         l_repo_current_version=""
     elif [ $l_status -eq 3 ]; then
-        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_opaque" "$l_repo_current_version" "$g_color_reset" "No se puede determinar"
+        printf 'Repositorio "%s%b[%s]%b" (Versión Actual): "%s"\n' "${p_repo_id}" "$g_color_gray1" "$l_repo_current_version" "$g_color_reset" "No se puede determinar"
     #else
     #    printf 'Repositorio "%s[%s]" (Versión Actual): "%s"\n' "${p_repo_id}" "${l_repo_current_version}" "OK"
     fi
@@ -972,13 +972,13 @@ _validate_versions_to_uninstall() {
     #8. Si no esta instalado, no se puede desinstalar.
     if [ -z "${l_repo_current_version}" ]; then
 
-        printf 'Repositorio "%s%b[%s]%b" no esta instalado. No se desinstalará.\n' "${p_repo_id}" "$g_color_opaque" "$l_empty_version" "$g_color_reset"
+        printf 'Repositorio "%s%b[%s]%b" no esta instalado. No se desinstalará.\n' "${p_repo_id}" "$g_color_gray1" "$l_empty_version" "$g_color_reset"
         return 10
     fi
 
 
     #Si requiere actualizarse
-    printf 'Repositorio "%s%b[%s]%b" (Versión Actual): Se desinstalará...\n' "${p_repo_id}" "$g_color_opaque" "${l_repo_current_version}" "$g_color_reset"
+    printf 'Repositorio "%s%b[%s]%b" (Versión Actual): Se desinstalará...\n' "${p_repo_id}" "$g_color_gray1" "${l_repo_current_version}" "$g_color_reset"
     return 0
 
 
@@ -1087,18 +1087,18 @@ function _install_menu_options() {
     if [ -z "$l_result" ]; then
    
         #3.1. Mostrar el titulo
-        print_line '─' $g_max_length_line  "$g_color_opaque"
+        print_line '─' $g_max_length_line  "$g_color_gray1"
 
         #Si se ejecuta usando el menu
         if [ $gp_type_calling -eq 0 ]; then
-            printf -v l_title_template 'Opción %b%s%b: %b%s%b' "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+            printf -v l_title_template 'Opción %b%s%b: %b%s%b' "$g_color_gray1" "$l_option_value" "$g_color_reset" "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         #Si se ejecuta sin usar el menu
         else
-            printf -v l_title_template 'Grupo de repositorios: %b%s%b' "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+            printf -v l_title_template 'Grupo de repositorios: %b%s%b' "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         fi
 
         print_text_in_center2 "$l_title_template" $g_max_length_line
-        print_line '─' $g_max_length_line "$g_color_opaque"
+        print_line '─' $g_max_length_line "$g_color_gray1"
 
         #3.2. Inicializar la opcion si aun no ha sido inicializado.
         install_initialize_menu_option $p_option_relative_idx
@@ -1189,12 +1189,12 @@ function _install_menu_options() {
             #4.2.4. Calcular la plantilla del titulo.
             #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
-                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_option_value" "$g_color_reset"
             #Si se ejecuta sin usar el menu
             else
-                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
 
             #El primer repositorio donde se ha analizado si se puede o no ser procesado.
@@ -1208,18 +1208,18 @@ function _install_menu_options() {
             #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
             if [ $l_status_first_setup -eq 3 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El repositorio "%s" no se pudo obtener su versión cuando se analizó con la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
             #  4 > El repositorio esta instalado y ya esta actualizado.
             elif [ $l_status_first_setup -eq 4 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El repositorio "%s" ya esta instalado y actualizado con la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
@@ -1227,36 +1227,36 @@ function _install_menu_options() {
             #  5 > El repositorio inicio la instalación y lo termino con exito.
             elif [ $l_status_first_setup -eq 5 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "se acaba de instalar"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El repositorio "%s" se acaba de instalar en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
             #  6 > El repositorio inicio la actualización y lo termino con exito.
             elif [ $l_status_first_setup -eq 6 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "se acaba de actualizar"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El repositorio "%s" se acaba de actualizar en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
             #  7 > El repositorio inicio la instalación y lo termino con error.
             elif [ $l_status_first_setup -eq 7 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "se acaba de instalar con error"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El repositorio "%s" se acaba de instalar con error en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
             #  8 > El repositorio inicio la actualización y lo termino con error.
             elif [ $l_status_first_setup -eq 8 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "se acaba de instalar con error"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El repositorio "%s" se acaba de instalar con error en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
@@ -1280,12 +1280,12 @@ function _install_menu_options() {
 
             #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
-                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_option_value" "$g_color_reset"
             #Si se ejecuta sin usar el menú
             else
-                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
         fi
         
@@ -1316,7 +1316,7 @@ function _install_menu_options() {
             _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido a los parametros incorrectos enviados.\n' \
-                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                          "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
 
             #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
@@ -1335,7 +1335,7 @@ function _install_menu_options() {
             _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido su ultima versión obtenida es invalida.\n' \
-                   "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                   "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
 
             #echo "C > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
@@ -1390,7 +1390,7 @@ function _install_menu_options() {
             l_flag_process_next_repo=1
             l_exits_error=0
 
-            printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
             printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
 
         #   4 > El repositorio esta instalado y ya esta actualizado.
@@ -1415,7 +1415,7 @@ function _install_menu_options() {
             l_flag_process_next_repo=1
             l_exits_error=0
 
-            printf '%bError al instalar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf '%bError al instalar el respositorio%b "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
             printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
 
         #   8 > El repositorio inicio la actualización y lo termino con error.
@@ -1424,7 +1424,7 @@ function _install_menu_options() {
             l_flag_process_next_repo=1
             l_exits_error=0
 
-            printf '%bError al actualizar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf '%bError al actualizar el respositorio%b "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
             printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
         fi
 
@@ -1503,19 +1503,19 @@ function _update_installed_repository() {
 
 
     #C. Mostrar el titulo
-    print_line '─' $g_max_length_line  "$g_color_opaque"
+    print_line '─' $g_max_length_line  "$g_color_gray1"
     
     #Si se ejecuta mostrando el menu
     if [ $gp_type_calling -eq 0 ]; then
-        printf -v l_title_template 'Opción %b%s%b: %bActualizando repositorios instalados%b' "$g_color_opaque" "$g_opt_update_installed_repo" "$g_color_reset" "$g_color_subtitle" \
+        printf -v l_title_template 'Opción %b%s%b: %bActualizando repositorios instalados%b' "$g_color_gray1" "$g_opt_update_installed_repo" "$g_color_reset" "$g_color_cian1" \
            "$g_color_reset"
     #Si se ejecuta sin mostrar el menu
     else
-        printf -v l_title_template 'Grupo de respositorios: %bActualizando repositorios instalados%b' "$g_color_subtitle" \
+        printf -v l_title_template 'Grupo de respositorios: %bActualizando repositorios instalados%b' "$g_color_cian1" \
            "$g_color_reset"
     fi
     print_text_in_center2 "$l_title_template" $g_max_length_line 
-    print_line '─' $g_max_length_line "$g_color_opaque"
+    print_line '─' $g_max_length_line "$g_color_gray1"
     printf '\n'
 
     #D. Actualizar los repositorios actualizados
@@ -1558,12 +1558,12 @@ function _update_installed_repository() {
             #B.2. Calcular la plantilla del titulo.
             #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
-                printf -v l_title_template "%s(%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$l_i" "$g_color_reset" "$g_color_subtitle" \
-                   "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$g_opt_update_installed_repo" "$g_color_reset"
+                printf -v l_title_template "%s(%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_gray1" "$l_i" "$g_color_reset" "$g_color_cian1" \
+                   "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_opt_update_installed_repo" "$g_color_reset"
             #Si se ejecuta sin usar el menú
             else
-                printf -v l_title_template "%s(%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_opaque" "$l_i" "$g_color_reset" "$g_color_subtitle" \
-                   "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+                printf -v l_title_template "%s(%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_gray1" "$l_i" "$g_color_reset" "$g_color_cian1" \
+                   "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
 
             #Configurar el respositorio, con el flag 'solo actulizar si esta instalado'
@@ -1594,7 +1594,7 @@ function _update_installed_repository() {
                 #_gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
                 printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido a los parametros incorrectos enviados.\n' \
-                              "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                              "$g_color_red1" "$l_repo_id" "$g_color_reset"
                 printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
                 continue
 
@@ -1611,7 +1611,7 @@ function _update_installed_repository() {
                 #_gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
                 printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido su ultima versión obtenida es invalida.\n' \
-                       "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                       "$g_color_red1" "$l_repo_id" "$g_color_reset"
                 printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
                 continue
             fi
@@ -1662,7 +1662,7 @@ function _update_installed_repository() {
                 l_exits_error=0
                 ((l_i++))
 
-                printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+                printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
                 printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
 
 
@@ -1692,7 +1692,7 @@ function _update_installed_repository() {
                 l_exits_error=0
                 ((l_i++))
 
-                printf '%bError al instalar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+                printf '%bError al instalar el respositorio%b "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
                 printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
 
             #   8 > El repositorio inicio la actualización y lo termino con error.
@@ -1702,7 +1702,7 @@ function _update_installed_repository() {
                 l_exits_error=0
                 ((l_i++))
 
-                printf '%bError al actualizar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+                printf '%bError al actualizar el respositorio%b "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
                 printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
             fi
 
@@ -1820,7 +1820,7 @@ function i_uninstall_repository() {
 
             #Por defecto considerando que termino con error
             l_status_process_lnx=5
-            l_tag="${l_tag}${g_color_opaque}[${_g_repo_current_version}]${g_color_reset}"
+            l_tag="${l_tag}${g_color_gray1}[${_g_repo_current_version}]${g_color_reset}"
             printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%s" ...\n' "desinstalación" "${l_tag}" "$g_os_subtype_name"
             _uninstall_repository "$p_repo_id" "$_g_repo_current_version" $l_install_win_cmds
             l_status2=$?
@@ -1881,7 +1881,7 @@ function i_uninstall_repository() {
             #Por defecto considerando que termino con error
             l_status_process_win=5
 
-            l_tag="${l_tag}${g_color_opaque}[${_g_repo_current_version}]${g_color_reset}"
+            l_tag="${l_tag}${g_color_gray1}[${_g_repo_current_version}]${g_color_reset}"
             printf '\nIniciando la %s de los artefactos del repositorio "%b" en Windows vinculado a Linux "%s" ...\n' "desinstalación" "${l_tag}" "$g_os_subtype_name"
             _uninstall_repository "$p_repo_id" "$_g_repo_current_version" $l_install_win_cmds
             l_status2=$?
@@ -1992,18 +1992,18 @@ function _uninstall_menu_options() {
     if [ -z "$l_result" ]; then
    
         #3.1. Mostrar el titulo
-        print_line '─' $g_max_length_line  "$g_color_opaque"
+        print_line '─' $g_max_length_line  "$g_color_gray1"
 
         #Si se ejecuta usando el menu
         if [ $gp_type_calling -eq 0 ]; then
-            printf -v l_title_template "Opción %s%s%s '%s%s%s'" "$g_color_opaque" "$l_option_value" "$g_color_reset" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+            printf -v l_title_template "Opción %s%s%s '%s%s%s'" "$g_color_gray1" "$l_option_value" "$g_color_reset" "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         #Si se ejecuta sin usar el menu
         else
-            printf -v l_title_template "Grupo de respositorios: '%s%s%s'" "$g_color_subtitle" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+            printf -v l_title_template "Grupo de respositorios: '%s%s%s'" "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         fi
 
         print_text_in_center2 "$l_title_template" $g_max_length_line 
-        print_line '─' $g_max_length_line "$g_color_opaque"
+        print_line '─' $g_max_length_line "$g_color_gray1"
 
         #3.2. Inicializar la opcion si aun no ha sido inicializado.
         uninstall_initialize_menu_option $p_option_relative_idx
@@ -2092,12 +2092,12 @@ function _uninstall_menu_options() {
             #4.2.4. Calcular la plantilla del titulo.
             #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
-                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_option_value" "$g_color_reset"
             #Si se ejecuta sin usar el menú
             else
-                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
 
             #El primer repositorio donde se ha analizado si se puede o no ser procesado.
@@ -2111,18 +2111,18 @@ function _uninstall_menu_options() {
             #  2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
             if [ $l_status_first_setup -eq 2 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El repositorio "%s" no se pudo obtener su versión cuando se analizó con la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
             #  3 > El repositorio no esta instalado.
             elif [ $l_status_first_setup -eq 3 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "no procesado"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El repositorio "%s" no esta instalado, ello se determino con la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
@@ -2130,9 +2130,9 @@ function _uninstall_menu_options() {
             #  4 > El repositorio inicio la desinstalación y lo termino con exito.
             elif [ $l_status_first_setup -eq 4 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "se acaba de instalar"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El repositorio "%s" se acaba de desinstalar en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
@@ -2140,9 +2140,9 @@ function _uninstall_menu_options() {
             #  5 > El repositorio inicio la desinstalación y lo termino con error.
             elif [ $l_status_first_setup -eq 5 ]; then
 
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 printf "${l_title_template}\n" "se acaba de instalar con error"
-                print_line '-' $g_max_length_line "$g_color_opaque"
+                print_line '-' $g_max_length_line "$g_color_gray1"
 
                 printf 'El repositorio "%s" se acaba de desinstalar con error en la opción del menu %s ("%s")\n\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
 
@@ -2166,12 +2166,12 @@ function _uninstall_menu_options() {
         if [ -z "$l_title_template" ]; then
             #Si se ejecuta usando el menú
             if [ $gp_type_calling -eq 0 ]; then
-                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset" "$g_color_opaque" "$l_option_value" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s %s(opción de menu %s)%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_option_value" "$g_color_reset"
             #Si se ejecuta sin usar el menú
             else
-                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_opaque" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_subtitle" \
-                      "$l_repo_name_aux" "$g_color_reset" "$g_color_subtitle" "$g_color_reset"
+                printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                      "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
         fi
         
@@ -2197,7 +2197,7 @@ function _uninstall_menu_options() {
             _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido a los parametros incorrectos enviados.\n' \
-                          "$g_color_warning" "$l_repo_id" "$g_color_reset"
+                          "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
 
             #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
@@ -2252,7 +2252,7 @@ function _uninstall_menu_options() {
             l_flag_process_next_repo=1
             l_exits_error=0
 
-            printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
             printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
 
         #   3 > El repositorio no esta instalado.
@@ -2273,7 +2273,7 @@ function _uninstall_menu_options() {
             l_flag_process_next_repo=1
             l_exits_error=0
 
-            printf '%bError al desinstalar el respositorio%b "%s" en %s\n' "$g_color_warning" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf '%bError al desinstalar el respositorio%b "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
             printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
 
         fi
@@ -2577,9 +2577,9 @@ function g_install_repository() {
 
                 #Etiqueta para identificar el repositorio que se usara en lo logs cuando se instala
                 if [ ! -z "${l_repo_last_version_pretty}" ]; then
-                    l_tag="${p_repo_id}${g_color_opaque}[${l_repo_last_version_pretty}]${g_color_reset}"
+                    l_tag="${p_repo_id}${g_color_gray1}[${l_repo_last_version_pretty}]${g_color_reset}"
                 else
-                    l_tag="${p_repo_id}${g_color_opaque}[${l_empty_version}]${g_color_reset}"
+                    l_tag="${p_repo_id}${g_color_gray1}[${l_empty_version}]${g_color_reset}"
                 fi
 
                 printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%s" ...\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
@@ -2607,9 +2607,9 @@ function g_install_repository() {
 
                     #Etiqueta para identificar el repositorio que se usara en lo logs cuando se instala
                     if [ ! -z "${l_repo_last_version_pretty}" ]; then
-                        l_tag="${p_repo_id}${g_color_opaque}[${l_repo_last_version_pretty}][${_ga_artifact_subversions[${l_n}]}]${g_color_reset}"
+                        l_tag="${p_repo_id}${g_color_gray1}[${l_repo_last_version_pretty}][${_ga_artifact_subversions[${l_n}]}]${g_color_reset}"
                     else
-                        l_tag="${p_repo_id}${g_color_opaque}[${l_empty_version}][${_ga_artifact_subversions[${l_n}]}]${g_color_reset}"
+                        l_tag="${p_repo_id}${g_color_gray1}[${l_empty_version}][${_ga_artifact_subversions[${l_n}]}]${g_color_reset}"
                     fi
                     printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%s" ...\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
 
@@ -2713,9 +2713,9 @@ function g_install_repository() {
 
                 #Etiqueta para identificar el repositorio que se usara en lo logs cuando se instala
                 if [ ! -z "${l_repo_last_version_pretty}" ]; then
-                    l_tag="${p_repo_id}${g_color_opaque}[${l_repo_last_version_pretty}]${g_color_reset}"
+                    l_tag="${p_repo_id}${g_color_gray1}[${l_repo_last_version_pretty}]${g_color_reset}"
                 else
-                    l_tag="${p_repo_id}${g_color_opaque}[${l_empty_version}]${g_color_reset}"
+                    l_tag="${p_repo_id}${g_color_gray1}[${l_empty_version}]${g_color_reset}"
                 fi
 
                 printf '\nIniciando la %s de los artefactos del repositorio "%b" Windows (asociado al WSL "%s")\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
@@ -2737,9 +2737,9 @@ function g_install_repository() {
 
                     #Etiqueta para identificar el repositorio que se usara en lo logs cuando se instala
                     if [ ! -z "${l_repo_last_version_pretty}" ]; then
-                        l_tag="${p_repo_id}${g_color_opaque}[${l_repo_last_version_pretty}][${_ga_artifact_subversions[${l_n}]}]${g_color_reset}"
+                        l_tag="${p_repo_id}${g_color_gray1}[${l_repo_last_version_pretty}][${_ga_artifact_subversions[${l_n}]}]${g_color_reset}"
                     else
-                        l_tag="${p_repo_id}${g_color_opaque}[${l_empty_version}][${_ga_artifact_subversions[${l_n}]}]${g_color_reset}"
+                        l_tag="${p_repo_id}${g_color_gray1}[${l_empty_version}][${_ga_artifact_subversions[${l_n}]}]${g_color_reset}"
                     fi
 
                     printf '\nIniciando la %s de los artefactos del repositorio "%b" Windows (asociado al WSL "%s")\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
@@ -2836,10 +2836,10 @@ function g_install_repositories() {
                 fi
             fi
 
-            print_line '─' $g_max_length_line  "$g_color_opaque"
-            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_subtitle" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+            print_line '─' $g_max_length_line  "$g_color_gray1"
+            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_cian1" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
             print_text_in_center2 "$l_title" $g_max_length_line 
-            print_line '─' $g_max_length_line "$g_color_opaque"
+            print_line '─' $g_max_length_line "$g_color_gray1"
             
             upgrade_os_packages $g_os_subtype_id $l_noninteractive
 
@@ -2902,23 +2902,23 @@ function g_install_repositories() {
 
 function _show_menu_install_core() {
 
-    print_text_in_center "Menu de Opciones (Install/Update)" $g_max_length_line "$g_color_title"
-    print_line '-' $g_max_length_line  "$g_color_opaque"
-    printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
-    printf " (%ba%b) Actualizar los paquetes del SO existentes y los binarios/programas ya instalados\n" "$g_color_title" "$g_color_reset"
-    printf " (%bb%b) Instalar o actualizar: Binarios basicos, 'Nerd Fonts', NeoVim\n" "$g_color_title" "$g_color_reset"
-    printf " (%bc%b) Instalar o actualizar: Binarios basicos, 'Nerd Fonts', NeoVim, .NET SDK/LSP/DAP, PowerShell\n" "$g_color_title" "$g_color_reset"
-    printf " (%bd%b) Instalar o actualizar los runtime, SDK, LSP y DAP: .NET, Java, NodeJS, C/C++, Rust, Go\n" "$g_color_title" "$g_color_reset"
+    print_text_in_center "Menu de Opciones (Install/Update)" $g_max_length_line "$g_color_green1"
+    print_line '-' $g_max_length_line  "$g_color_gray1"
+    printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
+    printf " (%ba%b) Actualizar los paquetes del SO existentes y los binarios/programas ya instalados\n" "$g_color_green1" "$g_color_reset"
+    printf " (%bb%b) Instalar o actualizar: Binarios basicos, 'Nerd Fonts', NeoVim\n" "$g_color_green1" "$g_color_reset"
+    printf " (%bc%b) Instalar o actualizar: Binarios basicos, 'Nerd Fonts', NeoVim, .NET SDK/LSP/DAP, PowerShell\n" "$g_color_green1" "$g_color_reset"
+    printf " (%bd%b) Instalar o actualizar los runtime, SDK, LSP y DAP: .NET, Java, NodeJS, C/C++, Rust, Go\n" "$g_color_green1" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     get_length_menu_option $g_offset_option_index_menu_install
     local l_max_digits=$?
 
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes existentes del sistema operativo\n" "$g_color_title" "$g_opt_update_installed_pckg" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas ya instalados\n" "$g_color_title" "$g_opt_update_installed_repo" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes existentes del sistema operativo\n" "$g_color_green1" "$g_opt_update_installed_pckg" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas ya instalados\n" "$g_color_green1" "$g_opt_update_installed_repo" "$g_color_reset"
 
     show_dynamic_menu 'Instalar o actualizar' $g_offset_option_index_menu_install $l_max_digits
-    print_line '-' $g_max_length_line "$g_color_opaque"
+    print_line '-' $g_max_length_line "$g_color_gray1"
 
 }
 
@@ -2928,7 +2928,7 @@ function g_install_main() {
     #1. Pre-requisitos
    
     #2. Mostrar el Menu
-    print_line '─' $g_max_length_line "$g_color_title" 
+    print_line '─' $g_max_length_line "$g_color_green1" 
     _show_menu_install_core
 
     #3. Mostar la ultima parte del menu y capturar la opcion elegida
@@ -2937,21 +2937,21 @@ function g_install_main() {
     local l_value_option_a=$(($g_opt_update_installed_pckg + $g_opt_update_installed_repo))
     while [ $l_flag_continue -eq 0 ]; do
 
-        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_opaque" "$g_color_reset"
+        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
         read -r l_options
 
         case "$l_options" in
 
             a)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 g_install_repositories $l_value_option_a 0
                 ;;
 
             b)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 #    4> Binarios basicos
                 #   32> Fuente 'Nerd Fonts'
@@ -2961,7 +2961,7 @@ function g_install_main() {
 
             c)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 #    4> Binarios basicos
                 #   32> Fuente 'Nerd Fonts'
@@ -2974,7 +2974,7 @@ function g_install_main() {
 
             d)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 #   32768> .NET  : RTE y SDK
                 #   65536> .NET  : LSP y DAP server
@@ -2990,34 +2990,34 @@ function g_install_main() {
                 ;;
             q)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 ;;
 
 
             0)
                 l_flag_continue=0
-                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_opaque" 
+                printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_gray1" 
                 ;;
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '─' $g_max_length_line "$g_color_title" 
+                    print_line '─' $g_max_length_line "$g_color_green1" 
                     printf '\n'
                     g_install_repositories $l_options 0
                 else
                     l_flag_continue=0
-                    printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                    print_line '-' $g_max_length_line "$g_color_opaque" 
+                    printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                    print_line '-' $g_max_length_line "$g_color_gray1" 
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
-                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_opaque" 
+                printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_gray1" 
                 ;;
 
         esac
@@ -3030,16 +3030,16 @@ function g_install_main() {
 
 function _show_menu_uninstall_core() {
 
-    print_text_in_center "Menu de Opciones (Uninstall)" $g_max_length_line "$g_color_title"
-    print_line '-' $g_max_length_line  "$g_color_opaque"
-    printf " (%bq%b) Salir del menu\n" "$g_color_title" "$g_color_reset"
+    print_text_in_center "Menu de Opciones (Uninstall)" $g_max_length_line "$g_color_green1"
+    print_line '-' $g_max_length_line  "$g_color_gray1"
+    printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
     printf " ( ) Para desintalar ingrese un opción o la suma de las opciones que desea configurar:\n"
 
     get_length_menu_option $g_offset_option_index_menu_uninstall
     local l_max_digits=$?
 
     show_dynamic_menu 'Desinstalar' $g_offset_option_index_menu_uninstall $l_max_digits
-    print_line '-' $g_max_length_line "$g_color_opaque" 
+    print_line '-' $g_max_length_line "$g_color_gray1" 
 
 }
 
@@ -3048,7 +3048,7 @@ function g_uninstall_main() {
 
   
     #Mostrar la parte superior del menu 
-    print_line '─' $g_max_length_line "$g_color_title" 
+    print_line '─' $g_max_length_line "$g_color_green1" 
 
     _show_menu_uninstall_core
 
@@ -3056,42 +3056,42 @@ function g_uninstall_main() {
     local l_options=""
     while [ $l_flag_continue -eq 0 ]; do
 
-        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_opaque" "$g_color_reset"
+        printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
         read -r l_options
 
         case "$l_options" in
 
             q)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_title" 
+                print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
                 ;;
 
 
             0)
                 l_flag_continue=0
-                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_opaque" 
+                printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_gray1" 
                 ;;
 
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '─' $g_max_length_line "$g_color_title" 
+                    print_line '─' $g_max_length_line "$g_color_green1" 
                     printf '\n'
                     i_uninstall_repositories $l_options 0
                 else
                     l_flag_continue=0
-                    printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                    print_line '-' $g_max_length_line "$g_color_opaque" 
+                    printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                    print_line '-' $g_max_length_line "$g_color_gray1" 
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
-                printf '%bOpción incorrecta%b\n' "$g_color_opaque" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_opaque" 
+                printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
+                print_line '-' $g_max_length_line "$g_color_gray1" 
                 ;;
         esac
         
@@ -3102,23 +3102,23 @@ function g_uninstall_main() {
 
 g_usage() {
 
-    printf '%bUsage:\n\n' "$g_color_opaque"
+    printf '%bUsage:\n\n' "$g_color_gray1"
     printf '  > Desintalar repositorios mostrando el menú de opciones:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash uninstall\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash uninstall\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Instalar repositorios mostrando el menú de opciones (interactivo):\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Instalar/Actualizar un grupo de repositorios sin mostrar el menú, pero interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Instalar/Actualizar un repositorio sin mostrar el  menú, pero interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 2 REPO-ID%b\n' "$g_color_info" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 2 REPO-ID SUDO-STORAGE-OPTIONS%b\n' "$g_color_info" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 2 REPO-ID%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 2 REPO-ID SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
     printf '  > Instalar/Actualizar un grupo de repositorios sin mostrar el menú, pero no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 3 MENU-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 3 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_info" "$g_color_opaque"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 3 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 3 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
     printf '  > Instalar/Actualizar un repositorio sin mostrar el  menú, pero no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 4 REPO-ID%b\n' "$g_color_info" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 4 REPO-ID SUDO-STORAGE-OPTIONS%b\n\n' "$g_color_info" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 4 REPO-ID%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 4 REPO-ID SUDO-STORAGE-OPTIONS%b\n\n' "$g_color_yellow1" "$g_color_reset"
 
 }
 
