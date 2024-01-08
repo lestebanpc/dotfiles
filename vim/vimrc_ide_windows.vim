@@ -14,8 +14,8 @@ let g:use_typing_surround = 1
 let g:use_typing_visual_multi = 1
 
 "Ruta base para los servidores LSP y DAP
-let g:home_path_dap_server = 'D:/Tools/CLI/DAP_Servers'
-let g:home_path_lsp_server = 'D:/Tools/CLI/LSP_Servers'
+let g:home_path_dap_server = 'D:/CLI/Programs/DAP_Servers'
+let g:home_path_lsp_server = 'D:/CLI/Programs/LSP_Servers'
 
 "----------------------------- Basic Settings          -----------------------------
 source C:/Users/LucianoWin/.files/vim/setting/core_setting.vim

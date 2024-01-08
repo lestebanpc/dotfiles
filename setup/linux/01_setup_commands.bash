@@ -43,11 +43,11 @@ if [ -z "$g_os_type" ]; then
 
     #Solo en WSL: Ruta de binarios y programas de Windows
     if [ $g_os_type -eq 1 ]; then
-        declare -r g_path_programs_win='/mnt/d/CLI'
-        declare -r g_path_bin_win="${g_path_programs_win}/Cmds/bin"
-        declare -r g_path_man_win="${g_path_programs_win}/Cmds/man"
-        declare -r g_path_doc_win="${g_path_programs_win}/Cmds/doc"
-        declare -r g_path_etc_win="${g_path_programs_win}/Cmds/etc"
+        declare -r g_path_programs_win='/mnt/d/CLI/Programs'
+        declare -r g_path_bin_win="/mnt/d/CLI/Commands/bin"
+        declare -r g_path_man_win="/mnt/d/CLI/Commands/man"
+        declare -r g_path_doc_win="/mnt/d/CLI/Commands/doc"
+        declare -r g_path_etc_win="/mnt/d/CLI/Commands/etc"
     fi
 
 fi
