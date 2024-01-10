@@ -1345,7 +1345,7 @@ function _install_vim_nvim_environment() {
             fi
 
         else
-            printf 'VIM         > VIM-Enhaced "%s" ya esta instalando' "$l_version"
+            printf 'VIM         > VIM-Enhaced "%s" ya esta instalando\n' "$l_version"
         fi
 
 

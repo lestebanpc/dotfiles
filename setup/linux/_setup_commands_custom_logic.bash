@@ -4022,6 +4022,7 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             
+            cd ${g_path_temp}
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
@@ -4036,11 +4037,9 @@ function _copy_artifact_files() {
                     #Limpieza
                     #rm -rf ${l_path_target_bin}/*
                 fi
-                    
-                #No es necesario eliminarlo, lo hace el metodo que lo descarga y lo descomprime
-                #find "${l_path_source}/*.tar.gz" -maxdepth 1 -mindepth 1 -type f -exec rm '{}' \;
                  
                 #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
+                printf 'Ejecutando "%brsync -a --stats %s/ %s%b"...\n' "$g_color_gray1" "$l_path_source" "$l_path_target_bin" "$g_color_reset"
                 printf '%b' "$g_color_gray1"
                 rsync -a --stats "${l_path_source}/" "${l_path_target_bin}"
                 printf '%b' "$g_color_reset"
@@ -4073,10 +4072,8 @@ function _copy_artifact_files() {
                     #rm -rf ${l_path_target_bin}/*
                 fi
                     
-                #No es necesario eliminarlo, lo hace el metodo que lo descarga y lo descomprime
-                #find "${l_path_source}/*.zip" -maxdepth 1 -mindepth 1 -type f -exec rm '{}' \;
-
                 #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
+                printf 'Ejecutando "%brsync -a --stats %s/ %s%b"...\n' "$g_color_gray1" "$l_path_source" "$l_path_target_bin" "$g_color_reset"
                 printf '%b' "$g_color_gray1"
                 rsync -a --stats "${l_path_source}/" "${l_path_target_bin}"
                 printf '%b' "$g_color_reset"
