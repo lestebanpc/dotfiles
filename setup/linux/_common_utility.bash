@@ -346,9 +346,11 @@ uncompress_program() {
     if [ $p_compressed_filetype -eq 0 ]; then
 
         #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+        printf 'tar -xf "%b%s/%s%b" -C "%b%s%b"\n' "$g_color_gray1" "$p_path_source" "$p_compressed_filename" "$g_color_reset" \
+               "$g_color_gray1" "$p_path_destination" "$g_color_reset"
         tar -xf "${p_path_source}/${p_compressed_filename}" -C "${p_path_destination}"
         rm "${p_path_source}/${p_compressed_filename}"
-        chmod u+rw ${p_path_destination}/*
+        #chmod u+rw ${p_path_destination}/*
 
         g_filename_without_ext="${p_compressed_filename%.tar.gz}"
 
@@ -356,8 +358,12 @@ uncompress_program() {
     elif [ $p_compressed_filetype -eq 1 ]; then
 
         #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+        printf 'unzip -q "%b%s/%s%b" -d "%b%s%b"\n' "$g_color_gray1" "$p_path_source" "$p_compressed_filename" "$g_color_reset" \
+               "$g_color_gray1" "$p_path_destination" "$g_color_reset"
         unzip -q "${p_path_source}/${p_compressed_filename}" -d "${p_path_destination}"
         rm "${p_path_source}/${p_compressed_filename}"
+
+        #FIX: Los archivos de themas de 'Oh-my-posh' no tienen permisos para usuarios en WSL
         chmod u+rw ${p_path_destination}/*
 
         g_filename_without_ext="${p_compressed_filename%.zip}"
@@ -366,12 +372,13 @@ uncompress_program() {
     # Si el tipo de item es 12 si es un comprimido '.gz' no muy pesado (se descomprime en una ruta local y luego se copia a su destino)
     elif [ $p_compressed_filetype -eq 2 ]; then
 
-        #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+        #Descomprimir el archivo en el directorio creado (no crear sub-folderes), por defecto elimina el comprimido
+        printf 'cd "%b%s%b"\n' "$g_color_gray1" "$p_path_destination" "$g_color_reset"
         cd "${p_path_destination}"
+
+        printf 'gunzip -q "%b%s/%s%b"\n' "$g_color_gray1" "$p_path_source" "$p_compressed_filename" "$g_color_reset"
         gunzip -q "${p_path_source}/${p_compressed_filename}"
-        #Elimina el comprimido cuando el comando termina en exito.
-        #rm "${p_path_source}/${p_compressed_filename}"
-        chmod u+rw ${p_path_destination}/*
+        #chmod u+rw ${p_path_destination}/*
 
         g_filename_without_ext="${p_compressed_filename%.gz}"
 
@@ -380,9 +387,11 @@ uncompress_program() {
     elif [ $p_compressed_filetype -eq 3 ]; then
 
         #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+        printf 'tar -xf "%b%s/%s%b" -C "%b%s%b"\n' "$g_color_gray1" "$p_path_source" "$p_compressed_filename" "$g_color_reset" \
+               "$g_color_gray1" "$p_path_destination" "$g_color_reset"
         tar -xf "${p_path_source}/${p_compressed_filename}" -C "${p_path_destination}"
         rm "${p_path_source}/${p_compressed_filename}"
-        chmod u+rw ${p_path_destination}/*
+        #chmod u+rw ${p_path_destination}/*
 
         g_filename_without_ext="${p_compressed_filename%.tgz}"
 
@@ -390,9 +399,11 @@ uncompress_program() {
     elif [ $p_compressed_filetype -eq 4 ]; then
 
         #Descomprimir el archivo en el directorio creado (no crear sub-folderes)
+        printf 'tar -xJf "%b%s/%s%b" -C "%b%s%b"\n' "$g_color_gray1" "$p_path_source" "$p_compressed_filename" "$g_color_reset" \
+               "$g_color_gray1" "$p_path_destination" "$g_color_reset"
         tar -xJf "${p_path_source}/${p_compressed_filename}" -C "${p_path_destination}"
         rm "${p_path_source}/${p_compressed_filename}"
-        chmod u+rw ${p_path_destination}/*
+        #chmod u+rw ${p_path_destination}/*
 
         g_filename_without_ext="${p_compressed_filename%.tar.xz}"
 

@@ -3294,7 +3294,7 @@ function _copy_artifact_files() {
                 #Instalando usando sudo
                 else
 
-                    printf 'Instalando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" \n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
+                    printf 'Instalando AWS CLI: %ssudo /aws/install -i "%s/aws-cli" -b "%s" \n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
                     sudo ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
 
                 fi
@@ -3306,23 +3306,22 @@ function _copy_artifact_files() {
                 if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
 
                     printf 'Actualizando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" --update\n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
-                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}" --update
 
                 #Actualizando como root
                 elif [ $g_user_sudo_support -eq 4 ]; then
 
                     printf 'Actualizando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" --update\n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
-                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}" --update
 
                 #Actualizando usando sudo
                 else
 
-                    printf 'Actualizando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" --update\n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
-                    sudo ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+                    printf 'Actualizando AWS CLI: %ssudo /aws/install -i "%s/aws-cli" -b "%s" --update\n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
+                    sudo ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}" --update
 
                 fi
             fi
-
             ;;
 
 
@@ -4220,7 +4219,7 @@ function _copy_artifact_files() {
                 #l_artifact_name_without_ext="$g_filename_without_ext"
 
                 #Acceso al folder creado
-                mv ${g_path_programs_win}/go ${g_path_programs_win}/Go
+                #mv ${g_path_programs_win}/go ${g_path_programs_win}/Go
                 #chmod g+rx,o+rx ${g_path_programs_win}/Go
 
                 printf 'Instalé/actualizé el modulo go %s ejecutando:  %b%s%b\n' 'LSP "gopls"' "$g_color_yellow1" \
