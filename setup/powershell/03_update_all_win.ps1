@@ -23,7 +23,7 @@ function m_get_nodejs_version() {
     $l_status=$?
     if ($l_status) {
         $l_version= $l_version[0]
-        $l_version= $l_version -creplace "$g_regexp_sust_version1", "$1"
+        $l_version= $l_version -creplace "$g_regexp_sust_version1", '$1'
     }
     else {
         $l_version=""
@@ -43,20 +43,20 @@ function m_is_developer_vim_profile($p_is_neovim) {
 
     #2. Ruta base donde se instala el plugins/paquete
     $l_real_path
-    $l_profile_path="${HOME}/.vimrc"
+    $l_profile_path="${env:USERPROFILE}\.vimrc"
     if ($p_is_neovim) {
-        $l_profile_path="${HOME}/.config/nvim/init.vim"
+        $l_profile_path="${env:LOCALAPPDATA}\nvim\init.vim"
     }
 
     #'vimrc_ide_linux_xxxx.vim'
     #'vimrc_basic_linux.vim'
     #'init_ide_linux_xxxx.vim'
     #'init_basic_linux.vim'
-	if(! (Test-Path "$p_target_link")) {
+	if(! (Test-Path "$l_profile_path")) {
 		return 2
 	}
 	
-	$l_info= Get-Item "$p_target_link" | Select-Object LinkType, LinkTarget
+	$l_info= Get-Item "$l_profile_path" | Select-Object LinkType, LinkTarget
     if ( $l_info.LinkType -ne "SymbolicLink" ) {
         return 2
     }
@@ -188,11 +188,13 @@ function m_update_vim_repository($p_flag_nvim, $p_is_coc_installed)
 		
 		if(!${l_show_title}) 
 		{
-			Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Blue
-			Write-Host "                                                    ${l_tag}" -ForegroundColor Blue
-			Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Blue    
+			Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
+			Write-Host "                                                    ${l_tag}" -ForegroundColor DarkGray
+			Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
 			$l_show_title= $true
 		}
+
+        Write-Host ""
         $l_repo_path = Split-Path -Parent $folder.FullName
 		$l_repo_name = Split-Path "$l_repo_path" -Leaf
         $l_status= m_update_repository $l_repo_path $l_repo_name $p_flag_nvim
@@ -318,14 +320,14 @@ function m_update_vim_repository($p_flag_nvim, $p_is_coc_installed)
     Write-Host "Recomendaciones:"
     if (!$p_is_neovim) {
 
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 vim`""
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:USE_EDITOR}=1`" y luego `"vim`""
         Write-Host "    > Se recomienda que configure su IDE CoC segun su necesidad:"
 	}
     else {
 
         Write-Host "  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM."
-        Write-Host "    > Si desea usar CoC, use: `"USE_COC=1 nvim`""
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 nvim`""
+        Write-Host "    > Si desea usar CoC, use: `"`${env:USE_COC}=1`" y luego `"nvim`""
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:USE_EDITOR}=1`" y luego `"nvim`""
 
         Write-Host "  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:"
 
@@ -368,37 +370,41 @@ function m_main_update($p_input_options) {
         $l_status=$?
         if ($l_status) {
             $l_version= $l_version[0]
-            $l_version= $l_version -creplace "$g_regexp_sust_version1", "$1"
+            #Write-Host "VIM Version: ${l_version}"
+            $l_version= $l_version -creplace "$g_regexp_sust_version1", '$1'
         }
         else {
             $l_version=""
         }
 
+        #Write-Host "VIM Version: ${l_version}"
+
         #Solo actualizar si esta instalado
         if ($l_version) {
 
             #Mostrar el titulo
-            $l_title= "Actualizar los paquetes de VIM (${l_version})"
+            $l_title= ">> Actualizar los paquetes de VIM (${l_version})"
 
-            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
-            Write-Host "$l_title"
-            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
+            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
+            Write-Host "$l_title" -ForegroundColor Blue
+            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
 
             #Determinar si esta instalado en modo developer
             $l_is_coc_installed= $false
             $l_status= m_is_developer_vim_profile $false
             if ($l_status -eq 1) {
                 if ($l_nodejs_version) {
-                    Write-Host "Se actualizará los paquetes/plugins de VIM ${l_version} (Modo developer, NodeJS no intalado) ..."
-                }
-                else {
                     Write-Host "Se actualizará los paquetes/plugins de VIM ${l_version} (Modo developer, NodeJS `"${l_nodejs_version}`") ..."
                     $l_is_coc_installed= $true
+                }
+                else {
+                    Write-Host "Se actualizará los paquetes/plugins de VIM ${l_version} (Modo developer, NodeJS no intalado) ..."
                 }
             }
             else {
                 Write-Host "Se actualizará los paquetes/plugins de VIM ${l_version} ..."
             }
+            Write-Host ""
 
             #Actualizar los plugins
             m_update_vim_repository $false $l_is_coc_installed
@@ -417,37 +423,43 @@ function m_main_update($p_input_options) {
         $l_status=$?
         if ($l_status) {
             $l_version= $l_version[0]
-            $l_version= $l_version -creplace "$g_regexp_sust_version1", "$1"
+            #Write-Host "NeoVIM Version: ${l_version}"
+            $l_version= $l_version -creplace "$g_regexp_sust_version1", '$1'
         }
         else {
             $l_version=""
         }
 
+        #Write-Host "NeoVIM Version: ${l_version}"
+
         #Solo actualizar si esta instalado
         if ($l_version) {
 
-            #Mostrar el titulo
-            $l_title= "Actualizar los paquetes de NeoVIM (${l_version})"
+            Write-Host ""
+            Write-Host ""
 
-            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
-            Write-Host "$l_title"
-            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
+            #Mostrar el titulo
+            $l_title= ">> Actualizar los paquetes de NeoVIM (${l_version})"
+            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
+            Write-Host "$l_title" -ForegroundColor Blue
+            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
 
             #Determinar si esta instalado en modo developer
             $l_is_coc_installed= $false
             $l_status= m_is_developer_vim_profile $true
             if ($l_status -eq 1) {
                 if ($l_nodejs_version) {
-                    Write-Host "Se actualizará los paquetes/plugins de NeoVIM ${l_version} (Modo developer, NodeJS no intalado) ..."
-                }
-                else {
                     Write-Host "Se actualizará los paquetes/plugins de NeoVIM ${l_version} (Modo developer, NodeJS `"${l_nodejs_version}`") ..."
                     $l_is_coc_installed= $true
+                }
+                else {
+                    Write-Host "Se actualizará los paquetes/plugins de NeoVIM ${l_version} (Modo developer, NodeJS no intalado) ..."
                 }
             }
             else {
                 Write-Host "Se actualizará los paquetes/plugins de NeoVIM ${l_version} ..."
             }
+            Write-Host ""
 
             #Actualizar los plugins
             m_update_vim_repository $true $l_is_coc_installed
@@ -513,7 +525,7 @@ function m_show_menu_core()
 	Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
 	Write-Host " (q) Salir del menu";
 	Write-Host " (a) Actualizar los plugins VIM/NeoVIM";
-	Write-Host " (b) Reparar FZF";	
+	#Write-Host " (b) Reparar FZF";	
 	Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
 }
 
@@ -538,12 +550,12 @@ function show_menu()
 					m_setup 1
 				}
 				
-				'b' {
-					$l_continue= $false
-					Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
-					Write-Host ""
-					m_setup 2
-				}
+				#'b' {
+				#	$l_continue= $false
+				#	Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+				#	Write-Host ""
+				#	m_setup 2
+				#}
 				
 				'q' {
 					$l_continue= $false

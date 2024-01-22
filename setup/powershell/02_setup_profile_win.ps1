@@ -475,14 +475,14 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer)
     Write-Host "Recomendaciones:"
     if (!$p_is_neovim) {
 
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 vim`""
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:USE_EDITOR}=1`" y luego `"vim`""
         Write-Host "    > Se recomienda que configure su IDE CoC segun su necesidad:"
 	}
     else {
 
         Write-Host "  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM."
-        Write-Host "    > Si desea usar CoC, use: `"USE_COC=1 nvim`""
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 nvim`""
+        Write-Host "    > Si desea usar CoC, use: `"`${env:USE_COC}=1`" y luego `"nvim`""
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:USE_EDITOR}=1`" y luego `"nvim`""
 
         Write-Host "  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:"
 
@@ -508,11 +508,27 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
     #1. Argumentos    
     
 
-    #Sobrescribir los enlaces simbolicos
+    #2. Crear el subtitulo
+    $l_title= ">> Configurando NeoVIM ("
+    if($p_flag_developer) {
+        $l_title= "${l_title} Modo developer"
+    }
+    else {
+        $l_title= "${l_title} Modo editor"
+    }
+
+    if($p_overwrite_ln_flag) {
+        $l_title= "${l_title}, Sobrescribiendo los enlaces simbolicos)"
+    }
+    else {
+        $l_title= "${l_title}, Solo crando enlaces simbolicos si no existen)"
+    }
     
-    Write-Host ""
-	Write-Host ([string]::new('.', $g_max_length_line)) -ForegroundColor DarkGray
-    
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
+    Write-Host "$l_title" -ForegroundColor Blue
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
+
+    #Creando el directorio hijos si no existen	
 	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:LOCALAPPDATA}\nvim"	
     
     #2. Creando los enalces simbolicos
@@ -595,11 +611,26 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
     
 
     #2. Crear el subtitulo
+    $l_title= ">> Configurando VIM ("
+    if($p_flag_developer) {
+        $l_title= "${l_title} Modo developer"
+    }
+    else {
+        $l_title= "${l_title} Modo editor"
+    }
 
+    if($p_overwrite_ln_flag) {
+        $l_title= "${l_title}, Sobrescribiendo los enlaces simbolicos)"
+    }
+    else {
+        $l_title= "${l_title}, Solo crando enlaces simbolicos si no existen)"
+    }
     
-    Write-Host ""
-	Write-Host ([string]::new('.', $g_max_length_line)) -ForegroundColor DarkGray
-	
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
+    Write-Host "$l_title" -ForegroundColor Blue
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
+
+    #Creando el directorio hijos si no existen	
 	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\vimfiles"	
 
     #3. Crear los enlaces simbolicos de VIM
@@ -662,16 +693,16 @@ function m_setup_profile($l_overwrite_ln_flag) {
     
 
     #2. Mostrar el titulo 
-    Write-Host ([string]::new('.', $g_max_length_line)) -ForegroundColor DarkGray
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
 	$l_title=""
     if ($l_overwrite_ln_flag) {
-        $l_title= "Creando los senlaces simbolicos del perfil (sobrescribir lo existente)"
+        $l_title= ">> Creando los senlaces simbolicos del perfil (sobrescribir lo existente)"
 	}
     else {
-        $l_title= "Creando los enlaces simbolicos del perfil (solo crar si no existe)"
+        $l_title= ">> Creando los enlaces simbolicos del perfil (solo crar si no existe)"
     }
-	Write-Host "$l_title" -ForegroundColor DarkGray
-    Write-Host ([string]::new('.', $g_max_length_line)) -ForegroundColor DarkGray
+	Write-Host "$l_title" -ForegroundColor Blue
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
 
     
 
@@ -781,9 +812,11 @@ function m_setup($p_input_options)
 	
 	#Instalar VIM como Developer
 	m_config_vim $true $l_overwrite_ln_flag	
+	Write-Host ""
 	
 	#Instalar NeoVIM como Developer
 	m_config_nvim $true $l_overwrite_ln_flag
+	Write-Host ""
 	
 	#Configurar el profile
 	m_setup_profile $l_overwrite_ln_flag	
