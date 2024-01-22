@@ -1834,7 +1834,7 @@ function _setup_profile() {
 
     #Archivos de configuración de PowerShell
     l_target_link="${HOME}/.config/powershell/Microsoft.PowerShell_profile.ps1"
-    l_source_path="${HOME}/.files/terminal/powershell"
+    l_source_path="${HOME}/.files/terminal/powershell/profile"
     if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
             if [ "$g_os_architecture_type" = "aarch64" ]; then

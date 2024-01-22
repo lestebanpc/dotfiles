@@ -342,7 +342,7 @@ function _update_vim_package() {
 
     fi
 
-    #5. Actauliar los modulos de los  paquetes/plugin de VIM/NeoVIM que lo requieren.
+    #5. Actualizar los modulos de los  paquetes/plugin de VIM/NeoVIM que lo requieren.
     if [ $p_is_coc_installed -ne 0 ]; then
         printf 'Se ha actualizado los plugin/paquetes de %b%s%b.\n' "$g_color_cian1" "$l_tag" "$g_color_reset"
         return 0
