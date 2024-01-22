@@ -1,3 +1,84 @@
+$g_max_length_line= 130
+
+$g_is_nodejs_installed= $true
+
+#La version 'x.y.z' esta la inicio o despues de caracteres no numericos
+$g_regexp_sust_version1='[^0-9]*([0-9]+.[0-9.]+).*'
+#La version 'x.y.z' o 'x-y-z' esta la inicio o despues de caracteres no numericos
+$g_regexp_sust_version2='[^0-9]*([0-9]+.[0-9.-]+).*'
+#La version '.y.z' esta la inicio o despues de caracteres no numericos
+$g_regexp_sust_version3='[^0-9]*([0-9.]+).*'
+#La version 'xyz' (solo un entero sin puntos)  esta la inicio o despues de caracteres no numericos
+$g_regexp_sust_version4='[^0-9]*([0-9]+).*'
+#La version 'x.y.z' esta despues de un caracter vacio
+$g_regexp_sust_version5='.*\s+([0-9]+.[0-9.]+).*'
+
+#Parametros de salida (SDTOUT): Version de NodeJS instalado
+#Parametros de salida (valores de retorno):
+# 0 > Se obtuvo la version
+# 1 > No se obtuvo la version
+function m_get_nodejs_version() {
+
+    $l_version= node --version 2> $null
+    $l_status=$?
+    if ($l_status) {
+        $l_version= $l_version[0]
+        $l_version= $l_version -creplace "$g_regexp_sust_version1", "$1"
+    }
+    else {
+        $l_version=""
+    }
+
+    return "$l_version"
+}
+
+
+#Parametros de salida (valores de retorno):
+#  0 > Si es esta configurado en modo editor
+#  1 > Si es esta configurado en modo developer
+#  2 > Si NO esta configurado
+function m_is_developer_vim_profile($p_is_neovim) {
+
+    #1. Argumentos
+
+    #2. Ruta base donde se instala el plugins/paquete
+    $l_real_path
+    $l_profile_path="${HOME}/.vimrc"
+    if ($p_is_neovim) {
+        $l_profile_path="${HOME}/.config/nvim/init.vim"
+    }
+
+    #'vimrc_ide_linux_xxxx.vim'
+    #'vimrc_basic_linux.vim'
+    #'init_ide_linux_xxxx.vim'
+    #'init_basic_linux.vim'
+	if(! (Test-Path "$p_target_link")) {
+		return 2
+	}
+	
+	$l_info= Get-Item "$p_target_link" | Select-Object LinkType, LinkTarget
+    if ( $l_info.LinkType -ne "SymbolicLink" ) {
+        return 2
+    }
+
+    $l_real_filename = Split-Path $l_info.LinkTarget -Leaf
+
+    #Si es NeoVIM
+    if ($p_is_neovim) {
+        if ($l_real_filename -match '^init_ide_.*$') {
+            return 1 
+        }
+        return 0
+    }
+
+    #Si es VIM
+    if ($l_real_filename -match '^vimrc_ide_.*$') {
+        return 1 
+    }
+    return 0
+
+}
+
 
 function m_update_repository($p_path, $p_repo_name, $p_flag_nvim) 
 {
@@ -140,7 +221,7 @@ function m_update_vim_repository($p_flag_nvim, $p_is_coc_installed)
 		}
 		Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
 		
-		$l_j
+		$l_j= 0
 		for ($i=0; $i -lt $l_n; $i++) {
 			$l_repo_path= $la_doc_paths[$i]
 			$l_repo_name= $la_doc_repos[$i]
@@ -160,15 +241,222 @@ function m_update_vim_repository($p_flag_nvim, $p_is_coc_installed)
 	}
 	
 
-    #Si se actualizo de paquete de fzf seguir los siguientes pasos en Vim y NeoVim
-    #en fzf descargar el repositorio temporalmente y traer los archivos, comprararlo y actualizar ~/files/vim/plugin/fzf
-    
+    #6. Inicializar los paquetes/plugin de VIM/NeoVIM que lo requieren.
+    if (!$p_is_coc_installed) {
+        Write-Host "Se ha instalando los plugin/paquetes de ${l_tag} como Editor."
+        return 0
+    }
+
+    Write-Host "Se ha instalando los plugin/paquetes de ${l_tag} como Developer."
+    if (!$g_is_nodejs_installed)  {
+
+        Write-Host "Recomendaciones:"
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 vim`""
+        if ($p_is_neovim -eq 0) {
+            Write-Host "    > NeoVIM como developer por defecto usa el adaptador LSP y autocompletado nativo. No esta habilitado el uso de CoC"
+        }
+		else {
+            Write-Host "    > VIM esta como developer pero NO puede usar CoC  (requiere que NodeJS este instalando)"
+        }
+        return 0
+
+	}
+        
+    Write-Host "Los plugins del IDE CoC de ${l_tag} tiene componentes que requieren inicialización para su uso. Inicializando dichas componentes del plugins..."	
+
+    #Instalando los parseadores de lenguaje de 'nvim-treesitter'
+    if ($p_is_neovim) {
+
+        #Requiere un compilador C/C++ y NodeJS: https://tree-sitter.github.io/tree-sitter/creating-parsers#installation
+		#TODO Obtener la version del compilador C/C++
+        $l_version="xxxx"
+        if(! $l_version ) {
+            Write-Host "  Instalando `"language parsers`" de TreeSitter `":TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash`""
+            nvim --headless -c  "TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash" -c "qa"
+
+            Write-Host "  Instalando `"language parsers`" de TreeSitter `":TSInstall java kotlin llvm lua rust swift c cpp go c_sharp`""
+            nvim --headless -c "TSInstall java kotlin llvm lua rust swift c cpp go c_sharp" -c "qa"
+        }
+	}
+
+    #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
+    Write-Host "  Instalando extensiones de CoC (Adaptador de LSP server basicos) `":CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh`""
+    if ($p_is_neovim) {       
+		${env:USE_COC}=1
+		nvim --headless -c "CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh" -c "qa"
+	}
+    else {
+        vim -esc "CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh" -c "qa"
+    }
+
+    #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
+    Write-Host "  Instalando extensiones de CoC (Motor de snippets `"UtilSnips`") `":CocInstall coc-ultisnips`" (no se esta usando el nativo de CoC)"
+    if ($p_is_neovim) {        
+		nvim --headless -c "CocInstall coc-ultisnips" -c "qa"
+	}
+    else {
+        vim -esc "CocInstall coc-ultisnips" -c "qa"
+    }
+
+    #Actualizar las extensiones de CoC
+    Write-Host "  Actualizando los extensiones existentes de CoC, ejecutando el comando `":CocUpdate`""
+    if ($p_is_neovim) {
+        nvim --headless -c "CocUpdate" -c "qa"
+		${env:USE_COC}=0
+	}
+    else {        
+		vim -esc "CocUpdate" -c "qa"
+    }
+
+    #Actualizando los gadgets de 'VimSpector'
+    if (!$p_is_neovim) {
+        Write-Host "  Actualizando los gadgets de `"VimSpector`", ejecutando el comando `":VimspectorUpdate`""
+        vim -esc "VimspectorUpdate" -c "qa"
+    }
+	
+	Write-Host ""
+    Write-Host "Recomendaciones:"
+    if (!$p_is_neovim) {
+
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 vim`""
+        Write-Host "    > Se recomienda que configure su IDE CoC segun su necesidad:"
+	}
+    else {
+
+        Write-Host "  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM."
+        Write-Host "    > Si desea usar CoC, use: `"USE_COC=1 nvim`""
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 nvim`""
+
+        Write-Host "  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:"
+
+    }
+
+    Write-Host "        1> Instalar extensiones de COC segun su necesidad (Listar existentes `":CocList extensions`")"
+    Write-Host "        2> Revisar la Configuracion de COC `":CocConfig`":"
+    Write-Host "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+    Write-Host "               { `"diagnostic.displayByAle`": true }"
+    Write-Host "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+    Write-Host "               Si esta instalando esta extension, desintalarlo."
+
+
+    return 0
+
     #~\vimfiles\pack\ui\opt\fzf.vim
     #Restaurar el archivo 
     #comprar con lo que se tiene en y actualizar el repo 
 
 }
 
+function m_main_update($p_input_options) {
+
+
+    #Obtener la version de NodeJS
+    $l_nodejs_version= m_get_nodejs_version
+
+    #4. Actualizar paquetes VIM instalados
+    $l_version
+    $l_aux=""
+    $l_is_coc_installed=1
+
+    $l_opcion=4
+    $l_flag= $l_opcion
+
+    if ($l_flag -eq $l_opcion) {
+
+        #Obtener la version actual de VIM
+        $l_version= vim --version 2> $null
+        $l_status=$?
+        if ($l_status) {
+            $l_version= $l_version[0]
+            $l_version= $l_version -creplace "$g_regexp_sust_version1", "$1"
+        }
+        else {
+            $l_version=""
+        }
+
+        #Solo actualizar si esta instalado
+        if ($l_version) {
+
+            #Mostrar el titulo
+            $l_title= "Actualizar los paquetes de VIM (${l_version})"
+
+            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
+            Write-Host "$l_title"
+            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
+
+            #Determinar si esta instalado en modo developer
+            $l_is_coc_installed= $false
+            $l_status= m_is_developer_vim_profile $false
+            if ($l_status -eq 1) {
+                if ($l_nodejs_version) {
+                    Write-Host "Se actualizará los paquetes/plugins de VIM ${l_version} (Modo developer, NodeJS no intalado) ..."
+                }
+                else {
+                    Write-Host "Se actualizará los paquetes/plugins de VIM ${l_version} (Modo developer, NodeJS `"${l_nodejs_version}`") ..."
+                    $l_is_coc_installed= $true
+                }
+            }
+            else {
+                Write-Host "Se actualizará los paquetes/plugins de VIM ${l_version} ..."
+            }
+
+            #Actualizar los plugins
+            m_update_vim_repository $false $l_is_coc_installed
+       }
+
+    }
+
+    #5. Actualizar paquetes NeoVIM instalados
+    $l_opcion=8
+    $l_flag= $l_opcion
+
+    if ($l_flag -eq $l_opcion) {
+
+        #Obtener la version actual de VIM
+        $l_version= nvim --version 2> $null
+        $l_status=$?
+        if ($l_status) {
+            $l_version= $l_version[0]
+            $l_version= $l_version -creplace "$g_regexp_sust_version1", "$1"
+        }
+        else {
+            $l_version=""
+        }
+
+        #Solo actualizar si esta instalado
+        if ($l_version) {
+
+            #Mostrar el titulo
+            $l_title= "Actualizar los paquetes de NeoVIM (${l_version})"
+
+            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
+            Write-Host "$l_title"
+            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
+
+            #Determinar si esta instalado en modo developer
+            $l_is_coc_installed= $false
+            $l_status= m_is_developer_vim_profile $true
+            if ($l_status -eq 1) {
+                if ($l_nodejs_version) {
+                    Write-Host "Se actualizará los paquetes/plugins de NeoVIM ${l_version} (Modo developer, NodeJS no intalado) ..."
+                }
+                else {
+                    Write-Host "Se actualizará los paquetes/plugins de NeoVIM ${l_version} (Modo developer, NodeJS `"${l_nodejs_version}`") ..."
+                    $l_is_coc_installed= $true
+                }
+            }
+            else {
+                Write-Host "Se actualizará los paquetes/plugins de NeoVIM ${l_version} ..."
+            }
+
+            #Actualizar los plugins
+            m_update_vim_repository $true $l_is_coc_installed
+       }
+
+    }
+
+
+}
 
 function m_fix_fzf() 
 {
@@ -214,18 +502,7 @@ function m_fix_fzf()
 
 function m_setup($p_input_options)
 {
-	if ($p_input_options -eq 1)
-	{
-		#Actualizar plugins de VIM		
-		m_update_vim_repository $false $true
-		
-		#Actualizar plugins de NeoVIM		
-		m_update_vim_repository $true $true
-		return
-	}
-	
-	#m_fix_fzf
-	#return 0
+    $l_status= m_main_update $p_input_options
 }
 
 
