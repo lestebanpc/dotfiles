@@ -7,7 +7,7 @@ local dap_server_path = ""
 
 if (vim.g.os_type == 0) then
     --Si es Windows
-    dap_server_path = vim.g.home_path_dap_server_win .. '/NetCoreDbg/netcoredbg.exe'
+    dap_server_path = vim.g.home_path_dap_server .. '/NetCoreDbg/netcoredbg.exe'
 else
     --Otros casos
     dap_server_path = vim.g.home_path_dap_server .. '/netcoredbg/netcoredbg'
