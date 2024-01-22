@@ -145,7 +145,7 @@ function m_update_vim_repository($p_flag_nvim, $p_is_coc_installed)
 			$l_repo_path= $la_doc_paths[$i]
 			$l_repo_name= $la_doc_repos[$i]
 			$l_j= $i + 1
-			Write-Host "(${l_j}/(l_n)) Indexando la documentación del plugin `"${l_repo_name}`" en `"${l_tag}`": `"helptags ${l_repo_path}`"\n"
+			Write-Host "(${l_j}/${l_n}) Indexando la documentación del plugin `"${l_repo_name}`" en `"${l_tag}`": `"helptags ${l_repo_path}`"\n"
 			if(${p_flag_nvim})
 			{
                 nvim --headless -c "helptags ${l_repo_path}" -c qa

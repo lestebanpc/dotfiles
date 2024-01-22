@@ -1,3 +1,5 @@
+$g_max_length_line= 130
+
 # Repositorios GIT donde estan los plugins VIM
 # Valores:
 #   (1) Perfil Basic - Tema
@@ -96,43 +98,146 @@ $gd_repos_depth= @{
         'junegunn/fzf'= 1
 	}
 
+$g_is_nodejs_installed= $true
 
 
-function m_setup_vim_packeges($p_is_neovim, $p_flag_developer)
+function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, $p_tag, $p_override_target_link) {
+
+    
+    $l_target_base = Split-Path -Parent $p_target_link
+	$l_tmp= $null
+	if(! (Test-Path "${l_target_base}")) {
+		$l_tmp= New-Item -ItemType Directory -Force -Path "${l_target_base}"
+    }
+	
+	#if(! (Test-Path "${p_source_path}")) {
+    #    mkdir "$p_source_path"
+    #}
+
+    $l_source_fullfilename="${p_source_path}\${p_source_filename}"
+	if(! (Test-Path "$p_target_link")) {
+		cmd /c mklink "$p_target_link" "$l_source_fullfilename"
+        Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha creado " -NoNewline
+		Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
+		return
+	}
+	
+	$l_info= Get-Item "$p_target_link" | Select-Object LinkType, LinkTarget
+	
+    if ( $l_info.LinkType -eq "SymbolicLink" ) {
+		if(! (Test-Path $l_info.LinkTarget)) {
+			rm "$p_target_link"
+			cmd /c mklink "$p_target_link" "$l_source_fullfilename"
+			Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha re-creado debido a que el destino no existe " -NoNewline
+			Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
+		}
+        else {
+			if($p_override_target_link) {
+				rm "$p_target_link"
+				cmd /c mklink "$p_target_link" "$l_source_fullfilename"
+				Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha re-creado " -NoNewline
+				Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
+			}
+			else {				
+				Write-Host "${p_tag}El enlace simbolico '${p_target_link}' ya existe " -NoNewline
+				Write-Host "(ruta real '$($l_info.LinkTarget)')" -ForegroundColor DarkGray				
+			}
+		}
+	}
+    else {
+        rm "$p_target_link"
+		cmd /c mklink "$p_target_link" "$l_source_fullfilename"
+        Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha creado " -NoNewline
+		Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
+    }
+
+}
+
+
+
+function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_override_target_link) {
+
+    
+    $l_target_base = Split-Path -Parent $p_source_path
+	$l_tmp= $null
+    if(! (Test-Path "${l_target_base}")) {    
+        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_target_base}"
+    }
+	
+	if(! (Test-Path "${p_target_link}")) {        
+		cmd /c mklink /d "$p_target_link" "$p_source_path"
+        Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha creado " -NoNewline
+		Write-Host "(ruta real '${p_source_path}')" -ForegroundColor DarkGray
+		return
+    }
+
+    $l_info= Get-Item "$p_target_link" | Select-Object LinkType, LinkTarget
+	
+	if ( $l_info.LinkType -eq "SymbolicLink" ) {
+		if(! (Test-Path $l_info.LinkTarget)) {
+			rmdir "$p_target_link"
+			cmd /c mklink /d "$p_target_link" "$p_source_path"
+			Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha re-creado debido a que el destino no existe " -NoNewline
+			Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
+		}
+        else {
+			if($p_override_target_link) {
+				rmdir "$p_target_link"
+				cmd /c mklink /d "$p_target_link" "$p_source_path"
+				Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha re-creado " -NoNewline
+				Write-Host "(ruta real '${p_source_path}')" -ForegroundColor DarkGray
+			}
+			else {				
+				Write-Host "${p_tag}El enlace simbolico '${p_target_link}' ya existe " -NoNewline
+				Write-Host "(ruta real '$($l_info.LinkTarget)')" -ForegroundColor DarkGray				
+			}
+		}
+	}
+    else {
+        rmdir "$p_target_link"
+		cmd /c mklink /d "$p_target_link" "$p_source_path"
+        Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha creado " -NoNewline
+		Write-Host "(ruta real '${p_source_path}')" -ForegroundColor DarkGray
+    }
+
+}
+
+
+
+function m_setup_vim_packages($p_is_neovim, $p_flag_developer)
 {
 	#1. Argumentos    
 
     #2. Ruta base donde se instala el plugins/paquete
     $l_tag="VIM"
     $l_current_scope=1
-    $l_base_plugins="${env:USERPROFILE}/vimfiles/pack"
+    $l_base_plugins="${env:USERPROFILE}\vimfiles\pack"
     if ($p_is_neovim)
 	{
-        $l_base_plugins="${env:LOCALAPPDATA}/nvim-data/site/pack"
+        $l_base_plugins="${env:LOCALAPPDATA}\nvim-data\site\pack"
         $l_current_scope=2
         $l_tag="NeoVIM"
     }
 
     #2. Crear las carpetas de basicas
-    printf 'Instalando los paquetes usados por %s en %b%s%b...\n' "$l_tag" "$g_color_gray1" "$l_base_plugins" "$g_color_reset"
+    Write-Host "Instalando los paquetes usados por ${l_tag} en `"${l_base_plugins}`"..."
 
-    mkdir -p ${l_base_plugins}
-    mkdir -p ${l_base_plugins}/themes/start
-    mkdir -p ${l_base_plugins}/themes/opt
-    mkdir -p ${l_base_plugins}/ui/start
-    mkdir -p ${l_base_plugins}/ui/opt
+    $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}"
+    $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\themes\start"
+    $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\themes\opt"
+    $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\ui\start"
+    $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\ui\opt"
     if ($p_flag_developer)
 	{
-        mkdir -p ${l_base_plugins}/typing/start
-        mkdir -p ${l_base_plugins}/typing/opt
-        mkdir -p ${l_base_plugins}/ide/start
-        mkdir -p ${l_base_plugins}/ide/opt
+        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\typing\start"
+        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\typing\opt"
+        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\ide\start"
+        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\ide\opt"
     }
    
     
     #4. Instalar el plugins que se instalan manualmente
     $l_base_path= ""
-    $l_repo_git= ""
     $l_repo_name= ""
     $l_repo_type=1
     $l_repo_url= ""
@@ -147,103 +252,116 @@ function m_setup_vim_packeges($p_is_neovim, $p_flag_developer)
 	$l_repo_path= ""
 	$l_repo_name= ""
 
-    for l_repo_git in "${!gA_repos_type[@]}" {
+    foreach ($l_repo_git in $gd_repos_type.keys) {
 
         #4.1 Configurar el repositorio
-        l_repo_scope="${gA_repos_scope[${l_repo_git}]:-3}"
-        l_repo_type=${gA_repos_type[$l_repo_git]}
-        l_repo_name=${l_repo_git#*/}
+        $l_repo_type= $gd_repos_type.Item("${l_repo_git}")
+		$l_repo_scope= $gd_repos_scope.Item("${l_repo_git}")
+		if(!$l_repo_scope) {
+			$l_repo_scope= 3
+		}
+		
+		$l_repo_name = Split-Path "$l_repo_git" -Leaf
+		
+		#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}'"
 
         #Si el repositorio no esta habilitido para su scope, continuar con el siguiente
-        if [ $((l_repo_scope & l_current_scope)) -ne $l_current_scope ]; then
+        if( $($l_repo_scope -band $l_current_scope) -ne $l_current_scope ) {
+			#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}'"
             continue
-        fi
+        }
 
         #4.2 Obtener la ruta base donde se clonara el paquete (todos los paquetes son opcionale, se inicia bajo configuraci├│n)
-        l_base_path=""
-        case "$l_repo_type" in 
-            1)
-                l_base_path=${l_base_plugins}/themes/opt
-                ;;
-            2)
-                l_base_path=${l_base_plugins}/ui/opt
-                ;;
-            3)
-                l_base_path=${l_base_plugins}/typing/opt
-                ;;
-            4)
-                l_base_path=${l_base_plugins}/ide/opt
-                ;;
-            *)
-                
-                #print_line '- ' $((g_max_length_line/2)) "$g_color_gray1" 
-                printf 'Paquete %s (%s) "%s": No tiene tipo valido\n' "$l_tag" "${l_repo_type}" "${l_repo_git}"
+        $l_base_path=""
+        switch ($l_repo_type) {
+            1 {
+                $l_base_path="${l_base_plugins}\themes\opt"
+            }
+            2 {
+                $l_base_path="${l_base_plugins}\ui\opt"
+            }
+            3 {
+                $l_base_path="${l_base_plugins}\typing\opt"
+            }
+            4 {
+                $l_base_path="${l_base_plugins}\ide\opt"
+            }
+            default {
+                                
+                Write-Host "Paquete ${l_tag} (${l_repo_type}) `"${l_repo_git}`": No tiene tipo valido."
                 continue
-                ;;
-        esac
+            }
+        }
 
         #Si es un repositorio para developer no debe instalarse en el perfil basico
-        if [ $p_flag_developer -eq 1 ] && [ $l_repo_type -eq 3 -o $l_repo_type -eq 4 ]; then
-            continue
-        fi
-
-        #echo "${l_base_path}/${l_repo_name}/.git"
-
+        if (!$p_flag_developer) {
+			if( $l_repo_type -eq 3 || $l_repo_type -eq 4 ) {
+				#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
+				continue
+			}
+        }	
+		
+		#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
+		
         #4.3 Validar si el paquete ya esta instalando
-        if [ -d ${l_base_path}/${l_repo_name}/.git ]; then
-             #print_line '- ' $((g_max_length_line/2)) "$g_color_gray1" 
-             printf 'Paquete %s (%s) "%b%s%b": Ya esta instalando\n' "$l_tag" "${l_repo_type}" "$g_color_gray1" "${l_repo_git}" "$g_color_reset"
+		if(Test-Path "${l_base_path}\${l_repo_name}\.git") {
+             Write-Host "Paquete ${l_tag} (${l_repo_type}) `"${l_repo_git}`": Ya esta instalando"
              continue
-        fi
+        }
 
         #4.5 Instalando el paquete
-        cd ${l_base_path}
-        printf '\n'
-        print_line '- ' $((g_max_length_line/2)) "$g_color_gray1" 
-        if [ $p_is_neovim -eq 0  ]; then
-            printf 'NeoVIM> Plugin (%b%s%b) "%b%s%b": Se esta instalando\n' "$g_color_cian1" "${l_repo_type}" "$g_color_reset" "$g_color_cian1" "${l_repo_git}" "$g_color_reset"
-        else
-            printf 'VIM   > Plugin (%b%s%b) "%b%s%b": Se esta instalando\n' "$g_color_cian1" "${l_repo_type}" "$g_color_reset" "$g_color_cian1" "${l_repo_git}" "$g_color_reset"
-        fi
-        print_line '- ' $((g_max_length_line/2)) "$g_color_gray1" 
+        cd "${l_base_path}"
+        Write-Host ""
+        Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+        if ($p_is_neovim) {
+            Write-Host "NeoVIM> Plugin (${l_repo_type}) `"${l_repo_git}`": Se esta instalando"
+        }
+		else {
+			Write-Host "   VIM> Plugin (${l_repo_type}) `"${l_repo_git}`": Se esta instalando"            
+        }
+        Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
 
-        l_aux=""
+        $l_aux=""
+        $l_repo_branch= $gd_repos_branch.Item("${l_repo_git}")
+		if (${l_repo_branch}) {
+		    $l_aux= "--branch ${l_repo_branch}"
+        }
 
-        l_repo_branch=${gA_repos_branch[$l_repo_git]}
-        if [ ! -z "$l_repo_branch" ]; then
-            l_aux="--branch ${l_repo_branch}"
-        fi
+        $l_repo_depth= $gd_repos_depth.Item("${l_repo_git}")
+        if (${l_repo_depth}) {
+            if (!${l_aux}) {
+                $l_aux="--depth ${l_repo_depth}"
+            }
+			else {
+                $l_aux="${l_aux} --depth ${l_repo_depth}"
+            }
+        }
+		
+		#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Repo-Branch: '${l_repo_branch}', Repo-Depth: '${l_repo_depth}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"		
 
-        l_repo_depth=${gA_repos_depth[$l_repo_git]}
-        if [ ! -z "$l_repo_depth" ]; then
-            if [ -z "$l_aux" ]; then
-                l_aux="--depth ${l_repo_depth}"
-            else
-                l_aux="${l_aux} --depth ${l_repo_depth}"
-            fi
-        fi
-
-        if [ -z "$l_aux" ]; then
-            printf 'Ejecutando "git clone https://github.com/%s.git"\n' "$l_repo_git"
+        if (${l_aux}) {
+            Write-Host "Ejecutando `"git clone ${l_aux} https://github.com/${l_repo_git}.git`""
+            Invoke-Expression "git clone ${l_aux} https://github.com/${l_repo_git}.git"
+        }
+		else {            
+			Write-Host "Ejecutando `"git clone https://github.com/${l_repo_git}.git`""
             git clone https://github.com/${l_repo_git}.git
-        else
-            printf 'Ejecutando "git clone %s https://github.com/%s.git"\n' "$l_aux" "$l_repo_git"
-            git clone ${l_aux} https://github.com/${l_repo_git}.git
-        fi
+		}
 
         #Almacenando las ruta de documentacion a indexar
-		if(Test-Path "${l_base_path}/${l_repo_name}/doc") {
+		if(Test-Path "${l_base_path}\${l_repo_name}\doc") {
         
-            #Indexar la documentaci├│n de plugins
-            la_doc_paths.Add("${l_base_path}/${l_repo_name}/doc")
-            la_doc_repos.Add("${l_repo_name}")
+            #Indexar la documentacion de plugins
+            $la_doc_paths.Add("${l_base_path}\${l_repo_name}\doc")
+            $la_doc_repos.Add("${l_repo_name}")
 
         }
 
         Write-Host ""
 
 	}
-
+	
+	
     #4. Actualizar la documentación de VIM (Los plugins VIM que no tiene documentación, no requieren indexar)
 	$l_n= $la_doc_paths.Count
 	if( $l_n -gt 0 )
@@ -260,18 +378,18 @@ function m_setup_vim_packeges($p_is_neovim, $p_flag_developer)
 		}
 		Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
 		
-		$l_j
+		$l_j= 0
 		for ($i=0; $i -lt $l_n; $i++) {
+			
 			$l_repo_path= $la_doc_paths[$i]
 			$l_repo_name= $la_doc_repos[$i]
 			$l_j= $i + 1
-			Write-Host "(${l_j}/(l_n)) Indexando la documentación del plugin `"${l_repo_name}`" en `"${l_tag}`": `"helptags ${l_repo_path}`"\n"
-			if(${p_flag_nvim})
-			{
+			
+			Write-Host "(${l_j}/${l_n}) Indexando la documentación del plugin `"${l_repo_name}`" en `"${l_tag}`": `"helptags ${l_repo_path}`"\n"
+			if(${p_flag_nvim}) {
                 nvim --headless -c "helptags ${l_repo_path}" -c qa
 			}
-			else
-			{
+			else {
                 vim -u NONE -esc "helptags ${l_repo_path}" -c qa
 			}
 
@@ -281,98 +399,101 @@ function m_setup_vim_packeges($p_is_neovim, $p_flag_developer)
 	
 
     #6. Inicializar los paquetes/plugin de VIM/NeoVIM que lo requieren.
-    if [ $p_flag_developer -ne 0 ]; then
-        printf 'Se ha instalando los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_cian1" "$l_tag" "$g_color_reset" "$g_color_cian1" "Editor" "$g_color_reset"
+    if (!$p_flag_developer) {
+        Write-Host "Se ha instalando los plugin/paquetes de ${l_tag} como Editor."
         return 0
-    fi
+    }
 
-    printf 'Se ha instalando los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_cian1" "$l_tag" "$g_color_reset" "$g_color_cian1" "Developer" "$g_color_reset"
-    if [ $g_is_nodejs_installed -ne 0  ]; then
+    Write-Host "Se ha instalando los plugin/paquetes de ${l_tag} como Developer."
+    if (!$g_is_nodejs_installed)  {
 
-        printf 'Recomendaciones:\n'
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_cian1" "$g_color_reset"
-        if [ $p_is_neovim -eq 0  ]; then
-            printf '    > NeoVIM como developer por defecto usa el adaptador LSP y autocompletado nativo. %bNo esta habilitado el uso de CoC%b\n' "$g_color_gray1" "$g_color_reset" 
-        else
-            printf '    > VIM esta como developer pero NO puede usar CoC  %b(requiere que NodeJS este instalando)%b\n' "$g_color_gray1" "$g_color_reset" 
-        fi
+        Write-Host "Recomendaciones:"
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 vim`""
+        if ($p_is_neovim -eq 0) {
+            Write-Host "    > NeoVIM como developer por defecto usa el adaptador LSP y autocompletado nativo. No esta habilitado el uso de CoC"
+        }
+		else {
+            Write-Host "    > VIM esta como developer pero NO puede usar CoC  (requiere que NodeJS este instalando)"
+        }
         return 0
 
-    fi
+	}
         
-    printf 'Los plugins del IDE CoC de %s tiene componentes que requieren inicializaci├│n para su uso. Inicilizando dichas componentes del plugins...\n' "$l_tag"
+    Write-Host "Los plugins del IDE CoC de ${l_tag} tiene componentes que requieren inicialización para su uso. Inicializando dichas componentes del plugins..."	
 
     #Instalando los parseadores de lenguaje de 'nvim-treesitter'
-    if [ $p_is_neovim -eq 0  ]; then
+    if ($p_is_neovim) {
 
         #Requiere un compilador C/C++ y NodeJS: https://tree-sitter.github.io/tree-sitter/creating-parsers#installation
-        local l_version=$(_get_gcc_version)
-        if [ ! -z "$l_version" ]; then
-            printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash%b"\n' \
-                   "$g_color_gray1" "$g_color_reset"
-            nvim --headless -c 'TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash' -c 'qa'
+		#TODO Obtener la version del compilador C/C++
+        $l_version="xxxx"
+        if(! $l_version ) {
+            Write-Host "  Instalando `"language parsers`" de TreeSitter `":TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash`""
+            nvim --headless -c  "TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash" -c "qa"
 
-            printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall java kotlin llvm lua rust swift c cpp go c_sharp%b"\n' \
-                   "$g_color_gray1" "$g_color_reset"
-            nvim --headless -c 'TSInstall java kotlin llvm lua rust swift c cpp go c_sharp' -c 'qa'
-        fi
-    fi
+            Write-Host "  Instalando `"language parsers`" de TreeSitter `":TSInstall java kotlin llvm lua rust swift c cpp go c_sharp`""
+            nvim --headless -c "TSInstall java kotlin llvm lua rust swift c cpp go c_sharp" -c "qa"
+        }
+	}
 
     #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
-    printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) "%b:CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh%b"\n' \
-           "$g_color_gray1" "$g_color_reset"
-    if [ $p_is_neovim -ne 0  ]; then
-        vim -esc 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
-    else
-        USE_COC=1 nvim --headless -c 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
-    fi
+    Write-Host "  Instalando extensiones de CoC (Adaptador de LSP server basicos) `":CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh`""
+    if ($p_is_neovim) {       
+		${env:USE_COC}=1
+		nvim --headless -c "CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh" -c "qa"
+	}
+    else {
+        vim -esc "CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh" -c "qa"
+    }
 
     #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
-    printf '  Instalando extensiones de CoC (Motor de snippets "UtilSnips") "%b:CocInstall coc-ultisnips%b" (%bno se esta usando el nativo de CoC%b)\n' \
-           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    if [ $p_is_neovim -ne 0  ]; then
-        vim -esc 'CocInstall coc-ultisnips' -c 'qa'
-    else
-        USE_COC=1 nvim --headless -c 'CocInstall coc-ultisnips' -c 'qa'
-    fi
+    Write-Host "  Instalando extensiones de CoC (Motor de snippets `"UtilSnips`") `":CocInstall coc-ultisnips`" (no se esta usando el nativo de CoC)"
+    if ($p_is_neovim) {        
+		nvim --headless -c "CocInstall coc-ultisnips" -c "qa"
+	}
+    else {
+        vim -esc "CocInstall coc-ultisnips" -c "qa"
+    }
 
     #Actualizar las extensiones de CoC
-    printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_gray1" "$g_color_reset"
-    if [ $p_is_neovim -ne 0  ]; then
-        vim -esc 'CocUpdate' -c 'qa'
-    else
-        USE_COC=1 nvim --headless -c 'CocUpdate' -c 'qa'
-    fi
+    Write-Host "  Actualizando los extensiones existentes de CoC, ejecutando el comando `":CocUpdate`""
+    if ($p_is_neovim) {
+        nvim --headless -c "CocUpdate" -c "qa"
+		${env:USE_COC}=0
+	}
+    else {        
+		vim -esc "CocUpdate" -c "qa"
+    }
 
     #Actualizando los gadgets de 'VimSpector'
-    if [ $p_is_neovim -ne 0  ]; then
-        printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando "%b:VimspectorUpdate%b"\n' "$g_color_gray1" "$g_color_reset"
-        vim -esc 'VimspectorUpdate' -c 'qa'
-    fi
+    if (!$p_is_neovim) {
+        Write-Host "  Actualizando los gadgets de `"VimSpector`", ejecutando el comando `":VimspectorUpdate`""
+        vim -esc "VimspectorUpdate" -c "qa"
+    }
+	
+	Write-Host ""
+    Write-Host "Recomendaciones:"
+    if (!$p_is_neovim) {
 
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 vim`""
+        Write-Host "    > Se recomienda que configure su IDE CoC segun su necesidad:"
+	}
+    else {
 
-    printf '\nRecomendaciones:\n'
-    if [ $p_is_neovim -ne 0  ]; then
+        Write-Host "  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM."
+        Write-Host "    > Si desea usar CoC, use: `"USE_COC=1 nvim`""
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 nvim`""
 
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_cian1" "$g_color_reset"
-        printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
+        Write-Host "  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:"
 
-    else
+    }
 
-        printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
-        printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_cian1" "$g_color_reset"
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_cian1" "$g_color_reset"
-
-        printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
-
-    fi
-
-    echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
-    echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
-    echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-    echo "               { \"diagnostic.displayByAle\": true }"
-    echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-    echo "               Si esta instalando esta extension, desintalarlo."
+    Write-Host "        1> Instalar extensiones de COC segun su necesidad (Listar existentes `":CocList extensions`")"
+    Write-Host "        2> Revisar la Configuracion de COC `":CocConfig`":"
+    Write-Host "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
+    Write-Host "               { `"diagnostic.displayByAle`": true }"
+    Write-Host "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
+    Write-Host "               Si esta instalando esta extension, desintalarlo."
 
 
     return 0
@@ -388,90 +509,78 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
     
 
     #Sobrescribir los enlaces simbolicos
-    local l_option=4
-    local l_flag=$(( $p_opciones & $l_option ))
-    local l_overwrite_ln_flag=1
-    if [ $l_flag -eq $l_option ]; then l_overwrite_ln_flag=0; fi
-
-    printf '\n'
-    print_line '. ' $((g_max_length_line/2)) "$g_color_gray1" 
-
-    mkdir -p ~/.config/nvim/
+    
+    Write-Host ""
+	Write-Host ([string]::new('.', $g_max_length_line)) -ForegroundColor DarkGray
+    
+	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:LOCALAPPDATA}\nvim"	
     
     #2. Creando los enalces simbolicos
-    local l_target_link
-    local l_source_path
-    local l_source_filename
+    $l_target_link= ""
+    $l_source_path= ""
+    $l_source_filename= ""
 
     #Configurar NeoVIM como IDE (Developer)
-    if [ $p_flag_developer -eq 0 ]; then
+    if ($p_flag_developer) {
 
 
-        l_target_link="${HOME}/.config/nvim/coc-settings.json"
-        l_source_path="${HOME}/.files/nvim/ide_coc"
-        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
-            l_source_filename='coc-settings_lnx_non_shared.json'
-        else
-            l_source_filename='coc-settings_lnx_shared.json'
-        fi
-        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
+        $l_target_link="${env:LOCALAPPDATA}\nvim\init.vim"
+        $l_source_path="${env:USERPROFILE}\.files\nvim"
+        $l_source_filename="init_ide_windows.vim"        
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
+        $l_target_link="${env:LOCALAPPDATA}\nvim\coc-settings.json"
+        $l_source_path="${env:USERPROFILE}\.files\nvim\ide_coc"
+        $l_source_filename="coc-settings_win.json"
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
-        l_target_link="${HOME}/.config/nvim/init.vim"
-        l_source_path="${HOME}/.files/nvim"
-        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
-            l_source_filename='init_ide_linux_non_shared.vim'
-        else
-            l_source_filename='init_ide_linux_shared.vim'
-        fi
-        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
-
-        l_target_link="${HOME}/.config/nvim/lua"
-        l_source_path="${HOME}/.files/nvim/lua"
-        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
+        $l_target_link="${env:LOCALAPPDATA}\nvim\lua"
+        $l_source_path="${env:USERPROFILE}\.files\nvim\lua"
+        m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
         
-        #El codigo open/close asociado a los 'file types'
-        l_target_link="${HOME}/.config/nvim/ftplugin"
-        l_source_path="${HOME}/.files/nvim/ide_commom/ftplugin"
-        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
+        #El codigo open\close asociado a los 'file types'
+        $l_target_link="${env:LOCALAPPDATA}\nvim\ftplugin"
+        $l_source_path="${env:USERPROFILE}\.files\nvim\ide_commom\ftplugin"
+        m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
 
         #Para el codigo open/close asociado a los 'file types' de CoC
-        l_target_link="${HOME}/.config/nvim/runtime_coc/ftplugin"
-        l_source_path="${HOME}/.files/nvim/ide_coc/ftplugin"
-        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
+        $l_target_link="${env:LOCALAPPDATA}\nvim\runtime_coc\ftplugin"
+        $l_source_path="${env:USERPROFILE}\.files\nvim\ide_coc\ftplugin"
+        m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
 
         #Para el codigo open/close asociado a los 'file types' que no sean CoC
-        l_target_link="${HOME}/.config/nvim/runtime_nococ/ftplugin"
-        l_source_path="${HOME}/.files/nvim/ide_nococ/ftplugin"
-        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
-
+        $l_target_link="${env:LOCALAPPDATA}\nvim\runtime_nococ\ftplugin"
+        $l_source_path="${env:USERPROFILE}\.files\nvim\ide_nococ\ftplugin"
+        m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
+		
+	}
     #Configurar NeoVIM como Editor
-    else
+    else {
 
-        l_target_link="${HOME}/.config/nvim/init.vim"
-        l_source_path="${HOME}/.files/nvim"
-        l_source_filename='init_basic_linux.vim'
-        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
+        $l_target_link="${env:LOCALAPPDATA}\nvim\init.vim"
+        $l_source_path="${env:USERPROFILE}\.files\nvim"
+        $l_source_filename="init_ide_windows.vim"
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
         
-        l_target_link="${HOME}/.config/nvim/lua"
-        l_source_path="${HOME}/.files/nvim/lua"
-        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
+        $l_target_link="${env:LOCALAPPDATA}\nvim\lua"
+        $l_source_path="${env:USERPROFILE}\.files\nvim\lua"
+        m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
 
-        #El codigo open/close asociado a los 'file types' como Editor
-        l_target_link="${HOME}/.config/nvim/ftplugin"
-        l_source_path="${HOME}/.files/nvim/editor/ftplugin"
-        _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
+        #El codigo open\close asociado a los 'file types' como Editor
+        $l_target_link="${env:LOCALAPPDATA}\nvim\ftplugin"
+        $l_source_path="${env:USERPROFILE}\.files\nvim\editor\ftplugin"
+        m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
 
-    fi
+    }
 
     #6. Instalando paquetes
-    m_setup_vim_packages 0 $p_flag_developer
+    $l_status= m_setup_vim_packages $true $p_flag_developer
 
 
 }
@@ -487,77 +596,198 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
 
     #2. Crear el subtitulo
 
-    #print_line '-' $g_max_length_line "$g_color_gray1" 
-    #echo "> Configuraci├│n de VIM-Enhanced"
-    #print_line '-' $g_max_length_line "$g_color_gray1" 
-
-    printf '\n'
-    print_line '. ' $((g_max_length_line/2)) "$g_color_gray1"
-    mkdir -p ~/.vim/
+    
+    Write-Host ""
+	Write-Host ([string]::new('.', $g_max_length_line)) -ForegroundColor DarkGray
+	
+	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\vimfiles"	
 
     #3. Crear los enlaces simbolicos de VIM
-    local l_target_link
-    local l_source_path
-    local l_source_filename
+    $l_target_link= ""
+    $l_source_path= ""
+    $l_source_filename= ""
 
 
     #Configurar VIM como IDE (Developer)
-    if [ $p_flag_developer -eq 0 ]; then
+    if ($p_flag_developer) {
 
         #Creando enlaces simbolicos
-        l_target_link="${HOME}/.vim/coc-settings.json"
-        l_source_path="${HOME}/.files/vim/ide_coc"
-        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
-            l_source_filename='coc-settings_lnx_non_shared.json'
-        else
-            l_source_filename='coc-settings_lnx_shared.json'
-        fi
-        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
+        $l_target_link="${env:USERPROFILE}\.vimrc"
+        $l_source_path="${env:USERPROFILE}\.files\vim"
+        $l_source_filename="vimrc_ide_windows.vim"
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
+		
+        $l_target_link="${env:USERPROFILE}\vimfiles\coc-settings.json"
+        $l_source_path="${env:USERPROFILE}\.files\vim\ide_coc"
+        $l_source_filename="coc-settings_win.json"
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 
         
-        l_target_link="${HOME}/.vim/ftplugin"
-        l_source_path="${HOME}/.files/vim/ide_coc/ftplugin"
-        _create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
+        $l_target_link="${env:USERPROFILE}\vimfiles\ftplugin"
+        $l_source_path="${env:USERPROFILE}\.files\vim\ide_coc\ftplugin"
+        m_create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 
 
-        l_target_link="${HOME}/.vimrc"
-        l_source_path="${HOME}/.files/vim"
-        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
-            l_source_filename='vimrc_ide_linux_non_shared.vim'
-        else
-            l_source_filename='vimrc_ide_linux_shared.vim'
-        fi
-        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
-
-
+	}
     #Configurar VIM como Editor basico
-    else
+    else {
 
-        l_target_link="${HOME}/.vimrc"
-        l_source_path="${HOME}/.files/vim"
-        l_source_filename='vimrc_basic_linux.vim'
-        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
-
-
-        l_target_link="${HOME}/.vim/ftplugin"
-        l_source_path="${HOME}/.files/vim/editor/ftplugin"
-        _create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
+        $l_target_link="${env:USERPROFILE}\.vimrc"
+        $l_source_path="${env:USERPROFILE}\.files\vim"
+        $l_source_filename="vimrc_ide_windows.vim"
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 
 
-    fi
+        $l_target_link="${env:USERPROFILE}\vimfiles\ftplugin"
+        $l_source_path="${env:USERPROFILE}\.files\vim\editor\ftplugin"
+        m_create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
+
+
+    }
 
     #Instalar los plugins
-    m_setup_vim_packages 1 $p_flag_developer
+    $l_status= m_setup_vim_packages $false $p_flag_developer
+
+}
+
+
+# Parametros:
+# > Opcion ingresada por el usuario.
+function m_setup_profile($l_overwrite_ln_flag) {
+
+    #1. Argumentos
+    
+    #Esta habilitado la creacion de enlaces simbolicos del perfil?    
+    #Se puede recrear los enlaces simbolicos en caso existir?
+    
+
+    #2. Mostrar el titulo 
+    Write-Host ([string]::new('.', $g_max_length_line)) -ForegroundColor DarkGray
+	$l_title=""
+    if ($l_overwrite_ln_flag) {
+        $l_title= "Creando los senlaces simbolicos del perfil (sobrescribir lo existente)"
+	}
+    else {
+        $l_title= "Creando los enlaces simbolicos del perfil (solo crar si no existe)"
+    }
+	Write-Host "$l_title" -ForegroundColor DarkGray
+    Write-Host ([string]::new('.', $g_max_length_line)) -ForegroundColor DarkGray
+
+    
+
+    #3. Creando enlaces simbolico dependientes del tipo de distribuci├│n Linux
+
+    #Si es Linux WSL
+    $l_target_link= ""
+    $l_source_path= ""
+    $l_source_filename= ""
+
+    #Archivo de colores de la terminal usado por comandos basicos
+    #$l_target_link="${HOME}\.dircolors"
+    #$l_source_path="${HOME}\.files\terminal\linux\profile"
+    #$l_source_filename='ubuntu_wls_dircolors.conf'
+    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+
+    #Archivo de configuracion de Git
+    $l_target_link="${env:USERPROFILE}\.gitconfig"
+    $l_source_path="${env:USERPROFILE}\.files\config\git"
+	$l_source_filename='git_windows_usr1.toml'    
+    m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+
+    #Archivo de configuracion de SSH
+    $l_target_link="${env:USERPROFILE}\.ssh\config"
+    $l_source_path="${env:USERPROFILE}\.files\config\ssh"
+	$l_source_filename='ssh_windows_01.conf'
+    m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+
+    #Archivos de configuracion de PowerShell
+	$document_path= [Environment]::GetFolderPath("mydocuments")
+    $l_target_link="${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
+    $l_source_path="${env:USERPROFILE}\.files\terminal\powershell\profile"
+	$l_source_filename='windows_x64.ps1'
+    m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+	
+	$l_target_link="${document_path}\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
+    $l_source_path="${env:USERPROFILE}\.files\terminal\powershell\profile"
+	$l_source_filename='windows_x64.ps1'
+    m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+    #Creando el profile del interprete shell
+    #$l_target_link="${HOME}\.bashrc"
+    #$l_source_path="${HOME}\.files\terminal\linux\profile"
+	#$l_source_filename='debian_aarch64_local.bash'    
+    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+
+    #4. Creando enlaces simbolico independiente del tipo de distribuci├│n Linux
+
+    #Crear el enlace de TMUX
+    #$l_target_link="${HOME}\.tmux.conf"
+    #$l_source_path="${HOME}\.files\terminal\linux\tmux"
+    #$l_source_filename='tmux.conf'
+    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+    #Configuracion de un CLI de alto nivel del 'Container Runtime' 'ContainerD': nerdctl
+    #$l_target_link="${HOME}\.config\nerdctl\nerdctl.toml"
+    #$l_source_path="${HOME}\.files\config\nerdctl"
+    #$l_source_filename='default_config.toml'
+    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+
+    #Configuracion principal de un 'Container Runtime'\CLI de alto nivel (en modo 'rootless'): Podman
+    #$l_target_link="${HOME}\.config\containers\containers.conf"
+    #$l_source_path="${HOME}\.files\config\podman"
+    #$l_source_filename='default_config.toml'
+    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+    #Configuracion de los registros de imagenes de un 'Container Runtime'\CLI de alto nivel (en modo 'rootless'): Podman
+    #$l_target_link="${HOME}\.config\containers\registries.conf"
+    #$l_source_path="${HOME}\.files\config\podman"
+    #$l_source_filename='default_registries.toml'
+    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+
+    #Configuracion de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
+    #$l_target_link="${HOME}\.config\containerd\config.toml"
+    #$l_source_path="${HOME}\.files\config\containerd"
+    #$l_source_filename='default_config.toml'
+    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+
+    #Configuracion del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
+    #$l_target_link="${HOME}\.config\buildkit\buildkitd.toml"
+    #$l_source_path="${HOME}\.files\config\buildkit"
+    #$l_source_filename='default_config.toml'
+    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+
+    #Configuracion por defecto para un Cluster de Kubernates
+    #$l_target_link="${HOME}\.kube\config"
+    #$l_source_path="${HOME}\.files\config\kubectl"
+    #$l_source_filename='default_config.yaml'
+    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+    
 
 }
 
 
 
-
 function m_setup($p_input_options)
-{
+{	
+	$l_overwrite_ln_flag= $p_input_options
 	
-	return 0
+	#Instalar VIM como Developer
+	m_config_vim $true $l_overwrite_ln_flag	
+	
+	#Instalar NeoVIM como Developer
+	m_config_nvim $true $l_overwrite_ln_flag
+	
+	#Configurar el profile
+	m_setup_profile $l_overwrite_ln_flag	
+	
 }
 
 function m_show_menu_core() 
@@ -566,7 +796,8 @@ function m_show_menu_core()
 	Write-Host "                                                      Menu de Opciones" -ForegroundColor Green
 	Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
 	Write-Host " (q) Salir del menu";
-	Write-Host " (a) Configurar VIM/NeoVIM como IDE y re-crear enlaces simbolicos"
+	Write-Host " (a) Configurar VIM/NeoVIM como IDE y crear enlaces simbolicos si no existen"
+	Write-Host " (b) Configurar VIM/NeoVIM como IDE y re-crear enlaces simbolicos (aun si existe)"
 	Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
 }
 
@@ -588,7 +819,14 @@ function show_menu()
 					$l_continue= $false
 					Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
 					Write-Host ""
-					m_setup 1
+					m_setup $false
+				}
+				
+				'b' {
+					$l_continue= $false
+					Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+					Write-Host ""
+					m_setup $true
 				}
 				
 				
