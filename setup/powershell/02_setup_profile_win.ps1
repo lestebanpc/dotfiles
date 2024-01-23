@@ -753,7 +753,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
     #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 
-    #4. Creando enlaces simbolico independiente del tipo de distribuci├│n Linux
+    #4. Creando enlaces simbolico independiente del tipo de distribución Linux
 
     #Crear el enlace de TMUX
     #$l_target_link="${HOME}\.tmux.conf"
@@ -800,7 +800,21 @@ function m_setup_profile($l_overwrite_ln_flag) {
     #$l_source_path="${HOME}\.files\config\kubectl"
     #$l_source_filename='default_config.yaml'
     #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
-    
+
+    #5. Instalar el modulo PSFzf
+
+    #Buscar si el modulo esta instado
+    Write-Host ""
+    $mod= Get-InstalledModule PSFzf 2> $null
+    if($mod) {
+        Write-Host "El modulo 'PSFzf' $($mod.Version) esta instalado."
+        Write-Host "Intentando actualizar el modulo 'PSFzf' ..."
+        Update-Module -Name PSFzf
+    }
+    else {
+        Write-Host "Instalando el modulo 'PSFzf' ..."
+        Install-Module -Name PSFzf
+    }
 
 }
 
