@@ -222,14 +222,20 @@ function get_repo_latest_version() {
                 l_repo_last_version_pretty="$l_aux2"
             fi
 
-            #printf 'RepoID: "%s", RepoName: "%s", LastVersion: "%s"\n' "$p_repo_id" "$p_repo_name" "$l_repo_last_version_pretty"
-            #Obtener las subversiones: estara formado por la ultima version y 2 versiones inferiores 
-            l_arti_subversion_versions=$(_dotnet_get_subversions "$p_repo_name" "$l_repo_last_version_pretty")
-            #printf 'LastVersion: "%s", Subversiones: "%s"\n' "$l_repo_last_version_pretty" "${l_arti_subversion_versions[@]}"
-
-            #Si solo tiene uns subversion y es la misma que la version, no existe subversiones
-            if [ "$l_repo_last_version_pretty" = "$l_arti_subversion_versions" ]; then
+            if [ ! -z "$g_setup_only_last_dotnet" ] && [ $g_setup_only_last_dotnet -eq 0 ]; then
                 l_arti_subversion_versions=""
+            else
+
+                #printf 'RepoID: "%s", RepoName: "%s", LastVersion: "%s"\n' "$p_repo_id" "$p_repo_name" "$l_repo_last_version_pretty"
+                #Obtener las subversiones: estara formado por la ultima version y 2 versiones inferiores 
+                l_arti_subversion_versions=$(_dotnet_get_subversions "$p_repo_name" "$l_repo_last_version_pretty")
+                #printf 'LastVersion: "%s", Subversiones: "%s"\n' "$l_repo_last_version_pretty" "${l_arti_subversion_versions[@]}"
+
+                #Si solo tiene uns subversion y es la misma que la version, no existe subversiones
+                if [ "$l_repo_last_version_pretty" = "$l_arti_subversion_versions" ]; then
+                    l_arti_subversion_versions=""
+                fi
+
             fi
             ;;
         

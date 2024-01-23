@@ -207,6 +207,8 @@ declare -A gA_repo_is_os_package=(
     )
 
 
+#Solo descargar la ultima versión
+declare -r g_setup_only_last_dotnet=1
 
 
 
