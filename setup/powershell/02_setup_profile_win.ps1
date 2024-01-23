@@ -368,7 +368,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer)
 	{
 		Write-Host ""
 		Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
-		if(${p_flag_nvim})
+		if(${p_is_neovim})
 		{		
 			Write-Host "- NeoVIM> Indexando la documentación de los plugin"
 		}
@@ -386,7 +386,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer)
 			$l_j= $i + 1
 			
 			Write-Host "(${l_j}/${l_n}) Indexando la documentación del plugin `"${l_repo_name}`" en `"${l_tag}`": `"helptags ${l_repo_path}`"\n"
-			if(${p_flag_nvim}) {
+			if(${p_is_neovim}) {
                 nvim --headless -c "helptags ${l_repo_path}" -c qa
 			}
 			else {

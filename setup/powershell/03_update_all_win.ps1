@@ -22,7 +22,7 @@ function m_get_nodejs_version() {
     $l_version= node --version 2> $null
     $l_status=$?
     if ($l_status) {
-        $l_version= $l_version[0]
+        #$l_version= $l_version[0]
         $l_version= $l_version -creplace "$g_regexp_sust_version1", '$1'
     }
     else {
@@ -80,7 +80,7 @@ function m_is_developer_vim_profile($p_is_neovim) {
 }
 
 
-function m_update_repository($p_path, $p_repo_name, $p_flag_nvim) 
+function m_update_repository($p_path, $p_repo_name, $p_is_neovim) 
 {
     if(!(Test-Path $p_path)) {
         Write-Host "Folder `"${p_path}`" not exists"
@@ -88,7 +88,7 @@ function m_update_repository($p_path, $p_repo_name, $p_flag_nvim)
     }
 
     Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
-	if(${p_flag_nvim})
+	if(${p_is_neovim})
 	{		
 		Write-Host "- Repository Git para NeoVIM: `"${p_repo_name}`" " -NoNewline
 		Write-Host "(`"${p_path}`")" -ForegroundColor DarkGray
@@ -160,13 +160,13 @@ function m_update_repository($p_path, $p_repo_name, $p_flag_nvim)
 
 }
 
-function m_update_vim_repository($p_flag_nvim, $p_is_coc_installed)
+function m_update_vim_repository($p_is_neovim, $p_is_coc_installed)
 {
 
 	$l_show_title= $false
 	$l_tag= ""
 	$l_path_plugins= ""
-	if(${p_flag_nvim})
+	if(${p_is_neovim})
 	{
 		$l_tag= "NeoVIM"
 		$l_path_plugins= "${env:LOCALAPPDATA}\nvim-data\site\pack\"
@@ -188,16 +188,16 @@ function m_update_vim_repository($p_flag_nvim, $p_is_coc_installed)
 		
 		if(!${l_show_title}) 
 		{
-			Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
-			Write-Host "                                                    ${l_tag}" -ForegroundColor DarkGray
-			Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
+			#Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
+			#Write-Host "                                                    ${l_tag}" -ForegroundColor DarkGray
+			#Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor DarkGray
 			$l_show_title= $true
 		}
 
         Write-Host ""
         $l_repo_path = Split-Path -Parent $folder.FullName
 		$l_repo_name = Split-Path "$l_repo_path" -Leaf
-        $l_status= m_update_repository $l_repo_path $l_repo_name $p_flag_nvim
+        $l_status= m_update_repository $l_repo_path $l_repo_name $p_is_neovim
 		if(($l_status -eq 1) || ($l_status -eq 2))
 		{
 			if(Test-Path "${l_repo_path}/doc") {
@@ -212,8 +212,8 @@ function m_update_vim_repository($p_flag_nvim, $p_is_coc_installed)
 	$l_n= $la_doc_paths.Count
 	if( $l_n -gt 0 )
 	{
-		Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
-		if(${p_flag_nvim})
+		Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
+		if(${p_is_neovim})
 		{		
 			Write-Host "- NeoVIM> Indexando la documentación de los plugin"
 		}
@@ -221,7 +221,7 @@ function m_update_vim_repository($p_flag_nvim, $p_is_coc_installed)
 		{
 			Write-Host "-    VIM> Indexando la documentación de los plugin"
 		}
-		Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+		Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 		
 		$l_j= 0
 		for ($i=0; $i -lt $l_n; $i++) {
@@ -229,7 +229,7 @@ function m_update_vim_repository($p_flag_nvim, $p_is_coc_installed)
 			$l_repo_name= $la_doc_repos[$i]
 			$l_j= $i + 1
 			Write-Host "(${l_j}/${l_n}) Indexando la documentación del plugin `"${l_repo_name}`" en `"${l_tag}`": `"helptags ${l_repo_path}`"\n"
-			if(${p_flag_nvim})
+			if(${p_is_neovim})
 			{
                 nvim --headless -c "helptags ${l_repo_path}" -c qa
 			}
@@ -242,13 +242,14 @@ function m_update_vim_repository($p_flag_nvim, $p_is_coc_installed)
 		}
 	}
 	
-
+    Write-Host ""
     #6. Inicializar los paquetes/plugin de VIM/NeoVIM que lo requieren.
     if (!$p_is_coc_installed) {
         Write-Host "Se ha instalando los plugin/paquetes de ${l_tag} como Editor."
         return 0
     }
 
+    Write-Host ""
     Write-Host "Se ha instalando los plugin/paquetes de ${l_tag} como Developer."
     if (!$g_is_nodejs_installed)  {
 
@@ -404,7 +405,7 @@ function m_main_update($p_input_options) {
             else {
                 Write-Host "Se actualizará los paquetes/plugins de VIM ${l_version} ..."
             }
-            Write-Host ""
+            #Write-Host ""
 
             #Actualizar los plugins
             m_update_vim_repository $false $l_is_coc_installed
@@ -459,7 +460,7 @@ function m_main_update($p_input_options) {
             else {
                 Write-Host "Se actualizará los paquetes/plugins de NeoVIM ${l_version} ..."
             }
-            Write-Host ""
+            #Write-Host ""
 
             #Actualizar los plugins
             m_update_vim_repository $true $l_is_coc_installed

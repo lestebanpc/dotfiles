@@ -1,267 +1,173 @@
-# Descripcion
+# Descripción
 
 Mi archivos de configuración
 
-# Configuración
+# Configuración en Linux
 
-Se puede tener varios escenarios:
+Para la configuracion se puede usar una de las siguientes script de configuración.
 
-## 1. Configuración en Linux
+- Script './setup/linux/01_setup_commands.bash' descarga y configura comandos (un binario) y programas (conjunto de binarios) de repositorio que no sean del SO (usualmente GitHub).
+  Se recomienda si ejecute con un usuario que no sea root para que los binarios/programas sean compartidos para todos los usuario, pero podria usarlo.
+  Los binarios lo instalara en:
+  - Si tiene la opcion 'sudo' como root habilitada, creara '/opt/tools' (lo instara crear la primeraz vez que ejecuta el script).
+  - Si no lo tiene, lo instalará en '~/tools'.
+    Los programas lo instalar en:
+  - Si tiene la opcion 'sudo' habilitada, creara '/usr/local/bin'.
+  - Si no lo tiene, lo instalará en '~/.local/bin'.
+    Los fuentes Nerd-Fonts lo instalar en:
+  - Si tiene la opcion 'sudo' habilitada, creara '/usr/share/fonts'.
+  - Si no lo tiene, lo instalará en '~/.local/share/fonts'.
+    Si usa WSL, este descarga los binarios/programas para Windows en las sigueente rutas:
+  - Los programas los descargará en 'D:\CLI\Programs'.
+  - Los comandos los descargará en 'D:\CLI\Commands\bin'.  
+    Si por algun motivo tiene acceso a 'sudo' como root, pero desea instalarlo a nivel usuario ('~/.local/bin' y '~/tools'), debera modificar el script './terminal/linux/functions/func_utility.bash' modificando la funcion 'get_user_options' descomentando la lineas que obligen a retornar 'g_user_sudo_support' con valor 3.  
+- Script './setup/linux/02_setup_profile.bash' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
+- Script './setup/linux/03_update_all.bash' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
 
-Se tiene los siguientes pasos:
+No se usa un gestor de plugin para VIM/NeoVIM (esto me trajo algunos problemas al ser usado en contenedores), por lo que se uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './setup/linux/03_update_all.bash'.
 
-```shell
-#Descargar el repositorio en ~/.files
-git clone https://github.com/lestebanpc/dotfiles.git ~/.files
-#Actualizar los paquetes, instalar VIM
-chmod u+x ~/.files/setup/01_setup_init.bash
-. ~/.files/setup/01_setup_init.bash
-```
+Los pasos recomandos para configurar su SO son:
 
-Se recomienda, Instalar o actualizar los comandos que mas uso que estan en el repositorio GitHub (mas actuales que los que estan en los repositorio de la distribución Linux):
-
-```shell
-. ~/.files/setup/02_setup_commands.bash
-```
-
-Configurar el profile ("~/.bashrc", "~/.tmux.conf", "~/.gitconfig", "~/.ssh/config", ..) y la configuración de VIM:
-
-```shell
-. ~/.files/setup/03_setup_profile_vm_fedora.bash
-```
-
-Este script instalar plugins de VIM (solo para usuario no-root instalara plugins para convertir VIM en IDE).
-
-Una vez configurado el VIM como IDE (para un usuario no root) tambien debera:
-
-
-
-```shell
-#Instalar paquetes de VIM-Plug
-:PlugInstall
-
-#Para VIM como IDE, configurar COC
-:CocInstall coc-tsserver coc-json coc-html coc-css
-:CocInstall coc-pyright
-:CocInstall coc-ultisnips
-:CocConfig
-```
-
-El resumen:
-
-1. Establecer permisos de ejecuacion de los script basicos: 
+1. Instalar comandos basicos 'git', 'curl', 'tmux' y 'rsync'
    
    ```shell
-   chmod u+x ~/.files/terminal/linux/tmux/oh-my-tmux.sh
-   chmod u+x ~/.files/terminal/linux/complete/fzf.bash
-   chmod u+x ~/.files/terminal/linux/keybindings/fzf.bash
-   chmod u+x ~/.files/setup/setup_commands.bash
+   #En Linux de la familia Fedora
+   sudo dnf install git
+   sudo dnf install curl
+   sudo dnf install tmux
+   sudo dnf install rsync
+   
+   #En Linux de la familia Debian
    ```
-
-2. Instalar el cliente Git
+   
+   Si desea instalar VIM como IDE de desarrollo debera tener instalado Python3.
    
    ```shell
-   #Para mi Ubuntu
-   sudo apt install git-all
-   #Para mi Fedora
-   sudo dnf install git-all
+   #En Linux de la familia Fedora
+   sudo dnf install python3
+   
+   #En Linux de la familia Debian
+   sudo apt-get install python3
    ```
 
-3. Ejecutar el scritp que instala/actualiza los comandos que mas uso que estan en el repositorio GitHub (mas actuales que los que estan en los repositorio de la distribucion Linux)
+2. Clonar el repositorio
    
    ```shell
-   #
-   . ~/.files/setup/setup_commands.bash
-   #
-   ...
+   #Descargar el repositorio en ~/.files
+   git clone https://github.com/lestebanpc/dotfiles.git ~/.files
    ```
 
-4. Configurar '~/.dircolors' (para que se crea una variable LS_COLORS mas adecuada): 
+3. Descarga y configurar comandos/programas basicos de los repositorios (usualmente Github).
+   
+   > Se puede ejecutar con root, pero no se recomienda si desea que los comandos sean para todos los usuarios. 
+   
+   Se debera escoger por lo menos la opcion 'b' que instala 'binarios basicos', las fuentes 'Nerd-Fonts' y NeoVIM (instalar 'Nerd-Fonts' es opcional si desea usar solo terminal, en cuyo caso la fuente 'Nerd-Fonts' siempre debe estar instalado en el SO donde ejecuta la terminal).
+   Si desea trabajar VIM con IDE desarrollo ejecute tambien la opcion '1048576' que descargara y configurar la ultima version de NodeJS.
+   
+   ```shell
+   #Mostrar el menu para instalar/actualizar comandos/programas:
+   ~/.files/setup/linux/01_setup_commands.bash
+   ```
+
+4. Para un usuario especifico, configure los archivos del profile y VIM/NeoVIM: 
+   
+   Ingrese sesion al usuario que desea configurar el profile y ejecute el script siguiente.
+   
+   Si desea usar configurar el modo desarrollo (VIM/NeoVIM como IDE) use la opcion 'd' o 'f'.
+   
+   Si desea usar configurar el modo editor (VIM/NeoVIM basico) use la opcion 'c' o 'e'.
    
    ```bash
-   #Para mi WSL2 Ubuntu
-   ln -s ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf ~/.dircolors
+   #Mostrar el menu para configurar el profile y VIM/NeoVIM
+   ~/.files/setup/linux/02_setup_profile.bash
    ```
 
-5. Configurar el interprete shell "bash"
-   
-   ```shell
-   #Para mi WSL2 Ubuntu
-   ln -sf ~/.files/terminal/linux/profile/ubuntu_wls.bash ~/.bashrc
-   #Para mi Fedora WS ...
-   ```
+5. Cierre session y vuelva a iniciar (o crage nuevamente su profile) para registrar la variables del profile del usuario.
 
-6. Configuracion del TMUX
-   
-   ```shell
-   ln -s ~/.files/terminal/linux/tmux/tmux.conf ~/.tmux.conf
-   ```
-
-7. Configuracion de Git
-   
-   ```shell
-   #Para mi WSL2 Ubuntu
-   ln -s ~/.files/git/wsl2_git.conf ~/.gitconfig
-   ```
-
-8. Registro de mis servidores SSH mas usados
-   
-   ```shell
-   #Para mi WSL2 Ubuntu
-   mkdir -p ~/.ssh/
-   ln -sfn ~/.files/ssh/wsl2_ssh.conf ~/.ssh/config
-   ```
-
-9. Configuración de VIM
-   
-   Estoy usando mas VIM que Neovim, por tal motivo el script de inicializacíon esta pensado en uso VimScrip antes que Lua.
-   
-   1. Instalando del gestor de plugins Vim-Plug
-   
-   2. Instalando los plugins a usar
-      
-      ```vim
-      #Para actualizar los paquetes de Vim-Plug
-      :PlugInstall
-      ```
-   
-   3. Configuracion de VIM
-      
-      ```shell
-      #Para mi WSL2 Ubuntu
-      ls -s ~/.files/vim/vimrc_wsl2.vim ~/.vimrc
-      #Para mi Fedora WS ...
-      ```
-
-10. Configuración de NoeVIM
-    Estoy usando Neovim como editor alternativo a VIM (uso mas Vim)
-    
-    1. Instalando del gestor de packetes Packer
-    
-    2. Instalando del gestor de plugins Vim-Plug
-    
-    3. Instalando los plugins a usar
-       
-       ```vim
-       #Para actualizar los paquetes de Packer
-       :PackerUpdate
-       #Para actualizar los paquetes de Vim-Plug
-       :PlugInstall
-       ```
-    
-    4. Configuracion de NeoVim
-       
-       ```shell
-       #Los script LUA a usar
-       ln -s ~/.files/nvim/lua ~/.config/nvim/lua
-       #Mi archivo de configuracion
-       ln -s ~/.files/nvim/init_wsl2.vim ~/.config/nvim/init.vim
-       ```
-
-## 2. Configuración en Windows
-
-Se tiene los siguientes pasos:
-
-1. Establecer permisos de ejecuacion de los script basicos: 
-   
-   ```shell
-   #
-   ```
-
-2. Instalar el cliente Git
-   
-   ```shell
-   #Para mi Ubuntu
-   sudo apt install git-all
-   #Para mi Fedora
-   sudo dnf install git-all
-   ```
-
-3. Ejecutar el scritp que instala/actualiza los comandos que mas uso que estan en el repositorio GitHub (mas actuales que los que estan en los repositorio de la distribucion Linux)
-   
-   ```shell
-   #
-   . ~/.files/setup/setup_git_commands.bash
-   #
-   setup_git_commands
-   ```
-
-4. Configurar '~/.dircolors' (para que se crea una variable LS_COLORS mas adecuada): 
+6. Si desea actualizar los plugins de VIM/NeoVIM, ejecute el script:
    
    ```bash
-   #Para mi WSL2 Ubuntu
-   ln -s ~/.files/terminal/linux/profile/ubuntu_wls_dircolors.conf ~/.dircolors
+   #Mostrar el menu para actualizar los plugins de VIM/NeoVIM
+   ~/.files/setup/linux/04_update_all.bash
    ```
+   
+7. Configure la terminal.
+   Debera configurar la fuente 'Nerd-Fonts'. La fuente recomendada es 'JetBrainsMono Nerd Font Mono'.
 
-5. Configurar el interprete shell "bash"
+
+# Configuración en Windows
+
+Para la configuracion se puede usar una de las siguientes script de configuración.
+
+- Script '.\setup\powershell\02_setup_profile_win.ps1' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
+- Script '.\setup\powershell\03_update_all_win.ps1' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
+
+No se usa un gestor de plugin para VIM/NeoVIM (esto me trajo algunos problemas al ser usado en contenedores), por lo que se uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './setup/linux/03_update_all.bash'.
+
+Los pasos recomandos para configurar su SO son:
+
+1. Instalar comandos basicos 'git', 'Powershell Core' (requiere .NET SDK o RTE instalado) y 'VIM' para Windows.
    
    ```shell
-   #Para mi Powershell
-   MKLINK E:\Documents\PowerShell\Microsoft.PowerShell_profile.ps1 %USERPROFILE%\.files\terminal\windows\profile\pwsh_profile.ps1
-   #Para mi Windows Powershell (opcional)
-   MKLINK E:\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 %USERPROFILE%\.files\terminal\windows\profile\pwsh_profile.ps1
+   #
    ```
-
-6. Configuracion de Git
+   
+   Si desea instalar VIM como IDE de desarrollo debera tener instalado NodeJS y Python3.
    
    ```shell
-   #Para ..
-   MKLINK %USERPROFILE%\.gitconfig %USERPROFILE%\.files\git\windows_git.conf
+   #
    ```
+   
+   Si cuenta con WSL, 'NodeJS', '. Net' y 'Powershell Core'y lo podra instalar usando la opcion el menu mostrado al ejecutar el script '~/.files/setup/linux/01_setup_commands.bash'
+   
+   - Usando la opcion '1048576' del menu para instalar la ultima version de 'NodeJS' en 'D:\CLI\Programs\NodeJS'.
+     En las variables de entorno del sistema debe registrar la la ruta 'D:\CLI\Programs\NodeJS'.
+   - Usando la opcion '32768' del menu para instalar las 3 ultimas versiones del SDK de .NET en 'D:\CLI\Programs\DotNet'.
+     En las variables de entorno del sistema debe registrar la la ruta 'D:\CLI\Programs\NodeJS'.
+   - Usando la opcion '128' del menu para instalar la ultima version de Powershell Core en 'D:\CLI\Programs\PowerShell'.
+     En las variables de entorno del sistema debe registrar la la ruta 'D:\CLI\Programs\PowerShell'.
+     Si usa Windows Terminal, debera configurar adicionar un nuevo perfil para la terminal 'Powershell':
+     - Nombre: Powershell
+     - Linea de comandos: D:\CLI\Programs\PowerShell\pwsh.exe
+     - Directorio de Inicio: %USERPROFILE%
+     - Icono: D:\CLI\Programs\PowerShell\assets\StoreLogo.png
+   
+   Se recomienda tener estos programas instalados y configurados antes de continuar
 
-7. Registro de mis servidores SSH mas usados
+2. En una terminal de Powershell, clone el repositorio
    
    ```shell
-   #Para ...
-   MKLINK %USERPROFILE%\.ssh\config %USERPROFILE%\.files\ssh\windows_ssh.conf
+   #Descargar el repositorio en ~/.files
+   git clone https://github.com/lestebanpc/dotfiles.git ${env:USERPROFILE}/.files
    ```
 
-8. Configuración de VIM
+3. Para un usuario especifico, configure los archivos del profile y VIM/NeoVIM: 
    
-   Estoy usando mas VIM que Neovim, por tal motivo el script de inicializacíon esta pensado en uso VimScrip antes que Lua.
+   Ingrese sesion al usuario que desea configurar el profile y ejecute el script siguiente.
    
-   1. Instalando del gestor de plugins Vim-Plug
+   Si desea usar configurar el modo desarrollo (VIM/NeoVIM como IDE) use la opcion 'a'.
    
-   2. Instalando los plugins a usar
-      
-      ```vim
-      #Para actualizar los paquetes de Vim-Plug
-      :PlugInstall
-      ```
-   
-   3. Configuracion de VIM
-      
-      ```shell
-      #Para ...
-      MKLINK %USERPROFILE%\.vimrc %USERPROFILE%\.files\vim\vimrc_windows.vim
-      #Para ...
-      ```
+   ```bash
+   #Mostrar el menu para configurar el profile y VIM/NeoVIM
+   ${env:USERPROFILE}\.files\setup\powershell\02_setup_profile_win.ps1
+   ```
 
-9. Configuración de NoeVIM
-   Estoy usando Neovim como editor alternativo a VIM (uso mas Vim)
-   
-   1. Instalando del gestor de packetes Packer
-   
-   2. Instalando del gestor de plugins Vim-Plug
-   
-   3. Instalando los plugins a usar
-      
-      ```vim
-      #Para actualizar los paquetes de Packer
-      :PackerUpdate
-      #Para actualizar los paquetes de Vim-Plug
-      :PlugInstall
-      ```
-   
-   4.  Configuracion de VIM
-      
-      ```shell
-      #Folder de los scripts
-      MKLINK /D %LOCALAPPDATA%\nvim\lua %USERPROFILE%\.files\nvim\lua
-      #El archivo de configuracion
-      MKLINK %LOCALAPPDATA%\nvim\init.vim %USERPROFILE%\.files\nvim\init_windows.vim
-      ```
+4. Cierre terminal y vuelve a iniciar la configuración.
 
-# Actualización de la configuraciones
+5. Configure el Windows Terminal.
+   Debera configurar la fuente 'Nerd-Fonts'. La fuente recomendada es 'JetBrainsMono Nerd Font Mono'.
 
-Se puede tener varios escenarios:
+6. Problemas y desafios encontrados por usar Windows.
+   Algunos comandos como FZF deberan adaptarse para usarse en VIM/NoeVIM.
+
+7. Si desea actualizar los plugins de VIM/NeoVIM, ejecute el script:
+   
+   ```bash
+   #Mostrar el menu para actualizar los plugins de VIM/NeoVIM
+   ${env:USERPROFILE}\.files\setup\powershell\03_update_all_win.ps1
+   ```
+
+
+# Configuracion en una 'proot-distro' de Termux (Android)
+
+Es el mismo procedemiento que la configuración en Linux pero con algunas consideraciones previas:
