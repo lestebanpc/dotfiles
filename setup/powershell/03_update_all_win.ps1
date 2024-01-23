@@ -471,50 +471,99 @@ function m_main_update($p_input_options) {
 
 }
 
-function m_fix_fzf() 
+function m_how_to_fix_fzf() 
 {
-    Write-Host "Restaurando las version del archivos desde repositorio git ..."
+	Write-Host ""
+	
+	Write-Host ""
+    Write-Host ">   VIM> Restaurando las modificaciones realizada al plugin 'fzf': " -NoNewline	
+	Write-Host "${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf" -ForegroundColor DarkGray -NoNewline
+	Write-Host "\plugin\fzf.vim" -ForegroundColor Blue
     cd ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf
+	Write-Host "git pull origin master" -ForegroundColor DarkGray
     git pull origin master
+	Write-Host "git restore autoload\fzf\vim.vim" -ForegroundColor DarkGray
     git restore plugin\fzf.vim
 
+	Write-Host ""
+	Write-Host ">   VIM> Restaurando las modificaciones realizada al plugin 'fzf.vim': " -NoNewline	
+	Write-Host "${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim" -ForegroundColor DarkGray -NoNewline
+	Write-Host "\autoload\fzf\vim.vim" -ForegroundColor Blue
     cd ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim
+	Write-Host "git pull origin master" -ForegroundColor DarkGray
     git pull origin master
+	Write-Host "git restore autoload\fzf\vim.vim" -ForegroundColor DarkGray
     git restore autoload\fzf\vim.vim
-
+		
+	Write-Host ""
+    Write-Host ">NeoVIM> Restaurando las modificaciones realizada al plugin 'fzf': " -NoNewline	
+	Write-Host "${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf" -ForegroundColor DarkGray -NoNewline
+	Write-Host "\plugin\fzf.vim" -ForegroundColor Blue
     cd ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf
+	Write-Host "git pull origin master" -ForegroundColor DarkGray
     git pull origin master
+	Write-Host "git restore autoload\fzf\vim.vim" -ForegroundColor DarkGray
     git restore plugin\fzf.vim
 
+	Write-Host ""
+	Write-Host ">NeoVIM> Restaurando las modificaciones realizada al plugin 'fzf.vim': " -NoNewline	
+	Write-Host "${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim" -ForegroundColor DarkGray -NoNewline
+	Write-Host "\autoload\fzf\vim.vim" -ForegroundColor Blue
     cd ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim
+	Write-Host "git pull origin master" -ForegroundColor DarkGray
     git pull origin master
+	Write-Host "git restore autoload\fzf\vim.vim" -ForegroundColor DarkGray
     git restore autoload\fzf\vim.vim
-
-    Write-Host ""
-    Write-Host "Fixing Vim ..."
-    Write-Host "Last vs Fixed (fzf)     : Use 'diffget' para corregir la version ultima, 'windo diffoff' para ingresar al modo normal, luego guarde y salga"
-    Write-Host "     vim -d `$`{env:USERPROFILE`}\vimfiles\pack\ui\opt\fzf\plugin\fzf.vim `$`{env:USERPROFILE`}\.files\vim\packages\fixes\fzf\plugin\fzf.vim"
-    Write-Host "Last vs Fixed (fzf.vim) : Use 'diffget' para corregir la version ultima, windo 'diffoff' para ingresar al modo normal, luego guarde y salga"
-    Write-Host "     vim -d `$`{env:USERPROFILE`}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\vim.vim `$`{env:USERPROFILE`}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim"
-    Write-Host ""
-    Write-Host ""
-    Write-Host "Fixing NeoVim ..."
-    Write-Host "Last vs Fixed (fzf)     : Use 'diffget' para corregir la version ultima, 'windo diffoff' para ingresar al modo normal, luego guarde y salga"
-    Write-Host "     vim -d `$`{env:LOCALAPPDATA`}\nvim-data\site\pack\ui\opt\fzf\plugin\fzf.vim `$`{env:USERPROFILE`}\.files\vim\packages\fixes\fzf\plugin\fzf.vim"
-    Write-Host "Last vs Fixed (fzf.vim) : Use 'diffget' para corregir la version ultima, 'windo diffoff' para ingresar al modo normal, luego guarde y salga"
-    Write-Host "     vim -d `$`{env:LOCALAPPDATA`}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\vim.vim `$`{env:USERPROFILE`}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim"
+	
+	Write-Host ""
+	Write-Host ""
+    Write-Host "Intrucciones para corregir FZF:"
+	
+	Write-Host ""
+    Write-Host "1> Buscar hay cambios que obligen a corregir las fuentes" -ForegroundColor Green
+	Write-Host "   Comparando la ultima version (plugin de VIM) vs la fuente (${env:USERPROFILE}\.files\vim\packages\fixes\)" -ForegroundColor DarkGray
+	Write-Host "   No cambie la lineas comentado con el comentario `"CHANGE ..." -ForegroundColor DarkGray
+	Write-Host "   > Inicie la comparacion de '.\fzf\plugin\fzf.vim':" -ForegroundColor DarkGray
+	Write-Host "     vim -d `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf\plugin\fzf.vim `${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim"    
+	Write-Host "     - Use 'diffput' para subir cambios a la fuente." -ForegroundColor DarkGray
+	Write-Host "     - Use '[c' y ']c' para navegar en las diferencias de un split." -ForegroundColor DarkGray
+	Write-Host "     - Use 'windo diffoff' para ingresar al modo normal." -ForegroundColor DarkGray
+	Write-Host "     - Use 'CTRL + l' y 'CTRL + h' para navegar en entre los split (si lo requiere)" -ForegroundColor DarkGray
+	Write-Host "     - Guarde los cambios con ':w'." -ForegroundColor DarkGray
+	Write-Host "   > Cierre e de la misma forma, inicie la comparacion de '.\fzf.vim\autoload\fzf\vim.vim':" -ForegroundColor DarkGray
+	Write-Host "     vim -d `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\vim.vim `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim"
+	
     
     Write-Host ""
-    Write-Host "Revise los singuientes enlaces simbolicos al script '%USERPROFILE%\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1':"
-    Write-Host "En Vim   : dir `$`{env:USERPROFILE`}\vimfiles\pack\ui\opt\fzf.vim\bin\preview.ps1"
-    Write-Host "     MKLINK %USERPROFILE%\vimfiles\pack\ui\opt\fzf.vim\bin\preview.ps1 %USERPROFILE%\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1"
-    Write-Host "En NeoVim: dir %LOCALAPPDATA%\nvim-data\site\pack\ui\opt\fzf.vim\bin\preview.ps1"
-    Write-Host "     MKLINK %LOCALAPPDATA%\nvim-data\site\pack\ui\opt\fzf.vim\bin\preview.ps1 %USERPROFILE%\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1"
-
+    Write-Host "2> Si la fuente tiene cambios (fue corregido), copie y remplaze los archivos desde la fuente (corregido) a los plugins" -ForegroundColor Green
+	Write-Host "   > Reparando VIM:" -ForegroundColor DarkGray
+    Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf\plugin\"
+    Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\"
+	Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1 `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\bin\"
+	Write-Host "   > Reparando NeoVIM:" -ForegroundColor DarkGray
+	Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf\plugin\"
+    Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\"
+	Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1 `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\bin\"
+	
+	Write-Host ""
+    Write-Host "3> Opcional: subir los cambios de la fuentes corregida al repositorio remoto" -ForegroundColor Green
+	Write-Host "   cd `${env:USERPROFILE}\.files"
+	Write-Host "   git add vim\packages\fixes\fzf\plugin\fzf.vim"
+	Write-Host "   git add vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim"
+	Write-Host "   git push origin main"
+	Write-Host ""
+    
+	cd ${env:USERPROFILE}
 }
 
 function m_setup($p_input_options)
 {
+	if($p_input_options -eq 2) {
+		
+		m_how_to_fix_fzf
+		return
+	}
+	
     $l_status= m_main_update $p_input_options
 }
 
@@ -526,7 +575,7 @@ function m_show_menu_core()
 	Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
 	Write-Host " (q) Salir del menu";
 	Write-Host " (a) Actualizar los plugins VIM/NeoVIM";
-	#Write-Host " (b) Reparar FZF";	
+	Write-Host " (b) Restuarar modificaciones de 'fzf' y 'fzf.vim'. Indicar como reparar FZF"	
 	Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
 }
 
@@ -551,12 +600,12 @@ function show_menu()
 					m_setup 1
 				}
 				
-				#'b' {
-				#	$l_continue= $false
-				#	Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
-				#	Write-Host ""
-				#	m_setup 2
-				#}
+				'b' {
+					$l_continue= $false
+					Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+					Write-Host ""
+					m_setup 2
+				}
 				
 				'q' {
 					$l_continue= $false
