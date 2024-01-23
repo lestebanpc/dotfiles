@@ -11,7 +11,7 @@ clusters:
 contexts:
   - context:
       cluster: k8s1
-      namespace: psit-010101-one
+      namespace: 
       user: k8s1-admin
     name: admin@k8s1
   - context:
