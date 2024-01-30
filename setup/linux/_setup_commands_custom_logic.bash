@@ -444,7 +444,7 @@ function _get_repo_current_version() {
         if [ $p_install_win_cmds -eq 0 ]; then
             l_path_file="${g_path_bin_win}/"
         else
-            l_path_file=""
+            l_path_file="${g_path_bin}/"
         fi
     else
         l_path_file="${p_path_file}/"
@@ -641,6 +641,34 @@ function _get_repo_current_version() {
             fi
 
             l_tmp=$(${l_path_file}aws --version 2> /dev/null)
+            l_status=$?
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            else
+                l_tmp=""
+            fi
+            ;;
+
+        hadolint)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}hadolint --version 2> /dev/null)
+            l_status=$?
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            else
+                l_tmp=""
+            fi
+            ;;
+
+        trivy)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}trivy --version 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
                 l_tmp=$(echo "$l_tmp" | head -n 1)
@@ -2556,6 +2584,39 @@ function get_repo_artifacts() {
             pna_artifact_types=(10)
             ;;
 
+
+        hadolint)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 1
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("hadolint-Linux-arm64")
+            else
+                pna_artifact_names=("hadolint-Linux-x86_64")
+            fi
+            pna_artifact_types=(0)
+            ;;
+
+
+        trivy)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 1
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_names=("trivy_${p_repo_last_version_pretty}_Linux-ARM64.tar.gz")
+            else
+                pna_artifact_names=("trivy_${p_repo_last_version_pretty}_Linux-64bit.tar.gz")
+            fi
+            pna_artifact_types=(10)
+            ;;
 
 
         *)
@@ -5397,6 +5458,61 @@ function _copy_artifact_files() {
                 sudo chmod +x "${l_path_target_bin}/dive"
             fi
             ;;
+
+
+        hadolint)
+
+            #No se soportado por Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                return 40
+            fi
+
+            #Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
+
+            #Renombrando 
+            echo "Renombrando \"${l_path_source}/${p_artifact_name_woext}\" a \"hadolint\" ..."
+            cp "${l_path_source}/${p_artifact_name_woext}" "${l_path_source}/hadolint"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Copiando \"${l_path_source}/hadolint\" a \"${l_path_target_bin}\" ..."
+            if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                cp "${l_path_source}/hadolint" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/hadolint"
+            else
+                sudo cp "${l_path_source}/hadolint" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/hadolint"
+            fi
+            ;;
+
+
+        trivy)
+
+            #No se soportado por Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+                echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux"
+                return 40
+            fi
+
+            #Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Copiando \"${l_path_source}/trivy\" a \"${l_path_target_bin}\" ..."
+            if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                cp "${l_path_source}/trivy" "${l_path_target_bin}"
+                chmod +x "${l_path_target_bin}/trivy"
+            else
+                sudo cp "${l_path_source}/trivy" "${l_path_target_bin}"
+                sudo chmod +x "${l_path_target_bin}/trivy"
+            fi
+
+            mkdir -p ~/.files/config/trivy/templates
+            echo "Copiando templates de \"contrib/*.tpl\" a \"~/.files/config/trivy/templates/\" ..."
+            cp ${l_path_source}/contrib/*.tpl ~/.files/config/trivy/templates/
+            ;;
+
 
 
         powershell)

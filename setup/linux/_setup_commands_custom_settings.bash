@@ -66,6 +66,8 @@ gA_packages=(
         ['rust']=''
         ['oc']=''
         ['awscli']=''
+        ['hadolint']='hadolint/hadolint'
+        ['trivy']='aquasecurity/trivy'
     )
 
 
@@ -83,7 +85,7 @@ ga_menu_options_title=(
     "LL Container Runtine, comandos root-less, CNI plugins"
     "HL Container Runtime ContainerD: ContainerD, BuildKit y NerdCtl"
     "HL Container Runtime CRI-O: CriCtl"
-    "Tools para gestionar containers: Dive"
+    "Tools para gestionar imagenes: Dive, HadoLint, Trivy"
     "Tools para K8S: kubectl, oc, helm, operator-sdk, ..."
     "Binarios para un nodo K8S de 'K0S'"
     "Binarios para un nodo K8S de 'KubeAdm'"
@@ -118,7 +120,7 @@ ga_menu_options_packages=(
     "runc,crun,rootlesskit,slirp4netns,fuse-overlayfs,cni-plugins"
     "containerd,buildkit,nerdctl"
     "crictl"
-    "dive"
+    "dive,hadolint,trivy"
     "kubectl,oc,helm,operator-sdk,3scale-toolbox,pgo"
     "k0s"
     "cni-plugins,kubectl,kubelet,kubeadm"
@@ -136,14 +138,14 @@ ga_menu_options_packages=(
     )
 
 #Tipos de SO donde se puede configurar los repositorio 
-# > Por defecto los repositorios son instalados en todo los tipos SO habilitados: Linux, Windows (valor por defecto es 11)
+# > Por defecto los repositorios son instalados en todo los tipos SO habilitados: Linux, Windows (valor por defecto es 7)
 # > Las opciones puede ser uno o la suma de los siguientes valores:
 #   1 (00001) Linux non-WSL2
 #   2 (00010) Linux WSL2
-#   8 (00100) Windows vinculado al Linux WSL2
+#   4 (00100) Windows vinculado al Linux WSL2
 #
 declare -A gA_repo_config_os_type=(
-        ['less']=8
+        ['less']=4
         ['llvm']=3
         ['rust']=3
         ['k0s']=1
@@ -165,6 +167,8 @@ declare -A gA_repo_config_os_type=(
         ['kubelet']=3
         ['crictl']=3
         ['awscli']=3
+        ['hadolint']=3
+        ['trivy']=3
     )
 
 

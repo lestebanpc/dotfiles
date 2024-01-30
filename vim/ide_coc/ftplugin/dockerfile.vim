@@ -2,20 +2,20 @@
 "1. Inicialización
 "--------------------------------------------------------------------------------
 if !g:use_ide | finish | endif
-if get(b:, 'html_ftplugin_loaded', 0) | finish | endif
+if get(b:, 'dockerfile_ftplugin_loaded', 0) | finish | endif
 
 
 "--------------------------------------------------------------------------------
 "2. Linter y Fixer
 "--------------------------------------------------------------------------------
 
-"Estableciendo el Linter: ESLint.
-"let b:ale_linters = ['eslint']
-"let b:ale_linters = {'html': ['eslint']}
+"Estableciendo el Linter: HadoLint
+"let b:ale_linters = ['hadolint']
+let b:ale_linters = {'dockerfile': ['hadolint']}
 
-"Estableciendo el Fixer : Prettier y ESLint.
-"let b:ale_fixers = ['prettier']
-let b:ale_fixers = {'html': ['prettier']}
+"Estableciendo el Fixer: HadoLint
+"let b:ale_fixers = ['hadolint']
+"let b:ale_fixers = {'dockerfile': ['hadolint']}
 
 
 "--------------------------------------------------------------------------------
@@ -23,7 +23,7 @@ let b:ale_fixers = {'html': ['prettier']}
 "--------------------------------------------------------------------------------
 
 "Flag de buffer cargado
-let b:html_ftplugin_loaded = 1
+let b:dockerfile_ftplugin_loaded = 1
 
 
 

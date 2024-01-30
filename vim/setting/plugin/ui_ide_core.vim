@@ -378,29 +378,6 @@ nmap <Leader>rn <Plug>(coc-rename)
 
 
 "-----------------------------------------------------------------------------------
-" CoC> LSP Client> Autocomandos 
-"-----------------------------------------------------------------------------------
-"Ejecutar comandos autocomandos cuando ocurre cierto tipo de evento
-
-"
-augroup mygroup
-
-    autocmd!
-
-    "Setup formatexpr specified filetype(s).
-    "autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-
-    "Update signature help on jump placeholder.
-    autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-
-augroup end
-
-
-"Highlight the symbol and its references when holding the cursor.
-autocmd CursorHold * silent call CocActionAsync('highlight')
-
-
-"-----------------------------------------------------------------------------------
 " CoC> LSP Client> Otros 
 "-----------------------------------------------------------------------------------
 
@@ -463,6 +440,32 @@ if g:has_python3
     "nmap <F12>        <Plug>VimspectorStepOut
 
 endif
+
+
+
+"###################################################################################
+" Settings> IDE > Autocomandos (Eventos usados por el IDE)
+"###################################################################################
+
+"¿Porque no usa un autogroup?
+"Highlight the symbol and its references when holding the cursor.
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+augroup mygroup
+
+    autocmd!
+
+    "-----------------------------------------------------------------------------------
+    " CoC> LSP Client> Autocomandos 
+    "-----------------------------------------------------------------------------------
+    "Setup formatexpr specified filetype(s).
+    "autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+
+    "Update signature help on jump placeholder.
+    autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+
+augroup end
+
 
 
 

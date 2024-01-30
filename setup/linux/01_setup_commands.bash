@@ -172,9 +172,9 @@ _can_setup_repository_in_this_so() {
     #  > Puede ser uno o la suma de los siguientes valores:
     #    1 (00001) Linux No-WSL2 (que no WSL2)
     #    2 (00010) Linux WSL2
-    #    8 (00100) Windows vinculado al Linux WSL2
-    #  > Si no se especifica, su valor es 11.
-    local l_repo_config_os_type=${gA_repo_config_os_type[${p_repo_id}]:-11}
+    #    4 (00100) Windows vinculado al Linux WSL2
+    #  > Si no se especifica, su valor es 7.
+    local l_repo_config_os_type=${gA_repo_config_os_type[${p_repo_id}]:-7}
 
     if [ $p_install_win_cmds -ne 0 ]; then
 
@@ -205,8 +205,8 @@ _can_setup_repository_in_this_so() {
         #Si es Linux WSL2
         if [ $g_os_type -eq 1 ]; then
 
-            #Si se usa el flag '8' (Windows vinculado al Linux WSL2), configurarlo
-            if [ $((l_repo_config_os_type & 8)) -eq 8 ]; then
+            #Si se usa el flag '4' (Windows vinculado al Linux WSL2), configurarlo
+            if [ $((l_repo_config_os_type & 4)) -eq 4 ]; then
                 l_repo_can_setup=0
             fi
 
