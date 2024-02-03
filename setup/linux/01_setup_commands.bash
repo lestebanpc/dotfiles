@@ -2989,7 +2989,7 @@ function g_install_repositories_byid() {
             printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_x + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
                     "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
         elif [ $p_show_title_on_onerepo -eq 0 ]; then
-            printf -v l_title_template "- El repositorio '%s%s%s' %s%%s%s" "$g_color_cian1" "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            printf -v l_title_template "* El repositorio '%s%s%s' %s%%s%s" "$g_color_cian1" "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
         fi
 
 
