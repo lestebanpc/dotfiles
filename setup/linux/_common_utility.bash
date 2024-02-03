@@ -22,10 +22,7 @@ declare -r g_path_temp='/tmp'
 
 #Parametros de entrada - Agumentos y opciones:
 #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
-#  2 > El tipo de invocación/ejecución del script que invoca este metodo
-#      (0) Ejecución interactiva del script (muestra el menu).
-#      (1) Ejecución no-interactiva del script para instalar/actualizar un conjunto de respositorios
-#      (2) Ejecución no-interactiva del script para instalar/actualizar un solo repositorio
+#  2 > Mostrar información adicional (solo mostrar cuando se muestra el menu)
 #  3 > Flag '0' si se requere curl
 #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
 # Retorno:
@@ -36,9 +33,9 @@ function fulfill_preconditions() {
     #Argumentos
     local p_os_subtype_id="$1"
 
-    local p_type_calling=$2
-    if [ -z "$p_type_calling" ]; then
-        p_type_calling=0
+    local p_show_additional_info=1
+    if [ "$2" = "0" ]; then
+        p_show_additional_info=0
     fi 
 
     local p_require_curl=1
@@ -196,7 +193,7 @@ function fulfill_preconditions() {
     fi
 
     #8. Mostar información adicional (Solo mostrar info adicional si la ejecución es interactiva)
-    if [ $p_type_calling -eq 0 ]; then
+    if [ $p_show_additional_info -eq 0 ]; then
 
         printf '%bLinux distribution - Name   : (%s) %s\n' "$g_color_gray1" "${g_os_subtype_id}" "${g_os_subtype_name}"
         printf 'Linux distribution - Version: (%s) %s (%s)\n' "$g_os_subtype_id" "$g_os_subtype_version" "$g_os_subtype_version_pretty"
@@ -473,8 +470,9 @@ function compressed_program_name() {
 #   1 > Nombre completo de la unidad de systemd
 #Opcionales:
 #   2 > Flag '0' si se usara para desintalar, caso contrario se usara para instalar/actualizar.
-#   3 > ID del repositorio
-#   4 > Indice del artefato del repositorio que se desea instalar
+#   3 > Flag '0' si no es interactivo, '1' si es interactivo
+#   4 > ID del repositorio
+#   5 > Indice del artefacto del repositorio que se desea instalar
 #Parametros de salida (valor de retorno):
 #   0 > La unidad systemd NO esta instalado y NO esta iniciado
 #   1 > La unidad systemd esta instalado pero NO esta iniciado (esta detenido)
@@ -485,14 +483,22 @@ function request_stop_systemd_unit() {
 
     #1. Argumentos
     local p_unit_name="$1"
+
     local p_is_uninstalling=1
     if [ "$2" = "0" ]; then
         p_is_uninstalling=0
     fi
-    local p_repo_id="$3"
+
+    local p_is_noninteractive=1
+    if [ "$3" = "1" ]; then
+        p_is_noninteractive=0
+    fi
+
+    local p_repo_id="$4"
+
     local p_artifact_index=-1
-    if [[ "$4" =~ ^[0-9]+$ ]]; then
-        p_option_relative_idx=$4
+    if [[ "$5" =~ ^[0-9]+$ ]]; then
+        p_option_relative_idx=$5
     fi
     
     #2. Averigur el estado actual de la unidad systemd
@@ -548,7 +554,7 @@ function request_stop_systemd_unit() {
         printf "repositorio '%s'.\n" "$p_repo_id"
     fi
 
-    if [ $gp_type_calling -ne 3 ] && [ $gp_type_calling -ne 4 ]; then
+    if [ $p_is_noninteractive -ne 0 ]; then
         printf "¿Desea detener la unidad systemd?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_gray1" "$g_color_reset"
         read -rei 's' -p ': ' l_option
     else

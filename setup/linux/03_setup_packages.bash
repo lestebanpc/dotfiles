@@ -48,10 +48,10 @@ gp_uninstall=1          #(0) Para instalar/actualizar
 
 #Tipo de ejecucion del script principal
 gp_type_calling=0       #(0) Ejecución mostrando el menu del opciones (siempre es interactiva).
-                        #(1) Ejecución sin el menu de opciones, interactivo - instalar/actualizar un conjunto de paquetes
-                        #(2) Ejecución sin el menu de opciones, interactivo - instalar/actualizar un solo paquete
-                        #(3) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar un conjunto de paquetes
-                        #(4) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar un solo paquete
+                        #(1) Ejecución sin el menu de opciones, interactivo    - instalar/actualizar paquetes relacionados a opciones de menu
+                        #(2) Ejecución sin el menu de opciones, interactivo    - instalar/actualizar paquetes de las lista de IDs
+                        #(3) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar paquetes relacionados a opciones de menu
+                        #(4) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar paquetes de la lista de IDs
 
 #Estado del almacenado temporalmente de las credenciales para sudo
 # -1 - No se solicito el almacenamiento de las credenciales
@@ -1000,11 +1000,11 @@ function g_uninstall_package() {
         fi
     fi
 
-    local l_noninteractive=1
-    if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
-        l_noninteractive=0
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] || [ $gp_type_calling -eq 4 ]; then
+        l_is_noninteractive=0
     fi
-    uninstall_os_package "$l_package_name" $g_os_subtype_id $l_noninteractive
+    uninstall_os_package "$l_package_name" $g_os_subtype_id $l_is_noninteractive
     l_status=$?
 
     #Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
@@ -1126,11 +1126,11 @@ function g_install_package() {
         fi
     fi
 
-    local l_noninteractive=1
-    if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
-        l_noninteractive=0
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] || [ $gp_type_calling -eq 4 ]; then
+        l_is_noninteractive=0
     fi
-    install_os_package "$l_package_name" $g_os_subtype_id $l_noninteractive
+    install_os_package "$l_package_name" $g_os_subtype_id $l_is_noninteractive
     l_status=$?
 
     #Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
@@ -1152,7 +1152,7 @@ function g_install_package() {
 #Parametros de entrada (Argumentos):
 #  1 > Opciones relacionados con los paquetes que se se instalaran (entero que es suma de opciones de tipo 2^n).
 #
-function g_install_packages() {
+function g_install_packages_byopc() {
     
     #1. Argumentos 
     local p_input_options=-1
@@ -1168,9 +1168,9 @@ function g_install_packages() {
     #3. Inicializaciones cuando se invoca directamente el script
     local l_flag=0
     local l_title
-    local l_noninteractive=1
-    if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
-        l_noninteractive=0
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] || [ $gp_type_calling -eq 4 ]; then
+        l_is_noninteractive=0
     fi
 
     if [ $gp_type_calling -eq 0 ]; then
@@ -1198,7 +1198,7 @@ function g_install_packages() {
             print_text_in_center2 "$l_title" $g_max_length_line 
             print_line '─' $g_max_length_line "$g_color_gray1"
 
-            upgrade_os_packages $g_os_subtype_id $l_noninteractive
+            upgrade_os_packages $g_os_subtype_id $l_is_noninteractive
 
         fi
     fi
@@ -1233,6 +1233,192 @@ function g_install_packages() {
 
 #
 #Parametros de entrada (Argumentos):
+#  1 > Flag '0' si se actualiza los paquetes.
+#  2 > Listado de ID de paquetes separados por coma.
+function g_install_packages_byid() {
+    
+    #1. Argumentos
+    local p_upgrade_os_packages=1
+    if [ "$1" = "0" ]; then
+        p_upgrade_os_packages=0
+    fi
+
+    if [ -z "$2" ]; then
+        echo "ERROR: Listado de paquetes \"${2}\" es invalido"
+        return 99
+    fi
+
+    local IFS=','
+    local pa_packages=(${2})
+    IFS=$' \t\n'
+
+    local l_n=${#pa_packages[@]}
+    if [ $l_n -le 0 ]; then
+        echo "ERROR: Listado de paquetes \"${2}\" es invalido"
+        return 99
+    fi
+
+    #3. Inicializaciones cuando se invoca directamente el script
+    local l_title
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] || [ $gp_type_calling -eq 4 ]; then
+        l_is_noninteractive=0
+    fi
+
+    #Instalacion de paquetes del SO
+    if [ $p_upgrade_os_packages -eq 0 ]; then
+
+        #Solicitar credenciales para sudo y almacenarlas temporalmente
+        if [ $g_status_crendential_storage -eq 0 ]; then
+            storage_sudo_credencial
+            g_status_crendential_storage=$?
+            #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+            #  Si es 0 o 1: la instalación/configuración es completar
+            #  Si es 2    : el usuario no acepto la instalación/configuración
+            #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
+            if [ $g_status_crendential_storage -eq 2 ]; then
+                return 120
+            fi
+        fi
+
+        print_line '-' $g_max_length_line  "$g_color_gray1"
+        printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_cian1" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+        print_text_in_center2 "$l_title" $g_max_length_line 
+        print_line '-' $g_max_length_line "$g_color_gray1"
+
+        upgrade_os_packages $g_os_subtype_id $l_is_noninteractive
+
+    fi
+
+    #Solicitar credenciales para sudo y almacenarlas temporalmente
+    if [ $g_status_crendential_storage -eq 0 ]; then
+        storage_sudo_credencial
+        g_status_crendential_storage=$?
+        #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+        #  Si es 0 o 1: la instalación/configuración es completar
+        #  Si es 2    : el usuario no acepto la instalación/configuración
+        #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
+        if [ $g_status_crendential_storage -eq 2 ]; then
+            return 120
+        fi
+    fi
+
+    #5. Instalar los paquetes indicados
+    local l_x=0
+    local l_status
+    local l_repo_id
+    local l_repo_name_aux
+    local l_title_template=""
+
+    for((l_x=0; l_x < ${l_n}; l_x++)); do
+        
+        #Nombre a mostrar del paquete
+        l_repo_id="${pa_packages[$l_x]}"
+        l_repo_name_aux="${gA_packages[${l_repo_id}]}"
+        if [ -z "$l_repo_name_aux" ]; then
+            printf 'El %bpaquete "%s"%b no esta definido en "gA_packages" para su instalacion.\n\n' \
+                   "$g_color_red1" "$l_repo_id" "$g_color_reset"
+            continue
+        fi
+
+        if [ $l_n -ne 1 ]; then
+            printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_x + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                    "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+        fi
+
+
+        g_install_package "$l_repo_id" "$l_title_template" 
+        l_status=$?   #Solo se puede mostrar el titulo del packege cuando no retorna [6, infinito].
+                      #   0 > Se inicio la instalación y termino existosamente
+                      #   1 > Se inicio la instalación y termino con errores
+                      #   2 > No se inicio la instalación: El paquete ya esta instalado 
+                      #   3 > No se inicio la instalación: No se obtuvo el nombre real del paquete
+                      #   4 > No se inicio la instalación: No se obtuvo información si el paquete esta instalado o no
+                      #   5 > No se inicio la instalación: Se envio otros parametros invalidos
+                      # 120 > No se inicio la instalación: No se permitio almacenar las credenciales para sudo 
+
+        #Se requiere almacenar las credenciales para realizar cambios con sudo.
+        if [ $l_status -eq 120 ]; then
+            return 120
+        fi
+
+        #4.4. Si no se inicio el el proceso de configuración por no contar informacion correcta: 
+
+        #     3> No se obtuvo el nombre real del paquete
+        if [ $l_status -eq 3 ]; then
+
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido no se establecio el nombre real de paquete a instalar.\n' \
+                   "$g_color_red1" "$l_repo_id" "$g_color_reset"
+            printf 'Corrija el error para continuar con configuración de los demas paquetes de la opción del menú.\n\n'
+            continue
+        fi
+
+        #     4> No se obtuvo información si el paquete esta instalado o no.
+        if [ $l_status -eq 4 ]; then
+
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido no se pudo obtener informacion del paquete en el SO.\n' \
+                          "$g_color_red1" "$l_repo_id" "$g_color_reset"
+            printf 'Corrija el error para continuar con configuración de los demas packages de la opción del menú.\n\n'
+            continue
+
+        fi
+
+        #     5> Se tiene parametros invalidos que impiden que se instale 
+        if [ $l_status -eq 5 ]; then
+
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido parametros invalidos del paquete en el SO.\n' \
+                          "$g_color_red1" "$l_repo_id" "$g_color_reset"
+            printf 'Corrija el error para continuar con configuración de los demas packages de la opción del menú.\n\n'
+            continue
+
+        fi
+
+
+
+        #4.5. Si se inicio el pocesamiento del package.
+
+        #A. Estados de un proceso no iniciado:
+        #   2 > El paqueta ya esta instalado 
+        if [ $l_status -eq 2 ]; then
+
+            #No se considera un error, continue con el procesamiento de los siguientes paquetes.
+            printf 'El paquete "%s" ya esta instalado. Se continua con el proceso de instalación.\n\n' "$l_repo_id"
+            #continue
+
+        #B. Estados de un proceso iniciado:
+        #   1 > El paquete inicio la instalación y lo termino con exito.
+        elif [ $l_status -eq 1 ]; then
+
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            printf '%bError al instalar el paquete%b "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf 'Corrija el error para continuar con configuración de los demas paquetes de la opción del menú.\n\n'
+
+        #   0 > El paquete inicio la instalación y lo termino con error.
+        elif [ $l_status -eq 0 ]; then
+
+            #No se considera un error, continue con el procesamiento de los siguientes paquetes.
+            printf '\n'
+
+        fi
+
+    done
+
+
+    #6. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
+    #   Si no se invoca usando el menú y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
+    if [ $g_status_crendential_storage -eq 0 ] && [ $gp_type_calling -eq 0 ]; then
+    #if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
+        clean_sudo_credencial
+    fi
+
+}
+
+
+#
+#Parametros de entrada (Argumentos):
 #  1 > Opciones relacionados con los paquetes que se se instalaran (entero que es suma de opciones de tipo 2^n).
 #
 function g_uninstall_packages() {
@@ -1255,7 +1441,7 @@ function g_uninstall_packages() {
     #fi
 
     #5. Instalar los paquetes selecionados por las opciones de menú dinamico.
-    local l_i=0
+    local l_x=0
     local l_status
     #Limpiar los resultados anteriores
     _gA_processed_repo=()
@@ -1317,7 +1503,7 @@ function g_install_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
-                g_install_packages $l_value_option_a 0
+                g_install_packages_byopc $l_value_option_a 0
                 ;;
 
             q)
@@ -1338,7 +1524,7 @@ function g_install_main() {
                     l_flag_continue=1
                     print_line '─' $g_max_length_line "$g_color_green1" 
                     printf '\n'
-                    g_install_packages $l_options 0
+                    g_install_packages_byopc $l_options 0
                 else
                     l_flag_continue=0
                     printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
@@ -1427,23 +1613,30 @@ function g_uninstall_main() {
 
 g_usage() {
 
-    printf '%bUsage:\n\n' "$g_color_gray1"
-    printf '  > Desintalar paquetes mostrando el menú de opciones:\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash uninstall\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Instalar paquetes mostrando el menú de opciones (interactivo):\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Instalar/Actualizar un grupo de paquetes sin mostrar el menú, pero interactivo:\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 1 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 1 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Instalar/Actualizar un paquete sin mostrar el menú, pero interactivo:\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 2 PACKAGE-ID%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 2 PACKAGE-ID SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '  > Instalar/Actualizar un grupo de paquetes sin mostrar el menú, pero no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 3 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 3 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Instalar/Actualizar un paquete sin mostrar el menú, pero no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 4 PACKAGE-ID%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 4 PACKAGE-ID SUDO-STORAGE-OPTIONS%b\n\n' "$g_color_yellow1" "$g_color_reset"
+    printf 'Usage:\n'
+    printf '  > %bDesintalar paquetes mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset" 
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '  > %bInstalar paquetes mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '  > %bInstalar/Actualizar un grupo de paquetes sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    > %bCALLING_TYPE%b (para este escenario) es 1 si es interactivo y 3 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bInstalar/Actualizar un listado paquete sin mostrar el  menú%b:\n' "$g_color_cian1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash CALLING_TYPE LIST-REPO-IDS%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash CALLING_TYPE LIST-REPO-IDS SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_setup_packages.bash CALLING_TYPE LIST-REPO-IDS SUDO-STORAGE-OPTIONS UPGRADE-OS-PACKAGES%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    > %bLIST-REPO-IDS%b es un listado de ID de paquetes separado por coma.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    > %bUPGRADE-OS-PACKAGES%b Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.\n\n%b' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf 'Donde:\n'
+    printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n\n' \
+           "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -1458,16 +1651,22 @@ g_usage() {
 
 
 #Argumento 1: ¿instalar/actualizar o desintalar?
-if [[ "$1" =~ ^[0-9]+$ ]]; then
-    gp_type_calling=$1
-elif [ "$1" = "uninstall" ]; then
+if [ "$1" = "uninstall" ]; then
+    gp_type_calling=0
     gp_uninstall=0
+elif [[ "$1" =~ ^[0-9]+$ ]]; then
+    gp_type_calling=$1
 elif [ ! -z "$1" ]; then
     printf 'Argumentos invalidos.\n\n'
     g_usage
-    exit 80
+    exit 110
 fi
 
+if [ $gp_type_calling -lt 0 ] || [ $gp_type_calling -gt 4 ]; then
+    printf 'Argumentos invalidos.\n\n'
+    g_usage
+    exit 110
+fi
 
 #2. Codigo de ejecución del programa (incluye el uso los argumentos variables)
 _g_result=0
@@ -1482,7 +1681,7 @@ g_is_credential_storage_externally=1
 if [ $gp_uninstall -eq 0 ]; then
 
     #Validar los requisitos
-    fulfill_preconditions $g_os_subtype_id $gp_type_calling 1 0
+    fulfill_preconditions $g_os_subtype_id 0 1 0
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -1499,7 +1698,7 @@ else
     if [ $gp_type_calling -eq 0 ]; then
     
         #Validar los requisitos
-        fulfill_preconditions $g_os_subtype_id $gp_type_calling 1 0
+        fulfill_preconditions $g_os_subtype_id 0 1 0
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -1533,12 +1732,12 @@ else
         fi
 
         #Validar los requisitos
-        fulfill_preconditions $g_os_subtype_id $gp_type_calling 1 0
+        fulfill_preconditions $g_os_subtype_id 1 1 0
         _g_status=$?
 
         #Iniciar el procesamiento
         if [ $_g_status -eq 0 ]; then
-            g_install_packages $gp_opciones
+            g_install_packages_byopc $gp_opciones
             _g_status=$?
 
             #Informar si se nego almacenar las credencial cuando es requirido
@@ -1552,16 +1751,17 @@ else
            _g_result=111
        fi
     
-    #2.2.3. Instalando un solo repostorio del ID indicao por '$2'
+    #2.2.3. Instalando un solo paquetes del ID indicao por '$2'
     else
     
         #Parametros del script usados hasta el momento:
         # 1> Tipo de configuración: 1 (instalación/actualización).
         # 2> ID del paquete a instalar: identificado interno del respositorio
         # 3> El estado de la credencial almacenada para el sudo.
-        gp_repo_id="$2"
-        if [ -z "$gp_repo_id" ]; then
-           echo "Parametro 2 \"$2\" debe ser un ID de paquete valido"
+        # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+        gp_repo_ids="$2"
+        if [ -z "$gp_repo_ids" ]; then
+           echo "Parametro 2 \"$2\" debe ser un listado de ID de paquetes"
            exit 110
         fi
 
@@ -1572,14 +1772,19 @@ else
                 g_is_credential_storage_externally=0
             fi
         fi
+
+        gp_upgrade_os_packages=1
+        if [ "$4" = "0" ]; then
+            gp_upgrade_os_packages=0
+        fi
     
         #Validar los requisitos
-        fulfill_preconditions $g_os_subtype_id $gp_type_calling 1 0
+        fulfill_preconditions $g_os_subtype_id 1 1 0
         _g_status=$?
 
         #Iniciar el procesamiento
         if [ $_g_status -eq 0 ]; then
-            g_install_package "$gp_repo_id" ""
+            g_install_packages_byid $gp_upgrade_os_packages "$gp_repo_ids"
             _g_status=$?
 
             #Informar si se nego almacenar las credencial cuando es requirido

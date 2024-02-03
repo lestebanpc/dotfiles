@@ -59,6 +59,8 @@ Register-ArgumentCompleter -Native -CommandName 'bat' -ScriptBlock {
             [CompletionResult]::new('--unbuffered', 'unbuffered', [CompletionResultType]::ParameterName, 'unbuffered')
             [CompletionResult]::new('--no-config', 'no-config', [CompletionResultType]::ParameterName, 'Do not use the configuration file')
             [CompletionResult]::new('--no-custom-assets', 'no-custom-assets', [CompletionResultType]::ParameterName, 'Do not load custom assets')
+            [CompletionResult]::new('--lessopen', 'lessopen', [CompletionResultType]::ParameterName, 'Enable the $LESSOPEN preprocessor')
+            [CompletionResult]::new('--no-lessopen', 'no-lessopen', [CompletionResultType]::ParameterName, 'Disable the $LESSOPEN preprocessor if enabled (overrides --lessopen)')
             [CompletionResult]::new('--config-file', 'config-file', [CompletionResultType]::ParameterName, 'Show path to the configuration file.')
             [CompletionResult]::new('--generate-config-file', 'generate-config-file', [CompletionResultType]::ParameterName, 'Generates a default configuration file.')
             [CompletionResult]::new('--config-dir', 'config-dir', [CompletionResultType]::ParameterName, 'Show bat''s configuration directory.')
@@ -68,7 +70,8 @@ Register-ArgumentCompleter -Native -CommandName 'bat' -ScriptBlock {
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print this help message.')
             [CompletionResult]::new('-V', 'V', [CompletionResultType]::ParameterName, 'Show version information.')
             [CompletionResult]::new('--version', 'version', [CompletionResultType]::ParameterName, 'Show version information.')
-            [CompletionResult]::new('cache', 'cache', [CompletionResultType]::ParameterValue, 'Modify the syntax-definition and theme cache')
+            ## Completion of the 'cache' command itself is removed for better UX
+            ## See https://github.com/sharkdp/bat/issues/2085#issuecomment-1271646802
             break
         }
         'bat;cache' {

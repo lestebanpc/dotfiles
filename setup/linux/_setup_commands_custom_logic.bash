@@ -222,7 +222,7 @@ function get_repo_latest_version() {
                 l_repo_last_version_pretty="$l_aux2"
             fi
 
-            if [ ! -z "$g_setup_only_last_dotnet" ] && [ $g_setup_only_last_dotnet -eq 0 ]; then
+            if [ ! -z "$g_setup_only_last_version" ] && [ $g_setup_only_last_version -eq 0 ]; then
                 l_arti_subversion_versions=""
             else
 
@@ -2732,6 +2732,11 @@ function _copy_artifact_files() {
         p_flag_install=0
     fi
 
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] || [ $gp_type_calling -eq 4 ]; then
+        l_is_noninteractive=0
+    fi
+
     #Tag usuado para imprimir un identificador del artefacto en un log
     local l_tag="${p_repo_id}${g_color_gray1}[${p_repo_last_version_pretty}]"
     if [ ! -z "${p_arti_subversion_version}" ]; then
@@ -4694,7 +4699,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
-            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4755,7 +4760,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "podman" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
-            request_stop_systemd_unit 'podman.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'podman.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4810,7 +4815,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
-            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4870,7 +4875,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
-            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -4930,7 +4935,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
-            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -5011,7 +5016,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
-            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -5105,7 +5110,7 @@ function _copy_artifact_files() {
                 printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             fi
 
-            request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -5225,7 +5230,7 @@ function _copy_artifact_files() {
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/bin"
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            request_stop_systemd_unit 'buildkit.service' 1 "$p_repo_id" "$p_artifact_index"
+            request_stop_systemd_unit 'buildkit.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -5376,7 +5381,7 @@ function _copy_artifact_files() {
                             printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" "$g_color_red1" "$g_color_reset"
                         fi
 
-                        request_stop_systemd_unit 'containerd.service' 1 "$p_repo_id" "$p_artifact_index"
+                        request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
                         l_status_stop=$?
                     fi
 
@@ -5599,9 +5604,9 @@ install_initialize_menu_option() {
     local l_repo_id
     local l_artifact_index
 
-    local l_noninteractive=1
-    if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
-        l_noninteractive=0
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] || [ $gp_type_calling -eq 4 ]; then
+        l_is_noninteractive=0
     fi
 
     #local l_aux
@@ -5785,7 +5790,7 @@ install_initialize_menu_option() {
                     fi
 
                     #Instalar los paquetes
-                    install_os_package "$l_packages" $g_os_subtype_id $l_noninteractive
+                    install_os_package "$l_packages" $g_os_subtype_id $l_is_noninteractive
                 fi
             fi
 
@@ -5854,6 +5859,11 @@ uninstall_initialize_menu_option() {
     #local l_artifact_index
     #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
+
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] || [ $gp_type_calling -eq 4 ]; then
+        l_is_noninteractive=0
+    fi
     
     #3. Preguntar antes de eliminar los archivos
     printf 'Se va ha iniciar con la desinstalación de los siguientes repositorios: '
@@ -5884,7 +5894,7 @@ uninstall_initialize_menu_option() {
     done
     printf '%b\n' "$l_repo_names"
 
-    if [ $gp_type_calling -ne 3 ] && [ $gp_type_calling -ne 4 ]; then
+    if [ $l_is_noninteractive -ne 0 ]; then
         printf "%b¿Desea continuar con la desinstalación de estos repositorios?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_red1" "$g_color_gray1" "$g_color_reset"
         read -rei 's' -p ': ' l_option
         if [ "$l_option" != "s" ]; then
@@ -5892,6 +5902,7 @@ uninstall_initialize_menu_option() {
             return 1
         fi
     fi
+    
 
     #4. Realizar validaciones segun la opcion de menu escogida
     case "$p_option_relative_idx" in
@@ -5913,7 +5924,7 @@ uninstall_initialize_menu_option() {
             fi
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            request_stop_systemd_unit 'containerd.service' 0 "$l_repo_id"
+            request_stop_systemd_unit 'containerd.service' 0 $l_is_noninteractive "$l_repo_id"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo
@@ -5937,7 +5948,7 @@ uninstall_initialize_menu_option() {
             fi
 
             #2. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
-            request_stop_systemd_unit 'buildkit.service' 0 "$l_repo_id"
+            request_stop_systemd_unit 'buildkit.service' 0 $l_is_noninteractive "$l_repo_id"
             l_status=$?
 
             #Si esta iniciado pero no acepta detenerlo

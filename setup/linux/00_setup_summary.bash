@@ -57,27 +57,6 @@ if [ -z "$g_user_is_root" ]; then
     #    > 4 : El usuario es root (no requiere sudo)
     get_user_options
 
-    #Si el usuario no tiene permisos a sudo o el SO no implementa sudo,
-    # - Se instala/configura los binarios a nivel usuario, las fuentes a nivel usuario.
-    # - No se instala ningun paquete/programa que requiere permiso 'root' para su instalación
-    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-
-        #Ruta donde se instalaran los programas CLI (tiene una estructura de folderes y generalmente incluye mas de 1 binario).
-        g_path_programs='/opt/tools'
-
-        #Rutas de binarios, archivos de help (man) y las fuentes
-        g_path_bin='/usr/local/bin'
-
-    else
-
-        #Ruta donde se instalaran los programas CLI (tiene una estructura de folderes y generalmente incluye mas de 1 binario).
-        g_path_programs=~/tools
-
-        #Rutas de binarios, archivos de help (man) y las fuentes
-        g_path_bin=~/.local/bin
-
-    fi
-
 fi
 
 
@@ -88,9 +67,7 @@ fi
 #Tipo de ejecucion del script principal
 gp_type_calling=0       #(0) Ejecución mostrando el menu del opciones (siempre es interactiva).
                         #(1) Ejecución sin el menu de opciones, interactivo - instalar/actualizar un conjunto de repositorios
-                        #(2) Ejecución sin el menu de opciones, interactivo - instalar/actualizar un solo repositorio
-                        #(3) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar un conjunto de repositorios
-                        #(4) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar un solo repositorio
+                        #(2) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar un conjunto de repositorios
 
 #Estado del almacenado temporalmente de las credenciales para sudo
 # -1 - No se solicito el almacenamiento de las credenciales
@@ -105,20 +82,6 @@ g_status_crendential_storage=-1
 g_is_credential_storage_externally=1
 
 
-#Menu personalizado: Opciones iniciales y especiales del menu (no estan vinculado al menu dinamico):
-# > Actualizar todos paquetes del sistema operativo (Opción 1 del arreglo del menu)
-g_opt_update_installed_pckg=$((1 << 0))
-# > Actualizar todos los repositorios instalados (Opción 2 del arreglo del menu)
-g_opt_update_installed_repo=$((1 << 1))
-
-
-#Menu dinamico: Offset (desface) del indice del menu dinamico respecto a menu personalizado.
-#               Generalmente el menu dinamico no inicia desde la primera opcion personalizado del menú.
-g_offset_option_index_menu_install=2
-g_offset_option_index_menu_uninstall=0
-
-
-
 #}}}
 
 
@@ -127,29 +90,12 @@ g_offset_option_index_menu_uninstall=0
 #Funciones principales y el menú {{{
 
 
-function g_install_repository() {
-
-    #1. Argumentos 
-    local p_repo_id="$1"
-    local p_repo_title_template="$2"
-
-    local p_only_update_if_its_installed=1
-    if [ "$3" = "0" ]; then
-        p_only_update_if_its_installed=0
-    fi
-
-    #1. Inicializaciones
-    local l_status=0
-    local l_repo_name="${gA_packages[$p_repo_id]}"
-
-}
-
 
 #
 #Parametros de entrada (Argumentos):
 #  1 > Opciones relacionados con los repositorios que se se instalaran (entero que es suma de opciones de tipo 2^n).
 #
-function g_install_repositories() {
+function g_install_options() {
     
     #1. Argumentos 
     local p_input_options=-1
@@ -162,6 +108,225 @@ function g_install_repositories() {
         return 99
     fi
 
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_is_noninteractive=0
+    fi
+
+    #Flag '0' cuando no se realizo ninguna instalacion de paquetes (si se instala un paquete del SO, se obligará a actualizar el gestor de paquetes).
+    local l_flag_packages_nonupgraded=0
+
+    #2. Opción> Paquetes basicos: Curl, OpenSSL y Tmux
+    local l_option=2
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+        #Solo soportado para los que tenga acceso a root
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+            #Mostrar el titulo de instalacion
+            print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "> Instalando '%bCurl%b', '%bOpenSSL%b' y '%bTmux%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            print_line '─' $g_max_length_line "$g_color_blue1"
+
+            #Parametros:
+            # 1> Tipo de ejecución: 2/4 (ejecución sin menu, para instalar/actualizar un grupo paquetes)
+            # 2> Paquetes a instalar 
+            # 3> El estado de la credencial almacenada para el sudo
+            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+            if [ $l_is_noninteractive -eq 1 ]; then
+                ~/.files/setup/linux/03_setup_packages.bash 2 'curl,openssl,tmux' $g_status_crendential_storage $l_flag_packages_nonupgraded
+                l_status=$?
+            else
+                ~/.files/setup/linux/03_setup_packages.bash 4 'curl,openssl,tmux' $g_status_crendential_storage $l_flag_packages_nonupgraded
+                l_status=$?
+            fi
+
+            if [ $l_flag_packages_nonupgraded -eq 0 ]; then
+                l_flag_packages_nonupgraded=1
+            fi
+
+            #Si no se acepto almacenar credenciales
+            if [ $l_status -eq 120 ]; then
+                return 120
+            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+            elif [ $l_status -eq 119 ]; then
+                g_status_crendential_storage=0
+            fi
+
+        fi
+
+    fi
+
+    #2. Opción> Programas basicos: Comandos basicos, VIM, NeoVIM, NodeJs y Python
+    l_option=4
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+        #Solo soportado para los que tenga acceso a root
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+            #Mostrar el titulo de instalacion
+            print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "> Instalando '%bComandos basicos%b', '%bVIM/NeoVIM%b', '%bNodeJS%b' y '%bPython%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+                   "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            print_line '─' $g_max_length_line "$g_color_blue1"
+
+            #Solo actualizar los paquetes del SO, si no se hizo antes
+            local l_options=152
+            if [ $l_flag_packages_nonupgraded -eq 0 ]; then
+                l_options=153
+                $l_flag_packages_nonupgraded=1
+            fi
+
+            #Parametros:
+            # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
+            # 2> Paquetes a instalar: 8 (Python/NodeJS) + 16 (VIM) + 128 (NeoVIM)
+            # 3> El estado de la credencial almacenada para el sudo
+            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+            if [ $l_is_noninteractive -eq 1 ]; then
+                ~/.files/setup/linux/02_setup_profile.bash 1 $l_options $g_status_crendential_storage
+                l_status=$?
+            else
+                ~/.files/setup/linux/02_setup_profile.bash 2 $l_options $g_status_crendential_storage
+                l_status=$?
+            fi
+
+            #Si no se acepto almacenar credenciales
+            if [ $l_status -eq 120 ]; then
+                return 120
+            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+            elif [ $l_status -eq 119 ]; then
+                g_status_crendential_storage=0
+            fi
+
+        fi
+
+    fi
+
+    #3. Opción> LSP/DAP de .NET : Omnisharp-Roslyn, NetCoreDbg
+    l_option=8
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+        #Solo soportado para los que tenga acceso a root
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+            #Mostrar el titulo de instalacion
+            print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "> Instalando %bLSP/DAP de .NET%b: '%bOmnisharp-Roslyn%b' y '%bNetCoreDbg%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+                   "$g_color_cian1" "$g_color_reset"
+            print_line '─' $g_max_length_line "$g_color_blue1"
+
+            #Parametros:
+            # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
+            # 2> Repsositorio a instalar/acutalizar: 
+            # 3> El estado de la credencial almacenada para el sudo
+            # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
+            # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+            if [ $l_is_noninteractive -eq 1 ]; then
+                
+                ~/.files/setup/linux/01_setup_commands.bash 2 "roslyn,netcoredbg" $g_status_crendential_storage            
+                l_status=$?
+            else
+                ~/.files/setup/linux/01_setup_commands.bash 4 "roslyn,netcoredbg" $g_status_crendential_storage            
+                l_status=$?
+            fi
+
+            #Si no se acepto almacenar credenciales
+            if [ $l_status -eq 120 ]; then
+                return 120
+            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+            elif [ $l_status -eq 119 ]; then
+               g_status_crendential_storage=0
+            fi
+
+        fi
+
+    fi
+
+    #4. Opción> LSP/DAP de Java : Jdtls
+    l_option=16
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+        #Solo soportado para los que tenga acceso a root
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+            #Mostrar el titulo de instalacion
+            print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "> Instalando %bLSP/DAP de Java%b: '%bJdtls%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+                   "$g_color_cian1" "$g_color_reset"
+            print_line '─' $g_max_length_line "$g_color_blue1"
+
+            #Parametros:
+            # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
+            # 2> Repsositorio a instalar/acutalizar: 
+            # 3> El estado de la credencial almacenada para el sudo.
+            # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
+            # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+            if [ $l_is_noninteractive -eq 1 ]; then
+                ~/.files/setup/linux/01_setup_commands.bash 2 "jdtls" $g_status_crendential_storage 0 0
+                l_status=$?
+            else
+                ~/.files/setup/linux/01_setup_commands.bash 4 "jdtls" $g_status_crendential_storage 0 0
+                l_status=$?
+            fi
+
+            #Si no se acepto almacenar credenciales
+            if [ $l_status -eq 120 ]; then
+                return 120
+            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+            elif [ $l_status -eq 119 ]; then
+               g_status_crendential_storage=0
+            fi
+
+        fi
+
+    fi
+
+    #2. Opción> Configurar el profile del usuario y VIM/NeoVIM como Developer
+    l_option=1
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+        #Solo soportado para los que tenga acceso a root
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+            #Mostrar el titulo de instalacion
+            print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "> Configurar el %bprofile del usuario%b, '%bVIM/NeoVIM%b' como %bDeveloper%b\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+                   "$g_color_cian1" "$g_color_reset"
+            print_line '─' $g_max_length_line "$g_color_blue1"
+
+            #Parametros:
+            # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
+            # 2> Opciones a configurar: 2 (Profile) + 4 (Recrear enlaces simbolicos) + 64 (VIM como IDE) + 512 (NeoVIM como IDE)
+            # 3> El estado de la credencial almacenada para el sudo
+            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+            if [ $l_is_noninteractive -eq 1 ]; then
+                ~/.files/setup/linux/02_setup_profile.bash 1 582 $g_status_crendential_storage
+                l_status=$?
+            else
+                ~/.files/setup/linux/02_setup_profile.bash 2 582 $g_status_crendential_storage
+                l_status=$?
+            fi
+
+            #Si no se acepto almacenar credenciales
+            if [ $l_status -eq 120 ]; then
+                return 120
+            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+            elif [ $l_status -eq 119 ]; then
+                g_status_crendential_storage=0
+            fi
+
+        fi
+
+    fi
+
+    #7. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
+    #   Si no se invoca usando el menú y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
+    if [ $g_status_crendential_storage -eq 0 ] && [ $gp_type_calling -eq 0 ]; then
+    #if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
+        clean_sudo_credencial
+    fi
+
+
 }    
 
 function _show_menu_install_core() {
@@ -169,17 +334,17 @@ function _show_menu_install_core() {
     print_text_in_center "Menu de Opciones (Install/Update)" $g_max_length_line "$g_color_green1"
     print_line '-' $g_max_length_line  "$g_color_gray1"
     printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
-    printf " (%ba%b) Actualizar los paquetes del SO existentes y los binarios/programas ya instalados\n" "$g_color_green1" "$g_color_reset"
-    printf " (%bb%b) Instalar o actualizar: Binarios basicos, 'Nerd Fonts', NeoVim\n" "$g_color_green1" "$g_color_reset"
-    printf " (%bc%b) Instalar o actualizar: Binarios basicos, 'Nerd Fonts', NeoVim, .NET SDK/LSP/DAP, PowerShell\n" "$g_color_green1" "$g_color_reset"
-    printf " (%bd%b) Instalar o actualizar los runtime, SDK, LSP y DAP: .NET, Java, NodeJS, C/C++, Rust, Go\n" "$g_color_green1" "$g_color_reset"
-    printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
-    get_length_menu_option $g_offset_option_index_menu_install
-    local l_max_digits=$?
+    local l_max_digits=2
 
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes existentes del sistema operativo\n" "$g_color_green1" "$g_opt_update_installed_pckg" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar solo los repositorios de programas ya instalados\n" "$g_color_green1" "$g_opt_update_installed_repo" "$g_color_reset"
+    printf " ( ) Configuración personalizado para el usuario:\n"
+    printf "     (%b%0${l_max_digits}d%b) Configurar el profile del usuario y VIM/NeoVIM como %bDeveloper%b\n" "$g_color_green1" "1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+
+    printf " ( ) Programas requeridos a instalar %b(usualmente instalado como root)%b:\n" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Paquetes  basicos: %bCurl, OpenSSL y Tmux%b\n" "$g_color_green1" "2" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bComandos basicos, VIM, NeoVIM, NodeJs y Python%b\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET  : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .Java : %bJdtls%b\n" "$g_color_green1" "16" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_gray1"
 
@@ -197,30 +362,12 @@ function g_install_main() {
     #3. Mostar la ultima parte del menu y capturar la opcion elegida
     local l_flag_continue=0
     local l_options=""
-    local l_value_option_a=$(($g_opt_update_installed_pckg + $g_opt_update_installed_repo))
     while [ $l_flag_continue -eq 0 ]; do
 
         printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
         read -r l_options
 
         case "$l_options" in
-
-            a)
-                l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_green1" 
-                printf '\n'
-                g_install_repositories $l_value_option_a 0
-                ;;
-
-            b)
-                l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_green1" 
-                printf '\n'
-                #    4> Binarios basicos
-                #   32> Fuente 'Nerd Fonts'
-                #   64> Editor NeoVIM
-                g_install_repositories 100 0
-                ;;
 
             q)
                 l_flag_continue=1
@@ -240,7 +387,7 @@ function g_install_main() {
                     l_flag_continue=1
                     print_line '─' $g_max_length_line "$g_color_green1" 
                     printf '\n'
-                    g_install_repositories $l_options 0
+                    g_install_options $l_options
                 else
                     l_flag_continue=0
                     printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
@@ -272,21 +419,22 @@ function g_install_main() {
 
 g_usage() {
 
-    printf '%bUsage:\n\n' "$g_color_gray1"
-    printf '  > Instalar repositorios mostrando el menú de opciones (interactivo):\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Instalar/Actualizar un grupo de repositorios sin mostrar el menú, pero interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Instalar/Actualizar un repositorio sin mostrar el  menú, pero interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 2 REPO-ID%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 2 REPO-ID SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '  > Instalar/Actualizar un grupo de repositorios sin mostrar el menú, pero no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 3 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 3 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Instalar/Actualizar un repositorio sin mostrar el  menú, pero no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 4 REPO-ID%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 4 REPO-ID SUDO-STORAGE-OPTIONS%b\n\n' "$g_color_yellow1" "$g_color_reset"
+    printf 'Usage:\n'
+    printf '  > %bDesintalar repositorios mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset" 
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '  > %bInstalar repositorios mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '  > %bInstalar/Actualizar un grupo de opciones sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    > %bCALLING_TYPE%b (para este escenario) es 1 si es interactivo y 2 si es no-interactivo.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf 'Donde:\n'
+    printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n\n' \
+           "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -294,16 +442,22 @@ g_usage() {
 #1. Argumentos fijos del script
 
 
-#Argumento 1: Si es "uninstall" se desintalar (siempre muestra el menu)
-#             Caso contrario se se indica el tipo de configuración (instalación/actualización)
-if [[ "$1" =~ ^[0-9]+$ ]]; then
+#Argumento 1: Indica el tipo de invocación
+if [ -z "$1" ]; then
+    gp_type_calling=0
+elif [[ "$1" =~ ^[0-9]+$ ]]; then
     gp_type_calling=$1
-elif [ ! -z "$1" ]; then
+else
     printf 'Argumentos invalidos.\n\n'
     g_usage
     exit 110
 fi
 
+if [ $gp_type_calling -lt 0 ] || [ $gp_type_calling -gt 2 ]; then
+    printf 'Argumentos invalidos.\n\n'
+    g_usage
+    exit 110
+fi
 
 
 #2. Logica principal del script (incluyendo los argumentos variables)
@@ -321,8 +475,8 @@ g_is_credential_storage_externally=1
 #2.1. Por defecto, mostrar el menu para escoger lo que se va instalar
 if [ $gp_type_calling -eq 0 ]; then
 
-    #Validar los requisitos
-    fulfill_preconditions $g_os_subtype_id $gp_type_calling 0 1
+    #Validar los requisitos (algunas opciones requiere root y otros no)
+    fulfill_preconditions $g_os_subtype_id 0 0 1
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -333,7 +487,8 @@ if [ $gp_type_calling -eq 0 ]; then
     fi
 
 #2.2. Instalando los repositorios especificados por las opciones indicas en '$2'
-elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
+#elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 2 ]; then
+else
 
     #Parametros del script usados hasta el momento:
     # 1> Tipo de configuración: 1 (instalación/actualización).
@@ -356,14 +511,14 @@ elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
 
     fi
 
-    #Validar los requisitos
-    fulfill_preconditions $g_os_subtype_id $gp_type_calling 0 1
+    #Validar los requisitos (algunas opciones requiere root y otros no)
+    fulfill_preconditions $g_os_subtype_id 1 0 1
     _g_status=$?
 
     #Iniciar el procesamiento
     if [ $_g_status -eq 0 ]; then
 
-        g_install_repositories $gp_opciones
+        g_install_options $gp_opciones
         _g_status=$?
 
         #Informar si se nego almacenar las credencial cuando es requirido
@@ -378,52 +533,6 @@ elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
         _g_result=111
     fi
 
-#2.3. Instalando un solo repositorio del ID indicao por '$2'
-else
-
-    #Parametros del script usados hasta el momento:
-    # 1> Tipo de configuración: 1 (instalación/actualización).
-    # 2> ID del repositorio a instalar: identificado interno del respositorio
-    # 3> El estado de la credencial almacenada para el sudo.
-    gp_repo_id="$2"
-    if [ -z "$gp_repo_id" ]; then
-       echo "Parametro 2 \"$2\" debe ser un ID de repositorio valido"
-       exit 110
-    fi
-
-    if [[ "$3" =~ ^[0-2]$ ]]; then
-        g_status_crendential_storage=$3
-
-        if [ $g_status_crendential_storage -eq 0 ]; then
-            g_is_credential_storage_externally=0
-        fi
-    fi
-
-    #Validar los requisitos
-    fulfill_preconditions $g_os_subtype_id $gp_type_calling 0 1
-    _g_status=$?
-
-    #Iniciar el procesamiento
-    if [ $_g_status -eq 0 ]; then
-
-        g_install_repository "$gp_repo_id" "" 1
-        _g_status=$?
-
-        #Informar si se nego almacenar las credencial cuando es requirido
-        if [ $_g_status -eq 0 ]; then
-
-            if [ $_g_status -eq 120 ]; then
-                _g_result=120
-            #Si la credencial se almaceno en este script (localmente). avisar para que lo cierre el caller
-            elif [ $g_is_credential_storage_externally -ne 0 ] && [ $g_status_crendential_storage -eq 0 ]; then
-                _g_result=119
-            fi
-
-        fi
-
-    else
-        _g_result=111
-    fi
 
 fi
     

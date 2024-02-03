@@ -104,10 +104,10 @@ gp_uninstall=1          #(0) Para instalar/actualizar
 
 #Tipo de ejecucion del script principal
 gp_type_calling=0       #(0) Ejecución mostrando el menu del opciones (siempre es interactiva).
-                        #(1) Ejecución sin el menu de opciones, interactivo - instalar/actualizar un conjunto de repositorios
-                        #(2) Ejecución sin el menu de opciones, interactivo - instalar/actualizar un solo repositorio
-                        #(3) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar un conjunto de repositorios
-                        #(4) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar un solo repositorio
+                        #(1) Ejecución sin el menu de opciones, interactivo - instalar/actualizar los repositorios de un conjunto opciones de menú
+                        #(2) Ejecución sin el menu de opciones, interactivo - instalar/actualizar los repositorios indicado su IDs
+                        #(3) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar los repositorios de un conjunto opciones de menú
+                        #(4) Ejecución sin el menu de opciones, no interactivo - instalar/actualizar los repositorio indicado su IDs
 
 #Estado del almacenado temporalmente de las credenciales para sudo
 # -1 - No se solicito el almacenamiento de las credenciales
@@ -134,6 +134,9 @@ g_opt_update_installed_repo=$((1 << 1))
 g_offset_option_index_menu_install=2
 g_offset_option_index_menu_uninstall=0
 
+
+#Solo descargar la ultima versión
+g_setup_only_last_version=1
 
 #Personalización: Variables a modificar.
 . ~/.files/setup/linux/_setup_commands_custom_settings.bash
@@ -2407,7 +2410,7 @@ declare -a _g_install_repo_status
 #  2 > La plantilla del titulo (si tiene un '%s', sera remplazado por "se instalará", "se actualizará" o "se configurará")
 #      Si se envia una cadena vacia o no se especifica, no se mostrara el titulo.
 #      Se usa "se configurará" si no se puede determinar si se instala o configura pero es necesario que se continue.
-#  3 > Flag '0' si la unica configuración que puede realizarse es actualizarse (no instalarse) y siempre en cuando el repositorio esta esta instalado.
+#  3 > Flag '0', si la unica configuración que puede realizarse es actualizarse (no instalarse) y siempre en cuando el repositorio esta esta instalado.
 #
 #Parametros de salida (El valor de retorno). Sus valores pueder ser
 #   0 > Se inicio la configuración (en por lo menos uno de los 2 SO Linux o Windows).
@@ -2793,7 +2796,7 @@ function g_install_repository() {
 #Parametros de entrada (Argumentos):
 #  1 > Opciones relacionados con los repositorios que se se instalaran (entero que es suma de opciones de tipo 2^n).
 #
-function g_install_repositories() {
+function g_install_repositories_byopc() {
     
     #1. Argumentos 
     local p_input_options=-1
@@ -2811,9 +2814,9 @@ function g_install_repositories() {
     local l_flag=0
     local l_status
     local l_title
-    local l_noninteractive=1
-    if [ $gp_type_calling -eq 3 ] && [ $gp_type_calling -eq 4 ]; then
-        l_noninteractive=0
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 3 ] || [ $gp_type_calling -eq 4 ]; then
+        l_is_noninteractive=0
     fi
 
     #Si se muestra el menu
@@ -2841,7 +2844,7 @@ function g_install_repositories() {
             print_text_in_center2 "$l_title" $g_max_length_line 
             print_line '─' $g_max_length_line "$g_color_gray1"
             
-            upgrade_os_packages $g_os_subtype_id $l_noninteractive
+            upgrade_os_packages $g_os_subtype_id $l_is_noninteractive
 
         fi
     fi
@@ -2900,6 +2903,224 @@ function g_install_repositories() {
 
 }
 
+#
+#Parametros de entrada (Argumentos):
+#  1 > Listado de ID de paquetes separados por coma.
+function g_install_repositories_byid() {
+    
+    #1. Argumentos
+    if [ -z "$1" ]; then
+        echo "ERROR: Listado de paquetes \"${1}\" es invalido"
+        return 99
+    fi
+
+    p_show_title_on_onerepo=1
+    if [ "$2" = "0" ]; then
+        p_show_title_on_onerepo=0
+    fi
+
+    local IFS=','
+    local pa_packages=(${1})
+    IFS=$' \t\n'
+
+    local l_n=${#pa_packages[@]}
+    if [ $l_n -le 0 ]; then
+        echo "ERROR: Listado de paquetes \"${1}\" es invalido"
+        return 99
+    fi
+
+    #3. Inicializaciones cuando se invoca directamente el script
+    #local l_title
+    #local l_is_noninteractive=1
+    #if [ $gp_type_calling -eq 3 ] || [ $gp_type_calling -eq 4 ]; then
+    #    l_is_noninteractive=0
+    #fi
+
+    #Instalacion de paquetes del SO
+    #if [ $p_upgrade_os_packages -eq 0 ]; then
+
+    #    #Solicitar credenciales para sudo y almacenarlas temporalmente
+    #    if [ $g_status_crendential_storage -eq 0 ]; then
+    #        storage_sudo_credencial
+    #        g_status_crendential_storage=$?
+    #        #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+    #        #  Si es 0 o 1: la instalación/configuración es completar
+    #        #  Si es 2    : el usuario no acepto la instalación/configuración
+    #        #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
+    #        if [ $g_status_crendential_storage -eq 2 ]; then
+    #            return 120
+    #        fi
+    #    fi
+
+    #    print_line '-' $g_max_length_line  "$g_color_gray1"
+    #    printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_cian1" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+    #    print_text_in_center2 "$l_title" $g_max_length_line 
+    #    print_line '-' $g_max_length_line "$g_color_gray1"
+
+    #    upgrade_os_packages $g_os_subtype_id $l_is_noninteractive
+
+    #fi
+
+
+    #5. Instalar los paquetes indicados
+    local l_repo_id
+    local l_repo_name_aux
+    local l_title_template=""
+
+    local l_exits_error=1
+    local l_x=0
+    local l_status
+    local l_aux=""
+    local l_processed_repo=""
+
+    for((l_x=0; l_x < ${l_n}; l_x++)); do
+        
+        #A.1. Nombre a mostrar del paquete
+        l_repo_id="${pa_packages[$l_x]}"
+        l_repo_name_aux="${gA_packages[${l_repo_id}]}"
+        if [ -z "$l_repo_name_aux" ]; then
+            printf 'El %brepositorio "%s"%b no esta definido en "gA_packages" para su instalacion.\n\n' \
+                   "$g_color_red1" "$l_repo_id" "$g_color_reset"
+            continue
+        fi
+
+        l_title_template=""
+        if [ $l_n -ne 1 ]; then
+            printf -v l_title_template "%s(%s/%s)%s> El repositorio '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_x + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
+                    "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+        elif [ $p_show_title_on_onerepo -eq 0 ]; then
+            printf -v l_title_template "- El repositorio '%s%s%s' %s%%s%s" "$g_color_cian1" "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+        fi
+
+
+        #A.2. Instalar el repositorio
+        g_install_repository "$l_repo_id" "$l_title_template" 1 
+        l_status=$?   #'g_install_repository' solo se puede mostrar el titulo del repositorio cuando retorna [0, 1] y ninguno de los estados de '_g_install_repo_status' sea [0, 2].
+                      # 0 > Se inicio la configuración (en por lo menos uno de los 2 SO Linux o Windows).
+                      #     Para ver detalle del estado ver '_g_install_repo_status'.
+                      # 1 > No se inicio la configuración del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
+                      #     Para ver detalle del estado ver '_g_install_repo_status'.
+                      # 2 > No se puede obtener la ultima versión del repositorio o la versión obtenida no es valida.
+                      #99 > Argumentos ingresados son invalidos.
+
+        #Se requiere almacenar las credenciales para realizar cambios con sudo.
+        if [ $l_status -eq 120 ]; then
+            return 120
+        fi
+
+        #A.3. Si se envio parametros incorrectos
+        if [ $l_status -eq 99 ]; then
+
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_exits_error=0
+            printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido a los parametros incorrectos enviados.\n' \
+                          "$g_color_red1" "$l_repo_id" "$g_color_reset"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+
+            break
+
+        fi
+
+        #A.4. Si no se pudo obtener la ultima versión del repositorio
+        if [ $l_status -eq 2 ]; then
+
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_exits_error=0
+            printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido su ultima versión obtenida es invalida.\n' \
+                   "$g_color_red1" "$l_repo_id" "$g_color_reset"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+
+            break
+
+        fi
+
+        #A.5. Si el repositorio no esta permitido procesarse en ninguno de los SO (no esta permitido para ser instalado en SO).
+        if [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
+            continue
+        fi 
+
+        #A.6. Obtener el status del procesamiento principal del repositorio
+        if [ ${_g_install_repo_status[0]} -gt 1 ] && [ ${_g_install_repo_status[1]} -le 1 ]; then
+            #Si solo este permitido iniciar su proceso en Linux.
+            l_processed_repo=${_g_install_repo_status[0]}
+            l_aux="Linux '${g_os_subtype_name}'"
+        elif [ ${_g_install_repo_status[0]} -le 1 ] && [ ${_g_install_repo_status[1]} -gt 1 ]; then
+            #Si solo este permitido iniciar su proceso en Windows.
+            l_processed_repo=${_g_install_repo_status[1]}
+            l_aux="Windows vinculado a su Linux WSL '${g_os_subtype_name}')"
+        else
+            #Si esta permitido iniciar el procesa tanto el Linux como en Windows (solo se considera como estado de Linux. El Windows es opcional y pocas veces usado).
+            l_processed_repo=${_g_install_repo_status[0]}
+            l_aux="Linux WSL '${g_os_subtype_name}' (o su Windows vinculado)"
+        fi
+
+        #A.7. Mostrar información adicional> Estados de un proceso no iniciado:
+
+        #   2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
+        if [ $l_processed_repo -eq 2 ]; then
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            continue
+
+        #   3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
+        elif [ $l_processed_repo -eq 3 ]; then
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_exits_error=0
+
+            printf '%bError al obtener la versión actual%b del respositorio "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+            break
+
+        #   4 > El repositorio esta instalado y ya esta actualizado.
+        elif [ $l_processed_repo -eq 4 ]; then
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            printf '\n'
+
+        #A.8. Mostrar información adicional> Estados de un proceso iniciado:
+
+        #   5 > El repositorio inicio la instalación y lo termino con exito.
+        elif [ $l_processed_repo -eq 5 ]; then
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            printf '\n'
+
+        #   6 > El repositorio inicio la actualización y lo termino con exito.
+        elif [ $l_processed_repo -eq 6 ]; then
+            #No se considera un error, continue con el procesamiento de los siguientes repositorios.
+            printf '\n'
+
+        #   7 > El repositorio inicio la instalación y lo termino con error.
+        elif [ $l_processed_repo -eq 7 ]; then
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_exits_error=0
+
+            printf '%bError al instalar el respositorio%b "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+            break
+
+        #   8 > El repositorio inicio la actualización y lo termino con error.
+        elif [ $l_processed_repo -eq 8 ]; then
+            #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
+            l_exits_error=0
+
+            printf '%bError al actualizar el respositorio%b "%s" en %s\n' "$g_color_red1" "$g_color_reset" "$l_repo_name_aux" "$l_aux"
+            printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n\n'
+            break
+        fi
+
+
+    done
+
+
+    #6. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
+    #   Si no se invoca usando el menú y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
+    if [ $g_status_crendential_storage -eq 0 ] && [ $gp_type_calling -eq 0 ]; then
+    #if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
+        clean_sudo_credencial
+    fi
+
+}
+
+
+
 function _show_menu_install_core() {
 
     print_text_in_center "Menu de Opciones (Install/Update)" $g_max_length_line "$g_color_green1"
@@ -2946,7 +3167,7 @@ function g_install_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1" 
                 printf '\n'
-                g_install_repositories $l_value_option_a 0
+                g_install_repositories_byopc $l_value_option_a 0
                 ;;
 
             b)
@@ -2956,7 +3177,7 @@ function g_install_main() {
                 #    4> Binarios basicos
                 #   32> Fuente 'Nerd Fonts'
                 #   64> Editor NeoVIM
-                g_install_repositories 100 0
+                g_install_repositories_byopc 100 0
                 ;;
 
             c)
@@ -2969,7 +3190,7 @@ function g_install_main() {
                 #  128> PowerShell
                 #32768> .NET SDK 
                 #65536> .NET LSP/DAP
-                g_install_repositories 98532 0
+                g_install_repositories_byopc 98532 0
                 ;;
 
             d)
@@ -2986,7 +3207,7 @@ function g_install_main() {
                 # 4194304> Rust  : Compiler
                 # 8388608> Rust  : LSP server
                 #16777216> Go    : RTE
-                g_install_repositories 33521664 0
+                g_install_repositories_byopc 33521664 0
                 ;;
             q)
                 l_flag_continue=1
@@ -3006,7 +3227,7 @@ function g_install_main() {
                     l_flag_continue=1
                     print_line '─' $g_max_length_line "$g_color_green1" 
                     printf '\n'
-                    g_install_repositories $l_options 0
+                    g_install_repositories_byopc $l_options 0
                 else
                     l_flag_continue=0
                     printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
@@ -3102,23 +3323,32 @@ function g_uninstall_main() {
 
 g_usage() {
 
-    printf '%bUsage:\n\n' "$g_color_gray1"
-    printf '  > Desintalar repositorios mostrando el menú de opciones:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash uninstall\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Instalar repositorios mostrando el menú de opciones (interactivo):\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Instalar/Actualizar un grupo de repositorios sin mostrar el menú, pero interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 1 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Instalar/Actualizar un repositorio sin mostrar el  menú, pero interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 2 REPO-ID%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 2 REPO-ID SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '  > Instalar/Actualizar un grupo de repositorios sin mostrar el menú, pero no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 3 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 3 MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Instalar/Actualizar un repositorio sin mostrar el  menú, pero no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 4 REPO-ID%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 4 REPO-ID SUDO-STORAGE-OPTIONS%b\n\n' "$g_color_yellow1" "$g_color_reset"
+    printf 'Usage:\n'
+    printf '  > %bDesintalar repositorios mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset" 
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '  > %bInstalar repositorios mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash 0 INSTALL_ONLYLAST_VERSION\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '  > %bInstalar/Actualizar un grupo de repositorios sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS INSTALL_ONLYLAST_VERSION\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    > %bCALLING_TYPE%b (para este escenario) es 1 si es interactivo y 3 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bInstalar/Actualizar un repositorio sin mostrar el  menú%b:\n' "$g_color_cian1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID SUDO-STORAGE-OPTIONS INSTALL_ONLYLAST_VERSION%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    > %bLIST-REPO-ID%b lista de ID repositorios separados por coma.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf 'Donde:\n'
+    printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
+           "$g_color_gray1" "$g_color_reset"
+    printf '  > %bINSTALL_ONLYLAST_VERSION %bpor defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -3130,17 +3360,25 @@ g_usage() {
 
 
 #Argumento 1: Si es "uninstall" se desintalar (siempre muestra el menu)
-#             Caso contrario se se indica el tipo de configuración (instalación/actualización)
-if [[ "$1" =~ ^[0-9]+$ ]]; then
+#             Caso contrario se se indica el tipo de invocación
+if [ -z "$1" ]; then
+    gp_type_calling=0
+elif [[ "$1" =~ ^[0-9]+$ ]]; then
     gp_type_calling=$1
 elif [ "$1" = "uninstall" ]; then
     gp_uninstall=0
-elif [ ! -z "$1" ]; then
+    gp_type_calling=0
+else
     printf 'Argumentos invalidos.\n\n'
     g_usage
     exit 110
 fi
 
+if [ $gp_type_calling -lt 0 ] || [ $gp_type_calling -gt 4 ]; then
+    printf 'Argumentos invalidos.\n\n'
+    g_usage
+    exit 110
+fi
 
 
 #2. Logica principal del script (incluyendo los argumentos variables)
@@ -3156,7 +3394,7 @@ g_is_credential_storage_externally=1
 if [ $gp_uninstall -eq 0 ]; then
 
     #Validar los requisitos
-    fulfill_preconditions $g_os_subtype_id $gp_type_calling 1 1
+    fulfill_preconditions $g_os_subtype_id 0 1 1
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -3172,9 +3410,16 @@ else
 
     #2.2.1. Por defecto, mostrar el menu para escoger lo que se va instalar
     if [ $gp_type_calling -eq 0 ]; then
-    
+
+        #Parametros del script usados hasta el momento:
+        # 1> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+        g_setup_only_last_version=1        
+        if [ "$2" = "0" ]; then
+            g_setup_only_last_version=0
+        fi
+
         #Validar los requisitos
-        fulfill_preconditions $g_os_subtype_id $gp_type_calling 0 1
+        fulfill_preconditions $g_os_subtype_id 0 0 1
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -3191,6 +3436,7 @@ else
         # 1> Tipo de configuración: 1 (instalación/actualización).
         # 2> Opciones de menu a ejecutar: entero positivo.
         # 3> El estado de la credencial almacenada para el sudo.
+        # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
         gp_opciones=0
         if [[ "$2" =~ ^[0-9]+$ ]]; then
             gp_opciones=$2
@@ -3208,14 +3454,19 @@ else
 
         fi
 
+        g_setup_only_last_version=1        
+        if [ "$4" = "0" ]; then
+            g_setup_only_last_version=0
+        fi
+
         #Validar los requisitos
-        fulfill_preconditions $g_os_subtype_id $gp_type_calling 0 1
+        fulfill_preconditions $g_os_subtype_id 1 0 1
         _g_status=$?
 
         #Iniciar el procesamiento
         if [ $_g_status -eq 0 ]; then
 
-            g_install_repositories $gp_opciones
+            g_install_repositories_byopc $gp_opciones
             _g_status=$?
 
             #Informar si se nego almacenar las credencial cuando es requirido
@@ -3235,10 +3486,12 @@ else
     
         #Parametros del script usados hasta el momento:
         # 1> Tipo de configuración: 1 (instalación/actualización).
-        # 2> ID del repositorio a instalar: identificado interno del respositorio
+        # 2> Listado de ID del repositorio a instalar.
         # 3> El estado de la credencial almacenada para el sudo.
-        gp_repo_id="$2"
-        if [ -z "$gp_repo_id" ]; then
+        # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+        # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+        gp_list_repo_ids="$2"
+        if [ -z "$gp_list_repo_ids" ]; then
            echo "Parametro 2 \"$2\" debe ser un ID de repositorio valido"
            exit 110
         fi
@@ -3251,14 +3504,24 @@ else
             fi
         fi
     
+        g_setup_only_last_version=1        
+        if [ "$4" = "0" ]; then
+            g_setup_only_last_version=0
+        fi
+
+        _g_show_title_on_onerepo=1
+        if [ "$5" = "0" ]; then
+            _g_show_title_on_onerepo=0
+        fi
+
         #Validar los requisitos
-        fulfill_preconditions $g_os_subtype_id $gp_type_calling 0 1
+        fulfill_preconditions $g_os_subtype_id 1 0 1
         _g_status=$?
 
         #Iniciar el procesamiento
         if [ $_g_status -eq 0 ]; then
 
-            g_install_repository "$gp_repo_id" "" 1
+            g_install_repositories_byid "$gp_list_repo_ids" $_g_show_title_on_onerepo
             _g_status=$?
 
             #Informar si se nego almacenar las credencial cuando es requirido
