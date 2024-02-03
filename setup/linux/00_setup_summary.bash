@@ -117,7 +117,7 @@ function g_install_options() {
     local l_flag_packages_nonupgraded=0
 
     #2. Opción> Paquetes basicos: Curl, OpenSSL y Tmux
-    local l_option=2
+    local l_option=4
     if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -157,8 +157,8 @@ function g_install_options() {
 
     fi
 
-    #2. Opción> Programas basicos: Comandos basicos, VIM, NeoVIM, NodeJs y Python
-    l_option=4
+    #3. Opción> Programas basicos: Comandos basicos, VIM, NeoVIM, NodeJs y Python
+    l_option=8
     if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -202,8 +202,8 @@ function g_install_options() {
 
     fi
 
-    #3. Opción> LSP/DAP de .NET : Omnisharp-Roslyn, NetCoreDbg
-    l_option=8
+    #4. Opción> LSP/DAP de .NET : Omnisharp-Roslyn, NetCoreDbg
+    l_option=16
     if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -242,8 +242,8 @@ function g_install_options() {
 
     fi
 
-    #4. Opción> LSP/DAP de Java : Jdtls
-    l_option=16
+    #5. Opción> LSP/DAP de Java : Jdtls
+    l_option=32
     if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -281,8 +281,47 @@ function g_install_options() {
 
     fi
 
-    #2. Opción> Configurar el profile del usuario y VIM/NeoVIM como Developer
+
+    #6. Opción> Configurar el profile del usuario y VIM/NeoVIM como Editor
     l_option=1
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+        #Solo soportado para los que tenga acceso a root
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+            #Mostrar el titulo de instalacion
+            print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "> Configurar el %bprofile del usuario%b, '%bVIM/NeoVIM%b' como %bEditor%b\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+                   "$g_color_cian1" "$g_color_reset"
+            print_line '─' $g_max_length_line "$g_color_blue1"
+
+            #Parametros:
+            # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
+            # 2> Opciones a configurar: 2 (Profile) + 4 (Recrear enlaces simbolicos) + 32 (VIM como Editor) + 256 (NeoVIM como Editor)
+            # 3> El estado de la credencial almacenada para el sudo
+            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+            if [ $l_is_noninteractive -eq 1 ]; then
+                ~/.files/setup/linux/02_setup_profile.bash 1 294 $g_status_crendential_storage
+                l_status=$?
+            else
+                ~/.files/setup/linux/02_setup_profile.bash 2 294 $g_status_crendential_storage
+                l_status=$?
+            fi
+
+            #Si no se acepto almacenar credenciales
+            if [ $l_status -eq 120 ]; then
+                return 120
+            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+            elif [ $l_status -eq 119 ]; then
+                g_status_crendential_storage=0
+            fi
+
+        fi
+
+    fi
+
+    #7. Opción> Configurar el profile del usuario y VIM/NeoVIM como Developer
+    l_option=2
     if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -338,13 +377,14 @@ function _show_menu_install_core() {
     local l_max_digits=2
 
     printf " ( ) Configuración personalizado para el usuario:\n"
-    printf "     (%b%0${l_max_digits}d%b) Configurar el profile del usuario y VIM/NeoVIM como %bDeveloper%b\n" "$g_color_green1" "1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Configurar el profile del usuario y VIM/NeoVIM como %bEditor%b\n" "$g_color_green1" "1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Configurar el profile del usuario y VIM/NeoVIM como %bDeveloper%b\n" "$g_color_green1" "2" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
 
     printf " ( ) Programas requeridos a instalar %b(usualmente instalado como root)%b:\n" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Paquetes  basicos: %bCurl, OpenSSL y Tmux%b\n" "$g_color_green1" "2" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bComandos basicos, VIM, NeoVIM, NodeJs y Python%b\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET  : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .Java : %bJdtls%b\n" "$g_color_green1" "16" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Paquetes  basicos: %bCurl, OpenSSL y Tmux%b\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bComandos basicos, VIM, NeoVIM, NodeJs y Python%b\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET  : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "16" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .Java : %bJdtls%b\n" "$g_color_green1" "32" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_gray1"
 
