@@ -815,4 +815,69 @@ uninstall_os_package() {
 }
 
 
+#Limpiar el cache
+#Parametros de entrada - Agumentos y opciones:
+#  1 > El tipo de distribucion Linux (variable global 'g_os_subtype_id' generado por la funcion 'get_linux_type_info') 
+#  2 > Flag es 0, si es modo no-interactivo (asume 'yes' siempre que se instanta preguntar en forma interactiva)
+#Parametros de salida :
+#  Valor de retorno :
+#    0 > OK
+#    1 > No OK
+#    9 > Parametros de entrada invalido
+clean_os_cache() {
+
+    local p_os_subtype_id=$1
+    local l_status=0
+
+    #Opcion de modo non-interactive
+    local p_non_interative=''
+    if [ "$2" = "0" ]; then
+        p_non_interative='-y '
+    fi
+
+    local l_status=0
+
+    #Si no se calculo, Calcularlo 
+    if [ -z "$g_user_is_root" ]; then
+        get_user_options
+    fi
+
+    #Si es un distribucion de la familia Debian
+    if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
+
+        #Distribución: Ubuntu
+        if [ $g_user_is_root -eq 0 ]; then
+           apt-get $p_non_interative clean
+        else
+           sudo apt-get $p_non_interative clean
+        fi
+        l_status=$?
+
+    #Si es un distribucion de la familia Fedora
+    elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
+
+        #Distribución: Fedora
+        if [ $g_user_is_root -eq 0 ]; then
+           dnf $p_non_interative clean all
+        else
+           sudo dnf $p_non_interative clean all
+        fi
+        l_status=$?
+
+    else
+
+        printf 'La limpieza del cache del SO (tipo "%s") aun no esta implementado\n' "$p_os_type"
+        l_status=110
+    fi
+
+
+    if [ $l_status -eq 110 ]; then
+        return 9
+    elif [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    return 0
+
+}
 
