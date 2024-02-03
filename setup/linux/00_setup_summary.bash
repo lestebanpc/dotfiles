@@ -370,7 +370,7 @@ function g_install_options() {
 
 function _show_menu_install_core() {
 
-    print_text_in_center "Menu de Opciones (Install/Update)" $g_max_length_line "$g_color_green1"
+    print_text_in_center "Menu de Opciones (Install/Configuration)" $g_max_length_line "$g_color_green1"
     print_line '-' $g_max_length_line  "$g_color_gray1"
     printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
 
