@@ -834,8 +834,19 @@ function _config_vim_profile() {
         _config_vim $l_config_vim $l_flag_overwrite_ln
     fi
 
-    #6. Configurar NeoVIM 
+    #6. Configurar NeoVIM
+    local l_status
     if [ $l_config_nvim -ge 0 ]; then
+        
+        #¿El programa NeoVIM esta en el path?: se requiere usar el comando 'nvim'
+        if ! nvim --version 2> /dev/null; then
+            echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                export PATH=${g_path_programs}/neovim/bin:$PATH
+            fi
+        fi
+
         _config_nvim $l_config_nvim $l_flag_overwrite_ln
     fi
 
