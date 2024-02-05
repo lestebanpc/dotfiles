@@ -16,6 +16,7 @@ g_color_blue1="\x1b[34m"
 g_max_length_line=130
 
 declare -r g_path_temp='/tmp'
+declare -r g_empty_str='EMPTY'
 
 #}}}
 
@@ -827,7 +828,7 @@ show_dynamic_menu() {
 
             l_repo_id="${la_repos[${l_j}]}"
             l_aux="${gA_packages[${l_repo_id}]}"
-            if [ -z "$l_aux" ]; then
+            if [ -z "$l_aux" ] || [ "$l_aux" = "$g_empty_str" ]; then
                 l_aux="$l_repo_id"
             fi
 

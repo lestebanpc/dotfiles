@@ -109,7 +109,7 @@ function g_install_options() {
     #fi
 
     p_list_repo_ids=""
-    if [ ! -z "$2" ]; then
+    if [ ! -z "$2" ] && [ "$2" != "EMPTY"]; then
         p_list_repo_ids="$2"
     fi
 
@@ -298,7 +298,7 @@ function g_install_options() {
 
             #Mostrar el titulo de instalacion
             print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando los %brepositorios de comandos%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$p_list_repo_ids" "$g_color_reset"
+            printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$p_list_repo_ids" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Parametros:
@@ -531,7 +531,7 @@ g_usage() {
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bMENU-OPTIONS%b Las opciones de menu a instalar. Si no desea especificar coloque 0.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bLIST-REPO-ID %bID de los repositorios de comandos a instalar, separados por coma. Por defecto, se envia vacio.%b\n' \
+    printf '  > %bLIST-REPO-ID %bID de los repositorios de comandos a instalar, separados por coma. Por defecto, se envia vacio o "EMPTY".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -613,8 +613,8 @@ else
         exit 110
     fi
 
-    _gp_list_repo_ids=""
-    if [ ! -z "$3" ]; then
+    _gp_list_repo_ids="EMPTY"
+    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
         _gp_list_repo_ids="$3"
     fi
 

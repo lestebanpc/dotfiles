@@ -345,7 +345,7 @@ uninstall_initialize_menu_option() {
 
         l_repo_id="${la_repos[${l_j}]}"
         l_aux="${gA_packages[${l_repo_id}]}"
-        if [ -z "$l_aux" ]; then
+        if [ -z "$l_aux" ] || [ "$l_aux" = "$g_empty_str" ]; then
             l_aux="$l_repo_id"
         fi
 

@@ -729,6 +729,10 @@ _validate_versions_to_install() {
     fi
 
     local l_repo_name_aux="${gA_packages[$p_repo_id]:-$p_repo_id}"
+    if [ "$l_repo_name_aux" = "$g_empty_str" ]; then
+        l_repo_name_aux="$p_repo_id"
+    fi
+
 
 
     #3. Mostrar el titulo
@@ -908,6 +912,9 @@ _validate_versions_to_uninstall() {
 
 
     local l_repo_name_aux="${gA_packages[$p_repo_id]:-$p_repo_id}"
+    if [ "$l_repo_name_aux" = "$g_empty_str" ]; then
+        l_repo_name_aux="$p_repo_id"
+    fi
 
 
     #3. Mostrar el titulo
@@ -1144,6 +1151,10 @@ function _install_menu_options() {
         #Nombre a mostrar del respositorio
         l_repo_id="${la_repos[$l_j]}"
         l_repo_name_aux="${gA_packages[${l_repo_id}]:-${l_repo_id}}"
+        if [ "$l_repo_name_aux" = "$g_empty_str" ]; then
+            l_repo_name_aux="$l_repo_id"
+        fi
+
 
         #4.1. Obtener el estado del repositorio antes de su instalación.
         l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
@@ -1556,6 +1567,10 @@ function _update_installed_repository() {
 
             #2.1. Valores iniciales
             l_repo_name_aux="${gA_packages[${l_repo_id}]:-${l_repo_id}}"
+            if [ "$l_repo_name_aux" = "$g_empty_str" ]; then
+                l_repo_name_aux="$l_repo_id"
+            fi
+
 
 
             #B.2. Calcular la plantilla del titulo.
@@ -1764,6 +1779,9 @@ function i_uninstall_repository() {
     local l_status
     #local l_repo_name="${gA_packages[$p_repo_id]}"
     #local l_repo_name_aux="${l_repo_name:-$p_repo_id}"
+    #if [ "$l_repo_name_aux" = "$g_empty_str" ]; then
+    #   l_repo_name_aux=''
+    #fi
     
     _g_uninstall_repo_status=(0 0)
 
@@ -2050,6 +2068,10 @@ function _uninstall_menu_options() {
         #Nombre a mostrar del respositorio
         l_repo_id="${la_repos[$l_j]}"
         l_repo_name_aux="${gA_packages[$l_repo_id]:-$l_repo_id}"
+        if [ "$l_repo_name_aux" = "$g_empty_str" ]; then
+            l_repo_name_aux="$l_repo_id"
+        fi
+
 
         #4.1. Obtener el estado del repositorio antes de su instalación.
         l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
@@ -2437,6 +2459,9 @@ function g_install_repository() {
     #1. Inicializaciones
     local l_status=0
     local l_repo_name="${gA_packages[$p_repo_id]}"
+    if [ "$l_repo_name" = "$g_empty_str" ]; then
+        l_repo_name=''
+    fi
 
 
     #2. Obtener la ultima version del repositorio
@@ -2982,6 +3007,10 @@ function g_install_repositories_byid() {
             printf 'El %brepositorio "%s"%b no esta definido en "gA_packages" para su instalacion.\n\n' \
                    "$g_color_red1" "$l_repo_id" "$g_color_reset"
             continue
+        fi
+
+        if [ "$l_repo_name_aux" = "$g_empty_str" ]; then
+            l_repo_name_aux="$l_repo_id"
         fi
 
         l_title_template=""

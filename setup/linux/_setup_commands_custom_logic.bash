@@ -5969,7 +5969,7 @@ uninstall_initialize_menu_option() {
 
         l_repo_id="${la_repos[${l_j}]}"
         l_aux="${gA_packages[${l_repo_id}]}"
-        if [ -z "$l_aux" ]; then
+        if [ -z "$l_aux" ] || [ "$l_aux" = "$g_empty_str" ]; then
             l_aux="$l_repo_id"
         fi
 
@@ -6099,6 +6099,9 @@ _uninstall_repository2() {
     #2. Inicialización de variables
     local l_repo_name="${gA_packages[$p_repo_id]}"
     #local l_repo_name_aux="${l_repo_name:-$p_repo_id}"
+    if [ "$l_repo_name" = "$g_empty_str" ]; then
+        l_repo_name=''
+    fi
     
     #Tag usuado para imprimir un identificador del artefacto en un log
     local l_tag="${p_repo_id}[${p_repo_current_version}]"
@@ -6124,6 +6127,10 @@ _uninstall_repository() {
 
     #2. Inicialización de variables
     local l_repo_name="${gA_packages[$p_repo_id]}"
+    if [ "$l_repo_name" = "$g_empty_str" ]; then
+        l_repo_name=''
+    fi
+
     #local l_repo_name_aux="${l_repo_name:-$p_repo_id}"
 
     #local l_path_source=""

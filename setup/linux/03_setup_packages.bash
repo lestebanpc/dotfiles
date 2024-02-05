@@ -229,6 +229,10 @@ function _install_menu_options() {
         #Nombre a mostrar del paquete
         l_repo_id="${la_repos[$l_j]}"
         l_repo_name_aux="${gA_packages[${l_repo_id}]:-${l_repo_id}}"
+        if [ "$l_repo_name_aux" = "$g_empty_str" ]; then
+            l_repo_name_aux="$l_repo_id"
+        fi
+
 
         #4.1. Obtener el estado del paquete antes de su instalación.
         l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
@@ -638,6 +642,9 @@ function _uninstall_menu_options() {
         #Nombre a mostrar del respositorio
         l_repo_id="${la_repos[$l_j]}"
         l_repo_name_aux="${gA_packages[$l_repo_id]:-$l_repo_id}"
+        if [ "$l_repo_name_aux" = "$g_empty_str" ]; then
+            l_repo_name_aux="$l_repo_id"
+        fi
 
         #4.1. Obtener el estado del paquete antes de su instalación.
         l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
@@ -951,6 +958,10 @@ function g_uninstall_package() {
     #1. Inicializaciones
     local l_status=0
     local l_package_name_default="${gA_packages[$p_package_id]}"
+    if [ "$l_package_name_default" = "$g_empty_str" ]; then
+        l_package_name_default=""
+    fi
+
     local l_package_name
 
     #3. Mostrar el titulo
@@ -1058,6 +1069,10 @@ function g_install_package() {
 
     #2. Obtener el nombre del paquete para el sistema operativo
     local l_package_name_default="${gA_packages[$p_package_id]}"
+    if [ "$l_package_name_default" = "$g_empty_str" ]; then
+        l_package_name_default=""
+    fi
+
     local l_package_name
     local l_search_type
     l_package_name=$(get_package_name "$p_package_id" "$l_package_name_default" ${g_os_subtype_id})
@@ -1319,6 +1334,10 @@ function g_install_packages_byid() {
             printf 'El %bpaquete "%s"%b no esta definido en "gA_packages" para su instalacion.\n\n' \
                    "$g_color_red1" "$l_repo_id" "$g_color_reset"
             continue
+        fi
+
+        if [ "$l_repo_name_aux" = "$g_empty_str" ]; then
+            l_repo_name_aux="$l_repo_id"
         fi
 
         if [ $l_n -ne 1 ]; then
