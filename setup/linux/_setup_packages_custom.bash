@@ -10,6 +10,7 @@
 gA_packages=(
         ['curl']='curl'
         ['tmux']='tmux'
+        ['unzip']='unzip'
         ['git']='git'
         ['openssl']='openssl'
         ['rsync']='rsync'
@@ -50,7 +51,7 @@ ga_menu_options_title=(
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
 ga_menu_options_packages=(
-    "curl,openssl,git,tmux,rsync"
+    "curl,openssl,unzip,git,tmux,rsync"
     "vim"
     "nvim"
     "python,python-pip"

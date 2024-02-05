@@ -129,11 +129,8 @@ function g_install_options() {
         l_is_noninteractive=0
     fi
 
-    #Flag '0' cuando no se realizo ninguna instalacion de paquetes (si se instala un paquete del SO, se obligará a actualizar el gestor de paquetes).
-    local l_flag_packages_nonupgraded=0
-    if [ $p_flag_upgrade_os_pkgs -ne 0 ]; then        
-        l_flag_packages_nonupgraded=1
-    fi
+    #Flag '0' cuando no se realizo ninguna instalacion de paquetes
+    local l_exist_packages_installed=1
 
     #2. Opción> Paquetes basicos: Curl, OpenSSL y Tmux
     local l_option=4
@@ -144,7 +141,8 @@ function g_install_options() {
 
             #Mostrar el titulo de instalacion
             print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando '%bCurl%b', '%bOpenSSL%b' y '%bTmux%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            printf "> Instalando '%bCurl%b', '%bUnZip%b', '%bOpenSSL%b' y '%bTmux%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+                   "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Parametros:
@@ -153,15 +151,15 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
             if [ $l_is_noninteractive -eq 1 ]; then
-                ~/.files/setup/linux/03_setup_packages.bash 2 'curl,openssl,tmux' $g_status_crendential_storage $l_flag_packages_nonupgraded
+                ~/.files/setup/linux/03_setup_packages.bash 2 'curl,unzip,openssl,tmux' $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             else
-                ~/.files/setup/linux/03_setup_packages.bash 4 'curl,openssl,tmux' $g_status_crendential_storage $l_flag_packages_nonupgraded
+                ~/.files/setup/linux/03_setup_packages.bash 4 'curl,unzip,openssl,tmux' $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             fi
 
-            if [ $l_flag_packages_nonupgraded -eq 0 ]; then
-                l_flag_packages_nonupgraded=1
+            if [ $l_exist_packages_installed -ne 0 ]; then
+                l_exist_packages_installed=0
             fi
 
             #Si no se acepto almacenar credenciales
@@ -185,7 +183,7 @@ function g_install_options() {
 
             #Mostrar el titulo de instalacion
             print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando %bComandos Basicos%b: '%bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, etc.%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            printf "> Instalando %bComandos Basicos%b: '%bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh%b, etc.'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Parametros:
@@ -246,9 +244,8 @@ function g_install_options() {
             print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Solo actualizar los paquetes del SO, si no se hizo antes
-            if [ $l_flag_packages_nonupgraded -eq 0 ]; then
+            if [ $p_flag_upgrade_os_pkgs -eq 0 ] && [ $l_exist_packages_installed -ne 0 ]; then
                 l_prg_options=$((l_prg_options + 1))
-                l_flag_packages_nonupgraded=1
             fi
 
             #Parametros:
@@ -262,6 +259,10 @@ function g_install_options() {
             else
                 ~/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage
                 l_status=$?
+            fi
+
+            if [ $l_exist_packages_installed -ne 0 ]; then
+                l_exist_packages_installed=0
             fi
 
             #Si no se acepto almacenar credenciales
@@ -365,9 +366,6 @@ function g_install_options() {
             printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$p_list_repo_ids" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
 
-            #Obligar a limpiar el cache: ¿algunos instalacion, instala paquetes?
-            l_flag_packages_nonupgraded=1
-
             #Parametros:
             # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
             # 2> Repsositorio a instalar/acutalizar: 
@@ -381,6 +379,11 @@ function g_install_options() {
             else
                 ~/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" $g_status_crendential_storage            
                 l_status=$?
+            fi
+
+            #Obligar a limpiar el cache: ¿algunos instalacion, instala paquetes?
+            if [ $l_exist_packages_installed -ne 0 ]; then
+                l_exist_packages_installed=0
             fi
 
             #Si no se acepto almacenar credenciales
@@ -472,7 +475,7 @@ function g_install_options() {
 
     fi
 
-    if [ $p_flag_clean_os_cache -eq 0 ] && [ $l_flag_packages_nonupgraded -ne 0 ]; then
+    if [ $p_flag_clean_os_cache -eq 0 ] && [ $l_exist_packages_installed -eq 0 ]; then
         clean_os_cache $g_os_subtype_id $l_is_noninteractive
     fi
 
