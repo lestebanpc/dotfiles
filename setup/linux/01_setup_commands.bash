@@ -3433,13 +3433,13 @@ else
     elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
     
         #Parametros del script usados hasta el momento:
-        # 1> Tipo de configuración: 1 (instalación/actualización).
+        # 1> Tipo de llamado: 1/3 (sin menu no-interactivo/interactivo).
         # 2> Opciones de menu a ejecutar: entero positivo.
         # 3> El estado de la credencial almacenada para el sudo.
         # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
-        gp_opciones=0
+        _gp_opciones=0
         if [[ "$2" =~ ^[0-9]+$ ]]; then
-            gp_opciones=$2
+            _gp_opciones=$2
         else
             echo "Parametro 2 \"$2\" debe ser una opción valida."
             exit 110
@@ -3466,7 +3466,7 @@ else
         #Iniciar el procesamiento
         if [ $_g_status -eq 0 ]; then
 
-            g_install_repositories_byopc $gp_opciones
+            g_install_repositories_byopc $_gp_opciones
             _g_status=$?
 
             #Informar si se nego almacenar las credencial cuando es requirido
@@ -3485,13 +3485,13 @@ else
     else
     
         #Parametros del script usados hasta el momento:
-        # 1> Tipo de configuración: 1 (instalación/actualización).
+        # 1> Tipo de llamado: 2/4 (sin menu no-interactivo/interactivo).
         # 2> Listado de ID del repositorio a instalar.
         # 3> El estado de la credencial almacenada para el sudo.
         # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
         # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
-        gp_list_repo_ids="$2"
-        if [ -z "$gp_list_repo_ids" ]; then
+        _gp_list_repo_ids="$2"
+        if [ -z "$_gp_list_repo_ids" ]; then
            echo "Parametro 2 \"$2\" debe ser un ID de repositorio valido"
            exit 110
         fi
@@ -3521,7 +3521,7 @@ else
         #Iniciar el procesamiento
         if [ $_g_status -eq 0 ]; then
 
-            g_install_repositories_byid "$gp_list_repo_ids" $_g_show_title_on_onerepo
+            g_install_repositories_byid "$_gp_list_repo_ids" $_g_show_title_on_onerepo
             _g_status=$?
 
             #Informar si se nego almacenar las credencial cuando es requirido
