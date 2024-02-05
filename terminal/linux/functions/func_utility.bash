@@ -34,7 +34,7 @@ function get_os_type() {
     case "$l_system" in
         Linux*)
             l_tmp=$(uname -r)
-            if [[ "$l_tmp" == *WSL* ]]; then
+            if [[ "$l_tmp" == *WSL* ]] && [ -f "/etc/wsl.conf" ]; then
                 l_os_type=1
             else
                 l_os_type=0
