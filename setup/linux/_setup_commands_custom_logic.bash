@@ -1684,10 +1684,20 @@ function get_repo_artifacts() {
                 pna_artifact_names=("jq-windows-amd64.exe")
                 pna_artifact_types=(0)
             else
-                if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("jq-linux-arm64")
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para musl, solo libc
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("jq-linux-arm64")
+                    else
+                        pna_artifact_names=("jq-linux-amd64")
+                    fi
                 else
-                    pna_artifact_names=("jq-linux-amd64")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("jq-linux-arm64")
+                    else
+                        pna_artifact_names=("jq-linux-amd64")
+                    fi
                 fi
                 pna_artifact_types=(0)
             fi
@@ -1698,10 +1708,20 @@ function get_repo_artifacts() {
                 pna_artifact_names=("yq_windows_amd64.zip")
                 pna_artifact_types=(11)
             else
-                if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("yq_linux_arm64.tar.gz")
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para musl, solo libc
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("yq_linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("yq_linux_amd64.tar.gz")
+                    fi
                 else
-                    pna_artifact_names=("yq_linux_amd64.tar.gz")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("yq_linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("yq_linux_amd64.tar.gz")
+                    fi
                 fi
                 pna_artifact_types=(10)
             fi
@@ -1712,10 +1732,20 @@ function get_repo_artifacts() {
                 pna_artifact_names=("fzf-${p_repo_last_version_pretty}-windows_amd64.zip")
                 pna_artifact_types=(11)
             else
-                if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_arm64.tar.gz")
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte a musl, solo libc
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_amd64.tar.gz")
+                    fi
                 else
-                    pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_amd64.tar.gz")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_amd64.tar.gz")
+                    fi
                 fi
                 pna_artifact_types=(10)
             fi
@@ -1747,10 +1777,20 @@ function get_repo_artifacts() {
                 pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(11)
             else
-                if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("delta-${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        #pna_artifact_names=("delta-${p_repo_last_version_pretty}-aarch64-unknown-linux-musl.tar.gz")
+                        pna_artifact_names=("delta-${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                    fi
                 else
-                    pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("delta-${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("delta-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                    fi
                 fi
                 pna_artifact_types=(10)
             fi
@@ -1761,10 +1801,21 @@ function get_repo_artifacts() {
                 pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(11)
             else
-                if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                        #pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-aarch64-unknown-linux-musl.tar.gz")
+                    else
+                        pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                    fi
                 else
-                    pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                        #pna_artifact_names=("ripgrep-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                    fi
                 fi
                 pna_artifact_types=(10)
             fi
@@ -1782,7 +1833,13 @@ function get_repo_artifacts() {
                 pna_artifact_names=("xsv-${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(11)
             else
-                pna_artifact_names=("xsv-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    pna_artifact_names=("xsv-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                else
+                    pna_artifact_names=("xsv-${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                    #pna_artifact_names=("xsv-${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                fi
                 pna_artifact_types=(10)
             fi
             ;;
@@ -1792,10 +1849,20 @@ function get_repo_artifacts() {
                 pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(11)
             else
-                if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("bat-v${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        #pna_artifact_names=("bat-v${p_repo_last_version_pretty}-aarch64-unknown-linux-musl.tar.gz")
+                        pna_artifact_names=("bat-v${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                    fi
                 else
-                    pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("bat-v${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("bat-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                    fi
                 fi
                 pna_artifact_types=(10)
             fi
@@ -1820,10 +1887,20 @@ function get_repo_artifacts() {
                 pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(11)
             else
-                if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("fd-v${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        #pna_artifact_names=("fd-v${p_repo_last_version_pretty}-aarch64-unknown-linux-musl.tar.gz")
+                        pna_artifact_names=("fd-v${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-unknown-linux-musl.tar.gz")
+                    fi
                 else
-                    pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("fd-v${p_repo_last_version_pretty}-aarch64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("fd-v${p_repo_last_version_pretty}-x86_64-unknown-linux-gnu.tar.gz")
+                    fi
                 fi
                 pna_artifact_types=(10)
             fi
@@ -1853,10 +1930,20 @@ function get_repo_artifacts() {
                 pna_artifact_names=("step_windows_${p_repo_last_version_pretty}_amd64.zip")
                 pna_artifact_types=(11)
             else
-                if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_arm64.tar.gz")
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No se soporta musl, solo libc
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.tar.gz")
+                    fi
                 else
-                    pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.tar.gz")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("step_linux_${p_repo_last_version_pretty}_amd64.tar.gz")
+                    fi
                 fi
                 pna_artifact_types=(10)
             fi
