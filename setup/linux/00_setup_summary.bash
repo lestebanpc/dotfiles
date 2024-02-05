@@ -176,7 +176,7 @@ function g_install_options() {
 
             #Mostrar el titulo de instalacion
             print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando %bComandos Basicos%b: '%fzf, bat, jq, yq, ripgrep, delta, oh-my-posh, etc.%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            printf "> Instalando %bComandos Basicos%b: '%bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, etc.%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Parametros:
@@ -492,7 +492,7 @@ function _show_menu_install_core() {
     printf " ( ) Programas requeridos a instalar %b(usualmente instalado como root)%b:\n" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Paquetes  basicos: %bCurl, OpenSSL y Tmux%b\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Comandos  basicos: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, etc.%b\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %NodeJs y Python%b\n" "$g_color_green1" "16" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bNodeJs y Python%b\n" "$g_color_green1" "16" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bVIM y NeoVIM%b\n" "$g_color_green1" "32" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET  : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "64" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) LSP/DAP de Java  : %bJdtls%b\n" "$g_color_green1" "128" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
