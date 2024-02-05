@@ -118,6 +118,12 @@ function g_install_options() {
         p_flag_clean_os_cache=0
     fi
 
+    p_flag_upgrade_os_pkgs=1
+    if [ "$4" = "0" ]; then
+        p_flag_upgrade_os_pkgs=0
+    fi
+
+    #Inicialización
     local l_is_noninteractive=1
     if [ $gp_type_calling -eq 2 ]; then
         l_is_noninteractive=0
@@ -125,6 +131,9 @@ function g_install_options() {
 
     #Flag '0' cuando no se realizo ninguna instalacion de paquetes (si se instala un paquete del SO, se obligará a actualizar el gestor de paquetes).
     local l_flag_packages_nonupgraded=0
+    if [ $p_flag_upgrade_os_pkgs -ne 0 ]; then        
+        l_flag_packages_nonupgraded=1
+    fi
 
     #2. Opción> Paquetes basicos: Curl, OpenSSL y Tmux
     local l_option=4
@@ -226,7 +235,7 @@ function g_install_options() {
         fi
     fi
 
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+    if [ $l_prg_options -gt 0 ]; then
 
         #Solo soportado para los que tenga acceso a root
         if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
@@ -251,7 +260,7 @@ function g_install_options() {
                 ~/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage
                 l_status=$?
             else
-                ~/.files/setup/linux/02_setup_profile.bash 2 $l_options $g_status_crendential_storage
+                ~/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage
                 l_status=$?
             fi
 
@@ -584,7 +593,7 @@ g_usage() {
     printf '  > %bInstalar/Actualizar un grupo de opciones sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-ID\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-ID SUDO-STORAGE-OPTIONS CLEAN-OS-CACHE\n\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-ID SUDO-STORAGE-OPTIONS CLEAN-OS-CACHE UPGRADE-OS-PACKAGES\n\n%b' "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bMENU-OPTIONS%b Las opciones de menu a instalar. Si no desea especificar coloque 0.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -594,7 +603,8 @@ g_usage() {
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"
-    printf '  > %bCLEAN-OS-CACHE%b es 0 si se limpia el cache del gestor de paquetes. Por defecto es 1.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bCLEAN-OS-CACHE%b es 0 si se limpia el cache del gestor de paquetes. Por defecto es 1.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bUPGRADE-OS-PACKAGES%b Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.\n\n%b' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -689,6 +699,11 @@ else
         _gp_flag_clean_os_cache=0
     fi
 
+    _gp_flag_upgrade_os_pkgs=1
+    if [ "$6" = "0" ]; then
+        _gp_flag_upgrade_os_pkgs=0
+    fi
+
     #Validar los requisitos (algunas opciones requiere root y otros no)
     fulfill_preconditions $g_os_subtype_id 1 0 1
     _g_status=$?
@@ -696,7 +711,7 @@ else
     #Iniciar el procesamiento
     if [ $_g_status -eq 0 ]; then
 
-        g_install_options $_gp_opciones $_gp_list_repo_ids $_gp_flag_clean_os_cache
+        g_install_options $_gp_opciones $_gp_list_repo_ids $_gp_flag_clean_os_cache $_gp_flag_upgrade_os_pkgs
         _g_status=$?
 
         #Informar si se nego almacenar las credencial cuando es requirido
