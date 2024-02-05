@@ -342,6 +342,9 @@ function g_install_options() {
                    "$g_color_cian1" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
 
+            #Obligar a limpiar el cache: ¿algunos instalacion, instala paquetes?
+            $l_flag_packages_nonupgraded=1
+
             #Parametros:
             # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
             # 2> Opciones a configurar: 2 (Profile) + 4 (Recrear enlaces simbolicos) + 32 (VIM como Editor) + 256 (NeoVIM como Editor)
