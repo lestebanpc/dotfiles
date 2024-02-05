@@ -109,7 +109,7 @@ function g_install_options() {
     #fi
 
     p_list_repo_ids=""
-    if [ ! -z "$2" ] && [ "$2" != "EMPTY"]; then
+    if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
         p_list_repo_ids="$2"
     fi
 
@@ -167,7 +167,7 @@ function g_install_options() {
 
     fi
 
-    #3. Opción> Programas basicos: Comandos basicos, VIM, NeoVIM, NodeJs y Python
+    #3. Opción> Comandos Basicos
     l_option=8
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
@@ -176,15 +176,70 @@ function g_install_options() {
 
             #Mostrar el titulo de instalacion
             print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando '%bComandos basicos%b', '%bVIM/NeoVIM%b', '%bNodeJS%b' y '%bPython%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-                   "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            printf "> Instalando %bComandos Basicos%b: '%fzf, bat, jq, yq, ripgrep, delta, oh-my-posh, etc.%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            print_line '─' $g_max_length_line "$g_color_blue1"
+
+            #Parametros:
+            # 1> Tipo de ejecución: 1/3 (ejecución sin menu para instalar/actualizar un respositorio especifico)
+            # 2> Repsositorio a instalar/acutalizar: 
+            # 3> El estado de la credencial almacenada para el sudo.
+            # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
+            # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+            if [ $l_is_noninteractive -eq 1 ]; then
+                ~/.files/setup/linux/01_setup_commands.bash 1 4 $g_status_crendential_storage 0 0
+                l_status=$?
+            else
+                ~/.files/setup/linux/01_setup_commands.bash 3 4 $g_status_crendential_storage 0 0
+                l_status=$?
+            fi
+
+            #Si no se acepto almacenar credenciales
+            if [ $l_status -eq 120 ]; then
+                return 120
+            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+            elif [ $l_status -eq 119 ]; then
+               g_status_crendential_storage=0
+            fi
+
+        fi
+
+    fi
+
+    #4. Opción> Programas basicos: VIM, NeoVIM, NodeJs y Python
+    local l_prg_options=0
+    local l_aux=''
+
+    #Determinar los programas a instalar: 8 (Python/NodeJS) + 16 (VIM) + 128 (NeoVIM)
+    l_option=16
+    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        l_prg_options=$((l_prg_options + 8))
+        printf -v l_aux "'%bNodeJS%b', '%bPython%b'" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    fi
+
+    l_option=32
+    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        l_prg_options=$((l_prg_options + 144))
+        if [ -z "$l_aux" ]; then
+            printf -v l_aux "'%bVIM%b', '%bNeoVIM%b'" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+        else
+            printf -v l_aux "${l_aux}, '%bVIM%b', '%bNeoVIM%b'" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+        fi
+    fi
+
+    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+        #Solo soportado para los que tenga acceso a root
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+            #Mostrar el titulo de instalacion
+            print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "> Instalando %bProgramas basicos%b: %b\n" "$g_color_cian1" "$g_color_reset" "$l_aux"
             print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Solo actualizar los paquetes del SO, si no se hizo antes
-            local l_options=152
             if [ $l_flag_packages_nonupgraded -eq 0 ]; then
-                l_options=153
-                $l_flag_packages_nonupgraded=1
+                l_prg_options=$((l_prg_options + 1))
+                l_flag_packages_nonupgraded=1
             fi
 
             #Parametros:
@@ -193,7 +248,7 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
             if [ $l_is_noninteractive -eq 1 ]; then
-                ~/.files/setup/linux/02_setup_profile.bash 1 $l_options $g_status_crendential_storage
+                ~/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage
                 l_status=$?
             else
                 ~/.files/setup/linux/02_setup_profile.bash 2 $l_options $g_status_crendential_storage
@@ -212,8 +267,8 @@ function g_install_options() {
 
     fi
 
-    #4. Opción> LSP/DAP de .NET : Omnisharp-Roslyn, NetCoreDbg
-    l_option=16
+    #5. Opción> LSP/DAP de .NET : Omnisharp-Roslyn, NetCoreDbg
+    l_option=64
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -252,8 +307,8 @@ function g_install_options() {
 
     fi
 
-    #5. Opción> LSP/DAP de Java : Jdtls
-    l_option=32
+    #6. Opción> LSP/DAP de Java : Jdtls
+    l_option=128
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -290,7 +345,7 @@ function g_install_options() {
 
     fi
 
-    #6. Opción> Lista de repositorios de comandos a instalar
+    #7. Opción> Lista de repositorios de comandos a instalar
     if [ ! -z "$p_list_repo_ids" ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -300,6 +355,9 @@ function g_install_options() {
             print_line '─' $g_max_length_line  "$g_color_blue1"
             printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$p_list_repo_ids" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
+
+            #Obligar a limpiar el cache: ¿algunos instalacion, instala paquetes?
+            l_flag_packages_nonupgraded=1
 
             #Parametros:
             # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
@@ -329,7 +387,7 @@ function g_install_options() {
     fi
 
 
-    #7. Opción> Configurar el profile del usuario y VIM/NeoVIM como Editor
+    #8. Opción> Configurar el profile del usuario y VIM/NeoVIM como Editor
     l_option=1
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
@@ -341,9 +399,6 @@ function g_install_options() {
             printf "> Configurar el %bprofile del usuario%b, '%bVIM/NeoVIM%b' como %bEditor%b\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
                    "$g_color_cian1" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
-
-            #Obligar a limpiar el cache: ¿algunos instalacion, instala paquetes?
-            $l_flag_packages_nonupgraded=1
 
             #Parametros:
             # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
@@ -370,7 +425,7 @@ function g_install_options() {
 
     fi
 
-    #8. Opción> Configurar el profile del usuario y VIM/NeoVIM como Developer
+    #9. Opción> Configurar el profile del usuario y VIM/NeoVIM como Developer
     l_option=2
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
@@ -412,7 +467,7 @@ function g_install_options() {
         clean_os_cache $g_os_subtype_id $l_is_noninteractive
     fi
 
-    #7. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
+    #10. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
     #   Si no se invoca usando el menú y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
     if [ $g_status_crendential_storage -eq 0 ] && [ $gp_type_calling -eq 0 ]; then
     #if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
@@ -428,7 +483,7 @@ function _show_menu_install_core() {
     print_line '-' $g_max_length_line  "$g_color_gray1"
     printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
 
-    local l_max_digits=2
+    local l_max_digits=3
 
     printf " ( ) Configuración personalizado para el usuario:\n"
     printf "     (%b%0${l_max_digits}d%b) Configurar el profile del usuario y VIM/NeoVIM como %bEditor%b\n" "$g_color_green1" "1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
@@ -436,9 +491,11 @@ function _show_menu_install_core() {
 
     printf " ( ) Programas requeridos a instalar %b(usualmente instalado como root)%b:\n" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Paquetes  basicos: %bCurl, OpenSSL y Tmux%b\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bComandos basicos, VIM, NeoVIM, NodeJs y Python%b\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET  : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "16" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de Java  : %bJdtls%b\n" "$g_color_green1" "32" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Comandos  basicos: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, etc.%b\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %NodeJs y Python%b\n" "$g_color_green1" "16" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bVIM y NeoVIM%b\n" "$g_color_green1" "32" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET  : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "64" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de Java  : %bJdtls%b\n" "$g_color_green1" "128" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_gray1"
 
