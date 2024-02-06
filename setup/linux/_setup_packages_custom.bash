@@ -12,6 +12,7 @@ gA_packages=(
         ['tmux']='tmux'
         ['unzip']='unzip'
         ['git']='git'
+        ['fzf']='fzf'
         ['openssl']='openssl'
         ['rsync']='rsync'
         ['xclip']='xclip'

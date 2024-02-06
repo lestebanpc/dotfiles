@@ -310,6 +310,11 @@ function get_repo_latest_version() {
             if ! command -v jq &> /dev/null; then
                 return 1
             fi
+
+            #Si es Alpine: Usar el repositorio alternativos de NodeJS (https://github.com/nodejs/unofficial-builds/)
+            if [ $p_os_subtype_id -eq 1 ]; then
+                l_base_url_fixed='https://unofficial-builds.nodejs.org/download/release'
+            fi
             
             #Usando JSON para obtener la ultima version
             l_aux=$(curl -Ls "${l_base_url_fixed}/index.json" | jq -r 'first(.[] | select(.lts != false)) | "\(.version)"' 2> /dev/null)
@@ -1991,14 +1996,24 @@ function get_repo_artifacts() {
                 pna_artifact_types=(21)
                 #pna_artifact_types=(11)
             else
-                if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-arm64.tar.xz")
-                    pna_artifact_types=(24)
-                    #pna_artifact_types=(14)
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-arm64.tar.xz")
+                        #pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-arm64-musl.tar.xz")
+                        pna_artifact_types=(24)
+                    else
+                        pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-x64-musl.tar.xz")
+                        pna_artifact_types=(24)
+                    fi
                 else
-                    pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-x64.tar.gz")
-                    pna_artifact_types=(20)
-                    #pna_artifact_types=(10)
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-arm64.tar.xz")
+                        pna_artifact_types=(24)
+                    else
+                        pna_artifact_names=("node-v${p_repo_last_version_pretty}-linux-x64.tar.gz")
+                        pna_artifact_types=(20)
+                    fi
                 fi
             fi
             ;;

@@ -147,29 +147,30 @@ ga_menu_options_packages=(
 #
 declare -A gA_repo_config_os_type=(
         ['less']=1
+        ['k0s']=4
+        ['fzf']=7
         ['llvm']=14
         ['rust']=14
-        ['k0s']=4
-        ['operator-sdk']=14
         ['nerd-fonts']=14
-        ['runc']=14
-        ['crun']=14
-        ['cni-plugins']=14
-        ['3scale-toolbox']=14
-        ['rootlesskit']=14
-        ['slirp4netns']=14
-        ['fuse-overlayfs']=14
-        ['containerd']=14
-        ['buildkit']=14
-        ['nerdctl']=14
-        ['dive']=14
         ['butane']=14
-        ['kubeadm']=14
-        ['kubelet']=14
-        ['crictl']=14
         ['awscli']=14
         ['hadolint']=14
         ['trivy']=14
+        ['3scale-toolbox']=14
+        ['runc']=6
+        ['crun']=6
+        ['cni-plugins']=6
+        ['containerd']=6
+        ['crictl']=6
+        ['buildkit']=6
+        ['nerdctl']=6
+        ['rootlesskit']=6
+        ['slirp4netns']=6
+        ['fuse-overlayfs']=6
+        ['operator-sdk']=6
+        ['dive']=6
+        ['kubeadm']=6
+        ['kubelet']=6
     )
 
 

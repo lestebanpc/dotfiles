@@ -1446,8 +1446,8 @@ function _install_vim_programs() {
             printf 'NeoVIM > Se va instalar %bNeoVIM%b\n' "$g_color_cian1" "$g_color_reset"
             print_line '-' $g_max_length_line  "$g_color_gray1"
 
-            #Los binarios para arm64, se debera usar los repositorios de los SO
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
+            #Los binarios para arm64 y alpine, se debera usar los repositorios de los SO
+            if [ "$g_os_architecture_type" = "aarch64" ] || [ $g_os_subtype_id -eq 1 ]; then
 
                 #Parametros:
                 # 1> Tipo de ejecución: 2/4 (ejecución sin menu no-interactiva/interactiva para instalar/actualizar paquetes)
