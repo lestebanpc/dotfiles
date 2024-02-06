@@ -1,10 +1,32 @@
 #!/bin/bash
 
+#Parametros de entrada:
+#  1> La ruta relativa (o absoluta) de un archivos del repositorio
+#Parametros de salida: 
+#  STDOUT> La ruta base donde esta el repositorio
+function _get_current_repo_path() {
+
+    #Obteniendo la ruta absoluta del parametro ingresado
+    local l_path=''
+    l_path=$(realpath "$1" 2> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ]; then
+        echo "$HOME"
+        return 1
+    fi
+
+    #Obteniendo la ruta base
+    l_path=${l_path%/.files/*}
+    echo "$l_path"
+    return 0
+}
 
 #Inicialización Global {{{
 
+declare -r g_repo_path=$(_get_current_repo_path "${BASH_SOURCE[0]}")
+
 #Funciones generales, determinar el tipo del SO y si es root
-. ~/.files/terminal/linux/functions/func_utility.bash
+. ${g_repo_path}/.files/terminal/linux/functions/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -61,7 +83,7 @@ fi
 
 
 #Funciones de utilidad
-. ~/.files/setup/linux/_common_utility.bash
+. ${g_repo_path}/.files/setup/linux/_common_utility.bash
 
 
 #Tipo de ejecucion del script principal
@@ -151,10 +173,10 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
             if [ $l_is_noninteractive -eq 1 ]; then
-                ~/.files/setup/linux/03_setup_packages.bash 2 'curl,unzip,openssl,tmux' $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 2 'curl,unzip,openssl,tmux' $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             else
-                ~/.files/setup/linux/03_setup_packages.bash 4 'curl,unzip,openssl,tmux' $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 4 'curl,unzip,openssl,tmux' $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             fi
 
@@ -193,10 +215,10 @@ function g_install_options() {
             # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
             # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
             if [ $l_is_noninteractive -eq 1 ]; then
-                ~/.files/setup/linux/01_setup_commands.bash 1 4 $g_status_crendential_storage 0 0
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 1 4 $g_status_crendential_storage 0 0
                 l_status=$?
             else
-                ~/.files/setup/linux/01_setup_commands.bash 3 4 $g_status_crendential_storage 0 0
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 3 4 $g_status_crendential_storage 0 0
                 l_status=$?
             fi
 
@@ -254,10 +276,10 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
             if [ $l_is_noninteractive -eq 1 ]; then
-                ~/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage
                 l_status=$?
             else
-                ~/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage
                 l_status=$?
             fi
 
@@ -298,10 +320,10 @@ function g_install_options() {
             # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
             if [ $l_is_noninteractive -eq 1 ]; then
                 
-                ~/.files/setup/linux/01_setup_commands.bash 2 "roslyn,netcoredbg" $g_status_crendential_storage            
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "roslyn,netcoredbg" $g_status_crendential_storage            
                 l_status=$?
             else
-                ~/.files/setup/linux/01_setup_commands.bash 4 "roslyn,netcoredbg" $g_status_crendential_storage            
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "roslyn,netcoredbg" $g_status_crendential_storage            
                 l_status=$?
             fi
 
@@ -336,10 +358,10 @@ function g_install_options() {
             # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
             # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
             if [ $l_is_noninteractive -eq 1 ]; then
-                ~/.files/setup/linux/01_setup_commands.bash 2 "jdtls" $g_status_crendential_storage 0 0
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "jdtls" $g_status_crendential_storage 0 0
                 l_status=$?
             else
-                ~/.files/setup/linux/01_setup_commands.bash 4 "jdtls" $g_status_crendential_storage 0 0
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "jdtls" $g_status_crendential_storage 0 0
                 l_status=$?
             fi
 
@@ -374,10 +396,10 @@ function g_install_options() {
             # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
             if [ $l_is_noninteractive -eq 1 ]; then
                 
-                ~/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" $g_status_crendential_storage            
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" $g_status_crendential_storage            
                 l_status=$?
             else
-                ~/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" $g_status_crendential_storage            
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" $g_status_crendential_storage            
                 l_status=$?
             fi
 
@@ -418,10 +440,10 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
             if [ $l_is_noninteractive -eq 1 ]; then
-                ~/.files/setup/linux/02_setup_profile.bash 1 294 $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 294 $g_status_crendential_storage
                 l_status=$?
             else
-                ~/.files/setup/linux/02_setup_profile.bash 2 294 $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 294 $g_status_crendential_storage
                 l_status=$?
             fi
 
@@ -456,10 +478,10 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
             if [ $l_is_noninteractive -eq 1 ]; then
-                ~/.files/setup/linux/02_setup_profile.bash 1 582 $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 582 $g_status_crendential_storage
                 l_status=$?
             else
-                ~/.files/setup/linux/02_setup_profile.bash 2 582 $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 582 $g_status_crendential_storage
                 l_status=$?
             fi
 

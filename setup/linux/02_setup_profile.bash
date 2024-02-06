@@ -1,9 +1,32 @@
 #!/bin/bash
 
+#Parametros de entrada:
+#  1> La ruta relativa (o absoluta) de un archivos del repositorio
+#Parametros de salida: 
+#  STDOUT> La ruta base donde esta el repositorio
+function _get_current_repo_path() {
+
+    #Obteniendo la ruta absoluta del parametro ingresado
+    local l_path=''
+    l_path=$(realpath "$1" 2> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ]; then
+        echo "$HOME"
+        return 1
+    fi
+
+    #Obteniendo la ruta base
+    l_path=${l_path%/.files/*}
+    echo "$l_path"
+    return 0
+}
+
 #Inicialización Global {{{
 
+declare -r g_repo_path=$(_get_current_repo_path "${BASH_SOURCE[0]}")
+
 #Funciones generales: determinar el tipo del SO, ...
-. ~/.files/terminal/linux/functions/func_utility.bash
+. ${g_repo_path}/.files/terminal/linux/functions/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -60,7 +83,7 @@ g_is_nodejs_installed=0
 g_is_python_installed=0
 
 #Funciones de utilidad
-. ~/.files/setup/linux/_common_utility.bash
+. ${g_repo_path}/.files/setup/linux/_common_utility.bash
 
 
 #Tipo de ejecucion del script principal
@@ -902,10 +925,10 @@ _install_nodejs() {
         # 2> Repositorio a instalar/acutalizar: "nodejs" (actualizar solo los comandos instalandos)
         # 3> El estado de la credencial almacenada para el sudo
         if [ $l_is_noninteractive -eq 1 ]; then
-            ~/.files/setup/linux/01_setup_commands.bash 2 "nodejs" $g_status_crendential_storage
+            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "nodejs" $g_status_crendential_storage
             l_status=$?
         else
-            ~/.files/setup/linux/01_setup_commands.bash 4 "nodejs" $g_status_crendential_storage
+            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "nodejs" $g_status_crendential_storage
             l_status=$?
         fi
 
@@ -1065,10 +1088,10 @@ _install_python() {
             # 2> Repositorios a instalar/acutalizar: 16 (RTE Python y Pip. Tiene Offset=1)
             # 3> El estado de la credencial almacenada para el sudo
             if [ $l_is_noninteractive -eq 1 ]; then
-                ~/.files/setup/linux/03_setup_packages.bash 2 'python,python-pip' $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 2 'python,python-pip' $g_status_crendential_storage
                 l_status=$?
             else
-                ~/.files/setup/linux/03_setup_packages.bash 4 'python,python-pip' $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 4 'python,python-pip' $g_status_crendential_storage
                 l_status=$?
             fi
 
@@ -1345,10 +1368,10 @@ function _install_vim_programs() {
                 # 2> Packete a instalar/acutalizar.
                 # 3> El estado de la credencial almacenada para el sudo
                 if [ $l_is_noninteractive -eq 1 ]; then
-                    ~/.files/setup/linux/03_setup_packages.bash 2 'vim' $g_status_crendential_storage
+                    ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 2 'vim' $g_status_crendential_storage
                     l_status=$?
                 else
-                    ~/.files/setup/linux/03_setup_packages.bash 4 'vim' $g_status_crendential_storage
+                    ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 4 'vim' $g_status_crendential_storage
                     l_status=$?
                 fi
 
@@ -1414,10 +1437,10 @@ function _install_vim_programs() {
                 # 2> Paquete a instalar/acutalizar.
                 # 3> El estado de la credencial almacenada para el sudo
                 if [ $l_is_noninteractive -eq 1 ]; then
-                    ~/.files/setup/linux/03_setup_packages.bash 2 "nvim" $g_status_crendential_storage
+                    ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 2 "nvim" $g_status_crendential_storage
                     l_status=$?
                 else
-                    ~/.files/setup/linux/03_setup_packages.bash 4 "nvim" $g_status_crendential_storage
+                    ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 4 "nvim" $g_status_crendential_storage
                     l_status=$?
                 fi
 
@@ -1438,10 +1461,10 @@ function _install_vim_programs() {
                 # 3> El estado de la credencial almacenada para el sudo
                 if [ $l_is_noninteractive -eq 1 ]; then
                     
-                    ~/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage            
+                    ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage            
                     l_status=$?
                 else
-                    ~/.files/setup/linux/01_setup_commands.bash 4 "neovim" $g_status_crendential_storage            
+                    ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "neovim" $g_status_crendential_storage            
                     l_status=$?
                 fi
 
@@ -1608,10 +1631,10 @@ function _sutup_support_x11_clipboard() {
     # 2> Repositorios a instalar/acutalizar: 
     # 3> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ~/.files/setup/linux/03_setup_packages.bash 2 "$l_pkg_options" $g_status_crendential_storage
+        ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 2 "$l_pkg_options" $g_status_crendential_storage
         l_status=$?
     else
-        ~/.files/setup/linux/03_setup_packages.bash 4 "$l_pkg_options" $g_status_crendential_storage
+        ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 4 "$l_pkg_options" $g_status_crendential_storage
         l_status=$?
     fi
 

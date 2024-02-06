@@ -216,6 +216,27 @@ function get_user_options() {
 
 }
 
+#Parametros de entrada:
+#  1> La ruta relativa (o absoluta) de un archivos del repositorio
+#Parametros de salida: 
+#  STDOUT> La ruta base donde esta el repositorio
+function get_current_repo_path() {
+
+    #Obteniendo la ruta absoluta del parametro ingresado
+    local l_path=''
+    l_path=$(realpath "$1" 2> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ]; then
+        echo "$HOME"
+        return 1
+    fi
+
+    #Obteniendo la ruta base
+    l_path=${l_path%/.files/*}
+    echo "$l_path"
+    return 0
+}
+
 #}}}
 
 
