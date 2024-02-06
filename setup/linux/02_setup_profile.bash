@@ -25,6 +25,10 @@ function _get_current_repo_path() {
 
 declare -r g_repo_path=$(_get_current_repo_path "${BASH_SOURCE[0]}")
 
+#Si lo ejecuta un usuario diferente al actual (al que pertenece el repositorio)
+#UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
+g_other_calling_user=''
+
 #Funciones generales: determinar el tipo del SO, ...
 . ${g_repo_path}/.files/terminal/linux/functions/func_utility.bash
 
@@ -930,14 +934,17 @@ _install_nodejs() {
         #Instalando NodeJS
 
         #Parametros:
-        # 1> Tipo de ejecución: 2 (ejecución no-interactiva para instalar/actualizar un respositorio especifico)
-        # 2> Repositorio a instalar/acutalizar: "nodejs" (actualizar solo los comandos instalandos)
+        # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
+        # 2> Repsositorio a instalar/acutalizar: 
         # 3> El estado de la credencial almacenada para el sudo
+        # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
+        # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
+        # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
         if [ $l_is_noninteractive -eq 1 ]; then
-            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "nodejs" $g_status_crendential_storage
+            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "nodejs" $g_status_crendential_storage 1 1 "$g_other_calling_user"
             l_status=$?
         else
-            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "nodejs" $g_status_crendential_storage
+            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "nodejs" $g_status_crendential_storage 1 1 "$g_other_calling_user"
             l_status=$?
         fi
 
@@ -1465,15 +1472,18 @@ function _install_vim_programs() {
             else
 
                 #Parametros:
-                # 1> Tipo de ejecución: 2/4 (ejecución sin menu no-interactiva/interactiva para instalar/actualizar paquetes)
-                # 2> Repsositorio a instalar/acutalizar: "neovim" (actualizar solo los comandos instalandos)
+                # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
+                # 2> Repsositorio a instalar/acutalizar: 
                 # 3> El estado de la credencial almacenada para el sudo
+                # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
+                # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
+                # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
                 if [ $l_is_noninteractive -eq 1 ]; then
                     
-                    ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage            
+                    ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage 1 1 "$g_other_calling_user"
                     l_status=$?
                 else
-                    ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "neovim" $g_status_crendential_storage            
+                    ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "neovim" $g_status_crendential_storage 1 1 "$g_other_calling_user"
                     l_status=$?
                 fi
 
@@ -2428,14 +2438,14 @@ g_usage() {
     printf '    %b~/.files/setup/linux/02_setup_profile.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bConfigurando el profile del usuario/VIM/NeoVIM segun un grupo de opciones de menú indicados%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '    > %bCALLING_TYPE%b (para este escenario) es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
+    printf '  > %bCALLING_TYPE%b Es 0 si se muestra un menu, caso contrario es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n\n' \
            "$g_color_gray1" "$g_color_reset"
+    printf '  > %bOTHER-USERID %bEl GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -2484,6 +2494,7 @@ else
     # 1> Tipo de configuración: 1 (instalación/actualización).
     # 2> Opciones de menu a ejecutar: entero positivo.
     # 3> El estado de la credencial almacenada para el sudo.
+    # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
     gp_menu_options=0
     if [[ "$2" =~ ^[0-9]+$ ]]; then
         gp_menu_options=$2
@@ -2499,6 +2510,17 @@ else
             g_is_credential_storage_externally=0
         fi
 
+    fi
+
+    #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
+    g_other_calling_user=''
+    if [ "$g_repo_path" != "$HOME" ] && [ ! -z "$4" ]; then
+        if [[ "$4" =~ ^[0-9]+:[0-9]+$ ]]; then
+            g_other_calling_user="$4"
+        else
+            echo "Parametro 4 \"$4\" debe ser tener el formado 'UID:GID'."
+            exit 110
+        fi
     fi
 
     #Validar los requisitos

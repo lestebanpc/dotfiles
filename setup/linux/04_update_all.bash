@@ -26,6 +26,10 @@ function _get_current_repo_path() {
 
 declare -r g_repo_path=$(_get_current_repo_path "${BASH_SOURCE[0]}")
 
+#Si lo ejecuta un usuario diferente al actual (al que pertenece el repositorio)
+#UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
+g_other_calling_user=''
+
 #Funciones generales, determinar el tipo del SO y si es root
 . ${g_repo_path}/.files/terminal/linux/functions/func_utility.bash
 
@@ -516,14 +520,16 @@ function _update_all() {
     if [ $l_flag -eq $l_opcion ]; then
 
         #Parametros:
-        # 1> Tipo de ejecución: 1 (ejecución no-interactiva para actualizar un conjuentos de respositorios)
-        # 2> Opciones de menu seleccionados para instalar/actualizar: 2 (instalar/actualizar solo los comandos instalados)
+        # 1> Tipo de ejecución: 1/3 (ejecución sin menu para instalar/actualizar un respositorio especifico)
+        # 2> Opciones de menu a instalar/acutalizar: 
         # 3> El estado de la credencial almacenada para el sudo
+        # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
+        # 5> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
         if [ $l_is_noninteractive -eq 1 ]; then
-            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 1 2 $g_status_crendential_storage
+            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 1 2 $g_status_crendential_storage 1 "$g_other_calling_user"
             l_status=$?
         else
-            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 3 2 $g_status_crendential_storage
+            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 3 2 $g_status_crendential_storage 1 "$g_other_calling_user"
             l_status=$?
         fi
 
@@ -758,13 +764,20 @@ function g_main() {
 
 g_usage() {
 
-    printf '%bUsage:\n\n' "$g_color_gray1"
-    printf '  > Configurar el profile mostrando el menú de opciones (interactivo):\n'
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Configurar un grupo de opciones del menú sin mostrarlo pero en modo interactivo:\n'
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash 1 MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_gray1"
-    printf '  > Configurar un grupo de opciones del menú sin mostrarlo pero en modo no-interactivo:\n'
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash 2 MENU-OPTIONS%b\n\n' "$g_color_yellow1" "$g_color_reset"
+    printf 'Usage:\n'
+    printf '  > %bActualizaciones usando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_update_all.bash\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_update_all.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '  > %bActualizaciones SIN usar un menú de opciones:%b:\n' "$g_color_cian1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_update_all.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_update_all.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf 'Donde:\n'
+    printf '  > %bCALLING_TYPE%b Es 0 si se muestra un menu, caso contrario es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n\n' \
+           "$g_color_gray1" "$g_color_reset"
+    printf '  > %bOTHER-USERID %bEl GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -782,23 +795,38 @@ else
     exit 110
 fi
 
+
+_g_result=0
+_g_status=0
+
+#Aun no se ha solicitado almacenar temporalmente las credenciales para el sudo
+g_status_crendential_storage=-1
+#La credencial no se almaceno por un script externo.
+g_is_credential_storage_externally=1
+
+
 #1.1. Mostrar el menu para escoger lo que se va instalar
 if [ $gp_type_calling -eq 0 ]; then
 
     #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
-    _g_status=0
     fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_repo_path"
     _g_status=$?
 
     #Iniciar el procesamiento
     if [ $_g_status -eq 0 ]; then
         g_main
+    else
+        _g_result=111
     fi
 
 #1.2. No mostrar el menu, la opcion del menu a ejecutar se envia como parametro
 else
 
-    #Argumento 2: las opcione de menu a ejecutar
+    #Parametros del script usados hasta el momento:
+    # 1> Tipo de invocación.
+    # 2> Opciones de menu a ejecutar: entero positivo.
+    # 3> El estado de la credencial almacenada para el sudo.
+    # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
     gp_menu_options=0
     if [[ "$2" =~ ^[0-9]+$ ]]; then
         gp_menu_options=$2
@@ -807,10 +835,56 @@ else
         exit 110
     fi
 
-    #Ejecutar las opciones de menu escogidas
-    _update_all $gp_menu_options
+    if [[ "$3" =~ ^[0-2]$ ]]; then
+        g_status_crendential_storage=$3
+
+        if [ $g_status_crendential_storage -eq 0 ]; then
+            g_is_credential_storage_externally=0
+        fi
+
+    fi
+
+    #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
+    g_other_calling_user=''
+    if [ "$g_repo_path" != "$HOME" ] && [ ! -z "$4" ]; then
+        if [[ "$4" =~ ^[0-9]+:[0-9]+$ ]]; then
+            g_other_calling_user="$4"
+        else
+            echo "Parametro 4 \"$4\" debe ser tener el formado 'UID:GID'."
+            exit 110
+        fi
+    fi
+
+
+    #Validar los requisitos
+    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_repo_path"
+    _g_status=$?
+
+    #Iniciar el procesamiento
+    if [ $_g_status -eq 0 ]; then
+
+        #Ejecutar las opciones de menu escogidas
+        _update_all $gp_menu_options
+        _g_status=$?
+
+        #Informar si se nego almacenar las credencial cuando es requirido
+        if [ $_g_status -eq 120 ]; then
+            _g_result=120
+        #Si la credencial se almaceno en este script (localmente). avisar para que lo cierre el caller
+        elif [ $g_is_credential_storage_externally -ne 0 ] && [ $g_status_crendential_storage -eq 0 ]; then
+            _g_result=119
+        fi
+    else
+        _g_result=111
+    fi
 
 fi
+
+
+exit $_g_result
+
+
+
 
 
 

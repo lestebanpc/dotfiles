@@ -215,15 +215,15 @@ function g_install_options() {
 
             #Parametros:
             # 1> Tipo de ejecución: 1/3 (ejecución sin menu para instalar/actualizar un respositorio especifico)
-            # 2> Repsositorio a instalar/acutalizar: 
+            # 2> Opciones de menu de Repositorio a instalar/acutalizar: 
             # 3> El estado de la credencial almacenada para el sudo.
             # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-            # 5> Flag '0' para mostrar un titulo si se solo se configure un repositorio en el parametro 2. Por defecto es '1' 
+            # 5> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 1 4 $g_status_crendential_storage 0 1 "$g_other_calling_user"
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 1 4 $g_status_crendential_storage 0 "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 3 4 $g_status_crendential_storage 0 1 "$g_other_calling_user"
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 3 4 $g_status_crendential_storage 0 "$g_other_calling_user"
                 l_status=$?
             fi
 
@@ -279,12 +279,12 @@ function g_install_options() {
             # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
             # 2> Paquetes a instalar: 8 (Python/NodeJS) + 16 (VIM) + 128 (NeoVIM)
             # 3> El estado de la credencial almacenada para el sudo
-            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+            # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
                 l_status=$?
             fi
 
@@ -322,7 +322,8 @@ function g_install_options() {
             # 2> Repsitorio a instalar/actualizar: 
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-            # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+            # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
+            # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
             if [ $l_is_noninteractive -eq 1 ]; then
                 
                 ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "roslyn,netcoredbg" $g_status_crendential_storage 0 1 "$g_other_calling_user"
@@ -361,7 +362,8 @@ function g_install_options() {
             # 2> Repsositorio a instalar/acutalizar: 
             # 3> El estado de la credencial almacenada para el sudo.
             # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-            # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+            # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
+            # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
             if [ $l_is_noninteractive -eq 1 ]; then
                 ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "jdtls" $g_status_crendential_storage 0 1 "$g_other_calling_user"
                 l_status=$?
@@ -398,7 +400,8 @@ function g_install_options() {
             # 2> Repsositorio a instalar/acutalizar: 
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-            # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+            # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
+            # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
             if [ $l_is_noninteractive -eq 1 ]; then
                 
                 ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" $g_status_crendential_storage 0 1 "$g_other_calling_user"
@@ -443,12 +446,12 @@ function g_install_options() {
             # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
             # 2> Opciones a configurar: 2 (Profile) + 4 (Recrear enlaces simbolicos) + 32 (VIM como Editor) + 256 (NeoVIM como Editor)
             # 3> El estado de la credencial almacenada para el sudo
-            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+            # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 294 $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 294 $g_status_crendential_storage "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 294 $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 294 $g_status_crendential_storage "$g_other_calling_user"
                 l_status=$?
             fi
 
@@ -481,12 +484,12 @@ function g_install_options() {
             # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
             # 2> Opciones a configurar: 2 (Profile) + 4 (Recrear enlaces simbolicos) + 64 (VIM como IDE) + 512 (NeoVIM como IDE)
             # 3> El estado de la credencial almacenada para el sudo
-            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+            # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 582 $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 582 $g_status_crendential_storage "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 582 $g_status_crendential_storage
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 582 $g_status_crendential_storage "$g_other_calling_user"
                 l_status=$?
             fi
 
@@ -699,8 +702,11 @@ else
     #Parametros del script usados hasta el momento:
     # 1> Tipo de configuración: 1 (instalación/actualización).
     # 2> Opciones de menu a ejecutar: entero positivo.
-    # 3> El estado de la credencial almacenada para el sudo.
-    # 4> Flag '0' para limpiar el cache del sistema operativo.
+    # 3> ID de los repositorios de comandos a instalar, separados por coma. Por defecto, se envia vacio o "EMPTY".
+    # 4> El estado de la credencial almacenada para el sudo.
+    # 5> Flag '0' para limpiar el cache del sistema operativo. Caso contrario, use 1.
+    # 6> Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.
+    # 7> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
     _gp_opciones=0
     if [ "$2" = "0" ]; then
         _gp_opciones=-1
@@ -737,7 +743,7 @@ else
 
     #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
     g_other_calling_user=''
-    if [ "$g_repo_path" != "$HOME" ]; then
+    if [ "$g_repo_path" != "$HOME" ] && [ ! -z "$7" ]; then
         if [[ "$7" =~ ^[0-9]+:[0-9]+$ ]]; then
             g_other_calling_user="$7"
         else

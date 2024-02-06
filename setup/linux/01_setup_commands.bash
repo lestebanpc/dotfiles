@@ -3497,6 +3497,7 @@ else
         # 2> Opciones de menu a ejecutar: entero positivo.
         # 3> El estado de la credencial almacenada para el sudo.
         # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+        # 5> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
         _gp_opciones=0
         if [[ "$2" =~ ^[0-9]+$ ]]; then
             _gp_opciones=$2
@@ -3521,7 +3522,7 @@ else
 
         #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
         g_other_calling_user=''
-        if [ "$g_repo_path" != "$HOME" ]; then
+        if [ "$g_repo_path" != "$HOME" ] && [ ! -z "$5" ]; then
             if [[ "$5" =~ ^[0-9]+:[0-9]+$ ]]; then
                 g_other_calling_user="$5"
             else
@@ -3561,6 +3562,7 @@ else
         # 3> El estado de la credencial almacenada para el sudo.
         # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
         # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+        # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
         _gp_list_repo_ids="$2"
         if [ -z "$_gp_list_repo_ids" ]; then
            echo "Parametro 2 \"$2\" debe ser un ID de repositorio valido"
@@ -3587,7 +3589,7 @@ else
 
         #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
         g_other_calling_user=''
-        if [ "$g_repo_path" != "$HOME" ]; then
+        if [ "$g_repo_path" != "$HOME" ] && [ ! -z "$6" ]; then
             if [[ "$6" =~ ^[0-9]+:[0-9]+$ ]]; then
                 g_other_calling_user="$6"
             else
