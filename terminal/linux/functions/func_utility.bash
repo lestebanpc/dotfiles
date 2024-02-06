@@ -97,6 +97,8 @@ function get_linux_type_info() {
     #   NAME="Amazon Linux"
     # Alpine Linux
     #   NAME="Alpine Linux"
+    #   ID=alpine
+    #   PRETTY_NAME="Alpine Linux v3.19"
     #
     local l_tag="NAME"
     local l_distro_type=$(echo "$l_info_distro" | grep -e "^${l_tag}=" | sed 's/'"$l_tag"'="\(.*\)"/\1/')
@@ -136,8 +138,15 @@ function get_linux_type_info() {
     #   VERSION="36 (Workstation Edition)"
     # Amazon Linux 2023
     #   VERSION="2023"
+    # Alpine:
+    #   VERSION_ID=3.19.1
     #
     l_tag="VERSION"
+    if [ $g_os_subtype_id -eq 1 ]; then
+        #En Alpine
+        l_tag="VERSION_ID"        
+    fi
+
     local l_distro_version=$(echo "$l_info_distro" | grep -e "^${l_tag}=" | sed 's/'"$l_tag"'="\(.*\)"/\1/')
 
     if [ -z "$l_distro_version" ]; then
@@ -573,8 +582,12 @@ is_package_installed() {
         #Si es un distribucion de la familia Debian
         if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
             p_package_name_part=" ${1} "
+        #Si es un distribucion de la familia Fedora
         elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
             p_package_name_part="^${1}."
+        #Si es Alpine
+        elif [ $p_os_subtype_id -eq 1 ]; then
+            p_package_name_part="^${1}-[0-9]"
         fi
     fi
 
@@ -617,6 +630,35 @@ is_package_installed() {
         if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
             return 1
         fi
+
+    #Si es Alpine
+    elif [ $p_os_subtype_id -eq 1 ]; then
+
+       #
+       #apk list --installed | grep '^python3-'
+       #
+       #python3-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+       #python3-dbg-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+       #python3-dev-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+       #python3-doc-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+       #python3-gdbm-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+       #python3-idle-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
+       #python3-pyc-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+       #python3-pycache-pyc0-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+       #python3-pycache-pyc1-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+       #python3-pycache-pyc2-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+       #python3-tests-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+       #python3-tkinter-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
+       #python3-tkinter-pyc-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
+       #python3-tkinter-tests-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
+        
+        l_aux=$(apk list --installed | grep "$p_package_name_part" 2> /dev/null)
+        l_status=$?
+
+        if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
+            return 1
+        fi
+
     else
         return 9
     fi
@@ -644,7 +686,12 @@ upgrade_os_packages() {
     #Opcion de modo non-interactive
     local p_non_interative=''
     if [ "$3" = "0" ]; then
-        p_non_interative='-y '
+
+        #Alpine por defecto es non-inteactivo
+        if [ $p_os_subtype_id -ne 1 ]; then
+            p_non_interative='-y '
+        fi
+
     fi
 
     #Si no se calculo, Calcularlo 
@@ -673,6 +720,18 @@ upgrade_os_packages() {
             dnf $p_non_interative upgrade
         else
             sudo dnf $p_non_interative upgrade
+        fi
+        l_status=$?
+
+    #Si es Alpine
+    elif [ $p_os_subtype_id -eq 1 ]; then
+
+        if [ $g_user_is_root -eq 0 ]; then
+            apk $p_non_interative update
+            apk $p_non_interative upgrade
+        else
+            sudo apk $p_non_interative update
+            sudo apk $p_non_interative upgrade
         fi
         l_status=$?
 
@@ -714,7 +773,12 @@ install_os_package() {
     #Opcion de modo non-interactive
     local p_non_interative=''
     if [ "$3" = "0" ]; then
-        p_non_interative='-y '
+
+        #Alpine por defecto es non-inteactivo
+        if [ $p_os_subtype_id -ne 1 ]; then
+            p_non_interative='-y '
+        fi
+
     fi
 
     local l_status=0
@@ -743,6 +807,16 @@ install_os_package() {
            dnf $p_non_interative install "$p_package_name"
         else
            sudo dnf $p_non_interative install "$p_package_name"
+        fi
+        l_status=$?
+
+    #Si es Alpine
+    elif [ $p_os_subtype_id -eq 1 ]; then
+
+        if [ $g_user_is_root -eq 0 ]; then
+           apk $p_non_interative add "$p_package_name"
+        else
+           sudo apk $p_non_interative add "$p_package_name"
         fi
         l_status=$?
 
@@ -787,7 +861,12 @@ uninstall_os_package() {
     #Opcion de modo non-interactive
     local p_non_interative=''
     if [ "$3" = "0" ]; then
-        p_non_interative='-y '
+
+        #Alpine por defecto es non-inteactivo
+        if [ $p_os_subtype_id -ne 1 ]; then
+            p_non_interative='-y '
+        fi
+
     fi
 
     #Si no se calculo, Calcularlo 
@@ -816,6 +895,16 @@ uninstall_os_package() {
            dnf $p_non_interative erase "$p_package_name"
         else
            sudo dnf $p_non_interative erase "$p_package_name"
+        fi
+        l_status=$?
+
+    #Si es Alpine
+    elif [ $p_os_subtype_id -eq 1 ]; then
+
+        if [ $g_user_is_root -eq 0 ]; then
+           apk $p_non_interative del "$p_package_name"
+        else
+           sudo apk $p_non_interative del "$p_package_name"
         fi
         l_status=$?
 
@@ -853,7 +942,12 @@ clean_os_cache() {
     #Opcion de modo non-interactive
     local p_non_interative=''
     if [ "$2" = "0" ]; then
-        p_non_interative='-y '
+
+        #Alpine por defecto es non-inteactivo
+        if [ $p_os_subtype_id -ne 1 ]; then
+            p_non_interative='-y '
+        fi
+
     fi
 
     local l_status=0
@@ -882,6 +976,18 @@ clean_os_cache() {
            dnf $p_non_interative clean all
         else
            sudo dnf $p_non_interative clean all
+        fi
+        l_status=$?
+
+    #Si es Alpine
+    elif [ $p_os_subtype_id -eq 1 ]; then
+
+        if [ $g_user_is_root -eq 0 ]; then
+           apk $p_non_interative cache clean
+           rm -rf /var/cache/apk/*
+        else
+           sudo apk $p_non_interative cache clean
+           sudo rm -rf /var/cache/apk/*
         fi
         l_status=$?
 

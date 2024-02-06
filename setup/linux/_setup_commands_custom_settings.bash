@@ -138,37 +138,38 @@ ga_menu_options_packages=(
     )
 
 #Tipos de SO donde se puede configurar los repositorio 
-# > Por defecto los repositorios son instalados en todo los tipos SO habilitados: Linux, Windows (valor por defecto es 7)
+# > Por defecto los repositorios son instalados en todo los tipos SO habilitados: Linux, Windows (valor por defecto es 15)
 # > Las opciones puede ser uno o la suma de los siguientes valores:
-#   1 (00001) Linux non-WSL2
-#   2 (00010) Linux WSL2
-#   4 (00100) Windows vinculado al Linux WSL2
+#   1 (00001) Windows vinculado al Linux WSL2.
+#   2 (00010) Linux WSL     con 'libc' (opcional tienen 'musl' por lo que se puede instalar estos programas).
+#   4 (00100) Linux Non-WSL con 'libc' (opcional tienen 'musl' por lo que se puede instalar estos programas).
+#   8 (01000) Linux Non-WSL solo con 'musl' (Ejemplo: Alpine).
 #
 declare -A gA_repo_config_os_type=(
-        ['less']=4
-        ['llvm']=3
-        ['rust']=3
-        ['k0s']=1
-        ['operator-sdk']=3
-        ['nerd-fonts']=3
-        ['runc']=3
-        ['crun']=3
-        ['cni-plugins']=3
-        ['3scale-toolbox']=3
-        ['rootlesskit']=3
-        ['slirp4netns']=3
-        ['fuse-overlayfs']=3
-        ['containerd']=3
-        ['buildkit']=3
-        ['nerdctl']=3
-        ['dive']=3
-        ['butane']=3
-        ['kubeadm']=3
-        ['kubelet']=3
-        ['crictl']=3
-        ['awscli']=3
-        ['hadolint']=3
-        ['trivy']=3
+        ['less']=1
+        ['llvm']=14
+        ['rust']=14
+        ['k0s']=4
+        ['operator-sdk']=14
+        ['nerd-fonts']=14
+        ['runc']=14
+        ['crun']=14
+        ['cni-plugins']=14
+        ['3scale-toolbox']=14
+        ['rootlesskit']=14
+        ['slirp4netns']=14
+        ['fuse-overlayfs']=14
+        ['containerd']=14
+        ['buildkit']=14
+        ['nerdctl']=14
+        ['dive']=14
+        ['butane']=14
+        ['kubeadm']=14
+        ['kubelet']=14
+        ['crictl']=14
+        ['awscli']=14
+        ['hadolint']=14
+        ['trivy']=14
     )
 
 

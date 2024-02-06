@@ -202,43 +202,57 @@ _can_setup_repository_in_this_so() {
 
     #¿Se puede instalar en este tipo de SO?
     #  > Puede ser uno o la suma de los siguientes valores:
-    #    1 (00001) Linux No-WSL2 (que no WSL2)
-    #    2 (00010) Linux WSL2
-    #    4 (00100) Windows vinculado al Linux WSL2
-    #  > Si no se especifica, su valor es 7.
-    local l_repo_config_os_type=${gA_repo_config_os_type[${p_repo_id}]:-7}
+    #    1 (00001) Windows vinculado al Linux WSL2.
+    #    2 (00010) Linux WSL     con 'libc' (opcional tienen 'musl' por lo que se puede instalar estos programas).
+    #    4 (00100) Linux Non-WSL con 'libc' (opcional tienen 'musl' por lo que se puede instalar estos programas).
+    #    8 (01000) Linux Non-WSL solo con 'musl' (Ejemplo: Alpine).
+    #  > Si no se especifica, su valor es 15.
+    local l_repo_config_os_type=${gA_repo_config_os_type[${p_repo_id}]:-15}
 
     if [ $p_install_win_cmds -ne 0 ]; then
 
         #Si es Linux
         if [ $g_os_type -le 1 ]; then
 
-            #Si es Linux WSL2
+            #Si es Linux WSL
             if [ $g_os_type -eq 1 ]; then
 
-                #Si se usa el flag '2' (Linux WSL2), configurarlo
+                #Si se usa el flag '2' (Linux WSL), configurarlo
                 if [ $((l_repo_config_os_type & 2)) -eq 2 ]; then
                     l_repo_can_setup=0
                 fi
 
-            #Si es Linux No-WSL2
+            #Si es Linux Non-WSL
             else
 
-                #Si se usa el flag '1' (Linux No-WSL2), configurarlo
-                if [ $((l_repo_config_os_type & 1)) -eq 1 ]; then
-                    l_repo_can_setup=0
-                fi
+                #Si es un Linux Non-WSL solo con 'musl': Alpine
+                if [ $g_os_subtype_id -eq 1 ]; then
+
+                    #Si se usa el flag '8' (Linux Non-WSL con 'libc'), configurarlo
+                    if [ $((l_repo_config_os_type & 8)) -eq 8 ]; then
+                        l_repo_can_setup=0
+                    fi
+
+               #Si es un Linux Non-WSL con 'libc'
+               else
+
+                    #Si se usa el flag '4' (Linux Non-WSL con 'musl'), configurarlo
+                    if [ $((l_repo_config_os_type & 4)) -eq 4 ]; then
+                        l_repo_can_setup=0
+                    fi
+
+               fi
             fi
             
         fi
 
     else
 
-        #Si es Linux WSL2
+        #Si es Linux WSL
         if [ $g_os_type -eq 1 ]; then
 
-            #Si se usa el flag '4' (Windows vinculado al Linux WSL2), configurarlo
-            if [ $((l_repo_config_os_type & 4)) -eq 4 ]; then
+            #Si se usa el flag '1' (Windows vinculado al Linux WSL2), configurarlo
+            if [ $((l_repo_config_os_type & 1)) -eq 1 ]; then
                 l_repo_can_setup=0
             fi
 

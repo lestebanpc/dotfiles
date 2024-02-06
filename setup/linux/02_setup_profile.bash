@@ -1082,7 +1082,8 @@ _install_python() {
     l_version=$(python3 --version 2> /dev/null)
     l_status=$?
 
-    l_version2=$(python3 -m pip --version 2> /dev/null)
+    #l_version2=$(python3 -m pip --version 2> /dev/null)
+    l_version2=$(pip3 --version 2> /dev/null)
     l_status2=$?
 
     local l_is_noninteractive=1

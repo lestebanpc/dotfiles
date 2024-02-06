@@ -117,7 +117,11 @@ get_package_name() {
 
     #Obtener el nombre del paquete personalizado
     local l_package_name_custom="$p_package_name"
+    #Por defecto la busqueda es inexacta, execto en alpine donde es exacta
     local l_search_type=0
+    if [ $p_os_subtype_id -eq 1 ]
+        l_search_type=1
+    fi
 
     case "$p_package_id" in
 
@@ -129,11 +133,22 @@ get_package_name() {
                 #Si es Ubuntu
                 l_package_name_custom="vim"
                 l_search_type=1
+
+            #Si es Alpine
+            elif [ $p_os_subtype_id -eq 1 ]
+                l_package_name_custom="vim"
+                l_search_type=1
             fi 
             ;;
 
         python-pip)
             l_search_type=1
+
+            #Si es Alpine
+            if [ $p_os_subtype_id -eq 1 ]
+                l_package_name_custom="py3-pip"
+                l_search_type=1
+            fi 
             ;;
 
         xvfb)

@@ -506,6 +506,7 @@ function g_install_options() {
     fi
 
     if [ $p_flag_clean_os_cache -eq 0 ] && [ $l_exist_packages_installed -eq 0 ]; then
+        printf 'Clean packages cache...\n'
         clean_os_cache $g_os_subtype_id $l_is_noninteractive
     fi
 
