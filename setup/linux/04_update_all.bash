@@ -787,7 +787,7 @@ if [ $gp_type_calling -eq 0 ]; then
 
     #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
     _g_status=0
-    fulfill_preconditions $g_os_subtype_id 0 0 1
+    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_repo_path"
     _g_status=$?
 
     #Iniciar el procesamiento

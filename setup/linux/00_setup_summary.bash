@@ -671,7 +671,7 @@ g_is_credential_storage_externally=1
 if [ $gp_type_calling -eq 0 ]; then
 
     #Validar los requisitos (algunas opciones requiere root y otros no)
-    fulfill_preconditions $g_os_subtype_id 0 0 1
+    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_repo_path"
     _g_status=$?
 
     _gp_flag_clean_os_cache=1
@@ -730,7 +730,7 @@ else
     fi
 
     #Validar los requisitos (algunas opciones requiere root y otros no)
-    fulfill_preconditions $g_os_subtype_id 1 0 1
+    fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_repo_path"
     _g_status=$?
 
     #Iniciar el procesamiento

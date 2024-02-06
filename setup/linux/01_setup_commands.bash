@@ -3447,7 +3447,7 @@ g_is_credential_storage_externally=1
 if [ $gp_uninstall -eq 0 ]; then
 
     #Validar los requisitos
-    fulfill_preconditions $g_os_subtype_id 0 1 1
+    fulfill_preconditions $g_os_subtype_id 0 1 1 "$g_repo_path"
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -3472,7 +3472,7 @@ else
         fi
 
         #Validar los requisitos
-        fulfill_preconditions $g_os_subtype_id 0 0 1
+        fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_repo_path"
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -3513,7 +3513,7 @@ else
         fi
 
         #Validar los requisitos
-        fulfill_preconditions $g_os_subtype_id 1 0 1
+        fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_repo_path"
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -3568,7 +3568,7 @@ else
         fi
 
         #Validar los requisitos
-        fulfill_preconditions $g_os_subtype_id 1 0 1
+        fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_repo_path"
         _g_status=$?
 
         #Iniciar el procesamiento

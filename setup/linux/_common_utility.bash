@@ -26,6 +26,7 @@ declare -r g_empty_str='EMPTY'
 #  2 > Mostrar información adicional (solo mostrar cuando se muestra el menu)
 #  3 > Flag '0' si se requere curl
 #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
+#  5 > Path donde se encuentra el directorio donde esta el '.git'
 # Retorno:
 #   0 - Se tiene los programas necesarios para iniciar la configuración
 #   1 - No se tiene los programas necesarios para iniciar la configuración
@@ -40,16 +41,24 @@ function fulfill_preconditions() {
     fi 
 
     local p_require_curl=1
-    if [ "$p_require_curl" = "0" ]; then
+    if [ "$3" = "0" ]; then
         p_require_curl=0
     fi
+
     local p_require_root=1
-    if [ "$p_require_root" = "0" ]; then
+    if [ "$4" = "0" ]; then
         p_require_root=0
     fi
 
+    local p_repo_path
+    if [ -z "$5" ]; then
+        p_repo_path="$HOME"
+    else
+        p_repo_path="$5"
+    fi
+
     #1. Validar si ejecuta dentro de un repostorio git
-    if [ ! -d ~/.files/.git ]; then
+    if [ ! -d ${p_repo_path}/.files/.git ]; then
 
         echo "No existe los archivos necesarios, debera seguir los siguientes pasos:"
         echo "   1> Descargar los archivos del repositorio:"
