@@ -3130,10 +3130,12 @@ function _copy_artifact_files() {
 
                 if [ ! -z "$g_other_calling_user" ]; then
                     if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                        chown -R $g_other_calling_user ${g_repo_path}/.local/
                         chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/fzf.bash 
                         chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/keybindings/fzf.bash
                         chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/functions/fzf-tmux.bash
                     else
+                        sudo chown -R $g_other_calling_user ${g_repo_path}/.local/
                         sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/fzf.bash 
                         sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/keybindings/fzf.bash
                         sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/functions/fzf-tmux.bash
@@ -3607,9 +3609,9 @@ function _copy_artifact_files() {
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
                     if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown $g_other_calling_user ${g_repo_path}/.files/setup/programs/kubelet/kubelet.service
+                        chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/
                     else
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/setup/programs/kubelet/kubelet.service
+                        sudo chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/
                     fi
                 fi
 
@@ -5416,9 +5418,9 @@ function _copy_artifact_files() {
             #Fix permisos
             if [ ! -z "$g_other_calling_user" ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    chown $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/systemd/user/containerd.service
+                    chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/
                 else
-                    sudo chown $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/systemd/user/containerd.service
+                    sudo chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/
                 fi
             fi
 
@@ -5520,11 +5522,9 @@ function _copy_artifact_files() {
             #Fix permisos
             if [ ! -z "$g_other_calling_user" ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/systemd/system
-                    chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/systemd/user
+                    chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/
                 else
-                    sudo chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/systemd/system
-                    sudo chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/systemd/user
+                    sudo chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/
                 fi
             fi
 
@@ -5595,11 +5595,9 @@ function _copy_artifact_files() {
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
                     if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown $g_other_calling_user ${g_repo_path}/.files/setup/programs/containerd/containerd-rootless.sh
-                        chown $g_other_calling_user  ${g_repo_path}/.files/setup/programs/containerd/containerd-rootless-setuptool.sh
+                        chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/containerd/
                     else
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/setup/programs/containerd/containerd-rootless.sh
-                        sudo chown $g_other_calling_user  ${g_repo_path}/.files/setup/programs/containerd/containerd-rootless-setuptool.sh
+                        sudo chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/containerd/
                     fi
                 fi
 
@@ -5768,9 +5766,9 @@ function _copy_artifact_files() {
             #Fix permisos
             if [ ! -z "$g_other_calling_user" ]; then
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    chown -R $g_other_calling_user ${g_repo_path}/.files/config/trivy/templates
+                    chown -R $g_other_calling_user ${g_repo_path}/.files/config/trivy/
                 else
-                    sudo chown -R $g_other_calling_user ${g_repo_path}/.files/config/trivy/templates
+                    sudo chown -R $g_other_calling_user ${g_repo_path}/.files/config/trivy/
                 fi
             fi
             ;;
