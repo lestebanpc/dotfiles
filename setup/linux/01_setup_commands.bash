@@ -27,6 +27,11 @@ function _get_current_repo_path() {
 
 declare -r g_repo_path=$(_get_current_repo_path "${BASH_SOURCE[0]}")
 
+#Si lo ejecuta un usuario diferente al actual (al que pertenece el repositorio)
+#UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
+g_other_calling_user=''
+
+
 #Funciones generales, determinar el tipo del SO y si es root
 . ${g_repo_path}/.files/terminal/linux/functions/func_utility.bash
 
@@ -3386,22 +3391,24 @@ g_usage() {
     printf '  > %bInstalar/Actualizar un grupo de repositorios sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS INSTALL_ONLYLAST_VERSION\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS INSTALL-ONLYLAST-VERSION OTHER-USERID\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 1 si es interactivo y 3 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un repositorio sin mostrar el  menú%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID%b\n' "$g_color_yellow1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID SUDO-STORAGE-OPTIONS INSTALL_ONLYLAST_VERSION%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID SUDO-STORAGE-OPTIONS INSTALL-ONLYLAST-VERSION SHOW-TITLE-1REPO OTHER-USERID%b\n' "$g_color_yellow1" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '    > %bLIST-REPO-ID%b lista de ID repositorios separados por coma.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    > %bLIST-REPO-ID%b lista de ID repositorios separados por coma.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    > %bSHOW-TITLE-1REPO%b Es 0, si muestra el titulo cuando solo se instala 1 repositorio. Por defecto es 1.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"
-    printf '  > %bINSTALL_ONLYLAST_VERSION %bpor defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bINSTALL-ONLYLAST-VERSION %bpor defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bOTHER-USERID %bEl GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -3494,7 +3501,7 @@ else
         if [[ "$2" =~ ^[0-9]+$ ]]; then
             _gp_opciones=$2
         else
-            echo "Parametro 2 \"$2\" debe ser una opción valida."
+            echo "Parametro 2 \"$2\" debe ser una opción de menú valida."
             exit 110
         fi
 
@@ -3510,6 +3517,17 @@ else
         g_setup_only_last_version=1        
         if [ "$4" = "0" ]; then
             g_setup_only_last_version=0
+        fi
+
+        #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
+        g_other_calling_user=''
+        if [ "$g_repo_path" != "$HOME" ]; then
+            if [[ "$5" =~ ^[0-9]+:[0-9]+$ ]]; then
+                g_other_calling_user="$5"
+            else
+                echo "Parametro 5 \"$5\" debe ser tener el formado 'UID:GID'."
+                exit 110
+            fi
         fi
 
         #Validar los requisitos
@@ -3565,6 +3583,17 @@ else
         _g_show_title_on_onerepo=1
         if [ "$5" = "0" ]; then
             _g_show_title_on_onerepo=0
+        fi
+
+        #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
+        g_other_calling_user=''
+        if [ "$g_repo_path" != "$HOME" ]; then
+            if [[ "$6" =~ ^[0-9]+:[0-9]+$ ]]; then
+                g_other_calling_user="$6"
+            else
+                echo "Parametro 6 \"$6\" debe ser tener el formado 'UID:GID'."
+                exit 110
+            fi
         fi
 
         #Validar los requisitos

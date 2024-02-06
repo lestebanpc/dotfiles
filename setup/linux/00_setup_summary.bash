@@ -25,6 +25,11 @@ function _get_current_repo_path() {
 
 declare -r g_repo_path=$(_get_current_repo_path "${BASH_SOURCE[0]}")
 
+#Si lo ejecuta un usuario diferente al actual (al que pertenece el repositorio)
+#UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
+g_other_calling_user=''
+
+
 #Funciones generales, determinar el tipo del SO y si es root
 . ${g_repo_path}/.files/terminal/linux/functions/func_utility.bash
 
@@ -213,12 +218,12 @@ function g_install_options() {
             # 2> Repsositorio a instalar/acutalizar: 
             # 3> El estado de la credencial almacenada para el sudo.
             # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-            # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+            # 5> Flag '0' para mostrar un titulo si se solo se configure un repositorio en el parametro 2. Por defecto es '1' 
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 1 4 $g_status_crendential_storage 0 0
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 1 4 $g_status_crendential_storage 0 1 "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 3 4 $g_status_crendential_storage 0 0
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 3 4 $g_status_crendential_storage 0 1 "$g_other_calling_user"
                 l_status=$?
             fi
 
@@ -314,16 +319,16 @@ function g_install_options() {
 
             #Parametros:
             # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
-            # 2> Repsositorio a instalar/acutalizar: 
+            # 2> Repsitorio a instalar/actualizar: 
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
             # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
             if [ $l_is_noninteractive -eq 1 ]; then
                 
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "roslyn,netcoredbg" $g_status_crendential_storage            
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "roslyn,netcoredbg" $g_status_crendential_storage 0 1 "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "roslyn,netcoredbg" $g_status_crendential_storage            
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "roslyn,netcoredbg" $g_status_crendential_storage 0 1 "$g_other_calling_user"
                 l_status=$?
             fi
 
@@ -358,10 +363,10 @@ function g_install_options() {
             # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
             # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "jdtls" $g_status_crendential_storage 0 0
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "jdtls" $g_status_crendential_storage 0 1 "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "jdtls" $g_status_crendential_storage 0 0
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "jdtls" $g_status_crendential_storage 0 1 "$g_other_calling_user"
                 l_status=$?
             fi
 
@@ -396,10 +401,10 @@ function g_install_options() {
             # 5> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
             if [ $l_is_noninteractive -eq 1 ]; then
                 
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" $g_status_crendential_storage            
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" $g_status_crendential_storage 0 1 "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" $g_status_crendential_storage            
+                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" $g_status_crendential_storage 0 1 "$g_other_calling_user" 
                 l_status=$?
             fi
 
@@ -618,7 +623,7 @@ g_usage() {
     printf '  > %bInstalar/Actualizar un grupo de opciones sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-ID\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-ID SUDO-STORAGE-OPTIONS CLEAN-OS-CACHE UPGRADE-OS-PACKAGES\n\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-ID SUDO-STORAGE-OPTIONS CLEAN-OS-CACHE UPGRADE-OS-PACKAGES OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bMENU-OPTIONS%b Las opciones de menu a instalar. Si no desea especificar coloque 0.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -629,7 +634,8 @@ g_usage() {
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"
     printf '  > %bCLEAN-OS-CACHE%b es 0 si se limpia el cache del gestor de paquetes. Por defecto es 1.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bUPGRADE-OS-PACKAGES%b Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.\n\n%b' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bUPGRADE-OS-PACKAGES%b Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.\n%b' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bOTHER-USERID %bEl GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -727,6 +733,17 @@ else
     _gp_flag_upgrade_os_pkgs=1
     if [ "$6" = "0" ]; then
         _gp_flag_upgrade_os_pkgs=0
+    fi
+
+    #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
+    g_other_calling_user=''
+    if [ "$g_repo_path" != "$HOME" ]; then
+        if [[ "$7" =~ ^[0-9]+:[0-9]+$ ]]; then
+            g_other_calling_user="$7"
+        else
+            echo "Parametro 7 \"$7\" debe ser tener el formado 'UID:GID'."
+            exit 110
+        fi
     fi
 
     #Validar los requisitos (algunas opciones requiere root y otros no)

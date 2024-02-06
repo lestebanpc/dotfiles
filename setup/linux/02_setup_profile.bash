@@ -852,13 +852,22 @@ function _config_vim_profile() {
         l_flag_overwrite_ln=0
     fi
 
+    #¿El programa NodeJS esta en el PATH?: se requiere el comando 'node'
+    local l_status
+    if ! node --version 2> /dev/null; then
+        echo "$PATH" | grep "${g_path_programs}/nodejs/bin" &> /dev/null
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+            export PATH=${g_path_programs}/nodejs/bin:$PATH
+        fi
+    fi
+
     #5. Configurar VIM 
     if [ $l_config_vim -ge 0 ]; then
         _config_vim $l_config_vim $l_flag_overwrite_ln
     fi
 
     #6. Configurar NeoVIM
-    local l_status
     if [ $l_config_nvim -ge 0 ]; then
         
         #¿El programa NeoVIM esta en el path?: se requiere usar el comando 'nvim'
