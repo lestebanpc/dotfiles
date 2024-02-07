@@ -146,7 +146,7 @@ function get_linux_type_info() {
     #Si es Alpine
     if [ $g_os_subtype_id -eq 1 ]; then
         l_tag="VERSION_ID"
-        l_expression='s/'"$l_tag"'=\(.*\)"/\1/'
+        l_expression='s/'"$l_tag"'=\(.*\)/\1/'
     #Si no es Alpine
     else
         l_tag="VERSION"
