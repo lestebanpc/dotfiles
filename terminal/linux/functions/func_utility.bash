@@ -101,7 +101,8 @@ function get_linux_type_info() {
     #   PRETTY_NAME="Alpine Linux v3.19"
     #
     local l_tag="NAME"
-    local l_distro_type=$(echo "$l_info_distro" | grep -e "^${l_tag}=" | sed 's/'"$l_tag"'="\(.*\)"/\1/')
+    local l_expression='s/'"$l_tag"'="\(.*\)"/\1/'
+    local l_distro_type=$(echo "$l_info_distro" | grep -e "^${l_tag}=" | sed "$l_expression")
     if [ -z "$l_distro_type" ]; then
         return 1
     fi
@@ -141,13 +142,18 @@ function get_linux_type_info() {
     # Alpine:
     #   VERSION_ID=3.19.1
     #
-    l_tag="VERSION"
+
+    #Si es Alpine
     if [ $g_os_subtype_id -eq 1 ]; then
-        #En Alpine
-        l_tag="VERSION_ID"        
+        l_tag="VERSION_ID"
+        l_expression='s/'"$l_tag"'=\(.*\)"/\1/'
+    #Si no es Alpine
+    else
+        l_tag="VERSION"
+        l_expression='s/'"$l_tag"'="\(.*\)"/\1/'
     fi
 
-    local l_distro_version=$(echo "$l_info_distro" | grep -e "^${l_tag}=" | sed 's/'"$l_tag"'="\(.*\)"/\1/')
+    local l_distro_version=$(echo "$l_info_distro" | grep -e "^${l_tag}=" | sed "$l_expression")
 
     if [ -z "$l_distro_version" ]; then
         g_os_subtype_version=""
