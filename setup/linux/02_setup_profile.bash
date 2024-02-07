@@ -205,6 +205,7 @@ declare -A gA_repos_branch=(
 declare -A gA_repos_depth=(
         ['neoclide/coc.nvim']=1
         ['junegunn/fzf']=1
+        ['dense-analysis/ale']=1
     )
 
 

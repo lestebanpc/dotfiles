@@ -312,7 +312,7 @@ function get_repo_latest_version() {
             fi
 
             #Si es Alpine: Usar el repositorio alternativos de NodeJS (https://github.com/nodejs/unofficial-builds/)
-            if [ $p_os_subtype_id -eq 1 ]; then
+            if [ $g_os_subtype_id -eq 1 ]; then
                 l_base_url_fixed='https://unofficial-builds.nodejs.org/download/release'
             fi
             
