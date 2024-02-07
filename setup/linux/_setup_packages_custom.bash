@@ -120,7 +120,7 @@ get_package_name() {
     local l_package_name_custom="$p_package_name"
     #Por defecto la busqueda es inexacta, execto en alpine donde es exacta
     local l_search_type=0
-    if [ $p_os_subtype_id -eq 1 ]
+    if [ $p_os_subtype_id -eq 1 ]; then
         l_search_type=1
     fi
 
@@ -136,7 +136,7 @@ get_package_name() {
                 l_search_type=1
 
             #Si es Alpine
-            elif [ $p_os_subtype_id -eq 1 ]
+            elif [ $p_os_subtype_id -eq 1 ]; then
                 l_package_name_custom="vim"
                 l_search_type=1
             fi 
@@ -146,7 +146,7 @@ get_package_name() {
             l_search_type=1
 
             #Si es Alpine
-            if [ $p_os_subtype_id -eq 1 ]
+            if [ $p_os_subtype_id -eq 1 ]; then
                 l_package_name_custom="py3-pip"
                 l_search_type=1
             fi 
