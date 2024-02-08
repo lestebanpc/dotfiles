@@ -800,9 +800,9 @@ install_os_package() {
 
         #Distribución: Ubuntu
         if [ $g_user_is_root -eq 0 ]; then
-           apt-get $p_non_interative install "$p_package_name"
+           apt-get $p_non_interative install $p_package_name
         else
-           sudo apt-get $p_non_interative install "$p_package_name"
+           sudo apt-get $p_non_interative install $p_package_name
         fi
         l_status=$?
 
@@ -811,9 +811,9 @@ install_os_package() {
 
         #Distribución: Fedora
         if [ $g_user_is_root -eq 0 ]; then
-           dnf $p_non_interative install "$p_package_name"
+           dnf $p_non_interative install $p_package_name
         else
-           sudo dnf $p_non_interative install "$p_package_name"
+           sudo dnf $p_non_interative install $p_package_name
         fi
         l_status=$?
 
@@ -821,14 +821,13 @@ install_os_package() {
     elif [ $p_os_subtype_id -eq 1 ]; then
 
         if [ $g_user_is_root -eq 0 ]; then
-           apk $p_non_interative add "$p_package_name"
+           apk $p_non_interative add $p_package_name
         else
-           sudo apk $p_non_interative add "$p_package_name"
+           sudo apk $p_non_interative add $p_package_name
         fi
         l_status=$?
 
     else
-
         printf 'La instalación del paquete "%s" en el SO (tipo "%s") aun no esta implementado\n' "$p_package_name" "$p_os_type"
         l_status=110
     fi
@@ -886,10 +885,10 @@ uninstall_os_package() {
 
         #Distribución: Ubuntu
         if [ $g_user_is_root -eq 0 ]; then
-           apt-get $p_non_interative purge "$p_package_name"
+           apt-get $p_non_interative purge $p_package_name
            #apt-get autoremove
         else
-           sudo apt-get $p_non_interative purge "$p_package_name"
+           sudo apt-get $p_non_interative purge $p_package_name
            #sudo apt-get autoremove
         fi
         l_status=$?
@@ -899,9 +898,9 @@ uninstall_os_package() {
 
         #Distribución: Fedora
         if [ $g_user_is_root -eq 0 ]; then
-           dnf $p_non_interative erase "$p_package_name"
+           dnf $p_non_interative erase $p_package_name
         else
-           sudo dnf $p_non_interative erase "$p_package_name"
+           sudo dnf $p_non_interative erase $p_package_name
         fi
         l_status=$?
 
@@ -909,9 +908,9 @@ uninstall_os_package() {
     elif [ $p_os_subtype_id -eq 1 ]; then
 
         if [ $g_user_is_root -eq 0 ]; then
-           apk $p_non_interative del "$p_package_name"
+           apk $p_non_interative del $p_package_name
         else
-           sudo apk $p_non_interative del "$p_package_name"
+           sudo apk $p_non_interative del $p_package_name
         fi
         l_status=$?
 
