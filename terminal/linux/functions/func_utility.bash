@@ -640,25 +640,26 @@ is_package_installed() {
     #Si es Alpine
     elif [ $p_os_subtype_id -eq 1 ]; then
 
-       #
-       #apk list --installed | grep '^python3-'
-       #
-       #python3-3.11.6-r1 x86_64 {python3} (PSF-2.0)
-       #python3-dbg-3.11.6-r1 x86_64 {python3} (PSF-2.0)
-       #python3-dev-3.11.6-r1 x86_64 {python3} (PSF-2.0)
-       #python3-doc-3.11.6-r1 x86_64 {python3} (PSF-2.0)
-       #python3-gdbm-3.11.6-r1 x86_64 {python3} (PSF-2.0)
-       #python3-idle-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
-       #python3-pyc-3.11.6-r1 x86_64 {python3} (PSF-2.0)
-       #python3-pycache-pyc0-3.11.6-r1 x86_64 {python3} (PSF-2.0)
-       #python3-pycache-pyc1-3.11.6-r1 x86_64 {python3} (PSF-2.0)
-       #python3-pycache-pyc2-3.11.6-r1 x86_64 {python3} (PSF-2.0)
-       #python3-tests-3.11.6-r1 x86_64 {python3} (PSF-2.0)
-       #python3-tkinter-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
-       #python3-tkinter-pyc-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
-       #python3-tkinter-tests-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
-        
-        l_aux=$(apk list --installed | grep "$p_package_name_part" 2> /dev/null)
+        #
+        #apk list --installed | grep '^python3-'
+        #
+        #python3-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+        #python3-dbg-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+        #python3-dev-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+        #python3-doc-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+        #python3-gdbm-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+        #python3-idle-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
+        #python3-pyc-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+        #python3-pycache-pyc0-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+        #python3-pycache-pyc1-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+        #python3-pycache-pyc2-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+        #python3-tests-3.11.6-r1 x86_64 {python3} (PSF-2.0)
+        #python3-tkinter-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
+        #python3-tkinter-pyc-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
+        #python3-tkinter-tests-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
+       
+        #Opcion '-q' se requiere para que se muestren los mensajes 'WARNING: ....'
+        l_aux=$(apk list -q --installed | grep "$p_package_name_part" 2> /dev/null)
         l_status=$?
 
         if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
