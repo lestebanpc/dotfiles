@@ -3941,50 +3941,35 @@ function _copy_artifact_files() {
             
             #Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/netcoredbg"
-            l_flag_install=0            
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
                 l_path_target_bin="${g_path_programs}/dap_servers/netcoredbg"
 
-                #1. Comparando la version instalada con la version descargada
-                _compare_version_current_with "$p_repo_id" "$l_path_source" $p_install_win_cmds
-                l_status=$?
 
-                #Actualizar solo no esta configurado o tiene una version menor a la actual
-                if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                    l_flag_install=0
+                #2.1. Instalación: Limpieza del directorio del programa
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
+                    chmod g+rx,o+rx $l_path_target_bin
                 else
-                    l_flag_install=1
+                    #Limpieza
+                    rm -rf ${l_path_target_bin}/*
                 fi
-
-                #2. Instalación
-                if [ $l_flag_install -eq 0 ]; then
-
-                    #2.1. Instalación: Limpieza del directorio del programa
-                    if  [ ! -d "$l_path_target_bin" ]; then
-                        mkdir -p $l_path_target_bin
-                        chmod g+rx,o+rx $l_path_target_bin
-                    else
-                        #Limpieza
-                        rm -rf ${l_path_target_bin}/*
-                    fi
-                        
-                    #2.2. Instalación: Mover todos archivos
-                    #rm "${l_path_source}/${p_artifact_name_woext}.tar.gz"
-                    find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_target_bin} \;
                     
-                    #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
-                    echo "$p_repo_last_version_pretty" > "${l_path_target_bin}/netcoredbg.info" 
+                #2.2. Instalación: Mover todos archivos
+                #rm "${l_path_source}/${p_artifact_name_woext}.tar.gz"
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_target_bin} \;
+                
+                #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
+                echo "$p_repo_last_version_pretty" > "${l_path_target_bin}/netcoredbg.info" 
 
-                    #Fix permisos
-                    if [ ! -z "$g_other_calling_user" ]; then
-                        if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                            chown $g_other_calling_user "${l_path_target_bin}/netcoredbg.info"
-                        else
-                            sudo chown $g_other_calling_user "${l_path_target_bin}/netcoredbg.info"
-                        fi
+                #Fix permisos
+                if [ ! -z "$g_other_calling_user" ]; then
+                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                        chown $g_other_calling_user "${l_path_target_bin}/netcoredbg.info"
+                    else
+                        sudo chown $g_other_calling_user "${l_path_target_bin}/netcoredbg.info"
                     fi
                 fi
 
@@ -3993,36 +3978,22 @@ function _copy_artifact_files() {
                 
                 l_path_target_bin="${g_path_programs_win}/DAP_Servers/NetCoreDbg"
 
-                #1. Comparando la version instalada con la version descargada
-                _compare_version_current_with "$p_repo_id" "$l_path_source" $p_install_win_cmds
-                l_status=$?
 
-                #Actualizar solo no esta configurado o tiene una version menor a la actual
-                if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                    l_flag_install=0
+                #2.1. Instalación: Limpieza del directorio del programa
+                if  [ ! -d "$l_path_target_bin" ]; then
+                    mkdir -p $l_path_target_bin
+                    #chmod g+rx,o+rx $l_path_target_bin
                 else
-                    l_flag_install=1
+                    #Limpieza
+                    rm -rf ${l_path_target_bin}/*
                 fi
+                    
+                #2.2. Instalación: Mover todos archivos
+                #rm "${l_path_source}/${p_artifact_name_woext}.zip"
+                find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_target_bin} \;
 
-                #2. Instalación
-                if [ $l_flag_install -eq 0 ]; then
-
-                    #2.1. Instalación: Limpieza del directorio del programa
-                    if  [ ! -d "$l_path_target_bin" ]; then
-                        mkdir -p $l_path_target_bin
-                        #chmod g+rx,o+rx $l_path_target_bin
-                    else
-                        #Limpieza
-                        rm -rf ${l_path_target_bin}/*
-                    fi
-                        
-                    #2.2. Instalación: Mover todos archivos
-                    #rm "${l_path_source}/${p_artifact_name_woext}.zip"
-                    find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_target_bin} \;
-
-                    #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
-                    echo "$p_repo_last_version_pretty" > "${l_path_target_bin}/netcoredbg.info" 
-                fi
+                #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
+                echo "$p_repo_last_version_pretty" > "${l_path_target_bin}/netcoredbg.info" 
 
             fi
             ;;
@@ -4031,23 +4002,11 @@ function _copy_artifact_files() {
             
             #Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
-            l_flag_install=0            
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
                 l_path_target_bin="${g_path_programs}/neovim"
-
-                #1. Comparando la version instalada con la version descargada
-                _compare_version_current_with "$p_repo_id" "$l_path_source/bin" $p_install_win_cmds
-                l_status=$?
-
-                #Actualizar solo no esta configurado o tiene una version menor a la actual
-                if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                    l_flag_install=0
-                else
-                    l_flag_install=1
-                fi
 
                 #2. Instalación
                 if [ $l_flag_install -eq 0 ]; then
@@ -4081,17 +4040,6 @@ function _copy_artifact_files() {
             else
                 
                 l_path_target_bin="${g_path_programs_win}/NeoVim"
-
-                #1. Comparando la version instalada con la version descargada
-                _compare_version_current_with "$p_repo_id" "$l_path_source/bin" $p_install_win_cmds
-                l_status=$?
-
-                #Actualizar solo no esta configurado o tiene una version menor a la actual
-                if [ $l_status -eq 9 ] || [ $l_status -eq 2 ]; then
-                    l_flag_install=0
-                else
-                    l_flag_install=1
-                fi
 
                 #2. Instalación
                 if [ $l_flag_install -eq 0 ]; then
@@ -5911,164 +5859,37 @@ install_initialize_menu_option() {
         #Instalacion de DotNet (runtime o SDK o ambos)
         13)
 
-            #Validar si algunos paquees necesarios estan instalados
-            #https://learn.microsoft.com/en-us/dotnet/core/install/linux-fedora#dependencies
-            #https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu#dependencies
-            
-            #1. Obtener los paquetes que requeridos
-            local la_packages_needed=()
+            #Solo soportado para los que tenga acceso a root
+            if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
-            #Si es de la familia Fedora/CentOS
-            if [ $g_os_subtype_id -ge 10 ] && [ $g_os_subtype_id -lt 30 ]; then
+                #print_line '─' $g_max_length_line  "$g_color_blue1"
+                printf "> Instalando las %blibrerias%b requeridas por %b.NET%b...\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+                #print_line '─' $g_max_length_line "$g_color_blue1"
 
-                #la_packages_needed=("krb5-libs" "libicu" "openssl-libs" "zlib" "compat-openssl10")
-                la_packages_needed=("krb5-libs" "libicu" "openssl-libs" "zlib")
-
-            #Si es de la familia Debian
-            elif [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-
-                #Existe diferentes paquetes para Debian y para Ubuntu que depende de la version
-                
-                #libc6
-                #libgssapi-krb5-2
-                #libstdc++6
-                #zlib1g
-                #
-                la_packages_needed=("libc6" "libgssapi-krb5-2" "libstdc++6" "zlib1g")
-
-                #libicu55          (Ubuntu 16.x)
-                #libicu60          (Ubuntu 18.x)
-                #libicu66          (Ubuntu 20.x)
-                #libicu70          (Ubuntu 22.04)
-                #libicu71          (Ubuntu 22.10)
-                #libicu72          (Ubuntu 23.04, 23.10)
-                #libicu63          (Debian 10.x)
-                #libicu67          (Debian 11.x)
-                #libicu72          (Debian 12.x)
-                #
-                if [ $g_os_subtype_id -eq 31 ]; then
-                    if [[ "$g_os_subtype_version" =~ ^16\..+$ ]]; then
-                        la_packages_needed+=("libicu55")
-                    elif [[ "$g_os_subtype_version" =~ ^18\..+$ ]]; then
-                        la_packages_needed+=("libicu60")
-                    elif [[ "$g_os_subtype_version" =~ ^20\..+$ ]]; then
-                        la_packages_needed+=("libicu66")
-                    elif [ "$g_os_subtype_version" = "22.04" ]; then
-                        la_packages_needed+=("libicu70")
-                    elif [ "$g_os_subtype_version" = "22.10" ]; then
-                        la_packages_needed+=("libicu71")
-                    elif [[ "$g_os_subtype_version" =~ ^23\..+$ ]]; then
-                        la_packages_needed+=("libicu72")
-                    fi
-                else
-                    if [[ "$g_os_subtype_version" =~ ^10\..+$ ]]; then
-                        la_packages_needed+=("libicu63")
-                    elif [[ "$g_os_subtype_version" =~ ^11\..+$ ]]; then
-                        la_packages_needed+=("libicu67")
-                    elif [[ "$g_os_subtype_version" =~ ^12\..+$ ]]; then
-                        la_packages_needed+=("libicu72")
-                    fi
-                fi
-
-                #libssl1.0.0       (Ubuntu 16.x)
-                #libssl1.1         (Debian/Ubuntu 18.x, 20.x)
-                #libssl3           (Ubuntu 22.x, 23.x)
-                #
-                if [ $g_os_subtype_id -eq 31 ]; then
-                    if [[ "$g_os_subtype_version" =~ ^16\..+$ ]]; then
-                        la_packages_needed+=("libssl1.0.0")
-                    elif [[ "$g_os_subtype_version" =~ ^18\..+$ ]]; then
-                        la_packages_needed+=("libssl1.1")
-                    elif [[ "$g_os_subtype_version" =~ ^20\..+$ ]]; then
-                        la_packages_needed+=("libssl1.1")
-                    elif [[ "$g_os_subtype_version" =~ ^22\..+$ ]]; then
-                        la_packages_needed+=("libssl3")
-                    elif [[ "$g_os_subtype_version" =~ ^23\..+$ ]]; then
-                        la_packages_needed+=("libssl3")
-                    fi
-                else
-                    la_packages_needed+=("libssl1.1")
-                fi
-
-                #libgcc1           (Debian/Ubuntu 16.x, 18.x, 20.x, 22.x)
-                #libgcc-s1         (Debian/Ubuntu 22.x, 23.x)
-                #liblttng-ust1     (Ubuntu 22.x, 23.x)
-                #libunwind8        (Ubuntu 22.x, 23.x)
-                #
-                if [ $g_os_subtype_id -eq 31 ]; then
-                    if [[ "$g_os_subtype_version" =~ ^22\..+$ ]]; then
-                        la_packages_needed+=("libgcc1" "libgcc-s1" "liblttng-ust1" "libunwind8")
-                    elif [[ "$g_os_subtype_version" =~ ^23\..+$ ]]; then
-                        la_packages_needed+=("libgcc-s1" "liblttng-ust1" "libunwind8")
-                    else
-                        la_packages_needed+=("libgcc1" "libgcc-s1")
-                    fi
-                else
-                    la_packages_needed+=("libgcc1" "libgcc-s1")
-                fi
-
-
-            fi
-
-            #2. Determinar los paquetes que ya estan instalados
-            local l_n=${#la_packages_needed[@]}
-            local l_packages=''
-            local l_package
-            local l_i
-
-            if [ $l_n -gt 0 ]; then
-
-                for ((l_i=0; l_i < l_n; l_i++)); do
-
-                    l_package="${la_packages_needed[$l_i]}"
-
-                    #Buscar si el paquete esta instalado
-                    is_package_installed "$l_package" $g_os_subtype_id
+                #Parametros:
+                # 1> Tipo de ejecución: 2/4 (ejecución sin menu, para instalar/actualizar un grupo paquetes)
+                # 2> Paquetes a instalar 
+                # 3> El estado de la credencial almacenada para el sudo
+                # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+                if [ $l_is_noninteractive -eq 1 ]; then
+                    ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 2 'dotnetlib' $g_status_crendential_storage 1
                     l_status=$?
-
-                    if [ $l_status -eq 1 ]; then
-                        if [ -z "$l_packages" ]; then
-                            l_packages="$l_package"
-                        else
-                            l_packages="${l_package} ${l_packages}"
-                        fi
-                    else
-                        printf '%bEl paquete "%s" requerido por .NET ya esta instalado.%b\n' "$g_color_gray1" "$l_package" "$g_color_reset"
-                    fi
-
-                done
-            fi
-
-            #3. Instalar los paquetes
-            if [ ! -z "$l_packages" ]; then
-
-                if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
-                    printf '%bNo esta habilitada para instalar paquetes%b. Se recomienda que Instalé los paquetes "%b%s%b".\n' "$g_color_red1" "$g_color_reset" \
-                        "$g_color_gray1" "$l_packages" "$g_color_reset"
                 else
-                    printf 'Se requiere instalar los paquetes "%b%s%b".\n' "$g_color_gray1" "$l_packages" "$g_color_reset"
-
-                    #Solicitar credenciales de administrador y almacenarlas temporalmente
-                    if [ $g_status_crendential_storage -eq 0 ]; then
-
-                        #Solicitar credenciales de administrador y almacenarlas temporalmente
-                        storage_sudo_credencial
-                        g_status_crendential_storage=$?
-                        #Se requiere almacenar las credenciales para realizar cambio con sudo. 
-                        #  Si es 0 o 1: la instalación/configuración es completar
-                        #  Si es 2    : el usuario no acepto la instalación/configuración
-                        #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
-                        if [ $g_status_crendential_storage -eq 2 ]; then
-                            #return 120
-                            return 2
-                        fi
-                    fi
-
-                    #Instalar los paquetes
-                    install_os_package "$l_packages" $g_os_subtype_id $l_is_noninteractive
+                    ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 4 'dotnetlib' $g_status_crendential_storage 1
+                    l_status=$?
                 fi
-            fi
 
+                #Si no se acepto almacenar credenciales
+                if [ $l_status -eq 120 ]; then
+                    return 120
+                #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+                elif [ $l_status -eq 119 ]; then
+                    g_status_crendential_storage=0
+                fi
+
+            fi
+            
+            #OK
             return 0
             ;;        
 

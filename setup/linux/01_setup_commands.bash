@@ -488,6 +488,7 @@ function _install_artifacts() {
     fi
 
     local l_artifact_name_without_ext=""
+    local l_status=0
     for ((l_i=0; l_i<$l_n; l_i++)); do
 
         l_artifact_name="${pnra_artifact_names[$l_i]}"
@@ -514,7 +515,7 @@ function _install_artifacts() {
 
             _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
                 "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index $p_flag_install
-            #l_status=0
+            l_status=$?
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
         #Si el tipo de item es 1 si es package
@@ -533,7 +534,7 @@ function _install_artifacts() {
             else
                 sudo dpkg -i "${g_path_temp}/${p_repo_id}/${l_i}/${l_artifact_name}"
             fi
-            #l_status=0
+            l_status=0
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
         #Si el tipo de item es un paquete
@@ -550,7 +551,7 @@ function _install_artifacts() {
             printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
             _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
                 "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index $p_flag_install
-            #l_status=0
+            l_status=$?
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
         #Si el tipo de item es un paquete
@@ -563,7 +564,7 @@ function _install_artifacts() {
             printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
             _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
                 "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index $p_flag_install
-            #l_status=0
+            l_status=$?
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
 
@@ -572,6 +573,15 @@ function _install_artifacts() {
             printf 'ERROR (%s): El tipo del artefacto "%b[%s]" ("%s") no esta implementado "%s"\n\n' "21" "${l_tag}" "${l_i}" "${l_artifact_name}" "${l_artifact_type}"
             return 21
         fi
+
+        #Si no se acepto almacenar credenciales
+        if [ $l_status -eq 120 ]; then
+            return 120
+        #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+        #elif [ $l_status -eq 119 ]; then
+        #    g_status_crendential_storage=0
+        fi
+
 
     done
 
@@ -1144,7 +1154,8 @@ function _install_menu_options() {
 
         #Si se ejecuta usando el menu
         if [ $gp_type_calling -eq 0 ]; then
-            printf -v l_title_template 'Opción %b%s%b: %b%s%b' "$g_color_gray1" "$l_option_value" "$g_color_reset" "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+            printf -v l_title_template 'Opción %b%s%b: %b%s%b' "$g_color_gray1" "$l_option_value" "$g_color_reset" "$g_color_cian1" \
+                   "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
         #Si se ejecuta sin usar el menu
         else
             printf -v l_title_template 'Grupo de repositorios: %b%s%b' "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
@@ -1157,12 +1168,18 @@ function _install_menu_options() {
         install_initialize_menu_option $p_option_relative_idx
         l_status=$?
 
-        #3.3. Si se inicializo no se realizo con exito.
-        if [ $l_status -ne 0 ]; then
+        #3.3. Check the status 
 
+        #Si no se acepto almacenar credenciales
+        if [ $l_status -eq 120 ]; then
+            return 120
+        #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+        elif [ $l_status -eq 119 ]; then
+           g_status_crendential_storage=0
+        #Si es un error
+        elif [ $l_status -ne 0 ]; then
             printf 'No se ha completo la inicialización de la opción del menu elegida...\n'
             l_result=2
-
         fi
 
         printf '\n'

@@ -1085,7 +1085,7 @@ function g_install_package() {
     if [ ! -z "$p_package_title_template" ]; then
 
         print_line '-' $g_max_length_line  "$g_color_gray1"
-        printf "${p_package_title_template}\n" "se instalará"
+        printf "${p_package_title_template} %s\n" "se instalará"
         print_line '-' $g_max_length_line  "$g_color_gray1"
 
     fi
@@ -1204,7 +1204,6 @@ function g_install_packages_byopc() {
     fi
 
     #3. Inicializaciones cuando se invoca directamente el script
-    local l_flag=0
     local l_title
     local l_is_noninteractive=1
     if [ $gp_type_calling -eq 3 ] || [ $gp_type_calling -eq 4 ]; then
@@ -1213,10 +1212,8 @@ function g_install_packages_byopc() {
 
     if [ $gp_type_calling -eq 0 ]; then
 
-
         #Instalacion de paquetes del SO
-        l_flag=$(( $p_input_options & $g_opt_update_installed_pckg ))
-        if [ $g_opt_update_installed_pckg -eq $l_flag ]; then
+        if [ $(( $p_input_options & $g_opt_update_installed_pckg )) -eq $g_opt_update_installed_pckg ]; then
 
             #Solicitar credenciales para sudo y almacenarlas temporalmente
             if [ $g_status_crendential_storage -eq 0 ]; then
@@ -1271,7 +1268,7 @@ function g_install_packages_byopc() {
 
 #
 #Parametros de entrada (Argumentos):
-#  1 > Flag '0' si se actualiza los paquetes.
+#  1 > Flag '0' si se actualiza los paquetes SO.
 #  2 > Listado de ID de paquetes separados por coma.
 function g_install_packages_byid() {
     
@@ -1345,6 +1342,7 @@ function g_install_packages_byid() {
     local l_x=0
     local l_status
     local l_repo_id
+    local l_repo_name
     local l_repo_name_aux
     local l_title_template=""
 
@@ -1352,32 +1350,53 @@ function g_install_packages_byid() {
         
         #Nombre a mostrar del paquete
         l_repo_id="${pa_packages[$l_x]}"
-        l_repo_name_aux="${gA_packages[${l_repo_id}]}"
-        if [ -z "$l_repo_name_aux" ]; then
+        l_repo_name="${gA_packages[${l_repo_id}]}"
+        if [ -z "$l_repo_name" ]; then
             printf 'El %bpaquete "%s"%b no esta definido en "gA_packages" para su instalacion.\n\n' \
                    "$g_color_red1" "$l_repo_id" "$g_color_reset"
             continue
         fi
 
-        if [ "$l_repo_name_aux" = "$g_empty_str" ]; then
+        if [ "$l_repo_name" = "$g_empty_str" ]; then
             l_repo_name_aux="$l_repo_id"
+        else
+            l_repo_name_aux="$l_repo_name"
         fi
 
+        l_title_template=""
         if [ $l_n -ne 1 ]; then
             printf -v l_title_template "%s(%s/%s)%s> El paquete '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_x + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
                     "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
         fi
 
 
-        g_install_package "$l_repo_id" "$l_title_template" 
-        l_status=$?   #Solo se puede mostrar el titulo del packege cuando no retorna [6, infinito].
-                      #   0 > Se inicio la instalación y termino existosamente
-                      #   1 > Se inicio la instalación y termino con errores
-                      #   2 > No se inicio la instalación: El paquete ya esta instalado 
-                      #   3 > No se inicio la instalación: No se obtuvo el nombre real del paquete
-                      #   4 > No se inicio la instalación: No se obtuvo información si el paquete esta instalado o no
-                      #   5 > No se inicio la instalación: Se envio otros parametros invalidos
-                      # 120 > No se inicio la instalación: No se permitio almacenar las credenciales para sudo 
+        if [ "$l_repo_name" = "$g_empty_str" ]; then
+            
+            if [ ! -z "$l_title_template" ]; then
+                print_line '-' $g_max_length_line  "$g_color_gray1"
+                printf "${l_title_template} %s\n" "se instalará"
+                print_line '-' $g_max_length_line  "$g_color_gray1"
+            fi
+
+            install_custom_packages "$l_repo_id"
+            l_status=$?   #Solo se puede mostrar el titulo del packege cuando NO retorna [6, infinito].
+                          #   0 > Se inicio la instalación y termino existosamente
+                          #   1 > Se inicio la instalación y termino con errores
+                          #   2 > No se inicio la instalación: El paquete ya esta instalado 
+                          #   5 > No se inicio la instalación: Se envio otros parametros invalidos
+                          # 120 > No se inicio la instalación: No se permitio almacenar las credenciales para sudo
+
+        else
+            g_install_package "$l_repo_id" "$l_title_template" 
+            l_status=$?   #Solo se puede mostrar el titulo del packege cuando NO retorna [6, infinito].
+                          #   0 > Se inicio la instalación y termino existosamente
+                          #   1 > Se inicio la instalación y termino con errores
+                          #   2 > No se inicio la instalación: El paquete ya esta instalado 
+                          #   3 > No se inicio la instalación: No se obtuvo el nombre real del paquete
+                          #   4 > No se inicio la instalación: No se obtuvo información si el paquete esta instalado o no
+                          #   5 > No se inicio la instalación: Se envio otros parametros invalidos
+                          # 120 > No se inicio la instalación: No se permitio almacenar las credenciales para sudo
+        fi
 
         #Se requiere almacenar las credenciales para realizar cambios con sudo.
         if [ $l_status -eq 120 ]; then
@@ -1657,19 +1676,19 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bDesintalar paquetes mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset" 
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_setup_packages.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar paquetes mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_setup_packages.bash\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_setup_packages.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un grupo de paquetes sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_setup_packages.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_setup_packages.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 1 si es interactivo y 3 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un listado paquete sin mostrar el  menú%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash CALLING_TYPE LIST-REPO-IDS%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash CALLING_TYPE LIST-REPO-IDS SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_setup_packages.bash CALLING_TYPE LIST-REPO-IDS SUDO-STORAGE-OPTIONS UPGRADE-OS-PACKAGES%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS SUDO-STORAGE-OPTIONS UPGRADE-OS-PACKAGES%b\n' "$g_color_yellow1" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    > %bLIST-REPO-IDS%b es un listado de ID de paquetes separado por coma.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"

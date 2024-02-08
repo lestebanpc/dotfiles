@@ -109,6 +109,8 @@ g_status_crendential_storage=-1
 g_is_credential_storage_externally=1
 
 
+declare -r g_default_list_package_ids='curl,unzip,openssl,tmux'
+
 #}}}
 
 
@@ -117,11 +119,14 @@ g_is_credential_storage_externally=1
 #Funciones principales y el menú {{{
 
 
-
 #
 #Parametros de entrada (Argumentos):
-#  1 > Opciones relacionados con los repositorios que se se instalaran (entero que es suma de opciones de tipo 2^n).
-#  2 > Flag '0' para limpiar el cache del gestor de paquetes del SO
+# 1> Opciones de menu a ejecutar: entero positivo.
+# 2> ID de los repositorios de comandos a configurar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".
+# 3> ID de los paquetes del repositorio del SO a instalar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".
+#    Si envia "DEFAULT" se instalará paquete basicos por defecto que son: Curl, UnZip, OpenSSL y Tmux.
+# 4> Flag '0' para limpiar el cache de paquetes del sistema operativo. Caso contrario, use 1.
+# 5> Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.
 function g_install_options() {
     
     #1. Argumentos 
@@ -135,22 +140,27 @@ function g_install_options() {
     #    return 99
     #fi
 
-    p_list_repo_ids=""
+    local p_list_repo_ids=""
     if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
         p_list_repo_ids="$2"
     fi
 
-    p_flag_clean_os_cache=1
-    if [ "$3" = "0" ]; then
+    local p_list_pckg_ids="$g_default_list_package_ids"
+    if [ ! -z "$3" ]; then
+        p_list_pckg_ids="$3"
+    fi
+
+    local p_flag_clean_os_cache=1
+    if [ "$4" = "0" ]; then
         p_flag_clean_os_cache=0
     fi
 
-    p_flag_upgrade_os_pkgs=1
-    if [ "$4" = "0" ]; then
+    local p_flag_upgrade_os_pkgs=1
+    if [ "$5" = "0" ]; then
         p_flag_upgrade_os_pkgs=0
     fi
 
-    #Inicialización
+    #2.Inicialización
     local l_is_noninteractive=1
     if [ $gp_type_calling -eq 2 ]; then
         l_is_noninteractive=0
@@ -159,17 +169,16 @@ function g_install_options() {
     #Flag '0' cuando no se realizo ninguna instalacion de paquetes
     local l_exist_packages_installed=1
 
-    #2. Opción> Paquetes basicos: Curl, OpenSSL y Tmux
-    local l_option=4
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+    #3. Opción> Paquetes basicos: Curl, OpenSSL y Tmux
+    local l_option=32
+    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ] && [ ! -z "$p_list_pckg_ids" ]; then
 
         #Solo soportado para los que tenga acceso a root
         if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
             #Mostrar el titulo de instalacion
             print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando '%bCurl%b', '%bUnZip%b', '%bOpenSSL%b' y '%bTmux%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-                   "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            printf "> Instalando '%b%s%b'\n" "$g_color_cian1" "${p_list_pckg_ids//,/, }" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Parametros:
@@ -178,10 +187,10 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 2 'curl,unzip,openssl,tmux' $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             else
-                ${g_repo_path}/.files/setup/linux/03_setup_packages.bash 4 'curl,unzip,openssl,tmux' $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             fi
 
@@ -201,8 +210,8 @@ function g_install_options() {
 
     fi
 
-    #3. Opción> Comandos Basicos
-    l_option=8
+    #4. Opción> Comandos Basicos
+    l_option=64
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -210,7 +219,11 @@ function g_install_options() {
 
             #Mostrar el titulo de instalacion
             print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando %bComandos Basicos%b: '%bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh%b, etc.'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            if [ $g_os_subtype_id -eq 1 ]; then
+                printf "> Instalando %bComandos Basicos%b: '%bbat, jq, yq, ripgrep, delta, oh-my-posh%b, etc.'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            else
+                printf "> Instalando %bComandos Basicos%b: '%bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh%b, etc.'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            fi
             print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Parametros:
@@ -239,114 +252,130 @@ function g_install_options() {
 
     fi
 
-    #4. Opción> Programas basicos: VIM, NeoVIM, NodeJs y Python
+    #5. Opción> Programas basicos: NodeJs y sus paquetes globales, Python/Pip, VIM y NeoVIM
     local l_prg_options=0
     local l_aux=''
 
-    #Determinar los programas a instalar: 8 (Python/NodeJS) + 16 (VIM) + 128 (NeoVIM)
-    l_option=16
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-        l_prg_options=$((l_prg_options + 8))
-        printf -v l_aux "'%bNodeJS%b', '%bPython%b'" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    fi
+    if [ $p_input_options -gt 0 ]; then
 
-    l_option=32
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-        l_prg_options=$((l_prg_options + 144))
-        if [ -z "$l_aux" ]; then
-            printf -v l_aux "'%bVIM%b', '%bNeoVIM%b'" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-        else
-            printf -v l_aux "${l_aux}, '%bVIM%b', '%bNeoVIM%b'" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+        #Determinar los programas a instalar: NodeJs, sus paquetes globales y Python/Pip
+        l_option=128
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            l_prg_options=$((l_prg_options + 8 + 16 + 64))
+            printf -v l_aux "'%bNodeJS%b' %b(incluye paquetes globales basicos)%b, '%bPython%b'" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
         fi
+
+        #Determinar los programas a instalar: VIM
+        l_option=256
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            l_prg_options=$((l_prg_options + 128))
+            if [ -z "$l_aux" ]; then
+                printf -v l_aux "'%bVIM%b'" "$g_color_cian1" "$g_color_reset"
+            else
+                printf -v l_aux "${l_aux}, '%bVIM%b'" "$g_color_cian1" "$g_color_reset"
+            fi
+        fi
+
+        #Determinar los programas a instalar: NeoVIM
+        l_option=512
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            l_prg_options=$((l_prg_options + 1024))
+            if [ -z "$l_aux" ]; then
+                printf -v l_aux "'%bNeoVIM%b'" "$g_color_cian1" "$g_color_reset"
+            else
+                printf -v l_aux "${l_aux}, '%bNeoVIM%b'" "$g_color_cian1" "$g_color_reset"
+            fi
+        fi
+
     fi
 
     if [ $l_prg_options -gt 0 ]; then
 
-        #Solo soportado para los que tenga acceso a root
-        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+       #Solo soportado para los que tenga acceso a root
+       if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
-            #Mostrar el titulo de instalacion
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando %bProgramas basicos%b: %b\n" "$g_color_cian1" "$g_color_reset" "$l_aux"
-            print_line '─' $g_max_length_line "$g_color_blue1"
+           #Mostrar el titulo de instalacion
+           print_line '─' $g_max_length_line  "$g_color_blue1"
+           printf "> Instalando %bProgramas basicos%b: %b\n" "$g_color_cian1" "$g_color_reset" "$l_aux"
+           print_line '─' $g_max_length_line "$g_color_blue1"
 
-            #Solo actualizar los paquetes del SO, si no se hizo antes
-            if [ $p_flag_upgrade_os_pkgs -eq 0 ] && [ $l_exist_packages_installed -ne 0 ]; then
-                l_prg_options=$((l_prg_options + 1))
-            fi
+           #Solo actualizar los paquetes del SO, si no se hizo antes
+           if [ $p_flag_upgrade_os_pkgs -eq 0 ] && [ $l_exist_packages_installed -ne 0 ]; then
+               l_prg_options=$((l_prg_options + 1))
+           fi
 
-            #Parametros:
-            # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
-            # 2> Paquetes a instalar: 8 (Python/NodeJS) + 16 (VIM) + 128 (NeoVIM)
-            # 3> El estado de la credencial almacenada para el sudo
-            # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
-            if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
-                l_status=$?
-            else
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
-                l_status=$?
-            fi
+           #Parametros:
+           # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
+           # 2> Paquetes a instalar: 40 (Python y sus paquetes) + 80 (NodeJS y sus paquetes) + 128 (VIM) + 1024 (NeoVIM)
+           # 3> El estado de la credencial almacenada para el sudo
+           # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+           if [ $l_is_noninteractive -eq 1 ]; then
+               ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
+               l_status=$?
+           else
+               ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
+               l_status=$?
+           fi
 
-            if [ $l_exist_packages_installed -ne 0 ]; then
-                l_exist_packages_installed=0
-            fi
+           if [ $l_exist_packages_installed -ne 0 ]; then
+               l_exist_packages_installed=0
+           fi
 
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-                g_status_crendential_storage=0
-            fi
-
-        fi
-
-    fi
-
-    #5. Opción> LSP/DAP de .NET : Omnisharp-Roslyn, NetCoreDbg
-    l_option=64
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-
-        #Solo soportado para los que tenga acceso a root
-        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-
-            #Mostrar el titulo de instalacion
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando %bLSP/DAP de .NET%b: '%bOmnisharp-Roslyn%b' y '%bNetCoreDbg%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-                   "$g_color_cian1" "$g_color_reset"
-            print_line '─' $g_max_length_line "$g_color_blue1"
-
-            #Parametros:
-            # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
-            # 2> Repsitorio a instalar/actualizar: 
-            # 3> El estado de la credencial almacenada para el sudo
-            # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-            # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
-            # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
-            if [ $l_is_noninteractive -eq 1 ]; then
-                
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "roslyn,netcoredbg" $g_status_crendential_storage 0 1 "$g_other_calling_user"
-                l_status=$?
-            else
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "roslyn,netcoredbg" $g_status_crendential_storage 0 1 "$g_other_calling_user"
-                l_status=$?
-            fi
-
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
+           #Si no se acepto almacenar credenciales
+           if [ $l_status -eq 120 ]; then
+               return 120
+           #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+           elif [ $l_status -eq 119 ]; then
                g_status_crendential_storage=0
-            fi
+           fi
 
-        fi
+       fi
+
+   fi
+
+   #6. Opción> LSP/DAP de .NET : Omnisharp-Roslyn, NetCoreDbg
+   l_option=1024
+   if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+       #Solo soportado para los que tenga acceso a root
+       if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+           #Mostrar el titulo de instalacion
+           print_line '─' $g_max_length_line  "$g_color_blue1"
+           printf "> Instalando %bLSP/DAP de .NET%b: '%bOmnisharp-Roslyn%b' y '%bNetCoreDbg%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+                  "$g_color_cian1" "$g_color_reset"
+           print_line '─' $g_max_length_line "$g_color_blue1"
+
+           #Parametros:
+           # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
+           # 2> Repsitorio a instalar/actualizar: 
+           # 3> El estado de la credencial almacenada para el sudo
+           # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
+           # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
+           # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+           if [ $l_is_noninteractive -eq 1 ]; then
+               
+               ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "roslyn,netcoredbg" $g_status_crendential_storage 0 1 "$g_other_calling_user"
+               l_status=$?
+           else
+               ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "roslyn,netcoredbg" $g_status_crendential_storage 0 1 "$g_other_calling_user"
+               l_status=$?
+           fi
+
+           #Si no se acepto almacenar credenciales
+           if [ $l_status -eq 120 ]; then
+               return 120
+           #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+           elif [ $l_status -eq 119 ]; then
+              g_status_crendential_storage=0
+           fi
+
+       fi
 
     fi
 
-    #6. Opción> LSP/DAP de Java : Jdtls
-    l_option=128
+    #7. Opción> LSP/DAP de Java : Jdtls
+    l_option=2048
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -384,7 +413,7 @@ function g_install_options() {
 
     fi
 
-    #7. Opción> Lista de repositorios de comandos a instalar
+    #8. Opción> Lista de repositorios de comandos adicionales a instalar
     if [ ! -z "$p_list_repo_ids" ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -429,55 +458,92 @@ function g_install_options() {
     fi
 
 
-    #8. Opción> Configurar el profile del usuario y VIM/NeoVIM como Editor
-    l_option=1
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+    #9. Opción> Configurar el profile del usuario y VIM/NeoVIM como IDE/Developer
+    l_prg_options=0
+    l_aux=''
+    local l_python_pkg_opts=32
 
-        #Solo soportado para los que tenga acceso a root
-        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+    if [ $p_input_options -gt 0 ]; then
 
-            #Mostrar el titulo de instalacion
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Configurar el %bprofile del usuario%b, '%bVIM/NeoVIM%b' como %bEditor%b\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-                   "$g_color_cian1" "$g_color_reset"
-            print_line '─' $g_max_length_line "$g_color_blue1"
+        #Determinar si se configura el profile del usuario (se obligara a recrear lo enlaces simbolicos)    
+        l_option=1
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            l_prg_options=$((l_prg_options + 2 + 4))
+            printf -v l_aux "el %bprofile del usario%b" "$g_color_cian1" "$g_color_reset"
+        fi
 
-            #Parametros:
-            # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
-            # 2> Opciones a configurar: 2 (Profile) + 4 (Recrear enlaces simbolicos) + 32 (VIM como Editor) + 256 (NeoVIM como Editor)
-            # 3> El estado de la credencial almacenada para el sudo
-            # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
-            if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 294 $g_status_crendential_storage "$g_other_calling_user"
-                l_status=$?
+        #Determinar si se configura VIM como IDE (incluye los paquetes de usuario de Python)
+        l_option=4
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+            l_prg_options=$((l_prg_options + 512 + l_python_pkg_opts))
+            #Evitar que se vuelva a usar en NeoVIM como IDE
+            l_python_pkg_opts=0
+
+            if [ -z "$l_aux" ]; then
+                printf -v l_aux "%bVIM%b como %bIDE%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             else
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 294 $g_status_crendential_storage "$g_other_calling_user"
-                l_status=$?
+                printf -v l_aux "${l_aux}, %bVIM%b como %bIDE%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
 
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-                g_status_crendential_storage=0
+        #Si VIM no es IDE, determinar si se configura como Editor
+        else
+
+            l_option=2
+            if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+                l_prg_options=$((l_prg_options + 256))
+                if [ -z "$l_aux" ]; then
+                    printf -v l_aux "%bVIM%b como %bEditor%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+                else
+                    printf -v l_aux "${l_aux}, %bVIM%b como %bEditor%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+                fi
+
+            fi
+
+        fi
+
+        #Determinar si se configura NeoVIM como IDE (incluye los paquetes de usuario de Python)
+        l_option=16
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+            l_prg_options=$((l_prg_options + 4096 + l_python_pkg_opts))
+            #Evitar que se vuelva a usar
+            #l_python_pkg_opts=0
+
+            if [ -z "$l_aux" ]; then
+                printf -v l_aux "%bNeoVIM%b como %bIDE%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            else
+                printf -v l_aux "${l_aux}, %bNeoVIM%b como %bIDE%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            fi
+
+        #Si NeoVIM no es IDE, determinar si se configura como Editor
+        else
+
+            l_option=8
+            if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+                l_prg_options=$((l_prg_options + 2048))
+                if [ -z "$l_aux" ]; then
+                    printf -v l_aux "%bNeoVIM%b como %bEditor%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+                else
+                    printf -v l_aux "${l_aux}, %bNeoVIM%b como %bEditor%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+                fi
+
             fi
 
         fi
 
     fi
 
-    #9. Opción> Configurar el profile del usuario y VIM/NeoVIM como Developer
-    l_option=2
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+    if [ $l_prg_options -gt 0 ]; then
 
         #Solo soportado para los que tenga acceso a root
         if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
             #Mostrar el titulo de instalacion
             print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Configurar el %bprofile del usuario%b, '%bVIM/NeoVIM%b' como %bDeveloper%b\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-                   "$g_color_cian1" "$g_color_reset"
+            printf "> Configurar %b\n" "$l_aux"
             print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Parametros:
@@ -486,10 +552,10 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 582 $g_status_crendential_storage "$g_other_calling_user"
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 582 $g_status_crendential_storage "$g_other_calling_user"
+                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
                 l_status=$?
             fi
 
@@ -522,23 +588,35 @@ function g_install_options() {
 
 function _show_menu_install_core() {
 
+    #0. Parametros
+    local l_pckg_ids="${1//,/, }"
+
+    #1. Menu
     print_text_in_center "Menu de Opciones (Install/Configuration)" $g_max_length_line "$g_color_green1"
     print_line '-' $g_max_length_line  "$g_color_gray1"
     printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
 
-    local l_max_digits=3
+    local l_max_digits=4
 
     printf " ( ) Configuración personalizado para el usuario:\n"
-    printf "     (%b%0${l_max_digits}d%b) Configurar el profile del usuario y VIM/NeoVIM como %bEditor%b\n" "$g_color_green1" "1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Configurar el profile del usuario y VIM/NeoVIM como %bDeveloper%b\n" "$g_color_green1" "2" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Configurar el %bprofile del usuario%b\n" "$g_color_green1" "1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Configurar %bVIM%b    como %bEditor%b\n" "$g_color_green1" "2" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Configurar %bVIM%b    como %bIDE%b %b(incluye paquetes de usuario basicos de python)%b\n" "$g_color_green1" "4" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Configurar %bNeoVIM%b como %bEditor%b\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Configurar %bNeoVIM%b como %bIDE%b %b(incluye paquetes de usuario basicos de python)%b\n" "$g_color_green1" "16" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     printf " ( ) Programas requeridos a instalar %b(usualmente instalado como root)%b:\n" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Paquetes  basicos: %bCurl, OpenSSL y Tmux%b\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Comandos  basicos: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, etc.%b\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bNodeJs y Python%b\n" "$g_color_green1" "16" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bVIM y NeoVIM%b\n" "$g_color_green1" "32" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET  : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "64" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de Java  : %bJdtls%b\n" "$g_color_green1" "128" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Paquetes  basicos: %b%s%b\n" "$g_color_green1" "32" "$g_color_reset" "$g_color_gray1" "$l_pckg_ids" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Comandos  basicos: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, etc.%b\n" "$g_color_green1" "64" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bNodeJS (incluye paquetes globales basicos) y Python%b\n" "$g_color_green1" "128" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bVIM%b\n" "$g_color_green1" "256" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bNeoVIM%b\n" "$g_color_green1" "512" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET  : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "1024" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de Java  : %bJdtls%b\n" "$g_color_green1" "2048" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_gray1"
 
@@ -547,8 +625,14 @@ function _show_menu_install_core() {
 
 function g_install_main() {
 
+    #0. Parametros
+    local p_list_pckg_ids="$g_default_list_package_ids"
+    if [ ! -z "$1" ]; then
+        p_list_pckg_ids="$1"
+    fi
+
     p_flag_clean_os_cache=1
-    if [ "$1" = "0" ]; then
+    if [ "$2" = "0" ]; then
         p_flag_clean_os_cache=0
     fi
 
@@ -556,7 +640,7 @@ function g_install_main() {
    
     #2. Mostrar el Menu
     print_line '─' $g_max_length_line "$g_color_green1" 
-    _show_menu_install_core
+    _show_menu_install_core "$p_list_pckg_ids"
 
     #3. Mostar la ultima parte del menu y capturar la opcion elegida
     local l_flag_continue=0
@@ -583,10 +667,13 @@ function g_install_main() {
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
+
                     l_flag_continue=1
                     print_line '─' $g_max_length_line "$g_color_green1" 
                     printf '\n'
-                    g_install_options $l_options "" $p_flag_clean_os_cache
+
+                    g_install_options $l_options "EMPTY" "$p_list_pckg_ids" $p_flag_clean_os_cache 0
+
                 else
                     l_flag_continue=0
                     printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
@@ -615,7 +702,6 @@ function g_install_main() {
 
 #Codigo Global {{{
 
-
 g_usage() {
 
     printf 'Usage:\n'
@@ -623,21 +709,25 @@ g_usage() {
     printf '    %b~/.files/setup/linux/00_setup_summary.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar repositorios mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/00_setup_summary.bash\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash 0 CLEAN-OS-CACHE\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash 0 LIST-PCKG-IDS CLEAN-OS-CACHE\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un grupo de opciones sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-ID\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-ID SUDO-STORAGE-OPTIONS CLEAN-OS-CACHE UPGRADE-OS-PACKAGES OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS LIST-PCKG-IDS SUDO-STORAGE-OPTIONS CLEAN-OS-CACHE UPGRADE-OS-PACKAGES OTHER-USERID\n\n%b' \
+           "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bMENU-OPTIONS%b Las opciones de menu a instalar. Si no desea especificar coloque 0.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bLIST-REPO-ID %bID de los repositorios de comandos a instalar, separados por coma. Por defecto, se envia vacio o "EMPTY".%b\n' \
+    printf '  > %bLIST-REPO-IDS %bID de los repositorios de comandos a configurar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bLIST-PCKG-IDS %b.ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 4. Si desea usar el los los paquetes por defecto envie "EMPTY".%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    %bLos paquete basicos por defecto que son: Curl, UnZip, OpenSSL y Tmux.%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"
-    printf '  > %bCLEAN-OS-CACHE%b es 0 si se limpia el cache del gestor de paquetes. Por defecto es 1.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bCLEAN-OS-CACHE%b es 0 si se limpia el cache de paquetes instalados. Por defecto es 1.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bUPGRADE-OS-PACKAGES%b Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.\n%b' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bOTHER-USERID %bEl GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
@@ -645,7 +735,6 @@ g_usage() {
 
 
 #1. Argumentos fijos del script
-
 
 #Argumento 1: Indica el tipo de invocación
 if [ -z "$1" ]; then
@@ -680,18 +769,29 @@ g_is_credential_storage_externally=1
 #2.1. Por defecto, mostrar el menu para escoger lo que se va instalar
 if [ $gp_type_calling -eq 0 ]; then
 
+    #Parametros del script usados hasta el momento:
+    # 1> Tipo de invocación (sin menu): 1/2
+    # 2> ID de los paquetes del repositorio, separados por coma, que se mostrara en el menu para que pueda instalarse. Si desea usar el por defecto envie "EMPTY".
+    #    Los paquete basicos, por defecto, que se muestran en el menu son: Curl,UnZip, OpenSSL y Tmux
+    # 3> Flag '0' para limpiar el cache de paquetes del sistema operativo. Caso contrario, use 1.
+    _gp_list_pckg_ids="$g_default_list_package_ids"
+    if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
+        _gp_list_pckg_ids="$2"
+    fi
+
+    _gp_flag_clean_os_cache=1
+    if [ "$3" = "0" ]; then
+        _gp_flag_clean_os_cache=0
+    fi
+
     #Validar los requisitos (algunas opciones requiere root y otros no)
     fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_repo_path"
     _g_status=$?
 
-    _gp_flag_clean_os_cache=1
-    if [ "$2" = "0" ]; then
-        _gp_flag_clean_os_cache=0
-    fi
 
     #Iniciar el procesamiento
     if [ $_g_status -eq 0 ]; then
-        g_install_main $_gp_flag_clean_os_cache
+        g_install_main "$_gp_list_pckg_ids" $_gp_flag_clean_os_cache
     else
         _g_result=111
     fi
@@ -701,30 +801,37 @@ if [ $gp_type_calling -eq 0 ]; then
 else
 
     #Parametros del script usados hasta el momento:
-    # 1> Tipo de configuración: 1 (instalación/actualización).
+    # 1> Tipo de invocación (sin menu): 1/2
     # 2> Opciones de menu a ejecutar: entero positivo.
-    # 3> ID de los repositorios de comandos a instalar, separados por coma. Por defecto, se envia vacio o "EMPTY".
-    # 4> El estado de la credencial almacenada para el sudo.
-    # 5> Flag '0' para limpiar el cache del sistema operativo. Caso contrario, use 1.
-    # 6> Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.
-    # 7> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+    # 3> ID de los repositorios de comandos a configurar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".
+    # 4> ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 4. Si desea usar el los los paquetes por defecto envie "EMPTY".
+    #    Los paquetes por defecto que son: Curl, UnZip, OpenSSL y Tmux.
+    # 5> El estado de la credencial almacenada para el sudo.
+    # 6> Flag '0' para limpiar el cache de paquetes del sistema operativo. Caso contrario, use 1.
+    # 7> Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.
+    # 8> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
     _gp_opciones=0
     if [ "$2" = "0" ]; then
         _gp_opciones=-1
     elif [[ "$2" =~ ^[0-9]+$ ]]; then
         _gp_opciones=$2
     else
-        echo "Parametro 2 \"$2\" debe ser una opción valida."
+        echo "Opciones de menu a instalar (parametro 2) \"$2\" no es valido."
         exit 110
     fi
 
     _gp_list_repo_ids="EMPTY"
-    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+    if [ ! -z "$3" ]; then
         _gp_list_repo_ids="$3"
     fi
 
-    if [[ "$4" =~ ^[0-2]$ ]]; then
-        g_status_crendential_storage=$4
+    _gp_list_pckg_ids="$g_default_list_package_ids"
+    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
+        _gp_list_pckg_ids="$4"
+    fi
+
+    if [[ "$5" =~ ^[0-2]$ ]]; then
+        g_status_crendential_storage=$5
 
         if [ $g_status_crendential_storage -eq 0 ]; then
             g_is_credential_storage_externally=0
@@ -733,22 +840,22 @@ else
     fi
 
     _gp_flag_clean_os_cache=1
-    if [ "$5" = "0" ]; then
+    if [ "$6" = "0" ]; then
         _gp_flag_clean_os_cache=0
     fi
 
     _gp_flag_upgrade_os_pkgs=1
-    if [ "$6" = "0" ]; then
+    if [ "$7" = "0" ]; then
         _gp_flag_upgrade_os_pkgs=0
     fi
 
     #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
     g_other_calling_user=''
-    if [ "$g_repo_path" != "$HOME" ] && [ ! -z "$7" ]; then
-        if [[ "$7" =~ ^[0-9]+:[0-9]+$ ]]; then
-            g_other_calling_user="$7"
+    if [ "$g_repo_path" != "$HOME" ] && [ ! -z "$8" ]; then
+        if [[ "$8" =~ ^[0-9]+:[0-9]+$ ]]; then
+            g_other_calling_user="$8"
         else
-            echo "Parametro 7 \"$7\" debe ser tener el formado 'UID:GID'."
+            echo "Parametro 8 \"$8\" debe ser tener el formado 'UID:GID'."
             exit 110
         fi
     fi
@@ -760,7 +867,7 @@ else
     #Iniciar el procesamiento
     if [ $_g_status -eq 0 ]; then
 
-        g_install_options $_gp_opciones $_gp_list_repo_ids $_gp_flag_clean_os_cache $_gp_flag_upgrade_os_pkgs
+        g_install_options $_gp_opciones "$_gp_list_repo_ids" "$_gp_list_pckg_ids" $_gp_flag_clean_os_cache $_gp_flag_upgrade_os_pkgs
         _g_status=$?
 
         #Informar si se nego almacenar las credencial cuando es requirido
