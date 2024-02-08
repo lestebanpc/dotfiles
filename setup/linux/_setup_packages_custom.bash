@@ -173,10 +173,6 @@ get_package_name() {
             fi 
             ;;
 
-        *)
-            l_package_name_custom="$p_package_name"
-            l_search_type=0
-            ;;
     esac
 
     echo "$l_package_name_custom"
