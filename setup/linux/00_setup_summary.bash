@@ -170,6 +170,7 @@ function g_install_options() {
     local l_exist_packages_installed=1
 
     #3. Opción> Paquetes basicos: Curl, OpenSSL y Tmux
+    local l_status=0
     local l_option=32
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ] && [ ! -z "$p_list_pckg_ids" ]; then
 
@@ -204,6 +205,9 @@ function g_install_options() {
             #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
             elif [ $l_status -eq 119 ]; then
                 g_status_crendential_storage=0
+            #Si no se paso las precondiciones iniciales
+            elif [ $l_status -eq 111 ]; then
+                return $l_status
             fi
 
         fi
@@ -246,6 +250,9 @@ function g_install_options() {
             #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
             elif [ $l_status -eq 119 ]; then
                g_status_crendential_storage=0
+            #Si no se paso las precondiciones iniciales
+            elif [ $l_status -eq 111 ]; then
+                return $l_status
             fi
 
         fi
@@ -327,6 +334,9 @@ function g_install_options() {
            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
            elif [ $l_status -eq 119 ]; then
                g_status_crendential_storage=0
+            #Si no se paso las precondiciones iniciales
+            elif [ $l_status -eq 111 ]; then
+                return $l_status
            fi
 
        fi
@@ -368,6 +378,9 @@ function g_install_options() {
            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
            elif [ $l_status -eq 119 ]; then
               g_status_crendential_storage=0
+            #Si no se paso las precondiciones iniciales
+            elif [ $l_status -eq 111 ]; then
+                return $l_status
            fi
 
        fi
@@ -407,6 +420,9 @@ function g_install_options() {
             #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
             elif [ $l_status -eq 119 ]; then
                g_status_crendential_storage=0
+            #Si no se paso las precondiciones iniciales
+            elif [ $l_status -eq 111 ]; then
+                return $l_status
             fi
 
         fi
@@ -451,6 +467,9 @@ function g_install_options() {
             #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
             elif [ $l_status -eq 119 ]; then
                g_status_crendential_storage=0
+            #Si no se paso las precondiciones iniciales
+            elif [ $l_status -eq 111 ]; then
+                return $l_status
             fi
 
         fi
@@ -565,6 +584,9 @@ function g_install_options() {
             #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
             elif [ $l_status -eq 119 ]; then
                 g_status_crendential_storage=0
+            #Si no se paso las precondiciones iniciales
+            elif [ $l_status -eq 111 ]; then
+                return $l_status
             fi
 
         fi
@@ -720,7 +742,7 @@ g_usage() {
     printf '  > %bMENU-OPTIONS%b Las opciones de menu a instalar. Si no desea especificar coloque 0.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bLIST-REPO-IDS %bID de los repositorios de comandos a configurar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bLIST-PCKG-IDS %b.ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 4. Si desea usar el los los paquetes por defecto envie "EMPTY".%b\n' \
+    printf '  > %bLIST-PCKG-IDS %b.ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 32. Si desea usar el los los paquetes por defecto envie "EMPTY".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bLos paquete basicos por defecto que son: Curl, UnZip, OpenSSL y Tmux.%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
@@ -785,7 +807,7 @@ if [ $gp_type_calling -eq 0 ]; then
     fi
 
     #Validar los requisitos (algunas opciones requiere root y otros no)
-    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_repo_path"
+    fulfill_preconditions $g_os_subtype_id 0 1 1 "$g_repo_path"
     _g_status=$?
 
 
@@ -804,7 +826,7 @@ else
     # 1> Tipo de invocación (sin menu): 1/2
     # 2> Opciones de menu a ejecutar: entero positivo.
     # 3> ID de los repositorios de comandos a configurar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".
-    # 4> ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 4. Si desea usar el los los paquetes por defecto envie "EMPTY".
+    # 4> ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 32. Si desea usar el los los paquetes por defecto envie "EMPTY".
     #    Los paquetes por defecto que son: Curl, UnZip, OpenSSL y Tmux.
     # 5> El estado de la credencial almacenada para el sudo.
     # 6> Flag '0' para limpiar el cache de paquetes del sistema operativo. Caso contrario, use 1.
@@ -876,6 +898,9 @@ else
         #Si la credencial se almaceno en este script (localmente). avisar para que lo cierre el caller
         elif [ $g_is_credential_storage_externally -ne 0 ] && [ $g_status_crendential_storage -eq 0 ]; then
             _g_result=119
+        #Si no se paso las precondiciones iniciales
+        elif [ $_g_status -eq 111 ]; then
+            _g_result=111
         fi
 
     else

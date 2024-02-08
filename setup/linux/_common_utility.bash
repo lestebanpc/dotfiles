@@ -23,7 +23,7 @@ declare -r g_empty_str='EMPTY'
 
 #Parametros de entrada - Agumentos y opciones:
 #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
-#  2 > Mostrar información adicional (solo mostrar cuando se muestra el menu)
+#  2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
 #  3 > Flag '0' si se requere curl
 #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
 #  5 > Path donde se encuentra el directorio donde esta el '.git'
