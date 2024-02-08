@@ -1582,10 +1582,6 @@ function get_repo_artifacts() {
 
     #URL base fijo     :  Usualmente "https://github.com"
     local l_base_url_fixed="${gA_repo_base_url[${p_repo_id}]:-https://github.com}"
-    if [ $g_os_subtype_id -eq 1 ]; then
-        #Si es Alpine: Usar el repositorio alternativos de NodeJS (https://github.com/nodejs/unofficial-builds/)
-        l_base_url_fixed='https://unofficial-builds.nodejs.org/download/release'
-    fi
 
     #URL base variable :
     local l_base_url_variable="${p_repo_name}/releases/download/${p_repo_last_version}"
@@ -1991,6 +1987,11 @@ function get_repo_artifacts() {
 
         nodejs)
             #URL base fijo     : "https://nodejs.org/dist"
+            if [ $g_os_subtype_id -eq 1 ]; then
+                #Si es Alpine: Usar el repositorio alternativos de NodeJS (https://github.com/nodejs/unofficial-builds/)
+                l_base_url_fixed='https://unofficial-builds.nodejs.org/download/release'
+            fi
+
             #URL base variable :
             l_base_url_variable="${p_repo_last_version}"
 
