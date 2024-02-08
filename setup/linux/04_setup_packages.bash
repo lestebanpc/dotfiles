@@ -1742,6 +1742,11 @@ g_is_credential_storage_externally=1
 if [ $gp_uninstall -eq 0 ]; then
 
     #Validar los requisitos
+    #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
+    #  2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
+    #  3 > Flag '0' si se requere curl
+    #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
+    #  5 > Path donde se encuentra el directorio donde esta el '.git'
     fulfill_preconditions $g_os_subtype_id 0 1 0 "$g_repo_path"
     _g_status=$?
 
@@ -1759,6 +1764,11 @@ else
     if [ $gp_type_calling -eq 0 ]; then
     
         #Validar los requisitos
+        #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
+        #  2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
+        #  3 > Flag '0' si se requere curl
+        #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
+        #  5 > Path donde se encuentra el directorio donde esta el '.git'
         fulfill_preconditions $g_os_subtype_id 0 1 0 "$g_repo_path"
         _g_status=$?
 
@@ -1840,6 +1850,11 @@ else
         fi
     
         #Validar los requisitos
+        #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
+        #  2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
+        #  3 > Flag '0' si se requere curl
+        #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
+        #  5 > Path donde se encuentra el directorio donde esta el '.git'
         fulfill_preconditions $g_os_subtype_id 1 1 0 "$g_repo_path"
         _g_status=$?
 
