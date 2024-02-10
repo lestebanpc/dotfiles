@@ -41,7 +41,7 @@ fi
 #LLVM/Clang/Clangd
 if [ -d "${l_program_path}/llvm/bin" ]; then
     PATH="${l_program_path}/llvm/bin:$PATH"
-else
+elif [ -d "${l_program_path}/lsp_servers/clangd/bin" ]; then
     PATH="${l_program_path}/lsp_servers/clangd/bin:$PATH"
 fi
 
