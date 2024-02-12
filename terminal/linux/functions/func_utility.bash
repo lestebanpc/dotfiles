@@ -69,6 +69,7 @@ function get_os_type() {
 #              11 : CoreOS Stream
 #              12 : Red Hat Enterprise Linux
 #              19 : Amazon Linux
+#              20 : Oracle Linux Server
 #       > 30 - 49 : Familia Debian
 #              30 : Debian
 #              31 : Ubuntu
@@ -89,16 +90,29 @@ function get_linux_type_info() {
     fi
 
     #Determinar el tipo de distribucion Linux
-    # Ubuntu:
-    #   NAME="Ubuntu"
-    # Fedora:
-    #   NAME="Fedora Linux"
-    # Amazon Linux 2023
-    #   NAME="Amazon Linux"
-    # Alpine Linux
-    #   NAME="Alpine Linux"
-    #   ID=alpine
-    #   PRETTY_NAME="Alpine Linux v3.19"
+    # 01> Alpine Linux
+    #     NAME="Alpine Linux"
+    #     ID=alpine
+    #     PRETTY_NAME="Alpine Linux v3.19"
+    # 10> Fedora:
+    #     NAME="Fedora Linux"
+    # 19> Amazon Linux 2023
+    #     NAME="Amazon Linux"
+    # 12> Red Hat Enterprise Linux
+    #     NAME="Red Hat Enterprise Linux"
+    #     ID="rhel"
+    #     PRETTY_NAME="Red Hat Enterprise Linux 8.9 (Ootpa)"
+    # 20> Oracle Linux Server
+    #     NAME="Oracle Linux Server"
+    #     ID="ol"
+    #     PRETTY_NAME="Oracle Linux Server 8.9"
+    # 30> Debian:
+    #     NAME="Debian GNU/Linux"
+    #     PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+    #     ID=debian
+    # 31> Ubuntu:
+    #     NAME="Ubuntu"
+    #     PRETTY_NAME="Ubuntu 23.10"
     #
     local l_tag="NAME"
     local l_expression='s/'"$l_tag"'="\(.*\)"/\1/'
@@ -110,6 +124,9 @@ function get_linux_type_info() {
     g_os_subtype_name="$l_distro_type"
     local l_value
     case "$l_distro_type" in
+        Debian\ *)
+            l_value=30
+            ;;
         Ubuntu*)
             l_value=31
             ;;
@@ -118,6 +135,12 @@ function get_linux_type_info() {
             ;;
         Amazon*)
             l_value=19
+            ;;
+        Red\ Hat\ Enterprise*)
+            l_value=12
+            ;;
+        Oracle\ Linux*)
+            l_value=20
             ;;
         Alpine*)
             l_value=1
@@ -133,14 +156,25 @@ function get_linux_type_info() {
     #fi
 
     #Determinar la version de un distribucion Linux 
-    # Ubuntu:
-    #   VERSION="22.04.1 LTS (Jammy Jellyfish)"
-    # Fedora:
-    #   VERSION="36 (Workstation Edition)"
-    # Amazon Linux 2023
-    #   VERSION="2023"
-    # Alpine:
-    #   VERSION_ID=3.19.1
+    # 01> Alpine:
+    #     VERSION_ID=3.19.1
+    # 10> Fedora:
+    #     VERSION="36 (Workstation Edition)"
+    # 19> Amazon Linux 2023
+    #     VERSION="2023"
+    # 12> Red Hat Enterprise Linux
+    #     VERSION="8.9 (Ootpa)"
+    #     VERSION_ID="8.9"
+    # 20> Oracle Linux Server
+    #     VERSION="8.9"
+    #     VERSION_ID="8.9"
+    # 30> Debian:
+    #     VERSION_ID="12"
+    #     VERSION="12 (bookworm)"
+    #     VERSION_CODENAME=bookworm
+    # 31> Ubuntu:
+    #     VERSION="22.04.1 LTS (Jammy Jellyfish)"
+    #     VERSION_ID="23.10"
     #
 
     #Si es Alpine
