@@ -199,7 +199,7 @@ function get_linux_type_info() {
         g_os_subtype_version_pretty=$(echo "$l_distro_version" | sed -e "$g_regexp_sust_version1" | sed -e "$g_regexp_sust_version6")
 
         #Si solo es digitos y no tiene un . adicionar .0
-        if [[ "$g_os_subtype_version_pretty" =~ ^[0-9]+$ ]] ]]; then
+        if [[ "$g_os_subtype_version_pretty" =~ ^[0-9]+$ ]]; then
             g_os_subtype_version_pretty="${g_os_subtype_version_pretty}.0"
         fi
 
