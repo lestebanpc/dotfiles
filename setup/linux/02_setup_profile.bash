@@ -534,7 +534,7 @@ function _download_vim_packages() {
 
         fi
 
-        printf '\n'
+        #printf '\n'
 
     done;
 

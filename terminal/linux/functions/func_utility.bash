@@ -12,6 +12,8 @@ if [ -z "$g_regexp_sust_version1" ]; then
     declare -r g_regexp_sust_version4='s/[^0-9]*\([0-9]\+\).*/\1/'
     #La version 'x.y.z' esta despues de un caracter vacio
     declare -r g_regexp_sust_version5='s/.*\s\+\([0-9]\+\.[0-9.]\+\).*/\1/'
+    #Inicia con caracteres numericos y/o .
+    declare -r g_regexp_sust_version6='s/^\([0-9.]\+\).*/\1/'
 fi
 
 #Funciones de utilidad de Inicialización {{{
@@ -194,7 +196,13 @@ function get_linux_type_info() {
         g_os_subtype_version_pretty=""
     else
         g_os_subtype_version="$l_distro_version"
-        g_os_subtype_version_pretty=$(echo "$l_distro_version" | sed -e "$g_regexp_sust_version1")
+        g_os_subtype_version_pretty=$(echo "$l_distro_version" | sed -e "$g_regexp_sust_version1" | sed -e "$g_regexp_sust_version6")
+
+        #Si solo es digitos y no tiene un . adicionar .0
+        if [[ "$g_os_subtype_version_pretty" =~ ^[0-9]+$ ]] ]]; then
+            g_os_subtype_version_pretty="${g_os_subtype_version_pretty}.0"
+        fi
+
     fi
 
     #Determinar la arquitectura del procesador
