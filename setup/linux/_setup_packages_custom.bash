@@ -291,9 +291,9 @@ install_dotnet_lib() {
             fi
         fi
 
-        #libssl1.0.0       (Ubuntu 16.x)
-        #libssl1.1         (Debian/Ubuntu 18.x, 20.x)
-        #libssl3           (Ubuntu 22.x, 23.x)
+        #libssl1.0.0       (Debian 10.x/Ubuntu 16.x)
+        #libssl1.1         (Debian 11.x/Ubuntu 18.x, 20.x)
+        #libssl3           (Debian 12.x/Ubuntu 22.x, 23.x)
         #
         if [ $g_os_subtype_id -eq 31 ]; then
             if [[ "$g_os_subtype_version" =~ ^16\..+$ ]]; then
@@ -308,11 +308,17 @@ install_dotnet_lib() {
                 la_packages_needed+=("libssl3")
             fi
         else
-            la_packages_needed+=("libssl1.1")
+            if [[ "$g_os_subtype_version" =~ ^10\..+$ ]]; then
+                la_packages_needed+=("libssl1.0.0")
+            elif [[ "$g_os_subtype_version" =~ ^11\..+$ ]]; then
+                la_packages_needed+=("libssl1.1")
+            else
+                la_packages_needed+=("libssl3")
+            fi
         fi
 
-        #libgcc1           (Debian/Ubuntu 16.x, 18.x, 20.x, 22.x)
-        #libgcc-s1         (Debian/Ubuntu 22.x, 23.x)
+        #libgcc1           (Debian 10.x/Ubuntu 16.x, 18.x, 20.x, 22.x)
+        #libgcc-s1         (Debian 11.x, 12.x/Ubuntu 22.x, 23.x)
         #liblttng-ust1     (Ubuntu 22.x, 23.x)
         #libunwind8        (Ubuntu 22.x, 23.x)
         #
@@ -325,7 +331,13 @@ install_dotnet_lib() {
                 la_packages_needed+=("libgcc1" "libgcc-s1")
             fi
         else
-            la_packages_needed+=("libgcc1" "libgcc-s1")
+            if [[ "$g_os_subtype_version" =~ ^10\..+$ ]]; then
+                la_packages_needed+=("libgcc1")
+            elif [[ "$g_os_subtype_version" =~ ^11\..+$ ]]; then
+                la_packages_needed+=("libgcc-s1")
+            else
+                la_packages_needed+=("libgcc1")
+            fi
         fi
 
     #Si es Alpine
