@@ -341,7 +341,7 @@ install_dotnet_lib() {
                 la_packages_needed+=("libgcc-s1")
             else
             #elif [[ "$g_os_subtype_version_pretty" =~ ^12\..+$ ]]; then
-                la_packages_needed+=("libgcc1-s1")
+                la_packages_needed+=("libgcc-s1")
             fi
         fi
 
