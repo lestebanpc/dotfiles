@@ -111,6 +111,58 @@ g_is_credential_storage_externally=1
 
 declare -r g_default_list_package_ids='curl,unzip,openssl,tmux'
 
+#Opciones de '02_setup_profile.bash' para configurar VIM/NeoVIM
+#  0> Crear archivos de configuración como Editor
+#  1> Crear archivos de configuración como IDE
+#  2> Descargar plugins de Editor e indexarlos
+#  3> Descargar plugins de Editor (sin indexarlos)
+#  4> Descargar plugins de IDE e indexarlos
+#  5> Descargar plugins de IDE (sin indexarlos)
+#  6> Indexar la documentación (de plugins anteriormente descargados)
+#  7> Inicializar los plugins de IDE
+declare -ra ga_options_config_vim=(524288 1048576 209715 4194304 8388608 16777216 33554432 67108864)
+declare -ra ga_options_config_nvim=(134217728 268435456 536870912 1073741824 2147483648 4294967296 8589934592 17179869184)
+declare -ra ga_title_config=(
+    "Crear archivos de configuración como Editor"
+    "Crear archivos de Configuración como IDE"
+    "Descargar plugins de Editor e indexarlos"
+    "Descargar plugins de Editor (sin indexarlos)"
+    "Descargar plugins de IDE e indexarlos"
+    "Descargar plugins de IDE (sin indexarlos)"
+    "Indexar la documentación (de plugins anteriormente descargados)"
+    "Inicializar los plugins de IDE")
+
+#Opciones de '02_setup_profile.bash'para instalar lo necesario para VIM/NeoVIM
+#  0> Instalar Python
+#  1> Instalar paquete de usuario de Python: 'jtbl'
+#  2> Instalar paquete de usuario de Python: 'jtbl', 'compiledb', 'rope' y 'pynvim'
+#  3> Instalar NodeJS
+#  4> Instalar paquete globales de NodeJS: 'Prettier'
+#  5> Instalar paquete globales de NodeJS: 'Prettier', 'NeoVIM' y 'TreeSitter CLI'
+#  6> Instalar VIM
+#  7> Instalar NeoVIM
+declare -ra ga_options_install=(8 131072 32 16 262144 64 128 1024)
+declare -ra ga_title_install=(
+    "Python/Pip"
+    "Paquetes de usuario de Python 'jtbl'"
+    "Paquetes de usuario de Python 'jtbl', 'compiledb', 'rope' y 'pynvim'"
+    "NodeJS"
+    "Paquetes globales de Python 'Prettier'"
+    "Paquetes globales de Python 'Prettier', 'NeoVIM' y 'TreeSitter CLI'"
+    "VIM"
+    "NeoVIM")
+
+#Opciones de '02_setup_profile.bash' generales
+# 0> Actualizar los paquetes del SO
+# 1> Crear los enlaces simbolicos del profile del usuario
+# 2> Flag para re-crear un enlaces simbolicos en caso de existir
+declare -ra ga_options_general=(1 2 4)
+declare -ra ga_title_general=(
+    "Actualizar los paquetes del SO"
+    "Crear los enlaces simbolicos del profile del usuario"
+    "Flag para re-crear un enlaces simbolicos en caso de existir")
+
+
 #}}}
 
 
@@ -169,7 +221,7 @@ function g_install_options() {
     #Flag '0' cuando no se realizo ninguna instalacion de paquetes
     local l_exist_packages_installed=1
 
-    #3. Opción> Paquetes basicos: Curl, OpenSSL y Tmux
+    #3. Instalar paquetes basicos del SO: Curl, OpenSSL y Tmux
     local l_status=0
     local l_option=32
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ] && [ ! -z "$p_list_pckg_ids" ]; then
@@ -178,6 +230,7 @@ function g_install_options() {
         if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
             #Mostrar el titulo de instalacion
+            printf '\n'
             print_line '─' $g_max_length_line  "$g_color_blue1"
             printf "> Instalando '%b%s%b'\n" "$g_color_cian1" "${p_list_pckg_ids//,/, }" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
@@ -214,7 +267,7 @@ function g_install_options() {
 
     fi
 
-    #4. Opción> Comandos Basicos
+    #4. Instalar comandos basicos (usar un grupo de comandos especifico)
     l_option=64
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
@@ -222,11 +275,12 @@ function g_install_options() {
         if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
             #Mostrar el titulo de instalacion
+            printf '\n'
             print_line '─' $g_max_length_line  "$g_color_blue1"
             if [ $g_os_subtype_id -eq 1 ]; then
-                printf "> Instalando %bComandos Basicos%b: '%bbat, jq, yq, ripgrep, delta, oh-my-posh%b, etc.'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+                printf "> Instalando %bComandos Basicos%b: '%bbat, jq, yq, ripgrep, delta, oh-my-posh, fd y xsv%b.'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             else
-                printf "> Instalando %bComandos Basicos%b: '%bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh%b, etc.'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+                printf "> Instalando %bComandos Basicos%b: '%bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd y xsv%b.'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
             print_line '─' $g_max_length_line "$g_color_blue1"
 
@@ -259,57 +313,253 @@ function g_install_options() {
 
     fi
 
-    #5. Opción> Programas basicos: NodeJs y sus paquetes globales, Python/Pip, VIM y NeoVIM
+    #5. Instalar y/o Configurar todo lo relacionado con VIM/NeoVIM: NodeJs (y sus paquetes globales), Python/Pip (y sus paquetes de usuario), VIM y NeoVIM
+
+    #5.1. Determinar las opciones elegidas por el usuario
+    local la_options_config_vim=()
+    local la_options_config_nvim=()
+    local la_options_install=()
+    local la_options_general=()
+    local l_i=0
+    local l_info=''
     local l_prg_options=0
-    local l_aux=''
 
     if [ $p_input_options -gt 0 ]; then
 
-        #Determinar los programas a instalar: NodeJs, sus paquetes globales y Python/Pip
+        #5.1.1. Determinar las opciones elegidas
+
+        #Opciones recomendados para ejecutar con root:
+        # (0004096) Instalar NodeJS y Npm
+        # (0008192) Instalar paquetes globales de NodeJS: 'Prettier'
+        # (0016384) Instalar Python y Pip
+        # (0032768) Instalar VIM
+        # (0065536) Instalar NeoVIM
+        # (0131072) Descargar Plugins de Editor de VIM
+        # (0262144) Descargar Plugins de Editor de NeoVIM
+        # (0524288) Descargar Plugins de IDE    de VIM
+        # (1048576) Descargar Plugins de IDE    de NeoVIM
+
+
+        #Solo actualizar los paquetes del SO, si no se hizo antes
+        # 0> Actualizar los paquetes del SO
+        if [ $p_flag_upgrade_os_pkgs -eq 0 ] && [ $l_exist_packages_installed -ne 0 ]; then
+            la_options_general[0]=0
+        fi
+
+        # 3> Instalar NodeJS
+        l_option=4096
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_install[3]=0
+        fi
+
+        # 4> Instalar paquete globales de NodeJS: 'Prettier'
+        l_option=8192
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_install[4]=0
+        fi
+
+        # 5> Instalar paquete globales de NodeJS: 'Prettier', 'NeoVIM' y 'TreeSitter CLI'
+        #l_option=xxxx
+        #if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        #    la_options_install[5]=0
+        #fi
+
+        # 0> Instalar Python
+        l_option=16384
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_install[0]=0
+        fi
+
+        # 6> Instalar VIM
+        l_option=32768
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_install[6]=0
+        fi
+
+        # 7> Instalar NeoVIM
+        l_option=65536
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_install[7]=0
+        fi
+
+        # 3> Descargar plugins de Editor (sin indexarlos)
+        l_option=131072
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_config_vim[3]=0
+        fi
+
+        # 5> Descargar plugins de IDE (sin indexarlos)
+        l_option=262144
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_config_nvim[5]=0
+        fi
+
+        # 3> Descargar plugins de Editor (sin indexarlos)
+        l_option=524288
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_config_vim[3]=0
+        fi
+
+        # 5> Descargar plugins de IDE (sin indexarlos)
+        l_option=1048576
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_config_nvim[5]=0
+        fi
+
+
+        #Opciones recomendados para ejecutar con el usuario:
+        # (0000001) Configurar el profile del usuario
+        # (0000002) Instalar paquetes usuario de Python: 'jtbl'
+        # (0000004) VIM como Editor    > Crear archivos de configuración, Descargar plugins e indexarlos
+        # (0000008) VIM como IDE       > Crear archivos de configuración, Descargar plugins e indexarlos, Inicializar los plugins
+        # (0000016) NeoVIM como Editor > Crear archivos de configuración, Descargar plugins e indexarlos
+        # (0000032) NeoVIM como IDE    > Crear archivos de configuración, Descargar plugins e indexarlos, Inicializar los plugins
+        # (0000064) VIM como Editor    > Crear archivos de configuración, Indexar plugins
+        # (0000128) VIM como IDE       > Crear archivos de configuración, Indexar plugins, Inicializar los plugins
+        # (0000256) NeoVIM como Editor > Crear archivos de configuración, Indexar plugins
+        # (0000512) NeoVIM como IDE    > Crear archivos de configuración, Indexar plugins, Inicializar los plugins
+
+
+        # 1> Crear los enlaces simbolicos del profile del usuario
+        l_option=1
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_general[1]=0
+        fi
+
+        #Siempre recrear los enlaces simbolicos si no existe
+        # 2> Flag para re-crear un enlaces simbolicos en caso de existir
+        la_options_general[2]=0
+
+        # 1> Instalar paquete de usuario de Python: 'jtbl'
+        l_option=2
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_install[1]=0
+        fi
+
+        # 2> Instalar paquete de usuario de Python: 'jtbl', 'compiledb', 'rope' y 'pynvim'
+        #l_option=xxxx
+        #if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        #    la_options_install[1]=0
+        #fi
+
+        # 0> Crear archivos de configuración como Editor
+        # 2> Descargar plugins de Editor e indexarlos
+        l_option=4
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_config_vim[0]=0
+            la_options_config_vim[2]=0
+        fi
+
+        # 1> Crear archivos de configuración como IDE
+        # 4> Descargar plugins de IDE e indexarlos
+        # 7> Inicializar los plugins de IDE
+        l_option=8
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_config_vim[1]=0
+            la_options_config_vim[4]=0
+            la_options_config_vim[7]=0
+        fi
+
+        # 0> Crear archivos de configuración como Editor
+        # 2> Descargar plugins de Editor e indexarlos
+        l_option=16
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_config_nvim[0]=0
+            la_options_config_nvim[2]=0
+        fi
+
+        # 1> Crear archivos de configuración como IDE
+        # 4> Descargar plugins de IDE e indexarlos
+        # 7> Inicializar los plugins de IDE
+        l_option=32
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_config_nvim[1]=0
+            la_options_config_nvim[4]=0
+            la_options_config_nvim[7]=0
+        fi
+
+        # 0> Crear archivos de configuración como Editor
+        # 6> Indexar la documentación (de plugins anteriormente descargados)
+        l_option=64
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+            la_options_config_vim[1]=0
+            la_options_config_vim[6]=0
+        fi
+
+        # 1> Crear archivos de configuración como IDE
+        # 6> Indexar la documentación (de plugins anteriormente descargados)
+        # 7> Inicializar los plugins de IDE
         l_option=128
         if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            l_prg_options=$((l_prg_options + 8 + 16 + 64))
-            printf -v l_aux "'%bNodeJS%b' %b(incluye paquetes globales basicos)%b, '%bPython%b'" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+            la_options_config_vim[1]=0
+            la_options_config_vim[6]=0
+            la_options_config_vim[7]=0
         fi
 
-        #Determinar los programas a instalar: VIM
+        # 0> Crear archivos de configuración como Editor
+        # 6> Indexar la documentación (de plugins anteriormente descargados)
         l_option=256
         if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            l_prg_options=$((l_prg_options + 128))
-            if [ -z "$l_aux" ]; then
-                printf -v l_aux "'%bVIM%b'" "$g_color_cian1" "$g_color_reset"
-            else
-                printf -v l_aux "${l_aux}, '%bVIM%b'" "$g_color_cian1" "$g_color_reset"
-            fi
+            la_options_config_nvim[0]=0
+            la_options_config_nvim[6]=0
         fi
 
-        #Determinar los programas a instalar: NeoVIM
+        # 1> Crear archivos de configuración como IDE
+        # 6> Indexar la documentación (de plugins anteriormente descargados)
+        # 7> Inicializar los plugins de IDE
         l_option=512
         if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            l_prg_options=$((l_prg_options + 1024))
-            if [ -z "$l_aux" ]; then
-                printf -v l_aux "'%bNeoVIM%b'" "$g_color_cian1" "$g_color_reset"
-            else
-                printf -v l_aux "${l_aux}, '%bNeoVIM%b'" "$g_color_cian1" "$g_color_reset"
-            fi
+            la_options_config_nvim[1]=0
+            la_options_config_nvim[6]=0
+            la_options_config_nvim[7]=0
         fi
+
+        #5.1.1. Determinar el valor de estas las opciones elegidas
+        l_prg_options=0
+        l_info='Se realizara las siguientes instalaciones/configuraciones:'
+
+        for (( l_i = 0; l_i < ${#ga_options_general[@]}; l_i++ )); do
+            if [ "${la_options_general[${l_i}]}" = "0" ]; then
+                ((l_prg_options= l_prg_options + ${ga_options_general[${l_i}]}))
+                printf -v l_info '%s\n   > General > %b%s%b' "$l_info" "$g_color_gray1" "${ga_title_general[${l_i}]}" "$g_color_reset"
+            fi 
+        done
+
+        for (( l_i = 0; l_i < ${#ga_options_install[@]}; l_i++ )); do
+            if [ "${la_options_install[${l_i}]}" = "0" ]; then
+                ((l_prg_options= l_prg_options + ${ga_options_install[${l_i}]}))
+                printf -v l_info '%s\n   > Instalar %b%s%b' "$l_info" "$g_color_gray1" "${ga_title_install[${l_i}]}" "$g_color_reset"
+            fi 
+        done
+
+        for (( l_i = 0; l_i < ${#ga_options_config_vim[@]}; l_i++ )); do
+            if [ "${la_options_config_vim[${l_i}]}" = "0" ]; then
+                ((l_prg_options= l_prg_options + ${ga_options_config_vim[${l_i}]}))
+                printf -v l_info '%s\n   > Configuración VIM   > %b%s%b' "$l_info" "$g_color_gray1" "${ga_title_config[${l_i}]}" "$g_color_reset"
+            fi 
+        done
+
+        for (( l_i = 0; l_i < ${#ga_options_config_nvim[@]}; l_i++ )); do
+            if [ "${la_options_config_nvim[${l_i}]}" = "0" ]; then
+                ((l_prg_options= l_prg_options + ${ga_options_config_nvim[${l_i}]}))
+                printf -v l_info '%s\n   > Configuración NeoVIM > %b%s%b' "$l_info" "$g_color_gray1" "${ga_title_config[${l_i}]}" "$g_color_reset"
+            fi 
+        done
 
     fi
 
-    if [ $l_prg_options -gt 0 ]; then
+    #5.3. Instalar/Configurar el profile
+    if [ $l_prg_options -ne 0 ] && [ $l_prg_options -ne 4 ] && [ $l_prg_options -ne 5 ]; then
 
        #Solo soportado para los que tenga acceso a root
        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
            #Mostrar el titulo de instalacion
+           printf '\n'
            print_line '─' $g_max_length_line  "$g_color_blue1"
-           printf "> Instalando %bProgramas basicos%b: %b\n" "$g_color_cian1" "$g_color_reset" "$l_aux"
+           printf "> Instalando/configurando para VIM/NeoVIM como Editor/IDE\n"
            print_line '─' $g_max_length_line "$g_color_blue1"
-
-           #Solo actualizar los paquetes del SO, si no se hizo antes
-           if [ $p_flag_upgrade_os_pkgs -eq 0 ] && [ $l_exist_packages_installed -ne 0 ]; then
-               l_prg_options=$((l_prg_options + 1))
-           fi
+           printf '%b\n' "$l_info"
 
            #Parametros:
            # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
@@ -324,6 +574,7 @@ function g_install_options() {
                l_status=$?
            fi
 
+           #Considerar que siempre se instalan paquetes de SO, es decir se debe limpiar el cache de paquete descargados.
            if [ $l_exist_packages_installed -ne 0 ]; then
                l_exist_packages_installed=0
            fi
@@ -341,103 +592,61 @@ function g_install_options() {
 
        fi
 
-   fi
-
-   #6. Opción> LSP/DAP de .NET : Omnisharp-Roslyn, NetCoreDbg
-   l_option=1024
-   if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-
-       #Solo soportado para los que tenga acceso a root
-       if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-
-           #Mostrar el titulo de instalacion
-           print_line '─' $g_max_length_line  "$g_color_blue1"
-           printf "> Instalando %bLSP/DAP de .NET%b: '%bOmnisharp-Roslyn%b' y '%bNetCoreDbg%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-                  "$g_color_cian1" "$g_color_reset"
-           print_line '─' $g_max_length_line "$g_color_blue1"
-
-           #Parametros:
-           # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
-           # 2> Repsitorio a instalar/actualizar: 
-           # 3> El estado de la credencial almacenada para el sudo
-           # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-           # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
-           # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
-           if [ $l_is_noninteractive -eq 1 ]; then
-               
-               ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "roslyn,netcoredbg" $g_status_crendential_storage 0 1 "$g_other_calling_user"
-               l_status=$?
-           else
-               ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "roslyn,netcoredbg" $g_status_crendential_storage 0 1 "$g_other_calling_user"
-               l_status=$?
-           fi
-
-           #Si no se acepto almacenar credenciales
-           if [ $l_status -eq 120 ]; then
-               return 120
-           #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-           elif [ $l_status -eq 119 ]; then
-              g_status_crendential_storage=0
-            #Si no se paso las precondiciones iniciales
-            elif [ $l_status -eq 111 ]; then
-                return $l_status
-           fi
-
-       fi
-
     fi
 
-    #7. Opción> LSP/DAP de Java : Jdtls
-    l_option=2048
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+    #8. Opción> Lista de repositorios de comandos adicionales a instalar (segun una lista de ID de repositorios)
 
-        #Solo soportado para los que tenga acceso a root
-        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+    #¿Se adiciona repositorios adicionales?
+    if [ $p_input_options -gt 0 ]; then
 
-            #Mostrar el titulo de instalacion
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando %bLSP/DAP de Java%b: '%bJdtls%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-            print_line '─' $g_max_length_line "$g_color_blue1"
+        #LSP/DAP de Java: jdtls
+        l_option=4194304
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
-            #Parametros:
-            # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
-            # 2> Repsositorio a instalar/acutalizar: 
-            # 3> El estado de la credencial almacenada para el sudo.
-            # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-            # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
-            # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
-            if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "jdtls" $g_status_crendential_storage 0 1 "$g_other_calling_user"
-                l_status=$?
-            else
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "jdtls" $g_status_crendential_storage 0 1 "$g_other_calling_user"
-                l_status=$?
+            if [[ ! $p_list_repo_ids =~ ,jdtls$ ]] && [[ ! $p_list_repo_ids =~ ,jdtls, ]] && [[ ! $p_list_repo_ids =~ ^jdtls, ]]; then
+                if [ -z "$p_list_repo_ids" ]; then
+                    p_list_repo_ids="jdtls"
+                else
+                    p_list_repo_ids="${p_list_repo_ids},jdtls"
+                fi
             fi
 
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-               g_status_crendential_storage=0
-            #Si no se paso las precondiciones iniciales
-            elif [ $l_status -eq 111 ]; then
-                return $l_status
+        fi
+
+        #LSP/DAP de .NET : roslyn,netcoredbg
+        l_option=2097152
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+            if [[ ! $p_list_repo_ids =~ ,roslyn$ ]] && [[ ! $p_list_repo_ids =~ ,roslyn, ]] && [[ ! $p_list_repo_ids =~ ^roslyn, ]]; then
+                if [ -z "$p_list_repo_ids" ]; then
+                    p_list_repo_ids="roslyn"
+                else
+                    p_list_repo_ids="${p_list_repo_ids},roslyn"
+                fi
+            fi
+
+            if [[ ! $p_list_repo_ids =~ ,netcoredbg$ ]] && [[ ! $p_list_repo_ids =~ ,netcoredbg, ]] && [[ ! $p_list_repo_ids =~ ^netcoredbg, ]]; then
+                if [ -z "$p_list_repo_ids" ]; then
+                    p_list_repo_ids="netcoredbg"
+                else
+                    p_list_repo_ids="${p_list_repo_ids},netcoredbg"
+                fi
             fi
 
         fi
 
     fi
 
-    #8. Opción> Lista de repositorios de comandos adicionales a instalar
+    #Instalar los repositorios de comandos
     if [ ! -z "$p_list_repo_ids" ]; then
 
         #Solo soportado para los que tenga acceso a root
         if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
             #Mostrar el titulo de instalacion
+            printf '\n'
             print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$p_list_repo_ids" "$g_color_reset"
+            printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "${p_list_repo_ids/,/, }" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Parametros:
@@ -477,121 +686,6 @@ function g_install_options() {
     fi
 
 
-    #9. Opción> Configurar el profile del usuario y VIM/NeoVIM como IDE/Developer
-    l_prg_options=0
-    l_aux=''
-    local l_python_pkg_opts=32
-
-    if [ $p_input_options -gt 0 ]; then
-
-        #Determinar si se configura el profile del usuario (se obligara a recrear lo enlaces simbolicos)    
-        l_option=1
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            l_prg_options=$((l_prg_options + 2 + 4))
-            printf -v l_aux "el %bprofile del usario%b" "$g_color_cian1" "$g_color_reset"
-        fi
-
-        #Determinar si se configura VIM como IDE (incluye los paquetes de usuario de Python)
-        l_option=4
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-
-            l_prg_options=$((l_prg_options + 512 + l_python_pkg_opts))
-            #Evitar que se vuelva a usar en NeoVIM como IDE
-            l_python_pkg_opts=0
-
-            if [ -z "$l_aux" ]; then
-                printf -v l_aux "%bVIM%b como %bIDE%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-            else
-                printf -v l_aux "${l_aux}, %bVIM%b como %bIDE%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-            fi
-
-        #Si VIM no es IDE, determinar si se configura como Editor
-        else
-
-            l_option=2
-            if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-
-                l_prg_options=$((l_prg_options + 256))
-                if [ -z "$l_aux" ]; then
-                    printf -v l_aux "%bVIM%b como %bEditor%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-                else
-                    printf -v l_aux "${l_aux}, %bVIM%b como %bEditor%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-                fi
-
-            fi
-
-        fi
-
-        #Determinar si se configura NeoVIM como IDE (incluye los paquetes de usuario de Python)
-        l_option=16
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-
-            l_prg_options=$((l_prg_options + 4096 + l_python_pkg_opts))
-            #Evitar que se vuelva a usar
-            #l_python_pkg_opts=0
-
-            if [ -z "$l_aux" ]; then
-                printf -v l_aux "%bNeoVIM%b como %bIDE%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-            else
-                printf -v l_aux "${l_aux}, %bNeoVIM%b como %bIDE%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-            fi
-
-        #Si NeoVIM no es IDE, determinar si se configura como Editor
-        else
-
-            l_option=8
-            if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-
-                l_prg_options=$((l_prg_options + 2048))
-                if [ -z "$l_aux" ]; then
-                    printf -v l_aux "%bNeoVIM%b como %bEditor%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-                else
-                    printf -v l_aux "${l_aux}, %bNeoVIM%b como %bEditor%b" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-                fi
-
-            fi
-
-        fi
-
-    fi
-
-    if [ $l_prg_options -gt 0 ]; then
-
-        #Solo soportado para los que tenga acceso a root
-        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-
-            #Mostrar el titulo de instalacion
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Configurar %b\n" "$l_aux"
-            print_line '─' $g_max_length_line "$g_color_blue1"
-
-            #Parametros:
-            # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
-            # 2> Opciones a configurar: 2 (Profile) + 4 (Recrear enlaces simbolicos) + 64 (VIM como IDE) + 512 (NeoVIM como IDE)
-            # 3> El estado de la credencial almacenada para el sudo
-            # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
-            if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
-                l_status=$?
-            else
-                ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
-                l_status=$?
-            fi
-
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-                g_status_crendential_storage=0
-            #Si no se paso las precondiciones iniciales
-            elif [ $l_status -eq 111 ]; then
-                return $l_status
-            fi
-
-        fi
-
-    fi
 
     if [ $p_flag_clean_os_cache -eq 0 ] && [ $l_exist_packages_installed -eq 0 ]; then
         printf 'Clean packages cache...\n'
@@ -618,27 +712,46 @@ function _show_menu_install_core() {
     print_line '-' $g_max_length_line  "$g_color_gray1"
     printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
 
-    local l_max_digits=4
+    local l_max_digits=7
 
     printf " ( ) Configuración personalizado para el usuario:\n"
     printf "     (%b%0${l_max_digits}d%b) Configurar el %bprofile del usuario%b\n" "$g_color_green1" "1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Configurar %bVIM%b    como %bEditor%b\n" "$g_color_green1" "2" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Configurar %bVIM%b    como %bIDE%b %b(incluye paquetes de usuario basicos de python)%b\n" "$g_color_green1" "4" \
-           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Configurar %bNeoVIM%b como %bEditor%b\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Configurar %bNeoVIM%b como %bIDE%b %b(incluye paquetes de usuario basicos de python)%b\n" "$g_color_green1" "16" \
-           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes usuario%b de %bPython%b: 'jtbl'\n" "$g_color_green1" "2" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b como %bEditor%b    > Crear archivos de configuración, Descargar plugins e indexarlos\n" "$g_color_green1" "4" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b como %bIDE%b       > Crear archivos de configuración, Descargar plugins e indexarlos, Inicializar los plugins\n" "$g_color_green1" "8" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b como %bEditor%b > Crear archivos de configuración, Descargar plugins e indexarlos\n" "$g_color_green1" "16" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b como %bIDE%b    > Crear archivos de configuración, Descargar plugins e indexarlos, Inicializar los plugins\n" "$g_color_green1" "32" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b como %bEditor%b    > Crear archivos de configuración, Indexar plugins\n" "$g_color_green1" "64" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b como %bIDE%b       > Crear archivos de configuración, Indexar plugins, Inicializar los plugins\n" "$g_color_green1" "128" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b como %bEditor%b > Crear archivos de configuración, Indexar plugins\n" "$g_color_green1" "256" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b como %bIDE%b    > Crear archivos de configuración, Indexar plugins, Inicializar los plugins\n" "$g_color_green1" "512" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
 
     printf " ( ) Programas requeridos a instalar %b(usualmente instalado como root)%b:\n" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Paquetes  basicos: %b%s%b\n" "$g_color_green1" "32" "$g_color_reset" "$g_color_gray1" "$l_pckg_ids" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Comandos  basicos: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, etc.%b\n" "$g_color_green1" "64" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bNodeJS (incluye paquetes globales basicos) y Python%b\n" "$g_color_green1" "128" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bVIM%b\n" "$g_color_green1" "256" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Programas basicos: %bNeoVIM%b\n" "$g_color_green1" "512" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET  : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "1024" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de Java  : %bJdtls%b\n" "$g_color_green1" "2048" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes  basicos%b: %b%s%b\n" "$g_color_green1" "1024" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" \
+           "$l_pckg_ids" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bcomandos  basicos%b: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd y xsv.%b\n" "$g_color_green1" "2048" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bNodeJS%b y %bNpm%b\n" "$g_color_green1" "4096" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes globales%b de %bNodeJS%b: %b'Prettier'%b\n" "$g_color_green1" "8192" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bPython%b y %bPip%b\n" "$g_color_green1" "16384" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bVIM%b\n" "$g_color_green1" "32768" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bNeoVIM%b\n" "$g_color_green1" "65536" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de Editor%b de %bVIM%b\n" "$g_color_green1" "131072" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de Editor%b de %bNeoVIM%b\n" "$g_color_green1" "262144" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de IDE%b    de %bVIM%b\n" "$g_color_green1" "524288" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de IDE%b    de %bNeoVIM%b\n" "$g_color_green1" "1048576" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "2097152" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de Java : %bJdtls%b\n" "$g_color_green1" "4194304" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_gray1"
 
@@ -677,7 +790,6 @@ function g_install_main() {
             q)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1" 
-                printf '\n'
                 ;;
 
 
@@ -692,7 +804,6 @@ function g_install_main() {
 
                     l_flag_continue=1
                     print_line '─' $g_max_length_line "$g_color_green1" 
-                    printf '\n'
 
                     g_install_options $l_options "EMPTY" "$p_list_pckg_ids" $p_flag_clean_os_cache 0
 

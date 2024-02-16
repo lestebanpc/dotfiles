@@ -96,75 +96,6 @@ function _get_gcc_version() {
     return 0
 }
 
-#Parametros de salida (SDTOUT): Version de NodeJS instalado
-#Parametros de salida (valores de retorno):
-# 0 > Se obtuvo la version
-# 1 > No se obtuvo la version
-function _get_nodejs_version() {
-
-    #Obtener la version instalada
-    l_version=$(node -v 2> /dev/null)
-    l_status=$?
-    if [ $l_status -ne 0 ]; then
-        return 1
-    fi
-
-    l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-    echo "$l_version"
-    return 0
-}
-
-
-
-
-#
-#Parametros de salida (valores de retorno):
-#  0 > Si es esta configurado en modo editor
-#  1 > Si es esta configurado en modo developer
-#  2 > Si NO esta configurado
-function _is_developer_vim_profile() {
-
-    #1. Argumentos
-    local p_is_neovim=1
-    if [ "$1" = "0" ]; then
-        p_is_neovim=0
-    fi
-
-
-    #2. Ruta base donde se instala el plugins/paquete
-    local l_real_path
-    local l_profile_path="${HOME}/.vimrc"
-    if [ $p_is_neovim -eq 0  ]; then
-        l_profile_path="${HOME}/.config/nvim/init.vim"
-    fi
-
-    #'vimrc_ide_linux_xxxx.vim'
-    #'vimrc_basic_linux.vim'
-    #'init_ide_linux_xxxx.vim'
-    #'init_basic_linux.vim'
-    l_real_path=$(readlink "$l_profile_path" 2> /dev/null)
-    local l_status=$?
-    if [ $l_status -ne 0 ]; then
-        return 2
-    fi
-
-    l_real_path="${l_real_path##*/}"
-
-    #Si es NeoVIM
-    if [ $p_is_neovim -eq 0  ]; then
-        if [[ "$l_real_path" == init_ide_* ]]; then
-            return 1 
-        fi
-        return 0
-    fi
-
-    #Si es VIM
-    if [[ "$l_real_path" =~ vimrc_ide_* ]]; then
-        return 1 
-    fi
-    return 0
-
-}
 
 #Actualizar el repositorios
 #Parametros de salida (valores de retorno):
@@ -178,9 +109,11 @@ function _is_developer_vim_profile() {
 function _update_repository() {
 
     #1. Argumentos
+    local l_tag="VIM"
     local p_is_neovim=1
     if [ "$1" = "0" ]; then
         p_is_neovim=0
+        l_tag="NeoVIM"
     fi
 
     local p_repo_path="$2"
@@ -191,13 +124,9 @@ function _update_repository() {
     #2. Mostando el titulo
 
     printf '\n'
-    print_line '-' $g_max_length_line "$g_color_gray1" 
-    if [ $p_is_neovim -eq 0  ]; then
-        printf 'NeoVIM> Git repository "%b%s%b" %b(%s)%b\n' "$g_color_cian1" "$p_repo_name" "$g_color_reset" "$g_color_gray1" "$p_repo_path" "$g_color_gray1"
-    else
-        printf 'VIM   > Git repository "%b%s%b" %b(%s)%b\n' "$g_color_cian1" "$p_repo_name" "$g_color_reset" "$g_color_gray1" "$p_repo_path" "$g_color_gray1"
-    fi
-    print_line '-' $g_max_length_line "$g_color_gray1" 
+    print_line '.' $g_max_length_line "$g_color_gray1" 
+    printf '%s > Git repository "%b%s%b" %b(%s)%b\n' "$l_tag" "$g_color_cian1" "$p_repo_name" "$g_color_reset" "$g_color_gray1" "$p_repo_path" "$g_color_gray1"
+    print_line '.' $g_max_length_line "$g_color_gray1" 
 
     #1. Validar si existe directorio
     if [ ! -d $p_repo_path ]; then
@@ -343,13 +272,9 @@ function _update_vim_package() {
     if [ $l_n -gt 0 ]; then
 
         printf '\n'
-        print_line '-' $g_max_length_line "$g_color_gray1" 
-        if [ $p_is_neovim -eq 0  ]; then
-            printf 'NeoVIM> %bIndexando las documentación%b de los plugins\n' "$g_color_cian1" "$g_color_reset"
-        else
-            printf 'VIM   > %bIndexando las documentación%b de los plugins\n' "$g_color_cian1" "$g_color_reset"
-        fi
-        print_line '-' $g_max_length_line "$g_color_gray1" 
+        print_line '.' $g_max_length_line "$g_color_gray1" 
+        printf '%s > %bIndexando las documentación%b de los plugins\n' "$l_tag" "$g_color_cian1" "$g_color_reset"
+        print_line '.' $g_max_length_line "$g_color_gray1" 
 
         for ((l_i=0; l_i< ${l_n}; l_i++)); do
             
@@ -454,7 +379,20 @@ function _update_vim() {
     
 
     #2. Actualizar los plugins
-    _update_vim_package $p_is_neovim $p_is_coc_installed
+    local l_flag_setup=0
+
+    #Se requiere tener Git instalado
+    if ! git --version 1> /dev/null 2>&1; then
+
+        #No esta instalado Git, No configurarlo
+        l_flag_setup=1
+        printf '%s > Se requiere que Git este instalado para actualizar los plugins de %s.\n' "$l_tag" "$l_tag"
+
+    fi
+
+    if [ $l_flag_setup -eq 0 ]; then
+        _update_vim_package $p_is_neovim $p_is_coc_installed
+    fi
 
     #Si es desarrallador: Actualizar los modulos Python
     #Si es desarrollador: Actualizar los paquetes globales Node.JS istalados
@@ -474,7 +412,6 @@ function _update_all() {
     
     #2. Actualizar los paquetes instalados desde los repositorios SO
     g_status_crendential_storage=-1
-    local l_title
     local l_status
     local l_flag
     local l_opcion=1
@@ -502,13 +439,14 @@ function _update_all() {
                 fi
             fi
 
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf -v l_title "Actualizar los paquetes del SO '%s%s %s%s'" "$g_color_cian1" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
-            print_text_in_center2 "$l_title" $g_max_length_line 
-            print_line '─' $g_max_length_line "$g_color_blue1"
+            printf '\n'
+            print_line '-' $g_max_length_line  "$g_color_gray1"
+            #print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "OS > Actualizar los paquetes del SO '%b%s %s%b'\n" "$g_color_cian1" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
+            print_line '-' $g_max_length_line "$g_color_gray1"
+            #print_line '─' $g_max_length_line  "$g_color_blue1"
 
             upgrade_os_packages $g_os_subtype_id $l_is_noninteractive
-            echo ""
 
         fi
 
@@ -544,7 +482,7 @@ function _update_all() {
     fi
 
     #Version de NodeJS instalado
-    local l_nodejs_version=$(_get_nodejs_version)
+    local l_nodejs_version=$(get_nodejs_version)
 
     #4. Actualizar paquetes VIM instalados
     local l_version
@@ -570,16 +508,18 @@ function _update_all() {
         if [ ! -z "$l_version" ]; then
 
             #Mostrar el titulo
-            printf -v l_aux "%sVIM%s %s(%s)%s" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
-            printf -v l_title "Actualizar los paquetes de %s" "$l_aux"
+            printf -v l_aux "%bVIM%b %b(%s)%b" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
 
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            print_text_in_center2 "$l_title" $g_max_length_line
-            print_line '─' $g_max_length_line "$g_color_blue1"
+            printf '\n'
+            print_line '-' $g_max_length_line  "$g_color_gray1"
+            #print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "VIM > Actualizar los plugins de %b\n" "$l_aux"
+            print_line '-' $g_max_length_line "$g_color_gray1"
+            #print_line '─' $g_max_length_line  "$g_color_blue1"
 
             #Determinar si esta instalado en modo developer
             l_is_coc_installed=1
-            _is_developer_vim_profile 1
+            check_vim_profile 1
             l_status=$?
             if [ $l_status -eq 1 ]; then
                 if [ -z "$l_nodejs_version" ]; then
@@ -620,16 +560,18 @@ function _update_all() {
         if [ ! -z "$l_version" ]; then
 
             #Mostrar el titulo
-            printf -v l_aux "%sNeoVIM%s %s(%s)%s" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
-            printf -v l_title "Actualizar los paquetes de %s" "$l_aux"
+            printf -v l_aux "%bNeoVIM%b %b(%s)%b" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
 
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            print_text_in_center2 "$l_title" $g_max_length_line
-            print_line '─' $g_max_length_line "$g_color_blue1"
+            printf '\n'
+            print_line '-' $g_max_length_line  "$g_color_gray1"
+            #print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "NeoVIM > Actualizar los paquetes de %b\n" "$l_aux"
+            #print_line '─' $g_max_length_line "$g_color_blue1"
+            print_line '-' $g_max_length_line  "$g_color_gray1"
 
             #Determinar si esta instalado en modo developer
             l_is_coc_installed=1
-            _is_developer_vim_profile 0
+            check_vim_profile 0
             l_status=$?
             if [ $l_status -eq 1 ]; then
                 if [ -z "$l_nodejs_version" ]; then
@@ -707,7 +649,6 @@ function g_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1" 
 
-                printf '\n'
                 if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
                     #1 + 4 + 8
                     _update_all 13
@@ -721,7 +662,6 @@ function g_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1" 
                 
-                printf '\n'
                 if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
                     #1 + 2 + 4 + 8
                     _update_all 15
@@ -735,14 +675,12 @@ function g_main() {
             q)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1" 
-                printf '\n'
                 ;;
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
                     print_line '─' $g_max_length_line "$g_color_green1" 
-                    printf '\n'
                     _update_all $l_options
                 else
                     l_flag_continue=0

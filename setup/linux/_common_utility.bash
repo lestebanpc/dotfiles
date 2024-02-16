@@ -20,6 +20,286 @@ declare -r g_empty_str='EMPTY'
 
 #}}}
 
+#
+#Parametros de entrada
+# 1> Path por del programa.
+#Parametros de salida
+#  > SDTOUT: Version de NodeJS instalado
+#  > Valores de retorno:
+#     0 > Se obtuvo la version (esta instalado)
+#     1 > No se obtuvo la version (no esta instalado)
+#
+function get_nodejs_version() {
+
+    #Parametros
+    local p_path=''
+    if [ ! -z "$1" ]; then
+        p_path="${1}/"
+    fi
+
+    #Obtener la version instalada
+    local l_version
+    l_version=$(${path}node --version 2> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+    echo "$l_version"
+    return 0
+}
+
+#
+#Parametros de entrada
+# 1> Path por defecto de todos los programas instalados por el instalador.
+# 2> Flag es '0' si se muestra información cuando esta instalado excepto cuando se registra en el path.
+# 3> Flag es '0' si se muestra información cuando se registra en el path.
+#Parametros de salida
+#  > Valores de retorno:
+#     0 > Esta instalado (usando este instalador) y registrado en el PATH
+#     1 > Esta instalado (usando este instalador) pero NO estaba registrado en el PATH
+#     2 > Esta instalado pero fue instalado usando el gestor de paquetes (no requiere registro) 
+#     3 > No esta instalado
+#  > SDTOUT: Informacion si el parametro 2 es '0'
+function check_nodejs() {
+
+    #Parametros
+    local p_path_programs="$1"
+
+    local p_show_installed_info=1
+    if [ "$2" = "0" ]; then
+        p_show_installed_info=0
+    fi
+
+    local p_show_register_info=1
+    if [ "$3" = "0" ]; then
+        p_show_register_info=0
+    fi
+
+    #Obtener la version instalada
+    local l_version
+    local l_status
+
+    #1. Si no esta instalado o fue instalado por gestor de paquetes (no se requiere adicionar al PATH)
+    if [ ! -f "${p_path_programs}/nodejs/bin/node" ]; then
+
+        l_version=$(node --version 2> /dev/null)
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+            l_version=''
+        fi
+
+        if [ -z "$l_version" ]; then
+            return 3
+        fi
+
+        if [ $p_show_installed_info -eq 0 ]; then
+            l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+            printf 'NodeJS > NodeJS "%b%s%b" esta instalado.\n' "$g_color_gray1" "$l_version" "$g_color_reset"
+        fi
+        return 2
+
+    fi
+
+    #2. Si fue instalado por este instalador
+    l_version=$(${p_path_programs}/nodejs/bin/node --version 2> /dev/null)
+    l_status=$?
+    if [ $l_status -ne 0 ]; then
+        l_version=''
+    fi
+
+    #Si fue instalado incorrectamente
+    if [ -z "$l_version" ]; then
+        return 3
+    fi
+
+    #Si fue instalado correctamente, validar si esta registrado en el PATH
+    echo "$PATH" | grep "${p_path_programs}/nodejs/bin" &> /dev/null
+    l_status=$?
+
+    #Si no esta instalado
+    if [ $l_status -ne 0 ]; then
+
+        if [ $p_show_register_info -eq 0 ]; then
+            l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+            printf 'NodeJS > %bNodeJS "%b%s%b" esta instalado pero no esta en el $PATH del usuario%b.\n' \
+                   "$g_color_red1" "$g_color_gray1" "$l_version" "$g_color_red1" "$g_color_reset"
+            printf '         Se recomienda que adicione al PATH de su sesion actual de forma permanente, usando: %bPATH=%s/nodejs/bin:$PATH%b\n' \
+                   "$g_color_gray1" "${p_path_programs}" "$g_color_reset"
+        fi
+
+        export PATH=${p_path_programs}/nodejs/bin:$PATH
+        return 1
+
+    fi
+
+    #Si esta instalado
+    if [ $p_show_installed_info -eq 0 ]; then
+        l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+        printf 'NodeJS > NodeJS "%b%s%b" esta instalado.\n' "$g_color_gray1" "$l_version" "$g_color_reset"
+    fi
+    return 0
+
+}
+
+#
+#Parametros de salida
+#  > SDTOUT: Version de NodeJS instalado
+#  > Valores de retorno:
+#     0 > Se obtuvo la version (esta instalado)
+#     1 > No se obtuvo la version (no esta instalado)
+#
+function get_vim_version() {
+
+    #Obtener la version instalada
+    local l_version
+    l_version=$(vim --version 2> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+    echo "$l_version"
+    return 0
+}
+
+
+#
+#Parametros de entrada
+# 1> Path por del programa.
+#Parametros de salida
+#  > SDTOUT: Version de NodeJS instalado
+#  > Valores de retorno:
+#     0 > Se obtuvo la version (esta instalado)
+#     1 > No se obtuvo la version (no esta instalado)
+#
+function get_neovim_version() {
+
+    #Parametros
+    local p_path=''
+    if [ ! -z "$1" ]; then
+        p_path="${1}/"
+    fi
+
+    #Obtener la version instalada
+    local l_version
+    l_version=$(${path}nvim --version 2> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+    echo "$l_version"
+    return 0
+}
+
+
+#
+#Parametros de entrada
+# 1> Path por defecto de todos los programas instalados por el instalador.
+# 2> Flag es '0' si se muestra información cuando esta instalado excepto cuando se registra en el path.
+# 3> Flag es '0' si se muestra información cuando se registra en el path.
+#Parametros de salida
+#  > Valores de retorno:
+#     0 > Esta instalado (usando este instalador) y registrado en el PATH
+#     1 > Esta instalado (usando este instalador) pero NO estaba registrado en el PATH
+#     2 > Esta instalado pero fue instalado usando el gestor de paquetes (no requiere registro) 
+#     3 > No esta instalado
+#  > SDTOUT: Informacion si el parametro 2 es '0'
+function check_neovim() {
+
+    #Parametros
+    local p_path_programs="$1"
+
+    local p_show_installed_info=1
+    if [ "$2" = "0" ]; then
+        p_show_installed_info=0
+    fi
+
+    local p_show_register_info=1
+    if [ "$3" = "0" ]; then
+        p_show_register_info=0
+    fi
+
+
+
+    #Obtener la version instalada
+    local l_version
+    local l_status
+
+    #1. Si no esta instalado o fue instalado por gestor de paquetes (no se requiere adicionar al PATH)
+    if [ ! -f "${p_path_programs}/neovim/bin/nvim" ]; then
+
+        l_version=$(nvim --version 2> /dev/null)
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+            l_version=''
+        fi
+
+        if [ -z "$l_version" ]; then
+            return 3
+        fi
+
+        if [ $p_show_installed_info -eq 0 ]; then
+            l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+            printf 'NeoVIM > NeoVIM "%b%s%b" esta instalado.\n' "$g_color_gray1" "$l_version" "$g_color_reset"
+        fi
+        return 2
+
+    fi
+
+    #Actualmente en arm64 y alpine, solo se instala usaando el gestor de paquetes (el repositorios del SO)
+    if [ "$g_os_architecture_type" = "aarch64" ] || [ $g_os_subtype_id -eq 1 ]; then
+
+        #Si no se obtuvo la version antes, no esta instalado
+        return 3
+
+    fi
+
+    #2. Si fue instalado por este instalador
+    l_version=$(${p_path_programs}/neovim/bin/nvim --version 2> /dev/null)
+    l_status=$?
+    if [ $l_status -ne 0 ]; then
+        l_version=''
+    fi
+
+    #Si fue instalado incorrectamente
+    if [ -z "$l_version" ]; then
+        return 3
+    fi
+
+    #Si fue instalado correctamente, validar si esta registrado en el PATH
+    echo "$PATH" | grep "${p_path_programs}/neovim/bin" &> /dev/null
+    l_status=$?
+
+    #Si no esta instalado
+    if [ $l_status -ne 0 ]; then
+
+        if [ $p_show_register_info -eq 0 ]; then
+            l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+            printf 'NeoVIM > %bNeoVIM "%b%s%b" esta instalado pero no esta en el $PATH del usuario%b.\n' \
+                   "$g_color_red1" "$g_color_gray1" "$l_version" "$g_color_red1" "$g_color_reset"
+            printf '         Se recomienda que adicione al PATH de su sesion actual de forma permanente, usando: %bPATH=%s/neovim/bin:$PATH%b\n' \
+                   "$g_color_gray1" "${p_path_programs}" "$g_color_reset"
+        fi
+
+        export PATH=${p_path_programs}/neovim/bin:$PATH
+        return 1
+
+    fi
+
+    #Si esta instalado
+    if [ $p_show_installed_info -eq 0 ]; then
+        l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+        printf 'NeoVIM > NeoVIM "%b%s%b" esta instalado.\n' "$g_color_gray1" "$l_version" "$g_color_reset"
+    fi
+    return 0
+
+}
+
 
 #Parametros de entrada - Agumentos y opciones:
 #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
@@ -58,18 +338,9 @@ function fulfill_preconditions() {
     fi
 
     #1. Validar si ejecuta dentro de un repostorio git
-    if [ ! -d ${p_repo_path}/.files/.git ]; then
+    if [ ! -d "${p_repo_path}/.files" ]; then
 
-        echo "No existe los archivos necesarios, debera seguir los siguientes pasos:"
-        echo "   1> Descargar los archivos del repositorio:"
-        echo "      git clone https://github.com/lestebanpc/dotfiles.git ~/.files"
-        echo "   2> Instalar comandos basicos:"
-        echo "      chmod u+x ~/.files/setup/01_setup_commands.bash"
-        echo "      ~/.files/setup/01_setup_commands.bash"
-        echo "   3> Configurar el profile del usuario:"
-        echo "      chmod u+x ~/.files/setup/02_setup_profile.bash"
-        echo "      ~/.files/setup/02_setup_profile.bash"
-
+        printf 'No existe los archivos necesarios. Descarge el repostorio con los archivos: "%bgit clone https://github.com/lestebanpc/dotfiles.git ~/.files%b"\n' "$g_color_gray1" "$g_color_reset"
         return 1
     fi
 
@@ -473,6 +744,100 @@ function compressed_program_name() {
 
     echo "$l_filename_without_ext"
     return 0
+}
+
+
+#Revisa los plugins de VIM/NeoVIM existe en modo Editor/IDE
+#Parametro de entrada:
+#  0 > Flag '0' si es NeoVIM
+#Parametros de salida (valores de retorno):
+#  0 > Si es esta configurado en modo Editor
+#  1 > Si es esta configurado en modo IDE
+#  2 > Si NO esta configurado
+function check_vim_plugins() {
+
+    #1. Argumentos
+    local p_is_neovim=1
+    if [ "$1" = "0" ]; then
+        p_is_neovim=0
+    fi
+
+
+    #2. ¿Es IDE? (SOLO se analiza uno de los plugins descargados)
+    local l_plugin_path="${HOME}/.vim/pack/ide/opt/coc.nvim"
+    if [ $p_is_neovim -eq 0  ]; then
+        l_plugin_path="${HOME}/.local/share/nvim/site/pack/ide/opt/nvim-cmp"
+    fi
+
+    if [ -d "$l_plugin_path" ]; then
+        return 1
+    fi
+
+    #3. ¿Es Editor? (SOLO se analiza uno de los plugins descargados)
+    l_plugin_path="${HOME}/.vim/pack/ui/opt/fzf"
+    if [ $p_is_neovim -eq 0  ]; then
+        l_plugin_path="${HOME}/.local/share/nvim/site/pack/ui/opt/fzf"
+    fi
+
+    if [ -d "$l_plugin_path" ]; then
+        return 0
+    fi
+
+    #4. No es IDE ni Editor
+    return 2
+
+}
+
+
+#Revisa el profile de VIM/NeoVIM y segun ello determina si VIM/NeoVIM esta configurado en modo Editor/IDE
+#Parametro de entrada:
+#  0 > Flag '0' si es NeoVIM
+#Parametros de salida (valores de retorno):
+#  0 > Si es esta configurado en modo Editor
+#  1 > Si es esta configurado en modo IDE
+#  2 > Si NO esta configurado
+function check_vim_profile() {
+
+    #1. Argumentos
+    local p_is_neovim=1
+    if [ "$1" = "0" ]; then
+        p_is_neovim=0
+    fi
+
+
+    #2. Ruta base donde se instala el plugins/paquete
+    local l_real_path
+    local l_profile_path="${HOME}/.vimrc"
+    if [ $p_is_neovim -eq 0  ]; then
+        l_profile_path="${HOME}/.config/nvim/init.vim"
+    fi
+
+    #'vimrc_ide_linux_xxxx.vim'
+    #'vimrc_basic_linux.vim'
+    #'init_ide_linux_xxxx.vim'
+    #'init_basic_linux.vim'
+    l_real_path=$(readlink "$l_profile_path" 2> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ]; then
+        return 2
+    fi
+
+    l_real_path="${l_real_path##*/}"
+
+    #Si es NeoVIM
+    if [ $p_is_neovim -eq 0  ]; then
+        if [[ "$l_real_path" == init_ide_* ]]; then
+            return 1 
+        fi
+        return 0
+    fi
+
+    #Si es VIM
+    if [[ "$l_real_path" =~ vimrc_ide_* ]]; then
+        return 1 
+    fi
+    return 0
+
 }
 
 
