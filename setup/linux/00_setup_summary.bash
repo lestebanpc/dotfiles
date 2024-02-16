@@ -482,7 +482,7 @@ function g_install_options() {
         # 6> Indexar la documentación (de plugins anteriormente descargados)
         l_option=64
         if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_vim[1]=0
+            la_options_config_vim[0]=0
             la_options_config_vim[6]=0
         fi
 
