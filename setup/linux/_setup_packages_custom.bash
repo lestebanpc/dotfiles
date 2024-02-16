@@ -268,25 +268,27 @@ install_dotnet_lib() {
         #libicu72          (Debian 12.x)
         #
         if [ $g_os_subtype_id -eq 31 ]; then
-            if [[ "$g_os_subtype_version" =~ ^16\..+$ ]]; then
+            if [[ "$g_os_subtype_version_pretty" =~ ^16\..+$ ]]; then
                 la_packages_needed+=("libicu55")
-            elif [[ "$g_os_subtype_version" =~ ^18\..+$ ]]; then
+            elif [[ "$g_os_subtype_version_pretty" =~ ^18\..+$ ]]; then
                 la_packages_needed+=("libicu60")
-            elif [[ "$g_os_subtype_version" =~ ^20\..+$ ]]; then
+            elif [[ "$g_os_subtype_version_pretty" =~ ^20\..+$ ]]; then
                 la_packages_needed+=("libicu66")
-            elif [ "$g_os_subtype_version" = "22.04" ]; then
+            elif [ "$g_os_subtype_version_pretty" = "22.04" ]; then
                 la_packages_needed+=("libicu70")
-            elif [ "$g_os_subtype_version" = "22.10" ]; then
+            elif [ "$g_os_subtype_version_pretty" = "22.10" ]; then
                 la_packages_needed+=("libicu71")
-            elif [[ "$g_os_subtype_version" =~ ^23\..+$ ]]; then
+            #elif [[ "$g_os_subtype_version_pretty" =~ ^23\..+$ ]]; then
+            else
                 la_packages_needed+=("libicu72")
             fi
         else
-            if [[ "$g_os_subtype_version" =~ ^10\..+$ ]]; then
+            if [[ "$g_os_subtype_version_pretty" =~ ^10\..+$ ]]; then
                 la_packages_needed+=("libicu63")
-            elif [[ "$g_os_subtype_version" =~ ^11\..+$ ]]; then
+            elif [[ "$g_os_subtype_version_pretty" =~ ^11\..+$ ]]; then
                 la_packages_needed+=("libicu67")
-            elif [[ "$g_os_subtype_version" =~ ^12\..+$ ]]; then
+            #elif [[ "$g_os_subtype_version_pretty" =~ ^12\..+$ ]]; then
+            else
                 la_packages_needed+=("libicu72")
             fi
         fi
@@ -296,23 +298,25 @@ install_dotnet_lib() {
         #libssl3           (Debian 12.x/Ubuntu 22.x, 23.x)
         #
         if [ $g_os_subtype_id -eq 31 ]; then
-            if [[ "$g_os_subtype_version" =~ ^16\..+$ ]]; then
+            if [[ "$g_os_subtype_version_pretty" =~ ^16\..+$ ]]; then
                 la_packages_needed+=("libssl1.0.0")
-            elif [[ "$g_os_subtype_version" =~ ^18\..+$ ]]; then
+            elif [[ "$g_os_subtype_version_pretty" =~ ^18\..+$ ]]; then
                 la_packages_needed+=("libssl1.1")
-            elif [[ "$g_os_subtype_version" =~ ^20\..+$ ]]; then
+            elif [[ "$g_os_subtype_version_pretty" =~ ^20\..+$ ]]; then
                 la_packages_needed+=("libssl1.1")
-            elif [[ "$g_os_subtype_version" =~ ^22\..+$ ]]; then
+            elif [[ "$g_os_subtype_version_pretty" =~ ^22\..+$ ]]; then
                 la_packages_needed+=("libssl3")
-            elif [[ "$g_os_subtype_version" =~ ^23\..+$ ]]; then
+            #elif [[ "$g_os_subtype_version_pretty" =~ ^23\..+$ ]]; then
+            else
                 la_packages_needed+=("libssl3")
             fi
         else
-            if [[ "$g_os_subtype_version" =~ ^10\..+$ ]]; then
+            if [[ "$g_os_subtype_version_pretty" =~ ^10\..+$ ]]; then
                 la_packages_needed+=("libssl1.0.0")
-            elif [[ "$g_os_subtype_version" =~ ^11\..+$ ]]; then
+            elif [[ "$g_os_subtype_version_pretty" =~ ^11\..+$ ]]; then
                 la_packages_needed+=("libssl1.1")
             else
+            #elif [[ "$g_os_subtype_version_pretty" =~ ^12\..+$ ]]; then
                 la_packages_needed+=("libssl3")
             fi
         fi
@@ -323,20 +327,21 @@ install_dotnet_lib() {
         #libunwind8        (Ubuntu 22.x, 23.x)
         #
         if [ $g_os_subtype_id -eq 31 ]; then
-            if [[ "$g_os_subtype_version" =~ ^22\..+$ ]]; then
+            if [[ "$g_os_subtype_version_pretty" =~ ^22\..+$ ]]; then
                 la_packages_needed+=("libgcc1" "libgcc-s1" "liblttng-ust1" "libunwind8")
-            elif [[ "$g_os_subtype_version" =~ ^23\..+$ ]]; then
+            elif [[ "$g_os_subtype_version_pretty" =~ ^23\..+$ ]]; then
                 la_packages_needed+=("libgcc-s1" "liblttng-ust1" "libunwind8")
             else
                 la_packages_needed+=("libgcc1" "libgcc-s1")
             fi
         else
-            if [[ "$g_os_subtype_version" =~ ^10\..+$ ]]; then
+            if [[ "$g_os_subtype_version_pretty" =~ ^10\..+$ ]]; then
                 la_packages_needed+=("libgcc1")
-            elif [[ "$g_os_subtype_version" =~ ^11\..+$ ]]; then
+            elif [[ "$g_os_subtype_version_pretty" =~ ^11\..+$ ]]; then
                 la_packages_needed+=("libgcc-s1")
             else
-                la_packages_needed+=("libgcc1")
+            #elif [[ "$g_os_subtype_version_pretty" =~ ^12\..+$ ]]; then
+                la_packages_needed+=("libgcc1-s1")
             fi
         fi
 
