@@ -223,7 +223,7 @@ function g_install_options() {
 
     #3. Instalar paquetes basicos del SO: Curl, OpenSSL y Tmux
     local l_status=0
-    local l_option=32
+    local l_option=1024
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ] && [ ! -z "$p_list_pckg_ids" ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -268,7 +268,7 @@ function g_install_options() {
     fi
 
     #4. Instalar comandos basicos (usar un grupo de comandos especifico)
-    l_option=64
+    l_option=2048
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -688,7 +688,7 @@ function g_install_options() {
 
 
     if [ $p_flag_clean_os_cache -eq 0 ] && [ $l_exist_packages_installed -eq 0 ]; then
-        printf 'Clean packages cache...\n'
+        printf '\n%bClean packages cache%b...\n' "$g_color_gray1" "$g_color_reset"
         clean_os_cache $g_os_subtype_id $l_is_noninteractive
     fi
 
@@ -736,9 +736,9 @@ function _show_menu_install_core() {
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
 
     printf " ( ) Programas requeridos a instalar %b(usualmente instalado como root)%b:\n" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes  basicos%b: %b%s%b\n" "$g_color_green1" "1024" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" \
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes basicos%b: %b%s%b\n" "$g_color_green1" "1024" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" \
            "$l_pckg_ids" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bcomandos  basicos%b: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd y xsv.%b\n" "$g_color_green1" "2048" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bcomandos basicos%b: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd y xsv.%b\n" "$g_color_green1" "2048" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Instalar %bNodeJS%b y %bNpm%b\n" "$g_color_green1" "4096" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes globales%b de %bNodeJS%b: %b'Prettier'%b\n" "$g_color_green1" "8192" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \

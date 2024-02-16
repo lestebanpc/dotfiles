@@ -413,7 +413,8 @@ function _download_vim_packages() {
     #3. Crear las carpetas de basicas
     printf '\n'
     print_line '-' $g_max_length_line  "$g_color_gray1"
-    printf "%s > Descargando los %bplugins%b de modo %b%s%b\n" "$l_tag" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_mode" "$g_color_reset"
+    printf "%s > Descargando los %bplugins%b de modo %b%s%b %b(%s)%b\n" "$l_tag" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" \
+           "$l_mode" "$g_color_reset" "$g_color_gray1" "$l_base_plugins" "$g_color_reset"
     print_line '-' $g_max_length_line  "$g_color_gray1"
 
 
