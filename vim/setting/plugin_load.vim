@@ -218,7 +218,7 @@ endif
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 "Solo en Linux (incluyendo WSL, solo en Linux y MacOS)
-if g:os_type != 0
+if (g:os_type != 0) && g:use_tmux
     "Package UI> CORE> Crear paneles TMUX desde VIM (en Windows no existe TMUX)
     packadd vimux
 endif
@@ -230,7 +230,7 @@ if g:use_typing_html_emmet
 endif
 
 "Solo en Linux (incluyendo WSL, solo en Linux y MacOS)
-if g:os_type != 0
+if (g:os_type != 0) && g:use_tmux
     "Paquete UI> CORE> Permite navegar entre split VIM y paneles TMUX como el mismo comando
     packadd vim-tmux-navigator
 endif
