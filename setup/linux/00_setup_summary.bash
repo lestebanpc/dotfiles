@@ -646,7 +646,7 @@ function g_install_options() {
             #Mostrar el titulo de instalacion
             printf '\n'
             print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "${p_list_repo_ids/,/, }" "$g_color_reset"
+            printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "${p_list_repo_ids//,/, }" "$g_color_reset"
             print_line '─' $g_max_length_line "$g_color_blue1"
 
             #Parametros:
@@ -853,7 +853,7 @@ g_usage() {
     printf '  > %bMENU-OPTIONS%b Las opciones de menu a instalar. Si no desea especificar coloque 0.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bLIST-REPO-IDS %bID de los repositorios de comandos a configurar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bLIST-PCKG-IDS %b.ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 32. Si desea usar el los los paquetes por defecto envie "EMPTY".%b\n' \
+    printf '  > %bLIST-PCKG-IDS %b.ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 1024. Si desea usar el los los paquetes por defecto envie "EMPTY".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bLos paquete basicos por defecto que son: Curl, UnZip, OpenSSL y Tmux.%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
