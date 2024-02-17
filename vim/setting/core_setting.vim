@@ -352,7 +352,7 @@ if g:is_neovim
     set completeopt=menu,menuone,noinsert,preview
     "set completeopt=menu,menuone,noselect
 else
-    #Si se tiene soporte a Popup
+    "Si se tiene soporte a Popup
     if v:version > 802
         "Completado en modo insercion: 
         set completeopt=menu,menuone,noinsert,popuphidden,preview
