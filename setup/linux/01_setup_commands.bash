@@ -2568,10 +2568,12 @@ function g_install_repository() {
     #Si ocurrio un error al obtener la versión
     if [ $l_status -ne 0 ]; then
 
-        if [ $l_status -ne 1 ]; then
-            echo "ERROR: Primero debe tener a 'jq' en el PATH del usuario para obtener la ultima version del repositorio \"$p_repo_id\""
+        if [ $l_status -eq 1 ]; then
+            printf 'ERROR: Para que pueda obtener la ultima version del repositorio "%b%s%b", %bdeberá instalar el comando "jq"%b.\n' "$g_color_gray1" \
+                   "$p_repo_id" "$g_color_reset" "$g_color_red1" "$g_color_reset"
         else
-            echo "ERROR: Ocurrio un error al obtener la ultima version del repositorio \"$p_repo_id\""
+            printf 'ERROR: %bOcurrio un error (%s) al obtener la ultima version del repositorio%b "%b%s%b".\n' "$g_color_red1" "$l_status" "$g_color_reset" \
+                   "$g_color_gray1" "$p_repo_id" "$g_color_reset"
         fi
         return 2
     fi
