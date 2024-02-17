@@ -2569,7 +2569,7 @@ function g_install_repository() {
     if [ $l_status -ne 0 ]; then
 
         if [ $l_status -eq 1 ]; then
-            printf 'ERROR: Para que pueda obtener la ultima version del repositorio "%b%s%b", %bdeberá instalar el comando "jq"%b.\n' "$g_color_gray1" \
+            printf 'ERROR: Para que pueda obtener la ultima version del repositorio "%b%s%b", %bdeberá instalar antes el comando "jq"%b.\n' "$g_color_gray1" \
                    "$p_repo_id" "$g_color_reset" "$g_color_red1" "$g_color_reset"
         else
             printf 'ERROR: %bOcurrio un error (%s) al obtener la ultima version del repositorio%b "%b%s%b".\n' "$g_color_red1" "$l_status" "$g_color_reset" \
@@ -3119,8 +3119,8 @@ function g_install_repositories_byid() {
 
             #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
             l_exits_error=0
-            printf '%bNo se pudo iniciar el procesamiento del repositorio "%s"%b debido su ultima versión obtenida es invalida.\n' \
-                   "$g_color_red1" "$l_repo_id" "$g_color_reset"
+            printf 'No se pudo iniciar el procesamiento del repositorio "%b%s%b" debido %bsu ultima versión obtenida es invalida%b.\n' \
+                   "$g_color_gray1" "$l_repo_id" "$g_color_reset" "$g_color_red1" "$g_color_reset"
             printf 'Corrija el error para continuar con configuración de los demas repositorios de la opción del menú.\n'
 
             break
