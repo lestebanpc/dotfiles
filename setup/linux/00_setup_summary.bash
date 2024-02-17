@@ -263,6 +263,8 @@ function g_install_options() {
                 return $l_status
             fi
 
+        else
+            printf '%bSe requiere acceso a root%b para instalar paquete.\n' "$g_color_red1" "$g_color_reset"
         fi
 
     fi
@@ -551,45 +553,40 @@ function g_install_options() {
     #5.3. Instalar/Configurar el profile
     if [ $l_prg_options -ne 0 ] && [ $l_prg_options -ne 4 ] && [ $l_prg_options -ne 5 ]; then
 
-       #Solo soportado para los que tenga acceso a root
-       if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+       #Mostrar el titulo de instalacion
+       printf '\n'
+       print_line '─' $g_max_length_line  "$g_color_blue1"
+       printf "> Instalando/configurando para VIM/NeoVIM como Editor/IDE\n"
+       print_line '─' $g_max_length_line "$g_color_blue1"
+       printf '%b\n' "$l_info"
 
-           #Mostrar el titulo de instalacion
-           printf '\n'
-           print_line '─' $g_max_length_line  "$g_color_blue1"
-           printf "> Instalando/configurando para VIM/NeoVIM como Editor/IDE\n"
-           print_line '─' $g_max_length_line "$g_color_blue1"
-           printf '%b\n' "$l_info"
+       #Parametros:
+       # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
+       # 2> Paquetes a instalar: 40 (Python y sus paquetes) + 80 (NodeJS y sus paquetes) + 128 (VIM) + 1024 (NeoVIM)
+       # 3> El estado de la credencial almacenada para el sudo
+       # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+       if [ $l_is_noninteractive -eq 1 ]; then
+           ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
+           l_status=$?
+       else
+           ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
+           l_status=$?
+       fi
 
-           #Parametros:
-           # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
-           # 2> Paquetes a instalar: 40 (Python y sus paquetes) + 80 (NodeJS y sus paquetes) + 128 (VIM) + 1024 (NeoVIM)
-           # 3> El estado de la credencial almacenada para el sudo
-           # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
-           if [ $l_is_noninteractive -eq 1 ]; then
-               ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
-               l_status=$?
-           else
-               ${g_repo_path}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
-               l_status=$?
-           fi
+       #Considerar que siempre se instalan paquetes de SO, es decir se debe limpiar el cache de paquete descargados.
+       if [ $l_exist_packages_installed -ne 0 ]; then
+           l_exist_packages_installed=0
+       fi
 
-           #Considerar que siempre se instalan paquetes de SO, es decir se debe limpiar el cache de paquete descargados.
-           if [ $l_exist_packages_installed -ne 0 ]; then
-               l_exist_packages_installed=0
-           fi
-
-           #Si no se acepto almacenar credenciales
-           if [ $l_status -eq 120 ]; then
-               return 120
-           #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-           elif [ $l_status -eq 119 ]; then
-               g_status_crendential_storage=0
-            #Si no se paso las precondiciones iniciales
-            elif [ $l_status -eq 111 ]; then
-                return $l_status
-           fi
-
+       #Si no se acepto almacenar credenciales
+       if [ $l_status -eq 120 ]; then
+           return 120
+       #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+       elif [ $l_status -eq 119 ]; then
+           g_status_crendential_storage=0
+        #Si no se paso las precondiciones iniciales
+        elif [ $l_status -eq 111 ]; then
+            return $l_status
        fi
 
     fi
@@ -640,47 +637,42 @@ function g_install_options() {
     #Instalar los repositorios de comandos
     if [ ! -z "$p_list_repo_ids" ]; then
 
-        #Solo soportado para los que tenga acceso a root
-        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+        #Mostrar el titulo de instalacion
+        printf '\n'
+        print_line '─' $g_max_length_line  "$g_color_blue1"
+        printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "${p_list_repo_ids//,/, }" "$g_color_reset"
+        print_line '─' $g_max_length_line "$g_color_blue1"
 
-            #Mostrar el titulo de instalacion
-            printf '\n'
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "${p_list_repo_ids//,/, }" "$g_color_reset"
-            print_line '─' $g_max_length_line "$g_color_blue1"
+        #Parametros:
+        # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
+        # 2> Repsositorio a instalar/acutalizar: 
+        # 3> El estado de la credencial almacenada para el sudo
+        # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
+        # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
+        # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+        if [ $l_is_noninteractive -eq 1 ]; then
+            
+            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" $g_status_crendential_storage 0 1 "$g_other_calling_user"
+            l_status=$?
+        else
+            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" $g_status_crendential_storage 0 1 "$g_other_calling_user" 
+            l_status=$?
+        fi
 
-            #Parametros:
-            # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
-            # 2> Repsositorio a instalar/acutalizar: 
-            # 3> El estado de la credencial almacenada para el sudo
-            # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-            # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
-            # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
-            if [ $l_is_noninteractive -eq 1 ]; then
-                
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" $g_status_crendential_storage 0 1 "$g_other_calling_user"
-                l_status=$?
-            else
-                ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" $g_status_crendential_storage 0 1 "$g_other_calling_user" 
-                l_status=$?
-            fi
+        #Obligar a limpiar el cache: ¿algunos instalacion, instala paquetes?
+        if [ $l_exist_packages_installed -ne 0 ]; then
+            l_exist_packages_installed=0
+        fi
 
-            #Obligar a limpiar el cache: ¿algunos instalacion, instala paquetes?
-            if [ $l_exist_packages_installed -ne 0 ]; then
-                l_exist_packages_installed=0
-            fi
-
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-               g_status_crendential_storage=0
-            #Si no se paso las precondiciones iniciales
-            elif [ $l_status -eq 111 ]; then
-                return $l_status
-            fi
-
+        #Si no se acepto almacenar credenciales
+        if [ $l_status -eq 120 ]; then
+            return 120
+        #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+        elif [ $l_status -eq 119 ]; then
+           g_status_crendential_storage=0
+        #Si no se paso las precondiciones iniciales
+        elif [ $l_status -eq 111 ]; then
+            return $l_status
         fi
 
     fi
