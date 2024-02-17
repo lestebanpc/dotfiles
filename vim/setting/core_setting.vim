@@ -352,12 +352,18 @@ if g:is_neovim
     set completeopt=menu,menuone,noinsert,preview
     "set completeopt=menu,menuone,noselect
 else
-    "Completado en modo insercion: 
-     set completeopt=menu,menuone,noinsert,popuphidden,preview
-    "set completeopt=menuone,noinsert,noselect,popuphidden
+    #Si se tiene soporte a Popup
+    if v:version > 802
+        "Completado en modo insercion: 
+        set completeopt=menu,menuone,noinsert,popuphidden,preview
+        "set completeopt=menuone,noinsert,noselect,popuphidden
 
-    "Para mayor legibilidad usar el mismo resaltado que es usado popup del menu 
-    set completepopup=highlight:Pmenu,border:off
+        "Para mayor legibilidad usar el mismo resaltado que es usado popup del menu 
+        set completepopup=highlight:Pmenu,border:off
+    else
+        "Completado en modo insercion: 
+        set completeopt=menu,menuone,noinsert,preview
+    endif
 endif
 
 "----------------------------- Configuraciones de CoC   ----------------------------

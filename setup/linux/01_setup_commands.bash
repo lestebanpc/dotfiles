@@ -1,11 +1,14 @@
 #!/bin/bash
 
-
+#
+#Devolverá la ruta base 'PATH_BASE' donde esta el repositorio '.files'.
+#Nota: Los script de instalación tiene una ruta similar a 'PATH_BASE/REPO_NAME/setup/linux/SCRIPT.bash', donde 'REPO_NAME' siempre es '.files'.
+#
 #Parametros de entrada:
-#  1> La ruta relativa (o absoluta) de un archivos del repositorio
+#  1> La ruta relativa (o absoluta) de un script de instalación.
 #Parametros de salida: 
 #  STDOUT> La ruta base donde esta el repositorio
-function _get_current_repo_path() {
+function _get_current_base_path() {
 
     #Obteniendo la ruta absoluta del parametro ingresado
     local l_path=''
@@ -17,7 +20,7 @@ function _get_current_repo_path() {
     fi
 
     #Obteniendo la ruta base
-    l_path=${l_path%/.files/*}
+    l_path=${l_path%/.files/setup/linux/*}
     echo "$l_path"
     return 0
 }
@@ -25,15 +28,15 @@ function _get_current_repo_path() {
 
 #Inicialización Global {{{
 
-declare -r g_repo_path=$(_get_current_repo_path "${BASH_SOURCE[0]}")
+declare -r g_base_path=$(_get_current_base_path "${BASH_SOURCE[0]}")
 
-#Si lo ejecuta un usuario diferente al actual (al que pertenece el repositorio)
+#Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
 #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
 g_other_calling_user=''
 
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ${g_repo_path}/.files/terminal/linux/functions/func_utility.bash
+. ${g_base_path}/.files/terminal/linux/functions/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -95,28 +98,33 @@ if [ -z "$g_user_is_root" ]; then
     #    > 4 : El usuario es root (no requiere sudo)
     get_user_options
 
-    #Si el usuario no tiene permisos a sudo o el SO no implementa sudo,
-    # - Se instala/configura los binarios a nivel usuario, las fuentes a nivel usuario.
-    # - No se instala ningun paquete/programa que requiere permiso 'root' para su instalación
+    #Ruta de los programas (incluyen mas de 1 comando) a instalar (se usara una ruta personalizado)
+    if [ -d '/opt/tools' ] && [ -w '/opt/tools' ]; then
+        g_path_programs='/opt/tools'
+    else
+        #Si tiene acceso a root (incluyendo el uso de sudo)
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+            g_path_programs='/opt/tools'
+        else
+            g_path_programs="${g_base_path}/tools"
+        fi
+        
+    fi
+
+    #Ruta de los comandos, help y fuentes a instalar (se usara las carpetas estandar)
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
 
-        #Ruta donde se instalaran los programas CLI (tiene una estructura de folderes y generalmente incluye mas de 1 binario).
-        g_path_programs='/opt/tools'
-
-        #Rutas de binarios, archivos de help (man) y las fuentes
+        #Si tiene acceso a root (incluyendo el uso de sudo)
         g_path_bin='/usr/local/bin'
         g_path_man='/usr/local/man/man1'
         g_path_fonts='/usr/share/fonts'
 
     else
 
-        #Ruta donde se instalaran los programas CLI (tiene una estructura de folderes y generalmente incluye mas de 1 binario).
-        g_path_programs=~/tools
-
-        #Rutas de binarios, archivos de help (man) y las fuentes
-        g_path_bin=~/.local/bin
-        g_path_man=~/.local/man/man1
-        g_path_fonts=~/.local/share/fonts
+        #Si no se tiene acceso a root (incluyendo el uso de sudo)
+        g_path_bin="${g_base_path}/.local/bin"
+        g_path_man="${g_base_path}/.local/man/man1"
+        g_path_fonts="${g_base_path}/.local/share/fonts"
 
     fi
 
@@ -124,7 +132,7 @@ fi
 
 
 #Funciones de utilidad
-. ${g_repo_path}/.files/setup/linux/_common_utility.bash
+. ${g_base_path}/.files/setup/linux/_common_utility.bash
 
 
 #Parametros (argumentos) basicos del script
@@ -168,10 +176,10 @@ g_offset_option_index_menu_uninstall=0
 g_setup_only_last_version=1
 
 #Personalización: Variables a modificar.
-. ${g_repo_path}/.files/setup/linux/_setup_commands_custom_settings.bash
+. ${g_base_path}/.files/setup/linux/_setup_commands_custom_settings.bash
 
 #Personalización: Funciones modificables para el instalador.
-. ${g_repo_path}/.files/setup/linux/_setup_commands_custom_logic.bash
+. ${g_base_path}/.files/setup/linux/_setup_commands_custom_logic.bash
 
 
 #}}}
@@ -3435,7 +3443,8 @@ g_usage() {
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"
     printf '  > %bINSTALL-ONLYLAST-VERSION %bpor defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bOTHER-USERID %bEl GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bOTHER-USERID %bEl UID/GID del usuario al que es owner del script (el repositorio git) en formato "UID:GID". Solo si se ejecuta como root y este es diferente al onwer del script.%b\n\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -3486,7 +3495,7 @@ if [ $gp_uninstall -eq 0 ]; then
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 0 1 1 "$g_repo_path"
+    fulfill_preconditions $g_os_subtype_id 0 1 1 "$g_base_path"
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -3516,7 +3525,7 @@ else
         #  3 > Flag '0' si se requere curl
         #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
         #  5 > Path donde se encuentra el directorio donde esta el '.git'
-        fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_repo_path"
+        fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_base_path"
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -3557,9 +3566,9 @@ else
             g_setup_only_last_version=0
         fi
 
-        #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
+        #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
         g_other_calling_user=''
-        if [ "$g_repo_path" != "$HOME" ] && [ ! -z "$5" ]; then
+        if [ "$g_base_path" != "$HOME" ] && [ ! -z "$5" ]; then
             if [[ "$5" =~ ^[0-9]+:[0-9]+$ ]]; then
                 g_other_calling_user="$5"
             else
@@ -3574,7 +3583,7 @@ else
         #  3 > Flag '0' si se requere curl
         #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
         #  5 > Path donde se encuentra el directorio donde esta el '.git'
-        fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_repo_path"
+        fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_base_path" "$g_other_calling_user"
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -3629,9 +3638,9 @@ else
             _g_show_title_on_onerepo=0
         fi
 
-        #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
+        #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
         g_other_calling_user=''
-        if [ "$g_repo_path" != "$HOME" ] && [ ! -z "$6" ]; then
+        if [ "$g_base_path" != "$HOME" ] && [ ! -z "$6" ]; then
             if [[ "$6" =~ ^[0-9]+:[0-9]+$ ]]; then
                 g_other_calling_user="$6"
             else
@@ -3646,7 +3655,7 @@ else
         #  3 > Flag '0' si se requere curl
         #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
         #  5 > Path donde se encuentra el directorio donde esta el '.git'
-        fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_repo_path"
+        fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_base_path" "$g_other_calling_user"
         _g_status=$?
 
         #Iniciar el procesamiento

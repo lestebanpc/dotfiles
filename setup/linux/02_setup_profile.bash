@@ -1,10 +1,14 @@
 #!/bin/bash
 
+#
+#Devolverá la ruta base 'PATH_BASE' donde esta el repositorio '.files'.
+#Nota: Los script de instalación tiene una ruta similar a 'PATH_BASE/REPO_NAME/setup/linux/SCRIPT.bash', donde 'REPO_NAME' siempre es '.files'.
+#
 #Parametros de entrada:
 #  1> La ruta relativa (o absoluta) de un archivos del repositorio
 #Parametros de salida: 
 #  STDOUT> La ruta base donde esta el repositorio
-function _get_current_repo_path() {
+function _get_current_base_path() {
 
     #Obteniendo la ruta absoluta del parametro ingresado
     local l_path=''
@@ -16,21 +20,21 @@ function _get_current_repo_path() {
     fi
 
     #Obteniendo la ruta base
-    l_path=${l_path%/.files/*}
+    l_path=${l_path%/.files/setup/linux/*}
     echo "$l_path"
     return 0
 }
 
 #Inicialización Global {{{
 
-declare -r g_repo_path=$(_get_current_repo_path "${BASH_SOURCE[0]}")
+declare -r g_base_path=$(_get_current_base_path "${BASH_SOURCE[0]}")
 
-#Si lo ejecuta un usuario diferente al actual (al que pertenece el repositorio)
+#Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
 #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
 g_other_calling_user=''
 
 #Funciones generales: determinar el tipo del SO, ...
-. ${g_repo_path}/.files/terminal/linux/functions/func_utility.bash
+. ${g_base_path}/.files/terminal/linux/functions/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -53,36 +57,24 @@ if [ -z "$g_user_is_root" ]; then
     #Determinar si es root y el soporte de sudo
     get_user_options
 
-    #Si el usuario no tiene permisos a sudo o el SO no implementa sudo,
-    # - Se instala/Configura los binarios a nivel usuario, las fuentes a nivel usuario.
-    # - No se instala ningun paquete/programa que requiere permiso 'root' para su instalación
-    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-
-        #Ruta donde se instalaran los programas CLI (tiene una estructura de folderes y generalmente incluye mas de 1 binario).
+    #Ruta de los programas (incluyen mas de 1 comando) a instalar (se usara una ruta personalizado)
+    if [ -d '/opt/tools' ] && [ -w '/opt/tools' ]; then
         g_path_programs='/opt/tools'
-
-        #Rutas de binarios, archivos de help (man) y las fuentes
-        #g_path_bin='/usr/local/bin'
-        #g_path_man='/usr/local/man/man1'
-        #g_path_fonts='/usr/share/fonts'
-
     else
-
-        #Ruta donde se instalaran los programas CLI (tiene una estructura de folderes y generalmente incluye mas de 1 binario).
-        g_path_programs=~/tools
-
-        #Rutas de binarios, archivos de help (man) y las fuentes
-        #g_path_bin=~/.local/bin
-        #g_path_man=~/.local/man/man1
-        #g_path_fonts=~/.local/share/fonts
-
+        #Si tiene acceso a root (incluyendo el uso de sudo)
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+            g_path_programs='/opt/tools'
+        else
+            g_path_programs=~/tools
+        fi
+        
     fi
 
 fi
 
 
 #Funciones de utilidad
-. ${g_repo_path}/.files/setup/linux/_common_utility.bash
+. ${g_base_path}/.files/setup/linux/_common_utility.bash
 
 
 #Tipo de ejecucion del script principal
@@ -1094,10 +1086,10 @@ _install_nodejs() {
     # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
     # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "nodejs" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+        ${g_base_path}/.files/setup/linux/01_setup_commands.bash 2 "nodejs" $g_status_crendential_storage 1 1 "$g_other_calling_user"
         l_status=$?
     else
-        ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "nodejs" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+        ${g_base_path}/.files/setup/linux/01_setup_commands.bash 4 "nodejs" $g_status_crendential_storage 1 1 "$g_other_calling_user"
         l_status=$?
     fi
 
@@ -1321,10 +1313,10 @@ _install_python() {
     # 2> Repositorios a instalar/acutalizar: 16 (RTE Python y Pip. Tiene Offset=1)
     # 3> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 2 "$l_packages_to_install" $g_status_crendential_storage
+        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 2 "$l_packages_to_install" $g_status_crendential_storage
         l_status=$?
     else
-        ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 4 "$l_packages_to_install" $g_status_crendential_storage
+        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 4 "$l_packages_to_install" $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -1503,10 +1495,10 @@ function _install_vim() {
     # 2> Packete a instalar/acutalizar.
     # 3> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 2 'vim' $g_status_crendential_storage
+        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 2 'vim' $g_status_crendential_storage
         l_status=$?
     else
-        ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 4 'vim' $g_status_crendential_storage
+        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 4 'vim' $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -1568,10 +1560,10 @@ function _install_nvim() {
         # 2> Paquete a instalar/acutalizar.
         # 3> El estado de la credencial almacenada para el sudo
         if [ $l_is_noninteractive -eq 1 ]; then
-            ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 2 "nvim" $g_status_crendential_storage
+            ${g_base_path}/.files/setup/linux/04_setup_packages.bash 2 "nvim" $g_status_crendential_storage
             l_status=$?
         else
-            ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 4 "nvim" $g_status_crendential_storage
+            ${g_base_path}/.files/setup/linux/04_setup_packages.bash 4 "nvim" $g_status_crendential_storage
             l_status=$?
         fi
 
@@ -1595,10 +1587,10 @@ function _install_nvim() {
         # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
         if [ $l_is_noninteractive -eq 1 ]; then
             
-            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+            ${g_base_path}/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage 1 1 "$g_other_calling_user"
             l_status=$?
         else
-            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 4 "neovim" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+            ${g_base_path}/.files/setup/linux/01_setup_commands.bash 4 "neovim" $g_status_crendential_storage 1 1 "$g_other_calling_user"
             l_status=$?
         fi
 
@@ -1748,10 +1740,10 @@ function _sutup_support_x11_clipboard() {
     # 2> Repositorios a instalar/acutalizar: 
     # 3> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 2 "$l_pkg_options" $g_status_crendential_storage
+        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 2 "$l_pkg_options" $g_status_crendential_storage
         l_status=$?
     else
-        ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 4 "$l_pkg_options" $g_status_crendential_storage
+        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 4 "$l_pkg_options" $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -3420,7 +3412,8 @@ g_usage() {
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"
-    printf '  > %bOTHER-USERID %bEl GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bOTHER-USERID %bEl UID/GID del usuario al que es owner del script (el repositorio git) en formato "UID:GID". Solo si se ejecuta como root y este es diferente al onwer del script.%b\n\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -3456,7 +3449,7 @@ if [ $gp_type_calling -eq 0 ]; then
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_repo_path"
+    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_base_path"
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -3491,9 +3484,9 @@ else
 
     fi
 
-    #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
+    #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
     g_other_calling_user=''
-    if [ "$g_repo_path" != "$HOME" ] && [ ! -z "$4" ]; then
+    if [ "$g_base_path" != "$HOME" ] && [ ! -z "$4" ]; then
         if [[ "$4" =~ ^[0-9]+:[0-9]+$ ]]; then
             g_other_calling_user="$4"
         else
@@ -3508,7 +3501,7 @@ else
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_repo_path"
+    fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_base_path" "$g_other_calling_user"
     _g_status=$?
 
     #Iniciar el procesamiento

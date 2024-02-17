@@ -306,7 +306,7 @@ function check_neovim() {
 #  2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
 #  3 > Flag '0' si se requere curl
 #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
-#  5 > Path donde se encuentra el directorio donde esta el '.git'
+#  5 > Path base donde se encuentra el directorio de script de instalación
 # Retorno:
 #   0 - Se tiene los programas necesarios para iniciar la configuración
 #   1 - No se tiene los programas necesarios para iniciar la configuración
@@ -330,17 +330,24 @@ function fulfill_preconditions() {
         p_require_root=0
     fi
 
-    local p_repo_path
+    local p_base_path
     if [ -z "$5" ]; then
-        p_repo_path="$HOME"
+        p_base_path="$HOME"
     else
-        p_repo_path="$5"
+        p_base_path="$5"
+    fi
+
+    #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
+    #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
+    local p_other_calling_user
+    if [ -z "$6" ]; then
+        p_other_calling_user="$6"
     fi
 
     #1. Validar si ejecuta dentro de un repostorio git
-    if [ ! -d "${p_repo_path}/.files" ]; then
+    if [ ! -d "${p_base_path}/.files/setup/linux" ]; then
 
-        printf 'No existe los archivos necesarios. Descarge el repostorio con los archivos: "%bgit clone https://github.com/lestebanpc/dotfiles.git ~/.files%b"\n' "$g_color_gray1" "$g_color_reset"
+        printf 'No existe los archivos necesarios para la instalación. Descarge el repostorio con los archivos: "%bgit clone https://github.com/lestebanpc/dotfiles.git ~/.files%b"\n' "$g_color_gray1" "$g_color_reset"
         return 1
     fi
 
@@ -378,23 +385,14 @@ function fulfill_preconditions() {
     local l_group_name
     if [ ! -z "$g_path_programs" ] && [ ! -d "$g_path_programs" ]; then
 
-        printf 'La carpeta "%s" de programas no existe, se creará...\n' "$g_path_programs"
-        
-        #Ruta de programas: '~/tools'
-        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
 
-            mkdir -pm 755 "$g_path_programs"
-            l_status=$?
+        #Si la ruta de programas es global '~/tools' (compartida para varios usuarios)
+        if [ "$g_path_programs" = "/opt/tools" ]; then
 
-            mkdir -p "$g_path_programs/userkeys"
-            mkdir -p "$g_path_programs/userkeys/tls"
-            mkdir -p "$g_path_programs/userkeys/ssh"
-
-        #Ruta de programas: '/opt/tools'
-        else
-
+            # > 4 : El usuario es root (no requiere sudo)
             if [ $g_user_sudo_support -eq 4 ]; then
 
+                printf '%bLa carpeta "%s" de programas no existe, se creará%b...\n' "$g_color_gray1" "$g_path_programs" "$g_color_reset"
                 mkdir -pm 755 "$g_path_programs"
                 l_status=$?
 
@@ -402,45 +400,73 @@ function fulfill_preconditions() {
                 mkdir -pm 755 "$g_path_programs/userkeys/tls"
                 mkdir -pm 755 "$g_path_programs/userkeys/ssh"
 
-            else
+                if [ ! -z "$p_other_calling_user" ]; then
+                    chown -R "$p_other_calling_user" "$g_path_programs"
+                fi
 
+            # > 0 : se soporta el comando sudo con password
+            # > 1 : se soporta el comando sudo sin password
+            elif [ $g_user_sudo_support -eq 0 ] || [ $g_user_sudo_support -eq 1 ]; then
+
+                printf '%bLa carpeta "%s" de programas no existe, se creará%b...\n' "$g_color_gray1" "$g_path_programs" "$g_color_reset"
                 sudo mkdir -pm 755 "$g_path_programs"
                 l_status=$?
 
                 #Obtener el grupo primario
                 if l_group_name=$(id -gn 2> /dev/null); then
 
-                    sudo chown ${USER}:${l_group_name} "$g_path_programs"
-
                     #Creando subdirectorios opcionales
                     mkdir -p "$g_path_programs/userkeys"
                     mkdir -p "$g_path_programs/userkeys/tls"
                     mkdir -p "$g_path_programs/userkeys/ssh"
 
+                    sudo -R chown ${USER}:${l_group_name} "$g_path_programs"
+
                 fi
 
+            # > 2 : El SO no implementa el comando sudo
+            # > 3 : El usuario no tiene permisos para ejecutar sudo
+            else
+                printf 'La carpeta "%b%s%b" de programas no existe. %bEsta carpeta es requirida para instalar programas%b.\n' \
+                       "$g_color_gray1" "$g_path_programs" "$g_color_reset" "$g_color_red1" "$g_color_reset"
+                return 1
             fi
-        fi
 
-        if [ $l_status -ne 0 ]; then
-            printf 'Se requiere que la carpeta "%s" de programas este creado y se tenga acceso de escritura.\n' "$g_path_programs"
-            return 1
+        #Si la ruta de programas es local '~/tools' (solo para un usuario)
+        else
+
+            printf '%bLa carpeta "%s" de programas no existe, se creará%b...\n' "$g_color_gray1" "$g_path_programs" "$g_color_reset"
+            mkdir -pm 755 "$g_path_programs"
+            l_status=$?
+
+            mkdir -p "$g_path_programs/userkeys"
+            mkdir -p "$g_path_programs/userkeys/tls"
+            mkdir -p "$g_path_programs/userkeys/ssh"
+
+            if [ ! -z "$p_other_calling_user" ]; then
+                chown -R "$p_other_calling_user" "$g_path_programs"
+            fi
+
         fi
 
     fi
 
-    #5. Validar si existen el folder de comandos/binarios
-    if [ ! -z "$g_path_bin" ] && [ ! -d "$g_path_bin" ]; then
+    #5. Validar si existen el folder de comandos cuando estos son locales: '~/.local/bin'
+    if [ ! -z "$g_path_bin" ] && [ ! -d "$g_path_bin" ] && [ "$g_path_bin" = "${p_base_path}/.local/bin" ]; then
 
-        #Ruta de programas: '~/.local/bin'
-        if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
-            mkdir -p "$g_path_bin"
-            mkdir -p "$g_path_man"
-            mkdir -p "$g_path_fonts"
+        #Ruta de programas:
+        mkdir -p "$p_base_path/.local"
+        mkdir -p "$g_path_bin"
+        mkdir -p "$g_path_man"
+        mkdir -p "$g_path_fonts"
+
+        if [ ! -z "$p_other_calling_user" ]; then
+            chown -R "$p_other_calling_user" "$p_base_path/.local"
         fi
 
     fi
 
+    #6. Validar si existe los folderes de Windows sobre WSL
     if [ $g_os_type -eq 1 ] && [ ! -z "$g_path_programs_win" ] && [ ! -d "$g_path_programs_win" ]; then
         mkdir -p "$g_path_programs_win"
         mkdir -p "$g_path_bin_win"
@@ -449,7 +475,7 @@ function fulfill_preconditions() {
         mkdir -p "$g_path_doc_win"
     fi
 
-    #6. El programa instalados: ¿Esta 'curl' instalado?
+    #7. El programa instalados: ¿Esta 'curl' instalado?
     local l_curl_version
     if [ $p_require_curl -eq 0 ]; then
         l_curl_version=$(curl --version 2> /dev/null)
@@ -466,7 +492,7 @@ function fulfill_preconditions() {
         fi
     fi
 
-    #7. Lo que se instalar requiere permisos de root.
+    #8. Lo que se instalar requiere permisos de root.
     if [ $p_require_root -eq 0 ]; then
         if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
             printf 'ERROR: el usuario no tiene permisos para ejecutar sudo (o el SO no tiene implementa sudo y el usuario no es root).'
@@ -474,7 +500,7 @@ function fulfill_preconditions() {
         fi
     fi
 
-    #8. Mostar información adicional (Solo mostrar info adicional si la ejecución es interactiva)
+    #9. Mostar información adicional (Solo mostrar info adicional si la ejecución es interactiva)
     if [ $p_show_additional_info -eq 0 ]; then
 
         printf '%bLinux distribution - Name   : (%s) %s\n' "$g_color_gray1" "${g_os_subtype_id}" "${g_os_subtype_name}"

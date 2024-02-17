@@ -1,10 +1,14 @@
 #!/bin/bash
 
+#
+#Devolverá la ruta base 'PATH_BASE' donde esta el repositorio '.files'.
+#Nota: Los script de instalación tiene una ruta similar a 'PATH_BASE/REPO_NAME/setup/linux/SCRIPT.bash', donde 'REPO_NAME' siempre es '.files'.
+#
 #Parametros de entrada:
 #  1> La ruta relativa (o absoluta) de un archivos del repositorio
 #Parametros de salida: 
 #  STDOUT> La ruta base donde esta el repositorio
-function _get_current_repo_path() {
+function _get_current_base_path() {
 
     #Obteniendo la ruta absoluta del parametro ingresado
     local l_path=''
@@ -16,7 +20,7 @@ function _get_current_repo_path() {
     fi
 
     #Obteniendo la ruta base
-    l_path=${l_path%/.files/*}
+    l_path=${l_path%/.files/setup/linux/*}
     echo "$l_path"
     return 0
 }
@@ -24,14 +28,14 @@ function _get_current_repo_path() {
 
 #Inicialización Global {{{
 
-declare -r g_repo_path=$(_get_current_repo_path "${BASH_SOURCE[0]}")
+declare -r g_base_path=$(_get_current_base_path "${BASH_SOURCE[0]}")
 
-#Si lo ejecuta un usuario diferente al actual (al que pertenece el repositorio)
+#Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
 #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
 g_other_calling_user=''
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ${g_repo_path}/.files/terminal/linux/functions/func_utility.bash
+. ${g_base_path}/.files/terminal/linux/functions/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -57,7 +61,7 @@ fi
 
 
 #Funciones de utilidad
-. ${g_repo_path}/.files/setup/linux/_common_utility.bash
+. ${g_base_path}/.files/setup/linux/_common_utility.bash
 
 
 #Tamaño de la linea del menu
@@ -464,10 +468,10 @@ function _update_all() {
         # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
         # 5> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
         if [ $l_is_noninteractive -eq 1 ]; then
-            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 1 2 $g_status_crendential_storage 1 "$g_other_calling_user"
+            ${g_base_path}/.files/setup/linux/01_setup_commands.bash 1 2 $g_status_crendential_storage 1 "$g_other_calling_user"
             l_status=$?
         else
-            ${g_repo_path}/.files/setup/linux/01_setup_commands.bash 3 2 $g_status_crendential_storage 1 "$g_other_calling_user"
+            ${g_base_path}/.files/setup/linux/01_setup_commands.bash 3 2 $g_status_crendential_storage 1 "$g_other_calling_user"
             l_status=$?
         fi
 
@@ -713,9 +717,10 @@ g_usage() {
     printf '  > %bCALLING_TYPE%b Es 0 si se muestra un menu, caso contrario es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n\n' \
+    printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"
-    printf '  > %bOTHER-USERID %bEl GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bOTHER-USERID %bEl UID/GID del usuario al que es owner del script (el repositorio git) en formato "UID:GID". Solo si se ejecuta como root y este es diferente al onwer del script.%b\n\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -752,7 +757,7 @@ if [ $gp_type_calling -eq 0 ]; then
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_repo_path"
+    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_base_path"
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -787,9 +792,9 @@ else
 
     fi
 
-    #Solo si el script e  ejecuta con un usuario diferente al actual (al que pertenece el repositorio)
+    #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
     g_other_calling_user=''
-    if [ "$g_repo_path" != "$HOME" ] && [ ! -z "$4" ]; then
+    if [ "$g_base_path" != "$HOME" ] && [ ! -z "$4" ]; then
         if [[ "$4" =~ ^[0-9]+:[0-9]+$ ]]; then
             g_other_calling_user="$4"
         else
@@ -805,7 +810,7 @@ else
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_repo_path"
+    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_base_path" "$g_other_calling_user"
     _g_status=$?
 
     #Iniciar el procesamiento

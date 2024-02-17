@@ -1,10 +1,14 @@
 #!/bin/bash
 
+#
+#Devolverá la ruta base 'PATH_BASE' donde esta el repositorio '.files'.
+#Nota: Los script de instalación tiene una ruta similar a 'PATH_BASE/REPO_NAME/setup/linux/SCRIPT.bash', donde 'REPO_NAME' siempre es '.files'.
+#
 #Parametros de entrada:
 #  1> La ruta relativa (o absoluta) de un archivos del repositorio
 #Parametros de salida: 
 #  STDOUT> La ruta base donde esta el repositorio
-function _get_current_repo_path() {
+function _get_current_base_path() {
 
     #Obteniendo la ruta absoluta del parametro ingresado
     local l_path=''
@@ -16,7 +20,7 @@ function _get_current_repo_path() {
     fi
 
     #Obteniendo la ruta base
-    l_path=${l_path%/.files/*}
+    l_path=${l_path%/.files/setup/linux/*}
     echo "$l_path"
     return 0
 }
@@ -24,10 +28,10 @@ function _get_current_repo_path() {
 
 #Inicialización Global {{{
 
-declare -r g_repo_path=$(_get_current_repo_path "${BASH_SOURCE[0]}")
+declare -r g_base_path=$(_get_current_base_path "${BASH_SOURCE[0]}")
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ${g_repo_path}/.files/terminal/linux/functions/func_utility.bash
+. ${g_base_path}/.files/terminal/linux/functions/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -52,7 +56,7 @@ if [ -z "$g_user_is_root" ]; then
 fi
 
 #Funciones de utilidad
-. ${g_repo_path}/.files/setup/linux/_common_utility.bash
+. ${g_base_path}/.files/setup/linux/_common_utility.bash
 
 
 #Menu dinamico: Offset del indice donde inicia el menu dinamico.
@@ -89,7 +93,7 @@ g_status_crendential_storage=-1
 g_is_credential_storage_externally=1
 
 #Personalización: Funciones modificables para el instalador.
-. ${g_repo_path}/.files/setup/linux/_setup_packages_custom.bash
+. ${g_base_path}/.files/setup/linux/_setup_packages_custom.bash
 
 
 
@@ -1755,7 +1759,7 @@ if [ $gp_uninstall -eq 0 ]; then
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 0 1 0 "$g_repo_path"
+    fulfill_preconditions $g_os_subtype_id 0 1 0 "$g_base_path"
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -1777,7 +1781,7 @@ else
         #  3 > Flag '0' si se requere curl
         #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
         #  5 > Path donde se encuentra el directorio donde esta el '.git'
-        fulfill_preconditions $g_os_subtype_id 0 1 0 "$g_repo_path"
+        fulfill_preconditions $g_os_subtype_id 0 1 0 "$g_base_path"
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -1811,7 +1815,7 @@ else
         fi
 
         #Validar los requisitos
-        fulfill_preconditions $g_os_subtype_id 1 1 0 "$g_repo_path"
+        fulfill_preconditions $g_os_subtype_id 1 1 0 "$g_base_path"
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -1863,7 +1867,7 @@ else
         #  3 > Flag '0' si se requere curl
         #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
         #  5 > Path donde se encuentra el directorio donde esta el '.git'
-        fulfill_preconditions $g_os_subtype_id 1 1 0 "$g_repo_path"
+        fulfill_preconditions $g_os_subtype_id 1 1 0 "$g_base_path"
         _g_status=$?
 
         #Iniciar el procesamiento
