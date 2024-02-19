@@ -8,7 +8,7 @@
 #  1> La ruta relativa (o absoluta) de un archivos del repositorio
 #Parametros de salida: 
 #  STDOUT> La ruta base donde esta el repositorio
-function _get_current_base_path() {
+function _get_current_path_base() {
 
     #Obteniendo la ruta absoluta del parametro ingresado
     local l_path=''
@@ -28,10 +28,10 @@ function _get_current_base_path() {
 
 #Inicialización Global {{{
 
-declare -r g_base_path=$(_get_current_base_path "${BASH_SOURCE[0]}")
+declare -r g_path_base=$(_get_current_path_base "${BASH_SOURCE[0]}")
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ${g_base_path}/.files/terminal/linux/functions/func_utility.bash
+. ${g_path_base}/.files/terminal/linux/functions/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -51,12 +51,12 @@ fi
 if [ -z "$g_user_is_root" ]; then
 
     #Determinar si es root y el soporte de sudo
-    get_user_options
+    set_user_options
 
 fi
 
 #Funciones de utilidad
-. ${g_base_path}/.files/setup/linux/_common_utility.bash
+. ${g_path_base}/.files/setup/linux/_common_utility.bash
 
 
 #Menu dinamico: Offset del indice donde inicia el menu dinamico.
@@ -93,7 +93,7 @@ g_status_crendential_storage=-1
 g_is_credential_storage_externally=1
 
 #Personalización: Funciones modificables para el instalador.
-. ${g_base_path}/.files/setup/linux/_setup_packages_custom.bash
+. ${g_path_base}/.files/setup/linux/_setup_packages_custom.bash
 
 
 
@@ -1703,7 +1703,7 @@ g_usage() {
     printf '    %b~/.files/setup/linux/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS SUDO-STORAGE-OPTIONS UPGRADE-OS-PACKAGES%b\n' "$g_color_yellow1" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '    > %bLIST-REPO-IDS%b es un listado de ID de paquetes separado por coma.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    > %bLIST-REPO-IDS%b es un listado de ID de paquetes separado por coma. Es obligatorio, por lo que enviar "" o "EMPTY" es considerado un error.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    > %bUPGRADE-OS-PACKAGES%b Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.\n\n%b' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
@@ -1759,7 +1759,7 @@ if [ $gp_uninstall -eq 0 ]; then
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 0 1 0 "$g_base_path"
+    fulfill_preconditions $g_os_subtype_id 0 1 0 "$g_path_base"
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -1781,7 +1781,7 @@ else
         #  3 > Flag '0' si se requere curl
         #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
         #  5 > Path donde se encuentra el directorio donde esta el '.git'
-        fulfill_preconditions $g_os_subtype_id 0 1 0 "$g_base_path"
+        fulfill_preconditions $g_os_subtype_id 0 1 0 "$g_path_base"
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -1815,7 +1815,7 @@ else
         fi
 
         #Validar los requisitos
-        fulfill_preconditions $g_os_subtype_id 1 1 0 "$g_base_path"
+        fulfill_preconditions $g_os_subtype_id 1 1 0 "$g_path_base"
         _g_status=$?
 
         #Iniciar el procesamiento
@@ -1843,7 +1843,7 @@ else
         # 3> El estado de la credencial almacenada para el sudo.
         # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
         gp_repo_ids="$2"
-        if [ -z "$gp_repo_ids" ]; then
+        if [ -z "$gp_repo_ids" ] || [ "$gp_repo_ids" = "EMPTY" ]; then
            echo "Parametro 2 \"$2\" debe ser un listado de ID de paquetes"
            exit 110
         fi
@@ -1867,7 +1867,7 @@ else
         #  3 > Flag '0' si se requere curl
         #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
         #  5 > Path donde se encuentra el directorio donde esta el '.git'
-        fulfill_preconditions $g_os_subtype_id 1 1 0 "$g_base_path"
+        fulfill_preconditions $g_os_subtype_id 1 1 0 "$g_path_base"
         _g_status=$?
 
         #Iniciar el procesamiento

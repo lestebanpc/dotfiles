@@ -8,7 +8,7 @@
 #  1> La ruta relativa (o absoluta) de un archivos del repositorio
 #Parametros de salida: 
 #  STDOUT> La ruta base donde esta el repositorio
-function _get_current_base_path() {
+function _get_current_path_base() {
 
     #Obteniendo la ruta absoluta del parametro ingresado
     local l_path=''
@@ -28,14 +28,14 @@ function _get_current_base_path() {
 
 #Inicialización Global {{{
 
-declare -r g_base_path=$(_get_current_base_path "${BASH_SOURCE[0]}")
+declare -r g_path_base=$(_get_current_path_base "${BASH_SOURCE[0]}")
 
 #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
 #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
 g_other_calling_user=''
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ${g_base_path}/.files/terminal/linux/functions/func_utility.bash
+. ${g_path_base}/.files/terminal/linux/functions/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -55,13 +55,13 @@ fi
 if [ -z "$g_user_is_root" ]; then
 
     #Determinar si es root y el soporte de sudo
-    get_user_options
+    set_user_options
 
 fi
 
 
 #Funciones de utilidad
-. ${g_base_path}/.files/setup/linux/_common_utility.bash
+. ${g_path_base}/.files/setup/linux/_common_utility.bash
 
 
 #Tamaño de la linea del menu
@@ -461,17 +461,20 @@ function _update_all() {
     l_flag=$(( $p_opciones & $l_opcion ))
     if [ $l_flag -eq $l_opcion ]; then
 
-        #Parametros:
-        # 1> Tipo de ejecución: 1/3 (ejecución sin menu para instalar/actualizar un respositorio especifico)
-        # 2> Opciones de menu a instalar/acutalizar: 
-        # 3> El estado de la credencial almacenada para el sudo
-        # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-        # 5> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+        #Parametros usados por el script:
+        # 1> Tipo de llamado: 1/3 (sin menu interactivo/no-interactivo).
+        # 2> Opciones de menu a ejecutar: entero positivo.
+        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+        # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+        # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+        # 6> El estado de la credencial almacenada para el sudo.
+        # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+        # 8> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
         if [ $l_is_noninteractive -eq 1 ]; then
-            ${g_base_path}/.files/setup/linux/01_setup_commands.bash 1 2 $g_status_crendential_storage 1 "$g_other_calling_user"
+            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 1 2 "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 "$g_other_calling_user"
             l_status=$?
         else
-            ${g_base_path}/.files/setup/linux/01_setup_commands.bash 3 2 $g_status_crendential_storage 1 "$g_other_calling_user"
+            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 3 2 "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 "$g_other_calling_user"
             l_status=$?
         fi
 
@@ -709,16 +712,26 @@ g_usage() {
     printf 'Usage:\n'
     printf '  > %bActualizaciones usando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/03_update_all.bash\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_update_all.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_update_all.bash 0 PRG_PATH CMD_BASE_PATH TEMP_PATH SETUP_ONLYLAST_VERSION\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bActualizaciones SIN usar un menú de opciones:%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_update_all.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_update_all.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_update_all.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/03_update_all.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b Es 0 si se muestra un menu, caso contrario es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bCMD_BASE_PATH %bes ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts"). Si se envia vacio o EMPTY se usara el directorio predeterminado:%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '      %b> Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '      %b> Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '      %b> Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '  > %bTEMP_PATH %bes la ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado "/tmp".%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"
+    printf '  > %bSETUP_ONLYLAST_VERSION %bpor defecto es 1 (false). Solo si ingresa 0 se instala/actualiza la ultima versión.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bOTHER-USERID %bEl UID/GID del usuario al que es owner del script (el repositorio git) en formato "UID:GID". Solo si se ejecuta como root y este es diferente al onwer del script.%b\n\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
@@ -751,13 +764,56 @@ g_is_credential_storage_externally=1
 #1.1. Mostrar el menu para escoger lo que se va instalar
 if [ $gp_type_calling -eq 0 ]; then
 
+    #Parametros usados por el script:
+    # 1> Tipo de llamado: 0 (usar un menu interactivo).
+    # 2> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 3> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+    #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
+    #       > Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)
+    #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
+    # 4> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    # 5> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+
+    #Obtener los folderes de programas 'g_path_programs'
+    _g_path=''
+    if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
+        _g_path="$2"
+    fi
+
+    _g_is_noninteractive=1
+    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+
+    #Obtener los folderes de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
+    _g_path=''
+    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+        _g_path="$3"
+    fi
+
+    set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+
+    #Obtener los folderes temporal 'g_path_temp'
+    _g_path=''
+    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
+        _g_path="$4"
+    fi
+
+    set_temp_path "$_g_path"
+
+    #Parametros del script usados hasta el momento:
+    # 1> Setup only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+    g_setup_only_last_version=1        
+    if [ "$5" = "0" ]; then
+        g_setup_only_last_version=0
+    fi
+
     #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
     #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
     #  2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_base_path"
+    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_path_base"
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -771,10 +827,17 @@ if [ $gp_type_calling -eq 0 ]; then
 else
 
     #Parametros del script usados hasta el momento:
-    # 1> Tipo de invocación.
+    # 1> Tipo de ejecución: 1/2 (sin menu interactivo/no-interactivo).
     # 2> Opciones de menu a ejecutar: entero positivo.
-    # 3> El estado de la credencial almacenada para el sudo.
-    # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+    #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
+    #       > Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)
+    #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
+    # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    # 6> El estado de la credencial almacenada para el sudo.
+    # 7> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
     gp_menu_options=0
     if [[ "$2" =~ ^[0-9]+$ ]]; then
         gp_menu_options=$2
@@ -783,8 +846,13 @@ else
         exit 110
     fi
 
-    if [[ "$3" =~ ^[0-2]$ ]]; then
-        g_status_crendential_storage=$3
+    if [ $gp_menu_options -le 0 ]; then
+        echo "Parametro 2 \"$2\" debe ser un entero positivo."
+        exit 110
+    fi
+
+    if [[ "$6" =~ ^[0-2]$ ]]; then
+        g_status_crendential_storage=$6
 
         if [ $g_status_crendential_storage -eq 0 ]; then
             g_is_credential_storage_externally=0
@@ -794,23 +862,52 @@ else
 
     #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
     g_other_calling_user=''
-    if [ "$g_base_path" != "$HOME" ] && [ ! -z "$4" ]; then
-        if [[ "$4" =~ ^[0-9]+:[0-9]+$ ]]; then
-            g_other_calling_user="$4"
+    if [ $g_user_sudo_support -eq 4 ] && [ ! -z "$7" ] && [ "$7" != "EMPTY" ] && [ "$g_path_base" != "$HOME" ]; then
+        if [[ "$7" =~ ^[0-9]+:[0-9]+$ ]]; then
+            g_other_calling_user="$7"
         else
-            echo "Parametro 4 \"$4\" debe ser tener el formado 'UID:GID'."
+            echo "Parametro 7 \"$7\" debe ser tener el formado 'UID:GID'."
             exit 110
         fi
     fi
 
 
+    #Obtener los folderes de programas 'g_path_programs'
+    _g_path=''
+    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+        _g_path="$3"
+    fi
+
+    _g_is_noninteractive=0
+    if [ $gp_type_calling -eq 1 ]; then
+        _g_is_noninteractive=1
+    fi
+    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+
+    #Obtener los folderes de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
+    _g_path=''
+    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
+        _g_path="$4"
+    fi
+
+    set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+
+    #Obtener los folderes temporal 'g_path_temp'
+    _g_path=''
+    if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
+        _g_path="$5"
+    fi
+
+    set_temp_path "$_g_path"
+
+
     #Validar los requisitos
-    #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
-    #  2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
-    #  3 > Flag '0' si se requere curl
-    #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
-    #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_base_path" "$g_other_calling_user"
+    # 1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
+    # 2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
+    # 3 > Flag '0' si se requere curl
+    # 4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
+    # 5 > Path donde se encuentra el directorio donde esta el '.git'
+    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_path_base" "$g_other_calling_user"
     _g_status=$?
 
     #Iniciar el procesamiento

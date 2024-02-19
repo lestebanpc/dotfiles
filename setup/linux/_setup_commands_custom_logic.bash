@@ -2906,18 +2906,13 @@ function _copy_artifact_files() {
             #Copiar los script de completado
             if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"autocomplete/bat.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-                cp "${l_path_source}/autocomplete/bat.bash" ${g_repo_path}/.files/terminal/linux/complete/bat.bash
+                cp "${l_path_source}/autocomplete/bat.bash" ${g_path_base}/.files/terminal/linux/complete/bat.bash
                 echo "Copiando \"autocomplete/_bat.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-                cp "${l_path_source}/autocomplete/_bat.ps1" ${g_repo_path}/.files/terminal/powershell/complete/bat.ps1
+                cp "${l_path_source}/autocomplete/_bat.ps1" ${g_path_base}/.files/terminal/powershell/complete/bat.ps1
 
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/bat.bash
-                        chown $g_other_calling_user ${g_repo_path}/.files/terminal/powershell/complete/bat.ps1
-                    else
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/bat.bash
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/powershell/complete/bat.ps1
-                    fi
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/bat.bash
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/powershell/complete/bat.ps1
                 fi
             fi
             ;;
@@ -2957,18 +2952,13 @@ function _copy_artifact_files() {
             #Copiar los script de completado
             if [ $p_install_win_cmds -ne 0 ]; then
                 echo "Copiando \"complete/rg.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-                cp "${l_path_source}/complete/rg.bash" ${g_repo_path}/.files/terminal/linux/complete/rg.bash
+                cp "${l_path_source}/complete/rg.bash" ${g_path_base}/.files/terminal/linux/complete/rg.bash
                 echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-                cp "${l_path_source}/complete/_rg.ps1" ${g_repo_path}/.files/terminal/powershell/complete/rg.ps1
+                cp "${l_path_source}/complete/_rg.ps1" ${g_path_base}/.files/terminal/powershell/complete/rg.ps1
 
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/rg.bash
-                        chown $g_other_calling_user ${g_repo_path}/.files/terminal/powershell/complete/rg.ps1
-                    else
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/rg.bash
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/powershell/complete/rg.ps1
-                    fi
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/rg.bash
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/powershell/complete/rg.ps1
                 fi
             fi
             ;;
@@ -3031,9 +3021,9 @@ function _copy_artifact_files() {
             ##Copiar los script de completado
             #if [ $p_install_win_cmds -ne 0 ]; then
             #    echo "Copiando \"complete/rg.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-            #    cp "${l_path_source}/complete/rg.bash" ${g_repo_path}/.files/terminal/linux/complete/rg.bash
+            #    cp "${l_path_source}/complete/rg.bash" ${g_path_base}/.files/terminal/linux/complete/rg.bash
             #    echo "Copiando \"autocomplete/_rg.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-            #    cp "${l_path_source}/complete/_rg.ps1" ${g_repo_path}/.files/terminal/powershell/complete/rg.ps1
+            #    cp "${l_path_source}/complete/_rg.ps1" ${g_path_base}/.files/terminal/powershell/complete/rg.ps1
             #fi
             ;;
 
@@ -3124,43 +3114,49 @@ function _copy_artifact_files() {
                 fi
 
                 #Copiar los archivos requeridos por el plugin vim base "fzf"
-                #mkdir -p ${g_repo_path}/.files/vim/packages/fzf/doc
-                #mkdir -p ${g_repo_path}/.files/vim/packages/fzf/plugin
+                #mkdir -p ${g_path_base}/.files/vim/packages/fzf/doc
+                #mkdir -p ${g_path_base}/.files/vim/packages/fzf/plugin
                 #echo "Copiando \"git/doc/fzf.txt\" a \"~/.files/vim/packages/fzf/doc/\" ..."
-                #cp "${l_path_source}/git/doc/fzf.txt" ${g_repo_path}/.files/vim/packages/fzf/doc/
+                #cp "${l_path_source}/git/doc/fzf.txt" ${g_path_base}/.files/vim/packages/fzf/doc/
                 #echo "Copiando \"git/doc/fzf.vim\" a \"~/.files/vim/packages/fzf/plugin/\" ..."
-                #cp "${l_path_source}/git/plugin/fzf.vim" ${g_repo_path}/.files/vim/packages/fzf/plugin/
+                #cp "${l_path_source}/git/plugin/fzf.vim" ${g_path_base}/.files/vim/packages/fzf/plugin/
 
                 #Copiar los archivos opcionales del plugin
                 #echo "Copiando \"git/LICENSE\" en \"~/.files/vim/packages/fzf/\" .."
-                #cp "${l_path_source}/git/LICENSE" ${g_repo_path}/.files/vim/packages/fzf/LICENSE
+                #cp "${l_path_source}/git/LICENSE" ${g_path_base}/.files/vim/packages/fzf/LICENSE
             
                 #Copiar los script de completado
                 echo "Copiando \"git/shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."
-                cp "${l_path_source}/git/shell/completion.bash" ${g_repo_path}/.files/terminal/linux/complete/fzf.bash
+                cp "${l_path_source}/git/shell/completion.bash" ${g_path_base}/.files/terminal/linux/complete/fzf.bash
             
                 #Copiar los script de keybindings
                 echo "Copiando \"git/shell/key-bindings.bash\" como \"~/.files/terminal/linux/keybindings/fzf.bash\" ..."
-                cp "${l_path_source}/git/shell/key-bindings.bash" ${g_repo_path}/.files/terminal/linux/keybindings/fzf.bash
+                cp "${l_path_source}/git/shell/key-bindings.bash" ${g_path_base}/.files/terminal/linux/keybindings/fzf.bash
             
                 # Script que se usara como comando para abrir fzf en un panel popup tmux
                 echo "Copiando \"git/bin/fzf-tmux\" como \"~/.files/terminal/linux/functions/fzf-tmux.bash\" y crear un enlace como comando \"~/.local/bin/fzf-tmux\"..."
-                cp "${l_path_source}/git/bin/fzf-tmux" ${g_repo_path}/.files/terminal/linux/functions/fzf-tmux.bash
-                mkdir -p ${g_repo_path}/.local/bin
-                ln -sfn ${g_repo_path}/.files/terminal/linux/functions/fzf-tmux.bash ${g_repo_path}/.local/bin/fzf-tmux
+                cp "${l_path_source}/git/bin/fzf-tmux" ${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash
+
+                if [ ! -d "${g_path_base}/.local" ]; then
+                    mkdir -p ${g_path_base}/.local/bin
+                    if [ ! -z "$g_other_calling_user" ]; then
+                        chown $g_other_calling_user ${g_path_base}/.local/
+                        chown $g_other_calling_user ${g_path_base}/.local/bin
+                    fi
+                elif [ ! -d "${g_path_base}/.local/bin" ]; then
+                    mkdir -p ${g_path_base}/.local/bin
+                    if [ ! -z "$g_other_calling_user" ]; then
+                        chown $g_other_calling_user ${g_path_base}/.local/bin
+                    fi
+                fi
+
+                ln -sfn ${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
 
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown -R $g_other_calling_user ${g_repo_path}/.local/
-                        chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/fzf.bash 
-                        chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/keybindings/fzf.bash
-                        chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/functions/fzf-tmux.bash
-                    else
-                        sudo chown -R $g_other_calling_user ${g_repo_path}/.local/
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/fzf.bash 
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/keybindings/fzf.bash
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/functions/fzf-tmux.bash
-                    fi
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/fzf.bash 
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/keybindings/fzf.bash
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash
+                    chown -h $g_other_calling_user ${g_path_base}/.local/bin/fzf-tmux
                 fi
             fi
             ;;
@@ -3202,9 +3198,9 @@ function _copy_artifact_files() {
 
             #Copiar los script de completado
             #echo "Copiando \"autocomplete/jq.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-            #cp "${l_path_source}/autocomplete/jq.bash" ${g_repo_path}/.files/terminal/linux/complete/jq.bash
+            #cp "${l_path_source}/autocomplete/jq.bash" ${g_path_base}/.files/terminal/linux/complete/jq.bash
             #echo "Copiando \"autocomplete/_jq.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-            #cp "${l_path_source}/autocomplete/jq.ps1" ${g_repo_path}/.files/terminal/powershell/complete/jq.ps1
+            #cp "${l_path_source}/autocomplete/jq.ps1" ${g_path_base}/.files/terminal/powershell/complete/jq.ps1
             ;;
 
         yq)
@@ -3285,22 +3281,18 @@ function _copy_artifact_files() {
 
                     #Copiar los script de completado
                     #echo "Copiando \"autocomplete/yq.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-                    #cp "${l_path_source}/autocomplete/yq.bash" ${g_repo_path}/.files/terminal/linux/complete/yq.bash
+                    #cp "${l_path_source}/autocomplete/yq.bash" ${g_path_base}/.files/terminal/linux/complete/yq.bash
                     #echo "Copiando \"autocomplete/_yq.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-                    #cp "${l_path_source}/autocomplete/yq.ps1" ${g_repo_path}/.files/terminal/powershell/complete/yq.ps1
+                    #cp "${l_path_source}/autocomplete/yq.ps1" ${g_path_base}/.files/terminal/powershell/complete/yq.ps1
 
                 #Instalación del tema
                 else
 
-                    mkdir -p ${g_repo_path}/.files/terminal/oh-my-posh/themes
-                    cp -f ${l_path_source}/*.json ${g_repo_path}/.files/terminal/oh-my-posh/themes
+                    mkdir -p ${g_path_base}/.files/terminal/oh-my-posh/themes
+                    cp -f ${l_path_source}/*.json ${g_path_base}/.files/terminal/oh-my-posh/themes
 
                     if [ ! -z "$g_other_calling_user" ]; then
-                        if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                            chown -R $g_other_calling_user ${g_repo_path}/.files/terminal/oh-my-posh/themes
-                        else
-                            sudo chown -R $g_other_calling_user ${g_repo_path}/.files/terminal/oh-my-posh/themes
-                        fi
+                        chown -R $g_other_calling_user ${g_path_base}/.files/terminal/oh-my-posh/themes
                     fi
 
                 fi
@@ -3479,19 +3471,14 @@ function _copy_artifact_files() {
 
                 #Copiar los script de completado
                 echo "Copiando \"autocomplete/fd.bash\" a \"~/.files/terminal/linux/complete/\" ..."
-                cp "${l_path_source}/autocomplete/fd.bash" ${g_repo_path}/.files/terminal/linux/complete/fd.bash
+                cp "${l_path_source}/autocomplete/fd.bash" ${g_path_base}/.files/terminal/linux/complete/fd.bash
                 echo "Copiando \"autocomplete/fd.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
-                cp "${l_path_source}/autocomplete/fd.ps1" ${g_repo_path}/.files/terminal/powershell/complete/fd.ps1
+                cp "${l_path_source}/autocomplete/fd.ps1" ${g_path_base}/.files/terminal/powershell/complete/fd.ps1
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/fd.bash
-                        chown $g_other_calling_user ${g_repo_path}/.files/terminal/powershell/complete/fd.ps1
-                    else
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/fd.bash
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/powershell/complete/fd.ps1
-                    fi
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/fd.bash
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/powershell/complete/fd.ps1
                 fi
 
             fi
@@ -3620,20 +3607,16 @@ function _copy_artifact_files() {
             fi
 
             #Desacargar archivos adicionales para su configuración
-            mkdir -p ${g_repo_path}/.files/setup/programs/kubelet
+            mkdir -p ${g_path_base}/.files/setup/programs/kubelet
             l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubelet/kubelet.service 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
                 printf 'Creando el archivo "%b~/.files/setup/programs/kubelet/kubelet.service%b" ... \n' "$g_color_gray1" "$g_color_reset"
-                echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ${g_repo_path}/.files/setup/programs/kubelet/kubelet.service
+                echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ${g_path_base}/.files/setup/programs/kubelet/kubelet.service
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/
-                    else
-                        sudo chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/
-                    fi
+                    chown -R $g_other_calling_user ${g_path_base}/.files/setup/programs/
                 fi
 
             fi
@@ -3662,20 +3645,16 @@ function _copy_artifact_files() {
             fi
 
             #Desacargar archivos adicionales para su configuración
-            mkdir -p ${g_repo_path}/.files/setup/programs/kubeadm
+            mkdir -p ${g_path_base}/.files/setup/programs/kubeadm
             l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubeadm/10-kubeadm.conf 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
                 printf 'Creando el archivo "%b~/.files/setup/programs/kubeadm/10-kubeadm.conf%b" ... \n' "$g_color_gray1" "$g_color_reset"
-                echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ${g_repo_path}/.files/setup/programs/kubeadm/10-kubeadm.conf
+                echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ${g_path_base}/.files/setup/programs/kubeadm/10-kubeadm.conf
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown $g_other_calling_user ${g_repo_path}/.files/setup/programs/kubeadm/10-kubeadm.conf
-                    else
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/setup/programs/kubeadm/10-kubeadm.conf
-                    fi
+                    chown $g_other_calling_user ${g_path_base}/.files/setup/programs/kubeadm/10-kubeadm.conf
                 fi
             fi
 
@@ -4627,19 +4606,14 @@ function _copy_artifact_files() {
 
                 #Copiando los script para el autocompletado
                 echo "Copiando \"autocomplete/bash_autocomplete\" a \"~/.files/terminal/linux/complete/\" ..."
-                cp "${l_path_source}/autocomplete/bash_autocomplete" ${g_repo_path}/.files/terminal/linux/complete/step.bash
+                cp "${l_path_source}/autocomplete/bash_autocomplete" ${g_path_base}/.files/terminal/linux/complete/step.bash
                 echo "Copiando \"autocomplete/zsh_autocomplete\" a \"~/.files/terminal/linux/complete/\" ..."
-                cp "${l_path_source}/autocomplete/zsh_autocomplete" ${g_repo_path}/.files/terminal/linux/complete/step.zsh
+                cp "${l_path_source}/autocomplete/zsh_autocomplete" ${g_path_base}/.files/terminal/linux/complete/step.zsh
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/step.bash
-                        chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/step.zsh
-                    else
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/step.bash
-                        sudo chown $g_other_calling_user ${g_repo_path}/.files/terminal/linux/complete/step.zsh
-                    fi
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/step.bash
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/step.zsh
                 fi
 
             else
@@ -5361,10 +5335,10 @@ function _copy_artifact_files() {
             fi
 
             #Descargar archivo de configuracion como servicio a nivel system:
-            mkdir -p ${g_repo_path}/.files/setup/programs/nerdctl/systemd/user
+            mkdir -p ${g_path_base}/.files/setup/programs/nerdctl/systemd/user
             
             printf 'Descargando el archivo de configuracion de "%s" a nivel system en "%s"\n' "containerd.service" "~/.files/setup/programs/nerdctl/systemd/user/"
-            curl -fLo ${g_repo_path}/.files/setup/programs/nerdctl/systemd/user/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+            curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/user/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
             if [ $l_status -eq 2 ]; then
@@ -5386,11 +5360,7 @@ function _copy_artifact_files() {
 
             #Fix permisos
             if [ ! -z "$g_other_calling_user" ]; then
-                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/
-                else
-                    sudo chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/
-                fi
+                chown -R $g_other_calling_user ${g_path_base}/.files/setup/programs/nerdctl/
             fi
 
             #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
@@ -5473,28 +5443,24 @@ function _copy_artifact_files() {
             fi
 
             #Descargar archivo de configuracion como servicio a nivel system:
-            mkdir -p ${g_repo_path}/.files/setup/programs/nerdctl/systemd/system
-            mkdir -p ${g_repo_path}/.files/setup/programs/nerdctl/systemd/user
+            mkdir -p ${g_path_base}/.files/setup/programs/nerdctl/systemd/system
+            mkdir -p ${g_path_base}/.files/setup/programs/nerdctl/systemd/user
             
             printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.service" "~/.files/setup/programs/nerdctl/systemd/user/"
-            #curl -fLo ${g_repo_path}/.files/setup/programs/nerdctl/systemd/user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.service
-            curl -fLo ${g_repo_path}/.files/setup/programs/nerdctl/systemd/user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit.service
+            #curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.service
+            curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit.service
             printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.socket" "~/.files/setup/programs/nerdctl/systemd/user/"
-            curl -fLo ${g_repo_path}/.files/setup/programs/nerdctl/systemd/user/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.socket
+            curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/user/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.socket
 
             printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.service" "~/.files/setup/programs/nerdctl/systemd/system/"
-            curl -fLo ${g_repo_path}/.files/setup/programs/nerdctl/systemd/system/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.service
+            curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/system/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.service
             printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.socket" "~/.files/setup/programs/nerdctl/systemd/system/"
-            curl -fLo ${g_repo_path}/.files/setup/programs/nerdctl/systemd/system/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.socket
+            curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/system/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.socket
 
 
             #Fix permisos
             if [ ! -z "$g_other_calling_user" ]; then
-                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/
-                else
-                    sudo chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/nerdctl/
-                fi
+                chown -R $g_other_calling_user ${g_path_base}/.files/setup/programs/nerdctl/
             fi
 
 
@@ -5550,24 +5516,20 @@ function _copy_artifact_files() {
 
                 fi
 
-                mkdir -p ${g_repo_path}/.files/setup/programs/containerd
+                mkdir -p ${g_path_base}/.files/setup/programs/containerd
 
                 #Archivos para instalar 'containerd' de modo rootless
                 echo "Copiando \"${l_path_source}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/setup/programs/containerd\" ..."
-                cp "${l_path_source}/containerd-rootless.sh" ${g_repo_path}/.files/setup/programs/containerd
-                chmod u+x ${g_repo_path}/.files/setup/programs/containerd/containerd-rootless.sh
+                cp "${l_path_source}/containerd-rootless.sh" ${g_path_base}/.files/setup/programs/containerd
+                chmod u+x ${g_path_base}/.files/setup/programs/containerd/containerd-rootless.sh
 
                 echo "Copiando \"${l_path_source}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/setup/programs/containerd\" ..."
-                cp "${l_path_source}/containerd-rootless-setuptool.sh" ${g_repo_path}/.files/setup/programs/containerd
-                chmod u+x ${g_repo_path}/.files/setup/programs/containerd/containerd-rootless-setuptool.sh
+                cp "${l_path_source}/containerd-rootless-setuptool.sh" ${g_path_base}/.files/setup/programs/containerd
+                chmod u+x ${g_path_base}/.files/setup/programs/containerd/containerd-rootless-setuptool.sh
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/containerd/
-                    else
-                        sudo chown -R $g_other_calling_user ${g_repo_path}/.files/setup/programs/containerd/
-                    fi
+                    chown -R $g_other_calling_user ${g_path_base}/.files/setup/programs/containerd/
                 fi
 
             #3. Configuración: Instalación de binarios de complementos que su reposotrio no ofrece el compilado (solo la fuente). Para ello se usa el full
@@ -5728,17 +5690,13 @@ function _copy_artifact_files() {
                 sudo chmod +x "${l_path_target_bin}/trivy"
             fi
 
-            mkdir -p ${g_repo_path}/.files/config/trivy/templates
+            mkdir -p ${g_path_base}/.files/config/trivy/templates
             echo "Copiando templates de \"contrib/*.tpl\" a \"~/.files/config/trivy/templates/\" ..."
-            cp ${l_path_source}/contrib/*.tpl ${g_repo_path}/.files/config/trivy/templates/
+            cp ${l_path_source}/contrib/*.tpl ${g_path_base}/.files/config/trivy/templates/
 
             #Fix permisos
             if [ ! -z "$g_other_calling_user" ]; then
-                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    chown -R $g_other_calling_user ${g_repo_path}/.files/config/trivy/
-                else
-                    sudo chown -R $g_other_calling_user ${g_repo_path}/.files/config/trivy/
-                fi
+                chown -R $g_other_calling_user ${g_path_base}/.files/config/trivy/
             fi
             ;;
 
@@ -5873,10 +5831,10 @@ install_initialize_menu_option() {
                 # 3> El estado de la credencial almacenada para el sudo
                 # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
                 if [ $l_is_noninteractive -eq 1 ]; then
-                    ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 2 'dotnetlib' $g_status_crendential_storage 1
+                    ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 'dotnetlib' $g_status_crendential_storage 1
                     l_status=$?
                 else
-                    ${g_repo_path}/.files/setup/linux/04_setup_packages.bash 4 'dotnetlib' $g_status_crendential_storage 1
+                    ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 'dotnetlib' $g_status_crendential_storage 1
                     l_status=$?
                 fi
 
@@ -6388,14 +6346,14 @@ _uninstall_repository() {
 
                 if [ $l_is_user -eq 0 ]; then
 
-                    if [ -f ${g_repo_path}/.config/systemd/user/${l_aux} ]; then
+                    if [ -f ${g_path_base}/.config/systemd/user/${l_aux} ]; then
 
                         #Si esta configurado para inicio automatico desactivarlo
                         printf "Disable la unidad systemd '%s'" "$l_aux"
                         systemctl --user disable $l_aux
 
                         echo "Eliminando la configuración '~/.config/systemd/user/%s' de la unidad systemd '%s'" "$l_aux" "$l_aux"
-                        rm ${g_repo_path}/.config/systemd/user/${l_aux}
+                        rm ${g_path_base}/.config/systemd/user/${l_aux}
 
                         #Recargar el arbol de dependencies cargados por systemd
                         printf "Actualizar el arbol de configuraciones de unidad systemd '%s'" "$l_aux"
@@ -6529,14 +6487,14 @@ _uninstall_repository() {
 
                 if [ $l_is_user -eq 0 ]; then
 
-                    if [ -f ${g_repo_path}/.config/systemd/user/${l_aux} ]; then
+                    if [ -f ${g_path_base}/.config/systemd/user/${l_aux} ]; then
 
                         #Si esta configurado para inicio automatico desactivarlo
                         printf "Disable la unidad systemd '%s'" "$l_aux"
                         systemctl --user disable $l_aux
 
                         echo "Eliminando la configuración '~/.config/systemd/user/%s' de la unidad systemd '%s'" "$l_aux" "$l_aux"
-                        rm ${g_repo_path}/.config/systemd/user/${l_aux}
+                        rm ${g_path_base}/.config/systemd/user/${l_aux}
 
                         #Recargar el arbol de dependencies cargados por systemd
                         printf "Actualizar el arbol de configuraciones de unidad systemd '%s'" "$l_aux"

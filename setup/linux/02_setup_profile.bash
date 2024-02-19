@@ -8,7 +8,7 @@
 #  1> La ruta relativa (o absoluta) de un archivos del repositorio
 #Parametros de salida: 
 #  STDOUT> La ruta base donde esta el repositorio
-function _get_current_base_path() {
+function _get_current_path_base() {
 
     #Obteniendo la ruta absoluta del parametro ingresado
     local l_path=''
@@ -27,14 +27,14 @@ function _get_current_base_path() {
 
 #Inicialización Global {{{
 
-declare -r g_base_path=$(_get_current_base_path "${BASH_SOURCE[0]}")
+declare -r g_path_base=$(_get_current_path_base "${BASH_SOURCE[0]}")
 
 #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
 #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
 g_other_calling_user=''
 
 #Funciones generales: determinar el tipo del SO, ...
-. ${g_base_path}/.files/terminal/linux/functions/func_utility.bash
+. ${g_path_base}/.files/terminal/linux/functions/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -55,33 +55,19 @@ fi
 if [ -z "$g_user_is_root" ]; then
 
     #Determinar si es root y el soporte de sudo
-    get_user_options
-
-    #Ruta de los programas (incluyen mas de 1 comando) a instalar (se usara una ruta personalizado)
-    if [ -d '/opt/tools' ] && [ -w '/opt/tools' ]; then
-        g_path_programs='/opt/tools'
-    else
-        #Si tiene acceso a root (incluyendo el uso de sudo)
-        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-            g_path_programs='/opt/tools'
-        else
-            g_path_programs=~/tools
-        fi
-        
-    fi
+    set_user_options
 
 fi
 
 
 #Funciones de utilidad
-. ${g_base_path}/.files/setup/linux/_common_utility.bash
+. ${g_path_base}/.files/setup/linux/_common_utility.bash
 
 
 #Tipo de ejecucion del script principal
 gp_type_calling=0       #(0) Ejecución mostrando el menu del opciones (siempre es interactiva).
                         #(1) Ejecución sin el menu de opciones, interactivo    - configurar un conjunto de opciones del menú
                         #(2) Ejecución sin el menu de opciones, no-interactivo - configurar un conjunto de opciones del menú
-
 
 #Estado del almacenado temporalmente de las credenciales para sudo
 # -1 - No se solicito el almacenamiento de las credenciales
@@ -301,9 +287,9 @@ function _index_doc_of_vim_packages() {
     fi
 
     #2. Ruta base donde se instala el plugins/paquete
-    local l_base_plugins_path="${HOME}/.vim/pack"
+    local l_base_plugins_path="${g_path_base}/.vim/pack"
     if [ $p_is_neovim -eq 0  ]; then
-        l_base_plugins_path="${HOME}/.local/share/nvim/site/pack"
+        l_base_plugins_path="${g_path_base}/.local/share/nvim/site/pack"
     fi
 
     #Validar si existe directorio
@@ -395,9 +381,9 @@ function _download_vim_packages() {
     #2. Ruta base donde se instala el plugins/paquete
     local l_tag="VIM"
     local l_current_scope=1
-    local l_base_plugins="${HOME}/.vim/pack"
+    local l_base_plugins="${g_path_base}/.vim/pack"
     if [ $p_is_neovim -eq 0  ]; then
-        l_base_plugins="${HOME}/.local/share/nvim/site/pack"
+        l_base_plugins="${g_path_base}/.local/share/nvim/site/pack"
         l_current_scope=2
         l_tag="NeoVIM"
     fi
@@ -424,7 +410,7 @@ function _download_vim_packages() {
    
     
     #4. Instalar el plugins que se instalan manualmente
-    local l_base_path
+    local l_path_base
     local l_repo_git
     local l_repo_name
     local l_repo_type=1
@@ -450,19 +436,19 @@ function _download_vim_packages() {
         fi
 
         #4.2 Obtener la ruta base donde se clonara el paquete (todos los paquetes son opcionale, se inicia bajo configuración)
-        l_base_path=""
+        l_path_base=""
         case "$l_repo_type" in 
             1)
-                l_base_path=${l_base_plugins}/themes/opt
+                l_path_base=${l_base_plugins}/themes/opt
                 ;;
             2)
-                l_base_path=${l_base_plugins}/ui/opt
+                l_path_base=${l_base_plugins}/ui/opt
                 ;;
             3)
-                l_base_path=${l_base_plugins}/typing/opt
+                l_path_base=${l_base_plugins}/typing/opt
                 ;;
             4)
-                l_base_path=${l_base_plugins}/ide/opt
+                l_path_base=${l_base_plugins}/ide/opt
                 ;;
             *)
                 
@@ -476,16 +462,16 @@ function _download_vim_packages() {
             continue
         fi
 
-        #echo "${l_base_path}/${l_repo_name}/.git"
+        #echo "${l_path_base}/${l_repo_name}/.git"
 
         #4.3 Validar si el paquete ya esta instalando
-        if [ -d ${l_base_path}/${l_repo_name}/.git ]; then
+        if [ -d ${l_path_base}/${l_repo_name}/.git ]; then
              printf '%s > Paquete (%s) "%b%s%b": Ya esta instalando\n' "$l_tag" "${l_repo_type}" "$g_color_gray1" "${l_repo_git}" "$g_color_reset"
              continue
         fi
 
         #4.5 Instalando el paquete
-        cd ${l_base_path}
+        cd ${l_path_base}
         printf '\n'
         print_line '.' $g_max_length_line  "$g_color_gray1"
         #print_line '- ' $((g_max_length_line/2)) "$g_color_gray1" 
@@ -518,10 +504,10 @@ function _download_vim_packages() {
         fi
 
         #4.6 Almacenando las ruta de documentacion a indexar 
-        if [ $p_flag_non_index_doc -ne 0 ] && [ -d "${l_base_path}/${l_repo_name}/doc" ]; then
+        if [ $p_flag_non_index_doc -ne 0 ] && [ -d "${l_path_base}/${l_repo_name}/doc" ]; then
 
             #Indexar la documentación de plugins
-            la_doc_paths+=("${l_base_path}/${l_repo_name}/doc")
+            la_doc_paths+=("${l_path_base}/${l_repo_name}/doc")
             la_doc_repos+=("${l_repo_name}")
 
         fi
@@ -744,7 +730,20 @@ function _setup_nvim_files() {
     printf 'NeoVIM > Configuración %barchivos basicos%b de NeoVIM como %b%s%b\n' "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_mode" "$g_color_reset"
     print_line '-' $g_max_length_line "$g_color_gray1" 
 
-    mkdir -p ~/.config/nvim/
+    #Creando el folder "~/.config/nvim/"
+    if [ ! -d "${g_path_base}/.config" ]; then
+        mkdir -p ${g_path_base}/.config/nvim/
+        if [ ! -z "$g_other_calling_user" ]; then
+            chown $g_other_calling_user ${g_path_base}/.config/
+            chown $g_other_calling_user ${g_path_base}/.config/nvim
+        fi
+    elif [ ! -d "${g_path_base}/.config/nvim" ]; then
+        mkdir -p ${g_path_base}/.config/nvim/
+        if [ ! -z "$g_other_calling_user" ]; then
+            chown $g_other_calling_user ${g_path_base}/.config/nvim
+        fi
+    fi
+
     
     #2. Creando los enalces simbolicos
     local l_target_link
@@ -755,8 +754,8 @@ function _setup_nvim_files() {
     if [ $p_flag_developer -eq 0 ]; then
 
 
-        l_target_link="${HOME}/.config/nvim/coc-settings.json"
-        l_source_path="${HOME}/.files/nvim/ide_coc"
+        l_target_link="${g_path_base}/.config/nvim/coc-settings.json"
+        l_source_path="${g_path_base}/.files/nvim/ide_coc"
         if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
             l_source_filename='coc-settings_lnx_non_shared.json'
         else
@@ -765,8 +764,8 @@ function _setup_nvim_files() {
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
 
-        l_target_link="${HOME}/.config/nvim/init.vim"
-        l_source_path="${HOME}/.files/nvim"
+        l_target_link="${g_path_base}/.config/nvim/init.vim"
+        l_source_path="${g_path_base}/.files/nvim"
         if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
             l_source_filename='init_ide_linux_non_shared.vim'
         else
@@ -774,45 +773,45 @@ function _setup_nvim_files() {
         fi
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
-        l_target_link="${HOME}/.config/nvim/lua"
-        l_source_path="${HOME}/.files/nvim/lua"
+        l_target_link="${g_path_base}/.config/nvim/lua"
+        l_source_path="${g_path_base}/.files/nvim/lua"
         _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
         
         #El codigo open/close asociado a los 'file types'
-        l_target_link="${HOME}/.config/nvim/ftplugin"
-        l_source_path="${HOME}/.files/nvim/ide_commom/ftplugin"
+        l_target_link="${g_path_base}/.config/nvim/ftplugin"
+        l_source_path="${g_path_base}/.files/nvim/ide_commom/ftplugin"
         _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
 
         #Para el codigo open/close asociado a los 'file types' de CoC
-        l_target_link="${HOME}/.config/nvim/runtime_coc/ftplugin"
-        l_source_path="${HOME}/.files/nvim/ide_coc/ftplugin"
+        l_target_link="${g_path_base}/.config/nvim/runtime_coc/ftplugin"
+        l_source_path="${g_path_base}/.files/nvim/ide_coc/ftplugin"
         _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
 
         #Para el codigo open/close asociado a los 'file types' que no sean CoC
-        l_target_link="${HOME}/.config/nvim/runtime_nococ/ftplugin"
-        l_source_path="${HOME}/.files/nvim/ide_nococ/ftplugin"
+        l_target_link="${g_path_base}/.config/nvim/runtime_nococ/ftplugin"
+        l_source_path="${g_path_base}/.files/nvim/ide_nococ/ftplugin"
         _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
     #Configurar NeoVIM como Editor
     else
 
-        l_target_link="${HOME}/.config/nvim/init.vim"
-        l_source_path="${HOME}/.files/nvim"
+        l_target_link="${g_path_base}/.config/nvim/init.vim"
+        l_source_path="${g_path_base}/.files/nvim"
         l_source_filename='init_basic_linux.vim'
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
         
-        l_target_link="${HOME}/.config/nvim/lua"
-        l_source_path="${HOME}/.files/nvim/lua"
+        l_target_link="${g_path_base}/.config/nvim/lua"
+        l_source_path="${g_path_base}/.files/nvim/lua"
         _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
 
         #El codigo open/close asociado a los 'file types' como Editor
-        l_target_link="${HOME}/.config/nvim/ftplugin"
-        l_source_path="${HOME}/.files/nvim/editor/ftplugin"
+        l_target_link="${g_path_base}/.config/nvim/ftplugin"
+        l_source_path="${g_path_base}/.files/nvim/editor/ftplugin"
         _create_folder_link "$l_source_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
     fi
@@ -845,7 +844,15 @@ function _setup_vim_files() {
     printf 'VIM > Configuración %barchivos basicos%b de VIM como %b%s%b\n' "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_mode" "$g_color_reset"
     print_line '-' $g_max_length_line "$g_color_gray1" 
 
-    mkdir -p ~/.vim/
+
+    #Creando el folder "~/.vim/"
+    if [ ! -d "${g_path_base}/.vim" ]; then
+        mkdir -p ${g_path_base}/.vim/
+        if [ ! -z "$g_other_calling_user" ]; then
+            chown $g_other_calling_user ${g_path_base}/.vim
+        fi
+    fi
+
 
     #3. Crear los enlaces simbolicos de VIM
     local l_target_link
@@ -856,8 +863,8 @@ function _setup_vim_files() {
     if [ $p_flag_developer -eq 0 ]; then
 
         #Creando enlaces simbolicos
-        l_target_link="${HOME}/.vim/coc-settings.json"
-        l_source_path="${HOME}/.files/vim/ide_coc"
+        l_target_link="${g_path_base}/.vim/coc-settings.json"
+        l_source_path="${g_path_base}/.files/vim/ide_coc"
         if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
             l_source_filename='coc-settings_lnx_non_shared.json'
         else
@@ -866,13 +873,13 @@ function _setup_vim_files() {
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM > " $p_flag_overwrite_ln
 
         
-        l_target_link="${HOME}/.vim/ftplugin"
-        l_source_path="${HOME}/.files/vim/ide_coc/ftplugin"
+        l_target_link="${g_path_base}/.vim/ftplugin"
+        l_source_path="${g_path_base}/.files/vim/ide_coc/ftplugin"
         _create_folder_link "$l_source_path" "$l_target_link" "VIM > " $p_flag_overwrite_ln
 
 
-        l_target_link="${HOME}/.vimrc"
-        l_source_path="${HOME}/.files/vim"
+        l_target_link="${g_path_base}/.vimrc"
+        l_source_path="${g_path_base}/.files/vim"
         if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
             l_source_filename='vimrc_ide_linux_non_shared.vim'
         else
@@ -885,14 +892,14 @@ function _setup_vim_files() {
     #Configurar VIM como Editor basico
     else
 
-        l_target_link="${HOME}/.vimrc"
-        l_source_path="${HOME}/.files/vim"
+        l_target_link="${g_path_base}/.vimrc"
+        l_source_path="${g_path_base}/.files/vim"
         l_source_filename='vimrc_basic_linux.vim'
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM > " $p_flag_overwrite_ln
 
 
-        l_target_link="${HOME}/.vim/ftplugin"
-        l_source_path="${HOME}/.files/vim/editor/ftplugin"
+        l_target_link="${g_path_base}/.vim/ftplugin"
+        l_source_path="${g_path_base}/.files/vim/editor/ftplugin"
         _create_folder_link "$l_source_path" "$l_target_link" "VIM > " $p_flag_overwrite_ln
 
 
@@ -1078,18 +1085,21 @@ _install_nodejs() {
         return 0
     fi
 
-    #Parametros:
-    # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
-    # 2> Repsositorio a instalar/acutalizar: 
-    # 3> El estado de la credencial almacenada para el sudo
-    # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-    # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
-    # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+    #Parametros del script usados hasta el momento:
+    # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
+    # 2> Listado de ID del repositorios a instalar separados por coma.
+    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+    # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    # 6> El estado de la credencial almacenada para el sudo.
+    # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+    # 8> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+    # 9> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_base_path}/.files/setup/linux/01_setup_commands.bash 2 "nodejs" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+        ${g_path_base}/.files/setup/linux/01_setup_commands.bash 2 "nodejs" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
         l_status=$?
     else
-        ${g_base_path}/.files/setup/linux/01_setup_commands.bash 4 "nodejs" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+        ${g_path_base}/.files/setup/linux/01_setup_commands.bash 4 "nodejs" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
         l_status=$?
     fi
 
@@ -1313,10 +1323,10 @@ _install_python() {
     # 2> Repositorios a instalar/acutalizar: 16 (RTE Python y Pip. Tiene Offset=1)
     # 3> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 2 "$l_packages_to_install" $g_status_crendential_storage
+        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "$l_packages_to_install" $g_status_crendential_storage
         l_status=$?
     else
-        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 4 "$l_packages_to_install" $g_status_crendential_storage
+        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "$l_packages_to_install" $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -1495,10 +1505,10 @@ function _install_vim() {
     # 2> Packete a instalar/acutalizar.
     # 3> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 2 'vim' $g_status_crendential_storage
+        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 'vim' $g_status_crendential_storage
         l_status=$?
     else
-        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 4 'vim' $g_status_crendential_storage
+        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 'vim' $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -1560,10 +1570,10 @@ function _install_nvim() {
         # 2> Paquete a instalar/acutalizar.
         # 3> El estado de la credencial almacenada para el sudo
         if [ $l_is_noninteractive -eq 1 ]; then
-            ${g_base_path}/.files/setup/linux/04_setup_packages.bash 2 "nvim" $g_status_crendential_storage
+            ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "nvim" $g_status_crendential_storage
             l_status=$?
         else
-            ${g_base_path}/.files/setup/linux/04_setup_packages.bash 4 "nvim" $g_status_crendential_storage
+            ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "nvim" $g_status_crendential_storage
             l_status=$?
         fi
 
@@ -1578,19 +1588,22 @@ function _install_nvim() {
     #Actualmente (2023), en github solo existe binarios para x64 y no para arm64
     else
 
-        #Parametros:
-        # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
-        # 2> Repsositorio a instalar/acutalizar: 
-        # 3> El estado de la credencial almacenada para el sudo
-        # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-        # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
-        # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+        #Parametros del script usados hasta el momento:
+        # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
+        # 2> Listado de ID del repositorios a instalar separados por coma.
+        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+        # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+        # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+        # 6> El estado de la credencial almacenada para el sudo.
+        # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+        # 8> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+        # 9> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
         if [ $l_is_noninteractive -eq 1 ]; then
             
-            ${g_base_path}/.files/setup/linux/01_setup_commands.bash 2 "neovim" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 2 "neovim" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
             l_status=$?
         else
-            ${g_base_path}/.files/setup/linux/01_setup_commands.bash 4 "neovim" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 4 "neovim" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
             l_status=$?
         fi
 
@@ -1740,10 +1753,10 @@ function _sutup_support_x11_clipboard() {
     # 2> Repositorios a instalar/acutalizar: 
     # 3> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 2 "$l_pkg_options" $g_status_crendential_storage
+        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "$l_pkg_options" $g_status_crendential_storage
         l_status=$?
     else
-        ${g_base_path}/.files/setup/linux/04_setup_packages.bash 4 "$l_pkg_options" $g_status_crendential_storage
+        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "$l_pkg_options" $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -1965,16 +1978,16 @@ function _setup_user_profile() {
     #Archivo de colores de la terminal usado por comandos basicos
     if [ $g_os_type -eq 1 ]; then
 
-        l_target_link="${HOME}/.dircolors"
-        l_source_path="${HOME}/.files/terminal/linux/profile"
+        l_target_link="${g_path_base}/.dircolors"
+        l_source_path="${g_path_base}/.files/terminal/linux/profile"
         l_source_filename='ubuntu_wls_dircolors.conf'
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
     fi
 
     #Archivo de configuración de Git
-    l_target_link="${HOME}/.gitconfig"
-    l_source_path="${HOME}/.files/config/git"
+    l_target_link="${g_path_base}/.gitconfig"
+    l_source_path="${g_path_base}/.files/config/git"
     if [ $g_os_type -eq 1 ]; then
         l_source_filename='git_linux_usr1.toml'
     else
@@ -1984,8 +1997,8 @@ function _setup_user_profile() {
 
 
     #Archivo de configuración de SSH
-    l_target_link="${HOME}/.ssh/config"
-    l_source_path="${HOME}/.files/config/ssh"
+    l_target_link="${g_path_base}/.ssh/config"
+    l_source_path="${g_path_base}/.files/config/ssh"
     if [ $g_os_type -eq 1 ]; then
         l_source_filename='ssh_linux_01.conf'
     else
@@ -1995,8 +2008,8 @@ function _setup_user_profile() {
 
 
     #Archivos de configuración de PowerShell
-    l_target_link="${HOME}/.config/powershell/Microsoft.PowerShell_profile.ps1"
-    l_source_path="${HOME}/.files/terminal/powershell/profile"
+    l_target_link="${g_path_base}/.config/powershell/Microsoft.PowerShell_profile.ps1"
+    l_source_path="${g_path_base}/.files/terminal/powershell/profile"
     if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
             if [ "$g_os_architecture_type" = "aarch64" ]; then
@@ -2029,8 +2042,8 @@ function _setup_user_profile() {
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
     #Creando el profile del interprete shell
-    l_target_link="${HOME}/.bashrc"
-    l_source_path="${HOME}/.files/terminal/linux/profile"
+    l_target_link="${g_path_base}/.bashrc"
+    l_source_path="${g_path_base}/.files/terminal/linux/profile"
     if [ $g_user_sudo_support -eq 2 ] || [ $g_user_sudo_support -eq 3 ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
             if [ "$g_os_architecture_type" = "aarch64" ]; then
@@ -2066,48 +2079,48 @@ function _setup_user_profile() {
     #4. Creando enlaces simbolico independiente del tipo de distribución Linux
 
     #Crear el enlace de TMUX
-    l_target_link="${HOME}/.tmux.conf"
-    l_source_path="${HOME}/.files/terminal/linux/tmux"
+    l_target_link="${g_path_base}/.tmux.conf"
+    l_source_path="${g_path_base}/.files/terminal/linux/tmux"
     l_source_filename='tmux.conf'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
     #Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD': nerdctl
-    l_target_link="${HOME}/.config/nerdctl/nerdctl.toml"
-    l_source_path="${HOME}/.files/config/nerdctl"
+    l_target_link="${g_path_base}/.config/nerdctl/nerdctl.toml"
+    l_source_path="${g_path_base}/.files/config/nerdctl"
     l_source_filename='default_config.toml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
 
     #Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless'): Podman
-    l_target_link="${HOME}/.config/containers/containers.conf"
-    l_source_path="${HOME}/.files/config/podman"
+    l_target_link="${g_path_base}/.config/containers/containers.conf"
+    l_source_path="${g_path_base}/.files/config/podman"
     l_source_filename='default_config.toml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
     #Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless'): Podman
-    l_target_link="${HOME}/.config/containers/registries.conf"
-    l_source_path="${HOME}/.files/config/podman"
+    l_target_link="${g_path_base}/.config/containers/registries.conf"
+    l_source_path="${g_path_base}/.files/config/podman"
     l_source_filename='default_registries.toml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
 
     #Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
-    l_target_link="${HOME}/.config/containerd/config.toml"
-    l_source_path="${HOME}/.files/config/containerd"
+    l_target_link="${g_path_base}/.config/containerd/config.toml"
+    l_source_path="${g_path_base}/.files/config/containerd"
     l_source_filename='default_config.toml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
 
     #Configuración del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
-    l_target_link="${HOME}/.config/buildkit/buildkitd.toml"
-    l_source_path="${HOME}/.files/config/buildkit"
+    l_target_link="${g_path_base}/.config/buildkit/buildkitd.toml"
+    l_source_path="${g_path_base}/.files/config/buildkit"
     l_source_filename='default_config.toml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
 
     #Configuracion por defecto para un Cluster de Kubernates
-    l_target_link="${HOME}/.kube/config"
-    l_source_path="${HOME}/.files/config/kubectl"
+    l_target_link="${g_path_base}/.kube/config"
+    l_source_path="${g_path_base}/.files/config/kubectl"
     l_source_filename='default_config.yaml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
@@ -3402,11 +3415,15 @@ g_usage() {
     printf 'Usage:\n'
     printf '  > %bConfigurando el profile del usuario/VIM/NeoVIM escogidos del menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/02_setup_profile.bash\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash 0 PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bConfigurando el profile del usuario/VIM/NeoVIM segun un grupo de opciones de menú indicados%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
+    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bTEMP_PATH %bes la ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado "/tmp".%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bCALLING_TYPE%b Es 0 si se muestra un menu, caso contrario es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -3443,13 +3460,37 @@ g_is_credential_storage_externally=1
 #1.1. Mostrar el menu para escoger lo que se va instalar
 if [ $gp_type_calling -eq 0 ]; then
 
+    #Parametros usados por el script:
+    # 1> Tipo de configuración: 0 (instalación con un menu interactivo).
+    # 2> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 3> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+
+    #Obtener los folderes de programas 'g_path_programs'
+    _g_path=''
+    if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
+        _g_path="$2"
+    fi
+
+    _g_is_noninteractive=1
+    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" "$g_other_calling_user"
+
+    #Obtener los folderes temporal 'g_path_temp'
+    _g_path=''
+    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+        _g_path="$3"
+    fi
+
+    set_temp_path "$_g_path"
+
+
+
     #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
     #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
     #  2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_base_path"
+    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_path_base"
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -3462,11 +3503,13 @@ if [ $gp_type_calling -eq 0 ]; then
 #1.2. No mostrar el menu, la opcion del menu a ejecutar se envia como parametro
 else
 
-    #Parametros del script usados hasta el momento:
-    # 1> Tipo de configuración: 1 (instalación/actualización).
+    #Parametros usados por el script:
+    # 1> Tipo de configuración: 1/2 (instalación sin un menu interactivo/no-interactivo).
     # 2> Opciones de menu a ejecutar: entero positivo.
-    # 3> El estado de la credencial almacenada para el sudo.
-    # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
+    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 4> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    # 5> El estado de la credencial almacenada para el sudo.
+    # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
     gp_menu_options=0
     if [[ "$2" =~ ^[0-9]+$ ]]; then
         gp_menu_options=$2
@@ -3475,8 +3518,13 @@ else
         exit 110
     fi
 
-    if [[ "$3" =~ ^[0-2]$ ]]; then
-        g_status_crendential_storage=$3
+    if [ $gp_menu_options -le 0 ]; then
+        echo "Parametro 2 \"$2\" debe ser un entero positivo."
+        exit 110
+    fi
+
+    if [[ "$5" =~ ^[0-2]$ ]]; then
+        g_status_crendential_storage=$5
 
         if [ $g_status_crendential_storage -eq 0 ]; then
             g_is_credential_storage_externally=0
@@ -3486,14 +3534,35 @@ else
 
     #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
     g_other_calling_user=''
-    if [ "$g_base_path" != "$HOME" ] && [ ! -z "$4" ]; then
-        if [[ "$4" =~ ^[0-9]+:[0-9]+$ ]]; then
-            g_other_calling_user="$4"
+    if [ $g_user_sudo_support -eq 4 ] && [ ! -z "$6" ] && [ "$6" != "EMPTY" ] && [ "$g_path_base" != "$HOME" ]; then
+        if [[ "$6" =~ ^[0-9]+:[0-9]+$ ]]; then
+            g_other_calling_user="$6"
         else
-            echo "Parametro 4 \"$4\" debe ser tener el formado 'UID:GID'."
+            echo "Parametro 6 \"$6\" debe ser tener el formado 'UID:GID'."
             exit 110
         fi
     fi
+
+    #Obtener los folderes de programas 'g_path_programs'
+    _g_path=''
+    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+        _g_path="$3"
+    fi
+
+    _g_is_noninteractive=0
+    if [ $gp_type_calling -eq 1 ]; then
+        _g_is_noninteractive=1
+    fi
+    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" "$g_other_calling_user"
+
+    #Obtener los folderes temporal 'g_path_temp'
+    _g_path=''
+    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
+        _g_path="$4"
+    fi
+
+    set_temp_path "$_g_path"
+
 
     #Validar los requisitos
     #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
@@ -3501,7 +3570,7 @@ else
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_base_path" "$g_other_calling_user"
+    fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_path_base" "$g_other_calling_user"
     _g_status=$?
 
     #Iniciar el procesamiento

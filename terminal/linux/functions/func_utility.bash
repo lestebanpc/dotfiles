@@ -215,7 +215,7 @@ function get_linux_type_info() {
 
 }
 
-#Permite obtener informacion del usuario. Devuelve:
+#Permite obtener informacion del usuario y establece las variables globales 'g_user_is_root' y 'g_user_sudo_support'. Devuelve:
 # 1) Retorna 0 si se encontro informacion de la distribucion Linux, caso contrario retorna 1.
 # 2) En el flujo de salida, en variales globales:
 #    > 'g_user_is_root'                : 0 si es root. Caso contrario no es root.
@@ -225,7 +225,7 @@ function get_linux_type_info() {
 #       > 2 : El SO no implementa el comando sudo
 #       > 3 : El usuario no tiene permisos para ejecutar sudo
 #       > 4 : El usuario es root (no requiere sudo)
-function get_user_options() {
+function set_user_options() {
 
     #Si es root, salir
     g_user_is_root=1
@@ -235,10 +235,6 @@ function get_user_options() {
         g_user_sudo_support=4
         return 0
     fi
-
-    #TODO Si forzar la instalación local descomente este linea.
-    #g_user_sudo_support=3
-    #return 0
 
     #Soporta de sudo
     local l_status
@@ -745,7 +741,7 @@ upgrade_os_packages() {
 
     #Si no se calculo, Calcularlo 
     if [ -z "$g_user_is_root" ]; then
-        get_user_options
+        set_user_options
     fi
 
     #Si es un distribucion de la familia Debian
@@ -834,7 +830,7 @@ install_os_package() {
 
     #Si no se calculo, Calcularlo 
     if [ -z "$g_user_is_root" ]; then
-        get_user_options
+        set_user_options
     fi
 
     #Si es un distribucion de la familia Debian
@@ -919,7 +915,7 @@ uninstall_os_package() {
 
     #Si no se calculo, Calcularlo 
     if [ -z "$g_user_is_root" ]; then
-        get_user_options
+        set_user_options
     fi
 
     #Si es un distribucion de la familia Debian
@@ -1002,7 +998,7 @@ clean_os_cache() {
 
     #Si no se calculo, Calcularlo 
     if [ -z "$g_user_is_root" ]; then
-        get_user_options
+        set_user_options
     fi
 
     #Si es un distribucion de la familia Debian

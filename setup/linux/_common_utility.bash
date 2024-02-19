@@ -15,10 +15,449 @@ g_color_blue1="\x1b[34m"
 #Tamaño de la linea del menu
 g_max_length_line=130
 
-declare -r g_path_temp='/tmp'
 declare -r g_empty_str='EMPTY'
 
 #}}}
+
+
+#
+#Establece el ruta de los programas (incluyen mas de 1 comando) 'g_path_programs' a instalar.
+#Orden de prioridad:
+#  > La carpeta ingresada como parametro 3, siempre que existe y el usuario de ejecución tiene permisos de escritura,
+#  > La carpeta '/opt/tools', si existe y tiene permisos de escritura. Si no tiene permisos intenta adicionarlo, si no existe intenta crearlo,
+#  > La carpeta '~/tools', si '/opt/tools' existe pero no se tiene permisos de escritura o no existe y no se tiene permisos para crearlo.
+#
+#Parametros de entrada:
+# 1> Path base donde se encuentra el repostorio de los script de instalación (por defecto es '$HOME')
+# 2> Flag '0' si no es interactivo, '1' si es interactivo
+# 3> Ruta donde se ubicaran los programas descargsdos
+#    Si es vacio, no se se usara las carpetas '/opt/tools' o '~/tools'
+# 4> 'UID:GID' solo si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
+#Parametros de salida:
+#  > Variables globales: 'g_path_programs'
+#  > Valor de retorno
+#     00> Si es establecio sin errores
+#     01> Si el directorio programa existe no existe y no se ha podido crearse automaticamente
+function set_program_path() {
+
+    local p_path_base
+    if [ -z "$1" ]; then
+        p_path_base="$HOME"
+    else
+        p_path_base="$1"
+    fi
+
+    local p_is_noninteractive=1
+    if [ "$2" = "0" ]; then
+        p_is_noninteractive=0
+    fi
+
+    local p_path_programs="$3"
+
+    #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
+    #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
+    local p_other_calling_user
+    if [ -z "$4" ]; then
+        p_other_calling_user="$4"
+    fi
+
+
+
+    #1. Si es directorio personalizado del usuario y tienes acceso de escritura
+    if  [ ! -z "$p_path_programs" ] && [ "$p_path_programs" != "/opt/tools" ] && [ -d "$p_path_programs" ] && [ -w "$p_path_programs" ]; then
+        g_path_programs="$p_path_programs"
+        return 0
+    fi
+
+    #2. Intento de usar el directorio por defecto '/opt/tools'
+    local l_status
+    local l_group_name
+    
+    #2.1. Si existe la carpeta, validar si tiene permisos de escritura.
+    if [ -d "/opt/tools" ]; then
+
+        #Si tiene acceso de escritura
+        if [ -w "/opt/tools" ]; then
+
+            g_path_programs='/opt/tools'
+            return 0
+
+        #Si no tiene acceso de escritura, establecer permisos de escritura (para los usuarios no son root)
+        else
+
+            # > 1 : se soporta el comando sudo sin password
+            if [ $g_user_sudo_support -eq 1 ]; then
+
+                g_path_programs='/opt/tools'
+
+                #Establecer como owner
+                if l_group_name=$(id -gn 2> /dev/null); then
+                    sudo chown ${USER}:${l_group_name} "$g_path_programs"
+                else
+                    sudo chown ${USER} "$g_path_programs"
+                fi
+
+                return 0
+
+            # > 0 : se soporta el comando sudo con password (solo si es interactivo)
+            elif [ $g_user_sudo_support -eq 0 ] && [ $p_is_noninteractive -ne 0 ]; then
+
+                g_path_programs='/opt/tools'
+                printf 'Se requiere establecer como owner la carpeta "%b%s%b" de programas, para ello se requiere usar sudo con root...\n' "$g_color_gray1" "$g_path_programs" "$g_color_reset"
+
+                #Establecer como owner
+                if l_group_name=$(id -gn 2> /dev/null); then
+                    sudo chown ${USER}:${l_group_name} "$g_path_programs"
+                    l_status=$?
+                else
+                    sudo chown ${USER} "$g_path_programs"
+                    l_status=$?
+                fi
+
+                #Creando subdirectorios opcionales
+                if [ $l_status -eq 0 ]; then
+                    return 0
+                else
+                    printf 'No se puede establecer permisos de escritura a la carpeta "%b%s%b" de programas. %bSe usara como carpeta de programas a "%b%s%b"...%b\n' \
+                           "$g_color_gray1" "$g_path_programs" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
+                fi
+
+            else
+                printf 'No se puede establecer permisos de escritura a la carpeta "%b%s%b" de programas. %bSe usara como carpeta de programas a "%b%s%b"...%b\n' \
+                       "$g_color_gray1" "/opt/tools" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
+            fi
+        fi
+
+    fi
+
+    #2.2. Si no existe intentar crearlo si tiene permiso para ello
+    if [ ! -d "/opt/tools" ]; then
+
+        # > 4 : El usuario es root (no requiere sudo)
+        if [ $g_user_sudo_support -eq 4 ]; then
+
+            g_path_programs='/opt/tools'
+            mkdir -pm 755 "$g_path_programs"
+            l_status=$?
+
+            mkdir -pm 755 "$g_path_programs/userkeys"
+            mkdir -pm 755 "$g_path_programs/userkeys/tls"
+            mkdir -pm 755 "$g_path_programs/userkeys/ssh"
+
+            if [ ! -z "$p_other_calling_user" ]; then
+                chown -R "$p_other_calling_user" "$g_path_programs"
+            fi
+
+            return 0
+
+        # > 1 : se soporta el comando sudo sin password
+        elif [ $g_user_sudo_support -eq 1 ]; then
+
+            g_path_programs='/opt/tools'
+            sudo mkdir -pm 755 "$g_path_programs"
+            l_status=$?
+
+            #Establecer como owner
+            if l_group_name=$(id -gn 2> /dev/null); then
+                sudo chown ${USER}:${l_group_name} "$g_path_programs"
+            else
+                sudo chown ${USER} "$g_path_programs"
+            fi
+
+            #Creando subdirectorios opcionales
+            mkdir -pm "$g_path_programs/userkeys"
+            mkdir -pm "$g_path_programs/userkeys/tls"
+            mkdir -pm "$g_path_programs/userkeys/ssh"
+
+            return 0
+
+        # > 0 : se soporta el comando sudo con password (solo si es interactivo)
+        elif [ $g_user_sudo_support -eq 0 ] && [ $p_is_noninteractive -ne 0 ]; then
+
+            g_path_programs='/opt/tools'
+            printf 'Se requiere crear la carpeta "%b%s%b" de programas, para ello se requiere usar sudo con root...\n' "$g_color_gray1" "$g_path_programs" "$g_color_reset"
+            if sudo mkdir -pm 755 "$g_path_programs"; then
+
+                #Establecer como owner
+                if l_group_name=$(id -gn 2> /dev/null); then
+                    sudo chown ${USER}:${l_group_name} "$g_path_programs"
+                    l_status=$?
+                else
+                    sudo chown ${USER} "$g_path_programs"
+                    l_status=$?
+                fi
+
+                #Creando subdirectorios opcionales
+                if [ $l_status -eq 0 ]; then
+
+                    mkdir -pm "$g_path_programs/userkeys"
+                    mkdir -pm "$g_path_programs/userkeys/tls"
+                    mkdir -pm "$g_path_programs/userkeys/ssh"
+                    return 0
+
+                else
+                    printf 'No se puede crear la carpeta "%b%s%b" de programas. %bSe usara como carpeta de programas a "%b%s%b"...%b\n' \
+                           "$g_color_gray1" "$g_path_programs" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
+                fi
+
+            else
+                printf 'No se puede crear la carpeta "%b%s%b" de programas. %bSe usara como carpeta de programas a "%b%s%b"...%b\n' \
+                       "$g_color_gray1" "$g_path_programs" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
+
+            fi
+
+
+        else
+            printf 'No se puede crear la carpeta "%b%s%b" de programas. %bSe usara como carpeta de programas a "%b%s%b"...%b\n' \
+                   "$g_color_gray1" "/opt/tools" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
+        fi
+
+    fi
+
+
+    #3. Usar la carpeta '~/tools' (si '/opt/tools' existe pero no se tiene permisos de escritura o no existe y no se tiene permisos para crearlo).
+    # > 0 : se soporta el comando sudo con password (solo no es interactivo)
+    # > 2 : El SO no implementa el comando sudo
+    # > 3 : El usuario no tiene permisos para ejecutar sudo
+    g_path_programs="${p_path_base}/tools"
+
+    #Si no existe crearlo
+    if [ ! -d "$g_path_programs" ]; then
+
+        mkdir -pm 755 "$g_path_programs"
+        l_status=$?
+
+        mkdir -pm 755 "$g_path_programs/userkeys"
+        mkdir -pm 755 "$g_path_programs/userkeys/tls"
+        mkdir -pm 755 "$g_path_programs/userkeys/ssh"
+
+        if [ ! -z "$p_other_calling_user" ]; then
+            chown -R "$p_other_calling_user" "$g_path_programs"
+        fi
+
+    fi
+
+    return 0
+
+}
+
+
+#
+#Establece la ruta de los comandos del binario/man/fuente, es decir 'g_path_bin'/'g_path_man'/'g_path_fonts'/'g_path_cmd_base', donde se instalará.
+#Orden de prioridad:
+#  > La carpeta ingresada como parametro 3, siempre que existe y el usuario de ejecución tiene permisos de escritura,
+#  > La carpeta predeterminado para todos los usuarios ('/usr/local/bin', '/usr/local/man/man1' y '/usr/share/fonts'), si existe tenga permisos como root o sudo para root.
+#  > La carpeta predeterminado para el usuario '~/.local', si en las carpeta anterior no tiene permisos de root o sudo para root.
+#
+#Parametros de entrada:
+# 1> Path base donde se encuentra el repostorio de los script de instalación (por defecto es '$HOME')
+# 2> Flag '0' si no es interactivo, '1' si es interactivo
+# 3> Ruta base donde se ubicaran los programas descargados usando la rutas:
+#      > Binarios   : PATH_BASE/bin
+#      > Ayuda man1 : PATH_BASE/man/man1
+#      > Fuentes    : PATH_BASE/share/fonts
+#    Si es vacio, no se se usara las carpetas predeterminados
+# 4> 'UID:GID' solo si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
+#Parametros de salida:
+#  > Variables globales: 'g_path_bin', 'g_path_man' y 'g_path_fonts'
+#  > Valor de retorno
+#     00> Si es establecio sin errores
+#     01> Si el directorio programa existe no existe y no se ha podido crearse automaticamente
+function set_command_path() {
+
+    local p_path_base
+    if [ -z "$1" ]; then
+        p_path_base="$HOME"
+    else
+        p_path_base="$1"
+    fi
+
+    local p_is_noninteractive=1
+    if [ "$2" = "0" ]; then
+        p_is_noninteractive=0
+    fi
+
+    local p_path_command_base="$3"
+
+    #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
+    #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
+    local p_other_calling_user
+    if [ -z "$4" ]; then
+        p_other_calling_user="$4"
+    fi
+
+    
+    g_path_cmd_base=''
+
+    #1. Usar el directorio personalizado del usuario (siempre que existe y tienes acceso de escritura)
+    #if [ ! -z "$p_path_command_base" ] && [ "$p_path_command_base" != "${g_path_base}/.local" ] && [ -d "$p_path_command_base" ] && [ -w "$p_path_command_base" ]; then
+    if [ ! -z "$p_path_command_base" ] && [ -d "$p_path_command_base" ] && [ -w "$p_path_command_base" ]; then
+
+        g_path_cmd_base="$p_path_command_base"
+        g_path_bin="${p_path_command_base}/bin"
+        g_path_man="${p_path_command_base}/man/man1"
+        g_path_fonts="${p_path_command_base}/share/fonts"
+
+        #Si no existe los folderes, crearlo
+        if [ ! -d "$g_path_bin" ]; then
+            mkdir -pm 755 "$g_path_bin"
+            if [ ! -z "$p_other_calling_user" ]; then
+                chown "$p_other_calling_user" "$g_path_bin"
+            fi
+        fi
+
+        if [ ! -d "$g_path_man" ]; then
+            mkdir -pm 755 "$g_path_man"
+            if [ ! -z "$p_other_calling_user" ]; then
+                chown "$p_other_calling_user" "$g_path_man"
+            fi
+        fi
+
+        if [ ! -d "$g_path_fonts" ]; then
+            mkdir -pm 755 "$g_path_fonts"
+            if [ ! -z "$p_other_calling_user" ]; then
+                chown "$p_other_calling_user" "$g_path_fonts"
+            fi
+        fi
+
+        return 0
+    fi
+
+    #2. Usar la carpeta predeterminado para todos los usuarios, siempre que tenga permisos como root o sudo para root.
+    #   Folderes: '/usr/local/bin', '/usr/local/man/man1' y '/usr/share/fonts'
+
+    # > 4 : El usuario es root (no requiere sudo)
+    if [ $g_user_sudo_support -eq 4 ]; then
+
+        g_path_cmd_base=''
+        g_path_bin='/usr/local/bin'
+        g_path_man='/usr/local/man/man1'
+        g_path_fonts='/usr/share/fonts'
+
+        if [ ! -d "$g_path_man" ]; then
+            mkdir -p "$g_path_man"
+        fi
+
+        if [ ! -d "$g_path_fonts" ]; then
+            mkdir -p "$g_path_fonts"
+        fi
+
+        return 0
+
+    # > 1 : se soporta el comando sudo sin password
+    elif [ $g_user_sudo_support -eq 1 ]; then
+
+        g_path_cmd_base=''
+        g_path_bin='/usr/local/bin'
+        g_path_man='/usr/local/man/man1'
+        g_path_fonts='/usr/share/fonts'
+
+        #if [ ! -d "$g_path_man" ]; then
+        #    sudo mkdir -p "$g_path_man"
+        #fi
+
+        #if [ ! -d "$g_path_fonts" ]; then
+        #    sudo mkdir -p "$g_path_fonts"
+        #fi
+
+        return 0
+
+    # > 0 : se soporta el comando sudo con password (solo si es interactivo)
+    elif [ $g_user_sudo_support -eq 0 ] && [ $p_is_noninteractive -eq 1 ]; then
+
+        g_path_cmd_base=''
+        g_path_bin='/usr/local/bin'
+        g_path_man='/usr/local/man/man1'
+        g_path_fonts='/usr/share/fonts'
+
+        return 0
+
+    else
+        printf 'No se tiene permiso a la carpeta "%b%s%b" de programas. %bSe usara como carpeta de programas a "%b%s%b"...%b\n' \
+               "$g_color_gray1" "/usr/local/bin" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/.local/bin"  "$g_color_gray1" "$g_color_reset"
+    fi
+
+    #3. Usar la carpeta predeterminado para el usuario '~/.local' (si en las carpeta anterior no tiene permisos de root o sudo para root).
+    # > 0 : se soporta el comando sudo con password (solo no es interactivo)
+    # > 2 : El SO no implementa el comando sudo
+    # > 3 : El usuario no tiene permisos para ejecutar sudo
+    g_path_cmd_base="${p_path_base}/.local"
+    g_path_bin="${g_path_cmd_base}/bin"
+    g_path_man="${p_path_cmd_base}/man/man1"
+    g_path_fonts="${p_path_cmd_base}/share/fonts"
+
+    #Si no existe crearlo
+    if [ ! -d "${g_path_cmd_base}" ]; then
+
+        mkdir -pm 755 "${g_path_cmd_base}"
+        mkdir -pm 755 "$g_path_bin"
+        mkdir -pm 755 "$g_path_man"
+        mkdir -pm 755 "$g_path_man"
+
+        if [ ! -z "$p_other_calling_user" ]; then
+            chown -R "$p_other_calling_user" "${g_path_cmd_base}"
+        fi
+
+    else
+
+        if [ ! -d "$g_path_bin" ]; then
+            mkdir -p "$g_path_bin"
+            if [ ! -z "$p_other_calling_user" ]; then
+                chown "$p_other_calling_user" "$g_path_bin"
+            fi
+        fi
+
+        if [ ! -d "$g_path_man" ]; then
+            mkdir -p "$g_path_man"
+            if [ ! -z "$p_other_calling_user" ]; then
+                chown "$p_other_calling_user" "$g_path_man"
+            fi
+        fi
+
+        if [ ! -d "$g_path_fonts" ]; then
+            mkdir -p "$g_path_fonts"
+            if [ ! -z "$p_other_calling_user" ]; then
+                chown "$p_other_calling_user" "$g_path_fonts"
+            fi
+        fi
+
+    fi
+
+    return 0
+
+}
+
+
+
+#
+#Establece la ruta de los archivos temporales, es decir 'g_path_temp', donde se descargaran archivos comprimidos del repositorio externos (como GitHub).
+#Orden de prioridad:
+#  > La carpeta ingresada como parametro 1, siempre que existe y el usuario de ejecución tiene permisos de escritura.
+#  > La carpeta predeterminado para el usuario '/tmp', si en las carpeta anterior no tiene permisos de root o sudo para root.
+#
+#Parametros de entrada:
+# 1> Ruta base donde se ubicaran los archivo temporales. Si es vacio, no se se usara la carpeta predeterminado '/tmp'.
+#Parametros de salida:
+#  > Variables globales: 'g_path_temp'
+#  > Valor de retorno
+#     00> Si es establecio sin errores
+#     01> Si el directorio programa existe no existe y no se ha podido crearse automaticamente
+function set_temp_path() {
+
+    local p_path_temp="$1"
+
+    #1. Usar el directorio personalizado del usuario (siempre que existe y tienes acceso de escritura)
+    if [ ! -z "$p_path_temp" ] && [ "$p_path_temp" != "/tmp" ] && [ -d "$p_path_temp" ] && [ -w "$p_path_temp" ]; then
+        g_path_temp="$p_path_temp"
+        return 0
+    fi
+
+    #2. Usar la carpeta predeterminado '/tmp'.
+    g_path_temp="/tmp"
+    return 0
+
+}
+
 
 #
 #Parametros de entrada
@@ -330,11 +769,11 @@ function fulfill_preconditions() {
         p_require_root=0
     fi
 
-    local p_base_path
+    local p_path_base
     if [ -z "$5" ]; then
-        p_base_path="$HOME"
+        p_path_base="$HOME"
     else
-        p_base_path="$5"
+        p_path_base="$5"
     fi
 
     #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
@@ -345,7 +784,7 @@ function fulfill_preconditions() {
     fi
 
     #1. Validar si ejecuta dentro de un repostorio git
-    if [ ! -d "${p_base_path}/.files/setup/linux" ]; then
+    if [ ! -d "${p_path_base}/.files/setup/linux" ]; then
 
         printf 'No existe los archivos necesarios para la instalación. Descarge el repostorio con los archivos: "%bgit clone https://github.com/lestebanpc/dotfiles.git ~/.files%b"\n' "$g_color_gray1" "$g_color_reset"
         return 1
@@ -378,92 +817,6 @@ function fulfill_preconditions() {
     if [ ! "$g_os_architecture_type" = "x86_64" ] && [ ! "$g_os_architecture_type" = "aarch64" ]; then
         printf 'No esta implementado para la arquitectura de procesador "%s"\n' "$g_os_architecture_type"
         return 1
-    fi
-
-    #4. Validar si existen el folder de programas
-    local l_status=0
-    local l_group_name
-    if [ ! -z "$g_path_programs" ] && [ ! -d "$g_path_programs" ]; then
-
-
-        #Si la ruta de programas es global '~/tools' (compartida para varios usuarios)
-        if [ "$g_path_programs" = "/opt/tools" ]; then
-
-            # > 4 : El usuario es root (no requiere sudo)
-            if [ $g_user_sudo_support -eq 4 ]; then
-
-                printf '%bLa carpeta "%s" de programas no existe, se creará%b...\n' "$g_color_gray1" "$g_path_programs" "$g_color_reset"
-                mkdir -pm 755 "$g_path_programs"
-                l_status=$?
-
-                mkdir -pm 755 "$g_path_programs/userkeys"
-                mkdir -pm 755 "$g_path_programs/userkeys/tls"
-                mkdir -pm 755 "$g_path_programs/userkeys/ssh"
-
-                if [ ! -z "$p_other_calling_user" ]; then
-                    chown -R "$p_other_calling_user" "$g_path_programs"
-                fi
-
-            # > 0 : se soporta el comando sudo con password
-            # > 1 : se soporta el comando sudo sin password
-            elif [ $g_user_sudo_support -eq 0 ] || [ $g_user_sudo_support -eq 1 ]; then
-
-                printf '%bLa carpeta "%s" de programas no existe, se creará%b...\n' "$g_color_gray1" "$g_path_programs" "$g_color_reset"
-                sudo mkdir -pm 755 "$g_path_programs"
-                l_status=$?
-
-                #Obtener el grupo primario
-                if l_group_name=$(id -gn 2> /dev/null); then
-
-                    #Creando subdirectorios opcionales
-                    mkdir -p "$g_path_programs/userkeys"
-                    mkdir -p "$g_path_programs/userkeys/tls"
-                    mkdir -p "$g_path_programs/userkeys/ssh"
-
-                    sudo -R chown ${USER}:${l_group_name} "$g_path_programs"
-
-                fi
-
-            # > 2 : El SO no implementa el comando sudo
-            # > 3 : El usuario no tiene permisos para ejecutar sudo
-            else
-                printf 'La carpeta "%b%s%b" de programas no existe. %bEsta carpeta es requirida para instalar programas%b.\n' \
-                       "$g_color_gray1" "$g_path_programs" "$g_color_reset" "$g_color_red1" "$g_color_reset"
-                return 1
-            fi
-
-        #Si la ruta de programas es local '~/tools' (solo para un usuario)
-        else
-
-            printf '%bLa carpeta "%s" de programas no existe, se creará%b...\n' "$g_color_gray1" "$g_path_programs" "$g_color_reset"
-            mkdir -pm 755 "$g_path_programs"
-            l_status=$?
-
-            mkdir -p "$g_path_programs/userkeys"
-            mkdir -p "$g_path_programs/userkeys/tls"
-            mkdir -p "$g_path_programs/userkeys/ssh"
-
-            if [ ! -z "$p_other_calling_user" ]; then
-                chown -R "$p_other_calling_user" "$g_path_programs"
-            fi
-
-        fi
-
-    fi
-
-    #5. Validar si existen el folder de comandos cuando estos son locales: '~/.local/bin'
-    if [ ! -z "$g_path_bin" ] && [ ! -d "$g_path_bin" ] && [ "$g_path_bin" = "${p_base_path}/.local/bin" ]; then
-
-        #Ruta de programas:
-        mkdir -p "$p_base_path/.local"
-        mkdir -p "$g_path_bin"
-        mkdir -p "$g_path_man"
-        mkdir -p "$g_path_fonts"
-
-        if [ ! -z "$p_other_calling_user" ]; then
-            chown -R "$p_other_calling_user" "$p_base_path/.local"
-        fi
-
     fi
 
     #6. Validar si existe los folderes de Windows sobre WSL
@@ -519,7 +872,7 @@ function fulfill_preconditions() {
         if [ ! -z "$g_path_bin" ]; then
             printf 'Default command path        : "%s"' "$g_path_bin"
             if [ $g_os_type -eq 1 ] && [ ! -z "$g_path_bin_win" ]; then
-                printf ' (Windows "%s/bin")\n' "$g_path_bin_win"
+                printf ' (Windows "%s")\n' "$g_path_bin_win"
             else
                 printf '\n'
             fi
@@ -892,7 +1245,7 @@ function request_stop_systemd_unit() {
     fi
 
     local p_is_noninteractive=1
-    if [ "$3" = "1" ]; then
+    if [ "$3" = "0" ]; then
         p_is_noninteractive=0
     fi
 

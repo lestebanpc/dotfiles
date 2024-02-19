@@ -230,7 +230,8 @@ if g:use_typing_html_emmet
 endif
 
 "Solo en Linux (incluyendo WSL, solo en Linux y MacOS)
-if (g:os_type != 0) && g:use_tmux
+"if (g:os_type != 0) && g:use_tmux
+if (g:os_type != 0)
     "Paquete UI> CORE> Permite navegar entre split VIM y paneles TMUX como el mismo comando
     packadd vim-tmux-navigator
 endif

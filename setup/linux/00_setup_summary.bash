@@ -8,7 +8,7 @@
 #  1> La ruta relativa (o absoluta) de un archivos del repositorio
 #Parametros de salida: 
 #  STDOUT> La ruta base donde esta el repositorio
-function _get_current_base_path() {
+function _get_current_path_base() {
 
     #Obteniendo la ruta absoluta del parametro ingresado
     local l_path=''
@@ -27,7 +27,7 @@ function _get_current_base_path() {
 
 #Inicialización Global {{{
 
-declare -r g_base_path=$(_get_current_base_path "${BASH_SOURCE[0]}")
+declare -r g_path_base=$(_get_current_path_base "${BASH_SOURCE[0]}")
 
 #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
 #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
@@ -35,7 +35,7 @@ g_other_calling_user=''
 
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ${g_base_path}/.files/terminal/linux/functions/func_utility.bash
+. ${g_path_base}/.files/terminal/linux/functions/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -86,13 +86,13 @@ if [ -z "$g_user_is_root" ]; then
     #    > 2 : El SO no implementa el comando sudo
     #    > 3 : El usuario no tiene permisos para ejecutar sudo
     #    > 4 : El usuario es root (no requiere sudo)
-    get_user_options
+    set_user_options
 
 fi
 
 
 #Funciones de utilidad
-. ${g_base_path}/.files/setup/linux/_common_utility.bash
+. ${g_path_base}/.files/setup/linux/_common_utility.bash
 
 
 #Tipo de ejecucion del script principal
@@ -245,10 +245,10 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_base_path}/.files/setup/linux/04_setup_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             else
-                ${g_base_path}/.files/setup/linux/04_setup_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             fi
 
@@ -290,17 +290,20 @@ function g_install_options() {
             fi
             print_line '─' $g_max_length_line "$g_color_blue1"
 
-            #Parametros:
-            # 1> Tipo de ejecución: 1/3 (ejecución sin menu para instalar/actualizar un respositorio especifico)
-            # 2> Opciones de menu de Repositorio a instalar/acutalizar: 
-            # 3> El estado de la credencial almacenada para el sudo.
-            # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-            # 5> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+            #Parametros usados por el script:
+            # 1> Tipo de llamado: 1/3 (sin menu interactivo/no-interactivo).
+            # 2> Opciones de menu a ejecutar: entero positivo.
+            # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+            # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+            # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+            # 6> El estado de la credencial almacenada para el sudo.
+            # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+            # 8> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_base_path}/.files/setup/linux/01_setup_commands.bash 1 4 $g_status_crendential_storage 0 "$g_other_calling_user"
+                ${g_path_base}/.files/setup/linux/01_setup_commands.bash 1 4 "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_base_path}/.files/setup/linux/01_setup_commands.bash 3 4 $g_status_crendential_storage 0 "$g_other_calling_user"
+                ${g_path_base}/.files/setup/linux/01_setup_commands.bash 3 4 "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 "$g_other_calling_user"
                 l_status=$?
             fi
 
@@ -564,16 +567,18 @@ function g_install_options() {
        print_line '─' $g_max_length_line "$g_color_blue1"
        printf '%b\n' "$l_info"
 
-       #Parametros:
-       # 1> Tipo de ejecución: 1/2 (ejecución sin menu, interactiva y no-interactiva)
-       # 2> Paquetes a instalar: 40 (Python y sus paquetes) + 80 (NodeJS y sus paquetes) + 128 (VIM) + 1024 (NeoVIM)
-       # 3> El estado de la credencial almacenada para el sudo
-       # 4> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+       #Parametros usados por el script:
+       # 1> Tipo de configuración: 1/2 (instalación sin un menu interactivo/no-interactivo).
+       # 2> Opciones de menu a ejecutar: entero positivo.
+       # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+       # 4> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+       # 5> El estado de la credencial almacenada para el sudo.
+       # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
        if [ $l_is_noninteractive -eq 1 ]; then
-           ${g_base_path}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
+           ${g_path_base}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options "$g_path_programs" "$g_path_temp" $g_status_crendential_storage "$g_other_calling_user"
            l_status=$?
        else
-           ${g_base_path}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options $g_status_crendential_storage "$g_other_calling_user"
+           ${g_path_base}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options "$g_path_programs" "$g_path_temp" $g_status_crendential_storage "$g_other_calling_user"
            l_status=$?
        fi
 
@@ -647,19 +652,22 @@ function g_install_options() {
         printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "${p_list_repo_ids//,/, }" "$g_color_reset"
         print_line '─' $g_max_length_line "$g_color_blue1"
 
-        #Parametros:
-        # 1> Tipo de ejecución: 2/4 (ejecución sin menu para instalar/actualizar un respositorio especifico)
-        # 2> Repsositorio a instalar/acutalizar: 
-        # 3> El estado de la credencial almacenada para el sudo
-        # 4> Install only last version: por defecto es 1 (false). Solo si ingresa 0 es (true).
-        # 5> Flag '0' para mostrar un titulo si se envia, como parametro 2, un solo repositorio a configurar. Por defecto es '1' 
-        # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+        #Parametros del script usados hasta el momento:
+        # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
+        # 2> Listado de ID del repositorios a instalar separados por coma.
+        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+        # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+        # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+        # 6> El estado de la credencial almacenada para el sudo.
+        # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+        # 8> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+        # 9> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
         if [ $l_is_noninteractive -eq 1 ]; then
             
-            ${g_base_path}/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" $g_status_crendential_storage 0 1 "$g_other_calling_user"
+            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user"
             l_status=$?
         else
-            ${g_base_path}/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" $g_status_crendential_storage 0 1 "$g_other_calling_user" 
+            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user" 
             l_status=$?
         fi
 
@@ -838,11 +846,11 @@ g_usage() {
     printf '    %b~/.files/setup/linux/00_setup_summary.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar repositorios mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/00_setup_summary.bash\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash 0 LIST-PCKG-IDS CLEAN-OS-CACHE\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash 0 LIST-PCKG-IDS PRG_PATH CMD_BASE_PATH TEMP_PATH CLEAN-OS-CACHE\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un grupo de opciones sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS LIST-PCKG-IDS SUDO-STORAGE-OPTIONS CLEAN-OS-CACHE UPGRADE-OS-PACKAGES OTHER-USERID\n\n%b' \
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS LIST-PCKG-IDS PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS LIST-PCKG-IDS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS CLEAN-OS-CACHE UPGRADE-OS-PACKAGES OTHER-USERID\n\n%b' \
            "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -852,6 +860,15 @@ g_usage() {
     printf '  > %bLIST-PCKG-IDS %b.ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 1024. Si desea usar el los los paquetes por defecto envie "EMPTY".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bLos paquete basicos por defecto que son: Curl, UnZip, OpenSSL y Tmux.%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bCMD_BASE_PATH %bes ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts"). Si se envia vacio o EMPTY se usara el directorio predeterminado:%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '      %b> Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '      %b> Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '      %b> Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '  > %bTEMP_PATH %bes la ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado "/tmp".%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
@@ -899,18 +916,49 @@ g_is_credential_storage_externally=1
 #2.1. Por defecto, mostrar el menu para escoger lo que se va instalar
 if [ $gp_type_calling -eq 0 ]; then
 
-    #Parametros del script usados hasta el momento:
-    # 1> Tipo de invocación (sin menu): 1/2
+    #Parametros usados por el script:
+    # 1> Tipo de invocación: 0 (usando un menu interactivo)
     # 2> ID de los paquetes del repositorio, separados por coma, que se mostrara en el menu para que pueda instalarse. Si desea usar el por defecto envie "EMPTY".
     #    Los paquete basicos, por defecto, que se muestran en el menu son: Curl,UnZip, OpenSSL y Tmux
-    # 3> Flag '0' para limpiar el cache de paquetes del sistema operativo. Caso contrario, use 1.
+    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+    #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
+    #       > Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)
+    #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
+    # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    # 6> Flag '0' para limpiar el cache de paquetes del sistema operativo. Caso contrario, use 1.
     _gp_list_pckg_ids="$g_default_list_package_ids"
     if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
         _gp_list_pckg_ids="$2"
     fi
 
+    #Obtener los folderes de programas 'g_path_programs'
+    _g_path=''
+    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+        _g_path="$3"
+    fi
+
+    _g_is_noninteractive=1
+    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+
+    #Obtener los folderes de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
+    _g_path=''
+    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
+        _g_path="$4"
+    fi
+
+    set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+
+    #Obtener los folderes temporal 'g_path_temp'
+    _g_path=''
+    if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
+        _g_path="$5"
+    fi
+    set_temp_path "$_g_path"
+
     _gp_flag_clean_os_cache=1
-    if [ "$3" = "0" ]; then
+    if [ "$6" = "0" ]; then
         _gp_flag_clean_os_cache=0
     fi
 
@@ -920,7 +968,7 @@ if [ $gp_type_calling -eq 0 ]; then
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 0 1 1 "$g_base_path"
+    fulfill_preconditions $g_os_subtype_id 0 1 1 "$g_path_base"
     _g_status=$?
 
 
@@ -935,16 +983,23 @@ if [ $gp_type_calling -eq 0 ]; then
 #elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 2 ]; then
 else
 
-    #Parametros del script usados hasta el momento:
-    # 1> Tipo de invocación (sin menu): 1/2
+    #Parametros usados por el script:
+    # 1> Tipo de invocación (sin menu): 1/2 (sin usar un menu interactivo/no-interactivo)
     # 2> Opciones de menu a ejecutar: entero positivo.
     # 3> ID de los repositorios de comandos a configurar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".
     # 4> ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 32. Si desea usar el los los paquetes por defecto envie "EMPTY".
     #    Los paquetes por defecto que son: Curl, UnZip, OpenSSL y Tmux.
-    # 5> El estado de la credencial almacenada para el sudo.
-    # 6> Flag '0' para limpiar el cache de paquetes del sistema operativo. Caso contrario, use 1.
-    # 7> Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.
-    # 8> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+    # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+    #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
+    #       > Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)
+    #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
+    # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    # 8> El estado de la credencial almacenada para el sudo.
+    # 9> Flag '0' para limpiar el cache de paquetes del sistema operativo. Caso contrario, use 1.
+    #10> Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.
+    #11> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
     _gp_opciones=0
     if [ "$2" = "0" ]; then
         _gp_opciones=-1
@@ -955,9 +1010,14 @@ else
         exit 110
     fi
 
-    _gp_list_repo_ids="EMPTY"
-    if [ ! -z "$3" ]; then
+    _gp_list_repo_ids=""
+    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
         _gp_list_repo_ids="$3"
+    fi
+
+    if [ $_gp_opciones -lt 0 ] && [ -z "$_gp_list_repo_ids" ]; then
+        printf 'Se debe ingresar un valor valido para el pametro 2 "%s" o el parametro 3 "%s". Ambos no pueden ser empty.\n' "$_gp_opciones" "$_gp_list_repo_ids"
+        return 110
     fi
 
     _gp_list_pckg_ids="$g_default_list_package_ids"
@@ -965,8 +1025,8 @@ else
         _gp_list_pckg_ids="$4"
     fi
 
-    if [[ "$5" =~ ^[0-2]$ ]]; then
-        g_status_crendential_storage=$5
+    if [[ "$8" =~ ^[0-2]$ ]]; then
+        g_status_crendential_storage=$8
 
         if [ $g_status_crendential_storage -eq 0 ]; then
             g_is_credential_storage_externally=0
@@ -975,25 +1035,50 @@ else
     fi
 
     _gp_flag_clean_os_cache=1
-    if [ "$6" = "0" ]; then
+    if [ "$9" = "0" ]; then
         _gp_flag_clean_os_cache=0
     fi
 
     _gp_flag_upgrade_os_pkgs=1
-    if [ "$7" = "0" ]; then
+    if [ "${10}" = "0" ]; then
         _gp_flag_upgrade_os_pkgs=0
     fi
 
     #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
     g_other_calling_user=''
-    if [ "$g_base_path" != "$HOME" ] && [ ! -z "$8" ]; then
-        if [[ "$8" =~ ^[0-9]+:[0-9]+$ ]]; then
-            g_other_calling_user="$8"
+    if [ $g_user_sudo_support -eq 4 ] && [ ! -z "${11}" ] && [ "${11}" != "EMPTY" ] && [ "$g_path_base" != "$HOME" ]; then
+        if [[ "${11}" =~ ^[0-9]+:[0-9]+$ ]]; then
+            g_other_calling_user="${11}"
         else
-            echo "Parametro 8 \"$8\" debe ser tener el formado 'UID:GID'."
+            echo "Parametro 11 \"$8\" debe ser tener el formado 'UID:GID'."
             exit 110
         fi
     fi
+
+    #Obtener los folderes de programas 'g_path_programs'
+    _g_path=''
+    if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
+        _g_path="$5"
+    fi
+
+    _g_is_noninteractive=1
+    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+
+    #Obtener los folderes de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
+    _g_path=''
+    if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
+        _g_path="$6"
+    fi
+
+    set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+
+    #Obtener los folderes temporal 'g_path_temp'
+    _g_path=''
+    if [ ! -z "$7" ] && [ "$7" != "EMPTY" ]; then
+        _g_path="$7"
+    fi
+    set_temp_path "$_g_path"
+
 
     #Validar los requisitos (algunas opciones requiere root y otros no)
     #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
@@ -1001,7 +1086,7 @@ else
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 1 1 1 "$g_base_path" "$g_other_calling_user"
+    fulfill_preconditions $g_os_subtype_id 1 1 1 "$g_path_base" "$g_other_calling_user"
     _g_status=$?
 
     #Iniciar el procesamiento
