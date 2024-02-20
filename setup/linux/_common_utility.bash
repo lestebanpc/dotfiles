@@ -57,7 +57,7 @@ function set_program_path() {
     #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
     #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
     local p_other_calling_user
-    if [ -z "$4" ]; then
+    if [ ! -z "$4" ]; then
         p_other_calling_user="$4"
     fi
 
@@ -282,7 +282,7 @@ function set_command_path() {
     #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
     #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
     local p_other_calling_user
-    if [ -z "$4" ]; then
+    if [ ! -z "$4" ]; then
         p_other_calling_user="$4"
     fi
 
@@ -779,7 +779,7 @@ function fulfill_preconditions() {
     #Si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
     #UID del Usuario y GID del grupo (diferente al actual) que ejecuta el script actual
     local p_other_calling_user
-    if [ -z "$6" ]; then
+    if [ ! -z "$6" ]; then
         p_other_calling_user="$6"
     fi
 
