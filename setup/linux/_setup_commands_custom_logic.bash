@@ -249,11 +249,11 @@ function get_repo_latest_version() {
 
         go)
             #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
+            if ! ${g_path_bin}/jq --version &> /dev/null; then
                 return 1
             fi
 
-            l_aux=$(curl -Ls -H 'Accept: application/json' "https://go.dev/dl/?mode=json" | jq -r '.[0].version')
+            l_aux=$(curl -Ls -H 'Accept: application/json' "https://go.dev/dl/?mode=json" | ${g_path_bin}/jq -r '.[0].version')
             if [ $? -eq 0 ]; then
                 l_repo_last_version=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
                 l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
@@ -264,11 +264,11 @@ function get_repo_latest_version() {
 
         awscli)
             #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
+            if ! ${g_path_bin}/jq --version &> /dev/null; then
                 return 1
             fi
 
-            l_aux=$(curl -LsH "Accept: application/json" "https://api.github.com/repos/aws/aws-cli/tags" | jq -r '.[0].name')
+            l_aux=$(curl -LsH "Accept: application/json" "https://api.github.com/repos/aws/aws-cli/tags" | ${g_path_bin}/jq -r '.[0].name')
             if [ $? -eq 0 ]; then
                 l_repo_last_version=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
                 l_repo_last_version_pretty="$l_repo_last_version"
@@ -279,25 +279,25 @@ function get_repo_latest_version() {
 
         jq)
             #Si no esta instalado 'jq' usar expresiones regulares
-            if ! command -v jq &> /dev/null; then
+            if ! ${g_path_bin}/jq --version &> /dev/null; then
                 l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
             else
-                l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+                l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_path_bin}/jq -r '.tag_name')
             fi            
             l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
             ;;
 
         neovim)
             #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
+            if ! ${g_path_bin}/jq --version &> /dev/null; then
                 return 1
             fi
             
             #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_path_bin}/jq -r '.tag_name')
 
             #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            l_aux=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.body' | head -n 2 | tail -1)
+            l_aux=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | ${g_path_bin}/jq -r '.body' | head -n 2 | tail -1)
             if [ $? -eq 0 ]; then
                 l_repo_last_version_pretty=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
             else                                
@@ -307,7 +307,7 @@ function get_repo_latest_version() {
 
         nodejs)
             #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
+            if ! ${g_path_bin}/jq --version &> /dev/null; then
                 return 1
             fi
 
@@ -317,7 +317,7 @@ function get_repo_latest_version() {
             fi
             
             #Usando JSON para obtener la ultima version
-            l_aux=$(curl -Ls "${l_base_url_fixed}/index.json" | jq -r 'first(.[] | select(.lts != false)) | "\(.version)"' 2> /dev/null)
+            l_aux=$(curl -Ls "${l_base_url_fixed}/index.json" | ${g_path_bin}/jq -r 'first(.[] | select(.lts != false)) | "\(.version)"' 2> /dev/null)
 
             if [ $? -eq 0 ]; then
                 l_repo_last_version="$l_aux"
@@ -330,34 +330,34 @@ function get_repo_latest_version() {
 
        less)
             #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
+            if ! ${g_path_bin}/jq --version &> /dev/null; then
                 return 1
             fi
 
             #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_path_bin}/jq -r '.tag_name')
             #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | ${g_path_bin}/jq -r '.tag_name')
 
             l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version4")
            ;;
 
         graalvm)
             #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
+            if ! ${g_path_bin}/jq --version &> /dev/null; then
                 return 1
             fi
 
             #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_path_bin}/jq -r '.tag_name')
             #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | ${g_path_bin}/jq -r '.tag_name')
 
             l_repo_last_version_pretty=$(echo "$l_repo_last_version" | sed -e "$g_regexp_sust_version1")
-            l_arti_subversion_versions=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.assets[].name' | \
+            l_arti_subversion_versions=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | ${g_path_bin}/jq -r '.assets[].name' | \
                 grep -e '^graalvm-community-jdk-.*_linux-x64_bin\.tar\.gz$' | sed -e 's/graalvm-community-jdk-\(.*\)_linux-x64_bin.*/\1/' | sort -r)
 
-            #l_arti_subversion_versions=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.assets[].name' | \
+            #l_arti_subversion_versions=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | ${g_path_bin}/jq -r '.assets[].name' | \
             #   grep -e '^graalvm-ce-java.*-linux-amd64-.*\.tar\.gz$' | sed -e 's/graalvm-ce-java\(.*\)-linux-amd64-.*/\1/' | sort -r)
 
             #Si solo tiene uns subversion y es la misma que la version, no existe subversiones
@@ -379,7 +379,7 @@ function get_repo_latest_version() {
 
         *)
             #Si no esta instalado 'jq' no continuar
-            if ! command -v jq &> /dev/null; then
+            if ! ${g_path_bin}/jq --version &> /dev/null; then
                 return 1
             fi
 
@@ -389,9 +389,9 @@ function get_repo_latest_version() {
             fi
 
             #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_path_bin}/jq -r '.tag_name')
             #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | jq -r '.tag_name')
+            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | ${g_path_bin}/jq -r '.tag_name')
             
             if [ "$p_repo_id" = "netcoredbg" ]; then
                 l_aux="${l_repo_last_version//-/.}"
@@ -691,7 +691,7 @@ function _get_repo_current_version() {
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | jq -r '.clientVersion.gitVersion' 2> /dev/null)
+                l_tmp=$(echo "$l_tmp" | ${g_path_bin}/jq -r '.clientVersion.gitVersion' 2> /dev/null)
                 if [ $? -ne 0 ]; then
                     return 9;
                 fi
@@ -707,7 +707,7 @@ function _get_repo_current_version() {
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | jq -r '.releaseClientVersion' 2> /dev/null)
+                l_tmp=$(echo "$l_tmp" | ${g_path_bin}/jq -r '.releaseClientVersion' 2> /dev/null)
                 if [ $? -ne 0 ]; then
                     return 9;
                 fi
@@ -735,7 +735,7 @@ function _get_repo_current_version() {
             l_tmp=$(${l_path_file}kubeadm version -o json 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | jq -r '.clientVersion.gitVersion' 2> /dev/null)
+                l_tmp=$(echo "$l_tmp" | ${g_path_bin}/jq -r '.clientVersion.gitVersion' 2> /dev/null)
                 if [ $? -ne 0 ]; then
                     return 9;
                 fi
@@ -807,7 +807,7 @@ function _get_repo_current_version() {
 
             #Obtener la version
             if [ -f "${l_path_file}OmniSharp.deps.json" ]; then
-                l_tmp=$(jq -r '.targets[][].dependencies."OmniSharp.Stdio"' "${l_path_file}OmniSharp.deps.json" | grep -v "null" | head -n 1 2> /dev/null)
+                l_tmp=$(${g_path_bin}/jq -r '.targets[][].dependencies."OmniSharp.Stdio"' "${l_path_file}OmniSharp.deps.json" | grep -v "null" | head -n 1 2> /dev/null)
                 l_status=$?
             else
                 l_status=1
