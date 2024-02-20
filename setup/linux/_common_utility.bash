@@ -383,8 +383,8 @@ function set_command_path() {
     # > 3 : El usuario no tiene permisos para ejecutar sudo
     g_path_cmd_base="${p_path_base}/.local"
     g_path_bin="${g_path_cmd_base}/bin"
-    g_path_man="${p_path_cmd_base}/man/man1"
-    g_path_fonts="${p_path_cmd_base}/share/fonts"
+    g_path_man="${g_path_cmd_base}/man/man1"
+    g_path_fonts="${g_path_cmd_base}/share/fonts"
 
     #Si no existe crearlo
     if [ ! -d "${g_path_cmd_base}" ]; then
