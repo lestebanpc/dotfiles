@@ -361,9 +361,11 @@ function _index_doc_of_vim_packages() {
 function _download_vim_packages() {
 
     #1. Argumentos
+    local l_tag="VIM"
     local p_is_neovim=1
     if [ "$1" = "0" ]; then
         p_is_neovim=0
+        l_tag="NeoVIM"
     fi
 
     local l_mode="Editor"
@@ -378,14 +380,21 @@ function _download_vim_packages() {
         p_flag_non_index_doc=0
     fi
 
+    #Precondiciones obligatorios: Se requiere tener Git instalado
+    if ! git --version 1> /dev/null 2>&1; then
+
+        #No esta instalado Git, No configurarlo
+        printf '%s > %bGit NO esta instalado%b. Es requerido para descargar los plugins.\n' "$l_tag" "$g_color_red1" "$g_color_reset"
+        return 111
+
+    fi
+
     #2. Ruta base donde se instala el plugins/paquete
-    local l_tag="VIM"
     local l_current_scope=1
     local l_base_plugins="${g_path_base}/.vim/pack"
     if [ $p_is_neovim -eq 0  ]; then
         l_base_plugins="${g_path_base}/.local/share/nvim/site/pack"
         l_current_scope=2
-        l_tag="NeoVIM"
     fi
 
     #3. Crear las carpetas de basicas
@@ -394,7 +403,6 @@ function _download_vim_packages() {
     printf "%s > Descargando los %bplugins%b de modo %b%s%b %b(%s)%b\n" "$l_tag" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" \
            "$l_mode" "$g_color_reset" "$g_color_gray1" "$l_base_plugins" "$g_color_reset"
     print_line '-' $g_max_length_line  "$g_color_gray1"
-
 
     mkdir -p ${l_base_plugins}
     mkdir -p ${l_base_plugins}/themes/start
@@ -627,7 +635,7 @@ function _config_developer_vim() {
         
 
     printf 'Los plugins del IDE CoC de %s tiene componentes que requieren su inicialización para su uso.\n' "$l_tag"
-    printf 'Inicilizando dichas componentes del plugins...\n\n'
+    printf 'Inicializando dichas componentes del plugins...\n\n'
 
     #Instalando los parseadores de lenguaje de 'nvim-treesitter'
     if [ $p_is_neovim -eq 0  ]; then
@@ -909,146 +917,6 @@ function _setup_vim_files() {
 
 }
 
-#Conigura VIM/NeoVIM (siempre que esta instalado) para su perfil de usuario.
-# Parametros de entrada:
-#  1> Flag '0' si es NeoVIM.
-#  2> Opcion ingresada por el usuario.
-# Parametros de salida:
-#  > Valores de retorno
-#     00> Se configuro con exito
-#     01> Ocurrio un error en crear los archivos/carpetas del profile de VIM/NeoVIM para su usuario. No se continuara con la configuración de los paquetes.
-#     02> Ocurrio un error descarga de paquetes de VIM/NeoVIM para su usuario. Si es IDE, no se continuara con la configuración final.
-#     03> Ocurrio un error en la configuración final de VIM/NeoVIM como IDE
-#     04> No esta instalado VIM/NeoVIM, por lo que no se puede realizar la configuración.
-#     99> No se solicito configurar VIM/NeoVIM
-function _setup_vim_for_user() {
-
-    #1. Argumentos
-    local p_is_neovim=1
-    if [ "$1" = "0" ]; then
-        p_is_neovim=0
-    fi
-
-    local p_opciones=0
-    if [[ "$1" =~ ^[0-9]+$ ]]; then
-        p_opciones=$1
-    fi
-
-    #2. Determinar si se configurar: (-1) No se configura, (0) Como IDE, (1) Como Editor
-    local l_config_vim=-1
-    local l_option=512
-
-    if [ $p_is_neovim -eq 0 ]; then
-        l_option=4096
-    fi
-
-    #Es IDE?
-    if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-        l_config_vim=0
-    fi
-
-    if [ $l_config_vim -lt 0 ]; then
-
-        #Es Editor?
-        l_option=256
-        if [ $p_is_neovim -eq 0 ]; then
-            l_option=2048
-        fi
-
-        if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-            l_config_vim=1
-        fi
-    fi
-    
-    #Si no se solicitar instalar VIM/NeoVIM, salir
-    if [ $l_config_vim -lt 0 ]; then
-        return 99
-    fi
-   
-    #Sobrescribir los enlaces simbolicos
-    l_option=4
-    local l_flag_overwrite_ln=1
-    if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-        l_flag_overwrite_ln=0
-    fi
-
-    #Validar si NodeJS y adicionarlo en el PATH de programas del usuario si no lo esta.
-    local l_status
-    check_nodejs "${g_path_programs}" 1 1
-    l_status=$?    #Retorna 3 si no esta instalado
-
-
-    #6. Configurar los archivos/carpetas del profile de VIM/NeoVIM
-    if [ $p_is_neovim -eq 0  ]; then
-
-        #Validar si NeoVIM esta instalado y registrarlo en el PATH de programas del usuario.
-        check_neovim "${g_path_programs}" 1 1
-        l_status=$?    #Retorna 3 si no esta instalado
-
-        #Si no esta instalado
-        if [ $l_status -eq 3  ]; then
-            printf '%s > %s no esta instalado. NO se continuara con la configuración.\n' "$l_tag" "$l_tag"
-            return 4
-        fi
-
-        _setup_nvim_files $l_config_vim $l_flag_overwrite_ln
-        l_status=$?
-
-    else
-
-        #Si no esta instalado
-        local l_version=$(get_vim_version)
-
-        if [ -z "$l_version" ]; then
-            printf '%s > %s no esta instalado. NO se continuara con la configuración.\n' "$l_tag" "$l_tag"
-            return 4
-        fi
-
-        _setup_vim_files $l_config_vim $l_flag_overwrite_ln
-        l_status=$?
-    fi
-
-    #7. Instalando los paquetes de VIM, indexando la documentación, y configurando los plugins como IDE
-    local l_result=0
-    if [ $l_status -eq 0 ]; then
-
-        #Instalando los paquetes de VIM e indexando la documentación
-        _download_vim_packages $p_is_neovim $l_config_vim 1
-        l_status=$?
-
-        if [ $l_status -eq 0 ]; then
-
-            #Configuraciones adicionales de VIM como Developer
-            if [ $l_config_vim -eq 1 ]; then
-                printf 'Se ha instalando los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_cian1" "$l_tag" "$g_color_reset" "$g_color_cian1" "Editor" "$g_color_reset"
-            else
-                _config_developer_vim $p_is_neovim
-                l_status=$?
-
-                if [ $l_status -ne 0 ]; then
-                    printf 'Ocurrio un error en la configuración final de %s como IDE.\n' "$l_tag"
-                    l_result=3
-                fi
-            fi
-
-        else
-            if [ $l_config_vim -eq 0 ]; then
-                printf 'Ocurrio un error descarga de paquetes de %s para su usuario. No se continuara con la configuración de final de %s como IDE.\n' "$l_tag" "$l_tag"
-            else
-                printf 'Ocurrio un error descarga de paquetes de %s para su usuario.\n' "$l_tag"
-            fi
-            l_result=2
-        fi
-
-    else
-        printf 'Ocurrio un error en crear los archivos/carpetas del profile de %s para su usuario. No se continuara con la configuración de los paquetes.\n' "$l_tag"
-        l_result=1
-    fi
-
-
-    return $l_result
-
-}
 
 #
 #Instalar RTE Node.JS
@@ -1103,8 +971,11 @@ _install_nodejs() {
         l_status=$?
     fi
 
+    #No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
     #Si no se acepto almacenar credenciales
-    if [ $l_status -eq 120 ]; then
+    elif [ $l_status -eq 120 ]; then
         return 120
     #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
     elif [ $l_status -eq 119 ]; then
@@ -1330,8 +1201,11 @@ _install_python() {
         l_status=$?
     fi
 
+    #No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
     #Si no se acepto almacenar credenciales
-    if [ $l_status -eq 120 ]; then
+    elif [ $l_status -eq 120 ]; then
         return 120
     #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
     elif [ $l_status -eq 119 ]; then
@@ -1512,8 +1386,11 @@ function _install_vim() {
         l_status=$?
     fi
 
+    #No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
     #Si no se acepto almacenar credenciales
-    if [ $l_status -eq 120 ]; then
+    elif [ $l_status -eq 120 ]; then
         return 120
     #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
     elif [ $l_status -eq 119 ]; then
@@ -1607,8 +1484,11 @@ function _install_nvim() {
             l_status=$?
         fi
 
+        #No se cumplen las precondiciones obligatorios
+        if [ $l_status -eq 111 ]; then
+            return 111
         #Si no se acepto almacenar credenciales
-        if [ $l_status -eq 120 ]; then
+        elif [ $l_status -eq 120 ]; then
             return 120
         #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
         elif [ $l_status -eq 119 ]; then
@@ -1760,8 +1640,11 @@ function _sutup_support_x11_clipboard() {
         l_status=$?
     fi
 
+    #No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
     #Si no se acepto almacenar credenciales
-    if [ $l_status -eq 120 ]; then
+    elif [ $l_status -eq 120 ]; then
         return 120
     #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
     elif [ $l_status -eq 119 ]; then
@@ -2239,10 +2122,13 @@ function _remove_vim_plugin_manager() {
 
 }
 
-# Instalar Python, NodeJS, VIM y NeoVIM
+# Instalar Python, NodeJS, VIM/NeoVIM y luego configurarlo para que sea Editor/IDE (Crear archivos/folderes de configuración, 
+# Descargar Plugin, Indexar la documentación de los plugin).
 # Parametros de entrada:
 #  1> Opción de menu a ejecutar
-#
+# Parametros de salida:
+#  111> No se cumplio con requesitos obligatorios. Detener el proceso.
+#  120> No se almaceno el password para sudo (solo cuando se requiere).
 function _setup_vim_environment() {
 
     #00. Argumentos
@@ -2250,7 +2136,6 @@ function _setup_vim_environment() {
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_opciones=$1
     fi
-
 
     #01. Instalar Python y su gestor de paquetes Pip
     local l_status=0
@@ -2263,8 +2148,11 @@ function _setup_vim_environment() {
         _install_python
         l_status=$?
 
+        #No se cumplen las precondiciones obligatorios
+        if [ $l_status -eq 111 ]; then
+            return 111
         #Si no se acepto almacenar credenciales
-        if [ $l_status -eq 120 ]; then
+        elif [ $l_status -eq 120 ]; then
             return 120
         elif [ $l_status -eq 0 ]; then
             l_is_python_installed=0
@@ -2331,8 +2219,11 @@ function _setup_vim_environment() {
                 l_status=$?
             fi
 
+            #No se cumplen las precondiciones obligatorios
+            if [ $l_status -eq 111 ]; then
+                return 111
             #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
+            elif [ $l_status -eq 120 ]; then
                 return 120
             fi
 
@@ -2361,8 +2252,11 @@ function _setup_vim_environment() {
         _install_nodejs
         l_status=$?
 
+        #No se cumplen las precondiciones obligatorios
+        if [ $l_status -eq 111 ]; then
+            return 111
         #Si no se acepto almacenar credenciales
-        if [ $l_status -eq 120 ]; then
+        elif [ $l_status -eq 120 ]; then
             return 120
         elif [ $l_status -eq 0 ]; then
             l_is_nodejs_installed=0
@@ -2427,8 +2321,11 @@ function _setup_vim_environment() {
                 l_status=$?
             fi
 
+            #No se cumplen las precondiciones obligatorios
+            if [ $l_status -eq 111 ]; then
+                return 111
             #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
+            elif [ $l_status -eq 120 ]; then
                 return 120
             fi
 
@@ -2445,8 +2342,11 @@ function _setup_vim_environment() {
         _install_vim
         l_status=$?
 
+         #No se cumplen las precondiciones obligatorios
+        if [ $l_status -eq 111 ]; then
+            return 111
         #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-        if [ $l_status -eq 120 ]; then
+        elif [ $l_status -eq 120 ]; then
             return 120
         elif [ $l_status -eq 0 ]; then
             l_is_vim_installed=0
@@ -2463,8 +2363,11 @@ function _setup_vim_environment() {
         _install_nvim
         l_status=$?
 
+        #No se cumplen las precondiciones obligatorios
+        if [ $l_status -eq 111 ]; then
+            return 111
         #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-        if [ $l_status -eq 120 ]; then
+        elif [ $l_status -eq 120 ]; then
             return 120
         elif [ $l_status -eq 0 ]; then
             l_is_nvim_installed=0
@@ -2592,17 +2495,8 @@ function _setup_vim_environment() {
     local l_version
     if [ $l_flag_setup -ne -1 ]; then
 
-        #Se requiere tener Git instalado
-        if ! git --version 1> /dev/null 2>&1; then
-
-            #No esta instalado Git, No configurarlo
-            l_flag_setup=-1
-            printf 'VIM > %bGit NO esta instalado%b. Es requerido para descargar los plugins.\n' "$g_color_red1" "$g_color_reset"
-
-        fi
-
         #Si se indexa la documentación, requiere que VIM este instalado
-        if [ $l_flag_setup -ne -1 ] && [ $l_flag_non_index_docs -eq 1 ]; then
+        if [ $l_flag_non_index_docs -eq 1 ]; then
            
             #Si aun no se conoce si esta instalado
             if [ $l_is_vim_installed -eq -1 ]; then
@@ -2612,6 +2506,11 @@ function _setup_vim_environment() {
                     #No esta instalado VIM, No configurarlo
                     l_flag_setup=-1
                     printf 'VIM > %bVIM NO esta instalado%b. Es requerido para indexar la documentación de los plugins.\n' "$g_color_red1" "$g_color_reset"
+
+                    #Si no se comple lo requisitos obligatorios (tener VIM instalado): abortar todo el proceso.
+                    #Si desea continuar con otro procesos, comentarlo
+                    return 111
+
                 else
                     l_is_vim_installed=0
                 fi
@@ -2620,6 +2519,11 @@ function _setup_vim_environment() {
                 #No esta instalado VIM, No configurarlo
                 l_flag_setup=-1
                 printf 'VIM > %bVIM NO esta instalado%b. Es requerido para indexar la documentación de los plugins.\n' "$g_color_red1" "$g_color_reset"
+
+                #Si no se comple lo requisitos obligatorios (tener VIM instalado): abortar todo el proceso.
+                #Si desea continuar con otro procesos, comentarlo
+                return 111
+
             fi
 
         fi
@@ -2628,7 +2532,14 @@ function _setup_vim_environment() {
         if [ $l_flag_setup -ne -1 ]; then
             _download_vim_packages 1 $l_flag_setup $l_flag_non_index_docs
             l_status=$?
+
+            #Si no se comple lo requisitos obligatorios (tener Git instalado): abortar todo el proceso.
+            #Si desea continuar con otro procesos, comentarlo
+            if [ $l_status -eq 111 ]; then
+                return 111
+            fi
         fi
+
 
     fi
     
@@ -2830,17 +2741,8 @@ function _setup_vim_environment() {
 
     if [ $l_flag_setup -ne -1 ]; then
 
-        #Se requiere tener Git instalado
-        if ! git --version 1> /dev/null 2>&1; then
-
-            #No esta instalado Git, No configurarlo
-            l_flag_setup=-1
-            printf 'NeoVIM > %bGit NO esta instalado%b. Es requerido para descargar los plugins.\n' "$g_color_red1" "$g_color_reset"
-
-        fi
-
         #Si se indexa la documentación, requiere que NeoVIM este instalado
-        if [ $l_flag_setup -ne -1 ] && [ $l_flag_non_index_docs -eq 1 ]; then
+        if [ $l_flag_non_index_docs -eq 1 ]; then
            
             #Si aun no se conoce si esta instalado
             if [ $l_is_nvim_installed -eq -1 ]; then
@@ -2852,6 +2754,11 @@ function _setup_vim_environment() {
                     #No esta instalado NeoVIM, No configurarlo
                     l_flag_setup=-1
                     printf 'NeoVIM > %bNeoVIM NO esta instalado%b. Es requerido para indexar la documentación de los plugins.\n' "$g_color_red1" "$g_color_reset"
+
+                    #Si no se comple lo requisitos obligatorios (tener NeoVIM instalado): abortar todo el proceso.
+                    #Si desea continuar con otro procesos, comentarlo
+                    return 111
+
                 else
                     l_is_nvim_installed=0
                 fi
@@ -2861,6 +2768,11 @@ function _setup_vim_environment() {
                 #No esta instalado NeoVIM, No configurarlo
                 l_flag_setup=-1
                 printf 'NeoVIM > %bNeoVIM NO esta instalado%b. Es requerido para indexar la documentación de los plugins.\n' "$g_color_red1" "$g_color_reset"
+
+                #Si no se comple lo requisitos obligatorios (tener NeoVIM instalado): abortar todo el proceso.
+                #Si desea continuar con otro procesos, comentarlo
+                return 111
+
             fi
 
         fi
@@ -2869,6 +2781,12 @@ function _setup_vim_environment() {
         if [ $l_flag_setup -ne -1 ]; then
             _download_vim_packages 0 $l_flag_setup $l_flag_non_index_docs
             l_status=$?
+
+            #Si no se comple lo requisitos obligatorios (tener Git instalado): abortar todo el proceso.
+            #Si desea continuar con otro procesos, comentarlo
+            if [ $l_setup -eq 111 ]; then
+                return 111
+            fi
         fi
 
     fi
@@ -3054,43 +2972,58 @@ function _setup() {
     fi
     
 
-    #02. Configuracion entrono para VIM: Python, NodeJS, VIM/NeoVIM
+    #02. La configuracion requerido para tener VIM/NeoVIM como Editor/IDE (incluyendo la instalación de Python, NodeJS y VIM/NeoVIM)
     _setup_vim_environment $p_opciones
     l_status=$?
-    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-    if [ $l_status -eq 120 ]; then
+    #No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
+    #No se acepto almacenar las credenciales para usar sudo.
+    elif [ $l_status -eq 120 ]; then
         return 120
     fi
     
     #03. Configuracion el SO: Crear enlaces simbolicos y folderes basicos
     _setup_user_profile $p_opciones
     l_status=$?
-    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-    if [ $l_status -eq 120 ]; then
+    #No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
+    #No se acepto almacenar las credenciales para usar sudo.
+    elif [ $l_status -eq 120 ]; then
         return 120
     fi
-
+    
     #04. Eliminar el gestor 'VIM-Plug' y Packer
     _remove_vim_plugin_manager $p_opciones
     l_status=$?
-    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-    if [ $l_status -eq 120 ]; then
+    #No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
+    #No se acepto almacenar las credenciales para usar sudo.
+    elif [ $l_status -eq 120 ]; then
         return 120
     fi
-
+    
     #05. Configurar para tener el soporte a 'X11 forwarding for SSH Server'
     _sutup_support_x11_clipboard $p_opciones
     l_status=$?
-    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-    if [ $l_status -eq 120 ]; then
+    #No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
+    #No se acepto almacenar las credenciales para usar sudo.
+    elif [ $l_status -eq 120 ]; then
         return 120
     fi
 
     #06. Configurar para tener el soporte a 'X11 forwarding for SSH Server'
     _uninstall_support_x11_clipboard $p_opciones
     l_status=$?
-    #Se requiere almacenar las credenciales para realizar cambiso con sudo.
-    if [ $l_status -eq 120 ]; then
+    #No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
+    #No se acepto almacenar las credenciales para usar sudo.
+    elif [ $l_status -eq 120 ]; then
         return 120
     fi
 
@@ -3490,7 +3423,7 @@ if [ $gp_type_calling -eq 0 ]; then
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 0 0 1 "$g_path_base"
+    fulfill_preconditions $g_os_subtype_id 0 1 1 "$g_path_base"
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -3570,7 +3503,7 @@ else
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
     #  5 > Path donde se encuentra el directorio donde esta el '.git'
-    fulfill_preconditions $g_os_subtype_id 1 0 1 "$g_path_base" "$g_other_calling_user"
+    fulfill_preconditions $g_os_subtype_id 1 1 1 "$g_path_base" "$g_other_calling_user"
     _g_status=$?
 
     #Iniciar el procesamiento
@@ -3579,8 +3512,11 @@ else
         _setup $gp_menu_options
         _g_status=$?
 
+        #No se cumplen las precondiciones obligatorios
+        if [ $l_status -eq 111 ]; then
+            _g_result=111
         #Informar si se nego almacenar las credencial cuando es requirido
-        if [ $_g_status -eq 120 ]; then
+        elif [ $_g_status -eq 120 ]; then
             _g_result=120
         #Si la credencial se almaceno en este script (localmente). avisar para que lo cierre el caller
         elif [ $g_is_credential_storage_externally -ne 0 ] && [ $g_status_crendential_storage -eq 0 ]; then
