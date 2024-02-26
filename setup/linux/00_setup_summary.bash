@@ -225,9 +225,56 @@ function g_install_options() {
     #Flag '0' cuando no se realizo ninguna instalacion de paquetes
     local l_exist_packages_installed=1
 
-    #3. Instalar comandos basicos (usar un grupo de comandos especifico)
+    #3. Instalar paquetes basicos del SO: Curl, OpenSSL y Tmux
     local l_status=0
-    local l_option=2048
+    local l_option=1024
+    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ] && [ ! -z "$p_list_pckg_ids" ]; then
+
+        #Solo soportado para los que tenga acceso a root
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+            #Mostrar el titulo de instalacion
+            printf '\n'
+            print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "> Instalando '%b%s%b'\n" "$g_color_cian1" "${p_list_pckg_ids//,/, }" "$g_color_reset"
+            print_line '─' $g_max_length_line "$g_color_blue1"
+
+            #Parametros:
+            # 1> Tipo de ejecución: 2/4 (ejecución sin menu, para instalar/actualizar un grupo paquetes)
+            # 2> Paquetes a instalar 
+            # 3> El estado de la credencial almacenada para el sudo
+            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+            if [ $l_is_noninteractive -eq 1 ]; then
+                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                l_status=$?
+            else
+                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                l_status=$?
+            fi
+
+            if [ $l_exist_packages_installed -ne 0 ]; then
+                l_exist_packages_installed=0
+            fi
+
+            #Si no se acepto almacenar credenciales
+            if [ $l_status -eq 120 ]; then
+                return 120
+            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+            elif [ $l_status -eq 119 ]; then
+                g_status_crendential_storage=0
+            #Si no se paso las precondiciones iniciales
+            elif [ $l_status -eq 111 ]; then
+                return $l_status
+            fi
+
+        else
+            printf '%bSe requiere acceso a root%b para instalar paquete.\n' "$g_color_red1" "$g_color_reset"
+        fi
+
+    fi
+
+    #4. Descargar e configurar los comandos basicos (usar un grupo de comandos especifico)
+    l_option=2048
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -275,56 +322,100 @@ function g_install_options() {
 
     fi
 
-    #3. Instalar paquetes basicos del SO: Curl, OpenSSL y Tmux
-    l_option=1024
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ] && [ ! -z "$p_list_pckg_ids" ]; then
 
-        #Solo soportado para los que tenga acceso a root
-        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+    #5. Descargar y configurar una lista de repositorios de comandos adicionales a instalar (segun una lista de ID de repositorios)
 
-            #Mostrar el titulo de instalacion
-            printf '\n'
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando '%b%s%b'\n" "$g_color_cian1" "${p_list_pckg_ids//,/, }" "$g_color_reset"
-            print_line '─' $g_max_length_line "$g_color_blue1"
+    #¿Se adiciona repositorios adicionales?
+    if [ $p_input_options -gt 0 ]; then
 
-            #Parametros:
-            # 1> Tipo de ejecución: 2/4 (ejecución sin menu, para instalar/actualizar un grupo paquetes)
-            # 2> Paquetes a instalar 
-            # 3> El estado de la credencial almacenada para el sudo
-            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
-            if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
-                l_status=$?
-            else
-                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
-                l_status=$?
+        #LSP/DAP de Java: jdtls
+        l_option=4194304
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+            if [[ ! $p_list_repo_ids =~ ,jdtls$ ]] && [[ ! $p_list_repo_ids =~ ,jdtls, ]] && [[ ! $p_list_repo_ids =~ ^jdtls, ]]; then
+                if [ -z "$p_list_repo_ids" ]; then
+                    p_list_repo_ids="jdtls"
+                else
+                    p_list_repo_ids="${p_list_repo_ids},jdtls"
+                fi
             fi
 
-            if [ $l_exist_packages_installed -ne 0 ]; then
-                l_exist_packages_installed=0
+        fi
+
+        #LSP/DAP de .NET : roslyn,netcoredbg
+        l_option=2097152
+        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+
+            if [[ ! $p_list_repo_ids =~ ,roslyn$ ]] && [[ ! $p_list_repo_ids =~ ,roslyn, ]] && [[ ! $p_list_repo_ids =~ ^roslyn, ]]; then
+                if [ -z "$p_list_repo_ids" ]; then
+                    p_list_repo_ids="roslyn"
+                else
+                    p_list_repo_ids="${p_list_repo_ids},roslyn"
+                fi
             fi
 
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-                g_status_crendential_storage=0
-            #Si no se paso las precondiciones iniciales
-            elif [ $l_status -eq 111 ]; then
-                return $l_status
+            if [[ ! $p_list_repo_ids =~ ,netcoredbg$ ]] && [[ ! $p_list_repo_ids =~ ,netcoredbg, ]] && [[ ! $p_list_repo_ids =~ ^netcoredbg, ]]; then
+                if [ -z "$p_list_repo_ids" ]; then
+                    p_list_repo_ids="netcoredbg"
+                else
+                    p_list_repo_ids="${p_list_repo_ids},netcoredbg"
+                fi
             fi
 
-        else
-            printf '%bSe requiere acceso a root%b para instalar paquete.\n' "$g_color_red1" "$g_color_reset"
         fi
 
     fi
 
-    #5. Instalar y/o Configurar todo lo relacionado con VIM/NeoVIM: NodeJs (y sus paquetes globales), Python/Pip (y sus paquetes de usuario), VIM y NeoVIM
+    #Instalar los repositorios de comandos
+    if [ ! -z "$p_list_repo_ids" ]; then
 
-    #5.1. Determinar las opciones elegidas por el usuario
+        #Mostrar el titulo de instalacion
+        printf '\n'
+        print_line '─' $g_max_length_line  "$g_color_blue1"
+        printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "${p_list_repo_ids//,/, }" "$g_color_reset"
+        print_line '─' $g_max_length_line "$g_color_blue1"
+
+        #Parametros del script usados hasta el momento:
+        # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
+        # 2> Listado de ID del repositorios a instalar separados por coma.
+        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+        # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+        # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+        # 6> El estado de la credencial almacenada para el sudo.
+        # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+        # 8> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+        # 9> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
+        if [ $l_is_noninteractive -eq 1 ]; then
+            
+            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user"
+            l_status=$?
+        else
+            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user" 
+            l_status=$?
+        fi
+
+        #Obligar a limpiar el cache: ¿algunos instalacion, instala paquetes?
+        if [ $l_exist_packages_installed -ne 0 ]; then
+            l_exist_packages_installed=0
+        fi
+
+        #Si no se acepto almacenar credenciales
+        if [ $l_status -eq 120 ]; then
+            return 120
+        #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+        elif [ $l_status -eq 119 ]; then
+           g_status_crendential_storage=0
+        #Si no se paso las precondiciones iniciales
+        elif [ $l_status -eq 111 ]; then
+            return $l_status
+        fi
+
+    fi
+
+
+    #6. Instalar y/o Configurar todo lo relacionado con VIM/NeoVIM: NodeJs (y sus paquetes globales), Python/Pip (y sus paquetes de usuario), VIM y NeoVIM
+
+    #6.1. Determinar las opciones elegidas por el usuario
     local la_options_config_vim=()
     local la_options_config_nvim=()
     local la_options_install=()
@@ -335,7 +426,7 @@ function g_install_options() {
 
     if [ $p_input_options -gt 0 ]; then
 
-        #5.1.1. Determinar las opciones elegidas
+        #6.1.1. Determinar las opciones elegidas
 
         #Opciones recomendados para ejecutar con root:
         # (0004096) Instalar NodeJS y Npm
@@ -523,7 +614,7 @@ function g_install_options() {
             la_options_config_nvim[7]=0
         fi
 
-        #5.1.1. Determinar el valor de estas las opciones elegidas
+        #6.1.1. Determinar el valor de estas las opciones elegidas
         l_prg_options=0
         l_info='Se realizara las siguientes instalaciones/configuraciones:'
 
@@ -557,7 +648,7 @@ function g_install_options() {
 
     fi
 
-    #5.3. Instalar/Configurar el profile
+    #6.3. Instalar/Configurar el profile
     if [ $l_prg_options -ne 0 ] && [ $l_prg_options -ne 4 ] && [ $l_prg_options -ne 5 ]; then
 
        #Mostrar el titulo de instalacion
@@ -600,103 +691,14 @@ function g_install_options() {
 
     fi
 
-    #8. Opción> Lista de repositorios de comandos adicionales a instalar (segun una lista de ID de repositorios)
 
-    #¿Se adiciona repositorios adicionales?
-    if [ $p_input_options -gt 0 ]; then
-
-        #LSP/DAP de Java: jdtls
-        l_option=4194304
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-
-            if [[ ! $p_list_repo_ids =~ ,jdtls$ ]] && [[ ! $p_list_repo_ids =~ ,jdtls, ]] && [[ ! $p_list_repo_ids =~ ^jdtls, ]]; then
-                if [ -z "$p_list_repo_ids" ]; then
-                    p_list_repo_ids="jdtls"
-                else
-                    p_list_repo_ids="${p_list_repo_ids},jdtls"
-                fi
-            fi
-
-        fi
-
-        #LSP/DAP de .NET : roslyn,netcoredbg
-        l_option=2097152
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-
-            if [[ ! $p_list_repo_ids =~ ,roslyn$ ]] && [[ ! $p_list_repo_ids =~ ,roslyn, ]] && [[ ! $p_list_repo_ids =~ ^roslyn, ]]; then
-                if [ -z "$p_list_repo_ids" ]; then
-                    p_list_repo_ids="roslyn"
-                else
-                    p_list_repo_ids="${p_list_repo_ids},roslyn"
-                fi
-            fi
-
-            if [[ ! $p_list_repo_ids =~ ,netcoredbg$ ]] && [[ ! $p_list_repo_ids =~ ,netcoredbg, ]] && [[ ! $p_list_repo_ids =~ ^netcoredbg, ]]; then
-                if [ -z "$p_list_repo_ids" ]; then
-                    p_list_repo_ids="netcoredbg"
-                else
-                    p_list_repo_ids="${p_list_repo_ids},netcoredbg"
-                fi
-            fi
-
-        fi
-
-    fi
-
-    #Instalar los repositorios de comandos
-    if [ ! -z "$p_list_repo_ids" ]; then
-
-        #Mostrar el titulo de instalacion
-        printf '\n'
-        print_line '─' $g_max_length_line  "$g_color_blue1"
-        printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "${p_list_repo_ids//,/, }" "$g_color_reset"
-        print_line '─' $g_max_length_line "$g_color_blue1"
-
-        #Parametros del script usados hasta el momento:
-        # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
-        # 2> Listado de ID del repositorios a instalar separados por coma.
-        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
-        # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
-        # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
-        # 6> El estado de la credencial almacenada para el sudo.
-        # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
-        # 8> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
-        # 9> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
-        if [ $l_is_noninteractive -eq 1 ]; then
-            
-            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user"
-            l_status=$?
-        else
-            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user" 
-            l_status=$?
-        fi
-
-        #Obligar a limpiar el cache: ¿algunos instalacion, instala paquetes?
-        if [ $l_exist_packages_installed -ne 0 ]; then
-            l_exist_packages_installed=0
-        fi
-
-        #Si no se acepto almacenar credenciales
-        if [ $l_status -eq 120 ]; then
-            return 120
-        #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-        elif [ $l_status -eq 119 ]; then
-           g_status_crendential_storage=0
-        #Si no se paso las precondiciones iniciales
-        elif [ $l_status -eq 111 ]; then
-            return $l_status
-        fi
-
-    fi
-
-
-
+    #7. Limpiar el cache, si se instalo paquetes
     if [ $p_flag_clean_os_cache -eq 0 ] && [ $l_exist_packages_installed -eq 0 ]; then
         printf '\n%bClean packages cache%b...\n' "$g_color_gray1" "$g_color_reset"
         clean_os_cache $g_os_subtype_id $l_is_noninteractive
     fi
 
-    #10. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
+    #8. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
     #   Si no se invoca usando el menú y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
     if [ $g_status_crendential_storage -eq 0 ] && [ $gp_type_calling -eq 0 ]; then
     #if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
