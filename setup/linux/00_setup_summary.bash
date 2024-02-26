@@ -621,28 +621,32 @@ function g_install_options() {
         for (( l_i = 0; l_i < ${#ga_options_general[@]}; l_i++ )); do
             if [ "${la_options_general[${l_i}]}" = "0" ]; then
                 ((l_prg_options= l_prg_options + ${ga_options_general[${l_i}]}))
-                printf -v l_info '%s\n   > General > %b%s%b' "$l_info" "$g_color_gray1" "${ga_title_general[${l_i}]}" "$g_color_reset"
+                printf -v l_info '%s\n   > General > %b%s%b %b(opción de "02_setup_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_general[${l_i}]}" \
+                       "$g_color_reset" "$g_color_gray1" "${ga_options_general[${l_i}]}" "$g_color_reset"
             fi 
         done
 
         for (( l_i = 0; l_i < ${#ga_options_install[@]}; l_i++ )); do
             if [ "${la_options_install[${l_i}]}" = "0" ]; then
                 ((l_prg_options= l_prg_options + ${ga_options_install[${l_i}]}))
-                printf -v l_info '%s\n   > Instalar %b%s%b' "$l_info" "$g_color_gray1" "${ga_title_install[${l_i}]}" "$g_color_reset"
+                printf -v l_info '%s\n   > Instalar %b%s%b %b(opción de "02_setup_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_install[${l_i}]}" \
+                       "$g_color_reset" "$g_color_gray1" "${ga_options_install[${l_i}]}" "$g_color_reset"
             fi 
         done
 
         for (( l_i = 0; l_i < ${#ga_options_config_vim[@]}; l_i++ )); do
             if [ "${la_options_config_vim[${l_i}]}" = "0" ]; then
                 ((l_prg_options= l_prg_options + ${ga_options_config_vim[${l_i}]}))
-                printf -v l_info '%s\n   > Configuración VIM   > %b%s%b' "$l_info" "$g_color_gray1" "${ga_title_config[${l_i}]}" "$g_color_reset"
+                printf -v l_info '%s\n   > Configuración VIM   > %b%s%b %b(opción de "02_setup_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_config[${l_i}]}" \
+                       "$g_color_reset" "$g_color_gray1" "${ga_options_config_vim[${l_i}]}" "$g_color_reset"
             fi 
         done
 
         for (( l_i = 0; l_i < ${#ga_options_config_nvim[@]}; l_i++ )); do
             if [ "${la_options_config_nvim[${l_i}]}" = "0" ]; then
                 ((l_prg_options= l_prg_options + ${ga_options_config_nvim[${l_i}]}))
-                printf -v l_info '%s\n   > Configuración NeoVIM > %b%s%b' "$l_info" "$g_color_gray1" "${ga_title_config[${l_i}]}" "$g_color_reset"
+                printf -v l_info '%s\n   > Configuración NeoVIM > %b%s%b %b(opción de "02_setup_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_config[${l_i}]}" \
+                       "$g_color_reset" "$g_color_gray1" "${ga_options_config_nvim[${l_i}]}" "$g_color_reset"
             fi 
         done
 
