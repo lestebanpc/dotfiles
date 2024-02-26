@@ -2229,7 +2229,7 @@ function _setup_vim_environment() {
 
         #Si no estalado Python o Pip, mostrar info adicional
         else
-            if [ $l_install_basic_packages -ne 0 ]; then
+            if [ $l_is_python_installed -ne 0 ]; then
                 printf '%b       > Comando jtbl      : "pip3 install jtbl --break-system-packages" (mostrar arreglos json en tablas en consola)\n' "$g_color_gray1"
                 printf '         > Comando compiledb : "pip3 install compiledb --break-system-packages" (utilidad para generar make file para Clang)\n'
                 printf '         > Comando rope      : "pip3 install rope --break-system-packages" (utilidad para refactorización de Python)\n'
@@ -2289,7 +2289,7 @@ function _setup_vim_environment() {
 
         #Se reqioere temer instalado NodeJS
         #Si aun no se ha revisado si se ha instalado
-        if [ $l_is_python_installed -eq -1 ]; then
+        if [ $l_is_nodejs_installed -eq -1 ]; then
 
             #Validar si 'node' esta en el PATH
             check_nodejs "${g_path_programs}" 1 1 
@@ -2304,7 +2304,7 @@ function _setup_vim_environment() {
             fi
 
         #Si ya se reviso y se conoce que no esta instalado
-        elif [ $l_is_python_installed -ne 0 ]; then
+        elif [ $l_is_nodejs_installed -ne 0 ]; then
             printf 'NodeJS > %bNodeJS NO esta instalado%b. Es requerido para instalar sus paquetes.\n' "$g_color_red1" "$g_color_reset"
             l_flag_setup=2
         fi
