@@ -225,56 +225,9 @@ function g_install_options() {
     #Flag '0' cuando no se realizo ninguna instalacion de paquetes
     local l_exist_packages_installed=1
 
-    #3. Instalar paquetes basicos del SO: Curl, OpenSSL y Tmux
+    #3. Instalar comandos basicos (usar un grupo de comandos especifico)
     local l_status=0
-    local l_option=1024
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ] && [ ! -z "$p_list_pckg_ids" ]; then
-
-        #Solo soportado para los que tenga acceso a root
-        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-
-            #Mostrar el titulo de instalacion
-            printf '\n'
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando '%b%s%b'\n" "$g_color_cian1" "${p_list_pckg_ids//,/, }" "$g_color_reset"
-            print_line '─' $g_max_length_line "$g_color_blue1"
-
-            #Parametros:
-            # 1> Tipo de ejecución: 2/4 (ejecución sin menu, para instalar/actualizar un grupo paquetes)
-            # 2> Paquetes a instalar 
-            # 3> El estado de la credencial almacenada para el sudo
-            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
-            if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
-                l_status=$?
-            else
-                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
-                l_status=$?
-            fi
-
-            if [ $l_exist_packages_installed -ne 0 ]; then
-                l_exist_packages_installed=0
-            fi
-
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-                g_status_crendential_storage=0
-            #Si no se paso las precondiciones iniciales
-            elif [ $l_status -eq 111 ]; then
-                return $l_status
-            fi
-
-        else
-            printf '%bSe requiere acceso a root%b para instalar paquete.\n' "$g_color_red1" "$g_color_reset"
-        fi
-
-    fi
-
-    #4. Instalar comandos basicos (usar un grupo de comandos especifico)
-    l_option=2048
+    local l_option=2048
     if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
         #Solo soportado para los que tenga acceso a root
@@ -318,6 +271,53 @@ function g_install_options() {
                 return $l_status
             fi
 
+        fi
+
+    fi
+
+    #3. Instalar paquetes basicos del SO: Curl, OpenSSL y Tmux
+    l_option=1024
+    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ] && [ ! -z "$p_list_pckg_ids" ]; then
+
+        #Solo soportado para los que tenga acceso a root
+        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
+
+            #Mostrar el titulo de instalacion
+            printf '\n'
+            print_line '─' $g_max_length_line  "$g_color_blue1"
+            printf "> Instalando '%b%s%b'\n" "$g_color_cian1" "${p_list_pckg_ids//,/, }" "$g_color_reset"
+            print_line '─' $g_max_length_line "$g_color_blue1"
+
+            #Parametros:
+            # 1> Tipo de ejecución: 2/4 (ejecución sin menu, para instalar/actualizar un grupo paquetes)
+            # 2> Paquetes a instalar 
+            # 3> El estado de la credencial almacenada para el sudo
+            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+            if [ $l_is_noninteractive -eq 1 ]; then
+                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                l_status=$?
+            else
+                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                l_status=$?
+            fi
+
+            if [ $l_exist_packages_installed -ne 0 ]; then
+                l_exist_packages_installed=0
+            fi
+
+            #Si no se acepto almacenar credenciales
+            if [ $l_status -eq 120 ]; then
+                return 120
+            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+            elif [ $l_status -eq 119 ]; then
+                g_status_crendential_storage=0
+            #Si no se paso las precondiciones iniciales
+            elif [ $l_status -eq 111 ]; then
+                return $l_status
+            fi
+
+        else
+            printf '%bSe requiere acceso a root%b para instalar paquete.\n' "$g_color_red1" "$g_color_reset"
         fi
 
     fi
