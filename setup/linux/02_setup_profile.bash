@@ -764,7 +764,7 @@ function _setup_nvim_files() {
 
         l_target_link="${g_path_base}/.config/nvim/coc-settings.json"
         l_source_path="${g_path_base}/.files/nvim/ide_coc"
-        if [ "$g_path_programs"="${g_path_base}/tools" ]; then
+        if [ "$g_path_programs" = "${g_path_base}/tools" ]; then
             l_source_filename='coc-settings_lnx_non_shared.json'
         else
             l_source_filename='coc-settings_lnx_shared.json'
@@ -774,7 +774,7 @@ function _setup_nvim_files() {
 
         l_target_link="${g_path_base}/.config/nvim/init.vim"
         l_source_path="${g_path_base}/.files/nvim"
-        if [ "$g_path_programs"="${g_path_base}/tools" ]; then
+        if [ "$g_path_programs" = "${g_path_base}/tools" ]; then
             l_source_filename='init_ide_linux_non_shared.vim'
         else
             l_source_filename='init_ide_linux_shared.vim'
@@ -873,7 +873,7 @@ function _setup_vim_files() {
         #Creando enlaces simbolicos
         l_target_link="${g_path_base}/.vim/coc-settings.json"
         l_source_path="${g_path_base}/.files/vim/ide_coc"
-        if [ "$g_path_programs"="${g_path_base}/tools" ]; then
+        if [ "$g_path_programs" = "${g_path_base}/tools" ]; then
             l_source_filename='coc-settings_lnx_non_shared.json'
         else
             l_source_filename='coc-settings_lnx_shared.json'
@@ -888,7 +888,7 @@ function _setup_vim_files() {
 
         l_target_link="${g_path_base}/.vimrc"
         l_source_path="${g_path_base}/.files/vim"
-        if [ "$g_path_programs"="${g_path_base}/tools" ]; then
+        if [ "$g_path_programs" = "${g_path_base}/tools" ]; then
             l_source_filename='vimrc_ide_linux_non_shared.vim'
         else
             l_source_filename='vimrc_ide_linux_shared.vim'
@@ -1893,7 +1893,7 @@ function _setup_user_profile() {
     #Archivos de configuración de PowerShell
     l_target_link="${g_path_base}/.config/powershell/Microsoft.PowerShell_profile.ps1"
     l_source_path="${g_path_base}/.files/terminal/powershell/profile"
-    if [ "$g_path_programs"="${g_path_base}/tools" ]; then
+    if [ "$g_path_programs" = "${g_path_base}/tools" ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 l_source_filename='debian_aarch64_local.ps1'
@@ -1927,7 +1927,7 @@ function _setup_user_profile() {
     #Creando el profile del interprete shell
     l_target_link="${g_path_base}/.bashrc"
     l_source_path="${g_path_base}/.files/terminal/linux/profile"
-    if [ "$g_path_programs"="${g_path_base}/tools" ]; then
+    if [ "$g_path_programs" = "${g_path_base}/tools" ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 l_source_filename='debian_aarch64_local.bash'
