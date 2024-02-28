@@ -417,7 +417,8 @@ function get_repo_latest_version() {
 #Funciones modificables (Nive 1) {{{
 
 
-#Determinar la version actual del repositorio usado para instalar los comandos instalados:
+#Determinar la version actual del repositorio usado para instalar los comandos instalados.
+#Parametros de salida (Valor de retorno):
 #  0 - Si existe y se obtiene un valor
 #  1 - El comando no existe o existe un error en el comando para obtener la versión
 #  2 - La version obtenida no tiene formato valido
@@ -1595,9 +1596,9 @@ function get_repo_artifacts() {
 
             #Prefijo del nombre del artefacto
             local l_prefix_repo='dotnet-sdk'
-            if [ "p_repo_id" = "net-rt-core" ]; then
+            if [ "$p_repo_id" = "net-rt-core" ]; then
                 l_prefix_repo='dotnet-runtime'
-            elif [ "p_repo_id" = "net-rt-aspnet" ]; then
+            elif [ "$p_repo_id" = "net-rt-aspnet" ]; then
                 l_prefix_repo='aspnetcore-runtime'
             fi
 
@@ -1611,8 +1612,16 @@ function get_repo_artifacts() {
                 #Generar la URL con el artefactado:
                 pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
                 if [ $p_install_win_cmds -eq 0 ]; then
+
                     pna_artifact_names=("${l_prefix_repo}-${p_repo_last_version_pretty}-win-x64.zip")
-                    pna_artifact_types=(11)
+
+                    #Si se instala, no se descomprime el archivo automaticamente en '/tmp'. Si se actualiza, se usara 'rsync' para actualizar.
+                    if [ $p_flag_install -eq 0 ]; then
+                        pna_artifact_types=(21)
+                    else
+                        pna_artifact_types=(11)
+                    fi
+
                 else
                     #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
                     if [ $g_os_subtype_id -eq 1 ]; then
@@ -1628,7 +1637,13 @@ function get_repo_artifacts() {
                             pna_artifact_names=("${l_prefix_repo}-${p_repo_last_version_pretty}-linux-x64.tar.gz")
                         fi
                     fi
-                    pna_artifact_types=(10)
+
+                    #Si se instala, no se descomprime el archivo automaticamente en '/tmp'. Si se actualiza, se usara 'rsync' para actualizar.
+                    if [ $p_flag_install -eq 0 ]; then
+                        pna_artifact_types=(20)
+                    else
+                        pna_artifact_types=(10)
+                    fi
                 fi
 
             #Si existe subversiones en un repositorios
@@ -4216,28 +4231,103 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
-            
-            cd ${g_path_temp}
 
-            #Copiando el binario en una ruta del path
-            if [ $p_install_win_cmds -ne 0 ]; then
-                
-                l_path_target_bin="${g_path_programs}/dotnet"
+            #Si se instala (no existe version anterior instalado del respositorio)
+            if [ $p_flag_install -eq 0  ]; then
 
-                #Crear el directorio si no existe (no limpiar)
-                if  [ ! -d "$l_path_target_bin" ]; then
-                    mkdir -p $l_path_target_bin
-                    chmod g+rx,o+rx $l_path_target_bin
-                #else
-                    #Limpieza
-                    #rm -rf ${l_path_target_bin}/*
+                #Descomprimiendo el archivo en la ruta del path "${g_path_programs}/dotnet"
+                if [ $p_install_win_cmds -ne 0 ]; then
+
+                    l_path_target_bin="${g_path_programs}/dotnet"
+
+                    #Crear el directorio si no existe (no limpiar)
+                    if  [ ! -d "$l_path_target_bin" ]; then
+
+                        mkdir -pm 755 $l_path_target_bin
+                        if [ ! -z "$g_other_calling_user" ]; then
+                            chown $g_other_calling_user $l_path_target_bin
+                        fi
+                    fi
+                     
+                    #Descomprimiendo el archivo en path "${g_path_programs}/dotnet"
+                    printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "$l_path_target_bin"
+                    uncompress_program "$l_path_source" "$p_artifact_name" "${l_path_target_bin}" $((l_artifact_type - 20))
+
+                    #Renombrando el folder creado
+                    #printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$l_path_target_bin" "$g_color_reset"
+                    #mv "$l_aux" "$l_path_target_bin"
+
+                #Descomprimiendo el archivo en la ruta del path "${g_path_programs}/DotNet"
+                else
+
+                    l_path_target_bin="${g_path_programs_win}/DotNet"
+
+                    #Crear el directorio si no existe (no limpiar)
+                    if  [ ! -d "$l_path_target_bin" ]; then
+                        mkdir -p $l_path_target_bin
+                    fi
+
+                    #Descomprimiendo el archivo en path "${g_path_programs}/dotnet"
+                    printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "$l_path_target_bin"
+                    uncompress_program "$l_path_source" "$p_artifact_name" "${l_path_target_bin}" $((l_artifact_type - 20))
+
+                    #Renombrando el folder creado
+                    #printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$l_path_target_bin" "$g_color_reset"
+                    #mv "$l_aux" "$l_path_target_bin"
+
                 fi
-                 
-                #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
-                printf 'Ejecutando "%brsync -a --stats %s/ %s%b"...\n' "$g_color_gray1" "$l_path_source" "$l_path_target_bin" "$g_color_reset"
-                printf '%b' "$g_color_gray1"
-                rsync -a --stats "${l_path_source}/" "${l_path_target_bin}"
-                printf '%b' "$g_color_reset"
+
+            else
+
+                #Requiere que 'rsync' este instalado
+                if ! rsync --version 2> /dev/null 1>&2; then
+                    printf 'El %bcomando "rsync" no esta instalado%b. Se requiere para la actualización de "%s"' "$g_color_red1" "$g_color_reset" "$p_repo_id" 
+                    return 20
+                fi
+
+            
+                cd ${g_path_temp}
+
+                #Sincronizando los archivos descomprimidos con el path
+                if [ $p_install_win_cmds -ne 0 ]; then
+                    
+                    l_path_target_bin="${g_path_programs}/dotnet"
+
+                    #Crear el directorio si no existe (no limpiar)
+                    if  [ ! -d "$l_path_target_bin" ]; then
+                        mkdir -pm 755 $l_path_target_bin
+                    fi
+                     
+                    #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
+                    printf 'Ejecutando "%brsync -a --stats %s/ %s%b"...\n' "$g_color_gray1" "$l_path_source" "$l_path_target_bin" "$g_color_reset"
+                    printf '%b' "$g_color_gray1"
+                    rsync -a --stats "${l_path_source}/" "${l_path_target_bin}"
+                    printf '%b' "$g_color_reset"
+
+                #Sincronizando los archivos descomprimidos con el path Windows WSL
+                else
+                    
+                    l_path_target_bin="${g_path_programs_win}/DotNet"
+
+                    #Crear el directorio si no existe (no limpiar)
+                    if  [ ! -d "$l_path_target_bin" ]; then
+                        mkdir -p $l_path_target_bin
+                    #else
+                        #Limpieza
+                        #rm -rf ${l_path_target_bin}/*
+                    fi
+                        
+                    #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
+                    printf 'Ejecutando "%brsync -a --stats %s/ %s%b"...\n' "$g_color_gray1" "$l_path_source" "$l_path_target_bin" "$g_color_reset"
+                    printf '%b' "$g_color_gray1"
+                    rsync -a --stats "${l_path_source}/" "${l_path_target_bin}"
+                    printf '%b' "$g_color_reset"
+                fi
+
+            fi
+
+            #Validando si dotnet esta registrado en el PATH del usuario
+            if [ $p_install_win_cmds -ne 0 ]; then
 
                 #Validar si 'DotNet' esta en el PATH
                 echo "$PATH" | grep "${g_path_programs}/dotnet" &> /dev/null
@@ -4255,23 +4345,6 @@ function _copy_artifact_files() {
                     export PATH
                 fi
 
-            else
-                
-                l_path_target_bin="${g_path_programs_win}/DotNet"
-
-                #Crear el directorio si no existe (no limpiar)
-                if  [ ! -d "$l_path_target_bin" ]; then
-                    mkdir -p $l_path_target_bin
-                #else
-                    #Limpieza
-                    #rm -rf ${l_path_target_bin}/*
-                fi
-                    
-                #Mover todos archivos (remplazando los existentes sin advertencia interactiva)
-                printf 'Ejecutando "%brsync -a --stats %s/ %s%b"...\n' "$g_color_gray1" "$l_path_source" "$l_path_target_bin" "$g_color_reset"
-                printf '%b' "$g_color_gray1"
-                rsync -a --stats "${l_path_source}/" "${l_path_target_bin}"
-                printf '%b' "$g_color_reset"
             fi
             ;;
 
