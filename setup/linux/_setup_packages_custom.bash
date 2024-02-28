@@ -347,7 +347,29 @@ install_dotnet_lib() {
 
     #Si es Alpine
     elif [ $g_os_subtype_id -eq 1 ]; then
-        la_packages_needed=("icu-libs" "krb5-libs" "libgcc" "libintl" "libssl1.1" "libstdc++" "zlib")
+
+        #icu-libs
+        #krb5-libs
+        #libgcc
+        #libintl
+        #libstdc++
+        #zlib
+        #libgdiplus (si la aplicación .NET requiere el ensamblado System.Drawing.Common)
+        la_packages_needed=("icu-libs" "krb5-libs" "libgcc" "libintl" "libstdc++" "zlib")
+
+        #libssl1.1 (Alpine <= 3.14.x)
+        #libssl3   (Alpine >= 3.15.x)
+        if [[ "$g_os_subtype_version_pretty" =~ ^3\.1[01234]\..+$ ]]; then
+            la_packages_needed+=("libssl1.1")
+        elif [[ "$g_os_subtype_version_pretty" =~ ^3\.1[01234]$ ]]; then
+            la_packages_needed+=("libssl1.1")
+        elif [[ "$g_os_subtype_version_pretty" =~ ^3\.[0123456789]\..+$ ]]; then
+            la_packages_needed+=("libssl1.1")
+        elif [[ "$g_os_subtype_version_pretty" =~ ^3\.[0123456789]$ ]]; then
+            la_packages_needed+=("libssl1.1")
+        else
+            la_packages_needed+=("libssl3")
+        fi
     fi
 
     #2. Determinar los paquetes que ya estan instalados
