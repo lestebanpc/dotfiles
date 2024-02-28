@@ -4281,7 +4281,7 @@ function _copy_artifact_files() {
 
                 #Requiere que 'rsync' este instalado
                 if ! rsync --version 2> /dev/null 1>&2; then
-                    printf 'El %bcomando "rsync" no esta instalado%b. Se requiere para la actualización de "%s"' "$g_color_red1" "$g_color_reset" "$p_repo_id" 
+                    printf 'El %bcomando "rsync" no esta instalado%b. Se requiere para la actualización de "%s"\n' "$g_color_red1" "$g_color_reset" "$p_repo_id" 
                     return 20
                 fi
 

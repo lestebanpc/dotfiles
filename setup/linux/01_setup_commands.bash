@@ -2665,7 +2665,7 @@ function g_install_repository() {
             fi
 
             #Por defecto considerando que termino con error
-            if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
+            if [ $l_status -ge 0 ] && [ $l_status -le 4 ]; then
                 l_status_process_lnx=7
                 l_flag_install=0
                 l_aux='instalación'
@@ -2696,7 +2696,7 @@ function g_install_repository() {
                 fi
 
                 #Si no termino sin errores ... cambiar al estado 5/6 segun sea el caso
-                if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
+                if [ $l_status -ge 0 ] && [ $l_status -le 4 ]; then
                     l_status_process_lnx=5
                 else
                     l_status_process_lnx=6
@@ -2728,7 +2728,7 @@ function g_install_repository() {
                 done
 
                 #Si no termino sin errores ... cambiar al estado 5/6 segun sea el caso
-                if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
+                if [ $l_status -ge 0 ] && [ $l_status -le 4 ]; then
                     l_status_process_lnx=5
                 else
                     l_status_process_lnx=6
@@ -2800,7 +2800,7 @@ function g_install_repository() {
         if [ -z "$l_status_process_win" ]; then
 
             #Por defecto considerando que termino con error
-            if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
+            if [ $l_status -ge 0 ] && [ $l_status -le 4 ]; then
                 l_status_process_win=7
                 l_flag_install=0
                 l_aux='instalación'
@@ -2827,7 +2827,7 @@ function g_install_repository() {
                 l_status2=$?
 
                 #Si no termino sin errores ... cambiar al estado 5/6 segun sea el caso
-                if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
+                if [ $l_status -ge 0 ] && [ $l_status -le 4 ]; then
                     l_status_process_win=5
                 else
                     l_status_process_win=6
@@ -2854,7 +2854,7 @@ function g_install_repository() {
                 done
 
                 #Si no termino sin errores ... cambiar al estado 5/6 segun sea el caso
-                if [ $l_status -gt 0 ] && [ $l_status -lt 4 ]; then
+                if [ $l_status -ge 0 ] && [ $l_status -le 4 ]; then
                     l_status_process_win=5
                 else
                     l_status_process_win=6
