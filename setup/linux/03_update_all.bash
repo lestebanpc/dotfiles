@@ -142,11 +142,16 @@ function _update_repository() {
 
     #2. Validar si el directorio .git del repositorio es valido     
     if ! git rev-parse --git-dir > /dev/null 2>&1; then
-        echo 'Invalid git repository'
+        printf '%bInvalid git repository%b\n' "$g_color_red1" "$g_color_reset"
         return 9
     fi
     
     local l_local_branch=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
+    if [ "$l_local_branch" = "HEAD" ]; then
+        printf '%bInvalid current branch of  repository%b\n' "$g_color_red1" "$g_color_reset"
+        return 8
+    fi
+
     local l_remote=$(git config branch.${l_local_branch}.remote)
     local l_remote_branch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u})
     local l_status
@@ -222,11 +227,11 @@ function _copy_plugin_files() {
 
         fzf)
 
-            printf 'Copiando archivos opcionales usados por comando fzf desde el repositorio "%bjunegunn/fzf%b"...\n' \
-                   "$g_color_gray1" "$g_color_reset"
+            printf '%bCopiando archivos opcionales usados por comando fzf%b desde el repositorio "%bjunegunn/fzf%b"...\n' \
+                   "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
             #Copiar los archivos de ayuda man para comando fzf y el script fzf-tmux
-            echo "Copiando los archivos \"./man/man1/fzf.1\" y \"./man/man1/fzf-tmux.1\" en \"${g_path_man}/\" ..."
+            echo "Copiando los archivos de ayuda \"./man/man1/fzf.1\" y \"./man/man1/fzf-tmux.1\" en \"${g_path_man}/\" ..."
             if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
                 cp "${p_repo_path}/man/man1/fzf.1" "${g_path_man}/" 
                 cp "${p_repo_path}/man/man1/fzf-tmux.1" "${g_path_man}/" 
@@ -236,15 +241,15 @@ function _copy_plugin_files() {
             fi
             
             #Copiar los script de completado
-            echo "Descargando el recurso \"./shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."
+            echo "Copiando el script \"./shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."
             cp "${p_repo_path}/shell/completion.bash" "${g_path_base}/.files/terminal/linux/complete/fzf.bash"
 
             #Copiar los script de keybindings
-            echo "Descargando el recurso \"./shell/key-bindings.bash\" como \"~/.files/terminal/linux/keybindings/fzf.bash\" ..."
+            echo "Copiando el script \"./shell/key-bindings.bash\" como \"~/.files/terminal/linux/keybindings/fzf.bash\" ..."
             cp "${p_repo_path}/shell/key-bindings.bash" "${g_path_base}/.files/terminal/linux/keybindings/fzf.bash"
             
             # Script que se usara como comando para abrir fzf en un panel popup tmux
-            echo "Descargando el recurso \"./bin/fzf-tmux\" como \"~/.files/terminal/linux/functions/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
+            echo "Copiando el script \"./bin/fzf-tmux\" como \"~/.files/terminal/linux/functions/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
             cp "${p_repo_path}/bin/fzf-tmux" "${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash"
 
             if [ ! -d "${g_path_base}/.local" ]; then
@@ -709,7 +714,7 @@ function _show_menu_core() {
     if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
         printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes\n" "$g_color_green1" "1" "$g_color_reset"
     fi
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los comandos/programas descargdos de repositorio como GitHub\n" "$g_color_green1" "2" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los comandos/programas descargados de repositorio como GitHub\n" "$g_color_green1" "2" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de VIM    existentes e inicializarlos\n" "$g_color_green1" "4" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de NeoVIM existentes e inicializarlos\n" "$g_color_green1" "8" "$g_color_reset"
 
