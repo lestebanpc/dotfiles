@@ -1159,12 +1159,11 @@ _install_python() {
         #Determinar si el gestor de paquete de Python (Pip) esta instalado
         l_version_pip=$(pip3 --version 2> /dev/null)
         l_status=$?
-
         if [ $l_status -ne 0 ]; then
             l_version_pip=''
         fi
 
-        if [ -z "$l_version_python" ]; then
+        if [ -z "$l_version_pip" ]; then
             l_packages_to_install='python-pip'
         else
             l_version_pip=$(echo "$l_version_python" | sed "$g_regexp_sust_version1")
@@ -2190,12 +2189,12 @@ function _setup_vim_environment() {
         if [ $l_is_python_installed -eq -1 ]; then
 
             if python3 --version 1> /dev/null 2>&1; then
-                if ! pip3 --version 1> /dev/null 2>&1; then
+                if pip3 --version 1> /dev/null 2>&1; then
+                    l_is_python_installed=0
+                else
                     printf 'Python > %bEl gestor de paquetes de Python "Pip" NO esta instalado%b. Es requerido para instalar los paquetes:\n'  "$g_color_red1" "$g_color_reset"
                     l_is_python_installed=1
                     l_flag_setup=2
-                else
-                    l_is_python_installed=0
                 fi
             else
                 printf 'Python > %bPython3 NO esta instalado%b. Es requerido para instalar los paquetes:\n'  "$g_color_red1" "$g_color_reset"
@@ -3390,6 +3389,15 @@ g_status_crendential_storage=-1
 #La credencial no se almaceno por un script externo.
 g_is_credential_storage_externally=1
 
+#Rutas usuadas (con valores por defecto) durante el setup, cuyos valores reales son calculados usando: 'set_program_path', 'set_command_path' y 'set_temp_path'
+g_path_programs='/opt/tools'
+#g_path_cmd_base=''
+#g_path_bin='/usr/local/bin'
+#g_path_man='/usr/local/man/man1'
+#g_path_fonts='/usr/share/fonts'
+g_path_temp='/tmp'
+
+
 #1.1. Mostrar el menu para escoger lo que se va instalar
 if [ $gp_type_calling -eq 0 ]; then
 
@@ -3405,7 +3413,7 @@ if [ $gp_type_calling -eq 0 ]; then
     fi
 
     _g_is_noninteractive=1
-    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" "$g_other_calling_user"
+    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
 
     #Obtener los folderes temporal 'g_path_temp'
     _g_path=''

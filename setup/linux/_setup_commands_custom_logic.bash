@@ -3097,45 +3097,33 @@ function _copy_artifact_files() {
                 #mkdir -p "${l_path_target_man}"
             fi
             
+            #Descargar archivos opcionales del comando fzf desde la ultima version de la rama master de su repositorio 'junegunn/fzf' 
             if [ $p_install_win_cmds -ne 0 ]; then
 
-                #Descargar archivos necesarios
-                echo "Descargando \"https://github.com/junegunn/fzf.git\" en el folder \"git/\" ..."
-                git clone --depth 1 https://github.com/junegunn/fzf.git "${l_path_source}/git"
+                printf 'Descargando y copiando archivos opcionales del comando fzf desde "https://raw.githubusercontent.com/junegunn/fzf/master/%bRESOURCE%b" (el ultimo commit de la rama master)...\n' \
+                       "$g_color_gray1" "$g_color_reset"
 
                 #Copiar los archivos de ayuda man para comando fzf y el script fzf-tmux
-                echo "Copiando \"git/man/man1/fzf.1\" y \"git/man/man1/fzf-tmux.1\" a \"${l_path_target_man}/\" ..."
+                echo "Descargando los recursos \"./man/man1/fzf.1\" y \"./man/man1/fzf-tmux.1\" en \"${l_path_target_man}/\" ..."
                 if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_source}/git/man/man1/fzf.1" "${l_path_target_man}"
-                    cp "${l_path_source}/git/man/man1/fzf-tmux.1" "${l_path_target_man}"
+                    curl -sLfo "${l_path_target_man}/fzf.1" 'https://raw.githubusercontent.com/junegunn/fzf/master/man/man1/fzf.1'
+                    curl -sLfo "${l_path_target_man}/fzf-tmux.1" 'https://raw.githubusercontent.com/junegunn/fzf/master/man/man1/fzf-tmux.1'
                 else
-                    sudo cp "${l_path_source}/git/man/man1/fzf.1" "${l_path_target_man}"
-                    sudo cp "${l_path_source}/git/man/man1/fzf-tmux.1" "${l_path_target_man}"
+                    sudo curl -sLfo "${l_path_target_man}/fzf.1" 'https://raw.githubusercontent.com/junegunn/fzf/master/man/man1/fzf.1'
+                    sudo curl -sLfo "${l_path_target_man}/fzf-tmux.1" 'https://raw.githubusercontent.com/junegunn/fzf/master/man/man1/fzf-tmux.1'
                 fi
-
-                #Copiar los archivos requeridos por el plugin vim base "fzf"
-                #mkdir -p ${g_path_base}/.files/vim/packages/fzf/doc
-                #mkdir -p ${g_path_base}/.files/vim/packages/fzf/plugin
-                #echo "Copiando \"git/doc/fzf.txt\" a \"~/.files/vim/packages/fzf/doc/\" ..."
-                #cp "${l_path_source}/git/doc/fzf.txt" ${g_path_base}/.files/vim/packages/fzf/doc/
-                #echo "Copiando \"git/doc/fzf.vim\" a \"~/.files/vim/packages/fzf/plugin/\" ..."
-                #cp "${l_path_source}/git/plugin/fzf.vim" ${g_path_base}/.files/vim/packages/fzf/plugin/
-
-                #Copiar los archivos opcionales del plugin
-                #echo "Copiando \"git/LICENSE\" en \"~/.files/vim/packages/fzf/\" .."
-                #cp "${l_path_source}/git/LICENSE" ${g_path_base}/.files/vim/packages/fzf/LICENSE
             
                 #Copiar los script de completado
-                echo "Copiando \"git/shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."
-                cp "${l_path_source}/git/shell/completion.bash" ${g_path_base}/.files/terminal/linux/complete/fzf.bash
+                echo "Descargando el recurso \"./shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."
+                curl -sLfo "${g_path_base}/.files/terminal/linux/complete/fzf.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/shell/completion.bash'
             
                 #Copiar los script de keybindings
-                echo "Copiando \"git/shell/key-bindings.bash\" como \"~/.files/terminal/linux/keybindings/fzf.bash\" ..."
-                cp "${l_path_source}/git/shell/key-bindings.bash" ${g_path_base}/.files/terminal/linux/keybindings/fzf.bash
+                echo "Descargando el recurso \"./shell/key-bindings.bash\" como \"~/.files/terminal/linux/keybindings/fzf.bash\" ..."
+                curl -sLfo "${g_path_base}/.files/terminal/linux/keybindings/fzf.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.bash'
             
                 # Script que se usara como comando para abrir fzf en un panel popup tmux
-                echo "Copiando \"git/bin/fzf-tmux\" como \"~/.files/terminal/linux/functions/fzf-tmux.bash\" y crear un enlace como comando \"~/.local/bin/fzf-tmux\"..."
-                cp "${l_path_source}/git/bin/fzf-tmux" ${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash
+                echo "Descargando el recurso \"./bin/fzf-tmux\" como \"~/.files/terminal/linux/functions/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
+                curl -sLfo "${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/bin/fzf-tmux'
 
                 if [ ! -d "${g_path_base}/.local" ]; then
                     mkdir -p ${g_path_base}/.local/bin

@@ -98,36 +98,6 @@ if [ -z "$g_user_is_root" ]; then
     #    > 4 : El usuario es root (no requiere sudo)
     set_user_options
 
-    #Ruta de los programas (incluyen mas de 1 comando) a instalar (se usara una ruta personalizado)
-    if [ -d '/opt/tools' ] && [ -w '/opt/tools' ]; then
-        g_path_programs='/opt/tools'
-    else
-        #Si tiene acceso a root (incluyendo el uso de sudo)
-        if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-            g_path_programs='/opt/tools'
-        else
-            g_path_programs="${g_path_base}/tools"
-        fi
-        
-    fi
-
-    #Ruta de los comandos, help y fuentes a instalar (se usara las carpetas estandar)
-    if [ $g_user_sudo_support -ne 2 ] && [ $g_user_sudo_support -ne 3 ]; then
-
-        #Si tiene acceso a root (incluyendo el uso de sudo)
-        g_path_bin='/usr/local/bin'
-        g_path_man='/usr/local/man/man1'
-        g_path_fonts='/usr/share/fonts'
-
-    else
-
-        #Si no se tiene acceso a root (incluyendo el uso de sudo)
-        g_path_bin="${g_path_base}/.local/bin"
-        g_path_man="${g_path_base}/.local/man/man1"
-        g_path_fonts="${g_path_base}/.local/share/fonts"
-
-    fi
-
 fi
 
 
@@ -3506,6 +3476,14 @@ _g_status=0
 g_status_crendential_storage=-1
 #La credencial no se almaceno por un script externo.
 g_is_credential_storage_externally=1
+
+#Rutas usuadas (con valores por defecto) durante el setup, cuyos valores reales son calculados usando: 'set_program_path', 'set_command_path' y 'set_temp_path'
+g_path_programs='/opt/tools'
+g_path_cmd_base=''
+g_path_bin='/usr/local/bin'
+g_path_man='/usr/local/man/man1'
+g_path_fonts='/usr/share/fonts'
+g_path_temp='/tmp'
 
 #2.1. Desintalar los artefactos de un repoistorio
 if [ $gp_uninstall -eq 0 ]; then

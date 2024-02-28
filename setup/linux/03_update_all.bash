@@ -205,6 +205,83 @@ function _update_repository() {
 }
 
 
+function _copy_plugin_files() {
+
+    #1. Argumentos
+    local p_is_neovim=1
+    if [ "$1" = "0" ]; then
+        p_is_neovim=0
+    fi
+
+    local p_repo_name="$2"
+    local p_repo_path="$3"
+    local p_repo_type="$4"
+
+    local l_result=0
+    case "$p_repo_name" in
+
+        fzf)
+
+            printf 'Copiando archivos opcionales usados por comando fzf desde el repositorio "%bjunegunn/fzf%b"...\n' \
+                   "$g_color_gray1" "$g_color_reset"
+
+            #Copiar los archivos de ayuda man para comando fzf y el script fzf-tmux
+            echo "Copiando los archivos \"./man/man1/fzf.1\" y \"./man/man1/fzf-tmux.1\" en \"${g_path_man}/\" ..."
+            if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                cp "${p_repo_path}/man/man1/fzf.1" "${g_path_man}/" 
+                cp "${p_repo_path}/man/man1/fzf-tmux.1" "${g_path_man}/" 
+            else
+                sudo cp "${p_repo_path}/man/man1/fzf.1" "${g_path_man}/" 
+                sudo cp "${p_repo_path}/man/man1/fzf-tmux.1" "${g_path_man}/" 
+            fi
+            
+            #Copiar los script de completado
+            echo "Descargando el recurso \"./shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."
+            cp "${p_repo_path}/shell/completion.bash" "${g_path_base}/.files/terminal/linux/complete/fzf.bash"
+
+            #Copiar los script de keybindings
+            echo "Descargando el recurso \"./shell/key-bindings.bash\" como \"~/.files/terminal/linux/keybindings/fzf.bash\" ..."
+            cp "${p_repo_path}/shell/key-bindings.bash" "${g_path_base}/.files/terminal/linux/keybindings/fzf.bash"
+            
+            # Script que se usara como comando para abrir fzf en un panel popup tmux
+            echo "Descargando el recurso \"./bin/fzf-tmux\" como \"~/.files/terminal/linux/functions/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
+            cp "${p_repo_path}/bin/fzf-tmux" "${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash"
+
+            if [ ! -d "${g_path_base}/.local" ]; then
+                mkdir -p ${g_path_base}/.local/bin
+                if [ ! -z "$g_other_calling_user" ]; then
+                    chown $g_other_calling_user ${g_path_base}/.local/
+                    chown $g_other_calling_user ${g_path_base}/.local/bin
+                fi
+            elif [ ! -d "${g_path_base}/.local/bin" ]; then
+                mkdir -p ${g_path_base}/.local/bin
+                if [ ! -z "$g_other_calling_user" ]; then
+                    chown $g_other_calling_user ${g_path_base}/.local/bin
+                fi
+            fi
+
+            ln -sfn ${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
+
+            if [ ! -z "$g_other_calling_user" ]; then
+                chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/fzf.bash 
+                chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/keybindings/fzf.bash
+                chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash
+                chown -h $g_other_calling_user ${g_path_base}/.local/bin/fzf-tmux
+            fi
+            l_result=0
+            ;;
+
+        #fzf.vim)
+            #l_result=0
+            #;;
+
+    esac
+
+    return $l_result
+
+}
+
+
 function _update_vim_package() {
 
     #1. Argumentos
@@ -255,16 +332,17 @@ function _update_vim_package() {
         _update_repository $p_is_neovim "$l_folder" "$l_repo_name" "$l_repo_type"
         l_status=$?
 
-        #Si se actualizo con existo, indexar la ruta de documentacion a indexar 
+        #Si se llego a actualizar con existo... 
         if [ $l_status -eq 1 ] || [ $l_status -eq 2 ]; then
 
+            #Si tiene documentación, indexar la ruta de documentación...
             if [ -d "${l_folder}/doc" ]; then
-
-                #Indexar la documentación de plugins
                 la_doc_paths+=("${l_folder}/doc")
                 la_doc_repos+=("${l_repo_name}")
-
             fi
+
+            #Copiar algunos archivos del plugins a los archivos del usuario.
+            _copy_plugin_files $p_is_neovim "$l_repo_name" "$l_folder" "$l_repo_type"
         fi
 
     done
@@ -395,7 +473,9 @@ function _update_vim() {
     fi
 
     if [ $l_flag_setup -eq 0 ]; then
+
         _update_vim_package $p_is_neovim $p_is_coc_installed
+
     fi
 
     #Si es desarrallador: Actualizar los modulos Python
@@ -760,6 +840,14 @@ g_status_crendential_storage=-1
 #La credencial no se almaceno por un script externo.
 g_is_credential_storage_externally=1
 
+#Rutas usuadas (con valores por defecto) durante el setup, cuyos valores reales son calculados usando: 'set_program_path', 'set_command_path' y 'set_temp_path'
+g_path_programs='/opt/tools'
+g_path_cmd_base=''
+g_path_bin='/usr/local/bin'
+g_path_man='/usr/local/man/man1'
+g_path_fonts='/usr/share/fonts'
+g_path_temp='/tmp'
+
 
 #1.1. Mostrar el menu para escoger lo que se va instalar
 if [ $gp_type_calling -eq 0 ]; then
@@ -882,7 +970,7 @@ else
     if [ $gp_type_calling -eq 1 ]; then
         _g_is_noninteractive=1
     fi
-    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" "$g_other_calling_user"
 
     #Obtener los folderes de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
     _g_path=''
@@ -890,7 +978,7 @@ else
         _g_path="$4"
     fi
 
-    set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+    set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" "$g_other_calling_user"
 
     #Obtener los folderes temporal 'g_path_temp'
     _g_path=''

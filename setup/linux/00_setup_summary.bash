@@ -916,6 +916,14 @@ g_status_crendential_storage=-1
 #La credencial no se almaceno por un script externo.
 g_is_credential_storage_externally=1
 
+#Rutas usuadas (con valores por defecto) durante el setup, cuyos valores reales son calculados usando: 'set_program_path', 'set_command_path' y 'set_temp_path'
+g_path_programs='/opt/tools'
+g_path_cmd_base=''
+g_path_bin='/usr/local/bin'
+g_path_man='/usr/local/man/man1'
+g_path_fonts='/usr/share/fonts'
+g_path_temp='/tmp'
+
 
 #Instalar y actualizar los artefactos de un repositorio
 
@@ -1068,7 +1076,7 @@ else
     fi
 
     _g_is_noninteractive=1
-    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" "$g_other_calling_user"
 
     #Obtener los folderes de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
     _g_path=''
@@ -1076,7 +1084,7 @@ else
         _g_path="$6"
     fi
 
-    set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+    set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" "$g_other_calling_user"
 
     #Obtener los folderes temporal 'g_path_temp'
     _g_path=''
