@@ -1046,9 +1046,9 @@ _install_global_pckg_nodejs() {
     #if [ $l_status -ne 0 ]; then
     if [ -z "$l_version" ]; then
 
-        if [ $p_flag_install_only_pckg_vim -ne 0 ]; then
-            print_line '.' $g_max_length_line "$g_color_gray1"
-        fi
+        #if [ $p_flag_install_only_pckg_vim -ne 0 ]; then
+        #    print_line '.' $g_max_length_line "$g_color_gray1"
+        #fi
         echo "NodeJS > Instalando el comando 'prettier' para formatear archivos json, yaml, js, ..."
 
         #Se instalara a nivel glabal (puede ser usado por todos los usuarios) y para entornos de desarrallo
@@ -1255,9 +1255,9 @@ _install_user_pckg_python() {
     #if [ $l_status -ne 0 ]; then
     if [ -z "$l_version" ]; then
 
-        if [ $p_flag_install_only_pckg_vim -ne 0 ]; then
-            print_line '.' $g_max_length_line "$g_color_gray1" 
-        fi
+        #if [ $p_flag_install_only_pckg_vim -ne 0 ]; then
+        #    print_line '.' $g_max_length_line "$g_color_gray1" 
+        #fi
         echo "Python > Instalando el comando 'jtbl' (modulo python) para mostrar arreglos json en una consola en formato tabular."
         
         #Se instalar a nivel usuario
