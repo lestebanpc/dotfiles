@@ -3401,8 +3401,12 @@ function _copy_artifact_files() {
 
                 #Limpieza del directorio del programa
                 if  [ ! -d "$l_path_target_bin" ]; then
-                    mkdir -p $l_path_target_bin
-                    chmod g+rx,o+rx $l_path_target_bin
+
+                    mkdir -pm 775 $l_path_target_bin
+                    if [ ! -z "$g_other_calling_user" ]; then
+                        chown $g_other_calling_user $l_path_target_bin                    
+                    fi
+
                 else
                     #Limpieza
                     rm -rf ${l_path_target_bin}/*
@@ -3497,28 +3501,36 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
-
+            l_path_target_bin="${g_path_programs}/aws-cli"
 
             #Instalando 
             if [ $p_flag_install -eq 0 ]; then
+
+                if  [ ! -d "$l_path_target_bin" ]; then
+
+                    mkdir -pm 775 $l_path_target_bin
+                    if [ ! -z "$g_other_calling_user" ]; then
+                        chown $g_other_calling_user $l_path_target_bin                    
+                    fi
+                fi
 
                 #Si se configura localmente
                 if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
 
                     printf 'Instalando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" \n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
-                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+                    ${l_path_source}/aws/install -i "${l_path_target_bin}" -b "${l_path_target_bin}"
 
                 #Instalando como root
                 elif [ $g_user_sudo_support -eq 4 ]; then
 
                     printf 'Instalando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" \n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
-                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+                    ${l_path_source}/aws/install -i "${l_path_target_bin}" -b "${l_path_target_bin}"
 
                 #Instalando usando sudo
                 else
 
                     printf 'Instalando AWS CLI: %ssudo /aws/install -i "%s/aws-cli" -b "%s" \n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
-                    sudo ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}"
+                    sudo ${l_path_source}/aws/install -i "${l_path_target_bin}" -b "${l_path_target_bin}"
 
                 fi
 
@@ -3529,19 +3541,19 @@ function _copy_artifact_files() {
                 if [ $g_user_sudo_support -eq 2 ] && [ $g_user_sudo_support -eq 3 ]; then
 
                     printf 'Actualizando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" --update\n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
-                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}" --update
+                    ${l_path_source}/aws/install -i "${l_path_target_bin}" -b "${l_path_target_bin}" --update
 
                 #Actualizando como root
                 elif [ $g_user_sudo_support -eq 4 ]; then
 
                     printf 'Actualizando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" --update\n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
-                    ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}" --update
+                    ${l_path_source}/aws/install -i "${l_path_target_bin}" -b "${l_path_target_bin}" --update
 
                 #Actualizando usando sudo
                 else
 
-                    printf 'Actualizando AWS CLI: %ssudo /aws/install -i "%s/aws-cli" -b "%s" --update\n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
-                    sudo ${l_path_source}/aws/install -i "${g_path_programs}/aws-cli" -b "${l_path_target_bin}" --update
+                    printf 'Actualizando AWS CLI: %s/aws/install -i "%s/aws-cli" -b "%s" --update\n' "${l_path_source}" "${g_path_programs}" "${l_path_target_bin}"
+                    sudo ${l_path_source}/aws/install -i "${l_path_target_bin}" -b "${l_path_target_bin}" --update
 
                 fi
             fi
@@ -3740,11 +3752,7 @@ function _copy_artifact_files() {
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown $g_other_calling_user "${g_path_programs}/pgo.info"
-                    else
-                        sudo chown $g_other_calling_user "${g_path_programs}/pgo.info"
-                    fi
+                   chown $g_other_calling_user "${g_path_programs}/pgo.info"
                 fi
 
             else
@@ -3891,8 +3899,19 @@ function _copy_artifact_files() {
 
                 #Limpieza del directorio del programa
                 if  [ ! -d "$l_path_target_bin" ]; then
-                    mkdir -p $l_path_target_bin
-                    chmod g+rx,o+rx $l_path_target_bin
+
+                    if [ ! -d "${g_path_programs}/lsp_servers" ]; then
+                        mkdir -pm 755 "${g_path_programs}/lsp_servers"
+                        if [ ! -z "$g_other_calling_user" ]; then
+                            chown $g_other_calling_user "${g_path_programs}/lsp_servers"                    
+                        fi
+                    fi
+
+                    mkdir -pm 755 $l_path_target_bin
+                    if [ ! -z "$g_other_calling_user" ]; then
+                        chown $g_other_calling_user $l_path_target_bin                    
+                    fi
+
                 else
                     #Limpieza
                     rm -rf ${l_path_target_bin}/*
@@ -3933,8 +3952,19 @@ function _copy_artifact_files() {
 
                 #2.1. Instalación: Limpieza del directorio del programa
                 if  [ ! -d "$l_path_target_bin" ]; then
-                    mkdir -p $l_path_target_bin
-                    chmod g+rx,o+rx $l_path_target_bin
+
+                    if [ ! -d "${g_path_programs}/dap_servers" ]; then
+                        mkdir -pm 755 "${g_path_programs}/dap_servers"
+                        if [ ! -z "$g_other_calling_user" ]; then
+                            chown $g_other_calling_user "${g_path_programs}/dap_servers"                    
+                        fi
+                    fi
+
+                    mkdir -pm 755 $l_path_target_bin
+                    if [ ! -z "$g_other_calling_user" ]; then
+                        chown $g_other_calling_user $l_path_target_bin                    
+                    fi
+
                 else
                     #Limpieza
                     rm -rf ${l_path_target_bin}/*
@@ -3949,11 +3979,7 @@ function _copy_artifact_files() {
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown $g_other_calling_user "${l_path_target_bin}/netcoredbg.info"
-                    else
-                        sudo chown $g_other_calling_user "${l_path_target_bin}/netcoredbg.info"
-                    fi
+                    chown $g_other_calling_user "${l_path_target_bin}/netcoredbg.info"
                 fi
 
 
@@ -3996,8 +4022,12 @@ function _copy_artifact_files() {
 
                     #2.1. Instalación: Limpieza del directorio del programa
                     if  [ ! -d "$l_path_target_bin" ]; then
-                        mkdir -p $l_path_target_bin
-                        chmod g+rx,o+rx $l_path_target_bin
+
+                        mkdir -pm 755 $l_path_target_bin
+                        if [ ! -z "$g_other_calling_user" ]; then
+                            chown $g_other_calling_user $l_path_target_bin                    
+                        fi
+
                     else
                         #Limpieza
                         rm -rf ${l_path_target_bin}/*
@@ -4105,11 +4135,7 @@ function _copy_artifact_files() {
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown $g_other_calling_user "${g_path_programs}/nerd-fonts.info"
-                    else
-                        sudo chown $g_other_calling_user "${g_path_programs}/nerd-fonts.info"
-                    fi
+                    chown $g_other_calling_user "${g_path_programs}/nerd-fonts.info"
                 fi
             fi
 
@@ -4169,10 +4195,15 @@ function _copy_artifact_files() {
                 return 41
             fi
 
-            #Acceso al folder creado
+            #Renombrando la carpeta creada
             printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$l_path_target_bin" "$g_color_reset"
             mv "$l_aux" "$l_path_target_bin"
+
             chmod g+rx,o+rx ${l_path_target_bin}
+            if [ ! -z "$g_other_calling_user" ]; then
+                chown $g_other_calling_user $l_path_target_bin                    
+            fi
+
 
             #Validar si 'LLVM' esta en el PATH
             echo "$PATH" | grep "${g_path_programs}/llvm/bin" &> /dev/null
@@ -4198,8 +4229,19 @@ function _copy_artifact_files() {
 
                 #Limpieza del directorio del programa
                 if  [ ! -d "$l_path_target_bin" ]; then
-                    mkdir -p $l_path_target_bin
-                    chmod g+rx,o+rx $l_path_target_bin
+
+                    if [ ! -d "${g_path_programs}/lsp_servers" ]; then
+                        mkdir -pm 755 "${g_path_programs}/lsp_servers"
+                        if [ ! -z "$g_other_calling_user" ]; then
+                            chown $g_other_calling_user "${g_path_programs}/lsp_servers"                    
+                        fi
+                    fi
+
+                    mkdir -pm 755 $l_path_target_bin
+                    if [ ! -z "$g_other_calling_user" ]; then
+                        chown $g_other_calling_user $l_path_target_bin                    
+                    fi
+
                 else
                     #Limpieza
                     rm -rf ${l_path_target_bin}/*
@@ -4367,6 +4409,17 @@ function _copy_artifact_files() {
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
             mkdir -pm 775 "${g_path_programs}/rust"
 
+            #Crear el directorio si no existe (no limpiar)
+            if  [ ! -d "${g_path_programs}/rust" ]; then
+
+                mkdir -pm 755 "${g_path_programs}/rust"
+                if [ ! -z "$g_other_calling_user" ]; then
+                    chown $g_other_calling_user "${g_path_programs}/rust"
+                fi
+
+            fi
+                     
+
             #Las componente por defecto del instalador 'standalone' (no incluye 'rust-src')
             if [ $p_artifact_index -eq 0 ]; then
 
@@ -4449,7 +4502,9 @@ function _copy_artifact_files() {
 
                 #Acceso al folder creado
                 chmod g+rx,o+rx ${g_path_programs}/go
-                mkdir -p ~/go/bin
+                if [ ! -z "$g_other_calling_user" ]; then
+                    chown $g_other_calling_user "${g_path_programs}/go"                  
+                fi
 
                 #Validar si 'Go' esta en el PATH
                 echo "$PATH" | grep "${g_path_programs}/go/bin" &> /dev/null
@@ -4462,17 +4517,24 @@ function _copy_artifact_files() {
                     export PATH=$PATH:~/go/bin
                 fi
 
-                #Instalar o actualizar el modulo go: LSP 'gopls'
-                printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'LSP "gopls"' "$g_color_gray1" "$g_color_reset"
-                go install golang.org/x/tools/gopls@latest
-                l_aux=$(gopls version | grep 'gopls v' | sed "$g_regexp_sust_version1" 2> /dev/null)
-                printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'LSP "gopls"' "$g_color_gray1" "$l_aux" "$g_color_reset" 
+                #Solo instalar paquetes de usuario basicos, si lo ejecuta el usuario
+                if [ "${g_path_base}/go/bin" = ~/go/bin ]; then
 
-                #Instalar o actualizar el modulo go: DAP 'delve'
-                printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'DAP "delve"' "$g_color_gray1" "$g_color_reset"
-                go install github.com/go-delve/delve/cmd/dlv@latest
-                l_aux=$(dlv version | grep 'Version:' | sed "$g_regexp_sust_version1" 2> /dev/null)
-                printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'DAP "delve"' "$g_color_gray1" "$l_aux" "$g_color_reset" 
+                    mkdir -p ~/go/bin
+
+                    #Instalar o actualizar el modulo go: LSP 'gopls'
+                    printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'LSP "gopls"' "$g_color_gray1" "$g_color_reset"
+                    go install golang.org/x/tools/gopls@latest
+                    l_aux=$(gopls version | grep 'gopls v' | sed "$g_regexp_sust_version1" 2> /dev/null)
+                    printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'LSP "gopls"' "$g_color_gray1" "$l_aux" "$g_color_reset" 
+
+                    #Instalar o actualizar el modulo go: DAP 'delve'
+                    printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'DAP "delve"' "$g_color_gray1" "$g_color_reset"
+                    go install github.com/go-delve/delve/cmd/dlv@latest
+                    l_aux=$(dlv version | grep 'Version:' | sed "$g_regexp_sust_version1" 2> /dev/null)
+                    printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'DAP "delve"' "$g_color_gray1" "$l_aux" "$g_color_reset"
+
+                fi
 
 
             else
@@ -4518,11 +4580,15 @@ function _copy_artifact_files() {
                 uncompress_program "${l_path_source}" "$p_artifact_name" "${g_path_programs}" $((l_artifact_type - 20))
                 #l_artifact_name_without_ext="$g_filename_without_ext"
 
-                #Acceso al folder creado
+                #Renombrando el folder creado en la descomprención:
                 printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "${g_path_programs}/node-${p_repo_last_version}-linux-x64" "$g_color_reset" "$g_color_gray1" \
                        "${g_path_programs}/nodejs" "$g_color_reset"
                 mv "${g_path_programs}/${p_artifact_name_woext}" "${g_path_programs}/nodejs"
+
                 chmod g+rx,o+rx ${g_path_programs}/nodejs
+                if [ ! -z "$g_other_calling_user" ]; then
+                    chown $g_other_calling_user "${g_path_programs}/nodejs"                  
+                fi
 
                 #Validar si 'Node.JS' esta en el PATH
                 echo "$PATH" | grep "${g_path_programs}/nodejs/bin" &> /dev/null
@@ -4585,11 +4651,15 @@ function _copy_artifact_files() {
                 #    return 41
                 #fi
 
-                #Acceso al folder creado
+                #Renombrando el folder creado durante la descromprención:
                 l_aux="${g_path_programs}/${p_artifact_name_woext}"
                 printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$l_path_target_bin" "$g_color_reset"
                 mv "$l_aux" "$l_path_target_bin"
+
                 chmod g+rx,o+rx ${l_path_target_bin}
+                if [ ! -z "$g_other_calling_user" ]; then
+                    chown $g_other_calling_user "$l_path_target_bin"                  
+                fi
 
                 #Copiando los archivos de ayuda
                 #./man/man1/*.1
@@ -4731,11 +4801,7 @@ function _copy_artifact_files() {
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                        chown $g_other_calling_user "${g_path_programs}/rust-analyzer.info"
-                    else
-                        sudo chown $g_other_calling_user "${g_path_programs}/rust-analyzer.info"
-                    fi
+                    chown $g_other_calling_user "${g_path_programs}/rust-analyzer.info"
                 fi
 
             else
@@ -4798,10 +4864,14 @@ function _copy_artifact_files() {
                     return 41
                 fi
 
-                #Acceso al folder creado
+                #Renombrando la carpeta descomprimida
                 printf 'Renombrando "%b%s%b" en "%b%s%b"...\n' "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$l_path_target_bin" "$g_color_reset"
                 mv "$l_aux" "$l_path_target_bin"
+
                 chmod g+rx,o+rx ${l_path_target_bin}
+                if [ ! -z "$g_other_calling_user" ]; then
+                    chown $g_other_calling_user "$l_path_target_bin"
+                fi
 
                 #Validar si 'GraalVM' esta en el PATH
                 echo "$PATH" | grep "${g_path_programs}/graalvm/bin" &> /dev/null
@@ -4862,8 +4932,19 @@ function _copy_artifact_files() {
 
                 #Limpieza del directorio del programa
                 if  [ ! -d "$l_path_target_bin" ]; then
-                    mkdir -p $l_path_target_bin
-                    chmod g+rx,o+rx $l_path_target_bin
+
+                    if [ ! -d "${g_path_programs}/lsp_servers" ]; then
+                        mkdir -pm 755 "${g_path_programs}/lsp_servers"
+                        if [ ! -z "$g_other_calling_user" ]; then
+                            chown $g_other_calling_user "${g_path_programs}/lsp_servers"                    
+                        fi
+                    fi
+
+                    mkdir -pm 755 $l_path_target_bin
+                    if [ ! -z "$g_other_calling_user" ]; then
+                        chown $g_other_calling_user $l_path_target_bin                    
+                    fi
+
                 else
                     #Limpieza
                     rm -rf ${l_path_target_bin}/*
@@ -5241,10 +5322,9 @@ function _copy_artifact_files() {
 
                 #Crear las carpeta
                 echo "Creando la carpeta \"${l_path_target_bin}\" ..."
-                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    mkdir -pm 755 $l_path_target_bin
-                else
-                    sudo mkdir -pm 755 $l_path_target_bin
+                mkdir -pm 755 $l_path_target_bin
+                if [ ! -z "$g_other_calling_user" ]; then
+                    chown $g_other_calling_user $l_path_target_bin                    
                 fi
 
                 #Copiando los binarios
@@ -5285,11 +5365,7 @@ function _copy_artifact_files() {
 
             #Fix permisos
             if [ ! -z "$g_other_calling_user" ]; then
-                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    chown $g_other_calling_user "${g_path_programs}/cni-plugins.info"
-                else
-                    sudo chown $g_other_calling_user "${g_path_programs}/cni-plugins.info"
-                fi
+                chown $g_other_calling_user "${g_path_programs}/cni-plugins.info"
             fi
 
             #6. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
@@ -5776,8 +5852,10 @@ function _copy_artifact_files() {
 
                 #Limpieza del directorio del programa
                 if  [ ! -d "$l_path_target_bin" ]; then
-                    mkdir -p $l_path_target_bin
-                    chmod g+rx,o+rx $l_path_target_bin
+                    mkdir -pm 755 $l_path_target_bin
+                    if [ ! -z "$g_other_calling_user" ]; then
+                        chown $g_other_calling_user $l_path_target_bin                    
+                    fi
                 else
                     #Limpieza
                     rm -rf ${l_path_target_bin}/*
