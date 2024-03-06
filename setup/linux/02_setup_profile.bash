@@ -1852,13 +1852,11 @@ function _setup_user_profile() {
     #3. Crear algunos carpetas basicas (no es obligatorios, pero es deseado)
     
     #Claves SSH y TLS de uso personales
-    local l_source_path="${g_path_base}/.files/personalkeys"
+    local l_source_path="${g_path_base}/.files/tls"
 
     if [ ! -d "$l_source_path" ]; then
 
         mkdir -pm 755 "$l_source_path"
-        mkdir -m 755 "${l_source_path}/tls"
-        mkdir -m 755 "${l_source_path}/ssh"
 
         if [ ! -z "$p_other_calling_user" ]; then
             chown -R "$p_other_calling_user" "$l_source_path"

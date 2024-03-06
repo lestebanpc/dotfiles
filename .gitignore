@@ -8,7 +8,7 @@
 *.log
 
 #Claves privadas (y/o publicos) para SSH y TLS de uso personal
-personalkeys/*
+tls/*
 
 #Archivos de temas de oh-my-posh
 terminal/oh-my-posh/themes/*
