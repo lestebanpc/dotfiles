@@ -7,13 +7,16 @@
 #Log generados por: TMUX, ..
 *.log
 
+#Claves privadas (y/o publicos) para SSH y TLS de uso personal
+personalkeys/*
+
 #Archivos de temas de oh-my-posh
 terminal/oh-my-posh/themes/*
 
 #Archivos de instalacion de un programa/comando especificico
 setup/programs/*
 
-#Archivos de configuracion de k8s usados por UC
+#Archivos de configuracion personalizados para acceder a un cluster k8s
 k8s/config/*.yaml
 
 #Archivos internos de GIT

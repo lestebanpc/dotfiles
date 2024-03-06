@@ -19,6 +19,156 @@ declare -r g_empty_str='EMPTY'
 
 #}}}
 
+#Validar si la carpeta esta creado y tiene permiso de escritura, si no lo esta intenta crearlo.
+# - Si esta creada pero no tiene permisos de escritura, intenta establecer el owner solicitando acceso a root.
+# - Si no esta creada intenta crearlo solicitando acceso a root.
+#
+#Parametro de salida:
+#  00 > OK   La carpeta existe y se tiene acceso a escritura.
+#  01 > OK   La carpeta existe, no tenia permiso de escritura, pero se establecio como owner.
+#  02 > OK   La carpeta no existe, pero se creo con permisos de escritura (owner del folder).
+#  03 > NOOK La carpeta existe, pero no se tiene permisos para establecer como owner. 
+#  04 > NOOK La carpeta no existe, pero no se tiene permisos para crearlo. 
+#  99 > NOOK Parametro invalidos.
+#
+function _try_create_standard_prg_path() {
+
+    #1. Argumentos 
+    local p_path_programs="$1"
+
+    if [ -z "$p_path_programs" ]; then
+        return 99
+    fi
+    
+    #2. Si existe la carpeta, validar si tiene permisos de escritura, si no se tiene intentarlo establecer.
+    local l_status
+    local l_group_name
+    if [ -d "$p_path_programs" ]; then
+
+        #2.1. Si tiene acceso de escritura
+        if [ -w "$p_path_programs" ]; then
+            return 0
+        fi
+
+        #2.2. Si no tiene acceso de escritura, establecer permisos de escritura (para los usuarios no son root)
+        # > 1 : se soporta el comando sudo sin password
+        if [ $g_user_sudo_support -eq 1 ]; then
+
+            #Establecer como owner
+            if l_group_name=$(id -gn 2> /dev/null); then
+                sudo chown ${USER}:${l_group_name} "$p_path_programs"
+            else
+                sudo chown ${USER} "$p_path_programs"
+            fi
+
+            return 0
+
+        # > 0 : se soporta el comando sudo con password (solo si es interactivo)
+        elif [ $g_user_sudo_support -eq 0 ] && [ $p_is_noninteractive -ne 0 ]; then
+
+            printf 'Se requiere establecer como owner la carpeta "%b%s%b" de programas, para ello se requiere usar sudo con root...\n' "$g_color_gray1" "$p_path_programs" "$g_color_reset"
+
+            #Establecer como owner
+            if l_group_name=$(id -gn 2> /dev/null); then
+                sudo chown ${USER}:${l_group_name} "$p_path_programs"
+                l_status=$?
+            else
+                sudo chown ${USER} "$p_path_programs"
+                l_status=$?
+            fi
+
+            #Creando subdirectorios opcionales
+            if [ $l_status -eq 0 ]; then
+                return 1
+            else
+                return 3
+            fi
+
+        fi
+
+        # Cualquier otro caso, no se tiene permisos
+        return 3
+
+    fi
+
+    #3. Si no existe intentar crearlo si tiene permiso para ello
+
+    # > 4 : El usuario es root (no requiere sudo)
+    if [ $g_user_sudo_support -eq 4 ]; then
+
+        mkdir -pm 755 "$p_path_programs"
+        l_status=$?
+
+        mkdir -pm 755 "$p_path_programs/sharedkeys"
+        mkdir -pm 755 "$p_path_programs/sharedkeys/tls"
+        mkdir -pm 755 "$p_path_programs/sharedkeys/ssh"
+
+        if [ ! -z "$p_other_calling_user" ]; then
+            chown -R "$p_other_calling_user" "$p_path_programs"
+        fi
+
+        return 2
+
+    # > 1 : se soporta el comando sudo sin password
+    elif [ $g_user_sudo_support -eq 1 ]; then
+
+        sudo mkdir -pm 755 "$p_path_programs"
+        l_status=$?
+
+        #Establecer como owner
+        if l_group_name=$(id -gn 2> /dev/null); then
+            sudo chown ${USER}:${l_group_name} "$p_path_programs"
+        else
+            sudo chown ${USER} "$p_path_programs"
+        fi
+
+        #Creando subdirectorios opcionales
+        mkdir -pm 755 "$p_path_programs/sharedkeys"
+        mkdir -pm 755 "$p_path_programs/sharedkeys/tls"
+        mkdir -pm 755 "$p_path_programs/sharedkeys/ssh"
+
+        return 2
+
+    # > 0 : se soporta el comando sudo con password (solo si es interactivo)
+    elif [ $g_user_sudo_support -eq 0 ] && [ $p_is_noninteractive -ne 0 ]; then
+
+        printf 'Se requiere crear la carpeta "%b%s%b" de programas, para ello se requiere usar sudo con root...\n' "$g_color_gray1" "$p_path_programs" "$g_color_reset"
+        if sudo mkdir -pm 755 "$p_path_programs"; then
+
+            #Establecer como owner
+            if l_group_name=$(id -gn 2> /dev/null); then
+                sudo chown ${USER}:${l_group_name} "$p_path_programs"
+                l_status=$?
+            else
+                sudo chown ${USER} "$p_path_programs"
+                l_status=$?
+            fi
+
+            #Creando subdirectorios opcionales
+            if [ $l_status -eq 0 ]; then
+
+                mkdir -pm 755 "$p_path_programs/sharedkeys"
+                mkdir -pm 755 "$p_path_programs/sharedkeys/tls"
+                mkdir -pm 755 "$p_path_programs/sharedkeys/ssh"
+                return 2
+
+            fi
+
+            #Cualquier otro caso, no se tiene permisos
+            return 4
+
+        fi
+
+        #Cualquier otro caso, no se tiene permisos
+        return 4
+
+    fi
+
+    #Cualquier otro caso, no se tiene permisos
+    return 4
+
+}
+
 
 #
 #Establece el ruta de los programas (incluyen mas de 1 comando) 'g_path_programs' a instalar.
@@ -28,7 +178,7 @@ declare -r g_empty_str='EMPTY'
 #  > La carpeta '~/tools', si '/opt/tools' existe pero no se tiene permisos de escritura o no existe y no se tiene permisos para crearlo.
 #
 #Parametros de entrada:
-# 1> Path base donde se encuentra el repostorio de los script de instalación (por defecto es '$HOME')
+# 1> Path base donde se encuentra el repositorio de los script de instalación (por defecto es '$HOME')
 # 2> Flag '0' si no es interactivo, '1' si es interactivo
 # 3> Ruta donde se ubicaran los programas descargsdos
 #    Si es vacio, no se se usara las carpetas '/opt/tools' o '~/tools'
@@ -37,7 +187,7 @@ declare -r g_empty_str='EMPTY'
 #  > Variables globales: 'g_path_programs'
 #  > Valor de retorno
 #     00> Si es establecio sin errores
-#     01> Si el directorio programa existe no existe y no se ha podido crearse automaticamente
+#     01> Si existe errores en la conversion: el directorio programa existe no existe y no se ha podido crearse automaticamente
 function set_program_path() {
 
     local p_path_base
@@ -62,160 +212,96 @@ function set_program_path() {
     fi
 
 
-
     #1. Si es directorio personalizado del usuario y tienes acceso de escritura
     if  [ ! -z "$p_path_programs" ] && [ "$p_path_programs" != "/opt/tools" ] && [ -d "$p_path_programs" ] && [ -w "$p_path_programs" ]; then
         g_path_programs="$p_path_programs"
         return 0
     fi
 
-    #2. Intento de usar el directorio por defecto '/opt/tools'
+    #2. Intento de usar el directorio por defecto '/var/opt/tools'
     local l_status
-    local l_group_name
-    
-    #2.1. Si existe la carpeta, validar si tiene permisos de escritura.
-    if [ -d "/opt/tools" ]; then
 
-        #Si tiene acceso de escritura
-        if [ -w "/opt/tools" ]; then
+    if [ -d "/var/opt" ]; then
 
-            g_path_programs='/opt/tools'
+        # 00 > OK   La carpeta existe y se tiene acceso a escritura.
+        # 01 > OK   La carpeta existe, no tenia permiso de escritura, pero se establecio como owner.
+        # 02 > OK   La carpeta no existe, pero se creo con permisos de escritura (owner del folder).
+        # 03 > NOOK La carpeta existe, pero no se tiene permisos para establecer como owner. 
+        # 04 > NOOK La carpeta no existe, pero no se tiene permisos para crearlo. 
+        # 99 > NOOK Parametro invalidos.
+        _try_create_standard_prg_path '/var/opt/tools'
+        l_status=$?
+
+        if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
+            g_path_programs="/var/opt/tools"
             return 0
-
-        #Si no tiene acceso de escritura, establecer permisos de escritura (para los usuarios no son root)
-        else
-
-            # > 1 : se soporta el comando sudo sin password
-            if [ $g_user_sudo_support -eq 1 ]; then
-
-                g_path_programs='/opt/tools'
-
-                #Establecer como owner
-                if l_group_name=$(id -gn 2> /dev/null); then
-                    sudo chown ${USER}:${l_group_name} "$g_path_programs"
-                else
-                    sudo chown ${USER} "$g_path_programs"
-                fi
-
-                return 0
-
-            # > 0 : se soporta el comando sudo con password (solo si es interactivo)
-            elif [ $g_user_sudo_support -eq 0 ] && [ $p_is_noninteractive -ne 0 ]; then
-
-                g_path_programs='/opt/tools'
-                printf 'Se requiere establecer como owner la carpeta "%b%s%b" de programas, para ello se requiere usar sudo con root...\n' "$g_color_gray1" "$g_path_programs" "$g_color_reset"
-
-                #Establecer como owner
-                if l_group_name=$(id -gn 2> /dev/null); then
-                    sudo chown ${USER}:${l_group_name} "$g_path_programs"
-                    l_status=$?
-                else
-                    sudo chown ${USER} "$g_path_programs"
-                    l_status=$?
-                fi
-
-                #Creando subdirectorios opcionales
-                if [ $l_status -eq 0 ]; then
-                    return 0
-                else
-                    printf 'No se puede establecer permisos de escritura a la carpeta "%b%s%b" de programas. %bSe usara como carpeta de programas a "%b%s%b"...%b\n' \
-                           "$g_color_gray1" "$g_path_programs" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
-                fi
-
-            else
-                printf 'No se puede establecer permisos de escritura a la carpeta "%b%s%b" de programas. %bSe usara como carpeta de programas a "%b%s%b"...%b\n' \
-                       "$g_color_gray1" "/opt/tools" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
-            fi
         fi
+
+        #Si la carpeta existe, pero no se puede establacer permisos de escritura (owner de la carpeta)
+        if [ $l_status -eq 3 ]; then
+            printf 'No se puede establecer como owner la carpeta "%b%s%b" de programas. %bSe intentara usar como carpeta de programas a "%b%s%b"...%b\n' \
+                   "$g_color_gray1" "/var/opt/tools" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "/opt/tools"  "$g_color_gray1" "$g_color_reset"
+        fi
+
+        #Si la carpeta no existe y no se ha podido crear la carpeta
+        if [ $l_status -eq 4 ]; then
+            printf 'No se tiene permisos para crear la carpeta "%b%s%b" de programas. %bSe intentara usar como carpeta de programas a "%b%s%b"...%b\n' \
+                   "$g_color_gray1" "/var/opt/tools" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "/opt/tools"  "$g_color_gray1" "$g_color_reset"
+        fi
+
+        if [ $l_status -gt 4 ]; then
+            printf 'No se puede crear la carpeta "%b%s%b" de programas (code %s). %bSe intentara usar como carpeta de programas a "%b%s%b"...%b\n' \
+                   "$g_color_gray1" "/var/opt/tools" "$g_color_reset" "$l_status" "$g_color_gray1" "$g_color_reset" "/opt/tools"  "$g_color_gray1" "$g_color_reset"
+        fi
+
+    else
+
+        printf 'No existe la carpeta "%b%s%b". %bSe intentara usar como carpeta de programas a "%b%s%b"...%b\n' \
+               "$g_color_gray1" "/var/opt" "$g_color_reset" "$l_status" "$g_color_gray1" "$g_color_reset" "/opt/tools"  "$g_color_gray1" "$g_color_reset"
 
     fi
 
-    #2.2. Si no existe intentar crearlo si tiene permiso para ello
-    if [ ! -d "/opt/tools" ]; then
+    #3. Intento de usar el directorio por defecto '/opt/tools'
+    if [ -d "/opt" ]; then
 
-        # > 4 : El usuario es root (no requiere sudo)
-        if [ $g_user_sudo_support -eq 4 ]; then
+        # 00 > OK   La carpeta existe y se tiene acceso a escritura.
+        # 01 > OK   La carpeta existe, no tenia permiso de escritura, pero se establecio como owner.
+        # 02 > OK   La carpeta no existe, pero se creo con permisos de escritura (owner del folder).
+        # 03 > NOOK La carpeta existe, pero no se tiene permisos para establecer como owner. 
+        # 04 > NOOK La carpeta no existe, pero no se tiene permisos para crearlo. 
+        # 99 > NOOK Parametro invalidos.
+        _try_create_standard_prg_path '/opt/tools'
+        l_status=$?
 
-            g_path_programs='/opt/tools'
-            mkdir -pm 755 "$g_path_programs"
-            l_status=$?
-
-            mkdir -pm 755 "$g_path_programs/userkeys"
-            mkdir -pm 755 "$g_path_programs/userkeys/tls"
-            mkdir -pm 755 "$g_path_programs/userkeys/ssh"
-
-            if [ ! -z "$p_other_calling_user" ]; then
-                chown -R "$p_other_calling_user" "$g_path_programs"
-            fi
-
+        if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
+            g_path_programs="/opt/tools"
             return 0
+        fi
 
-        # > 1 : se soporta el comando sudo sin password
-        elif [ $g_user_sudo_support -eq 1 ]; then
-
-            g_path_programs='/opt/tools'
-            sudo mkdir -pm 755 "$g_path_programs"
-            l_status=$?
-
-            #Establecer como owner
-            if l_group_name=$(id -gn 2> /dev/null); then
-                sudo chown ${USER}:${l_group_name} "$g_path_programs"
-            else
-                sudo chown ${USER} "$g_path_programs"
-            fi
-
-            #Creando subdirectorios opcionales
-            mkdir -pm "$g_path_programs/userkeys"
-            mkdir -pm "$g_path_programs/userkeys/tls"
-            mkdir -pm "$g_path_programs/userkeys/ssh"
-
-            return 0
-
-        # > 0 : se soporta el comando sudo con password (solo si es interactivo)
-        elif [ $g_user_sudo_support -eq 0 ] && [ $p_is_noninteractive -ne 0 ]; then
-
-            g_path_programs='/opt/tools'
-            printf 'Se requiere crear la carpeta "%b%s%b" de programas, para ello se requiere usar sudo con root...\n' "$g_color_gray1" "$g_path_programs" "$g_color_reset"
-            if sudo mkdir -pm 755 "$g_path_programs"; then
-
-                #Establecer como owner
-                if l_group_name=$(id -gn 2> /dev/null); then
-                    sudo chown ${USER}:${l_group_name} "$g_path_programs"
-                    l_status=$?
-                else
-                    sudo chown ${USER} "$g_path_programs"
-                    l_status=$?
-                fi
-
-                #Creando subdirectorios opcionales
-                if [ $l_status -eq 0 ]; then
-
-                    mkdir -pm "$g_path_programs/userkeys"
-                    mkdir -pm "$g_path_programs/userkeys/tls"
-                    mkdir -pm "$g_path_programs/userkeys/ssh"
-                    return 0
-
-                else
-                    printf 'No se puede crear la carpeta "%b%s%b" de programas. %bSe usara como carpeta de programas a "%b%s%b"...%b\n' \
-                           "$g_color_gray1" "$g_path_programs" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
-                fi
-
-            else
-                printf 'No se puede crear la carpeta "%b%s%b" de programas. %bSe usara como carpeta de programas a "%b%s%b"...%b\n' \
-                       "$g_color_gray1" "$g_path_programs" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
-
-            fi
-
-
-        else
-            printf 'No se puede crear la carpeta "%b%s%b" de programas. %bSe usara como carpeta de programas a "%b%s%b"...%b\n' \
+        #Si la carpeta existe, pero no se puede establacer permisos de escritura (owner de la carpeta)
+        if [ $l_status -eq 3 ]; then
+            printf 'No se puede establecer como owner la carpeta "%b%s%b" de programas. %bSe intentara usar como carpeta de programas a "%b%s%b"...%b\n' \
                    "$g_color_gray1" "/opt/tools" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
         fi
 
+        #Si la carpeta no existe y no se ha podido crear la carpeta
+        if [ $l_status -eq 4 ]; then
+            printf 'No se tiene permisos para crear la carpeta "%b%s%b" de programas. %bSe intentara usar como carpeta de programas a "%b%s%b"...%b\n' \
+                   "$g_color_gray1" "/opt/tools" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
+        fi
+
+        if [ $l_status -gt 4 ]; then
+            printf 'No se puede crear la carpeta "%b%s%b" de programas (code %s). %bSe intentara usar como carpeta de programas a "%b%s%b"...%b\n' \
+                   "$g_color_gray1" "/opt/tools" "$g_color_reset" "$l_status" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
+        fi
+
+    else
+        printf 'No existe la carpeta "%b%s%b". %bSe intentara usar como carpeta de programas a "%b%s%b"...%b\n' \
+               "$g_color_gray1" "/opt" "$g_color_reset" "$l_status" "$g_color_gray1" "$g_color_reset" "${p_path_base}/tools"  "$g_color_gray1" "$g_color_reset"
     fi
 
 
-    #3. Usar la carpeta '~/tools' (si '/opt/tools' existe pero no se tiene permisos de escritura o no existe y no se tiene permisos para crearlo).
+    #4. Usar la carpeta '~/tools' (si '/opt/tools' existe pero no se tiene permisos de escritura o no existe y no se tiene permisos para crearlo).
     # > 0 : se soporta el comando sudo con password (solo no es interactivo)
     # > 2 : El SO no implementa el comando sudo
     # > 3 : El usuario no tiene permisos para ejecutar sudo
@@ -227,9 +313,9 @@ function set_program_path() {
         mkdir -pm 755 "$g_path_programs"
         l_status=$?
 
-        mkdir -pm 755 "$g_path_programs/userkeys"
-        mkdir -pm 755 "$g_path_programs/userkeys/tls"
-        mkdir -pm 755 "$g_path_programs/userkeys/ssh"
+        mkdir -pm 755 "$g_path_programs/sharedkeys"
+        mkdir -pm 755 "$g_path_programs/sharedkeys/tls"
+        mkdir -pm 755 "$g_path_programs/sharedkeys/ssh"
 
         if [ ! -z "$p_other_calling_user" ]; then
             chown -R "$p_other_calling_user" "$g_path_programs"
@@ -447,12 +533,18 @@ function set_temp_path() {
     local p_path_temp="$1"
 
     #1. Usar el directorio personalizado del usuario (siempre que existe y tienes acceso de escritura)
-    if [ ! -z "$p_path_temp" ] && [ "$p_path_temp" != "/tmp" ] && [ -d "$p_path_temp" ] && [ -w "$p_path_temp" ]; then
+    if [ ! -z "$p_path_temp" ] && [ -d "$p_path_temp" ] && [ -w "$p_path_temp" ]; then
         g_path_temp="$p_path_temp"
         return 0
     fi
 
     #2. Usar la carpeta predeterminado '/tmp'.
+    if [ -d "/var/tmp" ] && [ -w "/var/tmp" ]; then
+        g_path_temp="/var/tmp"
+        return 0
+    fi
+    
+    #3. Usar la carpeta predeterminado '/tmp'.
     g_path_temp="/tmp"
     return 0
 

@@ -1848,13 +1848,29 @@ function _setup_user_profile() {
     #print_line '─' $g_max_length_line "$g_color_blue1"
     print_line '-' $g_max_length_line  "$g_color_gray1"
 
-    
 
-    #3. Creando enlaces simbolico dependientes del tipo de distribución Linux
+    #3. Crear algunos carpetas basicas (no es obligatorios, pero es deseado)
+    
+    #Claves SSH y TLS de uso personales
+    local l_source_path="${g_path_base}/.files/personalkeys"
+
+    if [ ! -d "$l_source_path" ]; then
+
+        mkdir -pm 755 "$l_source_path"
+        mkdir -m 755 "${l_source_path}/tls"
+        mkdir -m 755 "${l_source_path}/ssh"
+
+        if [ ! -z "$p_other_calling_user" ]; then
+            chown -R "$p_other_calling_user" "$l_source_path"
+        fi
+
+    fi
+
+
+    #4. Creando enlaces simbolico dependientes del tipo de distribución Linux
 
     #Si es Linux WSL
     local l_target_link
-    local l_source_path
     local l_source_filename
 
     #Archivo de colores de la terminal usado por comandos basicos
@@ -1906,18 +1922,33 @@ function _setup_user_profile() {
                 l_source_filename='fedora_x64_local.ps1'
             fi
         fi
-    else
+    elif [ "$g_path_programs" = "/opt/tools" ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
             if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='debian_aarch64_shared.ps1'
+                l_source_filename='debian_aarch64_shared2.ps1'
             else
-                l_source_filename='debian_x64_shared.ps1'
+                l_source_filename='debian_x64_shared2.ps1'
             fi
         else
             if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='fedora_aarch64_shared.ps1'
+                l_source_filename='fedora_aarch64_shared2.ps1'
             else
-                l_source_filename='fedora_x64_shared.ps1'
+                l_source_filename='fedora_x64_shared2.ps1'
+            fi
+        fi
+    #Se recomienda '/var/opt/tools'
+    else
+        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='debian_aarch64_shared1.ps1'
+            else
+                l_source_filename='debian_x64_shared1.ps1'
+            fi
+        else
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='fedora_aarch64_shared1.ps1'
+            else
+                l_source_filename='fedora_x64_shared1.ps1'
             fi
         fi
     fi
@@ -1940,25 +1971,40 @@ function _setup_user_profile() {
                 l_source_filename='fedora_x64_local.bash'
             fi
         fi
-    else
+    elif [ "$g_path_programs" = "/opt/tools" ]; then
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
             if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='debian_aarch64_shared.bash'
+                l_source_filename='debian_aarch64_shared2.bash'
             else
-                l_source_filename='debian_x64_shared.bash'
+                l_source_filename='debian_x64_shared2.bash'
             fi
         else
             if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='fedora_aarch64_shared.bash'
+                l_source_filename='fedora_aarch64_shared2.bash'
             else
-                l_source_filename='fedora_x64_shared.bash'
+                l_source_filename='fedora_x64_shared2.bash'
+            fi
+        fi
+    #Se recomienda '/var/opt/tools'
+    else
+        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='debian_aarch64_shared1.bash'
+            else
+                l_source_filename='debian_x64_shared1.bash'
+            fi
+        else
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                l_source_filename='fedora_aarch64_shared1.bash'
+            else
+                l_source_filename='fedora_x64_shared1.bash'
             fi
         fi
     fi
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
 
-    #4. Creando enlaces simbolico independiente del tipo de distribución Linux
+    #5. Creando enlaces simbolico independiente del tipo de distribución Linux
 
     #Crear el enlace de TMUX
     l_target_link="${g_path_base}/.tmux.conf"
