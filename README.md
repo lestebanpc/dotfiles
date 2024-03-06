@@ -9,7 +9,7 @@ Para la configuracion se puede usar una de las siguientes script de configuraci�
 - Script './setup/linux/01_setup_commands.bash' descarga y configura comandos (un binario) y programas (conjunto de binarios) de repositorio que no sean del SO (usualmente GitHub).
   Se recomienda si ejecute con un usuario que no sea root para que los binarios/programas sean compartidos para todos los usuario, pero podria usarlo.
   Los binarios lo instalara en:
-  - Si tiene la opcion 'sudo' como root habilitada, creara '/opt/tools' (lo instara crear la primeraz vez que ejecuta el script).
+  - Si tiene la opcion 'sudo' como root habilitada, creara '/var/opt/tools' (lo instara crear la primeraz vez que ejecuta el script), si no puede intentara en '/opt/tools'.
   - Si no lo tiene, lo instalará en '~/tools'.
     Los programas lo instalar en:
   - Si tiene la opcion 'sudo' habilitada, creara '/usr/local/bin'.
@@ -67,6 +67,9 @@ Los pasos recomandos para configurar su SO son:
    ```shell
    #Mostrar el menu para instalar/actualizar comandos/programas:
    ~/.files/setup/linux/01_setup_commands.bash
+   
+   #Para mostrar los parametros del script, ingrese un parametro invalido como:
+   ~/.files/setup/linux/01_setup_commands.bash x
    ```
 
 4. Para un usuario especifico, configure los archivos del profile y VIM/NeoVIM: 
@@ -80,6 +83,9 @@ Los pasos recomandos para configurar su SO son:
    ```bash
    #Mostrar el menu para configurar el profile y VIM/NeoVIM
    ~/.files/setup/linux/02_setup_profile.bash
+   
+   #Para mostrar los parametros del script, ingrese un parametro invalido como:
+   ~/.files/setup/linux/02_setup_profile.bash
    ```
 
 5. Cierre session y vuelva a iniciar (o crage nuevamente su profile) para registrar la variables del profile del usuario.
@@ -89,11 +95,13 @@ Los pasos recomandos para configurar su SO son:
    ```bash
    #Mostrar el menu para actualizar los plugins de VIM/NeoVIM
    ~/.files/setup/linux/04_update_all.bash
-   ```
    
+   #Para mostrar los parametros del script, ingrese un parametro invalido como:
+   ~/.files/setup/linux/04_update_all.bash
+   ```
+
 7. Configure la terminal.
    Debera configurar la fuente 'Nerd-Fonts'. La fuente recomendada es 'JetBrainsMono Nerd Font Mono'.
-
 
 # Configuración en Windows
 
@@ -166,7 +174,6 @@ Los pasos recomandos para configurar su SO son:
    #Mostrar el menu para actualizar los plugins de VIM/NeoVIM
    ${env:USERPROFILE}\.files\setup\powershell\03_update_all_win.ps1
    ```
-
 
 # Configuracion en una 'proot-distro' de Termux (Android)
 
