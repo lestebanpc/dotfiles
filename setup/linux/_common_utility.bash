@@ -953,7 +953,7 @@ function fulfill_preconditions() {
         printf 'Processor architecture type : %s\n' "$g_os_architecture_type"
 
         if [ ! -z "$g_path_programs" ]; then
-            printf 'Default program path        : "%s" (temporary data path "%s")' "$g_path_programs" "$g_path_temp"
+            printf 'Default program path        : "%s"' "$g_path_programs"
             if [ $g_os_type -eq 1 ] && [ ! -z "$g_path_programs_win" ]; then
                 printf ' (Windows "%s")\n' "$g_path_programs_win"
             else
@@ -968,6 +968,10 @@ function fulfill_preconditions() {
             else
                 printf '\n'
             fi
+        fi
+
+        if [ ! -z "$g_path_temp" ]; then
+            printf 'Temporary data path         : "%s"\n' "$g_path_temp"
         fi
 
         local l_aux='Root ('
