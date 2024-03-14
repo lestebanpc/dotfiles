@@ -250,7 +250,7 @@
 # Path to directory where CNI plugin binaries are located.
 #
 cni_plugin_dirs = [
-  "/opt/tools/cni_plugins"
+  "/var/opt/tools/cni_plugins"
 #  "/usr/local/libexec/cni",
 #  "/usr/libexec/cni",
 #  "/usr/local/lib/cni",

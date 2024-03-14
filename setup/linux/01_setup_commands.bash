@@ -495,6 +495,7 @@ function _install_artifacts() {
 
             _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
                 "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index $p_flag_install
+
             l_status=$?
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
@@ -529,8 +530,10 @@ function _install_artifacts() {
 
             #Copiar los archivos necesarios
             printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
+
             _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
                 "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index $p_flag_install
+
             l_status=$?
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
@@ -542,8 +545,10 @@ function _install_artifacts() {
 
             #Copiar los archivos necesarios
             printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas especificas del SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
+
             _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_name" "$l_artifact_name_without_ext" $l_artifact_type $p_install_win_cmds \
                 "$p_repo_current_version" "$p_repo_last_version" "$p_repo_last_version_pretty" $l_is_last "$p_arti_subversion_version" $p_arti_subversion_index $p_flag_install
+
             l_status=$?
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_name}"
 
@@ -3411,7 +3416,7 @@ g_usage() {
     printf '    > %bLIST-REPO-ID%b lista de ID repositorios separados por coma. Si no %b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    > %bSHOW-TITLE-1REPO%b Es 0, si muestra el titulo cuando solo se instala 1 repositorio. Por defecto es 1.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf 'Donde:\n'
-    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".%b\n' \
+    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bCMD_BASE_PATH %bes ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts"). Si se envia vacio o EMPTY se usara el directorio predeterminado:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -3478,7 +3483,7 @@ g_status_crendential_storage=-1
 g_is_credential_storage_externally=1
 
 #Rutas usuadas (con valores por defecto) durante el setup, cuyos valores reales son calculados usando: 'set_program_path', 'set_command_path' y 'set_temp_path'
-g_path_programs='/opt/tools'
+g_path_programs='/var/opt/tools'
 g_path_cmd_base=''
 g_path_bin='/usr/local/bin'
 g_path_man='/usr/local/man/man1'
@@ -3490,7 +3495,7 @@ if [ $gp_uninstall -eq 0 ]; then
 
     #Parametros usados por el script:
     # 1> Tipo de llamado: "uninstall"
-    # 2> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 2> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
     # 3> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
     #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
     #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
@@ -3548,7 +3553,7 @@ else
 
         #Parametros usados por el script:
         # 1> Tipo de llamado: 0 (usar un menu interactivo).
-        # 2> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+        # 2> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
         # 3> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
         #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
         #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
@@ -3611,7 +3616,7 @@ else
         #Parametros usados por el script:
         # 1> Tipo de llamado: 1/3 (sin menu interactivo/no-interactivo).
         # 2> Opciones de menu a ejecutar: entero positivo.
-        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
         # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
         #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
         #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
@@ -3721,7 +3726,7 @@ else
         #Parametros del script usados hasta el momento:
         # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
         # 2> Listado de ID del repositorios a instalar separados por coma.
-        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
         # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
         #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
         #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)

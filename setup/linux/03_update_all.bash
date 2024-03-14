@@ -549,7 +549,7 @@ function _update_all() {
         #Parametros usados por el script:
         # 1> Tipo de llamado: 1/3 (sin menu interactivo/no-interactivo).
         # 2> Opciones de menu a ejecutar: entero positivo.
-        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
         # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
         # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
         # 6> El estado de la credencial almacenada para el sudo.
@@ -803,7 +803,7 @@ g_usage() {
     printf '    %b~/.files/setup/linux/03_update_all.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b Es 0 si se muestra un menu, caso contrario es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".%b\n' \
+    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bCMD_BASE_PATH %bes ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts"). Si se envia vacio o EMPTY se usara el directorio predeterminado:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -846,7 +846,7 @@ g_status_crendential_storage=-1
 g_is_credential_storage_externally=1
 
 #Rutas usuadas (con valores por defecto) durante el setup, cuyos valores reales son calculados usando: 'set_program_path', 'set_command_path' y 'set_temp_path'
-g_path_programs='/opt/tools'
+g_path_programs='/var/opt/tools'
 g_path_cmd_base=''
 g_path_bin='/usr/local/bin'
 g_path_man='/usr/local/man/man1'
@@ -859,7 +859,7 @@ if [ $gp_type_calling -eq 0 ]; then
 
     #Parametros usados por el script:
     # 1> Tipo de llamado: 0 (usar un menu interactivo).
-    # 2> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 2> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
     # 3> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
     #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
     #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
@@ -922,7 +922,7 @@ else
     #Parametros del script usados hasta el momento:
     # 1> Tipo de ejecución: 1/2 (sin menu interactivo/no-interactivo).
     # 2> Opciones de menu a ejecutar: entero positivo.
-    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
     # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
     #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
     #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)

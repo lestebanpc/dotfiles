@@ -23,28 +23,87 @@ nnoremap <Leader>vv :set cursorcolumn!<CR>
 
 "----------------------------- Portapapeles            -----------------------------
 
-"Si es Linux incluyendo WSL
+"Soporte adicional a los portapales
 if (g:os_type == 2) || (g:os_type == 3)
 
-   "Copiar el ultimo yank realizado al portapapeles ('CLIPBOARD' selecction)
-   nnoremap <Leader>cy :<C-u>call system('xclip -selection clipboard', @0)<CR>
+    if executable('wl-copy')
 
-   "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
-   nnoremap <Leader>cd :<C-u>call system('xclip -selection clipboard', @1)<CR>
+        "Copiar el ultimo yank realizado al portapapeles ('CLIPBOARD' selecction)
+        nnoremap <Leader>cy :<C-u>call system('wl-copy', @0)<CR>
 
-   "Pagar el portapapeles al ultimo yank ('CLIPBOARD' selecction)
-   nnoremap <Leader>py :<C-u>let @0=system('xclip -o -selection clipboard 2> /dev/null')<CR>
+        "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
+        nnoremap <Leader>cd :<C-u>call system('wl-copy', @1)<CR>
 
-   "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
-   vnoremap <Leader>cl :w !xclip -selection clipboard<CR><CR>
+        "Pegar el portapapeles al ultimo yank ('CLIPBOARD' selecction)
+        nnoremap <Leader>py :<C-u>let @0=system('wl-paste --no-newline 2> /dev/null')<CR>
 
-   "Pegar del portapapeles ('CLIPBOARD' selecction) en nuevas lineas siguientes
-   nnoremap <Leader>pl :<C-u>r !xclip -o -selection clipboard<CR>
+        "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
+        vnoremap <Leader>cl :w !wl-copy<CR><CR>
+
+        "Pegar del portapapeles ('CLIPBOARD' selecction) en nuevas lineas siguientes
+        nnoremap <Leader>pl :<C-u>r !wl-paste --no-newline<CR>
+
+        "Si no se tiene soporte al clipboard:
+        "Si no es NeoVIM (NeoVIM usa un backend de clipboard, es decir comandos externos, no se integra on el API del SO)
+        if !g:is_neovim && !g:has_clipboard
+            augroup Yank
+                autocmd!
+                autocmd TextYankPost * if v:event.operator ==# 'y' | call system('wl-copy',@") | endif
+            augroup END
+        endif
+
+    elseif exists('$DISPLAY') && executable('xclip')
+
+        "Copiar el ultimo yank realizado al portapapeles ('CLIPBOARD' selecction)
+        nnoremap <Leader>cy :<C-u>call system('xclip -i -selection clipboard', @0)<CR>
+
+        "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
+        nnoremap <Leader>cd :<C-u>call system('xclip -i -selection clipboard', @1)<CR>
+
+        "Pegar el portapapeles al ultimo yank ('CLIPBOARD' selecction)
+        nnoremap <Leader>py :<C-u>let @0=system('xclip -o -selection clipboard 2> /dev/null')<CR>
+
+        "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
+        vnoremap <Leader>cl :w !xclip -i -selection clipboard<CR><CR>
+
+        "Pegar del portapapeles ('CLIPBOARD' selecction) en nuevas lineas siguientes
+        nnoremap <Leader>pl :<C-u>r !xclip -o -selection clipboard<CR>
+
+        "Si no se tiene soporte al clipboard:
+        "Si no es NeoVIM (NeoVIM usa un backend de clipboard, es decir comandos externos, no se integra on el API del SO)
+        if !g:has_clipboard
+            augroup Yank
+                autocmd!
+                autocmd TextYankPost * if v:event.operator ==# 'y' | call system('xclip -i -selection clipboard',@") | endif
+            augroup END
+        endif
+
+    endif
+
 
 "elseif g:os_type == 0
-"elseif g:os_type == 3
+
+"Si es WSL2:
+"  Aparte de usar como registro por defecto a '+' (el portapales principal de Linux, establecido por 'set clipboard=unnamedplus').
+"  Se usara requiere copiar el ultimo yank registro del portapapeles del SO.
+elseif g:os_type == 3
+
+    "Copia cualquier yank que esta en el registro " (por defecto) se copia al portapales del SO
+    augroup WslYank
+        autocmd!
+        autocmd TextYankPost * if v:event.operator ==# 'y' | call system('/mnt/c/windows/system32/clip.exe ',@") | endif
+    augroup END
 
 endif
+
+
+"----------------------------- Buffer TMUX             -----------------------------
+
+"if g:use_tmux
+    "Usar 'tmux load-buffer -'
+    "Usar 'tmux save-buffer -'
+"endif
+
 
 "----------------------------- Splits                  -----------------------------
 

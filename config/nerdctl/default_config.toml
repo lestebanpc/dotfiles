@@ -1,6 +1,6 @@
 #More info: https://github.com/containerd/nerdctl/blob/main/docs/config.md
 
-cni_path       = "/opt/tools/cni_plugins"
+cni_path       = "/var/opt/tools/cni_plugins"
 #debug          = false
 #debug_full     = false
 #address        = "unix:///run/k3s/containerd/containerd.sock"

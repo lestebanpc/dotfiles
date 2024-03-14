@@ -62,6 +62,7 @@ else
 endif
 
 "Determinar si se usa TMUX
+"if (g:os_type != 0) && exists('$TMUX') && executable('tmux')
 if (g:os_type != 0) && exists('$TMUX') 
     let g:use_tmux = 1
 else
@@ -270,38 +271,20 @@ endif
 
 "----------------------------- Clipboard de SO         -----------------------------
 
-"Uso de los registros vinculados al portapales del SO
-"Solo WSL
-if g:os_type == 3
+"Si se tiene soporte a Clipboard, habilitar el uso de los registros vinculados al portapales del SO
+if g:has_clipboard
+"if g:has_clipboard || g:is_gui_vim
 
-    "Copia cualquier yank que esta en el registro " (por defecto) se copia al portapales del SO
-    augroup Yank
-    autocmd!
-    autocmd TextYankPost * :call system('/mnt/c/windows/system32/clip.exe ',@")
-    augroup END
-
-elseif g:has_clipboard
-"elseif g:has_clipboard || g:is_gui_vim
-
-    "Usar como registro predeterminado a '*' vinculado al portapales principal del SO 
+    "Usar como registro predeterminado a '+' vinculado al portapales principal del SO 
     "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
-    "Para copiar selecione y use "CTRL + c", para pegar use "CTRL + v"
-    set clipboard=unnamed
+    "Para copiar selecione y use 'CTRL + c', para pegar use 'CTRL + v'
+    set clipboard=unnamedplus
 
-    ""Solo Linux
-    "if g:os_type == 2
-    "    "Usar como registro predeterminado a '+' (que apunta al portapales 'PRIMARY' del servidor X11)
-    "    "Para copiar el al portapales solo selecione el texto, 
-    "    "Para pegar del portapales use el boton central o boton secundario o 'SHFIT + INSERT'
-    "    "Se esta usando esto en Linux porque es mas facil usar y mas eficiente en recursos
-    "    set clipboard=unnamedplus
-    ""No es Linux o WSL
-    "else        
-    "    "Usar como registro predeterminado a '*' vinculado al portapales principal del SO 
-    "    "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
-    "    "Para copiar selecione y use "CTRL + c", para pegar use "CTRL + v"
-    "    set clipboard=unnamed
-    "endif
+    "Usar como registro predeterminado a '*' (que apunta al portapales 'PRIMARY' del servidor X11)
+    "Para copiar el al portapales solo selecione el texto, 
+    "Para pegar del portapales use el boton central o boton secundario o 'SHFIT + INSERT'
+    "Se esta usando esto en Linux porque es mas facil usar y mas eficiente en recursos
+    "set clipboard+=unnamed
 
 endif 
 

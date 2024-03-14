@@ -174,14 +174,15 @@ function _try_create_standard_prg_path() {
 #Establece el ruta de los programas (incluyen mas de 1 comando) 'g_path_programs' a instalar.
 #Orden de prioridad:
 #  > La carpeta ingresada como parametro 3, siempre que existe y el usuario de ejecución tiene permisos de escritura,
-#  > La carpeta '/opt/tools', si existe y tiene permisos de escritura. Si no tiene permisos intenta adicionarlo, si no existe intenta crearlo,
+#  > La carpeta '/var/opt/tools', si existe y tiene permisos de escritura. Si no tiene permisos intenta adicionarlo, si no existe intenta crearlo,
+#  > La carpeta '/opt/tools', si '/var/opt/tools' existe pero no se tiene permisos de escritura o no existe y no se tiene permisos para crearlo.
 #  > La carpeta '~/tools', si '/opt/tools' existe pero no se tiene permisos de escritura o no existe y no se tiene permisos para crearlo.
 #
 #Parametros de entrada:
 # 1> Path base donde se encuentra el repositorio de los script de instalación (por defecto es '$HOME')
 # 2> Flag '0' si no es interactivo, '1' si es interactivo
 # 3> Ruta donde se ubicaran los programas descargsdos
-#    Si es vacio, no se se usara las carpetas '/opt/tools' o '~/tools'
+#    Si es vacio, no se se usara las carpetas '/var/opt/tools' o '~/tools'
 # 4> 'UID:GID' solo si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
 #Parametros de salida:
 #  > Variables globales: 'g_path_programs'
@@ -213,7 +214,7 @@ function set_program_path() {
 
 
     #1. Si es directorio personalizado del usuario y tienes acceso de escritura
-    if  [ ! -z "$p_path_programs" ] && [ "$p_path_programs" != "/opt/tools" ] && [ -d "$p_path_programs" ] && [ -w "$p_path_programs" ]; then
+    if  [ ! -z "$p_path_programs" ] && [ "$p_path_programs" != "/var/opt/tools" ] && [ -d "$p_path_programs" ] && [ -w "$p_path_programs" ]; then
         g_path_programs="$p_path_programs"
         return 0
     fi

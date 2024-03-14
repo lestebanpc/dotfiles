@@ -2289,7 +2289,8 @@ function get_repo_artifacts() {
                 pna_artifact_types=(11)
             else
                 pna_artifact_names=("nvim-linux64.tar.gz")
-                pna_artifact_types=(10)
+                #Si se instala, no se descomprime, se realizara la logica de descomprención.
+                pna_artifact_types=(20)
             fi
             ;;
 
@@ -2868,6 +2869,8 @@ function _copy_artifact_files() {
         l_tag="${l_tag}${g_color_reset}"
     fi
 
+    #printf 'Temporal: %b\n' "$l_tag"
+
     #3. Copiar loa archivos del artefacto segun el prefijo
     local l_path_source=""
 
@@ -2882,7 +2885,6 @@ function _copy_artifact_files() {
     fi
 
     local l_status=0
-    local l_flag_install=1
     local l_aux
 
     case "$p_repo_id" in
@@ -4010,66 +4012,54 @@ function _copy_artifact_files() {
         neovim)
             
             #Ruta local de los artefactos
-            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
+
+            echo 'Iniciando la instalación de NeoVim'
 
             #Copiando el binario en una ruta del path
             if [ $p_install_win_cmds -ne 0 ]; then
                 
                 l_path_target_bin="${g_path_programs}/neovim"
 
-                #2. Instalación
-                if [ $l_flag_install -eq 0 ]; then
-
-                    #2.1. Instalación: Limpieza del directorio del programa
-                    if  [ ! -d "$l_path_target_bin" ]; then
-
-                        mkdir -pm 755 $l_path_target_bin
-                        if [ ! -z "$g_other_calling_user" ]; then
-                            chown $g_other_calling_user $l_path_target_bin                    
-                        fi
-
-                    else
-                        #Limpieza
-                        rm -rf ${l_path_target_bin}/*
-                    fi
-                        
-                    #2.2. Instalación: Mover todos archivos
-                    #rm "${l_path_source}/${p_artifact_name_woext}.tar.gz"
-                    find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.tar.gz" -exec mv '{}' ${l_path_target_bin} \;
-
-                    #Validar si 'nvim' esta en el PATH
-                    echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
-                    l_status=$?
-                    if [ $l_status -ne 0 ]; then
-                        printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                            "$g_color_red1" "NeoVIM"  "$p_repo_last_version_pretty" "$g_color_reset"
-                        printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_programs}"
-                        export PATH=${g_path_programs}/neovim/bin:$PATH
-                    fi
-
+                #Si existe archivos instalados, eliminarlo
+                if  [ -d "$l_path_target_bin" ]; then
+                    #Limpieza
+                    rm -rf ${l_path_target_bin}
                 fi
 
+                #Descomprimir
+                printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "$l_path_target_bin"
+                uncompress_program "$l_path_source" "$p_artifact_name" "${g_path_programs}" $((l_artifact_type - 20))
+                
+                #Renombrar el carpeta
+                mv "${g_path_programs}/${p_artifact_name_woext}" "$l_path_target_bin"
+                
+                #Validar si 'nvim' esta en el PATH
+                echo "$PATH" | grep "${g_path_programs}/neovim/bin" &> /dev/null
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                        "$g_color_red1" "NeoVIM"  "$p_repo_last_version_pretty" "$g_color_reset"
+                    printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_path_programs}"
+                    export PATH=${g_path_programs}/neovim/bin:$PATH
+                fi
 
             else
                 
                 l_path_target_bin="${g_path_programs_win}/NeoVim"
 
-                #2. Instalación
-                if [ $l_flag_install -eq 0 ]; then
-
-                    #2.1. Instalación: Limpieza del directorio del programa
-                    if  [ ! -d "$l_path_target_bin" ]; then
-                        mkdir -p $l_path_target_bin
-                        #chmod g+rx,o+rx $l_path_target_bin
-                    else
-                        #Limpieza
-                        rm -rf ${l_path_target_bin}/*
-                    fi
-                        
-                    #2.2. Instalación: Mover todos archivos
-                    #rm "${l_path_source}/${p_artifact_name_woext}.zip"
-                    find "${l_path_source}" -maxdepth 1 -mindepth 1 -not -name "${p_artifact_name_woext}.zip" -exec mv '{}' ${l_path_target_bin} \;
+                #Si existe archivos instalados, eliminarlo
+                if  [ -d "$l_path_target_bin" ]; then
+                    #Limpieza
+                    rm -rf ${l_path_target_bin}
                 fi
+
+                #Descomprimir
+                printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "$l_tag" "$p_artifact_index" "$p_artifact_name" "$l_path_target_bin"
+                uncompress_program "$l_path_source" "$p_artifact_name" "${g_path_programs_win}" $((l_artifact_type - 20))
+                
+                #Renombrar el carpeta
+                mv "${g_path_programs_win}/${p_artifact_name_woext}" "$l_path_target_bin"
 
             fi
             ;;

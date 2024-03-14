@@ -293,7 +293,7 @@ function g_install_options() {
             #Parametros usados por el script:
             # 1> Tipo de llamado: 1/3 (sin menu interactivo/no-interactivo).
             # 2> Opciones de menu a ejecutar: entero positivo.
-            # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+            # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
             # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
             # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
             # 6> El estado de la credencial almacenada para el sudo.
@@ -378,7 +378,7 @@ function g_install_options() {
         #Parametros del script usados hasta el momento:
         # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
         # 2> Listado de ID del repositorios a instalar separados por coma.
-        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
         # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
         # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
         # 6> El estado de la credencial almacenada para el sudo.
@@ -665,7 +665,7 @@ function g_install_options() {
        #Parametros usados por el script:
        # 1> Tipo de configuración: 1/2 (instalación sin un menu interactivo/no-interactivo).
        # 2> Opciones de menu a ejecutar: entero positivo.
-       # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+       # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
        # 4> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
        # 5> El estado de la credencial almacenada para el sudo.
        # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
@@ -866,7 +866,7 @@ g_usage() {
     printf '  > %bLIST-PCKG-IDS %b.ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 1024. Si desea usar el los los paquetes por defecto envie "EMPTY".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bLos paquete basicos por defecto que son: Curl, UnZip, OpenSSL y Tmux.%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".%b\n' \
+    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bCMD_BASE_PATH %bes ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts"). Si se envia vacio o EMPTY se usara el directorio predeterminado:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -917,12 +917,12 @@ g_status_crendential_storage=-1
 g_is_credential_storage_externally=1
 
 #Rutas usuadas (con valores por defecto) durante el setup, cuyos valores reales son calculados usando: 'set_program_path', 'set_command_path' y 'set_temp_path'
-g_path_programs='/opt/tools'
+g_path_programs='/var/opt/tools'
 g_path_cmd_base=''
 g_path_bin='/usr/local/bin'
 g_path_man='/usr/local/man/man1'
 g_path_fonts='/usr/share/fonts'
-g_path_temp='/tmp'
+g_path_temp='/var/tmp'
 
 
 #Instalar y actualizar los artefactos de un repositorio
@@ -934,7 +934,7 @@ if [ $gp_type_calling -eq 0 ]; then
     # 1> Tipo de invocación: 0 (usando un menu interactivo)
     # 2> ID de los paquetes del repositorio, separados por coma, que se mostrara en el menu para que pueda instalarse. Si desea usar el por defecto envie "EMPTY".
     #    Los paquete basicos, por defecto, que se muestran en el menu son: Curl,UnZip, OpenSSL y Tmux
-    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
     # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
     #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
     #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
@@ -1003,7 +1003,7 @@ else
     # 3> ID de los repositorios de comandos a configurar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".
     # 4> ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 32. Si desea usar el los los paquetes por defecto envie "EMPTY".
     #    Los paquetes por defecto que son: Curl, UnZip, OpenSSL y Tmux.
-    # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
     # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
     #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
     #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)

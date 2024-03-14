@@ -14,8 +14,8 @@ let g:use_typing_surround = 1
 let g:use_typing_visual_multi = 1
 
 "Ruta base para los servidores LSP y DAP
-let g:home_path_lsp_server = '/opt/tools/lsp_servers'
-let g:home_path_dap_server = '/opt/tools/dap_servers'
+let g:home_path_lsp_server = '/var/opt/tools/lsp_servers'
+let g:home_path_dap_server = '/var/opt/tools/dap_servers'
 "Ruta base para los servidores LSP y DAP en Windows (visto de WSL) para reusarlos en Linux
 "Por ahora el unico que lo soporta es el adaptador del LSP para C# 'OmniSharp':
 let g:home_path_lsp_server_win = '/mnt/d/Tools/CLI/LSP_Servers'

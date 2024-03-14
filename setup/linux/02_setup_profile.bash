@@ -956,7 +956,7 @@ _install_nodejs() {
     #Parametros del script usados hasta el momento:
     # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
     # 2> Listado de ID del repositorios a instalar separados por coma.
-    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
     # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
     # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
     # 6> El estado de la credencial almacenada para el sudo.
@@ -1467,7 +1467,7 @@ function _install_nvim() {
         #Parametros del script usados hasta el momento:
         # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
         # 2> Listado de ID del repositorios a instalar separados por coma.
-        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+        # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
         # 4> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
         # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
         # 6> El estado de la credencial almacenada para el sudo.
@@ -3396,7 +3396,7 @@ g_usage() {
     printf '    %b~/.files/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '    %b~/.files/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
-    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".%b\n' \
+    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bTEMP_PATH %bes la ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado "/tmp".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -3434,7 +3434,7 @@ g_status_crendential_storage=-1
 g_is_credential_storage_externally=1
 
 #Rutas usuadas (con valores por defecto) durante el setup, cuyos valores reales son calculados usando: 'set_program_path', 'set_command_path' y 'set_temp_path'
-g_path_programs='/opt/tools'
+g_path_programs='/var/opt/tools'
 #g_path_cmd_base=''
 #g_path_bin='/usr/local/bin'
 #g_path_man='/usr/local/man/man1'
@@ -3447,7 +3447,7 @@ if [ $gp_type_calling -eq 0 ]; then
 
     #Parametros usados por el script:
     # 1> Tipo de configuración: 0 (instalación con un menu interactivo).
-    # 2> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 2> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
     # 3> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
 
     #Obtener los folderes de programas 'g_path_programs'
@@ -3491,7 +3491,7 @@ else
     #Parametros usados por el script:
     # 1> Tipo de configuración: 1/2 (instalación sin un menu interactivo/no-interactivo).
     # 2> Opciones de menu a ejecutar: entero positivo.
-    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/opt/tools" o "~/tools".
+    # 3> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".
     # 4> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
     # 5> El estado de la credencial almacenada para el sudo.
     # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
