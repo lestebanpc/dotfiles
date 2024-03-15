@@ -48,7 +48,7 @@ if (g:os_type == 2) || (g:os_type == 3)
         if !g:is_neovim && !g:has_clipboard
             augroup Yank
                 autocmd!
-                autocmd TextYankPost * if v:event.operator ==# 'y' | call system('wl-copy',@") | endif
+                autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system('wl-copy',@") | endif
             augroup END
         endif
 
@@ -74,7 +74,7 @@ if (g:os_type == 2) || (g:os_type == 3)
         if !g:has_clipboard
             augroup Yank
                 autocmd!
-                autocmd TextYankPost * if v:event.operator ==# 'y' | call system('xclip -i -selection clipboard',@") | endif
+                autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system('xclip -i -selection clipboard',@") | endif
             augroup END
         endif
 
