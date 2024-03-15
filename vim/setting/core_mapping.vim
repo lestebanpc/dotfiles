@@ -91,7 +91,7 @@ elseif g:os_type == 3
     "Copia cualquier yank que esta en el registro " (por defecto) se copia al portapales del SO
     augroup WslYank
         autocmd!
-        autocmd TextYankPost * if v:event.operator ==# 'y' | call system('/mnt/c/windows/system32/clip.exe ',@") | endif
+        autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system('/mnt/c/windows/system32/clip.exe ',@") | endif
     augroup END
 
 endif
