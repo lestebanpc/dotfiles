@@ -17,9 +17,12 @@ l_program_path='/opt/tools'
 #GraalVM - RTE y Herramientas de desarrollo para Java y otros
 if [ -d "${l_program_path}/graalvm" ]; then
     GRAALVM_HOME="${l_program_path}/graalvm"
-    JAVA_HOME="${GRAALVM_HOME}"
-    export GRAALVM_HOME JAVA_HOME
-    PATH="$PATH:${JAVA_HOME}/bin"
+    export GRAALVM_HOME
+
+    #No adicionar por defecto para no perjudicar a los programas que corren usando el OpenJDK
+    #JAVA_HOME="${GRAALVM_HOME}"
+    #export GRAALVM_HOME JAVA_HOME
+    #PATH="$PATH:${JAVA_HOME}/bin"
 fi
 
 # Rutas por defecto: Adicionando rutas de programas especificos
