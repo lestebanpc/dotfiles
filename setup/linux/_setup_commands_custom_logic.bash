@@ -1560,6 +1560,7 @@ function get_repo_artifacts() {
     declare -n pna_artifact_names=$6     #Parametro por referencia: Se devuelve un arreglo de los nombres de los artefactos
     declare -n pna_artifact_types=$7     #Parametro por referencia: Se devuelve un arreglo de los tipos de los artefactos
     local p_arti_subversion_version="$8"
+
     local p_install_win_cmds=1         #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                        #(1) Los binarios de los comandos se estan instalando en Linux
     if [ "$9" = "0" ]; then
@@ -1657,7 +1658,14 @@ function get_repo_artifacts() {
                 pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
                 if [ $p_install_win_cmds -eq 0 ]; then
                     pna_artifact_names=("${l_prefix_repo}-${p_arti_subversion_version}-win-x64.zip")
-                    pna_artifact_types=(11)
+
+                    #Si se instala, no se descomprime el archivo automaticamente en '/tmp'. Si se actualiza, se usara 'rsync' para actualizar.
+                    if [ $p_flag_install -eq 0 ]; then
+                        pna_artifact_types=(21)
+                    else
+                        pna_artifact_types=(11)
+                    fi
+
                 else
                     #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
                     if [ $g_os_subtype_id -eq 1 ]; then
@@ -1673,7 +1681,14 @@ function get_repo_artifacts() {
                             pna_artifact_names=("${l_prefix_repo}-${p_arti_subversion_version}-linux-x64.tar.gz")
                         fi
                     fi
-                    pna_artifact_types=(10)
+
+                    #Si se instala, no se descomprime el archivo automaticamente en '/tmp'. Si se actualiza, se usara 'rsync' para actualizar.
+                    if [ $p_flag_install -eq 0 ]; then
+                        pna_artifact_types=(20)
+                    else
+                        pna_artifact_types=(10)
+                    fi
+
                 fi
 
             fi
