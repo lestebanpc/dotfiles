@@ -183,6 +183,9 @@ if g:use_ide
         "Package UI> IDE> CORE> Depurador (Cliente DAP y los adaptadores depuracion)
         packadd nvim-dap
 
+        "Package UI> IDE> CORE> A library for asynchronous IO in Neovim
+        packadd nvim-nio
+
         "Package UI> IDE> CORE> DAP> Mejora de UI para nVim-DAP
         packadd nvim-dap-ui
 
