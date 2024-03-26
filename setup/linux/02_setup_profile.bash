@@ -130,6 +130,7 @@ declare -A gA_repos_type=(
         ['mfussenegger/nvim-dap']=4
         ['theHamsta/nvim-dap-virtual-text']=4
         ['rcarriga/nvim-dap-ui']=4
+        ['nvim-neotest/nvim-nio']=4
         ['nvim-telescope/telescope-dap.nvim']=4
     )
 
@@ -166,6 +167,7 @@ declare -A gA_repos_scope=(
         ['mfussenegger/nvim-dap']=2
         ['theHamsta/nvim-dap-virtual-text']=2
         ['rcarriga/nvim-dap-ui']=2
+        ['nvim-neotest/nvim-nio']=2
         ['nvim-telescope/telescope-dap.nvim']=2
     )
 
@@ -2827,7 +2829,7 @@ function _setup_vim_environment() {
 
             #Si no se comple lo requisitos obligatorios (tener Git instalado): abortar todo el proceso.
             #Si desea continuar con otro procesos, comentarlo
-            if [ $l_setup -eq 111 ]; then
+            if [ $l_flag_setup -eq 111 ]; then
                 return 111
             fi
         fi
