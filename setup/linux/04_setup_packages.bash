@@ -31,7 +31,7 @@ function _get_current_path_base() {
 declare -r g_path_base=$(_get_current_path_base "${BASH_SOURCE[0]}")
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ${g_path_base}/.files/terminal/linux/functions/func_utility.bash
+. ${g_path_base}/.files/shared/linux/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then

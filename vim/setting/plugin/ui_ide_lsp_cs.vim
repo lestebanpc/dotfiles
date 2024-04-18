@@ -28,11 +28,11 @@ if g:os_type == 0
     "Si es Windows
     let g:OmniSharp_server_path = g:home_path_lsp_server .. '/Omnisharp_Roslyn/OmniSharp.exe'
 
-elseif (g:os_type == 3) && g:using_lsp_server_cs_win
+"elseif (g:os_type == 3) && g:using_lsp_server_cs_win
 
     "Si es WSL y es se debe usar el servidor LSP de Windows
-	let g:OmniSharp_translate_cygwin_wsl = 1
-    let g:OmniSharp_server_path = g:home_path_lsp_server_win .. '/Omnisharp_Roslyn/OmniSharp.exe'
+	"let g:OmniSharp_translate_cygwin_wsl = 1
+    "let g:OmniSharp_server_path = g:home_path_lsp_server_win .. '/Omnisharp_Roslyn/OmniSharp.exe'
 
 else
 

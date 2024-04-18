@@ -2301,7 +2301,7 @@ function get_repo_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("nvim-win64.zip")
-                pna_artifact_types=(11)
+                pna_artifact_types=(21)
             else
                 pna_artifact_names=("nvim-linux64.tar.gz")
                 #Si se instala, no se descomprime, se realizara la logica de descomprención.

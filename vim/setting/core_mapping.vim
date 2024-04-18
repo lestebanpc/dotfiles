@@ -26,7 +26,7 @@ nnoremap <Leader>vv :set cursorcolumn!<CR>
 "Soporte adicional a los portapales
 if (g:os_type == 2) || (g:os_type == 3)
 
-    if executable('wl-copy')
+    if  exists('$WAYLAND_DISPLAY') && executable('wl-copy')
 
         "Copiar el ultimo yank realizado al portapapeles ('CLIPBOARD' selecction)
         nnoremap <Leader>cy :<C-u>call system('wl-copy', @0)<CR>

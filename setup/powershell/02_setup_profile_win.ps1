@@ -542,7 +542,12 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\init.vim"
         $l_source_path="${env:USERPROFILE}\.files\nvim"
-        $l_source_filename="init_ide_windows.vim"        
+		if(Test-Path "D:\") {
+            $l_source_filename="init_ide_windows1.vim"
+        }
+        else {
+            $l_source_filename="init_ide_windows2.vim"
+        }
         m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\coc-settings.json"
@@ -578,7 +583,12 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\init.vim"
         $l_source_path="${env:USERPROFILE}\.files\nvim"
-        $l_source_filename="init_ide_windows.vim"
+		if(Test-Path "D:\") {
+            $l_source_filename="init_ide_windows1.vim"
+        }
+        else {
+            $l_source_filename="init_ide_windows2.vim"
+        }
         m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
         
@@ -645,7 +655,12 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
         #Creando enlaces simbolicos
         $l_target_link="${env:USERPROFILE}\.vimrc"
         $l_source_path="${env:USERPROFILE}\.files\vim"
-        $l_source_filename="vimrc_ide_windows.vim"
+		if(Test-Path "D:\") {
+            $l_source_filename="vimrc_ide_windows1.vim"
+        }
+        else {
+            $l_source_filename="vimrc_ide_windows2.vim"
+        }
         m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 		
         $l_target_link="${env:USERPROFILE}\vimfiles\coc-settings.json"
@@ -665,7 +680,12 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
 
         $l_target_link="${env:USERPROFILE}\.vimrc"
         $l_source_path="${env:USERPROFILE}\.files\vim"
-        $l_source_filename="vimrc_ide_windows.vim"
+		if(Test-Path "D:\") {
+            $l_source_filename="vimrc_ide_windows1.vim"
+        }
+        else {
+            $l_source_filename="vimrc_ide_windows2.vim"
+        }
         m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 
 

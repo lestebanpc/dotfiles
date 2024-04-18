@@ -103,6 +103,10 @@ source ~/.files/terminal/linux/complete/fzf.bash
 source ~/.files/terminal/linux/keybindings/fzf.bash
 
 
+# Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC 
+export MPD_HOST=/run/mpd/socket
+
+
 # Ruta por defecto de los binarios de CNI plugin usados por CLI de Container Runtime como NerdCtl (no se usara, se usara su archivo de configuración nerdctl.tom)
 #[ -d "${l_program_path}/cni_plugins" ] && export CNI_PATH=${l_program_path}/cni_plugins
 
