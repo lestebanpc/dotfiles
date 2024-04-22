@@ -7,7 +7,7 @@
 	name = Luciano Peña
 
 [core]
-	editor = D:/Tools/Vim/vim91/vim.exe
+	editor = C:/Tools/Vim/vim91/vim.exe
 	autocrlf = true
 	pager = delta
 

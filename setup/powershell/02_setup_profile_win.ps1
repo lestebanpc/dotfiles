@@ -743,7 +743,12 @@ function m_setup_profile($l_overwrite_ln_flag) {
     #Archivo de configuracion de Git
     $l_target_link="${env:USERPROFILE}\.gitconfig"
     $l_source_path="${env:USERPROFILE}\.files\config\git"
-	$l_source_filename='git_windows_usr1.toml'    
+    if(Test-Path "D:\") {
+	    $l_source_filename='git_windows_usr1.toml'
+    }
+    else {
+	    $l_source_filename='git_windows_usr2.toml'
+    }
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 
