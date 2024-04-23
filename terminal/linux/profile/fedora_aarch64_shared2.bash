@@ -91,7 +91,7 @@ unset rc
 
 
 # Tema por defecto de "Oh My Posh"
-eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lepc-montys.omp.json)"
+eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lepc-montys-1.omp.json)"
 
 # Para tmux (usando la configuracion de "oh-my-tmux")
 export EDITOR=vim
