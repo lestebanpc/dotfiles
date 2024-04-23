@@ -3154,8 +3154,8 @@ function _copy_artifact_files() {
                 curl -sLfo "${g_path_base}/.files/terminal/linux/keybindings/fzf.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.bash'
             
                 # Script que se usara como comando para abrir fzf en un panel popup tmux
-                echo "Descargando el recurso \"./bin/fzf-tmux\" como \"~/.files/terminal/linux/functions/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
-                curl -sLfo "${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/bin/fzf-tmux'
+                echo "Descargando el recurso \"./bin/fzf-tmux\" como \"~/.files/terminal/linux/cmds/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
+                curl -sLfo "${g_path_base}/.files/terminal/linux/cmds/fzf-tmux.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/bin/fzf-tmux'
 
                 if [ ! -d "${g_path_base}/.local" ]; then
                     mkdir -p ${g_path_base}/.local/bin
@@ -3170,7 +3170,7 @@ function _copy_artifact_files() {
                     fi
                 fi
 
-                ln -sfn ${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
+                ln -sfn ${g_path_base}/.files/terminal/linux/cmds/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
 
                 if [ ! -z "$g_other_calling_user" ]; then
                     chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/fzf.bash 
