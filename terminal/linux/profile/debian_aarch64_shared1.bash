@@ -201,7 +201,7 @@ export MPD_HOST=/run/mpd/socket
 #[ -d "${l_program_path}/cni_plugins" ] && export CNI_PATH=${l_program_path}/cni_plugins
 
 #Funciones basicas
-source ~/.files/terminal/linux/functions/func_custom.bash
+source ~/.files/terminal/linux/functions/profile_functions.bash
 
 # Para corregir el error en diseño al inicio del promt 'Oh My Posh'
 #clear

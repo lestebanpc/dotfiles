@@ -1877,7 +1877,7 @@ function _setup_user_profile() {
     if [ $g_os_type -eq 1 ]; then
 
         l_target_link="${g_path_base}/.dircolors"
-        l_source_path="${g_path_base}/.files/terminal/linux/profile"
+        l_source_path="${g_path_base}/.files/terminal/linux/others"
         l_source_filename='ubuntu_wls_dircolors.conf'
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 

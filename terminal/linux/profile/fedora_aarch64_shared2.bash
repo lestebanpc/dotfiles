@@ -109,7 +109,7 @@ export MPD_HOST=/run/mpd/socket
 
 
 # Funciones basicas
-source ~/.files/terminal/linux/functions/func_custom.bash
+source ~/.files/terminal/linux/functions/profile_functions.bash
 
 
 
