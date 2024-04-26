@@ -1080,7 +1080,7 @@ function! s:tags_sink(lines)
   endif
 
   " Remember the current position
-  let buf = bufnr()
+  let buf = bufnr('')
   let view = winsaveview()
 
   let qfl = []
@@ -1133,6 +1133,10 @@ function! fzf#vim#tags(query, ...)
   if !executable('perl')
     return s:warn('Tags command requires perl')
   endif
+  if len(a:query) && !executable('readtags')
+    return s:warn('readtags from universal-ctags is required to pre-filter tags with a prefix')
+  endif
+
   if empty(tagfiles())
     call inputsave()
     echohl WarningMsg
@@ -1161,8 +1165,9 @@ function! fzf#vim#tags(query, ...)
   endfor
   let opts = v2_limit < 0 ? ['--algo=v1'] : []
 
+  let args = insert(map(tagfiles, 'fzf#shellescape(fnamemodify(v:val, ":p"))'), fzf#shellescape(a:query), 0)
   return s:fzf('tags', {
-  \ 'source':  'perl '.fzf#shellescape(s:bin.tags).' '.join(map(tagfiles, 'fzf#shellescape(fnamemodify(v:val, ":p"))')),
+  \ 'source':  join(['perl', fzf#shellescape(s:bin.tags), join(args)]),
   \ 'sink*':   s:function('s:tags_sink'),
   \ 'options': extend(opts, ['--nth', '1..2', '-m', '-d', '\t', '--tiebreak=begin', '--prompt', 'Tags> ', '--query', a:query])}, a:000)
 endfunction
@@ -1301,7 +1306,7 @@ function! fzf#vim#changes(...)
   let cursor = 0
   for bufnr in fzf#vim#_buflisted_sorted()
     let [changes, position_or_length] = getchangelist(bufnr)
-    let current = bufnr() == bufnr
+    let current = bufnr('') == bufnr
     if current
       let cursor = len(changes) - position_or_length
     endif
