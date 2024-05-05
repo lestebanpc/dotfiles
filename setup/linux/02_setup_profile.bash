@@ -2012,44 +2012,42 @@ function _setup_user_profile() {
     l_source_filename='tmux.conf'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
-    #Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD': nerdctl
-    l_target_link="${g_path_base}/.config/nerdctl/nerdctl.toml"
-    l_source_path="${g_path_base}/.files/config/nerdctl"
-    l_source_filename='default_config.toml'
-    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-
-
-    #Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless'): Podman
+    #Podman: Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
     l_target_link="${g_path_base}/.config/containers/containers.conf"
     l_source_path="${g_path_base}/.files/config/podman"
-    l_source_filename='default_config.toml'
+    l_source_filename='containers_default.toml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
-    #Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless'): Podman
+    #Podman: Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
     l_target_link="${g_path_base}/.config/containers/registries.conf"
     l_source_path="${g_path_base}/.files/config/podman"
-    l_source_filename='default_registries.toml'
+    l_source_filename='registries_default.toml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
-
-    #Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
-    l_target_link="${g_path_base}/.config/containerd/config.toml"
-    l_source_path="${g_path_base}/.files/config/containerd"
-    l_source_filename='default_config.toml'
+    #NerdCtl/ContainerD: Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD'
+    l_target_link="${g_path_base}/.config/nerdctl/nerdctl.toml"
+    l_source_path="${g_path_base}/.files/config/nerdctl"
+    l_source_filename='config_default.toml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
+    #NerdCtl/ContainerD: Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
+    #l_target_link="${g_path_base}/.config/containerd/config.toml"
+    #l_source_path="${g_path_base}/.files/config/containerd"
+    #l_source_filename='config_default.toml'
+    #_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
-    #Configuración del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
+
+    #NerdCtl/ContainerD: Configuración del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
     l_target_link="${g_path_base}/.config/buildkit/buildkitd.toml"
     l_source_path="${g_path_base}/.files/config/buildkit"
-    l_source_filename='default_config.toml'
+    l_source_filename='config_default.toml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
 
     #Configuracion por defecto para un Cluster de Kubernates
     l_target_link="${g_path_base}/.kube/config"
     l_source_path="${g_path_base}/.files/config/kubectl"
-    l_source_filename='default_config.yaml'
+    l_source_filename='config_default.yaml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
 
     return 0
@@ -3088,30 +3086,34 @@ function _show_menu_core() {
     print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_green1"
     print_line '-' $g_max_length_line  "$g_color_gray1"
     printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
-    printf " (%ba%b) Instalación y configuración de %bVIM%b/%bNeoVIM%b como %beditor%b basico\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" \
-           "$g_color_reset" "$g_color_cian1" "$g_color_reset" 
-    printf " (%bb%b) Instalación y configuración de %bVIM%b/%bNeoVIM%b como %bIDE%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" 
-    printf " (%bc%b) Instalación y configuración de %bVIM%b        como %beditor%b basico\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf " (%bd%b) Instalación y configuración de %bVIM%b        como %bIDE%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf " (%be%b) Instalación y configuración de %bNeoVIM%b     como %beditor%b basico\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf " (%bf%b) Instalación y configuración de %bNeoVIM%b     como %bIDE%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf " (%bg%b) Configurar todo el profile como %bbasico%b    %b(%bVIM%b/%bNeoVIM%b como editor basico)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
+    printf " (%ba%b) Instalación y configuración de %bVIM%b/%bNeoVIM%b como %beditor%b basico\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" 
+    printf " (%bb%b) Instalación y configuración de %bVIM%b/%bNeoVIM%b como %bIDE%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" 
+    printf " (%bc%b) Instalación y configuración de %bVIM%b        como %beditor%b basico\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset"
+    printf " (%bd%b) Instalación y configuración de %bVIM%b        como %bIDE%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset"
+    printf " (%be%b) Instalación y configuración de %bNeoVIM%b     como %beditor%b basico\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset"
+    printf " (%bf%b) Instalación y configuración de %bNeoVIM%b     como %bIDE%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" \
+           "$g_color_reset"
+    printf " (%bg%b) Configurar todo el profile como %bbasico%b    %b(%bVIM%b/%bNeoVIM%b como editor basico)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" \
+           "$g_color_reset" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
     printf " (%bh%b) Configurar todo el profile como %bdeveloper%b %b(%bVIM%b/%bNeoVIM%b como IDE)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
            "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
-    printf " (%bi%b) Configurar todo el profile como %bbasico%b    %b(%bVIM%b/%bNeovIM%b como editor basico)%b y re-crear enlaces simbolicos\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
-    printf " (%bj%b) Configurar todo el profile como %bdeveloper%b %b(%bVIM%b/%bNeoVIM%b como IDE)%b y re-crear enlaces simbolicos\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
+    printf " (%bi%b) Configurar todo el profile como %bbasico%b    %b(%bVIM%b/%bNeovIM%b como editor basico)%b y re-crear enlaces simbolicos\n" "$g_color_green1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
+    printf " (%bj%b) Configurar todo el profile como %bdeveloper%b %b(%bVIM%b/%bNeoVIM%b como IDE)%b y re-crear enlaces simbolicos\n" "$g_color_green1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
     printf " (%bk%b) Configurar todo el profile como %bbasico%b    %b(Solo %bVIM%b como editor basico)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
            "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
     printf " (%bl%b) Configurar todo el profile como %bdeveloper%b %b(Solo %bVIM%b como IDE)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
            "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
-    printf " (%bm%b) Configurar todo el profile como %bbasico%b    %b(Solo %bVIM%b como editor basico)%b y re-crear enlaces simbolicos\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
-    printf " (%bn%b) Configurar todo el profile como %bdeveloper%b %b(Solo %bVIM%b como IDE)%b y re-crear enlaces simbolicos\n" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
+    printf " (%bm%b) Configurar todo el profile como %bbasico%b    %b(Solo %bVIM%b como editor basico)%b y re-crear enlaces simbolicos\n" "$g_color_green1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
+    printf " (%bn%b) Configurar todo el profile como %bdeveloper%b %b(Solo %bVIM%b como IDE)%b y re-crear enlaces simbolicos\n" "$g_color_green1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     local l_max_digits=12
@@ -3131,18 +3133,20 @@ function _show_menu_core() {
     printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes%b globales de %bNodeJS%b: %b'Prettier', 'NeoVIM' y 'TreeSitter CLI'%b\n" "$g_color_green1" "64" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Instalar el programa '%bvim%b'\n" "$g_color_green1" "128" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Configurar como %bEditor%b %b(archivos de configuración, plugins y su documentación)%b\n" "$g_color_green1" "256" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Configurar como %bIDE%b    %b(archivos de configuración, plugins y su documentación)%b\n" "$g_color_green1" "512" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Instalar el programa '%bvim%b'\n" "$g_color_green1" "128" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Configurar como %bEditor%b %b(archivos de configuración, plugins y su documentación)%b\n" "$g_color_green1" "256" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Configurar como %bIDE%b    %b(archivos de configuración, plugins y su documentación)%b\n" "$g_color_green1" "512" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
 
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Instalar el programa '%bnvim%b'\n" "$g_color_green1" "1024" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Configurar como %bEditor%b %b(archivos de configuración, plugins y su documentación)%b\n" "$g_color_green1" "2048" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Configurar como %bIDE%b    %b(archivos de configuración, plugins y su documentación)%b\n" "$g_color_green1" "4096" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Instalar el programa '%bnvim%b'\n" "$g_color_green1" "1024" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Configurar como %bEditor%b %b(archivos de configuración, plugins y su documentación)%b\n" "$g_color_green1" "2048" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Configurar como %bIDE%b    %b(archivos de configuración, plugins y su documentación)%b\n" "$g_color_green1" "4096" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     printf "     (%b%0${l_max_digits}d%b) %bCliente  SSH%b> %bX11 forwading%b> server with %bX Server%b> Instalar 'xclip'\n" \
            "$g_color_green1" "8192" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
@@ -3159,36 +3163,38 @@ function _show_menu_core() {
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes%b globales de %bNodeJS%b: %b'Prettier'%b\n" "$g_color_green1" "262144" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Crear los %barchivos de configuración%b como %bEditor%b\n" "$g_color_green1" "524288" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Crear los %barchivos de configuración%b como %bIDE%b\n" "$g_color_green1" "1048576" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bEditor%b e %bindexar%b su documentación\n" "$g_color_green1" "2097152" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Crear los %barchivos de configuración%b como %bEditor%b\n" "$g_color_green1" "524288" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bEditor%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "4194304" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bIDE%b e %bindexar%b su documentación\n" "$g_color_green1" "8388608" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Crear los %barchivos de configuración%b como %bIDE%b\n" "$g_color_green1" "1048576" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bIDE%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "16777216" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > %bIndexar%b la documentación de los plugins existentes\n" "$g_color_green1" "33554432" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Configurar los %bplugins de IDE%b\n" "$g_color_green1" "67108864" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Crearlos %barchivos de configuración%b como %bEditor%b\n" "$g_color_green1" "134217728" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bEditor%b e %bindexar%b su documentación\n" "$g_color_green1" "2097152" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bEditor%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "4194304" \
+            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bIDE%b e %bindexar%b su documentación\n" "$g_color_green1" "8388608" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bIDE%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "16777216" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > %bIndexar%b la documentación de los plugins existentes\n" "$g_color_green1" "33554432" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Crear los %barchivos de configuración%b como %bIDE%b\n" "$g_color_green1" "268435456" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Configurar los %bplugins de IDE%b\n" "$g_color_green1" "67108864" "$g_color_reset" "$g_color_cian1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Crearlos %barchivos de configuración%b como %bEditor%b\n" "$g_color_green1" "134217728" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Crear los %barchivos de configuración%b como %bIDE%b\n" "$g_color_green1" "268435456" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bEditor%b e %bindexar%b su documentación\n" "$g_color_green1" "536870912" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bEditor%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "1073741824" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bIDE%b e %bindexar%b su documentación\n" "$g_color_green1" "2147483648" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bIDE%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "4294967296" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > %bIndexar%b la documentación de los plugins existentes\n" "$g_color_green1" "8589934592" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bEditor%b e %bindexar%b su documentación\n" "$g_color_green1" "536870912" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bEditor%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "1073741824" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bIDE%b e %bindexar%b su documentación\n" "$g_color_green1" "2147483648" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bIDE%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "4294967296" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > %bIndexar%b la documentación de los plugins existentes\n" "$g_color_green1" "8589934592" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Configurar los %bplugins de IDE%b\n" "$g_color_green1" "17179869184" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Configurar los %bplugins de IDE%b\n" "$g_color_green1" "17179869184" "$g_color_reset" "$g_color_cian1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset"
 
 
     printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Eliminar el gestor de plugins 'VIM-Plug'\n" "$g_color_green1" "34359738368" "$g_color_reset" "$g_color_gray1" "$g_color_reset"

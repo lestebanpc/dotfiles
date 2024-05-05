@@ -3639,16 +3639,16 @@ function _copy_artifact_files() {
             fi
 
             #Desacargar archivos adicionales para su configuración
-            mkdir -p ${g_path_base}/.files/setup/programs/kubelet
+            mkdir -p ${g_path_base}/.files/config/kubelet/systemd
             l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubelet/kubelet.service 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                printf 'Creando el archivo "%b~/.files/setup/programs/kubelet/kubelet.service%b" ... \n' "$g_color_gray1" "$g_color_reset"
-                echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ${g_path_base}/.files/setup/programs/kubelet/kubelet.service
+                printf 'Creando el archivo "%b~/.files/config/kubelet/systemd/kubelet.service%b" ... \n' "$g_color_gray1" "$g_color_reset"
+                echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ${g_path_base}/.files/config/kubelet/systemd/kubelet.service
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    chown -R $g_other_calling_user ${g_path_base}/.files/setup/programs/
+                    chown -R $g_other_calling_user ${g_path_base}/.files/config/kubelet/
                 fi
 
             fi
@@ -3677,16 +3677,16 @@ function _copy_artifact_files() {
             fi
 
             #Desacargar archivos adicionales para su configuración
-            mkdir -p ${g_path_base}/.files/setup/programs/kubeadm
+            mkdir -p ${g_path_base}/.files/config/kubeadm
             l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubeadm/10-kubeadm.conf 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                printf 'Creando el archivo "%b~/.files/setup/programs/kubeadm/10-kubeadm.conf%b" ... \n' "$g_color_gray1" "$g_color_reset"
-                echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ${g_path_base}/.files/setup/programs/kubeadm/10-kubeadm.conf
+                printf 'Creando el archivo "%b~/.files/config/kubeadm/10-kubeadm.conf%b" ... \n' "$g_color_gray1" "$g_color_reset"
+                echo "$l_aux" | sed "s:/usr/bin:${l_path_target_bin}:g" > ${g_path_base}/.files/config/kubeadm/10-kubeadm.conf
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    chown $g_other_calling_user ${g_path_base}/.files/setup/programs/kubeadm/10-kubeadm.conf
+                    chown $g_other_calling_user ${g_path_base}/.files/config/kubeadm/10-kubeadm.conf
                 fi
             fi
 
@@ -5477,10 +5477,13 @@ function _copy_artifact_files() {
             fi
 
             #Descargar archivo de configuracion como servicio a nivel system:
-            mkdir -p ${g_path_base}/.files/setup/programs/nerdctl/systemd/user
+            mkdir -p ${g_path_base}/.files/config/containerd/systemd_root
             
-            printf 'Descargando el archivo de configuracion de "%s" a nivel system en "%s"\n' "containerd.service" "~/.files/setup/programs/nerdctl/systemd/user/"
-            curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/user/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+            printf 'Descargando el archivo de configuracion de "%s" a nivel system en "%s"\n' "containerd.service" "~/.files/config/containerd/systemd_root/"
+            curl -fLo ${g_path_base}/.files/config/containerd/systemd_root/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+
+            #Descargar archivo de configuracion como servicio a nivel usuario: no se requiere.
+            #debio a que al ejecutar crea el arcivo 'containerd-rootless-setuptool.sh install' lo crea
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
             if [ $l_status -eq 2 ]; then
@@ -5502,23 +5505,27 @@ function _copy_artifact_files() {
 
             #Fix permisos
             if [ ! -z "$g_other_calling_user" ]; then
-                chown -R $g_other_calling_user ${g_path_base}/.files/setup/programs/nerdctl/
+                chown -R $g_other_calling_user ${g_path_base}/.files/config/containerd/
             fi
 
             #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
             if [ $l_status -eq 0 ]; then
 
-                printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "containerd.service"
+                printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' \
+                       "$p_repo_id" "containerd.service"
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
-                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "containerd.service" "$g_color_yellow1" "$g_color_reset"
-                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "containerd.service" \
+                       "$g_color_yellow1" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/setup/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   Opcional:%b\n' "$g_color_gray1" "$g_color_reset"
                 printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
-                printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
-                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "containerd.service" "$g_color_yellow1" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
-                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_gray1" \ 
+                       "$g_color_yellow1" "$g_color_reset"
+                printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" \
+                       "containerd.service" "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/config/containerd/systemd_root/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   sudo systemctl start containerd%b\n' "$g_color_yellow1" "$g_color_reset"                 
 
             fi
@@ -5585,24 +5592,24 @@ function _copy_artifact_files() {
             fi
 
             #Descargar archivo de configuracion como servicio a nivel system:
-            mkdir -p ${g_path_base}/.files/setup/programs/nerdctl/systemd/system
-            mkdir -p ${g_path_base}/.files/setup/programs/nerdctl/systemd/user
+            mkdir -p ${g_path_base}/.files/config/buildkit/systemd_root
+            mkdir -p ${g_path_base}/.files/config/buildkit/systemd_user
             
-            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.service" "~/.files/setup/programs/nerdctl/systemd/user/"
-            #curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.service
-            curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit.service
-            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.socket" "~/.files/setup/programs/nerdctl/systemd/user/"
-            curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/user/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.socket
+            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.service" "~/.files/config/buildkit/systemd_user/"
+            #curl -fLo ${g_path_base}/.files/config/buildkit/systemd_user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.service
+            curl -fLo ${g_path_base}/.files/config/buildkit/systemd_user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit.service
+            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.socket" "~/.files/config/buildkit/systemd_user/"
+            curl -fLo ${g_path_base}/.files/config/buildkit/systemd_user/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.socket
 
-            printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.service" "~/.files/setup/programs/nerdctl/systemd/system/"
-            curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/system/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.service
-            printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.socket" "~/.files/setup/programs/nerdctl/systemd/system/"
-            curl -fLo ${g_path_base}/.files/setup/programs/nerdctl/systemd/system/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.socket
+            printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.service" "~/.files/config/buildkit/systemd_root/"
+            curl -fLo ${g_path_base}/.files/config/buildkit/systemd_root/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.service
+            printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.socket" "~/.files/config/buildkit/systemd_root/"
+            curl -fLo ${g_path_base}/.files/config/buildkit/systemd_root/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.socket
 
 
             #Fix permisos
             if [ ! -z "$g_other_calling_user" ]; then
-                chown -R $g_other_calling_user ${g_path_base}/.files/setup/programs/nerdctl/
+                chown -R $g_other_calling_user ${g_path_base}/.files/config/buildkit/
             fi
 
 
@@ -5612,15 +5619,15 @@ function _copy_artifact_files() {
                 printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "buildkit.service"
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
                 printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "buildkit.service" "$g_color_yellow1" "$g_color_reset"
-                printf '%b   export PATH="$PATH:$HOME/.files/setup/programs/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/setup/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   containerd-rootless-setuptool.sh install-buildkit%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   Opcional:%b\n' "$g_color_gray1" "$g_color_reset"
                 printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
                 printf '%b      > Establezca el servicio buildkit para inicio manual:%b systemctl --user disable buildkit.service%b\n' "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
                 printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "buildkit.service" "$g_color_yellow1" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.socket /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/setup/programs/nerdctl/systemd/system/buildkit.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
-                #printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/config/buildkit/systemd_root/buildkit.socket /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/config/buildkit/systemd_root/buildkit.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   sudo systemctl start buildkit.service%b\n' "$g_color_yellow1" "$g_color_reset"                 
 
             fi
@@ -5658,20 +5665,20 @@ function _copy_artifact_files() {
 
                 fi
 
-                mkdir -p ${g_path_base}/.files/setup/programs/containerd
+                mkdir -p ${g_path_base}/.files/setup/containerd
 
                 #Archivos para instalar 'containerd' de modo rootless
-                echo "Copiando \"${l_path_source}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/setup/programs/containerd\" ..."
-                cp "${l_path_source}/containerd-rootless.sh" ${g_path_base}/.files/setup/programs/containerd
-                chmod u+x ${g_path_base}/.files/setup/programs/containerd/containerd-rootless.sh
+                echo "Copiando \"${l_path_source}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/setup/containerd\" ..."
+                cp "${l_path_source}/containerd-rootless.sh" ${g_path_base}/.files/setup/containerd
+                chmod u+x ${g_path_base}/.files/setup/containerd/containerd-rootless.sh
 
-                echo "Copiando \"${l_path_source}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/setup/programs/containerd\" ..."
-                cp "${l_path_source}/containerd-rootless-setuptool.sh" ${g_path_base}/.files/setup/programs/containerd
-                chmod u+x ${g_path_base}/.files/setup/programs/containerd/containerd-rootless-setuptool.sh
+                echo "Copiando \"${l_path_source}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/setup/containerd\" ..."
+                cp "${l_path_source}/containerd-rootless-setuptool.sh" ${g_path_base}/.files/setup/containerd
+                chmod u+x ${g_path_base}/.files/setup/containerd/containerd-rootless-setuptool.sh
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    chown -R $g_other_calling_user ${g_path_base}/.files/setup/programs/containerd/
+                    chown -R $g_other_calling_user ${g_path_base}/.files/setup/containerd/
                 fi
 
             #3. Configuración: Instalación de binarios de complementos que su reposotrio no ofrece el compilado (solo la fuente). Para ello se usa el full

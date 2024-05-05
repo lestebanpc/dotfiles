@@ -13,9 +13,6 @@ tls/*
 #Archivos de temas de oh-my-posh
 terminal/oh-my-posh/themes/*
 
-#Archivos de instalacion de un programa/comando especificico
-setup/programs/*
-
 #Archivos de configuracion personalizados para acceder a un cluster k8s
 k8s/config/*.yaml
 
