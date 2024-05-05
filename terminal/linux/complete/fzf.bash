@@ -475,8 +475,15 @@ a_cmds="${FZF_COMPLETION_PATH_COMMANDS-"
   basename bunzip2 bzip2 chmod chown curl cp dirname du
   find git grep gunzip gzip hg jar
   ln ls mv open rm rsync scp
+<<<<<<< HEAD
   svn tar unzip zip"}"
 v_cmds="${FZF_COMPLETION_VAR_COMMANDS-export unset printenv}"
+||||||| 7dcfeda
+  svn tar unzip zip"
+=======
+  svn tar unzip zip"
+v_cmds="export unset printenv"
+>>>>>>> 39debf6e1e43f790a4d9aa67c3169d1ec53135ec
 
 # Preserve existing completion
 __fzf_orig_completion < <(complete -p $d_cmds $a_cmds $v_cmds unalias kill ssh 2> /dev/null)

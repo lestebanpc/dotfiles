@@ -2,8 +2,7 @@
 #Comando Oh-My-Posh
 #------------------------------------------------------------------------------------------------
 
-#$POSH_THEMES_PATH = "D:\Tools\Cmds\Common\config\oh-my-posh\themes"
-oh-my-posh init pwsh --config "${env:USERPROFILE}\.files\terminal\oh-my-posh\lepc-montys.omp.json" | Invoke-Expression
+oh-my-posh init pwsh --config "${env:USERPROFILE}\.files\terminal\oh-my-posh\lepc-montys-1.omp.json" | Invoke-Expression
 
 #------------------------------------------------------------------------------------------------
 #Comando FZF (fzf.exe)
