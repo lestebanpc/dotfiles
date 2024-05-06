@@ -205,6 +205,10 @@ function _get_gcc_version() {
     return 0
 }
 
+#Parametros de salida (valores de retorno):
+# 0 > Ya existe el enlace simbolico y no se realizo ningun cambio.
+# 1 > Ya existe el enlace simbolico pero se ha recreado en enlace simbolico.
+# 2 > Se creo el enlace simbolico
 function _create_file_link() {
 
     local p_source_path="$1"
@@ -222,26 +226,36 @@ function _create_file_link() {
     fi
 
     local l_source_fullfilename="${p_source_path}/${p_source_filename}"
+    local l_status=0
     local l_aux
     if [ -h "$p_target_link" ] && [ -f "$p_target_link" ]; then
         if [ $p_override_target_link -eq 0 ]; then
             mkdir -p "$p_source_path"
             ln -snf "$l_source_fullfilename" "$p_target_link"
             printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$l_source_fullfilename" "$g_color_reset"
+            l_status=1
         else
             l_aux=$(readlink "$p_target_link")
             printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$l_aux" "$g_color_reset"
+            l_status=0
         fi
     else
         mkdir -p "$p_source_path"
         ln -snf "$l_source_fullfilename" "$p_target_link"
         printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$l_source_fullfilename" "$g_color_reset"
+        l_status=2
     fi
+
+    return $l_status
 
 }
 
 
 
+#Parametros de salida (valores de retorno):
+# 0 > Ya existe el enlace simbolico y no se realizo ningun cambio.
+# 1 > Ya existe el enlace simbolico pero se ha recreado en enlace simbolico.
+# 2 > Se creo el enlace simbolico
 function _create_folder_link() {
 
     local p_source_path="$1"
@@ -258,21 +272,26 @@ function _create_folder_link() {
     fi
 
     local l_aux
+    local l_status=0
     if [ -h "$p_target_link" ] && [ -d "$p_target_link" ]; then
         if [ $p_override_target_link -eq 0 ]; then
             mkdir -p "$p_source_path"
             ln -snf "${p_source_path}/" "$p_target_link"
             printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$p_source_path" "$g_color_reset"
+            l_status=1
         else
             l_aux=$(readlink "$p_target_link")
             printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$l_aux" "$g_color_reset"
+            l_status=0
         fi
     else
         mkdir -p "$p_source_path"
         ln -snf "${p_source_path}/" "$p_target_link"
         printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$p_target_link" "$g_color_gray1" "$p_source_path" "$g_color_reset"
+        l_status=2
     fi
 
+    return $l_status
 }
 
 
@@ -656,12 +675,12 @@ function _config_developer_vim() {
     fi
 
     #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
-    printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) "%b:CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh%b"\n' \
+    printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) "%b:CocInstall coc-tsserver coc-json coc-html coc-css coc-pyright coc-sh%b"\n' \
            "$g_color_gray1" "$g_color_reset"
     if [ $p_is_neovim -ne 0  ]; then
-        vim -esc 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
+        vim -esc 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyright coc-sh' -c 'qa'
     else
-        USE_COC=1 nvim --headless -c 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh' -c 'qa'
+        USE_COC=1 nvim --headless -c 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyright coc-sh' -c 'qa'
     fi
 
     #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
@@ -1872,6 +1891,7 @@ function _setup_user_profile() {
     #Si es Linux WSL
     local l_target_link
     local l_source_filename
+    local l_status
 
     #Archivo de colores de la terminal usado por comandos basicos
     if [ $g_os_type -eq 1 ]; then
@@ -1880,6 +1900,7 @@ function _setup_user_profile() {
         l_source_path="${g_path_base}/.files/terminal/linux/others"
         l_source_filename='ubuntu_wls_dircolors.conf'
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+        l_status=$?
 
     fi
 
@@ -1892,6 +1913,7 @@ function _setup_user_profile() {
         l_source_filename='git_linux_usr2.toml'
     fi
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
 
 
     #Archivo de configuración de SSH
@@ -1903,6 +1925,7 @@ function _setup_user_profile() {
         l_source_filename='ssh_linux_02.conf'
     fi
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
 
 
     #Archivos de configuración de PowerShell
@@ -1953,6 +1976,7 @@ function _setup_user_profile() {
         fi
     fi
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
 
     #Creando el profile del interprete shell
     l_target_link="${g_path_base}/.bashrc"
@@ -2002,6 +2026,7 @@ function _setup_user_profile() {
         fi
     fi
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
 
 
     #5. Creando enlaces simbolico independiente del tipo de distribución Linux
@@ -2011,44 +2036,64 @@ function _setup_user_profile() {
     l_source_path="${g_path_base}/.files/terminal/linux/tmux"
     l_source_filename='tmux.conf'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-
-    #Podman: Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
-    l_target_link="${g_path_base}/.config/containers/containers.conf"
-    l_source_path="${g_path_base}/.files/config/podman"
-    l_source_filename='containers_default.toml'
-    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-
-    #Podman: Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
-    l_target_link="${g_path_base}/.config/containers/registries.conf"
-    l_source_path="${g_path_base}/.files/config/podman"
-    l_source_filename='registries_default.toml'
-    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-
-    #NerdCtl/ContainerD: Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD'
-    l_target_link="${g_path_base}/.config/nerdctl/nerdctl.toml"
-    l_source_path="${g_path_base}/.files/config/nerdctl"
-    l_source_filename='config_default.toml'
-    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-
-    #NerdCtl/ContainerD: Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
-    #l_target_link="${g_path_base}/.config/containerd/config.toml"
-    #l_source_path="${g_path_base}/.files/config/containerd"
-    #l_source_filename='config_default.toml'
-    #_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-
-
-    #NerdCtl/ContainerD: Configuración del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
-    l_target_link="${g_path_base}/.config/buildkit/buildkitd.toml"
-    l_source_path="${g_path_base}/.files/config/buildkit"
-    l_source_filename='config_default.toml'
-    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-
+    l_status=$?
 
     #Configuracion por defecto para un Cluster de Kubernates
     l_target_link="${g_path_base}/.kube/config"
     l_source_path="${g_path_base}/.files/config/kubectl"
     l_source_filename='config_default.yaml'
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+
+    #Podman: Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
+    l_target_link="${g_path_base}/.config/containers/containers.conf"
+    l_source_path="${g_path_base}/.files/config/podman"
+    l_source_filename='containers_default.toml'
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+
+    #Podman: Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
+    l_target_link="${g_path_base}/.config/containers/registries.conf"
+    l_source_path="${g_path_base}/.files/config/podman"
+    l_source_filename='registries_default.toml'
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+
+    #NerdCtl/ContainerD: Para ejecutar en root, la configuracion no se alamcena en el $HOME, se almacena en el '/etc'
+    if [ $g_user_is_root -ne 0 ] || [ ! -z "$g_other_calling_user" ]; then
+
+        #NerdCtl/ContainerD: Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD'
+        l_target_link="${g_path_base}/.config/nerdctl/nerdctl.toml"
+        l_source_path="${g_path_base}/.files/config/nerdctl"
+        l_source_filename='config_default.toml'
+        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+        l_status=$?
+        #if [ $l_status -ne 0 ] && [ ! -z "$g_other_calling_user" ]; then
+        #    chown -R $g_other_calling_user ${g_path_base}/.config/nerdctl/
+        #fi
+
+        #NerdCtl/ContainerD: Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
+        #l_target_link="${g_path_base}/.config/containerd/config.toml"
+        #l_source_path="${g_path_base}/.files/config/containerd"
+        #l_source_filename='config_default.toml'
+        #_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+        #l_status=$?
+        #if [ $l_status -ne 0 ] && [ ! -z "$g_other_calling_user" ]; then
+        #    chown -R $g_other_calling_user ${g_path_base}/.config/containerd/
+        #fi
+
+
+        #NerdCtl/ContainerD: Configuración del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
+        l_target_link="${g_path_base}/.config/buildkit/buildkitd.toml"
+        l_source_path="${g_path_base}/.files/config/buildkit"
+        l_source_filename='config_default.toml'
+        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+        l_status=$?
+        #if [ $l_status -ne 0 ] && [ ! -z "$g_other_calling_user" ]; then
+        #    chown -R $g_other_calling_user ${g_path_base}/.config/buildkit/
+        #fi
+
+    fi
 
     return 0
 
