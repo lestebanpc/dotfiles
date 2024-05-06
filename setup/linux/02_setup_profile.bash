@@ -2045,6 +2045,16 @@ function _setup_user_profile() {
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
 
+    #NerdCtl: Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD'
+    l_target_link="${g_path_base}/.config/nerdctl/nerdctl.toml"
+    l_source_path="${g_path_base}/.files/config/nerdctl"
+    l_source_filename='config_default.toml'
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+    #if [ $l_status -ne 0 ] && [ ! -z "$g_other_calling_user" ]; then
+    #    chown -R $g_other_calling_user ${g_path_base}/.config/nerdctl/
+    #fi
+
     #Para ejecutar en root, la configuracion no se alamcena en el $HOME, se almacena en el '/etc'
     #Esto aplica para NerdCtl/ContainerD y Podman
     if [ $g_user_is_root -ne 0 ] || [ ! -z "$g_other_calling_user" ]; then
@@ -2063,17 +2073,7 @@ function _setup_user_profile() {
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
         l_status=$?
 
-        #NerdCtl/ContainerD: Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD'
-        l_target_link="${g_path_base}/.config/nerdctl/nerdctl.toml"
-        l_source_path="${g_path_base}/.files/config/nerdctl"
-        l_source_filename='config_default.toml'
-        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-        l_status=$?
-        #if [ $l_status -ne 0 ] && [ ! -z "$g_other_calling_user" ]; then
-        #    chown -R $g_other_calling_user ${g_path_base}/.config/nerdctl/
-        #fi
-
-        #NerdCtl/ContainerD: Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
+        #ContainerD: Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
         #l_target_link="${g_path_base}/.config/containerd/config.toml"
         #l_source_path="${g_path_base}/.files/config/containerd"
         #l_source_filename='config_overlay_default.toml'
@@ -2084,7 +2084,7 @@ function _setup_user_profile() {
         #fi
 
 
-        #NerdCtl/ContainerD: Configuración del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
+        #ContainerD: Configuración del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
         l_target_link="${g_path_base}/.config/buildkit/buildkitd.toml"
         l_source_path="${g_path_base}/.files/config/buildkit"
         l_source_filename='config_default.toml'
