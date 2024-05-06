@@ -5079,7 +5079,27 @@ function _copy_artifact_files() {
                 sudo chmod +x "${l_path_target_bin}/crun"
             fi
 
-            #4. Si la unidad servicio 'podman' estaba iniciando y se detuvo, iniciarlo
+            #4. Desacargar el archivo de configuracion requerido por podman, el cual algunas instalaciones de podman no se encuentra ...
+            mkdir -p ${g_path_base}/.files/config/podman
+            
+            #/etc/containers/storage.conf (default: overlayfs)
+            printf 'Descargando el archivo de configuracion requerido para "%s" con soporte a "Overlay" en "~/%s"\n' "/etc/containers/storage.conf" \
+                   ".files/config/podman/storage_default.toml"
+            curl -fLo ${g_path_base}/.files/config/podman/storage_default.toml \
+                 https://raw.githubusercontent.com/containers/podman/main/vendor/github.com/containers/storage/storage.conf
+           
+            #/etc/containers/storage.conf (btrfs)
+            # cambiando 'driver = "overlay"' por 'driver = "btrfs"'
+
+            #/etc/containers/containers.conf
+            #/etc/containers/registries.conf
+
+            #Fix permisos
+            if [ ! -z "$g_other_calling_user" ]; then
+                chown -R $g_other_calling_user ${g_path_base}/.files/config/podman/
+            fi
+
+            #5. Si la unidad servicio 'podman' estaba iniciando y se detuvo, iniciarlo
             #if [ $l_status -eq 3 ]; then
             if [ $l_status -eq 4 ]; then
 

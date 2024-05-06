@@ -2045,22 +2045,23 @@ function _setup_user_profile() {
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
 
-    #Podman: Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
-    l_target_link="${g_path_base}/.config/containers/containers.conf"
-    l_source_path="${g_path_base}/.files/config/podman"
-    l_source_filename='containers_default.toml'
-    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-    l_status=$?
-
-    #Podman: Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
-    l_target_link="${g_path_base}/.config/containers/registries.conf"
-    l_source_path="${g_path_base}/.files/config/podman"
-    l_source_filename='registries_default.toml'
-    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-    l_status=$?
-
-    #NerdCtl/ContainerD: Para ejecutar en root, la configuracion no se alamcena en el $HOME, se almacena en el '/etc'
+    #Para ejecutar en root, la configuracion no se alamcena en el $HOME, se almacena en el '/etc'
+    #Esto aplica para NerdCtl/ContainerD y Podman
     if [ $g_user_is_root -ne 0 ] || [ ! -z "$g_other_calling_user" ]; then
+
+        #Podman: Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
+        l_target_link="${g_path_base}/.config/containers/containers.conf"
+        l_source_path="${g_path_base}/.files/config/podman"
+        l_source_filename='containers_default.toml'
+        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+        l_status=$?
+
+        #Podman: Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
+        l_target_link="${g_path_base}/.config/containers/registries.conf"
+        l_source_path="${g_path_base}/.files/config/podman"
+        l_source_filename='registries_default.toml'
+        _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+        l_status=$?
 
         #NerdCtl/ContainerD: Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD'
         l_target_link="${g_path_base}/.config/nerdctl/nerdctl.toml"
