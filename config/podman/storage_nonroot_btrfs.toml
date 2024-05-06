@@ -1,5 +1,0 @@
-#Cambiar el storage driver por defecto 'overlay' a 'btrfs'
-[storage]
-driver = "btrfs"
-
-

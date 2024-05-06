@@ -1,3 +1,4 @@
+# https://raw.githubusercontent.com/containers/podman/main/vendor/github.com/containers/storage/storage.conf
 # This file is the configuration file for all tools
 # that use the containers/storage library. The storage.conf file
 # overrides all other storage.conf files. Container engines using the
@@ -14,7 +15,7 @@
 [storage]
 
 # Default Storage Driver, Must be set for proper operation.
-driver = "overlay"
+driver = "btrfs"
 
 # Temporary storage location
 runroot = "/run/containers/storage"

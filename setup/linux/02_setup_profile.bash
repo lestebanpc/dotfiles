@@ -2076,7 +2076,7 @@ function _setup_user_profile() {
         #NerdCtl/ContainerD: Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
         #l_target_link="${g_path_base}/.config/containerd/config.toml"
         #l_source_path="${g_path_base}/.files/config/containerd"
-        #l_source_filename='config_default.toml'
+        #l_source_filename='config_overlay_default.toml'
         #_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
         #l_status=$?
         #if [ $l_status -ne 0 ] && [ ! -z "$g_other_calling_user" ]; then
