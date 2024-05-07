@@ -249,8 +249,8 @@ function _copy_plugin_files() {
             cp "${p_repo_path}/shell/key-bindings.bash" "${g_path_base}/.files/terminal/linux/keybindings/fzf.bash"
             
             # Script que se usara como comando para abrir fzf en un panel popup tmux
-            echo "Copiando el script \"./bin/fzf-tmux\" como \"~/.files/terminal/linux/functions/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
-            cp "${p_repo_path}/bin/fzf-tmux" "${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash"
+            echo "Copiando el script \"./bin/fzf-tmux\" como \"~/.files/terminal/linux/cmds/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
+            cp "${p_repo_path}/bin/fzf-tmux" "${g_path_base}/.files/terminal/linux/cmds/fzf-tmux.bash"
 
             if [ ! -d "${g_path_base}/.local" ]; then
                 mkdir -p ${g_path_base}/.local/bin
@@ -265,7 +265,7 @@ function _copy_plugin_files() {
                 fi
             fi
 
-            ln -sfn ${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
+            ln -sfn ${g_path_base}/.files/terminal/linux/cmds/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
 
             if [ ! -z "$g_other_calling_user" ]; then
                 chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/fzf.bash 

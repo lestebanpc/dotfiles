@@ -66,6 +66,10 @@ if [ -d "${l_program_path}/dotnet" ]; then
     export DOTNET_GCHeapHardLimit=1C0000000
 fi
 
+#AWS CLI v2
+[ -d "${l_program_path}/aws-cli" ] && PATH="${l_program_path}/aws-cli:$PATH"
+#[ -d "${l_program_path}/aws-cli/v2/current/bin" ] && PATH="${l_program_path}/aws-cli/v2/current/bin:$PATH"
+
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
 

@@ -2052,7 +2052,7 @@ function _setup_user_profile() {
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
     #if [ $l_status -ne 0 ] && [ ! -z "$g_other_calling_user" ]; then
-    #    chown -R $g_other_calling_user ${g_path_base}/.config/nerdctl/
+    #    chown -Rh $g_other_calling_user ${g_path_base}/.config/nerdctl/
     #fi
 
     #Para ejecutar en root, la configuracion no se alamcena en el $HOME, se almacena en el '/etc'
@@ -2072,6 +2072,9 @@ function _setup_user_profile() {
         l_source_filename='registries_default.toml'
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
         l_status=$?
+        #if [ $l_status -ne 0 ] && [ ! -z "$g_other_calling_user" ]; then
+        #    chown -Rh $g_other_calling_user ${g_path_base}/.config/containers/
+        #fi
 
         #ContainerD: Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
         #l_target_link="${g_path_base}/.config/containerd/config.toml"
@@ -2080,7 +2083,7 @@ function _setup_user_profile() {
         #_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
         #l_status=$?
         #if [ $l_status -ne 0 ] && [ ! -z "$g_other_calling_user" ]; then
-        #    chown -R $g_other_calling_user ${g_path_base}/.config/containerd/
+        #    chown -Rh $g_other_calling_user ${g_path_base}/.config/containerd/
         #fi
 
 
@@ -2091,7 +2094,7 @@ function _setup_user_profile() {
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
         l_status=$?
         #if [ $l_status -ne 0 ] && [ ! -z "$g_other_calling_user" ]; then
-        #    chown -R $g_other_calling_user ${g_path_base}/.config/buildkit/
+        #    chown -Rh $g_other_calling_user ${g_path_base}/.config/buildkit/
         #fi
 
     fi

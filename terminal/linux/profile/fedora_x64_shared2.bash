@@ -64,6 +64,10 @@ if [ -d "${l_program_path}/dotnet" ]; then
     [ -d "$DOTNET_ROOT/tools" ] && PATH="${DOTNET_ROOT}/tools:$PATH"
 fi
 
+#AWS CLI v2
+[ -d "${l_program_path}/aws-cli" ] && PATH="${l_program_path}/aws-cli:$PATH"
+#[ -d "${l_program_path}/aws-cli/v2/current/bin" ] && PATH="${l_program_path}/aws-cli/v2/current/bin:$PATH"
+
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
 

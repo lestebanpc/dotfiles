@@ -66,6 +66,10 @@ if [ -d "${l_program_path}/dotnet" ]; then
     export DOTNET_GCHeapHardLimit=1C0000000
 fi
 
+#AWS CLI v2
+[ -d "${l_program_path}/aws-cli" ] && PATH="${l_program_path}/aws-cli:$PATH"
+#[ -d "${l_program_path}/aws-cli/v2/current/bin" ] && PATH="${l_program_path}/aws-cli/v2/current/bin:$PATH"
+
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
 
@@ -106,7 +110,6 @@ export MPD_HOST=/run/mpd/socket
 
 # Ruta por defecto de los binarios de CNI plugin usados por CLI de Container Runtime como NerdCtl (no se usara, se usara su archivo de configuración nerdctl.tom)
 #[ -d "${l_program_path}/cni_plugins" ] && export CNI_PATH=${l_program_path}/cni_plugins
-
 
 # Funciones basicas
 source ~/.files/terminal/linux/functions/profile_functions.bash
