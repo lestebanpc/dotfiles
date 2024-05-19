@@ -19,8 +19,8 @@ Para la configuracion se puede usar una de las siguientes script de configuraci�
   - Si no lo tiene, lo instalará en '~/.local/share/fonts'.
     Si usa WSL, este descarga los binarios/programas para Windows en las sigueente rutas:
   - Los programas los descargará en 'D:\CLI\Programs'.
-  - Los comandos los descargará en 'D:\CLI\Commands\bin'.  
-    Si por algun motivo tiene acceso a 'sudo' como root, pero desea instalarlo a nivel usuario ('~/.local/bin' y '~/tools'), debera modificar el script './terminal/linux/functions/func_utility.bash' modificando la funcion 'get_user_options' descomentando la lineas que obligen a retornar 'g_user_sudo_support' con valor 3.  
+  - Los comandos los descargará en 'D:\CLI\Commands\bin'. 
+    Si por algun motivo tiene acceso a 'sudo' como root, pero desea instalarlo a nivel usuario ('~/.local/bin' y '~/tools'), debera modificar el script './terminal/linux/functions/func_utility.bash' modificando la funcion 'get_user_options' descomentando la lineas que obligen a retornar 'g_user_sudo_support' con valor 3. 
 - Script './setup/linux/02_setup_profile.bash' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
 - Script './setup/linux/03_update_all.bash' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
 
