@@ -2,7 +2,7 @@
 
 #
 #Devolverá la ruta base 'PATH_BASE' donde esta el repositorio '.files'.
-#Nota: Los script de instalación tiene una ruta similar a 'PATH_BASE/REPO_NAME/setup/linux/SCRIPT.bash', donde 'REPO_NAME' siempre es '.files'.
+#Nota: Los script de instalación tiene una ruta similar a 'PATH_BASE/REPO_NAME/shell/setup/linux/SCRIPT.bash', donde 'REPO_NAME' siempre es '.files'.
 #
 #Parametros de entrada:
 #  1> La ruta relativa (o absoluta) de un archivos del repositorio
@@ -20,7 +20,7 @@ function _get_current_path_base() {
     fi
 
     #Obteniendo la ruta base
-    l_path=${l_path%/.files/setup/linux/*}
+    l_path=${l_path%/.files/shell/setup/linux/*}
     echo "$l_path"
     return 0
 }
@@ -35,7 +35,7 @@ declare -r g_path_base=$(_get_current_path_base "${BASH_SOURCE[0]}")
 g_other_calling_user=''
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ${g_path_base}/.files/shared/linux/func_utility.bash
+. ${g_path_base}/.files/shell/shared/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -61,7 +61,7 @@ fi
 
 
 #Funciones de utilidad
-. ${g_path_base}/.files/setup/linux/_common_utility.bash
+. ${g_path_base}/.files/shell/setup/linux/_common_utility.bash
 
 
 #Tamaño de la linea del menu
@@ -556,10 +556,10 @@ function _update_all() {
         # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
         # 8> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
         if [ $l_is_noninteractive -eq 1 ]; then
-            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 1 2 "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 "$g_other_calling_user"
+            ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 1 2 "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 "$g_other_calling_user"
             l_status=$?
         else
-            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 3 2 "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 "$g_other_calling_user"
+            ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 3 2 "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 "$g_other_calling_user"
             l_status=$?
         fi
 
@@ -796,11 +796,11 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bActualizaciones usando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_update_all.bash\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_update_all.bash 0 PRG_PATH CMD_BASE_PATH TEMP_PATH SETUP_ONLYLAST_VERSION\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/03_update_all.bash\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/03_update_all.bash 0 PRG_PATH CMD_BASE_PATH TEMP_PATH SETUP_ONLYLAST_VERSION\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bActualizaciones SIN usar un menú de opciones:%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_update_all.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/03_update_all.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/03_update_all.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/03_update_all.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b Es 0 si se muestra un menu, caso contrario es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".%b\n' \

@@ -20,7 +20,7 @@ function _get_current_path_base() {
     fi
 
     #Obteniendo la ruta base
-    l_path=${l_path%/.files/setup/linux/*}
+    l_path=${l_path%/.files/shell/setup/linux/*}
     echo "$l_path"
     return 0
 }
@@ -34,7 +34,7 @@ declare -r g_path_base=$(_get_current_path_base "${BASH_SOURCE[0]}")
 g_other_calling_user=''
 
 #Funciones generales: determinar el tipo del SO, ...
-. ${g_path_base}/.files/shared/linux/func_utility.bash
+. ${g_path_base}/.files/shell/shared/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -61,7 +61,7 @@ fi
 
 
 #Funciones de utilidad
-. ${g_path_base}/.files/setup/linux/_common_utility.bash
+. ${g_path_base}/.files/shell/setup/linux/_common_utility.bash
 
 
 #Tipo de ejecucion del script principal
@@ -985,10 +985,10 @@ _install_nodejs() {
     # 8> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
     # 9> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_path_base}/.files/setup/linux/01_setup_commands.bash 2 "nodejs" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+        ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 2 "nodejs" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
         l_status=$?
     else
-        ${g_path_base}/.files/setup/linux/01_setup_commands.bash 4 "nodejs" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+        ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 4 "nodejs" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
         l_status=$?
     fi
 
@@ -1214,10 +1214,10 @@ _install_python() {
     # 2> Repositorios a instalar/acutalizar: 16 (RTE Python y Pip. Tiene Offset=1)
     # 3> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "$l_packages_to_install" $g_status_crendential_storage
+        ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 2 "$l_packages_to_install" $g_status_crendential_storage
         l_status=$?
     else
-        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "$l_packages_to_install" $g_status_crendential_storage
+        ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 4 "$l_packages_to_install" $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -1399,10 +1399,10 @@ function _install_vim() {
     # 2> Packete a instalar/acutalizar.
     # 3> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 'vim' $g_status_crendential_storage
+        ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 2 'vim' $g_status_crendential_storage
         l_status=$?
     else
-        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 'vim' $g_status_crendential_storage
+        ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 4 'vim' $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -1467,10 +1467,10 @@ function _install_nvim() {
         # 2> Paquete a instalar/acutalizar.
         # 3> El estado de la credencial almacenada para el sudo
         if [ $l_is_noninteractive -eq 1 ]; then
-            ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "nvim" $g_status_crendential_storage
+            ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 2 "nvim" $g_status_crendential_storage
             l_status=$?
         else
-            ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "nvim" $g_status_crendential_storage
+            ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 4 "nvim" $g_status_crendential_storage
             l_status=$?
         fi
 
@@ -1497,10 +1497,10 @@ function _install_nvim() {
         # 9> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
         if [ $l_is_noninteractive -eq 1 ]; then
             
-            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 2 "neovim" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+            ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 2 "neovim" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
             l_status=$?
         else
-            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 4 "neovim" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
+            ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 4 "neovim" "$g_path_programs" "" "$g_path_temp" $g_status_crendential_storage 1 1 "$g_other_calling_user"
             l_status=$?
         fi
 
@@ -1653,10 +1653,10 @@ function _sutup_support_x11_clipboard() {
     # 2> Repositorios a instalar/acutalizar: 
     # 3> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "$l_pkg_options" $g_status_crendential_storage
+        ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 2 "$l_pkg_options" $g_status_crendential_storage
         l_status=$?
     else
-        ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "$l_pkg_options" $g_status_crendential_storage
+        ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 4 "$l_pkg_options" $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -3447,11 +3447,11 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bConfigurando el profile del usuario/VIM/NeoVIM escogidos del menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash 0 PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/02_setup_profile.bash\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/02_setup_profile.bash 0 PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bConfigurando el profile del usuario/VIM/NeoVIM segun un grupo de opciones de menú indicados%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS OTHER-USERID\n\n%b' "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"

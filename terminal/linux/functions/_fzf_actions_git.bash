@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ~/.files/shared/linux/func_utility.bash
+. ~/.files/shell/shared/func_utility.bash
 
 
 # > Argumentos:

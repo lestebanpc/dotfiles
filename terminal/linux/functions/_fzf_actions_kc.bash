@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#. ~/.files/shared/linux/func_utility.bash
+#. ~/.files/shell/shared/func_utility.bash
 
 #Colores principales usados para presentar en FZF
 g_color_reset="\x1b[0m"

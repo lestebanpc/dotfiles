@@ -20,7 +20,7 @@ function _get_current_path_base() {
     fi
 
     #Obteniendo la ruta base
-    l_path=${l_path%/.files/setup/linux/*}
+    l_path=${l_path%/.files/shell/setup/linux/*}
     echo "$l_path"
     return 0
 }
@@ -36,7 +36,7 @@ g_other_calling_user=''
 
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ${g_path_base}/.files/shared/linux/func_utility.bash
+. ${g_path_base}/.files/shell/shared/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -108,7 +108,7 @@ fi
 
 
 #Funciones de utilidad
-. ${g_path_base}/.files/setup/linux/_common_utility.bash
+. ${g_path_base}/.files/shell/setup/linux/_common_utility.bash
 
 
 #Parametros (argumentos) basicos del script
@@ -152,10 +152,10 @@ g_offset_option_index_menu_uninstall=0
 g_setup_only_last_version=1
 
 #Personalización: Variables a modificar.
-. ${g_path_base}/.files/setup/linux/_setup_commands_custom_settings.bash
+. ${g_path_base}/.files/shell/setup/linux/_setup_commands_custom_settings.bash
 
 #Personalización: Funciones modificables para el instalador.
-. ${g_path_base}/.files/setup/linux/_setup_commands_custom_logic.bash
+. ${g_path_base}/.files/shell/setup/linux/_setup_commands_custom_logic.bash
 
 
 #}}}
@@ -3401,22 +3401,22 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bDesintalar repositorios mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset" 
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash uninstall PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/01_setup_commands.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/01_setup_commands.bash uninstall PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar repositorios mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash 0 PRG_PATH CMD_BASE_PATH TEMP_PATH SETUP_ONLYLAST_VERSION\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/01_setup_commands.bash\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/01_setup_commands.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/01_setup_commands.bash 0 PRG_PATH CMD_BASE_PATH TEMP_PATH SETUP_ONLYLAST_VERSION\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un grupo de repositorios sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION OTHER-USERID\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION OTHER-USERID\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 1 si es interactivo y 3 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un repositorio sin mostrar el  menú%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION SHOW-TITLE-1REPO OTHER-USERID%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION SHOW-TITLE-1REPO OTHER-USERID%b\n' "$g_color_yellow1" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    > %bLIST-REPO-ID%b lista de ID repositorios separados por coma. Si no %b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"

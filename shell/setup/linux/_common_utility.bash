@@ -877,7 +877,7 @@ function fulfill_preconditions() {
     fi
 
     #1. Validar si ejecuta dentro de un repostorio git
-    if [ ! -d "${p_path_base}/.files/setup/linux" ]; then
+    if [ ! -d "${p_path_base}/.files/shell/setup/linux" ]; then
 
         printf 'No existe los archivos necesarios para la instalación. Descarge el repostorio con los archivos: "%bgit clone https://github.com/lestebanpc/dotfiles.git ~/.files%b"\n' "$g_color_gray1" "$g_color_reset"
         return 1

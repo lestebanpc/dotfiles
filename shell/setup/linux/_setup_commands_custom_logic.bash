@@ -3154,8 +3154,8 @@ function _copy_artifact_files() {
                 curl -sLfo "${g_path_base}/.files/terminal/linux/keybindings/fzf.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.bash'
             
                 # Script que se usara como comando para abrir fzf en un panel popup tmux
-                echo "Descargando el recurso \"./bin/fzf-tmux\" como \"~/.files/terminal/linux/cmds/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
-                curl -sLfo "${g_path_base}/.files/terminal/linux/cmds/fzf-tmux.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/bin/fzf-tmux'
+                echo "Descargando el recurso \"./bin/fzf-tmux\" como \"~/.files/shell/fzf/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
+                curl -sLfo "${g_path_base}/.files/shell/fzf/fzf-tmux.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/bin/fzf-tmux'
 
                 if [ ! -d "${g_path_base}/.local" ]; then
                     mkdir -p ${g_path_base}/.local/bin
@@ -3170,7 +3170,7 @@ function _copy_artifact_files() {
                     fi
                 fi
 
-                ln -sfn ${g_path_base}/.files/terminal/linux/cmds/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
+                ln -sfn ${g_path_base}/.files/shell/fzf/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
 
                 if [ ! -z "$g_other_calling_user" ]; then
                     chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/fzf.bash 
@@ -5536,7 +5536,7 @@ function _copy_artifact_files() {
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
                 printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "containerd.service" \
                        "$g_color_yellow1" "$g_color_reset"
-                printf '%b   export PATH="$PATH:$HOME/.files/setup/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/shell/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   Opcional:%b\n' "$g_color_gray1" "$g_color_reset"
                 printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
@@ -5639,7 +5639,7 @@ function _copy_artifact_files() {
                 printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' "$p_repo_id" "buildkit.service"
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
                 printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "buildkit.service" "$g_color_yellow1" "$g_color_reset"
-                printf '%b   export PATH="$PATH:$HOME/.files/setup/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/shell/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   containerd-rootless-setuptool.sh install-buildkit%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   Opcional:%b\n' "$g_color_gray1" "$g_color_reset"
                 printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
@@ -5685,20 +5685,20 @@ function _copy_artifact_files() {
 
                 fi
 
-                mkdir -p ${g_path_base}/.files/setup/containerd
+                mkdir -p ${g_path_base}/.files/shell/containerd
 
                 #Archivos para instalar 'containerd' de modo rootless
-                echo "Copiando \"${l_path_source}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/setup/containerd\" ..."
-                cp "${l_path_source}/containerd-rootless.sh" ${g_path_base}/.files/setup/containerd
-                chmod u+x ${g_path_base}/.files/setup/containerd/containerd-rootless.sh
+                echo "Copiando \"${l_path_source}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/shell/containerd\" ..."
+                cp "${l_path_source}/containerd-rootless.sh" ${g_path_base}/.files/shell/containerd
+                chmod u+x ${g_path_base}/.files/shell/containerd/containerd-rootless.sh
 
-                echo "Copiando \"${l_path_source}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/setup/containerd\" ..."
-                cp "${l_path_source}/containerd-rootless-setuptool.sh" ${g_path_base}/.files/setup/containerd
-                chmod u+x ${g_path_base}/.files/setup/containerd/containerd-rootless-setuptool.sh
+                echo "Copiando \"${l_path_source}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/shell/containerd\" ..."
+                cp "${l_path_source}/containerd-rootless-setuptool.sh" ${g_path_base}/.files/shell/containerd
+                chmod u+x ${g_path_base}/.files/shell/containerd/containerd-rootless-setuptool.sh
 
                 #Fix permisos
                 if [ ! -z "$g_other_calling_user" ]; then
-                    chown -R $g_other_calling_user ${g_path_base}/.files/setup/containerd/
+                    chown -R $g_other_calling_user ${g_path_base}/.files/shell/containerd/
                 fi
 
             #3. Configuración: Instalación de binarios de complementos que su reposotrio no ofrece el compilado (solo la fuente). Para ello se usa el full
@@ -6002,10 +6002,10 @@ install_initialize_menu_option() {
                 # 3> El estado de la credencial almacenada para el sudo
                 # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
                 if [ $l_is_noninteractive -eq 1 ]; then
-                    ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 'dotnetlib' $g_status_crendential_storage 1
+                    ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 2 'dotnetlib' $g_status_crendential_storage 1
                     l_status=$?
                 else
-                    ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 'dotnetlib' $g_status_crendential_storage 1
+                    ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 4 'dotnetlib' $g_status_crendential_storage 1
                     l_status=$?
                 fi
 

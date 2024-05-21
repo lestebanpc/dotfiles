@@ -66,10 +66,10 @@ Los pasos recomandos para configurar su SO son:
    
    ```shell
    #Mostrar el menu para instalar/actualizar comandos/programas:
-   ~/.files/setup/linux/01_setup_commands.bash
+   ~/.files/shell/setup/linux/01_setup_commands.bash
    
    #Para mostrar los parametros del script, ingrese un parametro invalido como:
-   ~/.files/setup/linux/01_setup_commands.bash x
+   ~/.files/shell/setup/linux/01_setup_commands.bash x
    ```
 
 4. Para un usuario especifico, configure los archivos del profile y VIM/NeoVIM: 
@@ -82,10 +82,10 @@ Los pasos recomandos para configurar su SO son:
    
    ```bash
    #Mostrar el menu para configurar el profile y VIM/NeoVIM
-   ~/.files/setup/linux/02_setup_profile.bash
+   ~/.files/shell/setup/linux/02_setup_profile.bash
    
    #Para mostrar los parametros del script, ingrese un parametro invalido como:
-   ~/.files/setup/linux/02_setup_profile.bash
+   ~/.files/shell/setup/linux/02_setup_profile.bash
    ```
 
 5. Cierre session y vuelva a iniciar (o crage nuevamente su profile) para registrar la variables del profile del usuario.
@@ -94,10 +94,10 @@ Los pasos recomandos para configurar su SO son:
    
    ```bash
    #Mostrar el menu para actualizar los plugins de VIM/NeoVIM
-   ~/.files/setup/linux/04_update_all.bash
+   ~/.files/shell/setup/linux/04_update_all.bash
    
    #Para mostrar los parametros del script, ingrese un parametro invalido como:
-   ~/.files/setup/linux/04_update_all.bash
+   ~/.files/shell/setup/linux/04_update_all.bash
    ```
 
 7. Configure la terminal.
@@ -107,8 +107,8 @@ Los pasos recomandos para configurar su SO son:
 
 Para la configuracion se puede usar una de las siguientes script de configuración.
 
-- Script '.\setup\powershell\02_setup_profile_win.ps1' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
-- Script '.\setup\powershell\03_update_all_win.ps1' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
+- Script '.\powershell\setup\windows\02_setup_profile_win.ps1' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
+- Script '.\powershell\setup\windows\03_update_all_win.ps1' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
 
 No se usa un gestor de plugin para VIM/NeoVIM (esto me trajo algunos problemas al ser usado en contenedores), por lo que se uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './setup/linux/03_update_all.bash'.
 
@@ -126,7 +126,7 @@ Los pasos recomandos para configurar su SO son:
    #
    ```
    
-   Si cuenta con WSL, 'NodeJS', '. Net' y 'Powershell Core'y lo podra instalar usando la opcion el menu mostrado al ejecutar el script '~/.files/setup/linux/01_setup_commands.bash'
+   Si cuenta con WSL, 'NodeJS', '. Net' y 'Powershell Core'y lo podra instalar usando la opcion el menu mostrado al ejecutar el script '~/.files/shell/setup/linux/01_setup_commands.bash'
    
    - Usando la opcion '1048576' del menu para instalar la ultima version de 'NodeJS' en 'D:\CLI\Programs\NodeJS'.
      En las variables de entorno del sistema debe registrar la la ruta 'D:\CLI\Programs\NodeJS'.

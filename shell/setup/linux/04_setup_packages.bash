@@ -20,7 +20,7 @@ function _get_current_path_base() {
     fi
 
     #Obteniendo la ruta base
-    l_path=${l_path%/.files/setup/linux/*}
+    l_path=${l_path%/.files/shell/setup/linux/*}
     echo "$l_path"
     return 0
 }
@@ -31,7 +31,7 @@ function _get_current_path_base() {
 declare -r g_path_base=$(_get_current_path_base "${BASH_SOURCE[0]}")
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ${g_path_base}/.files/shared/linux/func_utility.bash
+. ${g_path_base}/.files/shell/shared/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -56,7 +56,7 @@ if [ -z "$g_user_is_root" ]; then
 fi
 
 #Funciones de utilidad
-. ${g_path_base}/.files/setup/linux/_common_utility.bash
+. ${g_path_base}/.files/shell/setup/linux/_common_utility.bash
 
 
 #Menu dinamico: Offset del indice donde inicia el menu dinamico.
@@ -93,7 +93,7 @@ g_status_crendential_storage=-1
 g_is_credential_storage_externally=1
 
 #Personalización: Funciones modificables para el instalador.
-. ${g_path_base}/.files/setup/linux/_setup_packages_custom.bash
+. ${g_path_base}/.files/shell/setup/linux/_setup_packages_custom.bash
 
 
 
@@ -1688,19 +1688,19 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bDesintalar paquetes mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset" 
-    printf '    %b~/.files/setup/linux/04_setup_packages.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/04_setup_packages.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar paquetes mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/04_setup_packages.bash\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/04_setup_packages.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/04_setup_packages.bash\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/04_setup_packages.bash 0\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un grupo de paquetes sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/04_setup_packages.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/04_setup_packages.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/04_setup_packages.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/04_setup_packages.bash CALLING_TYPE MENU-OPTIONS SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 1 si es interactivo y 3 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un listado paquete sin mostrar el  menú%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS SUDO-STORAGE-OPTIONS UPGRADE-OS-PACKAGES%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS SUDO-STORAGE-OPTIONS UPGRADE-OS-PACKAGES%b\n' "$g_color_yellow1" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    > %bLIST-REPO-IDS%b es un listado de ID de paquetes separado por coma. Es obligatorio, por lo que enviar "" o "EMPTY" es considerado un error.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"

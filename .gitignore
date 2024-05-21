@@ -7,19 +7,18 @@
 #Log generados por: TMUX, ..
 *.log
 
-#Claves privadas (y/o publicos) para SSH y TLS de uso personal
-tls/*
-
-#Archivos de temas de oh-my-posh
-terminal/oh-my-posh/themes/*
-
-#Archivos de configuracion personalizados para acceder a un cluster k8s
-k8s/config/*.yaml
-
 #Archivos internos de GIT
 .git/*
 
 #Paquetes locales de NodeJS (binarios de NodeJs)
 node_modules/*
 
+#Archivos para la terminal> Oh-My-Posh> Temas
+terminal/oh-my-posh/themes/*
+
+#Archivos configuracion para otros comandos> kubectl
+config/kubectl/*.yaml
+
+#Archivos para clientes TLS de uso personal> Claves privadas y/o publicos TLS
+tls/*
 

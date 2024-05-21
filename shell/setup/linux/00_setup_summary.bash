@@ -20,7 +20,7 @@ function _get_current_path_base() {
     fi
 
     #Obteniendo la ruta base
-    l_path=${l_path%/.files/setup/linux/*}
+    l_path=${l_path%/.files/shell/setup/linux/*}
     echo "$l_path"
     return 0
 }
@@ -35,7 +35,7 @@ g_other_calling_user=''
 
 
 #Funciones generales, determinar el tipo del SO y si es root
-. ${g_path_base}/.files/shared/linux/func_utility.bash
+. ${g_path_base}/.files/shell/shared/func_utility.bash
 
 #Obtener informacion basica del SO
 if [ -z "$g_os_type" ]; then
@@ -92,7 +92,7 @@ fi
 
 
 #Funciones de utilidad
-. ${g_path_base}/.files/setup/linux/_common_utility.bash
+. ${g_path_base}/.files/shell/setup/linux/_common_utility.bash
 
 
 #Tipo de ejecucion del script principal
@@ -245,10 +245,10 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             else
-                ${g_path_base}/.files/setup/linux/04_setup_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_path_base}/.files/shell/setup/linux/04_setup_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             fi
 
@@ -300,10 +300,10 @@ function g_install_options() {
             # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
             # 8> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_path_base}/.files/setup/linux/01_setup_commands.bash 1 4 "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 "$g_other_calling_user"
+                ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 1 4 "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_path_base}/.files/setup/linux/01_setup_commands.bash 3 4 "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 "$g_other_calling_user"
+                ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 3 4 "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 "$g_other_calling_user"
                 l_status=$?
             fi
 
@@ -387,10 +387,10 @@ function g_install_options() {
         # 9> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
         if [ $l_is_noninteractive -eq 1 ]; then
             
-            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user"
+            ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user"
             l_status=$?
         else
-            ${g_path_base}/.files/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user" 
+            ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user" 
             l_status=$?
         fi
 
@@ -670,10 +670,10 @@ function g_install_options() {
        # 5> El estado de la credencial almacenada para el sudo.
        # 6> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
        if [ $l_is_noninteractive -eq 1 ]; then
-           ${g_path_base}/.files/setup/linux/02_setup_profile.bash 1 $l_prg_options "$g_path_programs" "$g_path_temp" $g_status_crendential_storage "$g_other_calling_user"
+           ${g_path_base}/.files/shell/setup/linux/02_setup_profile.bash 1 $l_prg_options "$g_path_programs" "$g_path_temp" $g_status_crendential_storage "$g_other_calling_user"
            l_status=$?
        else
-           ${g_path_base}/.files/setup/linux/02_setup_profile.bash 2 $l_prg_options "$g_path_programs" "$g_path_temp" $g_status_crendential_storage "$g_other_calling_user"
+           ${g_path_base}/.files/shell/setup/linux/02_setup_profile.bash 2 $l_prg_options "$g_path_programs" "$g_path_temp" $g_status_crendential_storage "$g_other_calling_user"
            l_status=$?
        fi
 
@@ -849,14 +849,14 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bDesintalar repositorios mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset" 
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/00_setup_summary.bash uninstall\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar repositorios mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash 0 LIST-PCKG-IDS PRG_PATH CMD_BASE_PATH TEMP_PATH CLEAN-OS-CACHE\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/00_setup_summary.bash\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/00_setup_summary.bash 0 LIST-PCKG-IDS PRG_PATH CMD_BASE_PATH TEMP_PATH CLEAN-OS-CACHE\n%b' "$g_color_yellow1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un grupo de opciones sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS LIST-PCKG-IDS PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
-    printf '    %b~/.files/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS LIST-PCKG-IDS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS CLEAN-OS-CACHE UPGRADE-OS-PACKAGES OTHER-USERID\n\n%b' \
+    printf '    %b~/.files/shell/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS LIST-PCKG-IDS PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" "$g_color_reset"
+    printf '    %b~/.files/shell/setup/linux/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS LIST-PCKG-IDS PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS CLEAN-OS-CACHE UPGRADE-OS-PACKAGES OTHER-USERID\n\n%b' \
            "$g_color_yellow1" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
