@@ -3,7 +3,7 @@
 
 version = 2
 
-root = "/data/containerd/root"
+root = "/dt3/containerd/root"
 #state = "/run/containerd"
 #oom_score = 0
 #imports = ["/etc/containerd/runtime_*.toml", "./debug.toml"]
