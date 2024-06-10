@@ -91,9 +91,6 @@ fi
 
 unset rc
 
-#Zoxide> Ejecutar el script de inicializacion
-eval "$(zoxide init bash)"
-
 #Oh-my-posh> Ejecutar el script de inicializacion segun el tema escogido
 eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lepc-montys-1.omp.json)"
 
@@ -101,14 +98,22 @@ eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lep
 export EDITOR=vim
 
 #FZF> Opciones del comando fzf
-export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168 --walker-skip=.git,node_modules"
+
+#Variables de entorno
+export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --walker-skip=.git,node_modules --info=inline --border --color=bg+:#293739,bg:#1B1D1E,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"
+#export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --walker-skip=.git,node_modules --info=inline --border --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"
 export FZF_COMPLETION_PATH_OPTS="--walker=file,dir,hidden,follow"
 export FZF_COMPLETION_DIR_OPTS="--walker=dir,hidden,follow"
+
 #El script "key bindings" y "fuzzy completion" (no puede ser modificado)
 eval "$(fzf --bash)"
+
 #El script "key bindings" y "fuzzy completion" (puede ser modificado)
 #source ~/.files/terminal/linux/complete/fzf.bash
 #source ~/.files/terminal/linux/keybindings/fzf.bash
+
+#Zoxide> Ejecutar el script de inicializacion
+eval "$(zoxide init bash)"
 
 #MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC 
 export MPD_HOST=/run/mpd/socket

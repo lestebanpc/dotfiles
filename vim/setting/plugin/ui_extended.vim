@@ -46,7 +46,8 @@ endif
 
 let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
 
-"Usar el comando 'fd' y no 'find' debido a que excluye de la busqueda lo especificado por '.gitignore'
+"Usar el comando 'fd' y no 'find' debido a que excluye de la busqueda lo especificado por '.gitignore'.
+"Debido '--walker-skip' no permite excluir archivos, se usara aun 'fd'.
 "Adicionalmente :
 "  > Solo incluir archivos '-t f' o '--type f'
 "  > Incluir los archivos ocultos '-H' o '--hidden'

@@ -227,52 +227,52 @@ function _copy_plugin_files() {
 
         fzf)
 
-            printf '%bCopiando archivos opcionales usados por comando fzf%b desde el repositorio "%bjunegunn/fzf%b"...\n' \
-                   "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+            #printf '%bCopiando archivos opcionales usados por comando fzf%b desde el repositorio "%bjunegunn/fzf%b"...\n' \
+            #       "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
-            #Copiar los archivos de ayuda man para comando fzf y el script fzf-tmux
-            echo "Copiando los archivos de ayuda \"./man/man1/fzf.1\" y \"./man/man1/fzf-tmux.1\" en \"${g_path_man}/\" ..."
-            if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                cp "${p_repo_path}/man/man1/fzf.1" "${g_path_man}/" 
-                cp "${p_repo_path}/man/man1/fzf-tmux.1" "${g_path_man}/" 
-            else
-                sudo cp "${p_repo_path}/man/man1/fzf.1" "${g_path_man}/" 
-                sudo cp "${p_repo_path}/man/man1/fzf-tmux.1" "${g_path_man}/" 
-            fi
-            
-            #Copiar los script de completado
-            echo "Copiando el script \"./shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."
-            cp "${p_repo_path}/shell/completion.bash" "${g_path_base}/.files/terminal/linux/complete/fzf.bash"
+            ##Copiar los archivos de ayuda man para comando fzf y el script fzf-tmux
+            #echo "Copiando los archivos de ayuda \"./man/man1/fzf.1\" y \"./man/man1/fzf-tmux.1\" en \"${g_path_man}/\" ..."
+            #if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+            #    cp "${p_repo_path}/man/man1/fzf.1" "${g_path_man}/" 
+            #    cp "${p_repo_path}/man/man1/fzf-tmux.1" "${g_path_man}/" 
+            #else
+            #    sudo cp "${p_repo_path}/man/man1/fzf.1" "${g_path_man}/" 
+            #    sudo cp "${p_repo_path}/man/man1/fzf-tmux.1" "${g_path_man}/" 
+            #fi
+            #
+            ##Copiar los script de completado
+            #echo "Copiando el script \"./shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."
+            #cp "${p_repo_path}/shell/completion.bash" "${g_path_base}/.files/terminal/linux/complete/fzf.bash"
 
-            #Copiar los script de keybindings
-            echo "Copiando el script \"./shell/key-bindings.bash\" como \"~/.files/terminal/linux/keybindings/fzf.bash\" ..."
-            cp "${p_repo_path}/shell/key-bindings.bash" "${g_path_base}/.files/terminal/linux/keybindings/fzf.bash"
-            
-            # Script que se usara como comando para abrir fzf en un panel popup tmux
-            echo "Copiando el script \"./bin/fzf-tmux\" como \"~/.files/shell/fzf/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
-            cp "${p_repo_path}/bin/fzf-tmux" "${g_path_base}/.files/shell/fzf/fzf-tmux.bash"
+            ##Copiar los script de keybindings
+            #echo "Copiando el script \"./shell/key-bindings.bash\" como \"~/.files/terminal/linux/keybindings/fzf.bash\" ..."
+            #cp "${p_repo_path}/shell/key-bindings.bash" "${g_path_base}/.files/terminal/linux/keybindings/fzf.bash"
+            #
+            ## Script que se usara como comando para abrir fzf en un panel popup tmux
+            #echo "Copiando el script \"./bin/fzf-tmux\" como \"~/.files/shell/fzf/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
+            #cp "${p_repo_path}/bin/fzf-tmux" "${g_path_base}/.files/shell/fzf/fzf-tmux.bash"
 
-            if [ ! -d "${g_path_base}/.local" ]; then
-                mkdir -p ${g_path_base}/.local/bin
-                if [ ! -z "$g_other_calling_user" ]; then
-                    chown $g_other_calling_user ${g_path_base}/.local/
-                    chown $g_other_calling_user ${g_path_base}/.local/bin
-                fi
-            elif [ ! -d "${g_path_base}/.local/bin" ]; then
-                mkdir -p ${g_path_base}/.local/bin
-                if [ ! -z "$g_other_calling_user" ]; then
-                    chown $g_other_calling_user ${g_path_base}/.local/bin
-                fi
-            fi
+            #if [ ! -d "${g_path_base}/.local" ]; then
+            #    mkdir -p ${g_path_base}/.local/bin
+            #    if [ ! -z "$g_other_calling_user" ]; then
+            #        chown $g_other_calling_user ${g_path_base}/.local/
+            #        chown $g_other_calling_user ${g_path_base}/.local/bin
+            #    fi
+            #elif [ ! -d "${g_path_base}/.local/bin" ]; then
+            #    mkdir -p ${g_path_base}/.local/bin
+            #    if [ ! -z "$g_other_calling_user" ]; then
+            #        chown $g_other_calling_user ${g_path_base}/.local/bin
+            #    fi
+            #fi
 
-            ln -sfn ${g_path_base}/.files/shell/fzf/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
+            #ln -sfn ${g_path_base}/.files/shell/fzf/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
 
-            if [ ! -z "$g_other_calling_user" ]; then
-                chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/fzf.bash 
-                chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/keybindings/fzf.bash
-                chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash
-                chown -h $g_other_calling_user ${g_path_base}/.local/bin/fzf-tmux
-            fi
+            #if [ ! -z "$g_other_calling_user" ]; then
+            #    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/fzf.bash 
+            #    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/keybindings/fzf.bash
+            #    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash
+            #    chown -h $g_other_calling_user ${g_path_base}/.local/bin/fzf-tmux
+            #fi
             l_result=0
             ;;
 
