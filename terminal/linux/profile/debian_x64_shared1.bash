@@ -66,7 +66,7 @@ else
 fi
 unset color_prompt force_color_prompt
 
-# If this is an xterm set the title to user@host:dir
+#If this is an xterm set the title to user@host:dir
 case "$TERM" in
     xterm*|rxvt*)
         PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
@@ -75,7 +75,7 @@ case "$TERM" in
         ;;
 esac
 
-# enable color support of ls and also add handy aliases
+#enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
     alias ls='ls --color=auto'
@@ -87,10 +87,10 @@ if [ -x /usr/bin/dircolors ]; then
     alias egrep='egrep --color=auto'
 fi
 
-# colored GCC warnings and errors
+#colored GCC warnings and errors
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-# some more ls aliases
+#some more ls aliases
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
@@ -98,14 +98,14 @@ alias l='ls -CF'
 alias kc='kubectl'
 alias step-jwt='step crypto jwt'
 
-# Add an "alert" alias for long running commands.  Use like so:
+#Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-# Alias definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_aliases, instead of adding them here directly.
-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+#Alias definitions.
+#You may want to put all your additions into a separate file like
+#~/.bash_aliases, instead of adding them here directly.
+#See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
@@ -168,17 +168,12 @@ fi
 [ -d "${l_program_path}/aws-cli" ] && PATH="${l_program_path}/aws-cli:$PATH"
 #[ -d "${l_program_path}/aws-cli/v2/current/bin" ] && PATH="${l_program_path}/aws-cli/v2/current/bin:$PATH"
 
-# Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
+#Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
 
-
-
-# "Oh My Posh" - Usando el profile
-eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lepc-montys-1.omp.json)"
-
-# enable programmable completion features (you don't need to enable
-# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-# sources /etc/bash.bashrc).
+#enable programmable completion features (you don't need to enable
+#this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+#sources /etc/bash.bashrc).
 if ! shopt -oq posix; then
   if [ -f /usr/share/bash-completion/bash_completion ]; then
     . /usr/share/bash-completion/bash_completion
@@ -187,25 +182,32 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# TMUX - Usando "oh-my-tmux", especificando el editor VIM
+#Zoxide> Ejecutar el script de inicializacion
+eval "$(zoxide init bash)"
+
+#Oh-my-posh> Ejecutar el script de inicializacion segun el tema escogido
+eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lepc-montys-1.omp.json)"
+
+#Oh-my-tmux> Opciones
 export EDITOR=vim
 
-# FZF - Opciones por defecto del comando
-export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"
-source ~/.files/terminal/linux/complete/fzf.bash
-source ~/.files/terminal/linux/keybindings/fzf.bash
+#FZF> Opciones del comando fzf
+export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168 --walker=file,dir,hidden,follow --walker-skip=.git,node_modules"
+export FZF_COMPLETION_PATH_OPTS="--walker=file,dir,hidden,follow"
+export FZF_COMPLETION_DIR_OPTS="--walker=dir,hidden,follow"
+#El script "key bindings" y "fuzzy completion" (no puede ser modificado)
+eval "$(fzf --bash)"
+#El script "key bindings" y "fuzzy completion" (puede ser modificado)
+#source ~/.files/terminal/linux/complete/fzf.bash
+#source ~/.files/terminal/linux/keybindings/fzf.bash
 
-
-# Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC 
+#MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC 
 export MPD_HOST=/run/mpd/socket
 
-
-# Ruta por defecto de los binarios de CNI plugin usados por CLI de Container Runtime como NerdCtl (no se usara, se usara su archivo de configuración nerdctl.tom)
+#CNI Plugin> Ruta por defecto de los binarios de CNI plugin (no se usara, se usara su archivo de configuración nerdctl.tom)
 #[ -d "${l_program_path}/cni_plugins" ] && export CNI_PATH=${l_program_path}/cni_plugins
 
 #Funciones basicas
 source ~/.files/terminal/linux/functions/profile_functions.bash
 
-# Para corregir el error en diseño al inicio del promt 'Oh My Posh'
-#clear
 

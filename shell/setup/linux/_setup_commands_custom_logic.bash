@@ -509,6 +509,7 @@ function _get_repo_current_version() {
                 l_tmp=$(echo "$l_tmp" | cut -d ' ' -f 2 | head -n 1)
             fi
             ;;
+
         ripgrep)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}rg.exe --version 2> /dev/null)
@@ -521,6 +522,7 @@ function _get_repo_current_version() {
                 l_tmp=$(echo "$l_tmp" | head -n 1)
             fi
             ;;
+
         xsv)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}xsv.exe --version 2> /dev/null)
@@ -533,6 +535,7 @@ function _get_repo_current_version() {
                 l_tmp=$(echo "$l_tmp" | head -n 1)
             fi
             ;;
+
         bat)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}bat.exe --version 2> /dev/null)
@@ -542,6 +545,7 @@ function _get_repo_current_version() {
                 l_status=$?
             fi
             ;;
+
         oh-my-posh)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}oh-my-posh.exe --version 2> /dev/null)
@@ -551,6 +555,7 @@ function _get_repo_current_version() {
                 l_status=$?
             fi
             ;;
+
         fd)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}fd.exe --version 2> /dev/null)
@@ -560,6 +565,41 @@ function _get_repo_current_version() {
                 l_status=$?
             fi
             ;;
+
+        zoxide)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}zoxide.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}zoxide --version 2> /dev/null)
+                l_status=$?
+            fi
+            ;;
+
+        eza)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}eza.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}eza --version 2> /dev/null)
+                l_status=$?
+            fi
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | tail -n 2 | head -n 1)
+                #l_sustitution_regexp="$g_regexp_sust_version3"
+            fi
+            ;;
+
+        yazi)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}yazi.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}yazi --version 2> /dev/null)
+                l_status=$?
+            fi
+            ;;
+
         less)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}less.exe --version 2> /dev/null)
@@ -1714,6 +1754,94 @@ function get_repo_artifacts() {
             fi
             ;;
 
+
+        zoxide)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("zoxide-0.9.4-aarch64-pc-windows-msvc.zip")
+                else
+                    pna_artifact_names=("zoxide-0.9.4-x86_64-pc-windows-msvc.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("zoxide-0.9.4-aarch64-unknown-linux-musl.tar.gz")
+                    else
+                        pna_artifact_names=("zoxide-0.9.4-x86_64-unknown-linux-musl.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("zoxide-0.9.4-aarch64-unknown-linux-musl.tar.gz")
+                    else
+                        pna_artifact_names=("zoxide-0.9.4-x86_64-unknown-linux-musl.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
+
+        eza)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_names=("eza.exe_x86_64-pc-windows-gnu.tar.gz")
+                pna_artifact_types=(10)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        #No hay soporte Alpine para aarch64
+                        pna_artifact_names=("eza_x86_64-unknown-linux-musl.tar.gz" "completions-${p_repo_last_version_pretty}.tar.gz" "man-${p_repo_last_version_pretty}.tar.gz")
+                    else
+                        pna_artifact_names=("eza_x86_64-unknown-linux-musl.tar.gz" "completions-${p_repo_last_version_pretty}.tar.gz" "man-${p_repo_last_version_pretty}.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("eza_aarch64-unknown-linux-gnu.tar.gz" "completions-${p_repo_last_version_pretty}.tar.gz" "man-${p_repo_last_version_pretty}.tar.gz")
+                    else
+                        pna_artifact_names=("eza_x86_64-unknown-linux-gnu.tar.gz" "completions-${p_repo_last_version_pretty}.tar.gz" "man-${p_repo_last_version_pretty}.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10 10 10)
+            fi
+            ;;
+
+
+        yazi)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("yazi-aarch64-pc-windows-msvc.zip")
+                else
+                    pna_artifact_names=("yazi-x86_64-pc-windows-msvc.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("yazi-aarch64-unknown-linux-musl.zip")
+                    else
+                        pna_artifact_names=("yazi-x86_64-unknown-linux-musl.zip")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("yazi-aarch64-unknown-linux-gnu.zip")
+                    else
+                        pna_artifact_names=("yazi-x86_64-unknown-linux-gnu.zip")
+                    fi
+                fi
+                pna_artifact_types=(11)
+            fi
+            ;;
+
+
         jq)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -1722,7 +1850,7 @@ function get_repo_artifacts() {
             else
                 #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
                 if [ $g_os_subtype_id -eq 1 ]; then
-                    #No hay soporte para musl, solo libc
+                    #No hay soporte para libc, solo musl
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
                         pna_artifact_names=("jq-linux-arm64")
                     else
@@ -1738,6 +1866,8 @@ function get_repo_artifacts() {
                 pna_artifact_types=(0)
             fi
             ;;
+
+
         yq)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -1746,7 +1876,7 @@ function get_repo_artifacts() {
             else
                 #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
                 if [ $g_os_subtype_id -eq 1 ]; then
-                    #No hay soporte para musl, solo libc
+                    #No hay soporte para libc, solo musl
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
                         pna_artifact_names=("yq_linux_arm64.tar.gz")
                     else
@@ -1762,30 +1892,40 @@ function get_repo_artifacts() {
                 pna_artifact_types=(10)
             fi
             ;;
+
+
         fzf)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
-                pna_artifact_names=("fzf-${p_repo_last_version_pretty}-windows_amd64.zip")
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("fzf-${p_repo_last_version_pretty}-windows_arm64.zip")
+                else
+                    pna_artifact_names=("fzf-${p_repo_last_version_pretty}-windows_amd64.zip")
+                fi
                 pna_artifact_types=(11)
             else
+                #Las rutas de 2 artectactos difieren
+                pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}" "${l_base_url_fixed}/${p_repo_name}/archive/refs/tags")
+
                 #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
                 if [ $g_os_subtype_id -eq 1 ]; then
-                    #No hay soporte a musl, solo libc
+                    #No hay soporte para libc, solo musl
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_arm64.tar.gz")
+                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_arm64.tar.gz" "${p_repo_last_version_pretty}.tar.gz")
                     else
-                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_amd64.tar.gz")
+                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_amd64.tar.gz" "${p_repo_last_version_pretty}.tar.gz")
                     fi
                 else
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_arm64.tar.gz")
+                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_arm64.tar.gz" "${p_repo_last_version_pretty}.tar.gz")
                     else
-                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_amd64.tar.gz")
+                        pna_artifact_names=("fzf-${p_repo_last_version_pretty}-linux_amd64.tar.gz" "${p_repo_last_version_pretty}.tar.gz")
                     fi
                 fi
-                pna_artifact_types=(10)
+                pna_artifact_types=(10 10)
             fi
             ;;
+
 
         helm)
 
@@ -1807,6 +1947,7 @@ function get_repo_artifacts() {
                 pna_artifact_types=(10)
             fi
             ;;
+
         delta)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -1831,6 +1972,7 @@ function get_repo_artifacts() {
                 pna_artifact_types=(10)
             fi
             ;;
+
         ripgrep)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -1856,6 +1998,7 @@ function get_repo_artifacts() {
                 pna_artifact_types=(10)
             fi
             ;;
+
         xsv)
             #No soportado para architecture ARM de 64 bits
             if [ "$g_os_architecture_type" = "aarch64" ]; then
@@ -1879,6 +2022,7 @@ function get_repo_artifacts() {
                 pna_artifact_types=(10)
             fi
             ;;
+
         bat)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -1903,6 +2047,7 @@ function get_repo_artifacts() {
                 pna_artifact_types=(10)
             fi
             ;;
+
         oh-my-posh)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -1917,6 +2062,7 @@ function get_repo_artifacts() {
                 pna_artifact_types=(0 11)
             fi
             ;;
+
         fd)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -3113,70 +3259,92 @@ function _copy_artifact_files() {
             l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
 
             #Copiar el comando fzf y dar permiso de ejecucion a todos los usuarios
-            echo "Copiando \"fzf\" a \"${l_path_target_bin}\" ..."
-            if [ $p_install_win_cmds -ne 0 ]; then
-                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    cp "${l_path_source}/fzf" "${l_path_target_bin}"
-                    chmod +x "${l_path_target_bin}/fzf"
-                    mkdir -pm 755 "${l_path_target_man}"
+            if [ $p_artifact_index -eq 0 ]; then
+                echo "Copiando \"fzf\" a \"${l_path_target_bin}\" ..."
+                if [ $p_install_win_cmds -ne 0 ]; then
+                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                        cp "${l_path_source}/fzf" "${l_path_target_bin}"
+                        chmod +x "${l_path_target_bin}/fzf"
+                        mkdir -pm 755 "${l_path_target_man}"
+                    else
+                        sudo cp "${l_path_source}/fzf" "${l_path_target_bin}"
+                        sudo chmod +x "${l_path_target_bin}/fzf"
+                        sudo mkdir -pm 755 "${l_path_target_man}"
+                    fi
                 else
-                    sudo cp "${l_path_source}/fzf" "${l_path_target_bin}"
-                    sudo chmod +x "${l_path_target_bin}/fzf"
-                    sudo mkdir -pm 755 "${l_path_target_man}"
+                    cp "${l_path_source}/fzf.exe" "${l_path_target_bin}"
+                    #mkdir -p "${l_path_target_man}"
                 fi
-            else
-                cp "${l_path_source}/fzf.exe" "${l_path_target_bin}"
-                #mkdir -p "${l_path_target_man}"
             fi
             
             #Descargar archivos opcionales del comando fzf desde la ultima version de la rama master de su repositorio 'junegunn/fzf' 
             if [ $p_install_win_cmds -ne 0 ]; then
 
-                printf 'Descargando y copiando archivos opcionales del comando fzf desde "https://raw.githubusercontent.com/junegunn/fzf/master/%bRESOURCE%b" (el ultimo commit de la rama master)...\n' \
-                       "$g_color_gray1" "$g_color_reset"
+                if [ $p_artifact_index -eq 1 ]; then
 
-                #Copiar los archivos de ayuda man para comando fzf y el script fzf-tmux
-                echo "Descargando los recursos \"./man/man1/fzf.1\" y \"./man/man1/fzf-tmux.1\" en \"${l_path_target_man}/\" ..."
-                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
-                    curl -sLfo "${l_path_target_man}/fzf.1" 'https://raw.githubusercontent.com/junegunn/fzf/master/man/man1/fzf.1'
-                    curl -sLfo "${l_path_target_man}/fzf-tmux.1" 'https://raw.githubusercontent.com/junegunn/fzf/master/man/man1/fzf-tmux.1'
-                else
-                    sudo curl -sLfo "${l_path_target_man}/fzf.1" 'https://raw.githubusercontent.com/junegunn/fzf/master/man/man1/fzf.1'
-                    sudo curl -sLfo "${l_path_target_man}/fzf-tmux.1" 'https://raw.githubusercontent.com/junegunn/fzf/master/man/man1/fzf-tmux.1'
-                fi
-            
-                #Copiar los script de completado
-                echo "Descargando el recurso \"./shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."
-                curl -sLfo "${g_path_base}/.files/terminal/linux/complete/fzf.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/shell/completion.bash'
-            
-                #Copiar los script de keybindings
-                echo "Descargando el recurso \"./shell/key-bindings.bash\" como \"~/.files/terminal/linux/keybindings/fzf.bash\" ..."
-                curl -sLfo "${g_path_base}/.files/terminal/linux/keybindings/fzf.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.bash'
-            
-                # Script que se usara como comando para abrir fzf en un panel popup tmux
-                echo "Descargando el recurso \"./bin/fzf-tmux\" como \"~/.files/shell/fzf/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
-                curl -sLfo "${g_path_base}/.files/shell/fzf/fzf-tmux.bash" 'https://raw.githubusercontent.com/junegunn/fzf/master/bin/fzf-tmux'
+                    l_path_source="${l_path_source}/fzf-${p_repo_last_version_pretty}"
+                    printf 'Copiando archivos adicionales del comando fzf desde "%b%s%b"...\n' "$g_color_gray1" "$l_path_source" "$g_color_reset"
 
-                if [ ! -d "${g_path_base}/.local" ]; then
-                    mkdir -p ${g_path_base}/.local/bin
-                    if [ ! -z "$g_other_calling_user" ]; then
-                        chown $g_other_calling_user ${g_path_base}/.local/
-                        chown $g_other_calling_user ${g_path_base}/.local/bin
+                    #Copiar los archivos de ayuda man para comando fzf y el script fzf-tmux
+                    echo "Copiando los archivos \"./man/man1/fzf.1\" y \"./man/man1/fzf-tmux.1\" en \"${l_path_target_man}/\" ..."
+                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                        cp "${l_path_source}/man/man1/fzf.1" "${l_path_target_man}/"
+                        cp "${l_path_source}/man/man1/fzf-tmux.1" "${l_path_target_man}/"
+                    else
+                        sudo cp "${l_path_source}/man/man1/fzf.1" "${l_path_target_man}/"
+                        sudo cp "${l_path_source}/man/man1/fzf-tmux.1" "${l_path_target_man}/"
                     fi
-                elif [ ! -d "${g_path_base}/.local/bin" ]; then
-                    mkdir -p ${g_path_base}/.local/bin
-                    if [ ! -z "$g_other_calling_user" ]; then
-                        chown $g_other_calling_user ${g_path_base}/.local/bin
+            
+                    #Copiar los script de completado
+                    echo "Copiando el script \"./shell/completion.bash\" como \"~/.files/terminal/linux/complete/fzf.bash\" ..."
+                    cp "${l_path_source}/shell/completion.bash" "${g_path_base}/.files/terminal/linux/complete/fzf.bash"
+            
+                    echo "Copiando el script \"./shell/completion.zsh\" como \"~/.files/terminal/linux/complete/fzf.zsh\" ..."
+                    cp "${l_path_source}/shell/completion.zsh" "${g_path_base}/.files/terminal/linux/complete/fzf.zsh"
+
+                    #Copiar los script de keybindings
+                    echo "Copiando el script \"./shell/key-bindings.bash\" como \"~/.files/terminal/linux/keybindings/fzf.bash\" ..."
+                    cp "${l_path_source}/shell/key-bindings.bash" "${g_path_base}/.files/terminal/linux/keybindings/fzf.bash"
+            
+                    echo "Copiando el script \"./shell/key-bindings.fish\" como \"~/.files/terminal/linux/keybindings/fzf.fish\" ..."
+                    cp "${l_path_source}/shell/key-bindings.fish" "${g_path_base}/.files/terminal/linux/keybindings/fzf.fish"
+            
+                    echo "Copiando el script \"./shell/key-bindings.zsh\" como \"~/.files/terminal/linux/keybindings/fzf.zsh\" ..."
+                    cp "${l_path_source}/shell/key-bindings.zsh" "${g_path_base}/.files/terminal/linux/keybindings/fzf.zsh"
+           
+                    #Creando la carpeta "~/.local/bin" si este no existe 
+                    if [ ! -d "${g_path_base}/.local" ]; then
+                        mkdir -p ${g_path_base}/.local/bin
+                        if [ ! -z "$g_other_calling_user" ]; then
+                            chown $g_other_calling_user ${g_path_base}/.local/
+                            chown $g_other_calling_user ${g_path_base}/.local/bin
+                        fi
+                    elif [ ! -d "${g_path_base}/.local/bin" ]; then
+                        mkdir -p ${g_path_base}/.local/bin
+                        if [ ! -z "$g_other_calling_user" ]; then
+                            chown $g_other_calling_user ${g_path_base}/.local/bin
+                        fi
                     fi
-                fi
 
-                ln -sfn ${g_path_base}/.files/shell/fzf/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
+                    #Script que se usara como comando para abrir fzf en un panel popup tmux
+                    echo "Copiando \"./bin/fzf-tmux\" como \"~/.files/shell/fzf/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
+                    cp "${l_path_source}/bin/fzf-tmux" "${g_path_base}/.files/shell/fzf/fzf-tmux.bash"
+                    ln -sfn ${g_path_base}/.files/shell/fzf/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
 
-                if [ ! -z "$g_other_calling_user" ]; then
-                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/fzf.bash 
-                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/keybindings/fzf.bash
-                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/functions/fzf-tmux.bash
-                    chown -h $g_other_calling_user ${g_path_base}/.local/bin/fzf-tmux
+                    echo "Copiando \"./bin/fzf-preview.sh\" como \"~/.files/shell/fzf/fzf-preview.sh\"..."
+                    cp "${l_path_source}/bin/fzf-preview.sh" "${g_path_base}/.files/shell/fzf/fzf-preview.sh"
+
+                    if [ ! -z "$g_other_calling_user" ]; then
+                        chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/fzf.bash 
+                        chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/fzf.zsh
+                        chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/keybindings/fzf.bash
+                        chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/keybindings/fzf.fish
+                        chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/keybindings/fzf.zsh
+                        chown $g_other_calling_user ${g_path_base}/.files/shell/fzf/fzf-tmux.bash
+                        chown $g_other_calling_user ${g_path_base}/.files/shell/fzf/fzf-preview.bash
+                        chown -h $g_other_calling_user ${g_path_base}/.local/bin/fzf-tmux
+                    fi
+
                 fi
             fi
             ;;
@@ -3335,6 +3503,300 @@ function _copy_artifact_files() {
                 fi
             fi
             ;;
+
+
+        zoxide)
+            #Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Copiando \"zoxide\" a \"${l_path_target_bin}\" ..."
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    cp "${l_path_source}/zoxide" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/zoxide"
+                    mkdir -pm 755 "${l_path_target_man}"
+                else
+                    sudo cp "${l_path_source}/zoxide" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/zoxide"
+                    sudo mkdir -pm 755 "${l_path_target_man}"
+                fi
+            else
+                cp "${l_path_source}/zoxide.exe" "${l_path_target_bin}"
+                #mkdir -p "${l_path_target_man}"
+            fi
+            
+            #Copiar los archivos de ayuda man para comando
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                echo "Copiando \"./man/man1/zoxide-add.1\" a \"${l_path_target_man}/\" ..."
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    cp "${l_path_source}/man/man1/zoxide-add.1" "${l_path_target_man}"
+                else
+                    sudo cp "${l_path_source}/man/man1/zoxide-add.1" "${l_path_target_man}"
+                fi
+
+                echo "Copiando \"./man/man1/zoxide.1\" a \"${l_path_target_man}/\" ..."
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    cp "${l_path_source}/man/man1/zoxide.1" "${l_path_target_man}"
+                else
+                    sudo cp "${l_path_source}/man/man1/zoxide.1" "${l_path_target_man}"
+                fi
+
+                echo "Copiando \"./man/man1/zoxide-query.1\" a \"${l_path_target_man}/\" ..."
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    cp "${l_path_source}/man/man1/zoxide-query.1" "${l_path_target_man}"
+                else
+                    sudo cp "${l_path_source}/man/man1/zoxide-query.1" "${l_path_target_man}"
+                fi
+
+                echo "Copiando \"./man/man1/zoxide-init.1\" a \"${l_path_target_man}/\" ..."
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    cp "${l_path_source}/man/man1/zoxide-init.1" "${l_path_target_man}"
+                else
+                    sudo cp "${l_path_source}/man/man1/zoxide-init.1" "${l_path_target_man}"
+                fi
+
+
+                echo "Copiando \"./man/man1/zoxide-remove.1\" a \"${l_path_target_man}/\" ..."
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    cp "${l_path_source}/man/man1/zoxide-remove.1" "${l_path_target_man}"
+                else
+                    sudo cp "${l_path_source}/man/man1/zoxide-remove.1" "${l_path_target_man}"
+                fi
+
+                echo "Copiando \"./man/man1/zoxide-import.1\" a \"${l_path_target_man}/\" ..."
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    cp "${l_path_source}/man/man1/zoxide-import.1" "${l_path_target_man}"
+                else
+                    sudo cp "${l_path_source}/man/man1/zoxide-import.1" "${l_path_target_man}"
+                fi
+            fi
+
+            #Copiar los script de completado
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                echo "Copiando \"./completions/zoxide.bash\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/zoxide.bash" ${g_path_base}/.files/terminal/linux/complete/zoxide.bash
+
+                echo "Copiando \"./completions/zoxide.fish\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/zoxide.fish" ${g_path_base}/.files/terminal/linux/complete/zoxide.fish
+                
+                echo "Copiando \"./completions/_zoxide\" a \"~/.files/terminal/powershell/complete/\" ..."
+                cp "${l_path_source}/completions/_zoxide" ${g_path_base}/.files/terminal/linux/complete/zoxide.zsh
+
+                echo "Copiando \"./completions/zoxide.elv\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/zoxide.elv" ${g_path_base}/.files/terminal/linux/complete/zoxide.elv
+
+                echo "Copiando \"./completions/zoxide.ts\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/zoxide.ts" ${g_path_base}/.files/terminal/linux/complete/zoxide.ts
+
+                echo "Copiando \"./completions/_zoxide.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
+                cp "${l_path_source}/completions/_zoxide.ps1" ${g_path_base}/.files/terminal/powershell/complete/zoxide.ps1
+
+                if [ ! -z "$g_other_calling_user" ]; then
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/zoxide.bash
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/zoxide.fish
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/zoxide.zsh
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/zoxide.elv
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/zoxide.ts
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/powershell/complete/zoxide.ps1
+                fi
+            fi
+            ;;
+
+
+        eza)
+            #Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_artifact_index -eq 0 ]; then
+                echo "Copiando \"eza\" a \"${l_path_target_bin}\" ..."
+                if [ $p_install_win_cmds -ne 0 ]; then
+                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                        cp "${l_path_source}/eza" "${l_path_target_bin}"
+                        chmod +x "${l_path_target_bin}/eza"
+                        mkdir -pm 755 "${l_path_target_man}"
+                    else
+                        sudo cp "${l_path_source}/eza" "${l_path_target_bin}"
+                        sudo chmod +x "${l_path_target_bin}/eza"
+                        sudo mkdir -pm 755 "${l_path_target_man}"
+                    fi
+                else
+                    cp "${l_path_source}/eza.exe" "${l_path_target_bin}"
+                    #mkdir -p "${l_path_target_man}"
+                fi
+            fi
+            
+            #En Linux, copiar los archivos de ayuda y autocompletado
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                #Copiar los archivos de autocompletado
+                if [ $p_artifact_index -eq 1 ]; then
+
+                    l_path_source="${l_path_source}/target/completions-${p_repo_last_version_pretty}"
+
+                    echo "Copiando \"${l_path_source}/eza\" a \"~/.files/terminal/linux/complete/\" ..."
+                    cp "${l_path_source}/eza" ${g_path_base}/.files/terminal/linux/complete/eza.bash
+
+                    echo "Copiando \"${l_path_source}/_eza\" a \"~/.files/terminal/linux/complete/\" ..."
+                    cp "${l_path_source}/_eza" ${g_path_base}/.files/terminal/linux/complete/eza.zsh
+
+                    echo "Copiando \"${l_path_source}/eza.nu\" a \"~/.files/terminal/linux/complete/\" ..."
+                    cp "${l_path_source}/eza.nu" ${g_path_base}/.files/terminal/linux/complete/eza.nu
+
+                    echo "Copiando \"${l_path_source}/eza.fish\" a \"~/.files/terminal/linux/complete/\" ..."
+                    cp "${l_path_source}/eza.fish" ${g_path_base}/.files/terminal/linux/complete/eza.fish
+
+                    if [ ! -z "$g_other_calling_user" ]; then
+                        chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/eza.bash
+                        chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/eza.fish
+                        chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/eza.zsh
+                        chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/eza.nu
+                    fi
+
+                fi
+
+                #Copiar los archivos de ayuda (man)
+                if [ $p_artifact_index -eq 2 ]; then
+
+                    l_path_source="${l_path_source}/target/man-${p_repo_last_version_pretty}"
+
+                    echo "Copiando \"${l_path_source}/eza.1\" a \"${l_path_target_man}/\" ..."
+                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                        cp "${l_path_source}/eza.1" "${l_path_target_man}"
+                    else
+                        sudo cp "${l_path_source}/eza.1" "${l_path_target_man}"
+                    fi
+
+                    echo "Copiando \"${l_path_source}/eza_colors.5\" a \"${l_path_target_man}/\" ..."
+                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                        cp "${l_path_source}/eza_colors.5" "${l_path_target_man}"
+                    else
+                        sudo cp "${l_path_source}/eza_colors.5" "${l_path_target_man}"
+                    fi
+
+                    echo "Copiando \"${l_path_source}/eza_colors-explanation.5\" a \"${l_path_target_man}/\" ..."
+                    if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                        cp "${l_path_source}/eza_colors-explanation.5" "${l_path_target_man}"
+                    else
+                        sudo cp "${l_path_source}/eza_colors-explanation.5" "${l_path_target_man}"
+                    fi
+
+                fi
+
+            fi
+            ;;
+
+
+        yazi)
+            #Ruta local de los artefactos
+            l_path_source="${g_path_temp}/${p_repo_id}/${p_artifact_index}/${p_artifact_name_woext}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            echo "Copiando \"yazi\" a \"${l_path_target_bin}\" ..."
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    cp "${l_path_source}/yazi" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/yazi"
+                    #mkdir -pm 755 "${l_path_target_man}"
+                else
+                    sudo cp "${l_path_source}/yazi" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/yazi"
+                    #sudo mkdir -pm 755 "${l_path_target_man}"
+                fi
+            else
+                cp "${l_path_source}/yazi.exe" "${l_path_target_bin}"
+            fi
+            
+            echo "Copiando \"ya\" a \"${l_path_target_bin}\" ..."
+            if [ $p_install_win_cmds -ne 0 ]; then
+                if [ $g_user_sudo_support -ne 0 ] && [ $g_user_sudo_support -ne 1 ]; then
+                    cp "${l_path_source}/ya" "${l_path_target_bin}"
+                    chmod +x "${l_path_target_bin}/ya"
+                else
+                    sudo cp "${l_path_source}/ya" "${l_path_target_bin}"
+                    sudo chmod +x "${l_path_target_bin}/ya"
+                fi
+            else
+                cp "${l_path_source}/ya.exe" "${l_path_target_bin}"
+            fi
+
+            #En Linux, copiar los archivos ...
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                #Copiar los archivos de autocompletado
+                echo "Copiando \"./completions/yazi.bash\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/yazi.bash" ${g_path_base}/.files/terminal/linux/complete/yazi.bash
+
+                echo "Copiando \"./completions/_yazi\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/_yazi" ${g_path_base}/.files/terminal/linux/complete/yazi.zsh
+
+                echo "Copiando \"./completions/yazi.elv\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/yazi.elv" ${g_path_base}/.files/terminal/linux/complete/yazi.elv
+
+                echo "Copiando \"./completions/yazi.fish\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/yazi.fish" ${g_path_base}/.files/terminal/linux/complete/yazi.fish
+
+                echo "Copiando \"./completions/yazi.nu\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/yazi.nu" ${g_path_base}/.files/terminal/linux/complete/yazi.nu
+
+                echo "Copiando \"./completions/yazi.ts\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/yazi.ts" ${g_path_base}/.files/terminal/linux/complete/yazi.ts
+
+                echo "Copiando \"./completions/_yazi.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
+                cp "${l_path_source}/completions/_yazi.ps1" ${g_path_base}/.files/terminal/powershell/complete/yazi.ps1
+
+
+                echo "Copiando \"./completions/ya.bash\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/ya.bash" ${g_path_base}/.files/terminal/linux/complete/ya.bash
+
+                echo "Copiando \"./completions/_ya\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/_ya" ${g_path_base}/.files/terminal/linux/complete/ya.zsh
+
+                echo "Copiando \"./completions/ya.elv\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/ya.elv" ${g_path_base}/.files/terminal/linux/complete/ya.elv
+
+                echo "Copiando \"./completions/ya.fish\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/ya.fish" ${g_path_base}/.files/terminal/linux/complete/ya.fish
+
+                echo "Copiando \"./completions/ya.nu\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/ya.nu" ${g_path_base}/.files/terminal/linux/complete/ya.nu
+
+                echo "Copiando \"./completions/ya.ts\" a \"~/.files/terminal/linux/complete/\" ..."
+                cp "${l_path_source}/completions/ya.ts" ${g_path_base}/.files/terminal/linux/complete/ya.ts
+
+                echo "Copiando \"./completions/_ya.ps1\" a \"~/.files/terminal/powershell/complete/\" ..."
+                cp "${l_path_source}/completions/_ya.ps1" ${g_path_base}/.files/terminal/powershell/complete/ya.ps1
+
+
+                if [ ! -z "$g_other_calling_user" ]; then
+
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/yazi.bash
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/yazi.fish
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/yazi.zsh
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/yazi.nu
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/yazi.elv
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/yazi.ts
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/powershell/complete/yazi.ps1
+
+
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/ya.bash
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/ya.fish
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/ya.zsh
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/ya.nu
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/ya.elv
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/linux/complete/ya.ts
+                    chown $g_other_calling_user ${g_path_base}/.files/terminal/powershell/complete/ya.ps1
+
+
+                fi
+
+            fi
+            ;;
+
+
 
         jwt)
 

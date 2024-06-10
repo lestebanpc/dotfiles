@@ -25,7 +25,7 @@ if [ -d "${l_program_path}/graalvm" ]; then
     #PATH="$PATH:${JAVA_HOME}/bin"
 fi
 
-# Rutas por defecto: Adicionando rutas de programas especificos
+#Rutas por defecto: Adicionando rutas de programas especificos
 [ -d "${l_program_path}/neovim/bin" ] && PATH="$PATH:${l_program_path}/neovim/bin"
 
 #CMake - Sistema de contrucción para C/C++ y otros
@@ -70,19 +70,19 @@ fi
 [ -d "${l_program_path}/aws-cli" ] && PATH="${l_program_path}/aws-cli:$PATH"
 #[ -d "${l_program_path}/aws-cli/v2/current/bin" ] && PATH="${l_program_path}/aws-cli/v2/current/bin:$PATH"
 
-# Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
+#Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
 
 
-# Alias
+#Alias
 alias kc='kubectl'
 alias step-jwt='step crypto jwt'
 
 
-# Uncomment the following line if you don't like systemctl's auto-paging feature:
-# export SYSTEMD_PAGER=
+#Uncomment the following line if you don't like systemctl's auto-paging feature:
+#export SYSTEMD_PAGER=
 
-# User specific aliases and functions
+#User specific aliases and functions
 if [ -d ~/.bashrc.d ]; then
 	for rc in ~/.bashrc.d/*; do
 		if [ -f "$rc" ]; then
@@ -93,25 +93,29 @@ fi
 
 unset rc
 
+#Zoxide> Ejecutar el script de inicializacion
+eval "$(zoxide init bash)"
 
-# Tema por defecto de "Oh My Posh"
+#Oh-my-posh> Ejecutar el script de inicializacion segun el tema escogido
 eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lepc-montys-1.omp.json)"
 
-# Para tmux (usando la configuracion de "oh-my-tmux")
+#Oh-my-tmux> Opciones
 export EDITOR=vim
 
-# Opciones por defecto del comando fzf
-export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"
-source ~/.files/terminal/linux/complete/fzf.bash
-source ~/.files/terminal/linux/keybindings/fzf.bash
+#FZF> Opciones del comando fzf
+export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168 --walker=file,dir,hidden,follow --walker-skip=.git,node_modules"
+export FZF_COMPLETION_PATH_OPTS="--walker=file,dir,hidden,follow"
+export FZF_COMPLETION_DIR_OPTS="--walker=dir,hidden,follow"
+#El script "key bindings" y "fuzzy completion" (no puede ser modificado)
+eval "$(fzf --bash)"
 
-# Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC 
+#MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC 
 export MPD_HOST=/run/mpd/socket
 
-# Ruta por defecto de los binarios de CNI plugin usados por CLI de Container Runtime como NerdCtl (no se usara, se usara su archivo de configuración nerdctl.tom)
+#CNI Plugin> Ruta por defecto de los binarios de CNI plugin (no se usara, se usara su archivo de configuración nerdctl.tom)
 #[ -d "${l_program_path}/cni_plugins" ] && export CNI_PATH=${l_program_path}/cni_plugins
 
-# Funciones basicas
+#Funciones basicas
 source ~/.files/terminal/linux/functions/profile_functions.bash
 
 

@@ -92,28 +92,32 @@ fi
 unset rc
 
 
-# Tema por defecto de "Oh My Posh"
+#Zoxide> Ejecutar el script de inicializacion
+eval "$(zoxide init bash)"
+
+#Oh-my-posh> Ejecutar el script de inicializacion segun el tema escogido
 eval "$(oh-my-posh --init --shell bash --config ~/.files/terminal/oh-my-posh/lepc-montys-1.omp.json)"
 
-# Para tmux (usando la configuracion de "oh-my-tmux")
+#Oh-my-tmux> Opciones
 export EDITOR=vim
 
-# Opciones por defecto del comando fzf
-export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"
-source ~/.files/terminal/linux/complete/fzf.bash
-source ~/.files/terminal/linux/keybindings/fzf.bash
+#FZF> Opciones del comando fzf
+export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --info=inline --border --margin=1 --padding=1 --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168 --walker=file,dir,hidden,follow --walker-skip=.git,node_modules"
+export FZF_COMPLETION_PATH_OPTS="--walker=file,dir,hidden,follow"
+export FZF_COMPLETION_DIR_OPTS="--walker=dir,hidden,follow"
+#El script "key bindings" y "fuzzy completion" (no puede ser modificado)
+eval "$(fzf --bash)"
+#El script "key bindings" y "fuzzy completion" (puede ser modificado)
+#source ~/.files/terminal/linux/complete/fzf.bash
+#source ~/.files/terminal/linux/keybindings/fzf.bash
 
-
-# Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC 
+#MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC 
 export MPD_HOST=/run/mpd/socket
 
-
-# Ruta por defecto de los binarios de CNI plugin usados por CLI de Container Runtime como NerdCtl (no se usara, se usara su archivo de configuración nerdctl.tom)
+#CNI Plugin> Ruta por defecto de los binarios de CNI plugin (no se usara, se usara su archivo de configuración nerdctl.tom)
 #[ -d "${l_program_path}/cni_plugins" ] && export CNI_PATH=${l_program_path}/cni_plugins
-
 
 #Funciones basicas
 source ~/.files/terminal/linux/functions/profile_functions.bash
-
 
 

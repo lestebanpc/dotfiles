@@ -20,6 +20,9 @@ gA_packages=(
         ['yq']='mikefarah/yq'
         ['less']='jftuga/less-Windows'
         ['fd']='sharkdp/fd'
+        ['zoxide']='ajeetdsouza/zoxide'
+        ['eza']='eza-community/eza'
+        ['yazi']='sxyazi/yazi'
         ['step']='smallstep/cli'
         ['jwt']='mike-engel/jwt-cli'
         ['butane']='coreos/butane'
@@ -111,8 +114,8 @@ ga_menu_options_title=(
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
 ga_menu_options_packages=(
-    "jq,yq,bat,ripgrep,xsv,delta,fzf,less,fd,oh-my-posh"
-    "jwt,step,butane"
+    "jq,yq,bat,ripgrep,xsv,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
+    "yazi,jwt,step,butane"
     "protoc,grpcurl,evans"
     "nerd-fonts"
     "neovim"
@@ -207,7 +210,6 @@ declare -A gA_repo_base_url=(
     )
 
 #Si el repositorio es un paquete del SO (esto no se puede instalar si no es root o se tiene acceso a sudo)
-
 declare -A gA_repo_is_os_package=(
         ['3scale-toolbox']=0
     )

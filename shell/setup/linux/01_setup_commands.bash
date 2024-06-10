@@ -732,7 +732,7 @@ declare -a _g_repo_current_version
 _validate_versions_to_install() {
 
     #1. Argumentos
-    local p_repo_id=$1
+    local p_repo_id="$1"
 
     local p_repo_last_version="$2"
     local p_repo_last_version_pretty="$3"
@@ -749,11 +749,11 @@ _validate_versions_to_install() {
 
     local p_title_template="$6"
 
+    #echo "p_repo_id: ${p_repo_id}, p_repo_last_version: ${p_repo_last_version}, p_repo_last_version_pretty: ${p_repo_last_version_pretty}"
+
+
     #Inicialización
     _g_repo_current_version=""
-    local l_empty_version
-    printf -v l_empty_version ' %.0s' $(seq ${#l_repo_last_version_pretty})
-
 
     #2. Obtener la versión de repositorio instalado en Linux
     local l_repo_current_version=""
@@ -777,14 +777,14 @@ _validate_versions_to_install() {
         l_repo_name_aux="$p_repo_id"
     fi
 
-
+    #echo "l_status: ${l_status}, l_repo_current_version: ${l_repo_current_version}, g_max_length_line: ${g_max_length_line}, l_repo_name_aux: ${l_repo_name_aux}"
 
     #3. Mostrar el titulo
 
     if [ ! -z "$p_title_template" ]; then
 
         printf '\n'
-        print_line '-' $g_max_length_line  "$g_color_gray1"
+        print_line '-' $g_max_length_line "$g_color_gray1"
 
         if [ $l_status -eq 0 -o $l_status -eq 2 ]; then
             printf "${p_title_template}\n" "se actualizará"
@@ -794,7 +794,7 @@ _validate_versions_to_install() {
             printf "${p_title_template}\n" "se configurará"
         fi
 
-        print_line '-' $g_max_length_line  "$g_color_gray1"
+        print_line '-' $g_max_length_line "$g_color_gray1"
 
     fi
 
@@ -805,6 +805,10 @@ _validate_versions_to_install() {
 
 
     #5. Mostar información de la versión actual.
+    local l_empty_version
+    printf -v l_empty_version ' %.0s' $(seq ${#l_repo_last_version_pretty})
+    #echo "l_empty_version: ${l_empty_version}."
+
     if [ $l_status -ne 0 ]; then
         printf 'Repositorio "%s%b[%s]%b" ' "${p_repo_id}" "$g_color_gray1" "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset"
     fi
@@ -823,7 +827,8 @@ _validate_versions_to_install() {
     fi
 
     #4. Mostrar información de la ultima versión.
-    printf 'Repositorio "%s%b[%s]%b" actual tiene la versión disponible "%s%b[%s]%b" (%s)\n' "${p_repo_id}" "$g_color_gray1" "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" \
+    printf 'Repositorio "%s%b[%s]%b" actual tiene la versión disponible "%s%b[%s]%b" (%s)\n' "${p_repo_id}" "$g_color_gray1" \
+            "${l_repo_current_version:-${l_empty_version}}" "$g_color_reset" \
             "${p_repo_id}" "$g_color_gray1" "${p_repo_last_version_pretty}" "$g_color_reset" "${p_repo_last_version}" 
 
     #Si el artefacto tiene Subversiones, mostrarlos.
@@ -1223,7 +1228,8 @@ function _install_menu_options() {
         l_status_first_setup=${la_aux[0]}    #'g_install_repository' solo se puede mostrar el titulo del repositorio cuando ninguno de los estados de '_g_install_repo_status' es [0, 2].
                                              # -1 > El repositorio no se ha iniciado su analisis ni su proceso.
                                              #Estados de un proceso no iniciado:
-                                             #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('g_install_repository' retorno 2 o 99).
+                                             #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio 
+                                             #      se procesa o no ('g_install_repository' retorno 2 o 99).
                                              #  1 > El repositorio no esta habilitado para este SO.
                                              #  2 > El repositorio no puede configurarse debido a que no esta instalado y solo pueden hacerlo para actualizarse.
                                              #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
@@ -1276,7 +1282,7 @@ function _install_menu_options() {
             l_aux=$((1 << (l_k + g_offset_option_index_menu_install)))
 
             #4.2.5. Mostrar el titulo y mensaje en los casos donde hubo error antes de procesarse y/o durante el procesamiento
-
+            #echo "Title template: ${l_title_template}"
 
             #Estados de un proceso no iniciado:
             #  3 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
@@ -1349,6 +1355,7 @@ function _install_menu_options() {
 
         #4.3. Si es la primera vez que se configurar (el repositorios de la opción del menu), inicie la configuración
 
+        #echo "Title template1: ${l_title_template}"
         #Si no se debe procesar mas repositorios de la opción del menú.
         if [ $l_flag_process_next_repo -ne 0 ]; then
             la_previous_options_idx+=(${p_option_relative_idx})
@@ -1356,6 +1363,7 @@ function _install_menu_options() {
             continue
         fi
 
+        #echo "l_n: ${l_n}, l_j: ${l_j}"
         if [ -z "$l_title_template" ]; then
 
             if [ $l_n -eq 1 ]; then
@@ -1372,16 +1380,19 @@ function _install_menu_options() {
             fi
         fi
         
+        #echo "Title template2: ${l_title_template}"
         g_install_repository "$l_repo_id" "$l_title_template" 1 
         l_status=$?   #'g_install_repository' solo se puede mostrar el titulo del repositorio cuando retorna [0, 1] y ninguno de los estados de '_g_install_repo_status' sea [0, 2].
                       # 0 > Se inicio la configuración (en por lo menos uno de los 2 SO Linux o Windows).
                       #     Para ver detalle del estado ver '_g_install_repo_status'.
-                      # 1 > No se inicio la configuración del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas para su configuración en cada SO.
+                      # 1 > No se inicio la configuración del artefacto (en ninguno de los 2 SO Linux o Windows) debido a que no se cumple la precondiciones requeridas
+                      #      para su configuración en cada SO.
                       #     Para ver detalle del estado ver '_g_install_repo_status'.
                       # 2 > No se puede obtener la ultima versión del repositorio o la versión obtenida no es valida.
                       #99 > Argumentos ingresados son invalidos.
 
         #Se requiere almacenar las credenciales para realizar cambios con sudo.
+        #echo "g_install_repository/l_status: ${l_status}"
         if [ $l_status -eq 120 ]; then
             return 120
         fi
@@ -1864,7 +1875,8 @@ function i_uninstall_repository() {
     local l_install_win_cmds=1
     local l_status_process_lnx     # Estados de un proceso no se ha iniciado:
                                    # Estados de un proceso no se ha iniciado:
-                                   #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se procesa o no ('i_uninstall_repository' retornó 99).
+                                   #  0 > El repositorio tiene parametros invalidos que impiden que se inicie el analisis para determinar si este repositorio se 
+                                   #      procesa o no ('i_uninstall_repository' retornó 99).
                                    #  1 > El repositorio no esta habilitado para este SO.
                                    #  2 > Al repositorio no se puede obtener la versión actual (no tiene implemento la logica o genero error al obtenerlo).
                                    #  3 > El repositorio no esta instalado.
@@ -2617,6 +2629,7 @@ function g_install_repository() {
 
     _can_setup_repository_in_this_so "$p_repo_id" $l_install_win_cmds
     l_status=$?
+    #echo "[_can_setup_repository_in_this_so] l_repo_name: ${l_repo_name}, l_status: ${l_status}"
 
     #Flag '0' si se instala (se realiza por primera vez), caso contrario no se instala (se actualiza o no se realiza ningun cambio)
     local l_flag_install=1
@@ -2698,7 +2711,8 @@ function g_install_repository() {
 
                 printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%s" ...\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
 
-                _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" "" 0 $l_install_win_cmds $l_flag_install
+                _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" \
+                                             "" 0 $l_install_win_cmds $l_flag_install
                 l_status2=$?
 
                 #Se requiere almacenar las credenciales para realizar cambios con sudo.
@@ -2834,7 +2848,8 @@ function g_install_repository() {
 
                 printf '\nIniciando la %s de los artefactos del repositorio "%b" Windows (asociado al WSL "%s")\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
 
-                _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" "" 0 $l_install_win_cmds $l_flag_install
+                _install_repository_internal "$p_repo_id" "$l_repo_name" "${_g_repo_current_version}" "$l_repo_last_version" "$l_repo_last_version_pretty" \
+                                             "" 0 $l_install_win_cmds $l_flag_install
                 l_status2=$?
 
                 #Si no termino sin errores ... cambiar al estado 5/6 segun sea el caso
