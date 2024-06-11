@@ -18,12 +18,12 @@ $env:FZF_DEFAULT_OPTS = "--height=80% --layout=reverse --walker-skip=.git,node_m
 #$env:FZF_DEFAULT_COMMAND = 'fd --type file'
 #$env:FZF_DEFAULT_COMMAND = 'fd --type file --follow --hidden --exclude .git'
 #$env:FZF_DEFAULT_COMMAND = "fd --type file --color=always"
-#$env:FZF_CTRL_T_COMMAND  = "fd -H -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
-#$env:FZF_ALT_C_COMMAND   = "fd -H -t d -E '.git' -E 'node_modules'"
+$env:FZF_CTRL_T_COMMAND  = "fd -H -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
+$env:FZF_ALT_C_COMMAND   = "fd -H -t d -E '.git' -E 'node_modules'"
 
 $env:FZF_CTRL_R_OPTS = "--prompt 'History> '"
-$env:FZF_CTRL_T_OPTS = "--prompt 'Select> ' --preview 'if exist {} ( eza --tree --color=always --icons always -L 5 {} ) else ( bat --color=always --style=numbers,header-filename,grid --line-range :500 {} )'"
-$env:FZF_ALT_C_OPTS  = "--prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {} | head -n 300'"
+$env:FZF_CTRL_T_OPTS = "--prompt 'Select> ' --preview 'if exist {}\ ( eza --tree --color=always --icons always -L 5 {} ) else ( bat --color=always --style=numbers,header-filename,grid --line-range :500 {} )'"
+$env:FZF_ALT_C_OPTS  = "--prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {}'"
 
 #Sobrescribir 'Ctrl+t' y 'Ctrl+r' para usar FZF para el listado de archivos y el historial:
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
