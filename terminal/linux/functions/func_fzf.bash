@@ -27,7 +27,7 @@ fi
 
 
 ################################################################################################
-# FZF> General Functions
+# FZF> GEneral Functions
 ################################################################################################
 
 # Listar archivos/folderes de una carpeta.
@@ -35,7 +35,7 @@ fi
 #   01 - Ruta del folder donde se busca los archivos.
 #   02 - Usar '0' para incluir todos los archivos, incluido los temporales de desarrollo.
 _g_fzf_fd=""
-gl_ls() {
+ge_ls() {
 
     #1. Argumentos
     local l_include=1
@@ -64,7 +64,7 @@ gl_ls() {
 # Buscar archivos con vista previa.
 # - Argumentos :
 #   01 - Ruta del folder donde se busca los archivos.
-gl_files() {
+ge_files() {
     local l_cmd_ls="fd -H -t f -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
     [ ! -z "$1" ] && l_cmd_ls="${l_cmd_ls} . '$1'"
 
@@ -78,7 +78,7 @@ gl_files() {
 }
 
 # Listar los procesos del SO
-gl_ps() {
+ge_ps() {
     (echo "Date: $(date '+%F %T') (Use CTRL-r to reload screen)"; ps -ef) |
     fzf --bind=$'ctrl-r:reload(echo "Date: $(date \'+%F %T\') (Use CTRL-r to reload screen)"; ps -ef)' \
         --prompt '🔧 Process> ' --header-lines=2 \
@@ -90,7 +90,7 @@ _g_fzf_rg="rg --column --line-number --no-heading --color=always --smart-case "
 _g_fzf_rg_initial_query=""
 
 
-gl_rg() {
+ge_rg() {
     #Todo los Argumentos pasados se le quitaran el entrecomillado y se pasara como criterio de busqueda
     _g_fzf_rg_initial_query="${*:-}"
 
@@ -112,7 +112,7 @@ gl_rg() {
 
 
 ################################################################################################
-# FZF> GIT Functions
+# FZF> GIt Functions
 ################################################################################################
 
 # Obtenido y modificado de https://github.com/junegunn/fzf-git.sh 
@@ -299,39 +299,38 @@ gi_eachref() {
 ################################################################################################
 
 #Se usara 'kubectl' por defecto, opcionalmente se usara 'oc' de RHOCP.
-
-#Resources short-names:
-#componentstatuses = cs
-#configmaps = cm
-#endpoints = ep
-#events = ev
-#limitranges = limits
-#namespaces = ns
-#nodes = no
-#persistentvolumeclaims = pvc
-#persistentvolumes = pv
-#pods = po
-#replicationcontrollers = rc
-#resourcequotas = quota
-#serviceaccounts = sa
-#services = svc
-#customresourcedefinitions = crd, crds
-#daemonsets = ds
-#deployments = deploy
-#replicasets = rs
-#statefulsets = sts
-#horizontalpodautoscalers = hpa
-#cronjobs = cj
-#certificiaterequests = cr, crs
-#certificates = cert, certs
-#certificatesigningrequests = csr
-#ingresses = ing
-#networkpolicies = netpol
-#podsecuritypolicies = psp
-#replicasets = rs
-#scheduledscalers = ss
-#priorityclasses = pc
-#storageclasses = sc
+#Para 'kubectl', en caso de existir, se usara el "short-names" del recursos:
+#    componentstatuses          = cs
+#    configmaps                 = cm
+#    endpoints                  = ep
+#    events                     = ev
+#    limitranges                = limits
+#    namespaces                 = ns
+#    nodes                      = no
+#    persistentvolumeclaims     = pvc
+#    persistentvolumes          = pv
+#    pods                       = po
+#    replicationcontrollers     = rc
+#    resourcequotas             = quota
+#    serviceaccounts            = sa
+#    services                   = svc
+#    customresourcedefinitions  = crd, crds
+#    daemonsets                 = ds
+#    deployments                = deploy
+#    replicasets                = rs
+#    statefulsets               = sts
+#    horizontalpodautoscalers   = hpa
+#    cronjobs                   = cj
+#    certificiaterequests       = cr, crs
+#    certificates               = cert, certs
+#    certificatesigningrequests = csr
+#    ingresses                  = ing
+#    networkpolicies            = netpol
+#    podsecuritypolicies        = psp
+#    replicasets                = rs
+#    scheduledscalers           = ss
+#    priorityclasses            = pc
+#    storageclasses             = sc
 
 
 #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
@@ -523,7 +522,7 @@ oc_projects() {
 
 
 
-kc_namespaces() {
+kc_ns() {
 
     #1. Inicializar variables requeridas para fzf y awk
     local l_awk_template='{print $1}'
@@ -598,7 +597,7 @@ kc_namespaces() {
 
 
 
-kc_pods() {
+kc_po() {
 
     #1. Inicializar variables requeridas para fzf y awk
     local l_awk_template='{print "pod/"$1" -n "$2}'
@@ -780,7 +779,7 @@ kc_containers() {
 }
 
 
-kc_deployments() {
+kc_deploy() {
 
     #1. Inicializar variables requeridas para fzf y awk
     #local l_awk_template='{print "deployment/"$1" -n "$2" | pod -n "$2"-l "$7}'
@@ -870,7 +869,7 @@ kc_deployments() {
 
 
 
-kc_replicasets() {
+kc_rs() {
 
     #1. Inicializar variables requeridas para fzf y awk
     #local l_awk_template='{print "replicaset/"$1" -n "$2" | pod -n "$2"-l "$7}'

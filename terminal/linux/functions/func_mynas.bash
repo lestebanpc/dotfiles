@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#Constantes: Colores
 g_color_reset="\x1b[0m"
 g_color_green1="\x1b[32m"
 g_color_gray1="\x1b[90m"
@@ -8,11 +9,11 @@ g_color_yellow1="\x1b[33m"
 g_color_red1="\x1b[31m"
 g_color_blue1="\x1b[34m"
 
-#Carpetas de archivos temporales
-#_g_tmp_data_path="/tmp/.files"
-#if [ ! -d "$_g_tmp_data_path" ]; then
-#    mkdir -p $_g_tmp_data_path
-#fi
+#Expresiones regulares de sustitucion mas usuadas para las versiones
+if [ -z "$g_regexp_sust_version1" ]; then
+    #La version 'x.y.z' esta la inicio o despues de caracteres no numericos
+    declare -r g_regexp_sust_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
+fi
 
 
 ################################################################################################
