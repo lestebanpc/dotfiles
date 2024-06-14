@@ -284,9 +284,11 @@ function g_install_options() {
             printf '\n'
             print_line '─' $g_max_length_line  "$g_color_blue1"
             if [ $g_os_subtype_id -eq 1 ]; then
-                printf "> Instalando %bComandos Basicos%b: '%bbat, jq, yq, ripgrep, delta, oh-my-posh, fd y xsv%b.'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+                printf "> Instalando %bComandos Basicos%b: '%bbat, jq, yq, ripgrep, delta, oh-my-posh, fd, zoxide y eza%b.'\n" "$g_color_cian1" "$g_color_reset" \
+                       "$g_color_cian1" "$g_color_reset"
             else
-                printf "> Instalando %bComandos Basicos%b: '%bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd y xsv%b.'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+                printf "> Instalando %bComandos Basicos%b: '%bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd, zoxide y eza%b.'\n" "$g_color_cian1" "$g_color_reset" \
+                       "$g_color_cian1" "$g_color_reset"
             fi
             print_line '─' $g_max_length_line "$g_color_blue1"
 
@@ -300,10 +302,12 @@ function g_install_options() {
             # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
             # 8> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 1 4 "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 "$g_other_calling_user"
+                ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 1 4 "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage \
+                    0 "$g_other_calling_user"
                 l_status=$?
             else
-                ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 3 4 "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 "$g_other_calling_user"
+                ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 3 4 "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage \
+                    0 "$g_other_calling_user"
                 l_status=$?
             fi
 
@@ -387,10 +391,12 @@ function g_install_options() {
         # 9> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
         if [ $l_is_noninteractive -eq 1 ]; then
             
-            ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user"
+            ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 2 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" \
+                $g_status_crendential_storage 0 1 "$g_other_calling_user"
             l_status=$?
         else
-            ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" $g_status_crendential_storage 0 1 "$g_other_calling_user" 
+            ${g_path_base}/.files/shell/setup/linux/01_setup_commands.bash 4 "$p_list_repo_ids" "$g_path_programs" "$g_path_cmd_base" "$g_path_temp" \
+                $g_status_crendential_storage 0 1 "$g_other_calling_user" 
             l_status=$?
         fi
 
@@ -748,18 +754,22 @@ function _show_menu_install_core() {
     printf " ( ) Programas requeridos a instalar %b(usualmente instalado como root)%b:\n" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes basicos%b: %b%s%b\n" "$g_color_green1" "1024" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" \
            "$l_pckg_ids" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bcomandos basicos%b: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd y xsv.%b\n" "$g_color_green1" "2048" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bcomandos basicos%b: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd, zoxide y eza.%b\n" "$g_color_green1" \
+           "2048" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Instalar %bNodeJS%b y %bNpm%b\n" "$g_color_green1" "4096" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes globales%b de %bNodeJS%b: %b'Prettier'%b\n" "$g_color_green1" "8192" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes globales%b de %bNodeJS%b: %b'Prettier'%b\n" "$g_color_green1" "8192" "$g_color_reset" "$g_color_cian1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Instalar %bPython%b y %bPip%b\n" "$g_color_green1" "16384" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Instalar %bVIM%b\n" "$g_color_green1" "32768" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Instalar %bNeoVIM%b\n" "$g_color_green1" "65536" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de Editor%b de %bVIM%b\n" "$g_color_green1" "131072" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de Editor%b de %bNeoVIM%b\n" "$g_color_green1" "262144" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de IDE%b    de %bVIM%b\n" "$g_color_green1" "524288" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de IDE%b    de %bNeoVIM%b\n" "$g_color_green1" "1048576" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de Editor%b de %bVIM%b\n" "$g_color_green1" "131072" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de Editor%b de %bNeoVIM%b\n" "$g_color_green1" "262144" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de IDE%b    de %bVIM%b\n" "$g_color_green1" "524288" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de IDE%b    de %bNeoVIM%b\n" "$g_color_green1" "1048576" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "2097152" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) LSP/DAP de Java : %bJdtls%b\n" "$g_color_green1" "4194304" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
