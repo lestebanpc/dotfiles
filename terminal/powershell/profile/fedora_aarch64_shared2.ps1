@@ -25,6 +25,17 @@ $env:FZF_CTRL_R_OPTS = "--prompt 'History> '"
 #$env:FZF_CTRL_T_OPTS = "--prompt 'Select> ' --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 5 {} | head -n 300; else bat --color=always --style=numbers,header-filename,grid --line-range :500 {}; fi'"
 $env:FZF_ALT_C_OPTS  = "--prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {} | head -n 300'"
 
+
+#------------------------------------------------------------------------------------------------
+#Comando Zoxide (zoxide.exe)
+#------------------------------------------------------------------------------------------------
+
+#Personalizar el uso comando 'zi'
+$env:_ZO_FZF_OPTS="${env:FZF_DEFAULT_OPTS} --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {2} | head -n 300' --preview-window=down,70%"
+
+#Inicializacion de zoxide: crea el alias del comando 'zi' y 'z'
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
+
 #------------------------------------------------------------------------------------------------
 #Funciones basicas
 #------------------------------------------------------------------------------------------------

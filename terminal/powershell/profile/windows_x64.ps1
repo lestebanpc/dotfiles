@@ -4,6 +4,7 @@
 
 oh-my-posh init pwsh --config "${env:USERPROFILE}\.files\terminal\oh-my-posh\lepc-montys-1.omp.json" | Invoke-Expression
 
+
 #------------------------------------------------------------------------------------------------
 #Comando FZF (fzf.exe)
 #------------------------------------------------------------------------------------------------
@@ -27,6 +28,18 @@ $env:FZF_ALT_C_OPTS  = "--prompt 'Go to Folder> ' --preview 'eza --tree --color=
 
 #Sobrescribir 'Ctrl+t' y 'Ctrl+r' para usar FZF para el listado de archivos y el historial:
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
+
+
+#------------------------------------------------------------------------------------------------
+#Comando Zoxide (zoxide.exe)
+#------------------------------------------------------------------------------------------------
+
+#Personalizar el uso comando 'zi'
+$env:_ZO_FZF_OPTS="${env:FZF_DEFAULT_OPTS} --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {2} | head -n 300' --preview-window=down,70%"
+
+#Inicializacion de zoxide: crea el alias del comando 'zi' y 'z'
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
+
 
 #------------------------------------------------------------------------------------------------
 #Funciones basicas

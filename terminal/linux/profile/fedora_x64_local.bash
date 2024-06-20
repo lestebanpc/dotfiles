@@ -111,6 +111,7 @@ export FZF_ALT_C_OPTS="--prompt 'Go to Folder> ' --preview 'eza --tree --color=a
 #export FZF_ALT_C_COMMAND="fd -H -t d -E '.git' -E 'node_modules'"
 
 #El script "key bindings" y "fuzzy completion" (no puede ser modificado)
+export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {2} | head -n 300' --preview-window=down,70%"
 eval "$(fzf --bash)"
 
 #El script "key bindings" y "fuzzy completion" (puede ser modificado)

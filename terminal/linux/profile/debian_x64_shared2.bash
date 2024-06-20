@@ -209,6 +209,7 @@ eval "$(fzf --bash)"
 #source ~/.files/terminal/linux/keybindings/fzf.bash
 
 #Zoxide> Ejecutar el script de inicializacion
+export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {2} | head -n 300' --preview-window=down,70%"
 eval "$(zoxide init bash)"
 
 #MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC 
