@@ -64,7 +64,7 @@ config.font = wezterm.font_with_fallback({
 
 -- Specifies the size of the font, measured in points. You may use fractional point sizes, such as 13.3, to fine tune the size.
 -- The default font size is 12.0
-config.font_size = 10.5
+config.font_size = 10.7
 --config.font_size = 11
 
 --config.bold_brightens_ansi_colors = true
@@ -80,7 +80,8 @@ config.use_ime = false
 ------------------------------------------------------------------------------------
 
 -- Configures whether the window has a title bar and/or resizable border.
-config.window_decorations = "RESIZE"
+--config.window_decorations = "RESIZE"
+config.window_decorations = "TITLE | RESIZE"
 --config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
 
 -- If it's 'AlwaysPrompt' display a confirmation prompt when the window is closed by the windowing environment, 
@@ -228,7 +229,7 @@ config.scrollback_lines = 5000
 -- If you don't want the default assignments to be registered, you can disable all of them with this configuration; 
 -- if you chose to do this, you must explicitly register every binding.
 -- Default key binding: https://wezfurlong.org/wezterm/config/default-keys.html
-config.disable_default_key_bindings = true
+--config.disable_default_key_bindings = false
 
 --config.keys = {
 --    {
