@@ -96,7 +96,7 @@ config.adjust_window_size_when_changing_font_size = true
 -- If you have enabled the scrollbar and have set right to 0 then the right padding (and thus the scrollbar width) will instead match the width of a cell.
 config.window_padding = {
     left = 5,
-    right = 15,
+    right = 10,
     top = 5,
     bottom = 5,
   }
@@ -231,16 +231,95 @@ config.scrollback_lines = 5000
 -- Default key binding: https://wezfurlong.org/wezterm/config/default-keys.html
 --config.disable_default_key_bindings = false
 
---config.keys = {
---    {
---        key = 'RightArrow',mods = 'CTRL',
---        action = wezterm.action.SplitHorizontal {  domain = 'CurrentPaneDomain'},
---    },
---    {
---        key = 'DownArrow',mods = 'CTRL',
---        action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain'},
---    }
---  }
+-- Los 'keybord shorcut' capturados por la ventana wezterm, no es enviado a los paneles. Por tal motivo desabilitelo, si desea
+-- que estos no sean procesados por la ventana y sean procesados por el panel actual.
+
+-- Leader key is 'CTRL + a' (called 'LEADER') stays active until a keypress is registered (whether it matches a key binding or not), 
+-- or until it has been active for the duration specified by timeout_milliseconds, at which point it will automatically cancel itself.
+--config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
+
+config.keys = {
+    -- Eliminar la acceso de teclado para maximizar la ventana actual
+    {
+        key = 'Enter', mods = 'ALT',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    -- Eliminar el acceso de teclado para minimizar la ventana actual
+    {
+        key = 'm', mods = 'SUPER',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    -- Eliminar el acceso de teclado para crear una nueva ventana wezterm 
+    {
+        key = 'n', mods = 'SUPER',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    -- Eliminar el acceso de teclado para crear una nueva ventana wezterm 
+    {
+        key = 'n', mods = 'CTRL|SHIFT',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    -- Eliminar el acceso de teclado para crear una tab (solo se usar 'CTRL + T') 
+    {
+        key = 't', mods = 'SUPER',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    -- Eliminar el acceso de teclado para recargar la configuracion (solo se usar 'CTRL + R') 
+    {
+        key = 'r', mods = 'SUPER',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    -- Eliminar el acceso de teclado para redimencionar el panel actual 
+    {
+        key = 'LeftArrow', mods = 'CTRL|SHIFT|ALT',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    {
+        key = 'RightArrow', mods = 'CTRL|SHIFT|ALT',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    {
+        key = 'UpArrow', mods = 'CTRL|SHIFT|ALT',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    {
+        key = 'DownArrow', mods = 'CTRL|SHIFT|ALT',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    -- Crear los nuevos acceso de teclado para redimencionar el panel actual 
+    {
+        key = 'h', mods = 'ALT|SHIFT',
+        action = wezterm.action.AdjustPaneSize { 'Left', 1 },
+    },
+    {
+        key = 'LeftArrow', mods = 'ALT|SHIFT',
+        action = wezterm.action.AdjustPaneSize { 'Left', 1 },
+    },
+    {
+        key = 'j', mods = 'ALT|SHIFT',
+        action = wezterm.action.AdjustPaneSize { 'Down', 1 },
+    },
+    {
+        key = 'DownArrow', mods = 'ALT|SHIFT',
+        action = wezterm.action.AdjustPaneSize { 'Down', 1 },
+    },
+    {
+        key = 'k', mods = 'ALT|SHIFT',
+        action = wezterm.action.AdjustPaneSize { 'Up', 1 },
+    },
+    {
+        key = 'UpArrow', mods = 'ALT|SHIFT',
+        action = wezterm.action.AdjustPaneSize { 'Up', 1 },
+    },
+    {
+        key = 'l', mods = 'ALT|SHIFT',
+        action = wezterm.action.AdjustPaneSize { 'Right', 1 },
+    },
+    {
+        key = 'RightArrow', mods = 'ALT|SHIFT',
+        action = wezterm.action.AdjustPaneSize { 'Right', 1 },
+    },
+  }
 
 ------------------------------------------------------------------------------------
 
