@@ -1,7 +1,7 @@
 local wezterm = require 'wezterm'
 
 -- CHANGE a "true" if use Windows
-local l_is_win = false
+local l_is_win = true
 
 -- Obtain the default configuration. See: https://wezfurlong.org/wezterm/config/lua/config/index.html
 local config = wezterm.config_builder()

@@ -1928,6 +1928,18 @@ function _setup_user_profile() {
     l_status=$?
 
 
+    #Archivo de configuración para pseudoterminal wezterm
+    l_target_link="${g_path_base}/.config/wezterm/wezterm.lua"
+    l_source_path="${g_path_base}/.files/terminal/wezterm"
+    if [ $g_os_type -eq 1 ]; then
+        l_source_filename='wezterm_bash1.lua'
+    else
+        l_source_filename='wezterm_bash1.lua'
+    fi
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+
+
     #Archivos de configuración de PowerShell
     l_target_link="${g_path_base}/.config/powershell/Microsoft.PowerShell_profile.ps1"
     l_source_path="${g_path_base}/.files/terminal/powershell/profile"
@@ -1959,8 +1971,8 @@ function _setup_user_profile() {
                 l_source_filename='fedora_x64_shared2.ps1'
             fi
         fi
-    #Se recomienda '/var/opt/tools'
     else
+        #Se recomienda '/var/opt/tools'
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 l_source_filename='debian_aarch64_shared1.ps1'
@@ -2009,8 +2021,8 @@ function _setup_user_profile() {
                 l_source_filename='fedora_x64_shared2.bash'
             fi
         fi
-    #Se recomienda '/var/opt/tools'
     else
+        #Se recomienda '/var/opt/tools'
         if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 l_source_filename='debian_aarch64_shared1.bash'
