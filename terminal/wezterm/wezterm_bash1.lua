@@ -560,17 +560,17 @@ else
     config.launch_menu = {
         { 
             -- Optional label to show in the launcher. If omitted, a label is derived from the `args`.
-            label = " Bash", 
+            label = " PowerShell Core", 
             -- Command to run into new tab. The argument array to spawn. 
-            args = { "bash", "-l" },
+            args =  { "pwsh" },
             -- You can specify an alternative current working directory; if you don't specify one then a default based on the OSC 7
             -- escape sequence will be used (see the Shell Integration docs), falling back to the home directory.
             --cwd = "/some/path",
             -- You can override environment variables just for this command by setting this here. 
             --set_environment_variables = { FOO = "bar" },
         },
-        --{ label = " Btop", args = { "btop" } },
-        { label = " PowerShell Core", args = { "pwsh" }, },
+        { label = " Bash", args = { "bash", "-l" }, },
+        { label = " Btop", args = { "btop" }, },
         --{ label = " Fish", args = { "/opt/homebrew/bin/fish" }, },
         --{ label = " Nushell", args = { "/opt/homebrew/bin/nu" }, },
         --{ label = " Zsh", args = { "zsh" } },
