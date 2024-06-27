@@ -58,6 +58,10 @@ config.check_for_updates = false
 --    "Disabled" - don't make a sound
 --config.audible_bell = "Disabled"
 
+-- If true, the mouse cursor will be hidden when typing, if your mouse cursor is hovering over the window.
+-- The default is true. Set to false to disable this behavior.
+--config.hide_mouse_cursor_when_typing = true
+
 -- Controls whether pasted text will have newlines normalized.
 -- If bracketed paste mode is enabled by the application, the effective value of this configuration option is "None".
 -- The following values are accepted:
@@ -353,9 +357,9 @@ config.scrollback_lines = 5000
 -- Los 'keybord shorcut' capturados por la ventana wezterm, no es enviado a los paneles. Por tal motivo desabilitelo, si desea
 -- que estos no sean procesados por la ventana y sean procesados por el panel actual.
 
--- Leader key is 'CTRL + a' (called 'LEADER') stays active until a keypress is registered (whether it matches a key binding or not), 
+-- Leader key (called 'LEADER') stays active until a keypress is registered (whether it matches a key binding or not), 
 -- or until it has been active for the duration specified by timeout_milliseconds, at which point it will automatically cancel itself.
---config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
+config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
 
 config.keys = {
     -- Eliminar la acceso de teclado para maximizar la ventana actual
@@ -388,7 +392,7 @@ config.keys = {
         key = 'r', mods = 'SUPER',
         action = wezterm.action.DisableDefaultAssignment,
     },
-    -- Eliminar el acceso de teclado para redimencionar el panel actual 
+    -- Eliminar el acceso de teclado para redimencionar el panel actual y crear panels 
     {
         key = 'LeftArrow', mods = 'CTRL|SHIFT|ALT',
         action = wezterm.action.DisableDefaultAssignment,
@@ -402,8 +406,22 @@ config.keys = {
         action = wezterm.action.DisableDefaultAssignment,
     },
     {
-        key = 'DownArrow', mods = 'CTRL|SHIFT|ALT',
+        key = 'UpArrow', mods = 'CTRL|SHIFT|ALT',
         action = wezterm.action.DisableDefaultAssignment,
+    },
+    -- Eliminar el acceso de teclado para crear panels 
+    {
+        key = '"', mods = 'CTRL|SHIFT|ALT',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    {
+        key = '%', mods = 'CTRL|SHIFT|ALT',
+        action = wezterm.action.DisableDefaultAssignment,
+    },
+    -- Send key leader "CTRL + a" to the terminal when pressing CTRL + a, CTRL + a
+    { 
+        key = 'a', mods = 'LEADER|CTRL', 
+        action = wezterm.action.SendString '\x01', 
     },
     -- Crear los nuevos acceso de teclado para redimencionar el panel actual 
     {
@@ -438,10 +456,18 @@ config.keys = {
         key = 'RightArrow', mods = 'ALT|SHIFT',
         action = wezterm.action.AdjustPaneSize { 'Right', 1 },
     },
+    -- Crear los nuevos acceso de teclado para crear el panel actual
+    { 
+        key = '=', mods = 'LEADER', 
+        action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' }, 
+    },
+    { 
+        key = '-', mods = 'LEADER', 
+        action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain' }, 
+    },
     -- Activate the Launcher Menu in the current tab
     {
-        key = '1',
-        mods = 'ALT',
+        key = '1', mods = 'ALT',
         action = wezterm.action.ShowLauncherArgs { flags = 'LAUNCH_MENU_ITEMS' },
     },
   }

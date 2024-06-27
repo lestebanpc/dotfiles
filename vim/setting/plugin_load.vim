@@ -235,7 +235,19 @@ endif
 "Solo en Linux (incluyendo WSL, solo en Linux y MacOS)
 "if (g:os_type != 0) && g:use_tmux
 if (g:os_type != 0)
-    "Paquete UI> CORE> Permite navegar entre split VIM y paneles TMUX como el mismo comando
+    "Paquete UI> CORE> Permite navegar entre split VIM y hacia paneles TMUX.
+    "Pemite ir de un split VIM a un panel tmux (identifica si existe un panel TMUX, y genera comando tmux para ir panel)
+    "Pero, para ir de panel TMUX a un split VIM, requiere configurar estos keybinding en el tmux.config, para reenviar las
+    "teclas en VIM.
+    "Los default keybinding se mantiene:
+    "  > En VIM  'CTRL + w, ...' 
+    "  > En TMUX 'CTRL + b, ...' 
+    "Los keybinding defenidos por este mantiene:
+    "  > <CTRL-h> => Left
+    "  > <CTRL-j> => Down
+    "  > <CTRL-k> => Up
+    "  > <CTRL-l> => Right
+    "  > <CTRL-\> => Previous split
     packadd vim-tmux-navigator
 endif
 
