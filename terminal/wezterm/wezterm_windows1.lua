@@ -126,9 +126,13 @@ config.use_ime = false
 -- > "INTEGRATED_BUTTONS|RESIZE"
 --   Place window management buttons (minimize, maximize, close) into the tab bar instead of showing a title bar.
 --   Wayland error: see https://github.com/wez/wezterm/issues/4963
---config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
---config.window_decorations = "RESIZE"
-config.window_decorations = "TITLE|RESIZE"
+if l_is_win then
+    config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
+else
+    --config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
+    config.window_decorations = "TITLE|RESIZE"
+    --config.window_decorations = "RESIZE"
+end
 
 -- Configures the visual style of the tabbar-integrated titlebar button replacements that are shown when window_decorations = "INTEGRATED_BUTTONS|RESIZE".
 -- Possible styles are:
@@ -199,8 +203,13 @@ config.exit_behavior = "Close"
 -- Specifies the default cursor style for prompt. Various escape sequences can override the default style in different situations 
 -- (eg: an editor can change it depending on the mode), but this value controls how the cursor appears when it is reset to default.
 -- Acceptable values are SteadyBlock, BlinkingBlock, SteadyUnderline, BlinkingUnderline, SteadyBar, and BlinkingBar.
--- The default is SteadyBlock.En Wayland, 'BlinkingBlock' esta arrojando un error.
---config.default_cursor_style = "BlinkingBlock"
+-- The default is SteadyBlock.
+if l_is_win then
+    config.default_cursor_style = "BlinkingBlock"
+else
+    -- En Wayland, 'BlinkingBlock' esta arrojando un error.
+    config.default_cursor_style = "SteadyBlock"
+end
 
 -- Specifies the easing function to use when computing the color for the text cursor when it is set to a blinking style.
 --config.cursor_blink_ease_in = "Constant"
@@ -221,7 +230,11 @@ config.enable_tab_bar = true
 
 -- If set to true, when there is only a single tab, the tab bar is hidden from the display. If a second tab is created, the tab will be shown.
 -- Defult is false.
-config.hide_tab_bar_if_only_one_tab = true
+if l_is_win then
+    config.hide_tab_bar_if_only_one_tab = false
+else
+    config.hide_tab_bar_if_only_one_tab = true
+end
 
 -- When tab_bar_at_bottom = true, the tab bar will be rendered at the bottom of the window rather than the top of the window.
 -- The default is false.
@@ -458,17 +471,21 @@ config.keys = {
     },
     -- Crear los nuevos acceso de teclado para crear el panel actual
     { 
-        key = '=', mods = 'LEADER', 
-        action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' }, 
-    },
-    { 
         key = '-', mods = 'LEADER', 
         action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain' }, 
+    },
+    { 
+        key = '=', mods = 'LEADER', 
+        action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' }, 
     },
     -- Activate the Launcher Menu in the current tab
     {
         key = '1', mods = 'ALT',
         action = wezterm.action.ShowLauncherArgs { flags = 'LAUNCH_MENU_ITEMS' },
+    },
+    {
+        key = '2', mods = 'ALT',
+        action = wezterm.action.ShowLauncherArgs { flags = 'FUZZY|DOMAINS' },
     },
   }
 
@@ -492,7 +509,7 @@ if l_is_win then
     config.wsl_domains = {
       {
         -- The name of this specific domain.  Must be unique amonst all types of domain in the configuration file.
-        name = 'WSL:Ubuntu',
+        name = 'wsl:ubuntu',
         -- The name of the distribution.  This identifies the WSL distribution. It must match a valid distribution from your `wsl -l -v` output.
         distribution = 'Ubuntu',
         -- The username to use when spawning commands in the distribution. If omitted, the default user for that distribution will be used.
@@ -532,7 +549,7 @@ end
 
 -- Set default multiplexing domains. Default is "local" multiplexing domain (if not using the serial or connect subcommands).
 --config.default_domain = "local"
---config.default_domain = "WSL:Ubuntu"
+--config.default_domain = "wsl:ubuntu"
 
 -- This field is a array where the 0th element is the command to run and the rest of the elements are passed as the positional arguments to that command.
 -- It is is the program used if the argument to the "start" subcommand is not specified. The default value is the current user's shell (executed in login mode).
@@ -561,7 +578,7 @@ if l_is_win then
         },
         { 
             -- Optional label to show in the launcher. If omitted, a label is derived from the `args`.
-            label = " PowerShell Core", 
+            label = "󰨊 PowerShell Core", 
             -- Command to run into new tab. The argument array to spawn. 
             args = { "pwsh" },
             -- You can specify an alternative current working directory; if you don't specify one then a default based on the OSC 7
@@ -595,8 +612,8 @@ else
             -- You can override environment variables just for this command by setting this here. 
             --set_environment_variables = { FOO = "bar" },
         },
-        { label = " Bash", args = { "bash", "-l" }, },
-        { label = " Btop", args = { "btop" }, },
+        { label = " Bash", args = { "bash", "-l" }, },
+        { label = " Btop", args = { "btop" }, },
         --{ label = " Fish", args = { "/opt/homebrew/bin/fish" }, },
         --{ label = " Nushell", args = { "/opt/homebrew/bin/nu" }, },
         --{ label = " Zsh", args = { "zsh" } },
