@@ -1,0 +1,43 @@
+#Incluyendo los temas de delta
+#[include]
+    #path = $HOME/.files/etc/delta/themes.toml
+
+[user]
+	email = esteban_fiis@hotmail.com
+	name = Luciano Peña
+
+[core]
+	editor = D:/Tools/Vim/vim91/vim.exe
+	autocrlf = true
+	pager = delta
+
+[init]
+	defaultBranch = main
+
+[interactive]
+    diffFilter = delta --color-only
+
+[delta]
+	line-numbers = true
+    light = false
+	syntax-theme = Coldark-Dark
+    #Tema que se usara para delta
+    #features = kingfisher
+
+[merge]
+    conflictstyle = diff3
+
+[diff]
+    colorMoved = default
+
+[alias]
+    log0 = log --color=always --format='%C(cyan)%h%Creset %C(blue)%ar%Creset%C(auto)%d%Creset %C(yellow)%s%+b %C(white)%ae%Creset'
+    log1 = log1-specific --all
+    log2 = log2-specific --all
+    log3 = log3-specific --all
+    log1-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)'
+    log2-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(auto)%d%C(reset)%n          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'
+    log3-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n          %C(white)%s%C(reset)%n        %C(dim white)- %an <%ae> %C(reset) %C(dim white)(committer: %cn <%ce>)%C(reset)'
+
+
+

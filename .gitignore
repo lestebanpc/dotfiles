@@ -22,3 +22,5 @@ config/kubectl/*.yaml
 #Archivos para clientes TLS de uso personal> Claves privadas y/o publicos TLS
 tls/*
 
+#Archivo de configuracion para los archivos de setup para Linux
+shell/setup/linux/_config.bash

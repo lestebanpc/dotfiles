@@ -1,12 +1,31 @@
 # Descripción
 
 Mi archivos de configuración
+Las estructura folderes es:
+
+- './etc/' contiene archivos de configuracion de programas que no sea codigo interpretado (como bash, lua, vimscript, tmux script, etc).
+- './shell/' incluye todo codigo que ejecutado por el interprete shell de su SO (incluye archivos usados por programas de terceros, archivos de instalacion, funciones de utilidad, etc).
+  Estan organizados por carpetas que representan la implementacion de un determinado interpre shell 'sh' (no es un implementacion de un interpre shell, pero obliga a usar el estandar POSIX), 'bash', 'zsh', ...
+  Por cada implementacion de interprete shell, generalmente, se tiene las siguientes carpetas:
+  - 'autocomplete/'
+  - 'keybindings'
+  - 'shared/' las cuales son funciones que puede ser reusadas por todo cualquier script del interprete existente.
+  - 'functions/' las cuales son funciones especificias para un uso particular, por ejemplo usadas o expuestas al profile del usuario del so.
+  - 'setup/' script usados para configurar el entorno del usuario.
+- './keys/tls/' mis archivos de claves publicas (generalmente almacenados en formados certificados x509).
+- Archivos de configuración que a su vez es codigo interpretado pero no es ejecutado por un interprete shell.
+  - './vim/' archivos de configuracion de VIM (en VimScript)
+  - './nvim/' archivos de configuracion de NeoVIM (en LUA y VimScript)
+  - './tmux/' archivos de configuracion de TMUX (archivos de configuracion de tmux)
+  - './wezterm/' archivos de configuracion de terminal Wezterm (en LUA)
+
+
 
 # Configuración en Linux
 
 Para la configuracion se puede usar una de las siguientes script de configuración.
 
-- Script './setup/linux/01_setup_commands.bash' descarga y configura comandos (un binario) y programas (conjunto de binarios) de repositorio que no sean del SO (usualmente GitHub).
+- Script './shell/bash/setup/linux/01_setup_commands.bash' descarga y configura comandos (un binario) y programas (conjunto de binarios) de repositorio que no sean del SO (usualmente GitHub).
   Se recomienda si ejecute con un usuario que no sea root para que los binarios/programas sean compartidos para todos los usuario, pero podria usarlo.
   Los binarios lo instalara en:
   - Si tiene la opcion 'sudo' como root habilitada, creara '/var/opt/tools' (lo instara crear la primeraz vez que ejecuta el script), si no puede intentara en '/opt/tools'.
@@ -20,11 +39,11 @@ Para la configuracion se puede usar una de las siguientes script de configuraci�
     Si usa WSL, este descarga los binarios/programas para Windows en las sigueente rutas:
   - Los programas los descargará en 'D:\CLI\Programs'.
   - Los comandos los descargará en 'D:\CLI\Commands\bin'. 
-    Si por algun motivo tiene acceso a 'sudo' como root, pero desea instalarlo a nivel usuario ('~/.local/bin' y '~/tools'), debera modificar el script './terminal/linux/functions/func_utility.bash' modificando la funcion 'get_user_options' descomentando la lineas que obligen a retornar 'g_user_sudo_support' con valor 3. 
-- Script './setup/linux/02_setup_profile.bash' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
-- Script './setup/linux/03_update_all.bash' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
+    Si por algun motivo tiene acceso a 'sudo' como root, pero desea instalarlo a nivel usuario ('~/.local/bin' y '~/tools'), debera modificar el script './shell/bash/shared/utility_general.bash' modificando la funcion 'get_user_options' descomentando la lineas que obligen a retornar 'g_user_sudo_support' con valor 3. 
+- Script './shell/bash/setup/linux/02_setup_profile.bash' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
+- Script './shell/bash/setup/linux/03_update_all.bash' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
 
-No se usa un gestor de plugin para VIM/NeoVIM (esto me trajo algunos problemas al ser usado en contenedores), por lo que se uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './setup/linux/03_update_all.bash'.
+No se usa un gestor de plugin para VIM/NeoVIM (esto me trajo algunos problemas al ser usado en contenedores), por lo que se uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './shell/bash/setup/linux/03_update_all.bash'.
 
 Los pasos recomandos para configurar su SO son:
 
@@ -66,10 +85,10 @@ Los pasos recomandos para configurar su SO son:
    
    ```shell
    #Mostrar el menu para instalar/actualizar comandos/programas:
-   ~/.files/shell/setup/linux/01_setup_commands.bash
+   ~/.files/shell/bash/setup/linux/01_setup_commands.bash
    
    #Para mostrar los parametros del script, ingrese un parametro invalido como:
-   ~/.files/shell/setup/linux/01_setup_commands.bash x
+   ~/.files/shell/bash/setup/linux/01_setup_commands.bash x
    ```
 
 4. Para un usuario especifico, configure los archivos del profile y VIM/NeoVIM: 
@@ -82,10 +101,10 @@ Los pasos recomandos para configurar su SO son:
    
    ```bash
    #Mostrar el menu para configurar el profile y VIM/NeoVIM
-   ~/.files/shell/setup/linux/02_setup_profile.bash
+   ~/.files/shell/bash/setup/linux/02_setup_profile.bash
    
    #Para mostrar los parametros del script, ingrese un parametro invalido como:
-   ~/.files/shell/setup/linux/02_setup_profile.bash
+   ~/.files/shell/bash/setup/linux/02_setup_profile.bash
    ```
 
 5. Cierre session y vuelva a iniciar (o crage nuevamente su profile) para registrar la variables del profile del usuario.
@@ -94,10 +113,10 @@ Los pasos recomandos para configurar su SO son:
    
    ```bash
    #Mostrar el menu para actualizar los plugins de VIM/NeoVIM
-   ~/.files/shell/setup/linux/04_update_all.bash
+   ~/.files/shell/bash/setup/linux/04_update_all.bash
    
    #Para mostrar los parametros del script, ingrese un parametro invalido como:
-   ~/.files/shell/setup/linux/04_update_all.bash
+   ~/.files/shell/bash/setup/linux/04_update_all.bash
    ```
 
 7. Configure la terminal.
@@ -110,7 +129,7 @@ Para la configuracion se puede usar una de las siguientes script de configuraci�
 - Script '.\powershell\setup\windows\02_setup_profile_win.ps1' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
 - Script '.\powershell\setup\windows\03_update_all_win.ps1' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
 
-No se usa un gestor de plugin para VIM/NeoVIM (esto me trajo algunos problemas al ser usado en contenedores), por lo que se uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './setup/linux/03_update_all.bash'.
+No se usa un gestor de plugin para VIM/NeoVIM (esto me trajo algunos problemas al ser usado en contenedores), por lo que se uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './shell/powershell/setup/windows/03_update_all.ps1'.
 
 Los pasos recomandos para configurar su SO son:
 
@@ -126,7 +145,7 @@ Los pasos recomandos para configurar su SO son:
    #
    ```
    
-   Si cuenta con WSL, 'NodeJS', '. Net' y 'Powershell Core'y lo podra instalar usando la opcion el menu mostrado al ejecutar el script '~/.files/shell/setup/linux/01_setup_commands.bash'
+   Si cuenta con WSL, 'NodeJS', '. Net' y 'Powershell Core'y lo podra instalar usando la opcion el menu mostrado al ejecutar el script '~/.files/shell/bash/setup/linux/01_setup_commands.bash'
    
    - Usando la opcion '1048576' del menu para instalar la ultima version de 'NodeJS' en 'D:\CLI\Programs\NodeJS'.
      En las variables de entorno del sistema debe registrar la la ruta 'D:\CLI\Programs\NodeJS'.
@@ -157,7 +176,7 @@ Los pasos recomandos para configurar su SO son:
    
    ```bash
    #Mostrar el menu para configurar el profile y VIM/NeoVIM
-   ${env:USERPROFILE}\.files\setup\powershell\02_setup_profile_win.ps1
+   ${env:USERPROFILE}\.files\powershell\setup\windows\02_setup_profile_win.ps1
    ```
 
 4. Cierre terminal y vuelve a iniciar la configuración.
@@ -172,7 +191,7 @@ Los pasos recomandos para configurar su SO son:
    
    ```bash
    #Mostrar el menu para actualizar los plugins de VIM/NeoVIM
-   ${env:USERPROFILE}\.files\setup\powershell\03_update_all_win.ps1
+   ${env:USERPROFILE}\.files\powershell\setup\windows\03_update_all_win.ps1
    ```
 
 # Configuracion en una 'proot-distro' de Termux (Android)
