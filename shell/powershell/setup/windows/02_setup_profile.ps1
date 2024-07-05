@@ -738,7 +738,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
     #Archivo de colores de la terminal usado por comandos basicos
     #$l_target_link="${HOME}\.dircolors"
     #$l_source_path="${HOME}\.files\etc\dircolors"
-    #$l_source_filename='dircolors_ubuntu_wls.conf'
+    #$l_source_filename='dircolors_wls_debian1.conf'
     #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 

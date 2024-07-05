@@ -1894,14 +1894,28 @@ function _setup_user_profile() {
     local l_status
 
     #Archivo de colores de la terminal usado por comandos basicos
-    if [ $g_os_type -eq 1 ]; then
+    l_target_link="${g_path_base}/.dircolors"
+    l_source_path="${g_path_base}/.files/etc/dircolors"
 
-        l_target_link="${g_path_base}/.dircolors"
-        l_source_path="${g_path_base}/.files/etc/dircolors"
-        l_source_filename='dircolors_ubuntu_wls.conf'
+    l_source_filename=''
+    if [ $g_os_type -eq 1 ]; then
+        #Si es WSL Linux
+        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+            l_source_filename='dircolors_wsl_debian1.conf'
+        elif [ $g_os_subtype_id -ge 10 ] && [ $g_os_subtype_id -lt 30 ]; then
+            l_source_filename='dircolors_wsl_fedora1.conf'
+        fi
+    else
+        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+            l_source_filename='dircolors_debian1.conf'
+        elif [ $g_os_subtype_id -ge 10 ] && [ $g_os_subtype_id -lt 30 ]; then
+            l_source_filename='dircolors_fedora1.conf'
+        fi
+    fi
+
+    if [ ! -z "$l_source_filename" ]; then
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
         l_status=$?
-
     fi
 
     #Archivo de configuración de Git

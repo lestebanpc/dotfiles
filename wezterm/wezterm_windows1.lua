@@ -34,9 +34,18 @@ else
     config.term = 'wezterm'
 end
 
--- Specifies various named color schemes in your configuration file.
--- See: https://wezfurlong.org/wezterm/colorschemes/index.html
-config.color_scheme = 'Ayu Dark (Gogh)'
+-- Create my custom scheme based on a built-in schema.
+-- Built-in scheme: https://wezfurlong.org/wezterm/colorschemes/index.html
+local scheme = wezterm.get_builtin_color_schemes()['Ayu Dark (Gogh)']
+scheme.foreground = '#c0bfbc'
+scheme.background = '#000000'
+config.color_schemes = {
+    ['lepc-schema']= scheme
+  }
+
+-- Specifies the current color schemes in your configuration file.
+config.color_scheme = 'lepc-schema'
+--config.color_scheme = 'Ayu Dark (Gogh)'
 
 
 -- Sets the default current working directory used by the initial window.
@@ -372,7 +381,7 @@ config.scrollback_lines = 5000
 
 -- Leader key (called 'LEADER') stays active until a keypress is registered (whether it matches a key binding or not), 
 -- or until it has been active for the duration specified by timeout_milliseconds, at which point it will automatically cancel itself.
-config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
+config.leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
 config.keys = {
     -- Eliminar la acceso de teclado para maximizar la ventana actual

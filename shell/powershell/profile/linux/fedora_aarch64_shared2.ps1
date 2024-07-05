@@ -1,11 +1,19 @@
 #------------------------------------------------------------------------------------------------
-#Comando Oh-My-Posh
+# Personalizacion de la terminal
+#------------------------------------------------------------------------------------------------
+
+# Cambiar el color de los folderes
+#PSStyle.FileInfo.Directory="`e[44;1m"
+$PSStyle.FileInfo.Directory="`e[44;30m"
+
+#------------------------------------------------------------------------------------------------
+# Comando Oh-My-Posh
 #------------------------------------------------------------------------------------------------
 
 oh-my-posh init pwsh --config ~/.files/etc/oh-my-posh/lepc-montys-1.omp.json | Invoke-Expression
 
 #------------------------------------------------------------------------------------------------
-#Comando FZF (fzf.exe)
+# Comando FZF (fzf.exe)
 #------------------------------------------------------------------------------------------------
 
 $env:FZF_COMPLETION_PATH_OPTS = "--walker=file,dir,hidden,follow"
@@ -27,7 +35,7 @@ Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory
 
 
 #------------------------------------------------------------------------------------------------
-#Comando Zoxide (zoxide.exe)
+# Comando Zoxide (zoxide.exe)
 #------------------------------------------------------------------------------------------------
 
 #Personalizar el uso comando 'zi'
@@ -37,7 +45,7 @@ $env:_ZO_FZF_OPTS="${env:FZF_DEFAULT_OPTS} --prompt 'Go to Folder> ' --preview '
 Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
 #------------------------------------------------------------------------------------------------
-#Funciones personalizado del usuario
+# Funciones personalizado del usuario
 #------------------------------------------------------------------------------------------------
 
 . ~/.files/shell/powershell/profile/linux/_profile_functions.ps1

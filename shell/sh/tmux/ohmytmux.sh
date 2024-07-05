@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/bin/sh 
+
+# Source: 'oh-my-tmux', creado por Gregory Pakosz (@gpakosz). 
+# URL   : https://github.com/gpakosz/.tmux 
+# Se modifica para tener shell en otro archivos y no dentro de los archivos de configuracion. 
 
 # exit the script if any statement returns a non-true return value
 set -e
@@ -712,21 +716,21 @@ _apply_bindings() {
   tmux_conf_new_window_retain_current_path=${tmux_conf_new_window_retain_current_path:-true}
   if ! _is_disabled "$tmux_conf_new_window_retain_current_path"; then
     perl -p -i -e "
-      s/\brun-shell\b\s+(\"|')cut\s+-c3-\s+(.+?)\s+\|\s+sh\s+-s\s+_new_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^\n\1]*?)(?:\s+-c\s+((?:\\\\{1,3}\")?|\"?|'?)#\{pane_current_path\}\4)([^\n\1]*?)\1/run-shell \1cut -c3- \2 | sh -s _new_window #\{pane_pid\} #\{b:pane_tty\}\3\5\1/g
+      s/\brun-shell\b\s+(\"|')sh\s+(.+?)\s+_new_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^\n\1]*?)(?:\s+-c\s+((?:\\\\{1,3}\")?|\"?|'?)#\{pane_current_path\}\4)([^\n\1]*?)\1/run-shell \1sh \2 _new_window #\{pane_pid\} #\{b:pane_tty\}\3\5\1/g
       ;
-      s/\brun-shell\b\s+(\"|')cut\s+-c3-\s+.+?\s+\|\s+sh\s+-s\s+_new_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}(\s+.+?)?\1/new-window\2/g
+      s/\brun-shell\b\s+(\"|')sh\s+.+?\s+_new_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}(\s+.+?)?\1/new-window\2/g
       ;
       s/\bnew-window\b([^;}\n]*?)(?:\s+-c\s+((?:\\\\\")?|\"?|'?)#\{pane_current_path\}\2)/new-window\1/g" \
       "$cfg"
   fi
 
   perl -p -i -e "
-    s,\bnew-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?(?:\s+(\bssh\b))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?,run-shell 'cut -c3- \"$TMUX_CONF\" | sh -s _new_window_ssh #\{pane_pid\} #\{b:pane_tty\}\1',g if /\bnew-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?(?:\s+(ssh))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?/"\
+    s,\bnew-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?(?:\s+(\bssh\b))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?,run-shell 'sh \"$TMUX_FUNC\" _new_window_ssh #\{pane_pid\} #\{b:pane_tty\}\1',g if /\bnew-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?(?:\s+(ssh))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?/"\
   "$cfg"
 
   tmux_conf_new_window_reconnect_ssh=${tmux_conf_new_window_reconnect_ssh:-false}
   if ! _is_disabled "$tmux_conf_new_window_reconnect_ssh" && _is_true "$tmux_conf_new_window_reconnect_ssh"; then
-    perl -p -i -e "s,\bnew-window\b([^;}\n\"]*),run-shell 'cut -c3- \"$TMUX_CONF\" | sh -s _new_window #\{pane_pid\} #\{b:pane_tty\}\1',g" "$cfg"
+    perl -p -i -e "s,\bnew-window\b([^;}\n\"]*),run-shell 'sh \"$TMUX_FUNC\" _new_window #\{pane_pid\} #\{b:pane_tty\}\1',g" "$cfg"
   fi
 
   tmux_conf_new_window_retain_current_path=${tmux_conf_new_window_retain_current_path:-false}
@@ -736,30 +740,30 @@ _apply_bindings() {
       ;
       s/\bnew-window\b/new-window -c '#{pane_current_path}'/g
       ;
-      s/\brun-shell\b\s+'cut\s+-c3-\s+(.+?)\s+\|\s+sh\s+-s\s+_new_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'cut -c3- \1 | sh -s _new_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \\\\\"#\{pane_current_path\}\\\\\"\3'/g if /\bdisplay-menu\b/
+      s/\brun-shell\b\s+'sh\s+(.+?)\s+_new_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'sh \1 _new_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \\\\\"#\{pane_current_path\}\\\\\"\3'/g if /\bdisplay-menu\b/
       ;
-      s/\brun-shell\b\s+'cut\s+-c3-\s+(.+?)\s+\|\s+sh\s+-s\s+_new_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'cut -c3- \1 | sh -s _new_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \"#\{pane_current_path\}\"\3'/g" \
+      s/\brun-shell\b\s+'sh\s+(.+?)\s+_new_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'sh \1 _new_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \"#\{pane_current_path\}\"\3'/g" \
       "$cfg"
   fi
 
   tmux_conf_new_pane_retain_current_path=${tmux_conf_new_pane_retain_current_path:-true}
   if ! _is_disabled "$tmux_conf_new_pane_retain_current_path"; then
     perl -p -i -e "
-      s/\brun-shell\b\s+(\"|')cut\s+-c3-\s+(.+?)\s+\|\s+sh\s+-s\s+_split_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^\n\1]*?)(?:\s+-c\s+((?:\\\\{1,3}\")?|\"?|'?)#\{pane_current_path\}\4)([^\n\1]*?)\1/run-shell \1cut -c3- \2 | sh -s _split_window #\{pane_pid\} #\{b:pane_tty\}\3\5\1/g
+      s/\brun-shell\b\s+(\"|')sh\s+(.+?)\s+_split_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^\n\1]*?)(?:\s+-c\s+((?:\\\\{1,3}\")?|\"?|'?)#\{pane_current_path\}\4)([^\n\1]*?)\1/run-shell \1sh \2 _split_window #\{pane_pid\} #\{b:pane_tty\}\3\5\1/g
       ;
-      s/\brun-shell\b\s+(\"|')cut\s+-c3-\s+.+?\s+\|\s+sh\s+-s\s+_split_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}(\s+.+?)?\1/split-window\2/g
+      s/\brun-shell\b\s+(\"|')sh\s+.+?\s+_split_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}(\s+.+?)?\1/split-window\2/g
       ;
       s/\bsplit-window\b([^;}\n]*?)(?:\s+-c\s+((?:\\\\\")?|\"?|'?)#\{pane_current_path\}\2)/split-window\1/g" \
       "$cfg"
   fi
 
   perl -p -i -e "
-    s,\bsplit-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?(?:\s+(\bssh\b))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?,run-shell 'cut -c3- \"$TMUX_CONF\" | sh -s _split_window_ssh #\{pane_pid\} #\{b:pane_tty\}\1',g if /\bsplit-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?(?:\s+(ssh))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?/"\
+    s,\bsplit-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?(?:\s+(\bssh\b))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?,run-shell 'sh \"$TMUX_FUNC\" _split_window_ssh #\{pane_pid\} #\{b:pane_tty\}\1',g if /\bsplit-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?(?:\s+(ssh))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?/"\
   "$cfg"
 
   tmux_conf_new_pane_reconnect_ssh=${tmux_conf_new_pane_reconnect_ssh:-false}
   if ! _is_disabled "$tmux_conf_new_pane_reconnect_ssh" && _is_true "$tmux_conf_new_pane_reconnect_ssh"; then
-    perl -p -i -e "s,\bsplit-window\b([^;}\n\"]*),run-shell 'cut -c3- \"$TMUX_CONF\" | sh -s _split_window #\{pane_pid\} #\{b:pane_tty\}\1',g" "$cfg"
+    perl -p -i -e "s,\bsplit-window\b([^;}\n\"]*),run-shell 'sh \"$TMUX_FUNC\" _split_window #\{pane_pid\} #\{b:pane_tty\}\1',g" "$cfg"
   fi
 
   if ! _is_disabled "$tmux_conf_new_pane_retain_current_path" && _is_true "$tmux_conf_new_pane_retain_current_path"; then
@@ -768,9 +772,9 @@ _apply_bindings() {
       ;
       s/\bsplit-window\b/split-window -c '#{pane_current_path}'\1/g
       ;
-      s/\brun-shell\b\s+'cut\s+-c3-\s+(.+?)\s+\|\s+sh\s+-s\s+_split_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'cut -c3- \1 | sh -s _split_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \\\\\"#\{pane_current_path\}\\\\\"\3'/g if /\bdisplay-menu\b/
+      s/\brun-shell\b\s+'sh\s+(.+?)\s+_split_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'sh \1 _split_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \\\\\"#\{pane_current_path\}\\\\\"\3'/g if /\bdisplay-menu\b/
       ;
-      s/\brun-shell\b\s+'cut\s+-c3-\s+(.+?)\s+\|\s+sh\s+-s\s+_split_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'cut -c3- \1 | sh -s _split_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \"#\{pane_current_path\}\"\3'/g" \
+      s/\brun-shell\b\s+'sh\s+(.+?)\s+_split_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'sh \1 _split_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \"#\{pane_current_path\}\"\3'/g" \
       "$cfg"
   fi
 
@@ -829,6 +833,13 @@ _apply_bindings() {
       line=$(printf "%s" "$out" | tail -1 | cut -d':' -f2)
       perl -n -i -e "if ($. != $line) { print }" "$cfg.in"
     done
+  fi
+
+  tmux_conf_urlscan_options=${tmux_conf_urlscan_options:---compact --dedupe}
+  if command -v urlscan > /dev/null 2>&1; then
+    tmux bind U run "sh '#{TMUX_FUNC}' _urlscan '#{pane_id}' $tmux_conf_urlscan_options"
+  elif command -v urlview > /dev/null 2>&1; then
+    tmux bind U run "sh '#{TMUX_FUNC}' _urlview '#{pane_id}'"
   fi
 }
 
@@ -1192,50 +1203,50 @@ _apply_theme() {
   # -- variables -------------------------------------------------------------
 
   set_titles_string=$(printf '%s' "${tmux_conf_theme_terminal_title:-$(tmux show -gv set-titles-string)}" | sed \
-    -e "s%#{circled_window_index}%#(cut -c3- '$TMUX_CONF' | sh -s _circled '#I')%g" \
-    -e "s%#{circled_session_name}%#(cut -c3- '$TMUX_CONF' | sh -s _circled '#S')%g" \
-    -e "s%#{username}%#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' false '#D')%g" \
-    -e "s%#{hostname}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' false false '#h' '#D')%g" \
-    -e "s%#{hostname_full}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' false true '#H' '#D')%g" \
-    -e "s%#{username_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' true '#D')%g" \
-    -e "s%#{hostname_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' true false '#h' '#D')%g" \
-    -e "s%#{hostname_full_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' true true '#H' '#D')%g")
+    -e "s%#{circled_window_index}%#(sh '$TMUX_FUNC' _circled '#I')%g" \
+    -e "s%#{circled_session_name}%#(sh '$TMUX_FUNC' _circled '#S')%g" \
+    -e "s%#{username}%#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' false '#D')%g" \
+    -e "s%#{hostname}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' false false '#h' '#D')%g" \
+    -e "s%#{hostname_full}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' false true '#H' '#D')%g" \
+    -e "s%#{username_ssh}%#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' true '#D')%g" \
+    -e "s%#{hostname_ssh}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' true false '#h' '#D')%g" \
+    -e "s%#{hostname_full_ssh}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' true true '#H' '#D')%g")
 
   window_status_format=$(printf '%s' "${window_status_format:-$(tmux show -gv window-status-format)}" | sed \
-    -e "s%#{circled_window_index}%#(cut -c3- '$TMUX_CONF' | sh -s _circled '#I')%g" \
-    -e "s%#{circled_session_name}%#(cut -c3- '$TMUX_CONF' | sh -s _circled '#S')%g" \
-    -e "s%#{username}%#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' false '#D')%g" \
-    -e "s%#{hostname}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' false false '#h' '#D')%g" \
-    -e "s%#{hostname_full}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' false true '#H' '#D')%g" \
-    -e "s%#{username_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' true '#D')%g" \
-    -e "s%#{hostname_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' true false '#h' '#D')%g" \
-    -e "s%#{hostname_full_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' true true '#H' '#D')%g")
+    -e "s%#{circled_window_index}%#(sh '$TMUX_FUNC' _circled '#I')%g" \
+    -e "s%#{circled_session_name}%#(sh '$TMUX_FUNC' _circled '#S')%g" \
+    -e "s%#{username}%#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' false '#D')%g" \
+    -e "s%#{hostname}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' false false '#h' '#D')%g" \
+    -e "s%#{hostname_full}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' false true '#H' '#D')%g" \
+    -e "s%#{username_ssh}%#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' true '#D')%g" \
+    -e "s%#{hostname_ssh}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' true false '#h' '#D')%g" \
+    -e "s%#{hostname_full_ssh}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' true true '#H' '#D')%g")
 
   window_status_current_format=$(printf '%s' "${window_status_current_format:-$(tmux show -gv window-status-current-format)}" | sed \
-    -e "s%#{circled_window_index}%#(cut -c3- '$TMUX_CONF' | sh -s _circled '#I')%g" \
-    -e "s%#{circled_session_name}%#(cut -c3- '$TMUX_CONF' | sh -s _circled '#S')%g" \
-    -e "s%#{username}%#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' false '#D')%g" \
-    -e "s%#{hostname}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' false false '#h' '#D')%g" \
-    -e "s%#{hostname_full}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' false true '#H' '#D')%g" \
-    -e "s%#{username_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' true '#D')%g" \
-    -e "s%#{hostname_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' true false '#h' '#D')%g" \
-    -e "s%#{hostname_full_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' true true '#H' '#D')%g")
+    -e "s%#{circled_window_index}%#(sh '$TMUX_FUNC' _circled '#I')%g" \
+    -e "s%#{circled_session_name}%#(sh '$TMUX_FUNC' _circled '#S')%g" \
+    -e "s%#{username}%#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' false '#D')%g" \
+    -e "s%#{hostname}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' false false '#h' '#D')%g" \
+    -e "s%#{hostname_full}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' false true '#H' '#D')%g" \
+    -e "s%#{username_ssh}%#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' true '#D')%g" \
+    -e "s%#{hostname_ssh}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' true false '#h' '#D')%g" \
+    -e "s%#{hostname_full_ssh}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' true true '#H' '#D')%g")
 
   status_left=$(printf '%s' "${status_left-$(tmux show -gv status-left)}" | sed \
     -e "s/#{pairing}/#{?session_many_attached,$tmux_conf_theme_pairing ,}/g" \
     -e "s/#{prefix}/#{?client_prefix,$tmux_conf_theme_prefix ,$(printf '%s' "$tmux_conf_theme_prefix" | sed -e 's/./ /g') }/g" \
     -e "s/#{mouse}/#{?mouse,$tmux_conf_theme_mouse ,$(printf '%s' "$tmux_conf_theme_mouse" | sed -e 's/./ /g') }/g" \
     -e "s%#{synchronized}%#{?pane_synchronized,$tmux_conf_theme_synchronized ,}%g" \
-    -e "s%#{circled_session_name}%#(cut -c3- '$TMUX_CONF' | sh -s _circled '#S')%g" \
-    -e "s%#{root}%#{?#{==:#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' '#D'),root},$tmux_conf_theme_root,}%g")
+    -e "s%#{circled_session_name}%#(sh '$TMUX_FUNC' _circled '#S')%g" \
+    -e "s%#{root}%#{?#{==:#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' '#D'),root},$tmux_conf_theme_root,}%g")
 
   status_right=$(printf '%s' "${status_right-$(tmux show -gv status-right)}" | sed \
     -e "s/#{pairing}/#{?session_many_attached,$tmux_conf_theme_pairing ,}/g" \
     -e "s/#{prefix}/#{?client_prefix,$tmux_conf_theme_prefix ,$(printf '%s' "$tmux_conf_theme_prefix" | sed -e 's/./ /g') }/g" \
     -e "s/#{mouse}/#{?mouse,$tmux_conf_theme_mouse ,$(printf '%s' "$tmux_conf_theme_mouse" | sed -e 's/./ /g') }/g" \
     -e "s%#{synchronized}%#{?pane_synchronized,$tmux_conf_theme_synchronized ,}%g" \
-    -e "s%#{circled_session_name}%#(cut -c3- '$TMUX_CONF' | sh -s _circled '#S')%g" \
-    -e "s%#{root}%#{?#{==:#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' '#D'),root},$tmux_conf_theme_root,}%g")
+    -e "s%#{circled_session_name}%#(sh '$TMUX_FUNC' _circled '#S')%g" \
+    -e "s%#{root}%#{?#{==:#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' '#D'),root},$tmux_conf_theme_root,}%g")
 
   tmux_conf_battery_bar_symbol_full=$(_decode_unicode_escapes "${tmux_conf_battery_bar_symbol_full:-◼}")
   tmux_conf_battery_bar_symbol_empty=$(_decode_unicode_escapes "${tmux_conf_battery_bar_symbol_empty:-◻}")
@@ -1246,7 +1257,7 @@ _apply_theme() {
   tmux_conf_battery_status_charging=$(_decode_unicode_escapes "${tmux_conf_battery_status_charging:-↑}")        # U+2191
   tmux_conf_battery_status_discharging=$(_decode_unicode_escapes "${tmux_conf_battery_status_discharging:-↓}")  # U+2193
 
-  _pkillf "cut -c3- '$TMUX_CONF' \| sh -s _battery"
+  _pkillf "sh '$TMUX_FUNC' _battery"
   _battery_info
   if [ "$battery_charge" != 0 ]; then
     case "$status_left $status_right" in
@@ -1255,30 +1266,30 @@ _apply_theme() {
           -e 's%#\{\?battery_bar%#\{?@battery_percentage%g' \
           -e 's%#\{\?battery_hbar%#\{?@battery_percentage%g' \
           -e 's%#\{\?battery_vbar%#\{?@battery_percentage%g' \
-          -e "s%#\{battery_bar\}%#(nice cut -c3- '$TMUX_CONF' | sh -s _bar '$(printf '%s' "$tmux_conf_battery_bar_palette" | tr ',' ';')' '$tmux_conf_battery_bar_symbol_empty' '$tmux_conf_battery_bar_symbol_full' '$tmux_conf_battery_bar_length' '#{@battery_charge}' '#{client_width}')%g" \
-          -e "s%#\{battery_hbar\}%#(nice cut -c3- '$TMUX_CONF' | sh -s _hbar '$(printf '%s' "$tmux_conf_battery_hbar_palette" | tr ',' ';')' '#{@battery_charge}')%g" \
-          -e "s%#\{battery_vbar\}%#(nice cut -c3- '$TMUX_CONF' | sh -s _vbar '$(printf '%s' "$tmux_conf_battery_vbar_palette" | tr ',' ';')' '#{@battery_charge}')%g" \
+          -e "s%#\{battery_bar\}%#(nice sh '$TMUX_FUNC' _bar '$(printf '%s' "$tmux_conf_battery_bar_palette" | tr ',' ';')' '$tmux_conf_battery_bar_symbol_empty' '$tmux_conf_battery_bar_symbol_full' '$tmux_conf_battery_bar_length' '#{@battery_charge}' '#{client_width}')%g" \
+          -e "s%#\{battery_hbar\}%#(nice sh '$TMUX_FUNC' _hbar '$(printf '%s' "$tmux_conf_battery_hbar_palette" | tr ',' ';')' '#{@battery_charge}')%g" \
+          -e "s%#\{battery_vbar\}%#(nice sh '$TMUX_FUNC' _vbar '$(printf '%s' "$tmux_conf_battery_vbar_palette" | tr ',' ';')' '#{@battery_charge}')%g" \
           -e 's%#\{(\?)?battery_status%#\{\1@battery_status%g' \
           -e 's%#\{(\?)?battery_percentage%#\{\1@battery_percentage%g')
         status_right=$(echo "$status_right" | sed -E \
           -e 's%#\{\?battery_bar%#\{?@battery_percentage%g' \
           -e 's%#\{\?battery_hbar%#\{?@battery_percentage%g' \
           -e 's%#\{\?battery_vbar%#\{?@battery_percentage%g' \
-          -e "s%#\{battery_bar\}%#(nice cut -c3- '$TMUX_CONF' | sh -s _bar '$(printf '%s' "$tmux_conf_battery_bar_palette" | tr ',' ';')' '$tmux_conf_battery_bar_symbol_empty' '$tmux_conf_battery_bar_symbol_full' '$tmux_conf_battery_bar_length' '#{@battery_charge}' '#{client_width}')%g" \
-          -e "s%#\{battery_hbar\}%#(nice cut -c3- '$TMUX_CONF' | sh -s _hbar '$(printf '%s' "$tmux_conf_battery_hbar_palette" | tr ',' ';')' '#{@battery_charge}')%g" \
-          -e "s%#\{battery_vbar\}%#(nice cut -c3- '$TMUX_CONF' | sh -s _vbar '$(printf '%s' "$tmux_conf_battery_vbar_palette" | tr ',' ';')' '#{@battery_charge}')%g" \
+          -e "s%#\{battery_bar\}%#(nice sh '$TMUX_FUNC' _bar '$(printf '%s' "$tmux_conf_battery_bar_palette" | tr ',' ';')' '$tmux_conf_battery_bar_symbol_empty' '$tmux_conf_battery_bar_symbol_full' '$tmux_conf_battery_bar_length' '#{@battery_charge}' '#{client_width}')%g" \
+          -e "s%#\{battery_hbar\}%#(nice sh '$TMUX_FUNC' _hbar '$(printf '%s' "$tmux_conf_battery_hbar_palette" | tr ',' ';')' '#{@battery_charge}')%g" \
+          -e "s%#\{battery_vbar\}%#(nice sh '$TMUX_FUNC' _vbar '$(printf '%s' "$tmux_conf_battery_vbar_palette" | tr ',' ';')' '#{@battery_charge}')%g" \
           -e 's%#\{(\?)?battery_status%#\{\1@battery_status%g' \
           -e 's%#\{(\?)?battery_percentage%#\{\1@battery_percentage%g')
-        status_right="#(echo; nice cut -c3- '$TMUX_CONF' | sh -s _battery_status '$tmux_conf_battery_status_charging' '$tmux_conf_battery_status_discharging')$status_right"
+        status_right="#(echo; nice sh '$TMUX_FUNC' _battery_status '$tmux_conf_battery_status_charging' '$tmux_conf_battery_status_discharging')$status_right"
         interval=60
         if [ "$_tmux_version" -ge 320 ]; then
-          tmux run -b "trap '[ -n \"\$sleep_pid\" ] && kill -9 \"\$sleep_pid\"; exit 0' TERM; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice cut -c3- '$TMUX_CONF' | sh -s _battery_info; sleep $interval & sleep_pid=\$!; wait \"\$sleep_pid\"; sleep_pid=; done"
+          tmux run -b "trap '[ -n \"\$sleep_pid\" ] && kill -9 \"\$sleep_pid\"; exit 0' TERM; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice sh '$TMUX_FUNC' _battery_info; sleep $interval & sleep_pid=\$!; wait \"\$sleep_pid\"; sleep_pid=; done"
         elif [ "$_tmux_version" -ge 280 ]; then
-          status_right="#(echo; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice cut -c3- '$TMUX_CONF' | sh -s _battery_info; sleep $interval; done)$status_right"
+          status_right="#(echo; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice sh '$TMUX_FUNC' _battery_info; sleep $interval; done)$status_right"
         elif [ "$_tmux_version" -gt 240 ]; then
-          status_right="#(echo; while :; do nice cut -c3- '$TMUX_CONF' | sh -s _battery_info; sleep $interval; done)$status_right"
+          status_right="#(echo; while :; do nice sh '$TMUX_FUNC' _battery_info; sleep $interval; done)$status_right"
         else
-          status_right="#(nice cut -c3- '$TMUX_CONF' | sh -s _battery_info)$status_right"
+          status_right="#(nice sh '$TMUX_FUNC' _battery_info)$status_right"
         fi
         ;;
     esac
@@ -1287,23 +1298,23 @@ _apply_theme() {
   case "$status_left $status_right" in
     *'#{username}'*|*'#{hostname}'*|*'#{hostname_full}'*|*'#{username_ssh}'*|*'#{hostname_ssh}'*|*'#{hostname_full_ssh}'*)
       status_left=$(echo "$status_left" | sed \
-        -e "s%#{username}%#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' false '#D')%g" \
-        -e "s%#{hostname}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' false false '#h' '#D')%g" \
-        -e "s%#{hostname_full}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' false true '#H' '#D')%g" \
-        -e "s%#{username_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' true '#D')%g" \
-        -e "s%#{hostname_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' true false '#h' '#D')%g" \
-        -e "s%#{hostname_full_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' true true '#H' '#D')%g")
+        -e "s%#{username}%#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' false '#D')%g" \
+        -e "s%#{hostname}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' false false '#h' '#D')%g" \
+        -e "s%#{hostname_full}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' false true '#H' '#D')%g" \
+        -e "s%#{username_ssh}%#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' true '#D')%g" \
+        -e "s%#{hostname_ssh}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' true false '#h' '#D')%g" \
+        -e "s%#{hostname_full_ssh}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' true true '#H' '#D')%g")
       status_right=$(echo "$status_right" | sed \
-        -e "s%#{username}%#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' false '#D')%g" \
-        -e "s%#{hostname}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' false false '#h' '#D')%g" \
-        -e "s%#{hostname_full}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' false true '#H' '#D')%g" \
-        -e "s%#{username_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _username '#{pane_pid}' '#{b:pane_tty}' true '#D')%g" \
-        -e "s%#{hostname_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' true false '#h' '#D')%g" \
-        -e "s%#{hostname_full_ssh}%#(cut -c3- '$TMUX_CONF' | sh -s _hostname '#{pane_pid}' '#{b:pane_tty}' true true '#H' '#D')%g")
+        -e "s%#{username}%#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' false '#D')%g" \
+        -e "s%#{hostname}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' false false '#h' '#D')%g" \
+        -e "s%#{hostname_full}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' false true '#H' '#D')%g" \
+        -e "s%#{username_ssh}%#(sh '$TMUX_FUNC' _username '#{pane_pid}' '#{b:pane_tty}' true '#D')%g" \
+        -e "s%#{hostname_ssh}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' true false '#h' '#D')%g" \
+        -e "s%#{hostname_full_ssh}%#(sh '$TMUX_FUNC' _hostname '#{pane_pid}' '#{b:pane_tty}' true true '#H' '#D')%g")
       ;;
   esac
 
-  _pkillf "cut -c3- '$TMUX_CONF' \| sh -s _uptime"
+  _pkillf "sh '$TMUX_FUNC' _uptime"
   case "$status_left $status_right" in
     *'#{uptime_'*|*'#{?uptime_'*)
       status_left=$(echo "$status_left" | perl -p -e '
@@ -1327,18 +1338,18 @@ _apply_theme() {
           ;;
       esac
       if [ "$_tmux_version" -ge 320 ]; then
-        tmux run -b "trap '[ -n \"\$sleep_pid\" ] && kill -9 \"\$sleep_pid\"; exit 0' TERM; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice cut -c3- '$TMUX_CONF' | sh -s _uptime; sleep $interval & sleep_pid=\$!; wait \"\$sleep_pid\"; sleep_pid=; done"
+        tmux run -b "trap '[ -n \"\$sleep_pid\" ] && kill -9 \"\$sleep_pid\"; exit 0' TERM; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice sh '$TMUX_FUNC' _uptime; sleep $interval & sleep_pid=\$!; wait \"\$sleep_pid\"; sleep_pid=; done"
       elif [ "$_tmux_version" -ge 280 ]; then
-        status_right="#(echo; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice cut -c3- '$TMUX_CONF' | sh -s _uptime; sleep $interval; done)$status_right"
+        status_right="#(echo; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice sh '$TMUX_FUNC' _uptime; sleep $interval; done)$status_right"
       elif [ "$_tmux_version" -gt 240 ]; then
-        status_right="#(echo; while :; do nice cut -c3- '$TMUX_CONF' | sh -s _uptime; sleep $interval; done)$status_right"
+        status_right="#(echo; while :; do nice sh '$TMUX_FUNC' _uptime; sleep $interval; done)$status_right"
       else
-        status_right="#(nice cut -c3- '$TMUX_CONF' | sh -s _uptime)$status_right"
+        status_right="#(nice sh '$TMUX_FUNC' _uptime)$status_right"
       fi
       ;;
   esac
 
-  _pkillf "cut -c3- '$TMUX_CONF' \| sh -s _loadavg"
+  _pkillf "sh '$TMUX_FUNC' _loadavg"
   case "$status_left $status_right" in
     *'#{loadavg'*|*'#{?loadavg'*)
       status_left=$(echo "$status_left" | sed -E \
@@ -1347,21 +1358,21 @@ _apply_theme() {
         -e 's/#\{(\?)?loadavg/#\{\1@loadavg/g')
       interval=$(tmux show -gv status-interval)
       if [ "$_tmux_version" -ge 320 ]; then
-        tmux run -b "trap '[ -n \"\$sleep_pid\" ] && kill -9 \"\$sleep_pid\"; exit 0' TERM; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice cut -c3- '$TMUX_CONF' | sh -s _loadavg; sleep $interval & sleep_pid=\$!; wait \"\$sleep_pid\"; sleep_pid=; done"
+        tmux run -b "trap '[ -n \"\$sleep_pid\" ] && kill -9 \"\$sleep_pid\"; exit 0' TERM; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice sh '$TMUX_FUNC' _loadavg; sleep $interval & sleep_pid=\$!; wait \"\$sleep_pid\"; sleep_pid=; done"
       elif [ "$_tmux_version" -ge 280 ]; then
-        status_right="#(echo; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice cut -c3- '$TMUX_CONF' | sh -s _loadavg; sleep $interval; done)$status_right"
+        status_right="#(echo; while [ x\"\$('$TMUX_PROGRAM' -S '#{socket_path}' display -p '#{l:#{pid}}')\" = x\"#{pid}\" ]; do nice sh '$TMUX_FUNC' _loadavg; sleep $interval; done)$status_right"
       elif [ "$_tmux_version" -gt 240 ]; then
-        status_right="#(echo; while :; do nice cut -c3- '$TMUX_CONF' | sh -s _loadavg; sleep $interval; done)$status_right"
+        status_right="#(echo; while :; do nice sh '$TMUX_FUNC' _loadavg; sleep $interval; done)$status_right"
       else
-        status_right="#(nice cut -c3- '$TMUX_CONF' | sh -s _loadavg)$status_right"
+        status_right="#(nice sh '$TMUX_FUNC' _loadavg)$status_right"
       fi
       ;;
   esac
 
   # -- custom variables ------------------------------------------------------
 
-  if [ -f "$TMUX_CONF_LOCAL" ] && [ "$(cut -c3- "$TMUX_CONF_LOCAL" | sh 2>/dev/null -s printf probe)" = "probe" ]; then
-    replacements=$(perl -n -e 'print if s!^#\s+([^_][^()\s]+)\s*\(\)\s*{\s*(?:#.*)?\n!s%#\\\{\1((?:\\s+(?:[^\{\}]+?|#\\{(?:[^\{\}]+?)\}))*)\\\}%#(cut -c3- \"\\\$TMUX_CONF_LOCAL\" | sh -s \1\\1)%g; !p' "$TMUX_CONF_LOCAL")
+  if [ -f "$TMUX_FUNC_LOCAL" ] && [ "$(sh 2>/dev/null "$TMUX_FUNC_LOCAL" printf probe)" = "probe" ]; then
+    replacements=$(perl -n -e 'print if s!^#\s+([^_][^()\s]+)\s*\(\)\s*{\s*(?:#.*)?\n!s%#\\\{\1((?:\\s+(?:[^\{\}]+?|#\\{(?:[^\{\}]+?)\}))*)\\\}%#(sh \"\\\$TMUX_FUNC_LOCAL\" \1\\1)%g; !p' "$TMUX_FUNC_LOCAL")
     status_left=$(echo "$status_left" | perl -p -e "$replacements" || echo "$status_left")
     status_right=$(echo "$status_right" | perl -p -e "$replacements" || echo "$status_right")
   fi
@@ -1489,7 +1500,7 @@ _apply_plugins() {
       TMUX_PLUGIN_MANAGER_PATH="$(dirname "$TMUX_CONF")/plugins"
     fi
   fi
-  tmux run -b "cut -c3- '$TMUX_CONF' | sh -s __apply_plugins '$TMUX_PLUGIN_MANAGER_PATH' '$window_active' '$tmux_conf_update_plugins_on_launch' '$tmux_conf_update_plugins_on_reload' '$tmux_conf_uninstall_plugins_on_reload'"
+  tmux run -b "sh '$TMUX_FUNC' __apply_plugins '$TMUX_PLUGIN_MANAGER_PATH' '$window_active' '$tmux_conf_update_plugins_on_launch' '$tmux_conf_update_plugins_on_reload' '$tmux_conf_uninstall_plugins_on_reload'"
 }
 
 _apply_important() {
@@ -1513,6 +1524,10 @@ _apply_configuration() {
   if [ -z "$window_active" ]; then
     if ! command -v perl > /dev/null 2>&1; then
       tmux run -b 'tmux set display-time 3000 \; display "This configuration requires perl" \; set -u display-time \; run "sleep 3" \; kill-server'
+      return
+    fi
+    if ! perl -MTime::HiRes -e1 > /dev/null 2>&1; then
+      tmux run -b 'tmux set display-time 3000 \; display "This configuration requires perl Time::HiRes" \; set -u display-time \; run "sleep 3" \; kill-server'
       return
     fi
     if ! command -v sed > /dev/null 2>&1; then
@@ -1550,11 +1565,15 @@ _apply_configuration() {
 }
 
 _urlview() {
-  tmux capture-pane -J -S - -E - -b "urlview-$1" -t "$1"
-  command='false'
-  command -v urlview > /dev/null 2>&1 && command='urlview'
-  command -v urlscan > /dev/null 2>&1 && command='urlscan --compact --dedupe'
-  tmux split-window "'$TMUX_PROGRAM' ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} show-buffer -b 'urlview-$1' | $command || true; '$TMUX_PROGRAM' ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} delete-buffer -b 'urlview-$1'"
+  pane_id="$1"; shift
+  tmux capture-pane -J -S - -E - -b "urlview-$pane_id" -t "$pane_id"
+  tmux split-window "'$TMUX_PROGRAM' ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} show-buffer -b 'urlview-$pane_id' | urlview || true; '$TMUX_PROGRAM' ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} delete-buffer -b 'urlview-$pane_id'"
+}
+
+_urlscan() {
+  pane_id="$1"; shift
+  tmux capture-pane -J -S - -E - -b "urlscan-$pane_id" -t "$pane_id"
+  tmux split-window "'$TMUX_PROGRAM' ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} show-buffer -b 'urlscan-$pane_id' | urlscan $* || true; '$TMUX_PROGRAM' ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} delete-buffer -b 'urlscan-$pane_id'"
 }
 
 _fpp() {
@@ -1563,3 +1582,4 @@ _fpp() {
 }
 
 "$@"
+

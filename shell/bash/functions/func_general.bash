@@ -18,6 +18,170 @@ fi
 
 
 ################################################################################################
+# Colores de la terminal
+################################################################################################
+
+# La mayoria de los comandos built-in por el interprete shell soportan colores y estos colores lo
+# obtinen de la variable de entorno 'LS_COLORS'. Por tal motivo, la mayoria de las distros 
+# implementa los siguientes alias en su profile:
+#    alias grep='grep --color=auto'
+#    alias fgrep='fgrep --color=auto'
+#    alias egrep='egrep --color=auto'
+
+declare -A _g_ls_colors_types=(
+    [bd]="block device"
+    [ca]="file with capability"
+    [cd]="character device"
+    [di]="directory"
+    [do]="door"
+    [ex]="executable file"
+    [fi]="regular file"
+    [ln]="symbolic link"
+    [mh]="multi-hardlink"
+    [mi]="missing file"
+    [no]="normal non-filename text"
+    [or]="orphan symlink"
+    [ow]="other-writable directory"
+    [pi]="named pipe, AKA FIFO"
+    [rs]="reset to no color"
+    [sg]="set-group-ID"
+    [so]="socket"
+    [st]="sticky directory"
+    [su]="set-user-ID"
+    [tw]="sticky and other-writable directory"
+)
+
+# Mustra la entradas almacenadas en las variable de entorno "LS_COLORS" (el tipo, el color y la
+# descripcion si existe).
+# La variable LS_COLORS almacena ...
+print_ls_colors() {
+
+    local IFS=:
+    local l_ls_color=""
+    local l_color=""
+    local l_type=""
+    local l_desc=""
+    local l_color_prev=""
+
+    for l_ls_color in $LS_COLORS; do
+
+        l_color="${l_ls_color#*=}"
+        l_type="${l_ls_color%=*}"
+    
+        # Add description for named types.
+        l_desc="${_g_ls_colors_types[$l_type]}"
+    
+        # Separate each color with a newline.
+        if [[ $l_color_prev ]] && [[ $l_color != "$l_color_prev" ]]; then
+            printf '\n'
+        fi
+    
+        printf "\e[%sm%s%s\e[m " "$l_color" "$l_type" "${l_desc:+ ($l_desc)}"
+    
+        # For next loop
+        l_color_prev="$l_color"
+
+    done
+    
+    printf '\n'
+}
+
+# Colores de la terminal
+# Obtenido y modificado de: https://gist.github.com/HaleTom/89ffe32783f89f403bba96bd7bcd1263
+
+# Return a colour that contrasts with the given colour Bash only does integer division, so keep it integral
+function _contrast_colour {
+    local r g b luminance
+    colour="$1"
+
+    if (( colour < 16 )); then # Initial 16 ANSI colours
+        (( colour == 0 )) && printf "15" || printf "0"
+        return
+    fi
+
+    # Greyscale # rgb_R = rgb_G = rgb_B = (number - 232) * 10 + 8
+    if (( colour > 231 )); then # Greyscale ramp
+        (( colour < 244 )) && printf "15" || printf "0"
+        return
+    fi
+
+    # All other colours:
+    # 6x6x6 colour cube = 16 + 36*R + 6*G + B  # Where RGB are [0..5]
+    # See http://stackoverflow.com/a/27165165/5353461
+
+    # r=$(( (colour-16) / 36 ))
+    g=$(( ((colour-16) % 36) / 6 ))
+    # b=$(( (colour-16) % 6 ))
+
+    # If luminance is bright, print number in black, white otherwise.
+    # Green contributes 587/1000 to human perceived luminance - ITU R-REC-BT.601
+    (( g > 2)) && printf "0" || printf "15"
+    return
+
+    # Uncomment the below for more precise luminance calculations
+
+    # # Calculate percieved brightness
+    # # See https://www.w3.org/TR/AERT#color-contrast
+    # # and http://www.itu.int/rec/R-REC-BT.601
+    # # Luminance is in range 0..5000 as each value is 0..5
+    # luminance=$(( (r * 299) + (g * 587) + (b * 114) ))
+    # (( $luminance > 2500 )) && printf "0" || printf "15"
+}
+
+# Print a coloured block with the number of that colour
+_print_colour() {
+    local colour="$1" contrast
+    contrast=$(_contrast_colour "$1")
+    printf "\e[48;5;%sm" "$colour"                # Start block of colour
+    printf "\e[38;5;%sm%3d" "$contrast" "$colour" # In contrast, print number
+    printf "\e[0m "                               # Reset colour
+}
+
+# Starting at $1, print a run of $2 colours
+_print_run () {
+    local i
+    local printable_colours=256
+    for (( i = "$1"; i < "$1" + "$2" && i < printable_colours; i++ )) do
+        _print_colour "$i"
+    done
+    printf "  "
+}
+
+# Print blocks of colours
+_print_blocks() {
+    local start="$1" i
+    local end="$2" # inclusive
+    local block_cols="$3"
+    local block_rows="$4"
+    local blocks_per_line="$5"
+    local block_length=$((block_cols * block_rows))
+
+    # Print sets of blocks
+    for (( i = start; i <= end; i += (blocks_per_line-1) * block_length )) do
+        printf "\n" # Space before each set of blocks
+        # For each block row
+        for (( row = 0; row < block_rows; row++ )) do
+            # Print block columns for all blocks on the line
+            for (( block = 0; block < blocks_per_line; block++ )) do
+                _print_run $(( i + (block * block_length) )) "$block_cols"
+            done
+            (( i += block_cols )) # Prepare to print the next row
+            printf "\n"
+        done
+    done
+}
+
+print_256_colors () {
+	# The first 16 colours are spread over the whole spectru
+	_print_run 0 16 
+	printf "\n"
+	# 6x6x6 colour cube between 16 and 231 inclusive
+	_print_blocks 16 231 6 6 3
+    # Not 50, but 24 Shades of Grey
+	_print_blocks 232 255 12 2 1 
+}
+
+################################################################################################
 # NerdCtl con CRT 'ContainerD'
 ################################################################################################
 
