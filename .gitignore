@@ -23,4 +23,4 @@ config/kubectl/*.yaml
 tls/*
 
 #Archivo de configuracion para los archivos de setup para Linux
-shell/setup/linux/_config.bash
+shell/bash/setup/linux/_config.bash
