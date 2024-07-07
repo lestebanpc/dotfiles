@@ -181,8 +181,8 @@ function _try_create_standard_prg_path() {
 #Parametros de entrada:
 # 1> Path base donde se encuentra el repositorio de los script de instalación (por defecto es '$HOME')
 # 2> Flag '0' si no es interactivo, '1' si es interactivo
-# 3> Ruta donde se ubicaran los programas descargsdos
-#    Si es vacio, no se se usara las carpetas '/var/opt/tools' o '~/tools'
+# 3> Ruta donde se ubicaran los programas descargados
+#    Si es vacio, se se usara las carpetas '/var/opt/tools' o '~/tools'
 # 4> 'UID:GID' solo si se ejecuta un usuario root y es diferente al usuario que pertenece este script de instalación (es decir donde esta el repositorio)
 #Parametros de salida:
 #  > Variables globales: 'g_path_programs'
@@ -956,9 +956,13 @@ function fulfill_preconditions() {
         if [ ! -z "$g_path_programs" ]; then
             printf 'Default program path        : "%s"' "$g_path_programs"
             if [ $g_os_type -eq 1 ] && [ ! -z "$g_path_programs_win" ]; then
-                printf ' (Windows "%s")\n' "$g_path_programs_win"
+                printf ' (Windows "%s")' "$g_path_programs_win"
+            fi
+
+            if [ "$g_setup_only_last_version" = "0" ]; then
+                printf ' (Setup only last version= "true")\n'
             else
-                printf '\n'
+                printf ' (Setup only last version= "false")\n'
             fi
         fi
 

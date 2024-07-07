@@ -73,23 +73,7 @@ if [ -z "$g_os_type" ]; then
         get_linux_type_info
     fi
 
-    #Solo en WSL: Ruta de binarios y programas de Windows
-    if [ $g_os_type -eq 1 ]; then
-
-        _g_path_base_win='/mnt/c/CLI'
-        if [ -d "/mnt/d" ]; then
-            _g_path_base_win='/mnt/d/CLI'
-        fi
-
-        declare -r g_path_programs_win="${_g_path_base_win}/Programs"
-        declare -r g_path_bin_win="${_g_path_base_win}/Commands/bin"
-        declare -r g_path_man_win="${_g_path_base_win}/Commands/man"
-        declare -r g_path_doc_win="${_g_path_base_win}/Commands/doc"
-        declare -r g_path_etc_win="${_g_path_base_win}/Commands/etc"
-    fi
-
 fi
-
 
 #Obtener informacion basica del usuario
 if [ -z "$g_user_is_root" ]; then
@@ -147,9 +131,6 @@ g_opt_update_installed_repo=$((1 << 1))
 g_offset_option_index_menu_install=2
 g_offset_option_index_menu_uninstall=0
 
-
-#Solo descargar la ultima versión
-g_setup_only_last_version=1
 
 #Personalización: Variables a modificar.
 . ${g_path_base}/.files/shell/bash/setup/linux/_setup_commands_custom_settings.bash
@@ -3503,13 +3484,105 @@ g_status_crendential_storage=-1
 #La credencial no se almaceno por un script externo.
 g_is_credential_storage_externally=1
 
-#Rutas usuadas (con valores por defecto) durante el setup, cuyos valores reales son calculados usando: 'set_program_path', 'set_command_path' y 'set_temp_path'
-g_path_programs='/var/opt/tools'
+#Folder base donde se almacena los subfolderes de los programas.
+# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
+# - Si no es un valor valido, la funcion "set_program_path" asignara un sus posibles valores (segun orden de prioridad):
+#     > "/var/opt/tools"
+#     > "~/tools"
+g_path_programs=''
+
+#Folder base donde se almacena el comando y sus archivos afines.
+# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura), dentro
+#   de este folder se creara/usara la siguiente estructura de folderes:
+#     > "${g_path_cmd_base}/bin"         : subfolder donde se almacena los comandos.
+#     > "${g_path_cmd_base}/man/man1"    : subfolder donde se almacena archivos de ayuda man1.
+#     > "${g_path_cmd_base}/share/fonts" : subfolder donde se almacena las fuentes.
+# - Si no es un valor valido, la funcion "set_command_path" asignara un sus posibles valores (segun orden de prioridad):
+#     > Si tiene permisos administrativos, usara los folderes predeterminado para todos los usuarios:
+#        - "/usr/local/bin"      : subfolder donde se almacena los comandos.
+#        - "/usr/local/man/man1" : subfolder donde se almacena archivos de ayuda man1.
+#        - "/usr/share/fonts"    : subfolder donde se almacena las fuentes.
+#     > Caso contrario, se usara los folderes predeterminado para el usuario:
+#        - "~/.local/bin"         : subfolder donde se almacena los comandos.
+#        - "~/.local/man/man1"    : subfolder donde se almacena archivos de ayuda man1.
+#        - "~/.local/share/fonts" : subfolder donde se almacena las fuentes.
 g_path_cmd_base=''
-g_path_bin='/usr/local/bin'
-g_path_man='/usr/local/man/man1'
-g_path_fonts='/usr/share/fonts'
-g_path_temp='/var/tmp'
+
+#Folder base donde se almacena data temporal que sera eliminado automaticamente despues completar la configuración.
+# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
+# - Si no es valido, la funcion "set_temp_path" asignara segun orden de prioridad a '/var/tmp' o '/tmp'.
+# - Tener en cuenta que en muchas distribuciones el folder '/tmp' esta en la memoria y esta limitado a su tamaño.
+g_path_temp=''
+
+#Folder base, generados solo para Linux WSL, donde se almacena el programas, comando y afines usados por Windows.
+# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
+# - Si no es un valor valido, se asignara un sus posibles valores (segun orden de prioridad):
+#     > "/mnt/d/CLI" (es decir "D:\CLI")
+#     > "/mnt/c/CLI" (es decir "C:\CLI")
+# - En este folder se creara/usara la siguiente estructura de folderes:
+#     > "${g_path_base_win}/Programs"     : subfolder donde se almacena los subfolder de los programas.
+#     > "${g_path_base_win}/Commands/bin" : subfolder donde se almacena los comandos.
+#     > "${g_path_base_win}/Commands/man" : subfolder donde se almacena los archivos de ayuda man1 del comando.
+#     > "${g_path_base_win}/Commands/doc" : subfolder donde se almacena documentacion del comando.
+#     > "${g_path_base_win}/Commands/etc" : subfolder donde se almacena archivos adicionales del comando.
+g_path_base_win=''
+
+#Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
+#Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
+g_setup_only_last_version=1
+
+
+#Obtener los parametros del archivos de configuración
+if [ -f "${g_path_base}/.files/shell/bash/setup/linux/_config.bash" ]; then
+
+    #Obtener los valores por defecto de las variables
+    . ${g_path_base}/.files/shell/bash/setup/linux/_config.bash
+
+    #Corregir algunos valaores
+    if [ "$g_setup_only_last_version" = "0" ]; then
+        g_setup_only_last_version=0
+    else
+        g_setup_only_last_version=1
+    fi
+fi
+
+#Folder donde se almacena los binarios. Su valor es autogenerado por "set_command_path" y puede ser:  
+# - "${g_path_cmd_base}/bin"
+# - "/usr/local/bin"
+# - "~/.local/bin" 
+g_path_bin=''
+
+#Folder donde se almacena los archivos de ayuda man1. Su valor es autogenerado por "set_command_path" y puede ser:  
+# - "${g_path_cmd_base}/man/man1"
+# - "/usr/local/man/man1"
+# - "~/.local/man/man1" 
+g_path_man=''
+
+#Folder donde se almacena los archivos fuentes. Su valor es autogenerado por "set_command_path" y puede ser:  
+# - "${g_path_cmd_base}/share/fonts"
+# - "/usr/share/fonts"
+# - "~/.local/share/fonts" 
+g_path_fonts=''
+
+#Si es WSL, obtener las carpetas usadas para almacenar los programas y comandos en Windows.
+if [ $g_os_type -eq 1 ]; then
+
+    #Si no es folder valido (no existe y no tiene permisos de escritura).
+    if [ -z "$g_path_base_win" ] || [ ! -w "$g_path_base_win" ]; then
+        if [ -d "/mnt/d" ]; then
+            g_path_base_win='/mnt/d/CLI'
+        else
+            g_path_base_win='/mnt/c/CLI'
+        fi
+    fi
+
+    g_path_programs_win="${g_path_base_win}/Programs"
+    g_path_bin_win="${g_path_base_win}/Commands/bin"
+    g_path_man_win="${g_path_base_win}/Commands/man"
+    g_path_doc_win="${g_path_base_win}/Commands/doc"
+    g_path_etc_win="${g_path_base_win}/Commands/etc"
+fi
+
 
 #2.1. Desintalar los artefactos de un repoistorio
 if [ $gp_uninstall -eq 0 ]; then
@@ -3524,30 +3597,30 @@ if [ $gp_uninstall -eq 0 ]; then
     #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
     # 4> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
 
-    #Obtener los folderes de programas 'g_path_programs'
-    _g_path=''
+    #Obtener la ruta real del folder donde se alamacena los de programas 'g_path_programs'
     if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
-        _g_path="$2"
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '_config.bash'
+        g_path_programs="$2"
     fi
 
     _g_is_noninteractive=1
-    set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+    set_program_path "$g_path_base" $_g_is_noninteractive "$g_path_programs" ""
 
-    #Obtener los folderes de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
-    _g_path=''
+    #Obtener la ruta real del folder de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
     if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
-        _g_path="$3"
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '_config.bash'
+        g_path_cmd_base="$3"
     fi
 
-    set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+    set_command_path "$g_path_base" $_g_is_noninteractive "$g_path_cmd_base" ""
 
-    #Obtener los folderes temporal 'g_path_temp'
-    _g_path=''
+    #Obtener la ruta real del folder temporal 'g_path_temp'
     if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-        _g_path="$4"
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '_config.bash'
+        g_path_temp="$4"
     fi
 
-    set_temp_path "$_g_path"
+    set_temp_path "$g_path_temp"
 
     #Validar los requisitos
     #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
@@ -3583,34 +3656,33 @@ else
         # 4> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
         # 5> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
 
-        #Obtener los folderes de programas 'g_path_programs'
-        _g_path=''
+        #Obtener la ruta real del folder donde se alamacena los de programas 'g_path_programs'
         if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
-            _g_path="$2"
+            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '_config.bash'
+            g_path_programs="$2"
         fi
 
         _g_is_noninteractive=1
-        set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+        set_program_path "$g_path_base" $_g_is_noninteractive "$g_path_programs" ""
 
-        #Obtener los folderes de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
-        _g_path=''
+        #Obtener la ruta real del folder de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
         if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
-            _g_path="$3"
+            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '_config.bash'
+            g_path_cmd_base="$3"
         fi
 
-        set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" ""
+        set_command_path "$g_path_base" $_g_is_noninteractive "$g_path_cmd_base" ""
 
-        #Obtener los folderes temporal 'g_path_temp'
-        _g_path=''
+        #Obtener la ruta real del folder de archivos temporales 'g_path_temp'
         if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-            _g_path="$4"
+            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '_config.bash'
+            g_path_temp="$4"
         fi
 
-        set_temp_path "$_g_path"
+        set_temp_path "$g_path_temp"
 
         #Parametros del script usados hasta el momento:
         # 1> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
-        g_setup_only_last_version=1        
         if [ "$5" = "0" ]; then
             g_setup_only_last_version=0
         fi
@@ -3670,7 +3742,6 @@ else
 
         fi
 
-        g_setup_only_last_version=1        
         if [ "$7" = "0" ]; then
             g_setup_only_last_version=0
         fi
@@ -3686,33 +3757,33 @@ else
             fi
         fi
 
-        #Obtener los folderes de programas 'g_path_programs'
-        _g_path=''
+        #Obtener la ruta real del folder donde se alamacena los de programas 'g_path_programs'
         if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
-            _g_path="$3"
+            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '_config.bash'
+            g_path_programs="$3"
         fi
 
         _g_is_noninteractive=0
         if [ $gp_type_calling -eq 1 ]; then
             _g_is_noninteractive=1
         fi
-        set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" "$g_other_calling_user"
+        set_program_path "$g_path_base" $_g_is_noninteractive "$g_path_programs" "$g_other_calling_user"
 
-        #Obtener los folderes de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
-        _g_path=''
+        #Obtener la ruta real del folder de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
         if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-            _g_path="$4"
+            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '_config.bash'
+            g_path_cmd_base="$4"
         fi
 
-        set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" "$g_other_calling_user"
+        set_command_path "$g_path_base" $_g_is_noninteractive "$g_path_cmd_base" "$g_other_calling_user"
 
-        #Obtener los folderes temporal 'g_path_temp'
-        _g_path=''
+        #Obtener la ruta real del folder de los archivos temporales 'g_path_temp'
         if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-            _g_path="$5"
+            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '_config.bash'
+            g_path_temp="$5"
         fi
 
-        set_temp_path "$_g_path"
+        set_temp_path "$g_path_temp"
 
         #Validar los requisitos
         #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
@@ -3772,7 +3843,6 @@ else
             fi
         fi
     
-        g_setup_only_last_version=1        
         if [ "$7" = "0" ]; then
             g_setup_only_last_version=0
         fi
@@ -3793,33 +3863,30 @@ else
             fi
         fi
 
-        #Obtener los folderes de programas 'g_path_programs'
-        _g_path=''
+        #Obtener la ruta real del folder donde se alamacena los de programas 'g_path_programs'
         if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
-            _g_path="$3"
+            g_path_programs="$3"
         fi
 
         _g_is_noninteractive=0
         if [ $gp_type_calling -eq 2 ]; then
             _g_is_noninteractive=1
         fi
-        set_program_path "$g_path_base" $_g_is_noninteractive "$_g_path" "$g_other_calling_user"
+        set_program_path "$g_path_base" $_g_is_noninteractive "$g_path_programs" "$g_other_calling_user"
 
-        #Obtener los folderes de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
-        _g_path=''
+        #Obtener la ruta real del folder de comandos 'g_path_bin', archivos de ayuda 'g_path_man' y fuentes de letras 'g_path_fonts' 
         if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-            _g_path="$4"
+            g_path_cmd_base="$4"
         fi
 
-        set_command_path "$g_path_base" $_g_is_noninteractive "$_g_path" "$g_other_calling_user"
+        set_command_path "$g_path_base" $_g_is_noninteractive "$g_path_cmd_base" "$g_other_calling_user"
 
-        #Obtener los folderes temporal 'g_path_temp'
-        _g_path=''
+        #Obtener la ruta real del folder de los archivos temporales 'g_path_temp'
         if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-            _g_path="$5"
+            g_path_temp="$5"
         fi
 
-        set_temp_path "$_g_path"
+        set_temp_path "$g_path_temp"
 
         #Validar los requisitos
         #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
