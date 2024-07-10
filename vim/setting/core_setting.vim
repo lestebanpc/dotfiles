@@ -258,7 +258,7 @@ if g:os_type == 0
         set shellxquote = 
     endif
 "Linux incluyendo WSL
-elseif (g:os_type == 2) || (g:os_type ==3)
+elseif (g:os_type == 2) || (g:os_type == 3)
 
     if exists('$SHELL')
         set shell=$SHELL
@@ -271,20 +271,30 @@ endif
 
 "----------------------------- Clipboard de SO         -----------------------------
 
-"Si se tiene soporte a Clipboard, habilitar el uso de los registros vinculados al portapales del SO
 if g:has_clipboard
 "if g:has_clipboard || g:is_gui_vim
 
-    "Usar como registro predeterminado a '+' vinculado al portapales principal del SO 
-    "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
-    "Para copiar selecione y use 'CTRL + c', para pegar use 'CTRL + v'
-    set clipboard=unnamedplus
+    "NeoVIM no usa API del SO (NeoVIM usa un backend de clipboard, es decir comandos externos, no se integra on el API del SO)
+    if g:is_neovim
+        set clipboard=unnamedplus
+    
+    "Si VIM y es Linux
+    elseif (g:os_type == 2) || (g:os_type == 3 )
 
-    "Usar como registro predeterminado a '*' (que apunta al portapales 'PRIMARY' del servidor X11)
-    "Para copiar el al portapales solo selecione el texto, 
-    "Para pegar del portapales use el boton central o boton secundario o 'SHFIT + INSERT'
-    "Se esta usando esto en Linux porque es mas facil usar y mas eficiente en recursos
-    "set clipboard+=unnamed
+        "Usar como registro predeterminado a '+' vinculado al portapales principal del SO 
+        "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
+        "Para copiar selecione y use 'CTRL + c', para pegar use 'CTRL + v'
+        set clipboard=unnamedplus
+
+        "Usar como registro predeterminado a '*' (que apunta al portapales 'PRIMARY' del servidor X11)
+        "Para copiar el al portapales solo selecione el texto, 
+        "Para pegar del portapales use el boton central o boton secundario o 'SHFIT + INSERT'
+        "Se esta usando esto en Linux porque es mas facil usar y mas eficiente en recursos
+        "set clipboard+=unnamed
+    "Si es VIM y no es Linux
+    else
+        set clipboard=unnamed
+    endif
 
 endif 
 

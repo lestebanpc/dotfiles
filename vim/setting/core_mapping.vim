@@ -71,7 +71,7 @@ if (g:os_type == 2) || (g:os_type == 3)
 
         "Si no se tiene soporte al clipboard:
         "Si no es NeoVIM (NeoVIM usa un backend de clipboard, es decir comandos externos, no se integra on el API del SO)
-        if !g:has_clipboard
+        if !g:is_neovim && !g:has_clipboard
             augroup Yank
                 autocmd!
                 autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system('xclip -i -selection clipboard',@") | endif

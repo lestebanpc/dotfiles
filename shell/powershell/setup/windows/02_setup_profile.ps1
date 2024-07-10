@@ -214,8 +214,7 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
 
 
 
-function m_setup_vim_packages($p_is_neovim, $p_flag_developer)
-{
+function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 	#1. Argumentos    
 
     #2. Ruta base donde se instala el plugins/paquete
@@ -695,7 +694,7 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
 # Parametros:
 # > Opcion ingresada por el usuario.
 function m_setup_profile($l_overwrite_ln_flag) {
-
+	
     #1. Argumentos
     
     #Esta habilitado la creacion de enlaces simbolicos del perfil?    
@@ -736,13 +735,14 @@ function m_setup_profile($l_overwrite_ln_flag) {
 	$l_source_filename='git_windows.toml'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
-    if(-not Test-Path "${env:USERPROFILE}\.files\etc\git\custom\main.toml") {
-        Write-Host "            > Creando el archivo 'etc\git\custom\main.toml' ..."
+    if(! (Test-Path "${env:USERPROFILE}\.files\etc\git\custom\main.toml" )) {
+		Write-Host "            > Creando el archivo 'etc\git\custom\main.toml' ..."
         Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\custom\template_windows_main.toml" -Destination "${env:USERPROFILE}\.files\etc\git\custom\main.toml"
         Write-Host "            > Creando el archivo 'etc\git\custom\work_uc.toml' ..."
         Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\custom\template_windows_work.toml" -Destination "${env:USERPROFILE}\.files\etc\git\custom\work_uc.toml"
         
         Write-Host "            > Edite los archivos 'main.toml' y 'work_uc.toml' si desea crear modificar las opciones de '~/.gitignore'."
+	}
     else {
         Write-Host "            > Edite los archivos 'main.toml' y 'work_uc.toml' si desea crear modificar las opciones de '~/.gitignore'."
     }
@@ -751,14 +751,23 @@ function m_setup_profile($l_overwrite_ln_flag) {
     $l_target_link="${env:USERPROFILE}\.ssh\config"
     $l_source_path="${env:USERPROFILE}\.files\etc\ssh\template_windows.conf"
 	
-    if(! Test-Path "$l_profile_path") {
-        Write-Host "General     > Creando el archivo '~\.ssh\config' ..."
-        Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
+	$l_info= Get-Item "$l_target_link" | Select-Object LinkType, LinkTarget 2> $null
+    
+    if(! (Test-Path "$l_profile_path")) {
+		if ( $l_info -and ($l_info.LinkType -eq "SymbolicLink") ) {
+            Write-Host "General     > Remplazado el enlace simbolico '~\.ssh\config' por un archivo ..."
+			Remove-Item -Path "$l_target_link"
+            Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
+        }
+        else {
+            Write-Host "General     > Creando el archivo '~\.ssh\config' ..."
+            Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
+		}
 	}
     else {
-	    $l_info= Get-Item "$l_target_link" | Select-Object LinkType, LinkTarget
-        if ( $l_info.LinkType -eq "SymbolicLink" ) {
+	    if ( $l_info -and ($l_info.LinkType -eq "SymbolicLink") ) {
             Write-Host "General     > Remplazado el enlace simbolico '~\.ssh\config' por un archivo ..."
+			Remove-Item -Path "$l_target_link"
             Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
         }
         else {
@@ -774,9 +783,10 @@ function m_setup_profile($l_overwrite_ln_flag) {
 	$l_source_filename='windows_x64.ps1'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 	
+
 	$l_target_link="${document_path}\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
     $l_source_path="${env:USERPROFILE}\.files\shell\powershell\profile\windows"
-	$l_source_filename='windows_x64.ps1'
+	$l_source_filename='legacy_x64.ps1'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
     #Creando archivo de configuracion para Wezterm
@@ -860,8 +870,8 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
 
 
-function m_setup($p_input_options)
-{	
+function m_setup($p_input_options) {
+	
 	$l_overwrite_ln_flag= $p_input_options
 	
 	#Instalar VIM como Developer
@@ -877,8 +887,8 @@ function m_setup($p_input_options)
 	
 }
 
-function m_show_menu_core() 
-{
+function m_show_menu_core() {
+	
 	Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 	Write-Host "                                                      Menu de Opciones" -ForegroundColor Green
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
@@ -888,8 +898,7 @@ function m_show_menu_core()
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 }
 
-function show_menu() 
-{
+function show_menu() {
 	Write-Host ""
 	m_show_menu_core
 	

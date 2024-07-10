@@ -39,9 +39,9 @@ if(-not ("$env:PATH" -match ";?$($g_command_path.Replace("\", "\\"));?")) {
 # Personalizacion de la terminal
 #------------------------------------------------------------------------------------------------
 
-# Cambiar el color de los folderes
-#PSStyle.FileInfo.Directory="`e[44;1m"
-$PSStyle.FileInfo.Directory="`e[44;30m"
+# Cambiar el color de los folderes (No soportado por Windows Powershell)
+#$PSStyle.FileInfo.Directory="`e[44;1m"
+#$PSStyle.FileInfo.Directory="`e[44;30m"
 
 
 #------------------------------------------------------------------------------------------------
