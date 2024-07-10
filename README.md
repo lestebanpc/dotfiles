@@ -76,9 +76,12 @@ Los pasos recomandos para configurar su SO son:
    git clone https://github.com/lestebanpc/dotfiles.git ~/.files
    ```
 
-2. Configurar el archivos de configuración para establecer las variables globales de los script (en caso que sea necesario).
-   Los valores ingresados por los argumentos del script, tiene mayor prioridad que los almacenados en el archivos de configuración '~/.files/shell/bash/setup/linux/_config.bash'.
-   Cree el archivo '~/.files/shell/bash/setup/linux/_config.bash' cuyo formato es:
+3. Opcional. Configuración de los script de instalación/actualización.
+   Los script de instalación usan variable globales con valores por defecto, las cuales puede ser modificados, segun orden de prioridad:
+   - Los argumentos enviados a ejecutar el script, 
+   - Las variables especificadas en el archivos de configuración "_config.bash" (por defecto este archivo no existe, tiene que crearlo).
+   
+   El archivo de configuración es "~/.files/shell/bash/setup/linux/_config.bash" cuyo formato es:
    
    ```shell
    #!/bin/bash
@@ -152,6 +155,15 @@ Los pasos recomandos para configurar su SO son:
    # Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
    #g_setup_only_last_version=0
    ```
+
+   Tambien puede copiar el archivo basando en la plantilla existente en su repositorio:
+
+
+   ```shell
+   cp ~/.files/shell/bash/setup/linux/template_config.bash ~/.files/shell/bash/setup/linux/template_config.bash
+
+   ```
+
    Descomente las variables que desea modificar y establecer el valor deseado.
 
 4. Descarga y configurar comandos/programas basicos de los repositorios (usualmente Github).
@@ -169,13 +181,14 @@ Los pasos recomandos para configurar su SO son:
    ~/.files/shell/bash/setup/linux/01_setup_commands.bash x
    ```
 
-5. Para un usuario especifico, configure los archivos del profile y VIM/NeoVIM: 
-   
+5. Configure la terminal.
+   Debera configurar la fuente 'Nerd-Fonts'. La fuente que uso es 'JetBrainsMono Nerd Font Mono'.
+
+6. Para un usuario especifico, configure los plugins VIM/NeoVIM: 
    Ingrese sesion al usuario que desea configurar el profile y ejecute el script siguiente.
+   - Si desea usar configurar el modo desarrollo (VIM/NeoVIM como IDE) use la opcion 'd' o 'f'.
+   - Si desea usar configurar el modo editor (VIM/NeoVIM basico) use la opcion 'c' o 'e'.
    
-   Si desea usar configurar el modo desarrollo (VIM/NeoVIM como IDE) use la opcion 'd' o 'f'.
-   
-   Si desea usar configurar el modo editor (VIM/NeoVIM basico) use la opcion 'c' o 'e'.
    
    ```bash
    #Mostrar el menu para configurar el profile y VIM/NeoVIM
@@ -184,10 +197,111 @@ Los pasos recomandos para configurar su SO son:
    #Para mostrar los parametros del script, ingrese un parametro invalido como:
    ~/.files/shell/bash/setup/linux/02_setup_profile.bash
    ```
+7. Opcional. Configuración de su profile del shell del SO:
+   El script de profile '~/.bashrc' define algunas variable globales con valores por defecto, las cuales puede ser modificados, defiendo el archivo de configuración '_config.bash'.
+   El archivo de configuración por defecto no existe y debe ser creado en '~/.files/shell/bash/profile/_config.bash' y tiene el siguiente contenido:
+   
+   
+   ```bash
+   #!/bin/bash
+   
+   # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
+   #_g_program_base_path='/var/opt/tools'
+   
+   # Ruta del folder donde se ubican comandos personalizado del usuario.
+   #_g_command_path='/usr/local/bin'
+   
+   # Ruta del tema de 'Oh-My-Posh' a usar.
+   #_g_ohmyposh_theme_path=~/.files/etc/oh-my-posh/lepc-montys-1.omp.json
+   ```
+   
+   Tambien puede copiar el archivo basando en la plantilla existente en su repositorio:
 
-6. Cierre session y vuelva a iniciar (o crage nuevamente su profile) para registrar la variables del profile del usuario.
 
-7. Si desea actualizar los plugins de VIM/NeoVIM, ejecute el script:
+   ```shell
+   cp ~/.files/shell/bash/profile/template_config.bash ~/.files/shell/bash/profile/_config.bash
+
+   ```
+
+   Descomente las variables que desea modificar y establecer el valor deseado.
+
+
+
+8. Vuelva a cargar su profile para registrar la variables de entorno de su profile del usuario.
+
+9. Opcional. Configuración de VIM/NeoVIM:
+   El script de inicio de VIM define algunas variable globales con valores por defecto, las cuales puede ser modificados, defiendo el archivo de configuración '_config.vim':
+   - Para VIM, se requiere el archivo "~/.files/vim/template_config.vim"
+   - Para NoeVIM, se requiere el archivo "~/.files/nvim/template_config.vim"
+
+   Por defecto, este archivo no existe y tiene el siguiente contenido:
+   
+   
+   ```bash
+   "#########################################################################################
+   " Variables globales generales
+   "#########################################################################################
+   
+   " Habilita el uso del TabLine (barra superior donde se muestran los buffer y los tabs).
+   " Valor por defecto es 1 ('true').
+   " Valor '0' es considerado 'false', otro valor es considerado 'true'.
+   "let g:use_tabline = 1
+   
+   " Habilitar el plugin de typing 'vim-surround', el cual es usado para encerar/modificar
+   " texto con '()', '{}', '[]' un texto. Valor por defecto es 0 ('false').
+   " Valor '0' es considerado 'false', otro valor es considerado 'true'.
+   " Si cambia este valor, recargar/cerrar VIM para volver a cargar los plugin.
+   "let g:use_typing_surround = 0
+   
+   " Habilitar el plugin de typing 'emmet-vim', el cual es usado para crear elementos
+   " HTML usando palabras claves. Valor por defecto es 0 ('false').
+   " Valor '0' es considerado 'false', otro valor es considerado 'true'.
+   " Si cambia este valor, recargar/cerrar VIM para volver a cargar los plugin.
+   "let g:use_typing_html_emmet = 0
+   
+   " Habilitar el plugin de typing 'vim-visual-multi', el cual es usado para realizar seleccion
+   " multiple de texto. Valor por defecto es 0 ('false').
+   " Valor '0' es considerado 'false', otro valor es considerado 'true'.
+   " Si cambia este valor, recargar/cerrar VIM para volver a cargar los plugin.
+   "let g:use_typing_visual_multi = 0
+   
+   "#########################################################################################
+   " Variables globales para VIM/NeoVim en modo IDE
+   "#########################################################################################
+   
+   " Ruta base para los servidores LSP y DAP. Los valores por defecto son:
+   " En Linux :
+   "   > Path base del LSP Server : '/var/opt/tools/lsp_servers'
+   "   > Path base del DAP Server : '/var/opt/tools/dap_servers'
+   " En Windows :
+   "   > Path base del DAP Server : 'C:/CLI/Programs/DAP_Servers'
+   "   > Path base del LSP Server : 'C:/CLI/Programs/LSP_Servers'
+   " Modiquelo si desea cambiar ese valor.
+   "let g:home_path_dap_server = 'D:/CLI/Programs/DAP_Servers'
+   "let g:home_path_lsp_server = 'D:/CLI/Programs/LSP_Servers'
+   "let g:home_path_lsp_server = $HOME .. '/tools/lsp_servers'
+   "let g:home_path_dap_server = $HOME .. '/tools/dap_servers'
+   
+   " Solo para Linux WSL donde Rosalyn tambien esta instalado en Windows.
+   " Si es 1 ('true'), se re-usara el LSP Server C# (Roslyn) instalado en Windows.
+   " Valor '0' es considerado 'false', otro valor es considerado 'true'.
+   " Su valor por defecto es 0 ('false').
+   "let g:using_lsp_server_cs_win = 0
+   ```
+   
+   Tambien puede copiar el archivo basando en la plantilla existente en su repositorio:
+
+
+   ```shell
+   cp ~/.files/vim/template_config.vim ~/.files/vim/_config.vim
+   cp ~/.files/nvim/template_config.vim ~/.files/nvim/_config.vim
+
+   ```
+
+   Descomente las variables que desea modificar y establecer el valor deseado.
+
+
+10. Si desea actualizar los plugins de VIM/NeoVIM, ejecute el script:
    
    ```bash
    #Mostrar el menu para actualizar los plugins de VIM/NeoVIM
@@ -197,8 +311,11 @@ Los pasos recomandos para configurar su SO son:
    ~/.files/shell/bash/setup/linux/04_update_all.bash
    ```
 
-8. Configure la terminal.
-   Debera configurar la fuente 'Nerd-Fonts'. La fuente recomendada es 'JetBrainsMono Nerd Font Mono'.
+11. Otras configuraciones> Configuración de GIT
+
+
+12. Otras configuraciones> Configuración del cliente SSH
+
 
 # Configuración en Windows
 

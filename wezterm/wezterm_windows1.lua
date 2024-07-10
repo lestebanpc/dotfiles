@@ -31,7 +31,8 @@ end
 if l_is_win then
     config.term = 'xterm-256color'
 else
-    config.term = 'wezterm'
+    config.term = 'xterm-256color'
+    --config.term = 'wezterm'
 end
 
 -- Create my custom scheme based on a built-in schema.

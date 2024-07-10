@@ -1,26 +1,53 @@
-#VIM - Archivos swap o temporales (formato '.filename.swp')
+# VIM - Archivos swap o temporales (formato '.filename.swp')
 **/*.swp
 
-#VIM - Archivos de 'persistence undo' (formato '.filename.un~')
+# VIM - Archivos de 'persistence undo' (formato '.filename.un~')
 **/*.un~
 
-#Log generados por: TMUX, ..
+# Log generados por: TMUX, ..
 *.log
 
-#Archivos internos de GIT
+# Archivos internos de GIT
 .git/*
 
-#Paquetes locales de NodeJS (binarios de NodeJs)
+# Paquetes locales de NodeJS (binarios de NodeJs)
 node_modules/*
 
-#Archivos para la terminal> Oh-My-Posh> Temas
+# Archivos para la terminal> Oh-My-Posh> Temas
 terminal/oh-my-posh/themes/*
 
-#Archivos configuracion para otros comandos> kubectl
+# Archivos configuracion para otros comandos> kubectl
 config/kubectl/*.yaml
 
-#Archivos para clientes TLS de uso personal> Claves privadas y/o publicos TLS
+# Archivos para clientes TLS de uso personal> Claves privadas y/o publicos TLS
 tls/*
 
-#Archivo de configuracion para los archivos de setup para Linux
+# Archivo de configuracion para los archivos de setup para Linux
 shell/bash/setup/linux/_config.bash
+
+# Archivo de configuracion del profile para Linux
+shell/bash/profile/_config.bash
+shell/zsh/profile/_config.bash
+shell/fish/profile/_config.bash
+
+# Archivo de configuracion del profile Powershell de Linux/Windows
+shell/powershell/profile/linux/_config.ps1
+shell/powershell/profile/windows/_config.ps1
+
+# Archivo de configuracion para los archivos de setup para Windows
+shell/powershell/setup/windows/_config.bash
+
+# Archivo de configuracion para VIM
+vim/_config.vim
+
+# Archivo de configuracion para NeoVIM
+nvim/_config.vim
+
+# Ingnorar archivos personalizados incluidos en '.gitignore'
+etc/git/custom/*
+!etc/git/custom/template_linux_main.toml
+!etc/git/custom/template_linux_work.toml
+!etc/git/custom/template_windows_main.toml
+!etc/git/custom/template_windows_work.toml
+
+

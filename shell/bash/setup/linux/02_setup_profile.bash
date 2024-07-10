@@ -795,11 +795,7 @@ function _setup_nvim_files() {
 
         l_target_link="${g_path_base}/.config/nvim/init.vim"
         l_source_path="${g_path_base}/.files/nvim"
-        if [ "$g_path_programs" = "${g_path_base}/tools" ]; then
-            l_source_filename='init_ide_linux_non_shared.vim'
-        else
-            l_source_filename='init_ide_linux_shared.vim'
-        fi
+        l_source_filename='init_ide_linux.vim'
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
         l_target_link="${g_path_base}/.config/nvim/lua"
@@ -909,11 +905,7 @@ function _setup_vim_files() {
 
         l_target_link="${g_path_base}/.vimrc"
         l_source_path="${g_path_base}/.files/vim"
-        if [ "$g_path_programs" = "${g_path_base}/tools" ]; then
-            l_source_filename='vimrc_ide_linux_non_shared.vim'
-        else
-            l_source_filename='vimrc_ide_linux_shared.vim'
-        fi
+        l_source_filename='vimrc_ide_linux.vim'
 
         _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM > " $p_flag_overwrite_ln
 
@@ -1887,8 +1879,6 @@ function _setup_user_profile() {
 
 
     #4. Creando enlaces simbolico dependientes del tipo de distribución Linux
-
-    #Si es Linux WSL
     local l_target_link
     local l_source_filename
     local l_status
@@ -1918,141 +1908,47 @@ function _setup_user_profile() {
         l_status=$?
     fi
 
-    #Archivo de configuración de Git
-    l_target_link="${g_path_base}/.gitconfig"
-    l_source_path="${g_path_base}/.files/etc/git"
-    if [ $g_os_type -eq 1 ]; then
-        l_source_filename='git_linux_usr1.toml'
-    else
-        l_source_filename='git_linux_usr2.toml'
-    fi
-    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-    l_status=$?
-
-
-    #Archivo de configuración de SSH
-    l_target_link="${g_path_base}/.ssh/config"
-    l_source_path="${g_path_base}/.files/etc/ssh"
-    if [ $g_os_type -eq 1 ]; then
-        l_source_filename='ssh_linux_01.conf'
-    else
-        l_source_filename='ssh_linux_02.conf'
-    fi
-    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-    l_status=$?
-
-
-    #Archivo de configuración para pseudoterminal wezterm
-    l_target_link="${g_path_base}/.config/wezterm/wezterm.lua"
-    l_source_path="${g_path_base}/.files/wezterm"
-    if [ $g_os_type -eq 1 ]; then
-        l_source_filename='wezterm_bash1.lua'
-    else
-        l_source_filename='wezterm_bash1.lua'
-    fi
-    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
-    l_status=$?
-
-
     #Archivos de configuración de PowerShell
     l_target_link="${g_path_base}/.config/powershell/Microsoft.PowerShell_profile.ps1"
     l_source_path="${g_path_base}/.files/shell/powershell/profile/linux"
-    if [ "$g_path_programs" = "${g_path_base}/tools" ]; then
-        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='debian_aarch64_local.ps1'
-            else
-                l_source_filename='debian_x64_local.ps1'
-            fi
+    if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+        if [ "$g_os_architecture_type" = "aarch64" ]; then
+            l_source_filename='debian_aarch64.ps1'
         else
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='fedora_aarch64_local.ps1'
-            else
-                l_source_filename='fedora_x64_local.ps1'
-            fi
-        fi
-    elif [ "$g_path_programs" = "/opt/tools" ]; then
-        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='debian_aarch64_shared2.ps1'
-            else
-                l_source_filename='debian_x64_shared2.ps1'
-            fi
-        else
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='fedora_aarch64_shared2.ps1'
-            else
-                l_source_filename='fedora_x64_shared2.ps1'
-            fi
+            l_source_filename='debian_x64.ps1'
         fi
     else
-        #Se recomienda '/var/opt/tools'
-        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='debian_aarch64_shared1.ps1'
-            else
-                l_source_filename='debian_x64_shared1.ps1'
-            fi
+        if [ "$g_os_architecture_type" = "aarch64" ]; then
+            l_source_filename='fedora_aarch64.ps1'
         else
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='fedora_aarch64_shared1.ps1'
-            else
-                l_source_filename='fedora_x64_shared1.ps1'
-            fi
+            l_source_filename='fedora_x64.ps1'
         fi
     fi
+
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
 
     #Creando el profile del interprete shell
     l_target_link="${g_path_base}/.bashrc"
     l_source_path="${g_path_base}/.files/shell/bash/profile"
-    if [ "$g_path_programs" = "${g_path_base}/tools" ]; then
-        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='debian_aarch64_local.bash'
-            else
-                l_source_filename='debian_x64_local.bash'
-            fi
+
+    if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+        if [ "$g_os_architecture_type" = "aarch64" ]; then
+            l_source_filename='debian_aarch64.bash'
         else
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='fedora_aarch64_local.bash'
-            else
-                l_source_filename='fedora_x64_local.bash'
-            fi
-        fi
-    elif [ "$g_path_programs" = "/opt/tools" ]; then
-        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='debian_aarch64_shared2.bash'
-            else
-                l_source_filename='debian_x64_shared2.bash'
-            fi
-        else
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='fedora_aarch64_shared2.bash'
-            else
-                l_source_filename='fedora_x64_shared2.bash'
-            fi
+            l_source_filename='debian_x64.bash'
         fi
     else
-        #Se recomienda '/var/opt/tools'
-        if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='debian_aarch64_shared1.bash'
-            else
-                l_source_filename='debian_x64_shared1.bash'
-            fi
+        if [ "$g_os_architecture_type" = "aarch64" ]; then
+            l_source_filename='fedora_aarch64.bash'
         else
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                l_source_filename='fedora_aarch64_shared1.bash'
-            else
-                l_source_filename='fedora_x64_shared1.bash'
-            fi
+            l_source_filename='fedora_x64.bash'
         fi
     fi
+
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
+
 
 
     #5. Creando enlaces simbolico independiente del tipo de distribución Linux
@@ -2064,12 +1960,35 @@ function _setup_user_profile() {
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
 
-    #Configuracion por defecto para un Cluster de Kubernates
-    l_target_link="${g_path_base}/.kube/config"
-    l_source_path="${g_path_base}/.files/etc/kubectl"
-    l_source_filename='config_default.yaml'
+    #Archivo de configuración para pseudoterminal wezterm
+    l_target_link="${g_path_base}/.config/wezterm/wezterm.lua"
+    l_source_path="${g_path_base}/.files/wezterm"
+    l_source_filename='wezterm_bash1.lua'
+
     _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
+
+    #Archivo de configuración de Git y sus archivo de connfiguracion personalzida.
+    l_target_link="${g_path_base}/.gitconfig"
+    l_source_path="${g_path_base}/.files/etc/git"
+    l_source_filename='git_linux.toml'
+
+    _create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+
+    if [ ! -f "${g_path_base}/.files/etc/git/custom/main.toml" ]; then
+        #Copiando el archivo de configuracion personalizada para '.gitconfig'
+        printf '        > Creando el archivo "%b~/.files/etc/git/custom/main.toml%b" ...\n' "$g_color_gray1" "$g_color_reset"
+        cp "${g_path_base}/.files/etc/git/custom/template_linux_main.toml" "${g_path_base}/.files/etc/git/custom/main.toml"
+        printf '        > Creando el archivo "%b~/.files/etc/git/custom/work_uc.toml%b" ...\n' "$g_color_gray1" "$g_color_reset"
+        cp "${g_path_base}/.files/etc/git/custom/template_linux_work.toml" "${g_path_base}/.files/etc/git/custom/work_uc.toml"
+        printf '        > Edite los archivos "%betc/git/custom/main.toml%b" y "%betc/git/custom/work_uc.toml%b" si desea modificar las opciones de archivo "%b~/.gitconfig%b"\n' \
+               "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    else
+        printf '        > Edite los archivos "%betc/git/custom/main.toml%b" y "%betc/git/custom/work_uc.toml%b" si desea modificar las opciones de archivo "%b~/.gitconfig%b"\n' \
+               "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    fi
+
 
     #NerdCtl: Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD'
     l_target_link="${g_path_base}/.config/nerdctl/nerdctl.toml"
@@ -2081,8 +2000,9 @@ function _setup_user_profile() {
     #    chown -Rh $g_other_calling_user ${g_path_base}/.config/nerdctl/
     #fi
 
-    #Para ejecutar en root, la configuracion no se alamcena en el $HOME, se almacena en el '/etc'
+
     #Esto aplica para NerdCtl/ContainerD y Podman
+    #Nota: Cuando el script se ejecutar en root, la configuracion no se alamcena en el $HOME, se almacena en el '/etc'
     if [ $g_user_is_root -ne 0 ] || [ ! -z "$g_other_calling_user" ]; then
 
         #Podman: Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
@@ -2123,6 +2043,47 @@ function _setup_user_profile() {
         #    chown -Rh $g_other_calling_user ${g_path_base}/.config/buildkit/
         #fi
 
+    fi
+
+    #6. Creando el archivo de configuracion basado en un template
+
+    #Configuracion por defecto para un Cluster de Kubernates
+    l_target_link="${g_path_base}/.kube/config"
+    l_source_path="${g_path_base}/.files/etc/kubectl/template_config.yaml"
+
+    
+    if [ -h "$l_target_link" ]; then
+        #Si es un enlace simbolico (este roto o no)
+        printf 'Profile > Remplazado el enlace simbolico "%b~/.kube/config%b" ...\n' "$g_color_gray1" "$g_color_reset"
+        unlink "${l_target_link}"
+        cp "${l_source_path}" "${l_target_link}"
+    else
+        #Si no es un enlace simbolico
+        if [ -f "$l_target_link" ]; then
+            printf 'Profile > El archivos de configuración "%b~/.kube/config%b" ya existe ...\n' "$g_color_gray1" "$g_color_reset"
+        else
+            printf 'Profile > Creando el archivo "%b~/.kube/config%b" ...\n' "$g_color_gray1" "$g_color_reset"
+            cp "${l_source_path}" "${l_target_link}"
+        fi 
+    fi 
+
+    #Archivo de configuración de SSH
+    l_target_link="${g_path_base}/.ssh/config"
+    l_source_path="${g_path_base}/.files/etc/ssh/template_linux.conf"
+
+    if [ -h "$l_target_link" ]; then
+        #Si es un enlace simbolico (este roto o no)
+        printf 'Profile > Remplazado el enlace simbolico "%b~/.ssh/config%b" ...\n' "$g_color_gray1" "$g_color_reset"
+        unlink "${l_target_link}"
+        cp "${l_source_path}" "${l_target_link}"
+    else
+        #Si no es un enlace simbolico
+        if [ -f "$l_target_link" ]; then
+            printf 'Profile > El archivos de configuración "%b~/.ssh/config%b" ya existe ...\n' "$g_color_gray1" "$g_color_reset"
+        else
+            printf 'Profile > Creando el archivo "%b~/.ssh/config%b" ...\n' "$g_color_gray1" "$g_color_reset"
+            cp "${l_source_path}" "${l_target_link}"
+        fi
     fi
 
     return 0

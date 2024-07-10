@@ -1,0 +1,39 @@
+# Usuario personal
+[user]
+	email = lpenac@mymail.com
+	name  = Mi name
+
+
+# Opciones generales 
+[core]
+    # Editor (colocar la ruta completa si este no esta en el 'PATH'.
+	editor = C:/Tools/Vim/vim91/vim.exe
+
+
+# Incluir los temas del comando 'delta'
+#[include]
+#    path = ~/.files/etc/delta/themes.toml
+
+
+# Personalizar las configuraciones de comando 'delta'
+[delta]
+    # Tema que se usara para delta
+    #features = kingfisher
+
+# Alias del comando git (use el nombre del alias como un subcomando: 'git alias')
+[alias]
+    log0 = log --color=always --format='%C(cyan)%h%Creset %C(blue)%ar%Creset%C(auto)%d%Creset %C(yellow)%s%+b %C(white)%ae%Creset'
+    log1 = log1-specific --all
+    log2 = log2-specific --all
+    log3 = log3-specific --all
+    log1-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)'
+    log2-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(auto)%d%C(reset)%n          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'
+    log3-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n          %C(white)%s%C(reset)%n        %C(dim white)- %an <%ae> %C(reset) %C(dim white)(committer: %cn <%ce>)%C(reset)'
+
+
+# Usuario de work UC
+#[includeIf "gitdir/i:c:/code/uc/"]
+#    path = ~/.files/etc/git/custom/work_uc.toml
+
+
+

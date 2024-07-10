@@ -3329,7 +3329,8 @@ function _copy_artifact_files() {
                     #Script que se usara como comando para abrir fzf en un panel popup tmux
                     echo "Copiando \"./bin/fzf-tmux\" como \"~/.files/shell/bash/fzf/fzf-tmux.bash\" y crear un enlace el como comando \"~/.local/bin/fzf-tmux\"..."
                     cp "${l_path_source}/bin/fzf-tmux" "${g_path_base}/.files/shell/bash/fzf/fzf-tmux.bash"
-                    ln -sfn ${g_path_base}/.files/shell/bash/fzf/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
+                    #Ya no es requerido, use la opcion 'fzf --tmux ...'
+                    #ln -sfn ${g_path_base}/.files/shell/bash/fzf/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
 
                     echo "Copiando \"./bin/fzf-preview.sh\" como \"~/.files/shell/bash/fzf/fzf-preview.bash\"..."
                     cp "${l_path_source}/bin/fzf-preview.sh" "${g_path_base}/.files/shell/bash/fzf/fzf-preview.bash"
@@ -3342,7 +3343,8 @@ function _copy_artifact_files() {
                         chown $g_other_calling_user ${g_path_base}/.files/shell/bash/keybindings/fzf.zsh
                         chown $g_other_calling_user ${g_path_base}/.files/shell/bash/fzf/fzf-tmux.bash
                         chown $g_other_calling_user ${g_path_base}/.files/shell/bash/fzf/fzf-preview.bash
-                        chown -h $g_other_calling_user ${g_path_base}/.local/bin/fzf-tmux
+                        #Ya no es requerido, use la opcion 'fzf --tmux ...'
+                        #chown -h $g_other_calling_user ${g_path_base}/.local/bin/fzf-tmux
                     fi
 
                 fi

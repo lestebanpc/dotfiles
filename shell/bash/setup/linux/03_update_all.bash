@@ -265,13 +265,11 @@ function _copy_plugin_files() {
             #    fi
             #fi
 
-            #ln -sfn ${g_path_base}/.files/shell/fzf/fzf-tmux.bash ${g_path_base}/.local/bin/fzf-tmux
 
             #if [ ! -z "$g_other_calling_user" ]; then
             #    chown $g_other_calling_user ${g_path_base}/.files/shell/bash/autocomplete/fzf.bash 
             #    chown $g_other_calling_user ${g_path_base}/.files/shell/bash/keybindings/fzf.bash
             #    chown $g_other_calling_user ${g_path_base}/.files/shell/bash/fzf/fzf-tmux.bash
-            #    chown -h $g_other_calling_user ${g_path_base}/.local/bin/fzf-tmux
             #fi
             l_result=0
             ;;

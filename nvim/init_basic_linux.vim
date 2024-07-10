@@ -1,10 +1,42 @@
-"----------------------------- Variables Iniciales    -----------------------------
+"----------------------------- Variables Globales      -----------------------------
 
-"Habilita el uso del TabLine (barra superior donde se muestran los buffer y los tabs)
-let g:use_tabline = 1
+" Cargar los valores de las variables globales
+if filereadable(expand('~/.files/nvim/_config.vim'))
+    source ~/.files/nvim/_config.vim
+endif
 
-"Habilita el uso de IDE (En VIM, puede ser desabilitado si se cumple los requisitos minimos)
+" Si es 1 ('true'), se habilita el uso de IDE (puede desabilitarse automatica si no cumple
+" requisitos minimos).
+" Valor '0' es considerado 'false', otro valor es considerado 'true'.
 let g:use_ide = 0
+
+" Habilita el uso del TabLine (barra superior donde se muestran los buffer y los tabs).
+" Valor por defecto es 1 ('true'). 
+" Valor '0' es considerado 'false', otro valor es considerado 'true'.
+let g:use_tabline = get(g:, 'use_tabline', 1)
+
+" Habilitar el plugin de typing 'vim-surround', el cual es usado para encerar/modificar
+" texto con '()', '{}', '[]' un texto. Valor por defecto es 0 ('false').
+" Valor '0' es considerado 'false', otro valor es considerado 'true'.
+" Si cambia este valor, recargar/cerrar VIM para volver a cargar los plugin.
+let g:use_typing_surround = get(g:, 'use_typing_surround', 0)
+
+" Habilitar el plugin de typing 'emmet-vim', el cual es usado para crear elementos
+" HTML usando palabras claves. Valor por defecto es 0 ('false').
+" Valor '0' es considerado 'false', otro valor es considerado 'true'.
+" Si cambia este valor, recargar/cerrar VIM para volver a cargar los plugin.
+let g:use_typing_html_emmet = get(g:, 'use_typing_html_emmet', 0)
+
+" Habilitar el plugin de typing 'vim-visual-multi', el cual es usado para realizar seleccion
+" multiple de texto. Valor por defecto es 0 ('false').
+" Valor '0' es considerado 'false', otro valor es considerado 'true'.
+" Si cambia este valor, recargar/cerrar VIM para volver a cargar los plugin.
+let g:use_typing_visual_multi = get(g:, 'use_typing_visual_multi', 0)
+
+" No usuados
+let g:home_path_lsp_server = ''
+let g:home_path_dap_server = ''
+let g:using_lsp_server_cs_win = 0
 
 "----------------------------- Basic Settings          -----------------------------
 source ~/.files/vim/setting/core_setting.vim

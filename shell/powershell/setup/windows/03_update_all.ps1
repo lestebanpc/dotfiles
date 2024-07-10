@@ -1,3 +1,7 @@
+#------------------------------------------------------------------------------------------------
+# Inicializacion
+#------------------------------------------------------------------------------------------------
+
 $g_max_length_line= 130
 
 $g_is_nodejs_installed= $true
@@ -12,6 +16,12 @@ $g_regexp_sust_version3='[^0-9]*([0-9.]+).*'
 $g_regexp_sust_version4='[^0-9]*([0-9]+).*'
 #La version 'x.y.z' esta despues de un caracter vacio
 $g_regexp_sust_version5='.*\s+([0-9]+.[0-9.]+).*'
+
+
+
+#------------------------------------------------------------------------------------------------
+# Funciones
+#------------------------------------------------------------------------------------------------
 
 #Parametros de salida (SDTOUT): Version de NodeJS instalado
 #Parametros de salida (valores de retorno):
@@ -87,7 +97,7 @@ function m_update_repository($p_path, $p_repo_name, $p_is_neovim)
         return 9
     }
 
-    Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 	if(${p_is_neovim})
 	{		
 		Write-Host "- Repository Git para NeoVIM: `"${p_repo_name}`" " -NoNewline
@@ -98,7 +108,7 @@ function m_update_repository($p_path, $p_repo_name, $p_is_neovim)
 		Write-Host "- Repository Git para    VIM: `"${p_repo_name}`" " -NoNewline
 		Write-Host "(`"${p_path}`")" -ForegroundColor DarkGray
 	}
-    Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 
     cd $p_path
     
@@ -620,14 +630,14 @@ function m_setup($p_input_options)
 
 function m_show_menu_core() 
 {
-	Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+	Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 	Write-Host "                                                      Menu de Opciones" -ForegroundColor Green
-	Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 	Write-Host " (q) Salir del menu"
 	Write-Host " (a) Actualizar los plugins VIM/NeoVIM"
 	Write-Host " (b) Rollback las modificaciones realizadas de los plugins 'fzf' y 'fzf.vim'"
 	Write-Host " (c) Cambiar los plugins 'fzf' y 'fzf.vim' usando la fuente corregida"	
-	Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 }
 
 function show_menu() 
@@ -646,35 +656,35 @@ function show_menu()
 			{
 				'a' {
 					$l_continue= $false
-					Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 					m_setup 1
 				}
 				
 				'b' {
 					$l_continue= $false
-					Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 					m_setup 2
 				}
 				
 				'c' {
 					$l_continue= $false
-					Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 					m_setup 3
 				}
 				
 				'q' {
 					$l_continue= $false
-					Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 				}
 				
 				default {
 					$l_continue= $true
 					Write-Host "opción incorrecta"
-					Write-Host "----------------------------------------------------------------------------------------------------------------------------------"	 -ForegroundColor DarkGray
+	                Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 				}
 				
 			}	
@@ -683,14 +693,67 @@ function show_menu()
 	
 	
 }
-	
 
+
+
+
+#------------------------------------------------------------------------------------------------
+# Main Code
+#------------------------------------------------------------------------------------------------
+
+#Procesar los argumentos
 $g_fix_fzf=0
 if($args.count -ge 1) {
     if($args[0] -eq "1") {
         $g_fix_fzf=1
     }
 }
+
+# Folder base donde se almacena el programas, comando y afines usados por Windows.
+# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
+# - Si no es un valor valido, se asignara "C:\CLI"
+# - En este folder se creara/usara la siguiente estructura de folderes:
+#     > "${g_path_base_win}/Programs"     : subfolder donde se almacena los subfolder de los programas.
+#     > "${g_path_base_win}/Commands/bin" : subfolder donde se almacena los comandos.
+#     > "${g_path_base_win}/Commands/man" : subfolder donde se almacena los archivos de ayuda man1 del comando.
+#     > "${g_path_base_win}/Commands/doc" : subfolder donde se almacena documentacion del comando.
+#     > "${g_path_base_win}/Commands/etc" : subfolder donde se almacena archivos adicionales del comando.
+$g_path_base_win=''
+
+# Folder base donde se almacena data temporal que sera eliminado automaticamente despues completar la configuración.
+# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
+# - Si no es valido, la funcion "set_temp_path" asignara segun orden de prioridad a '$env:TEMP'.
+$g_path_temp=''
+
+# Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
+#Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
+$g_setup_only_last_version=1
+
+# Cargar la información:
+if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/profile/linux/_config.ps1") {
+
+    . "${env:USERPROFILE}/.files/shell/powershell/profile/linux/_config.ps1"
+
+    #Fix the bad entry values
+    if( "$g_setup_only_last_version" -eq "0" ) {
+        $g_setup_only_last_version=0
+    }
+    else {
+        $g_setup_only_last_version=1
+    }
+
+}
+
+# Valor por defecto del folder base de  programas, comando y afines usados por Windows.
+if((-not ${g_path_base_win}) -and (Test-Path "$g_path_base_win")) {
+    $g_path_base_win='C:\CLI'
+}
+
+# Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
+if((-not ${g_path_temp}) -and (Test-Path "$g_path_temp")) {
+    $g_path_temp= 'C:\Windows\Temp'
+}
+
 
 show_menu
 

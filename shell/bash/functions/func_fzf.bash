@@ -55,7 +55,7 @@ ge_ls() {
 
     #3. Usar FZF
     FZF_DEFAULT_COMMAND="$_g_fzf_fd" \
-    fzf --prompt 'All> ' \
+    fzf --tmux center,100%,80% --prompt 'All> ' \
         --bind "ctrl-d:change-prompt(📁 Directories> )+reload(${_g_fzf_fd} -t d)" \
         --bind "ctrl-f:change-prompt(📄 Files> )+reload(${_g_fzf_fd} -t f)" \
         --header $'CTRL-d (Search directories), CTRL-f (Search files)\n'
@@ -69,7 +69,7 @@ ge_files() {
     [ ! -z "$1" ] && l_cmd_ls="${l_cmd_ls} . '$1'"
 
     FZF_DEFAULT_COMMAND="$l_cmd_ls" \
-    fzf --preview "$_g_fzf_bat --style=numbers {}" \
+    fzf --tmux center,100%,80% --preview "$_g_fzf_bat --style=numbers {}" \
         --prompt '📄 File> ' -m \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
         --bind "ctrl-a:execute:$_g_fzf_bat --paging always --style=numbers,header-filename,grid {}" \
@@ -80,7 +80,7 @@ ge_files() {
 # Listar los procesos del SO
 ge_ps() {
     (echo "Date: $(date '+%F %T') (Use CTRL-r to reload screen)"; ps -ef) |
-    fzf --bind=$'ctrl-r:reload(echo "Date: $(date \'+%F %T\') (Use CTRL-r to reload screen)"; ps -ef)' \
+    fzf --tmux center,100%,80% --bind=$'ctrl-r:reload(echo "Date: $(date \'+%F %T\') (Use CTRL-r to reload screen)"; ps -ef)' \
         --prompt '🔧 Process> ' --header-lines=2 \
         --preview='echo {}' --preview-window=down,3,wrap \
         --layout=reverse --height=80% | awk '{print $2}'
@@ -95,7 +95,7 @@ ge_rg() {
     _g_fzf_rg_initial_query="${*:-}"
 
     FZF_DEFAULT_COMMAND="$_g_fzf_rg $(printf %q "$_g_fzf_rg_initial_query")" \
-    fzf --ansi \
+    fzf --tmux center,100%,80% --ansi \
         --color "hl:-1:underline,hl+:-1:underline:reverse" \
         --header 'CTRL-r (ripgrep mode), CTRL-f (fzf mode), ENTER (Exit & view file)' \
         --disabled --query "$_g_fzf_rg_initial_query" \
@@ -124,7 +124,7 @@ ge_rg() {
 
 # Redefine this function to change the options
 _fzf_git_fzf() {
-    fzf-tmux -p80%,60% -- \
+    fzf --tmux center,100%,80% \
         --layout=reverse --multi --min-height=20 --border \
         --color='header:italic:underline' \
         --preview-window='right,50%,border-left' \
@@ -435,7 +435,7 @@ kc_resources() {
 
     #3. Generar el reporte deseado con la data ingresada
     FZF_DEFAULT_COMMAND="$l_cmd" \
-    fzf --info=inline --layout=reverse --header-lines=1 -m \
+    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=1 -m \
         --prompt "${l_resource_name}> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-r (reload), CTRL-a (View yaml)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(oc get ${_g_fzf_kc_options} -o yaml) > /dev/tty" \
@@ -503,7 +503,7 @@ oc_projects() {
     
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
+    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
         --prompt "Project> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-d (Set Default), CTRL-e (View Events)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/_fzf_actions_kc.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}') > /dev/tty" \
@@ -579,7 +579,7 @@ kc_ns() {
     
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
+    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
         --prompt "Project> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTR-d (Set Default), CTRL-e (View Events)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/_fzf_actions_kc.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}') > /dev/tty" \
@@ -665,7 +665,7 @@ kc_po() {
     
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
+    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Not-succeeded Pod> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-e (Exit & Terminal), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs), ALT-a (View all Pods), ATL-b (View Not-succeeded pods)\n' \
         --bind "alt-a:change-prompt(Pod> )+reload:bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_pods_table \"${_g_fzf_kc_data_file}\" 1" \
@@ -755,7 +755,7 @@ kc_containers() {
     
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
+    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Not-succeeded Pod's Container> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-e (Exit & Terminal), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs), ALT-a (View all Pods), ATL-b (View Not-succeeded pods)\n' \
         --bind "alt-a:change-prompt(Pod's Container> )+reload:bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_containers_table \"${_g_fzf_kc_data_file}\" 1" \
@@ -849,7 +849,7 @@ kc_deploy() {
     
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
+    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Deployment> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (View Preview), CTRL-d (View Revisions), CTRL-w (Watch pods)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/_fzf_actions_kc.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
@@ -939,7 +939,7 @@ kc_rs() {
     
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
+    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Active ReplicaSet> " \
         --header "$(_fzf_kc_get_context_info)"$'\nALT-a (View all rs), ATL-b (View rs with pods), CTRL-a (View yaml), CTRL-b (View Preview), CTRL-d (View Revisions), CTRL-w (Watch pods)\n' \
         --bind "alt-a:change-prompt(All Replicaset> )+reload:bash \"${_g_script_path}/_fzf_actions_kc.bash\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 1" \

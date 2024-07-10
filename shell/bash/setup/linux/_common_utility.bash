@@ -960,9 +960,9 @@ function fulfill_preconditions() {
             fi
 
             if [ "$g_setup_only_last_version" = "0" ]; then
-                printf ' (Setup only last version= "true")\n'
+                printf ' (SetupOnlyLastVersion= "true")\n'
             else
-                printf ' (Setup only last version= "false")\n'
+                printf ' (SetupOnlyLastVersion= "false")\n'
             fi
         fi
 

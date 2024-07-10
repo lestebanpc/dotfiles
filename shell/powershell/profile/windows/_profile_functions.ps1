@@ -3,4 +3,4 @@
 #Funciones Generales
 #------------------------------------------------------------------------------------------------
 
-. ~/.files/shell/powershell/functions/windows/func_general.ps1
+. "${env:USERPROFILE}\.files\shell\powershell\functions\windows\func_general.ps1"

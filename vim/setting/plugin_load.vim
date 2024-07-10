@@ -3,7 +3,7 @@
 "####################################################################################
 
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-"UI> CORE> Basico y extendido (Mejorar la experiencia de usuario)
+" CORE> Basico y extendido (Mejorar la experiencia de usuario)
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if g:is_neovim
 
@@ -70,16 +70,6 @@ if g:use_ide
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "IDE> Basico
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    if g:use_typing_surround 
-        "Package UI> IDE> TYPING> Encerrar/Modificar con (), {}, [] un texto
-        packadd vim-surround
-    endif
-
-    if g:use_typing_visual_multi
-        "Package UI> IDE> TYPING> Selector multiple de texto
-        packadd vim-visual-multi
-    endif
 
     if g:is_neovim
 
@@ -217,19 +207,28 @@ endif
 
 
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-"UI> CORE
+" CORE> Basico y extendido (Mejorar la experiencia de usuario)
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+if g:use_typing_surround 
+    "Package UI> IDE> TYPING> Encerrar/Modificar con (), {}, [] un texto
+    packadd vim-surround
+endif
+
+if g:use_typing_visual_multi
+    "Package UI> IDE> TYPING> Selector multiple de texto
+    packadd vim-visual-multi
+endif
+
+if g:use_typing_html_emmet
+    "Package UI> IDE> TYPING> Crear elementos HTML por comandos
+    packadd emmet-vim
+endif
 
 "Solo en Linux (incluyendo WSL, solo en Linux y MacOS)
 if (g:os_type != 0) && g:use_tmux
     "Package UI> CORE> Crear paneles TMUX desde VIM (en Windows no existe TMUX)
     packadd vimux
-endif
-
-
-if g:use_typing_html_emmet
-    "Package UI> IDE> TYPING> Crear elementos HTML por comandos
-    packadd emmet-vim
 endif
 
 "Solo en Linux (incluyendo WSL, solo en Linux y MacOS)

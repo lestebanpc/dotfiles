@@ -1,3 +1,7 @@
+#------------------------------------------------------------------------------------------------
+# Inicializacion
+#------------------------------------------------------------------------------------------------
+
 $g_max_length_line= 130
 
 # Repositorios GIT donde estan los plugins VIM
@@ -102,6 +106,10 @@ $gd_repos_depth= @{
 
 $g_is_nodejs_installed= $true
 
+
+#------------------------------------------------------------------------------------------------
+# Funciones
+#------------------------------------------------------------------------------------------------
 
 function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, $p_tag, $p_override_target_link) {
 
@@ -314,14 +322,14 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer)
         #4.5 Instalando el paquete
         cd "${l_base_path}"
         Write-Host ""
-        Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+	    Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
         if ($p_is_neovim) {
             Write-Host "NeoVIM> Plugin (${l_repo_type}) `"${l_repo_git}`": Se esta instalando"
         }
 		else {
 			Write-Host "   VIM> Plugin (${l_repo_type}) `"${l_repo_git}`": Se esta instalando"            
         }
-        Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+	    Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 
         $l_aux=""
         $l_repo_branch= $gd_repos_branch.Item("${l_repo_git}")
@@ -369,7 +377,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer)
 	if( $l_n -gt 0 )
 	{
 		Write-Host ""
-		Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+	    Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 		if(${p_is_neovim})
 		{		
 			Write-Host "- NeoVIM> Indexando la documentación de los plugin"
@@ -378,7 +386,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer)
 		{
 			Write-Host "-    VIM> Indexando la documentación de los plugin"
 		}
-		Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+	    Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 		
 		$l_j= 0
 		for ($i=0; $i -lt $l_n; $i++) {
@@ -544,12 +552,7 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\init.vim"
         $l_source_path="${env:USERPROFILE}\.files\nvim"
-		if(Test-Path "D:\") {
-            $l_source_filename="init_ide_windows1.vim"
-        }
-        else {
-            $l_source_filename="init_ide_windows2.vim"
-        }
+        $l_source_filename="init_ide_windows.vim"
         m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\coc-settings.json"
@@ -585,12 +588,7 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\init.vim"
         $l_source_path="${env:USERPROFILE}\.files\nvim"
-		if(Test-Path "D:\") {
-            $l_source_filename="init_ide_windows1.vim"
-        }
-        else {
-            $l_source_filename="init_ide_windows2.vim"
-        }
+        $l_source_filename="init_basic_windows.vim"
         m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
         
@@ -657,12 +655,7 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
         #Creando enlaces simbolicos
         $l_target_link="${env:USERPROFILE}\.vimrc"
         $l_source_path="${env:USERPROFILE}\.files\vim"
-		if(Test-Path "D:\") {
-            $l_source_filename="vimrc_ide_windows1.vim"
-        }
-        else {
-            $l_source_filename="vimrc_ide_windows2.vim"
-        }
+        $l_source_filename="vimrc_ide_windows.vim"
         m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 		
         $l_target_link="${env:USERPROFILE}\vimfiles\coc-settings.json"
@@ -682,12 +675,7 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
 
         $l_target_link="${env:USERPROFILE}\.vimrc"
         $l_source_path="${env:USERPROFILE}\.files\vim"
-		if(Test-Path "D:\") {
-            $l_source_filename="vimrc_ide_windows1.vim"
-        }
-        else {
-            $l_source_filename="vimrc_ide_windows2.vim"
-        }
+        $l_source_filename="vimrc_basic_windows.vim"
         m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
 
 
@@ -744,21 +732,39 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
     #Archivo de configuracion de Git
     $l_target_link="${env:USERPROFILE}\.gitconfig"
-    $l_source_path="${env:USERPROFILE}\.files\config\git"
-    if(Test-Path "D:\") {
-	    $l_source_filename='git_windows_usr1.toml'
-    }
-    else {
-	    $l_source_filename='git_windows_usr2.toml'
-    }
+    $l_source_path="${env:USERPROFILE}\.files\etc\git"
+	$l_source_filename='git_windows.toml'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
+    if(-not Test-Path "${env:USERPROFILE}\.files\etc\git\custom\main.toml") {
+        Write-Host "            > Creando el archivo 'etc\git\custom\main.toml' ..."
+        Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\custom\template_windows_main.toml" -Destination "${env:USERPROFILE}\.files\etc\git\custom\main.toml"
+        Write-Host "            > Creando el archivo 'etc\git\custom\work_uc.toml' ..."
+        Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\custom\template_windows_work.toml" -Destination "${env:USERPROFILE}\.files\etc\git\custom\work_uc.toml"
+        
+        Write-Host "            > Edite los archivos 'main.toml' y 'work_uc.toml' si desea crear modificar las opciones de '~/.gitignore'."
+    else {
+        Write-Host "            > Edite los archivos 'main.toml' y 'work_uc.toml' si desea crear modificar las opciones de '~/.gitignore'."
+    }
 
     #Archivo de configuracion de SSH
     $l_target_link="${env:USERPROFILE}\.ssh\config"
-    $l_source_path="${env:USERPROFILE}\.files\config\ssh"
-	$l_source_filename='ssh_windows_01.conf'
-    m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+    $l_source_path="${env:USERPROFILE}\.files\etc\ssh\template_windows.conf"
+	
+    if(! Test-Path "$l_profile_path") {
+        Write-Host "General     > Creando el archivo '~\.ssh\config' ..."
+        Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
+	}
+    else {
+	    $l_info= Get-Item "$l_target_link" | Select-Object LinkType, LinkTarget
+        if ( $l_info.LinkType -eq "SymbolicLink" ) {
+            Write-Host "General     > Remplazado el enlace simbolico '~\.ssh\config' por un archivo ..."
+            Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
+        }
+        else {
+            Write-Host "General     > El archivo de configuración '~\.ssh\config' ya existe ..."
+        }
+    }
 
 
     #Archivos de configuracion de PowerShell
@@ -873,13 +879,13 @@ function m_setup($p_input_options)
 
 function m_show_menu_core() 
 {
-	Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+	Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 	Write-Host "                                                      Menu de Opciones" -ForegroundColor Green
-	Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 	Write-Host " (q) Salir del menu";
 	Write-Host " (a) Configurar VIM/NeoVIM como IDE y crear enlaces simbolicos si no existen"
 	Write-Host " (b) Configurar VIM/NeoVIM como IDE y re-crear enlaces simbolicos (aun si existe)"
-	Write-Host "----------------------------------------------------------------------------------------------------------------------------------" -ForegroundColor DarkGray
+	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 }
 
 function show_menu() 
@@ -898,14 +904,14 @@ function show_menu()
 			{
 				'a' {
 					$l_continue= $false
-					Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 					m_setup $false
 				}
 				
 				'b' {
 					$l_continue= $false
-					Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 					m_setup $true
 				}
@@ -913,14 +919,14 @@ function show_menu()
 				
 				'q' {
 					$l_continue= $false
-					Write-Host "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────" -ForegroundColor Green
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 				}
 				
 				default {
 					$l_continue= $true
 					Write-Host "opción incorrecta"
-					Write-Host "----------------------------------------------------------------------------------------------------------------------------------"	 -ForegroundColor DarkGray
+	                Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 				}
 				
 			}	
@@ -929,14 +935,67 @@ function show_menu()
 	
 	
 }
-	
 
+
+
+#------------------------------------------------------------------------------------------------
+# Main Code
+#------------------------------------------------------------------------------------------------
+
+#Procesar los argumentos
 $g_fix_fzf=0
 if($args.count -ge 1) {
     if($args[0] -eq "1") {
         $g_fix_fzf=1
     }
 }
+
+
+# Folder base donde se almacena el programas, comando y afines usados por Windows.
+# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
+# - Si no es un valor valido, se asignara "C:\CLI"
+# - En este folder se creara/usara la siguiente estructura de folderes:
+#     > "${g_path_base_win}/Programs"     : subfolder donde se almacena los subfolder de los programas.
+#     > "${g_path_base_win}/Commands/bin" : subfolder donde se almacena los comandos.
+#     > "${g_path_base_win}/Commands/man" : subfolder donde se almacena los archivos de ayuda man1 del comando.
+#     > "${g_path_base_win}/Commands/doc" : subfolder donde se almacena documentacion del comando.
+#     > "${g_path_base_win}/Commands/etc" : subfolder donde se almacena archivos adicionales del comando.
+$g_path_base_win=''
+
+# Folder base donde se almacena data temporal que sera eliminado automaticamente despues completar la configuración.
+# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
+# - Si no es valido, la funcion "set_temp_path" asignara segun orden de prioridad a '$env:TEMP'.
+$g_path_temp=''
+
+# Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
+#Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
+$g_setup_only_last_version=1
+
+# Cargar la información:
+if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/profile/linux/_config.ps1") {
+
+    . "${env:USERPROFILE}/.files/shell/powershell/profile/linux/_config.ps1"
+
+    #Fix the bad entry values
+    if( "$g_setup_only_last_version" -eq "0" ) {
+        $g_setup_only_last_version=0
+    }
+    else {
+        $g_setup_only_last_version=1
+    }
+
+}
+
+# Valor por defecto del folder base de  programas, comando y afines usados por Windows.
+if((-not ${g_path_base_win}) -and (Test-Path "$g_path_base_win")) {
+    $g_path_base_win='C:\CLI'
+}
+
+# Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
+if((-not ${g_path_temp}) -and (Test-Path "$g_path_temp")) {
+    $g_path_temp= 'C:\Windows\Temp'
+}
+
 
 show_menu
 
