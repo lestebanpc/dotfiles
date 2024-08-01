@@ -91,15 +91,15 @@ if g:use_ide
 
     "Si es NeoVim, el IDE puede usar CoC o el LSP interno
     "  > Usar '~/.config/nvim/ftplugin' solo para 'file types' comunes para el IDE CoC/No-CoC
-    "  > Usar '~/.config/nvim/runtime_coc/ftplugin' solo para 'file types' del IDE CoC
-    "  > Usar '~/.config/nvim/runtime_nococ/ftplugin' solo para 'file types' del IDE No-CoC
+    "  > Usar '~/.config/nvim/rte_cocide/ftplugin' solo para 'file types' del IDE CoC
+    "  > Usar '~/.config/nvim/rte_nativeide/ftplugin' solo para 'file types' del IDE No-CoC
     if g:is_neovim
         if $USE_COC != ""
             let g:use_coc_in_nvim = 1
-            let &runtimepath.=',' .. g:home_path .. '/.config/nvim/runtime_coc'
+            let &runtimepath.=',' .. g:home_path .. '/.config/nvim/rte_cocide'
         else
             let g:use_coc_in_nvim = 0
-            let &runtimepath.=',' .. g:home_path .. '/.config/nvim/runtime_nococ'        
+            let &runtimepath.=',' .. g:home_path .. '/.config/nvim/rte_nativeide'        
          endif
     endif
 	

@@ -5,7 +5,7 @@
 if g:is_neovim
     
     "Inicializar el StatusLine, TabLine, ...
-    lua require('native.ui.core')
+    lua require('ui.core')
 
 else
     "StatusLine y TabLine : AirLine

@@ -5,7 +5,7 @@
 if g:is_neovim
     
     "Configurar el explorador de archivos ('nvim-tree'):
-    lua require('native.ui.extended')
+    lua require('ui.extended')
 
 else
 
@@ -44,10 +44,13 @@ endif
 " Settings> UI> Search Files> Plug-In: FZF (FuZzy Finder)
 "###################################################################################
 
+"Sobreescribir las opciones por defecto de FZF (VIM define muchas opciones usando
+"variables globales). 
 let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
 
-"Usar el comando 'fd' y no 'find' debido a que excluye de la busqueda lo especificado por '.gitignore'.
-"Debido '--walker-skip' no permite excluir archivos, se usara aun 'fd'.
+"El comando por defecto de FZF sera 'fd' y no 'find' debido a que:
+"  - 'fd' excluye de la busqueda folderes y archivos, y lo indicado por '.gitignore'.
+"  - La opcion '--walker-skip' aun no permite excluir archivos solo carpetas.
 "Adicionalmente :
 "  > Solo incluir archivos '-t f' o '--type f'
 "  > Incluir los archivos ocultos '-H' o '--hidden'
@@ -58,29 +61,42 @@ let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
 "    > Archivo de 'persistence undo' de VIM      : '.un~'
 let $FZF_DEFAULT_COMMAND="fd -H -t f -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
 
-"Layout 
-"  > Border : rounded, sharp, horizontal, vertical, top, bottom, left, right
-"  > Highlight: Comment, Identifier 
-
-"Se dejo de Usar 'tmux popup' (tmux floating window) debido a que usa el color de fondo de la terminal
-"if g:use_tmux
-"    let g:fzf_layout = { 'tmux': '-p90%,80%' }
-"else
-
-if g:is_neovim
-    let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
+"Layout de FZF, define el tamaño y posicion del popup, usando la variable global 'g:fzf_layout'
+if g:use_tmux
+	"Si se usa TMUX, usar el 'tmux popup', definiendo el valor de la opcion '--tmux'
+    "Su valor es la misma que la opcion: [center|top|bottom|left|right][,SIZE[%]][,SIZE[%]]
+    let g:fzf_layout = { 'tmux': '99%,80%' }
 else
-    let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'border': 'rounded' } }
-    "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
+    "Si no se usa TMUX, definir el valor de las opciones '--height', '--width' y '--border'.
+    "Campos obligatorios:
+    " - 'width'    : float range [0 ~ 1] or integer range [8 ~ ]
+    " - 'height'   : float range [0 ~ 1] or integer range [4 ~ ]
+    "Campos opcionales:
+    " - 'xoffset'  : float default 0.5 range [0 ~ 1]
+    " - 'yoffset'  : float default 0.5 range [0 ~ 1]
+    " - 'relative' : boolean (default v:false)
+    " - 'border'   : Border style (default is 'rounded')
+    "                Values : rounded, sharp, horizontal, vertical, top, bottom, left, right
+    " - 'highlight': Comment, Identifier 
+    if g:is_neovim
+        "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
+        "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.99, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'border': 'rounded' } }
+        let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.99, 'height': 0.8 } }
+    else
+        let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.99, 'height': 0.8 } }
+        "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.99, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'border': 'rounded' } }
+        "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
+    endif
+
 endif
 
-"endif
-
-"Color : Permitir que se traduzca los temas de VIM de 'ANSI 256 color' a 24 bits (RGB Hex)
+"Soporte a color 24 bits (RGB)
+"Permite traducir color 'ANSI 256 color' (muchos de los temas de VIM usa este tipo de color) a su equivalente a 24 bits (RGB)
 let g:fzf_force_24_bit_colors = 1
 
-"Color de popup de fzf, segun el tema usado en VIM
-"
+"Color de FZF, usando la variable global 'g:fzf_colors'.
+"La variable global define la opcion '--color' de FZF.
+"Los campos a definir se usaran:
 "   fg, bg, hl                Item (foreground / background / highlight)
 "   fg+, bg+, hl+             Current item (foreground / background / highlight)
 "   preview-fg, preview-bg    Preview window text and background
@@ -96,7 +112,7 @@ let g:fzf_force_24_bit_colors = 1
 "   disabled                  Query string when search is disabled
 "   prompt                    Prompt before query (> )
 "   pointer                   Pointer to the current line (>)
-"
+"Se usaran los colores del tema de VIM para definir el color
 let g:fzf_colors =
 \ { 'fg':         ['fg', 'Normal'],
   \ 'bg':         ['bg', 'Normal'],
@@ -120,7 +136,15 @@ nnoremap <silent> <leader>lg :GFiles<CR>
 "Listar archivos del 'Git Status Files', Seleccionar/Examinar e Ir
 nnoremap <silent> <leader>ls :GFiles?<CR>
 "Listar comandos VIM, seleccionar y ejecutar
-nnoremap <silent> <leader>lc :History:<CR>
+nnoremap <silent> <leader>cc :History:<CR>
+"Listar las marcas (marks), seleccionar e ir
+nnoremap <silent> <leader>mm :Marks<CR>
+"Listar los saltos (jumps), seleccionar e ir
+nnoremap <silent> <leader>jj :Jumps<CR>
+"Listar los tags (generados por ctags) del proyecto ('ctags -R'), seleccionar e ir
+nnoremap <silent> <leader>tt :Tags<CR>
+"Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
+nnoremap <silent> <leader>tb :BTags<CR>
 
 "Listar, Selexionar/Examinar e Ir al buffer
 nnoremap <silent> <leader>bb :Buffers<CR>

@@ -1,0 +1,40 @@
+# Opciones generales 
+[core]
+	autocrlf = input
+	pager = delta
+	editor = vim
+
+
+# 
+[init]
+	defaultBranch = main
+
+
+# Configuraciones basica del comando 'delta'
+[delta]
+	line-numbers = true
+    light = false
+	syntax-theme = Coldark-Dark
+
+
+# 
+[interactive]
+    diffFilter = delta --color-only
+
+
+# 
+[diff]
+    colorMoved = default
+
+
+# 
+[merge]
+    conflictstyle = diff3
+
+
+# Incluir los temas configuraciones personalizadas
+[include]
+    path = ~/.config/git/main.toml
+
+
+
