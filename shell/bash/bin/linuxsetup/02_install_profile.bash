@@ -190,6 +190,7 @@ declare -A gA_repos_type=(
         ['SirVer/ultisnips']=4
         ['honza/vim-snippets']=4
         ['puremourning/vimspector']=4
+        ['ludovicchabant/vim-gutentags']=4
         ['folke/tokyonight.nvim']=1
         ['kyazdani42/nvim-web-devicons']=2
         ['nvim-lualine/lualine.nvim']=2

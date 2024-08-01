@@ -10,6 +10,9 @@
 # Archivos internos de GIT
 .git/*
 
+# Archivos de tag generado por Universal CTags
+tags
+
 # Paquetes locales de NodeJS (binarios de NodeJs)
 node_modules/*
 

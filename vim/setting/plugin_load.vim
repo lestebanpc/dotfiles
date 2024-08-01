@@ -78,6 +78,9 @@ if g:use_ide
 
     endif
 
+    "Package IDE> Soporte a Universal CTags
+    packadd vim-gutentags
+
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "IDE> Completition, LSP Client, Snippets
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

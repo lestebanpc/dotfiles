@@ -1,4 +1,24 @@
-"Configuracion de NeoVim (usa el LSP nativo y como completado usa CMP)
+"###################################################################################
+" Settings> IDE> VIM/NeoVIM> Paquete de soporte a Universal CTags
+"###################################################################################
+
+"let g:gutentags_trace = 1
+"let g:gutentags_ctags_extra_args = ['--tag-relative=always', ]
+let g:gutentags_generate_on_empty_buffer = 1
+"let g:gutentags_exclude_filetypes= []
+"let g:gutentags_ctags_exclude = ['build', 'dist', '*css', '*json', '*yaml', '*md', '.venv', '*rst']
+let g:gutentags_ctags_exclude = [
+\   '.git',
+\   'build',
+\   'dist',
+\   'node_modules',
+\   '.venv',
+\   '*swp', '*json', '*yaml', '*toml', '*md', '*css'
+\]
+
+"###################################################################################
+" Settings> IDE> NeoVIM> Configuracion del LSP nativo y completado usa CMP
+"###################################################################################
 if g:is_neovim && !g:use_coc_in_nvim
 
     lua require('nativeide.lsp')
@@ -19,7 +39,7 @@ if g:is_neovim && !g:use_coc_in_nvim
 endif
 
 "###################################################################################
-" Settings> IDE > Package: ALE (Diagnostic: Linting y Fixing)
+" Settings> IDE> VIM> Package: ALE (Diagnostic: Linting y Fixing)
 "###################################################################################
 "https://github.com/dense-analysis/ale/blob/master/doc/ale.txt
 
