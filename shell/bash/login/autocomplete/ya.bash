@@ -15,20 +15,32 @@ _ya() {
             ya,help)
                 cmd="ya__help"
                 ;;
+            ya,pack)
+                cmd="ya__pack"
+                ;;
             ya,pub)
                 cmd="ya__pub"
                 ;;
-            ya,pub-static)
-                cmd="ya__pub__static"
+            ya,pub-to)
+                cmd="ya__pub__to"
+                ;;
+            ya,sub)
+                cmd="ya__sub"
                 ;;
             ya__help,help)
                 cmd="ya__help__help"
                 ;;
+            ya__help,pack)
+                cmd="ya__help__pack"
+                ;;
             ya__help,pub)
                 cmd="ya__help__pub"
                 ;;
-            ya__help,pub-static)
-                cmd="ya__help__pub__static"
+            ya__help,pub-to)
+                cmd="ya__help__pub__to"
+                ;;
+            ya__help,sub)
+                cmd="ya__help__sub"
                 ;;
             *)
                 ;;
@@ -37,7 +49,7 @@ _ya() {
 
     case "${cmd}" in
         ya)
-            opts="-h -V --help --version pub pub-static help"
+            opts="-V -h --version --help pub pub-to sub pack help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -51,7 +63,7 @@ _ya() {
             return 0
             ;;
         ya__help)
-            opts="pub pub-static help"
+            opts="pub pub-to sub pack help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -65,6 +77,20 @@ _ya() {
             return 0
             ;;
         ya__help__help)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        ya__help__pack)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -92,7 +118,7 @@ _ya() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ya__help__pub__static)
+        ya__help__pub__to)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -106,18 +132,32 @@ _ya() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ya__pub)
-            opts="-h -V --str --json --help --version <RECEIVER> <KIND>"
+        ya__help__sub)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        ya__pack)
+            opts="-a -i -l -u -h --add --install --list --upgrade --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --str)
+                --add)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
-                --json)
+                -a)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
@@ -128,8 +168,8 @@ _ya() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ya__pub__static)
-            opts="-h -V --str --json --help --version <SEVERITY> <KIND>"
+        ya__pub)
+            opts="-h --str --json --list --help <KIND>"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -143,6 +183,50 @@ _ya() {
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
+                --list)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        ya__pub__to)
+            opts="-h --str --json --list --help <RECEIVER> <KIND>"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                --str)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --json)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --list)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        ya__sub)
+            opts="-h --help <KINDS>"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
                 *)
                     COMPREPLY=()
                     ;;

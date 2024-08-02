@@ -18,38 +18,60 @@ set edit:completion:arg-completer[ya] = {|@words|
     }
     var completions = [
         &'ya'= {
-            cand -h 'Print help'
-            cand --help 'Print help'
             cand -V 'Print version'
             cand --version 'Print version'
-            cand pub 'Publish a message to remote instance(s)'
-            cand pub-static 'Publish a static message to all remote instances'
+            cand -h 'Print help'
+            cand --help 'Print help'
+            cand pub 'Publish a message to the current instance'
+            cand pub-to 'Publish a message to the specified instance'
+            cand sub 'Subscribe to messages from all remote instances'
+            cand pack 'Manage packages'
             cand help 'Print this message or the help of the given subcommand(s)'
         }
         &'ya;pub'= {
             cand --str 'Send the message with a string body'
             cand --json 'Send the message with a JSON body'
+            cand --list 'Send the message as string of list'
             cand -h 'Print help'
             cand --help 'Print help'
-            cand -V 'Print version'
-            cand --version 'Print version'
         }
-        &'ya;pub-static'= {
+        &'ya;pub-to'= {
             cand --str 'Send the message with a string body'
             cand --json 'Send the message with a JSON body'
+            cand --list 'Send the message as string of list'
             cand -h 'Print help'
             cand --help 'Print help'
-            cand -V 'Print version'
-            cand --version 'Print version'
+        }
+        &'ya;sub'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'ya;pack'= {
+            cand -a 'Add a package'
+            cand --add 'Add a package'
+            cand -i 'Install all packages'
+            cand --install 'Install all packages'
+            cand -l 'List all packages'
+            cand --list 'List all packages'
+            cand -u 'Upgrade all packages'
+            cand --upgrade 'Upgrade all packages'
+            cand -h 'Print help'
+            cand --help 'Print help'
         }
         &'ya;help'= {
-            cand pub 'Publish a message to remote instance(s)'
-            cand pub-static 'Publish a static message to all remote instances'
+            cand pub 'Publish a message to the current instance'
+            cand pub-to 'Publish a message to the specified instance'
+            cand sub 'Subscribe to messages from all remote instances'
+            cand pack 'Manage packages'
             cand help 'Print this message or the help of the given subcommand(s)'
         }
         &'ya;help;pub'= {
         }
-        &'ya;help;pub-static'= {
+        &'ya;help;pub-to'= {
+        }
+        &'ya;help;sub'= {
+        }
+        &'ya;help;pack'= {
         }
         &'ya;help;help'= {
         }

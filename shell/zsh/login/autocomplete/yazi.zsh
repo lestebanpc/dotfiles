@@ -14,9 +14,10 @@ _yazi() {
     fi
 
     local context curcontext="$curcontext" state line
-    _arguments "${_arguments_options[@]}" \
+    _arguments "${_arguments_options[@]}" : \
 '--cwd-file=[Write the cwd on exit to this file]:CWD_FILE:_files' \
 '--chooser-file=[Write the selected files to this file on open fired]:CHOOSER_FILE:_files' \
+'--client-id=[Use the specified client ID, must be a globally unique number]:CLIENT_ID: ' \
 '--local-events=[Report the specified local events to stdout]:LOCAL_EVENTS: ' \
 '--remote-events=[Report the specified remote events to stdout]:REMOTE_EVENTS: ' \
 '--clear-cache[Clear the cache directory]' \

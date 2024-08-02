@@ -23,6 +23,7 @@ Register-ArgumentCompleter -Native -CommandName 'yazi' -ScriptBlock {
         'yazi' {
             [CompletionResult]::new('--cwd-file', 'cwd-file', [CompletionResultType]::ParameterName, 'Write the cwd on exit to this file')
             [CompletionResult]::new('--chooser-file', 'chooser-file', [CompletionResultType]::ParameterName, 'Write the selected files to this file on open fired')
+            [CompletionResult]::new('--client-id', 'client-id', [CompletionResultType]::ParameterName, 'Use the specified client ID, must be a globally unique number')
             [CompletionResult]::new('--local-events', 'local-events', [CompletionResultType]::ParameterName, 'Report the specified local events to stdout')
             [CompletionResult]::new('--remote-events', 'remote-events', [CompletionResultType]::ParameterName, 'Report the specified remote events to stdout')
             [CompletionResult]::new('--clear-cache', 'clear-cache', [CompletionResultType]::ParameterName, 'Clear the cache directory')

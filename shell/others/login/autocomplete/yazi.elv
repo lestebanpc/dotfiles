@@ -20,6 +20,7 @@ set edit:completion:arg-completer[yazi] = {|@words|
         &'yazi'= {
             cand --cwd-file 'Write the cwd on exit to this file'
             cand --chooser-file 'Write the selected files to this file on open fired'
+            cand --client-id 'Use the specified client ID, must be a globally unique number'
             cand --local-events 'Report the specified local events to stdout'
             cand --remote-events 'Report the specified remote events to stdout'
             cand --clear-cache 'Clear the cache directory'

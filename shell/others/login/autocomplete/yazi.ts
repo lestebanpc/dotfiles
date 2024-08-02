@@ -23,6 +23,15 @@ const completion: Fig.Spec = {
       },
     },
     {
+      name: "--client-id",
+      description: "Use the specified client ID, must be a globally unique number",
+      isRepeatable: true,
+      args: {
+        name: "client_id",
+        isOptional: true,
+      },
+    },
+    {
       name: "--local-events",
       description: "Report the specified local events to stdout",
       isRepeatable: true,

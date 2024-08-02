@@ -4,7 +4,7 @@ const completion: Fig.Spec = {
   subcommands: [
     {
       name: "pub",
-      description: "Publish a message to remote instance(s)",
+      description: "Publish a message to the current instance",
       options: [
         {
           name: "--str",
@@ -25,12 +25,59 @@ const completion: Fig.Spec = {
           },
         },
         {
+          name: "--list",
+          description: "Send the message as string of list",
+          isRepeatable: true,
+          args: {
+            name: "list",
+            isVariadic: true,
+            isOptional: true,
+          },
+        },
+        {
           name: ["-h", "--help"],
           description: "Print help",
         },
+      ],
+      args: {
+        name: "kind",
+      },
+    },
+    {
+      name: "pub-to",
+      description: "Publish a message to the specified instance",
+      options: [
         {
-          name: ["-V", "--version"],
-          description: "Print version",
+          name: "--str",
+          description: "Send the message with a string body",
+          isRepeatable: true,
+          args: {
+            name: "str",
+            isOptional: true,
+          },
+        },
+        {
+          name: "--json",
+          description: "Send the message with a JSON body",
+          isRepeatable: true,
+          args: {
+            name: "json",
+            isOptional: true,
+          },
+        },
+        {
+          name: "--list",
+          description: "Send the message as string of list",
+          isRepeatable: true,
+          args: {
+            name: "list",
+            isVariadic: true,
+            isOptional: true,
+          },
+        },
+        {
+          name: ["-h", "--help"],
+          description: "Print help",
         },
       ],
       args: [
@@ -43,44 +90,48 @@ const completion: Fig.Spec = {
       ]
     },
     {
-      name: "pub-static",
-      description: "Publish a static message to all remote instances",
+      name: "sub",
+      description: "Subscribe to messages from all remote instances",
       options: [
         {
-          name: "--str",
-          description: "Send the message with a string body",
+          name: ["-h", "--help"],
+          description: "Print help",
+        },
+      ],
+      args: {
+        name: "kinds",
+      },
+    },
+    {
+      name: "pack",
+      description: "Manage packages",
+      options: [
+        {
+          name: ["-a", "--add"],
+          description: "Add a package",
           isRepeatable: true,
           args: {
-            name: "str",
+            name: "add",
             isOptional: true,
           },
         },
         {
-          name: "--json",
-          description: "Send the message with a JSON body",
-          isRepeatable: true,
-          args: {
-            name: "json",
-            isOptional: true,
-          },
+          name: ["-i", "--install"],
+          description: "Install all packages",
+        },
+        {
+          name: ["-l", "--list"],
+          description: "List all packages",
+        },
+        {
+          name: ["-u", "--upgrade"],
+          description: "Upgrade all packages",
         },
         {
           name: ["-h", "--help"],
           description: "Print help",
         },
-        {
-          name: ["-V", "--version"],
-          description: "Print version",
-        },
       ],
-      args: [
-        {
-          name: "severity",
-        },
-        {
-          name: "kind",
-        },
-      ]
     },
     {
       name: "help",
@@ -88,11 +139,19 @@ const completion: Fig.Spec = {
       subcommands: [
         {
           name: "pub",
-          description: "Publish a message to remote instance(s)",
+          description: "Publish a message to the current instance",
         },
         {
-          name: "pub-static",
-          description: "Publish a static message to all remote instances",
+          name: "pub-to",
+          description: "Publish a message to the specified instance",
+        },
+        {
+          name: "sub",
+          description: "Subscribe to messages from all remote instances",
+        },
+        {
+          name: "pack",
+          description: "Manage packages",
         },
         {
           name: "help",
@@ -103,12 +162,12 @@ const completion: Fig.Spec = {
   ],
   options: [
     {
-      name: ["-h", "--help"],
-      description: "Print help",
-    },
-    {
       name: ["-V", "--version"],
       description: "Print version",
+    },
+    {
+      name: ["-h", "--help"],
+      description: "Print help",
     },
   ],
 };
