@@ -172,7 +172,7 @@ if exists("g:csharp_codeactions_enable") && g:csharp_codeactions_enable
     augroup csharp_ftplugin
         autocmd! * <buffer>
         for au in split(g:csharp_codeactions_autocmd, ',')
-            execute 'autocmd' au '<buffer> call ui_ide_lsp_cs#codeactions_count()'
+            execute 'autocmd' au '<buffer> call ide_lsp_cs#codeactions_count()'
         endfor
     augroup END
 

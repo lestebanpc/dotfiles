@@ -1,5 +1,5 @@
 "
-" Se recomienda ejecutar ('~/.files/shell/powershell/bin/windowssetup/02_setup_profile.ps1') el script de 
+" Se recomienda ejecutar ('~/.files/shell/powershell/bin/windowssetup/02_install_profile.ps1') el script de 
 " configuración del profile y escoger uno de los modos Editor o IDE, el cual creara los enlaces simbolicos
 " requeridos para la inicialización de NeoVIM en dicho modo. El runtime path donde se encuentra el archivo 
 " de inicialización de NeoVIM ('${env:USERPROFILE}\vimfiles\') tiene la siguiente estructura:
@@ -13,7 +13,7 @@
 "                         archivo de inicialización. Es un enlace simbolico a '~/.files/vim/setting/'.
 "  ./lua/              -> Carpeta de script LUA de configuracion de NeoVIM invocados por los script
 "                         ubicados en './setting/plugin/' ('ui_core.vim', 'ui_extended.vim' y 
-"                         'ui_ide_core.vim'). Es un enlace simbolico a '~/.files/nvim/lua/'.
+"                         'ide_core.vim'). Es un enlace simbolico a '~/.files/nvim/lua/'.
 "  ./ftplugin/         -> Carpeta de plugin de filetypes usado por cualquier IDE.
 "                         En modo IDE, es un enlace simbolico a '~/.files/nvim/ftplugin/cocide/'.
 "                         En modo Editor, es un enlace simbolico a '~/.files/nvim/ftplugin/editor/'.

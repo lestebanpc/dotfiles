@@ -223,7 +223,7 @@ else
 endif
 
 "Code action: Funciones de utilidad
-function! ui_ide_lsp_cs#codeactions_count() abort
+function! ide_lsp_cs#codeactions_count() abort
   let opts = {
   \ 'CallbackCount': function('s:CBReturnCount', [bufnr(), line('.')]),
   \ 'CallbackCleanup': {-> execute('sign unplace * group=csharp_CodeActions')}

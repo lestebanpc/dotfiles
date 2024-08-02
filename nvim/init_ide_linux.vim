@@ -1,5 +1,5 @@
 "
-" Se recomienda ejecutar ('~/.files/shell/bash/bin/linuxsetup/02_setup_profile.bash') el script de 
+" Se recomienda ejecutar ('~/.files/shell/bash/bin/linuxsetup/02_install_profile.bash') el script de 
 " configuración del profile y escoger uno de los modos Editor o IDE, el cual creara los enlaces simbolicos
 " requeridos para la inicialización de NeoVIM en dicho modo. El runtime path donde se encuentra el archivo 
 " de inicialización de NeoVIM ('~/.config/nvim') tiene la siguiente estructura:
@@ -13,7 +13,7 @@
 "                         archivo de inicialización. Es un enlace simbolico a '~/.files/vim/setting/'.
 "  ./lua/              -> Carpeta de script LUA de configuracion de NeoVIM invocados por los script
 "                         ubicados en './setting/plugin/' ('ui_core.vim', 'ui_extended.vim' y 
-"                         'ui_ide_core.vim'). Es un enlace simbolico a '~/.files/nvim/lua/'.
+"                         'ide_core.vim'). Es un enlace simbolico a '~/.files/nvim/lua/'.
 "  ./ftplugin/         -> Carpeta de plugin de filetypes usado por cualquier IDE.
 "                         Enlace simbolico a '~/.files/nvim/ftplugin/commonide/'.
 "  ./rte_cocide/       -> Folder que formara parte del runtime path de NeoVIM de manera dinamicamente si 
@@ -126,14 +126,14 @@ if !g:use_ide
 endif
 
 "Setting Typing del IDE:
-runtime setting/plugin/ui_ide_typing.vim
+runtime setting/plugin/ide_typing.vim
 
 "Setting IDE Core : Diagnostic (Linting y Fixing), LSP client, Completition, ...
 "En VIM se define:
 "   - Diagnostico : ALE
 "   - Interprese Lenguage Server (incluye LSP server) y Completition : CoC.nvim
 "   - Snippets : UltiSnippets
-runtime setting/plugin/ui_ide_core.vim
+runtime setting/plugin/ide_core.vim
 
 "Adaptadores de Lenguajes personalizados: C# (OmniSharp)
 "Implementa :
@@ -141,7 +141,7 @@ runtime setting/plugin/ui_ide_core.vim
 "   - Source para ALE linting (Linter para C#)
 "   - Source de autocompletado para Coc (y otros motores de autocompletado
 "   - Source para UltiSnippets
-runtime vim/setting/plugin/ui_ide_lsp_cs.vim
+runtime vim/setting/plugin/ide_lsp_cs.vim
 
 
 

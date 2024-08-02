@@ -26,8 +26,8 @@
 #                  ./linuxsetup/             <- Requerido en el proceso de instalación en Linux
 #                      ./00_setup_summary.bash
 #                      ./01_setup_commands.bash
-#                      ./02_setup_profile.bash
-#                      ./03_update_all.bash
+#                      ./02_install_profile.bash
+#                      ./03_update_profile.bash
 #                      ./04_setup_packages.bash
 #                      ........................
 #                      ........................
@@ -143,7 +143,7 @@
 
 
 ##############################################################################################
-# Usado por los script "00_setup_summary.bash", "01_setup_commands.bash", "03_update_all.bash"
+# Usado por los script "00_setup_summary.bash", "01_setup_commands.bash"
 ##############################################################################################
 
 # Folder base donde se almacena el comando y sus archivos afines.
@@ -195,7 +195,7 @@
 
 
 ##############################################################################################
-# Usado por los script "01_setup_commands.bash", "03_update_all.bash"
+# Usado por los script "01_setup_commands.bash", "03_update_profile.bash"
 ##############################################################################################
 
 # Folder base, generados solo para Linux WSL, donde se almacena el programas, comando y afines usados por Windows.

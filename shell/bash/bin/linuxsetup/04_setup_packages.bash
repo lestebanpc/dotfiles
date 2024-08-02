@@ -26,8 +26,8 @@
 #             ./linuxsetup/
 #                 ./00_setup_summary.bash
 #                 ./01_setup_commands.bash
-#                 ./02_setup_profile.bash
-#                 ./03_update_all.bash
+#                 ./02_install_profile.bash
+#                 ./03_update_profile.bash
 #                 ./04_setup_packages.bash
 #                 ........................
 #                 ........................

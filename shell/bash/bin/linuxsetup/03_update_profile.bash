@@ -26,8 +26,8 @@
 #             ./linuxsetup/
 #                 ./00_setup_summary.bash
 #                 ./01_setup_commands.bash
-#                 ./02_setup_profile.bash
-#                 ./03_update_all.bash
+#                 ./02_install_profile.bash
+#                 ./03_update_profile.bash
 #                 ./04_setup_packages.bash
 #                 ........................
 #                 ........................
@@ -546,94 +546,25 @@ function _update_all() {
         p_opciones=$1
     fi
     
-    #2. Actualizar los paquetes instalados desde los repositorios SO
+    #2. Inicialización 
     g_status_crendential_storage=-1
     local l_status
     local l_flag
-    local l_opcion=1
     local l_is_noninteractive=1
     if [ $gp_type_calling -eq 2 ]; then
         l_is_noninteractive=0
     fi
 
 
-    if [ $g_runner_sudo_support -ne 2 ] && [ $g_runner_sudo_support -ne 3 ]; then
-
-        l_flag=$(( $p_opciones & $l_opcion ))
-        if [ $l_flag -eq $l_opcion ]; then
-
-        
-            #Solicitar credenciales de administrador y almacenarlas temporalmente
-            if [ $g_status_crendential_storage -eq 0 ]; then
-                storage_sudo_credencial
-                g_status_crendential_storage=$?
-                #Se requiere almacenar las credenciales para realizar cambio con sudo. 
-                #  Si es 0 o 1: la instalación/configuración es completar
-                #  Si es 2    : el usuario no acepto la instalación/configuración
-                #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
-                if [ $g_status_crendential_storage -eq 2 ]; then
-                    return 120
-                fi
-            fi
-
-            printf '\n'
-            print_line '-' $g_max_length_line  "$g_color_gray1"
-            #print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "OS > Actualizar los paquetes del SO '%b%s %s%b'\n" "$g_color_cian1" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
-            print_line '-' $g_max_length_line "$g_color_gray1"
-            #print_line '─' $g_max_length_line  "$g_color_blue1"
-
-            upgrade_os_packages $g_os_subtype_id $l_is_noninteractive
-
-        fi
-
-    fi
-
-    #3. Actualizar los binarios instados de repositorios como Git
-    l_opcion=2
-    l_flag=$(( $p_opciones & $l_opcion ))
-    if [ $l_flag -eq $l_opcion ]; then
-
-        #Parametros usados por el script:
-        # 1> Tipo de llamado: 1/3 (sin menu interactivo/no-interactivo).
-        # 2> Opciones de menu a ejecutar: entero positivo.
-        # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
-        # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
-        # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
-        #    "/var/opt/tools" o "~/tools".
-        # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
-        # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
-        # 8> El estado de la credencial almacenada para el sudo.
-        # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
-        if [ $l_is_noninteractive -eq 1 ]; then
-            ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 1 2 "$g_targethome_path" "$g_repo_name" "$g_programs_path" "" "$g_temp_path" \
-                $g_status_crendential_storage 1
-            l_status=$?
-        else
-            ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 3 2 "$g_targethome_path" "$g_repo_name" "$g_programs_path" "" "$g_temp_path" \
-                $g_status_crendential_storage 1
-            l_status=$?
-        fi
-
-        #Si no se acepto almacenar credenciales
-        if [ $l_status -eq 120 ]; then
-            return 120
-        #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-        elif [ $l_status -eq 119 ]; then
-           g_status_crendential_storage=0
-        fi
-
-    fi
-
     #Version de NodeJS instalado
     local l_nodejs_version=$(get_nodejs_version)
 
-    #4. Actualizar paquetes VIM instalados
+    #3. Actualizar paquetes VIM instalados
     local l_version
     local l_aux=""
     local l_is_coc_installed=1
 
-    l_opcion=4
+    local l_opcion=1
     l_flag=$(( $p_opciones & $l_opcion ))
 
     if [ $l_flag -eq $l_opcion ]; then
@@ -699,8 +630,8 @@ function _update_all() {
 
     fi
 
-    #5. Actualizar paquetes NeoVIM instalados
-    l_opcion=8
+    #4. Actualizar paquetes NeoVIM instalados
+    l_opcion=2
     l_flag=$(( $p_opciones & $l_opcion ))
 
     if [ $l_flag -eq $l_opcion ]; then
@@ -782,23 +713,13 @@ function _show_menu_core() {
     print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_green1"
     print_line '-' $g_max_length_line  "$g_color_gray1"
     printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
-    if [ $g_runner_sudo_support -ne 2 ] && [ $g_runner_sudo_support -ne 3 ]; then
-        printf " (%ba%b) Actualizar los artefactos existentes: Paquetes del SO y plugin VIM/NeoVIM\n" "$g_color_green1" "$g_color_reset"
-        printf " (%bb%b) Actualizar los artefactos existentes: Paquetes del SO, binarios de GIT y plugins VIM/NeoVIM\n" "$g_color_green1" "$g_color_reset"
-    else
-        printf " (%ba%b) Actualizar los artefactos existentes: Plugins VIM/NeoVIM\n" "$g_color_green1" "$g_color_reset"
-        printf " (%bb%b) Actualizar los artefactos existentes: Binarios de GIT y VIM/NeoVIM\n" "$g_color_green1" "$g_color_reset"
-    fi
+    printf " (%ba%b) Actualizar los artefactos existentes: Plugins VIM/NeoVIM\n" "$g_color_green1" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
     local l_max_digits=$?
 
-    if [ $g_runner_sudo_support -ne 2 ] && [ $g_runner_sudo_support -ne 3 ]; then
-        printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO existentes\n" "$g_color_green1" "1" "$g_color_reset"
-    fi
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los comandos/programas descargados de repositorio como GitHub\n" "$g_color_green1" "2" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de VIM    existentes e inicializarlos\n" "$g_color_green1" "4" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de NeoVIM existentes e inicializarlos\n" "$g_color_green1" "8" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de VIM    existentes e inicializarlos\n" "$g_color_green1" "1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de NeoVIM existentes e inicializarlos\n" "$g_color_green1" "2" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_gray1" 
 
@@ -823,28 +744,9 @@ function g_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1" 
 
-                if [ $g_runner_sudo_support -ne 2 ] && [ $g_runner_sudo_support -ne 3 ]; then
-                    #1 + 4 + 8
-                    _update_all 13
-                else
-                    #4 + 8
-                    _update_all 12
-                fi
+                #1 + 2
+                _update_all 3
                 ;;
-
-            b)
-                l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_green1" 
-                
-                if [ $g_runner_sudo_support -ne 2 ] && [ $g_runner_sudo_support -ne 3 ]; then
-                    #1 + 2 + 4 + 8
-                    _update_all 15
-                else
-                    #2 + 4 + 8
-                    _update_all 14
-                fi
-                ;;
-
 
             q)
                 l_flag_continue=1
@@ -878,13 +780,13 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bActualizaciones usando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/03_update_all.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/03_update_all.bash 0 TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SETUP_ONLYLAST_VERSION\n%b' "$g_color_yellow1" \
+    printf '    %b%s/bash/bin/linuxsetup/03_update_profile.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/03_update_profile.bash 0 TARGET_HOME_PATH REPO_NAME\n%b' "$g_color_yellow1" \
            "$g_shell_path" "$g_color_reset"
-    printf '  > %bActualizaciones SIN usar un menú de opciones:%b:\n' "$g_color_cian1" "$g_repo_name" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/03_update_all.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" \
+    printf '  > %bActualizaciones SIN usar un menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/03_update_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME\n%b' "$g_color_yellow1" \
            "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/03_update_all.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION OTHER-USERID\n\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/03_update_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME SUDO-STORAGE-OPTIONS\n\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b Es 0 si se muestra un menu, caso contrario es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -899,20 +801,9 @@ g_usage() {
     printf '    %b> El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si ninguno de los anteriores se establece, se usara el valor ".files".%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".%b\n' \
-           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bCMD_BASE_PATH %bes ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts"). Si se envia vacio o EMPTY se usara el directorio predeterminado:%b\n' \
-           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '      %b> Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '      %b> Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '      %b> Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '  > %bTEMP_PATH %bes la ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado "/tmp".%b\n' \
-           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
-           "$g_color_gray1" "$g_color_reset"
-    printf '  > %bSETUP_ONLYLAST_VERSION %bpor defecto es 1 (false). Solo si ingresa 0 se instala/actualiza la ultima versión.%b\n\n' "$g_color_green1" \
+    printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n\n' \
            "$g_color_gray1" "$g_color_reset"
 
 
@@ -977,48 +868,6 @@ g_targethome_path=''
 # - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 g_repo_name=''
 
-#Folder base donde se almacena los subfolderes de los programas.
-# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
-# - Si no es un valor valido, la funcion "get_program_path" asignara un sus posibles valores (segun orden de prioridad):
-#     > "/var/opt/tools"
-#     > "~/tools"
-g_programs_path=''
-
-#Folder base donde se almacena el comando y sus archivos afines.
-# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura), dentro
-#   de este folder se creara/usara la siguiente estructura de folderes:
-#     > "${g_cmd_base_path}/bin"         : subfolder donde se almacena los comandos.
-#     > "${g_cmd_base_path}/man/man1"    : subfolder donde se almacena archivos de ayuda man1.
-#     > "${g_cmd_base_path}/man/man5"    : subfolder donde se almacena archivos de ayuda man5.
-#     > "${g_cmd_base_path}/man/man7"    : subfolder donde se almacena archivos de ayuda man7.
-#     > "${g_cmd_base_path}/share/fonts" : subfolder donde se almacena las fuentes.
-# - Si no es un valor valido, la funcion "get_command_path" asignara un sus posibles valores (segun orden de prioridad):
-#     > Si tiene permisos administrativos, usara los folderes predeterminado para todos los usuarios:
-#        - "/usr/local/bin"      : subfolder donde se almacena los comandos.
-#        - "/usr/local/man/man1" : subfolder donde se almacena archivos de ayuda man1.
-#        - "/usr/local/man/man5" : subfolder donde se almacena archivos de ayuda man5.
-#        - "/usr/local/man/man7" : subfolder donde se almacena archivos de ayuda man7.
-#        - "/usr/share/fonts"    : subfolder donde se almacena las fuentes.
-#     > Caso contrario, se usara los folderes predeterminado para el usuario:
-#        - "~/.local/bin"         : subfolder donde se almacena los comandos.
-#        - "~/.local/man/man1"    : subfolder donde se almacena archivos de ayuda man1.
-#        - "~/.local/man/man5"    : subfolder donde se almacena archivos de ayuda man5.
-#        - "~/.local/man/man7"    : subfolder donde se almacena archivos de ayuda man7.
-#        - "~/.local/share/fonts" : subfolder donde se almacena las fuentes.
-# - Si el valor es vaciom se usara el los folderes predeterminado para todos los usuarios.
-g_cmd_base_path=''
-
-#Folder base donde se almacena data temporal que sera eliminado automaticamente despues completar la configuración.
-# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
-# - Si no es valido, la funcion "get_temp_path" asignara segun orden de prioridad a '/var/tmp' o '/tmp'.
-# - Tener en cuenta que en muchas distribuciones el folder '/tmp' esta en la memoria y esta limitado a su tamaño.
-g_temp_path=''
-
-
-#Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
-#Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
-g_setup_only_last_version=1
-
 
 #Obtener los parametros del archivos de configuración
 if [ -f "${g_shell_path}/bash/bin/linuxsetup/.config.bash" ]; then
@@ -1027,12 +876,7 @@ if [ -f "${g_shell_path}/bash/bin/linuxsetup/.config.bash" ]; then
     . ${g_shell_path}/bash/bin/linuxsetup/.config.bash
 
     #Corregir algunos valaores
-    if [ "$g_setup_only_last_version" = "0" ]; then
-        g_setup_only_last_version=0
-    else
-        g_setup_only_last_version=1
-    fi
-
+    #...
 fi
 
 
@@ -1085,17 +929,6 @@ if [ $gp_type_calling -eq 0 ]; then
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
     #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
-    # 4> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado 
-    #    "/var/opt/tools" o "~/tools".
-    # 5> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
-    #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
-    #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
-    #       > Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)
-    #       > Archivos man5 : "/usr/local/man/man5" (para todos los usuarios) y "~/.local/man/man5"    (solo para el usuario actual)
-    #       > Archivos man7 : "/usr/local/man/man7" (para todos los usuarios) y "~/.local/man/man7"    (solo para el usuario actual)
-    #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
-    # 6> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
-    # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
 
 
     #Calcular el valor efectivo de 'g_repo_name'.
@@ -1118,49 +951,6 @@ if [ $gp_type_calling -eq 0 ]; then
     _g_status=$?
     if [ $_g_status -ne 0 ]; then
         exit 111
-    fi
-
-    #Obtener la ruta real del folder donde se alamacena los de programas 'g_programs_path'
-    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_programs_path="$4"
-    fi
-
-    _g_is_noninteractive=1
-    get_program_path $_g_is_noninteractive "$g_programs_path"
-    _g_status=$?
-    if [ $_g_status -ne 0 ]; then
-        printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
-        exit 111
-    fi
-
-
-    #Obtener la ruta real del folder base de comandos 'g_cmd_base_path' 
-    if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_cmd_base_path="$5"
-    fi
-
-    get_command_path $_g_is_noninteractive "$g_cmd_base_path"
-    _g_status=$?
-    if [ $_g_status -ne 0 ]; then
-        printf 'No se pede establecer la ruta base donde se instalarán los comandos.\n'
-        exit 111
-    fi
-
-
-    #Obtener la ruta rel del folder de los archivos temporales 'g_temp_path'
-    if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_temp_path="$6"
-    fi
-
-    get_temp_path "$g_temp_path"
-
-    #Parametros del script usados hasta el momento:
-    # 1> Setup only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
-    if [ "$7" = "0" ]; then
-        g_setup_only_last_version=0
     fi
 
     #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
@@ -1194,16 +984,7 @@ else
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
     #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
-    # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
-    #    "/var/opt/tools" o "~/tools".
-    # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
-    #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
-    #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
-    #       > Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)
-    #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
-    # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
-    # 8> El estado de la credencial almacenada para el sudo.
-    # 9> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID"
+    # 5> El estado de la credencial almacenada para el sudo.
     gp_menu_options=0
     if [[ "$2" =~ ^[0-9]+$ ]]; then
         gp_menu_options=$2
@@ -1217,8 +998,8 @@ else
         exit 110
     fi
 
-    if [[ "$8" =~ ^[0-2]$ ]]; then
-        g_status_crendential_storage=$8
+    if [[ "$5" =~ ^[0-2]$ ]]; then
+        g_status_crendential_storage=$5
 
         if [ $g_status_crendential_storage -eq 0 ]; then
             g_is_credential_storage_externally=0
@@ -1249,48 +1030,10 @@ else
         exit 111
     fi
 
-
-
     _g_is_noninteractive=0
     if [ $gp_type_calling -eq 1 ]; then
         _g_is_noninteractive=1
     fi
-
-    #Obtener la ruta real del folder donde se alamacena los de programas 'g_programs_path'
-    if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_programs_path="$5"
-    fi
-
-    get_program_path $_g_is_noninteractive "$g_programs_path"
-    _g_status=$?
-    if [ $_g_status -ne 0 ]; then
-        printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
-        exit 111
-    fi
-
-
-    #Obtener la ruta real del folder base de comandos 'g_cmd_base_path' 
-    if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_cmd_base_path="$6"
-    fi
-
-    get_command_path $_g_is_noninteractive "$g_cmd_base_path"
-    _g_status=$?
-    if [ $_g_status -ne 0 ]; then
-        printf 'No se pede establecer la ruta base donde se instalarán los comandos.\n'
-        exit 111
-    fi
-
-
-    #Obtener la ruta rel del folder de los archivos temporales 'g_temp_path'
-    if [ ! -z "$7" ] && [ "$7" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_temp_path="$7"
-    fi
-
-    get_temp_path "$g_temp_path"
 
 
     #Validar los requisitos

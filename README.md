@@ -39,10 +39,10 @@ Para la configuracion se puede usar una de las siguientes script de configuraci�
     Si usa WSL, este descarga los binarios/programas para Windows en las sigueente rutas:
   - Los programas los descargará en 'D:\CLI\Programs'.
   - Los comandos los descargará en 'D:\CLI\Commands\bin'. 
-- Script './shell/bash/bin/linuxsetup/02_setup_profile.bash' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
-- Script './shell/bash/bin/linuxsetup/03_update_all.bash' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
+- Script './shell/bash/bin/linuxsetup/02_install_profile.bash' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
+- Script './shell/bash/bin/linuxsetup/03_update_profile.bash' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
 
-No se usa un gestor de plugin para VIM/NeoVIM (esto me trajo algunos problemas al ser usado en contenedores), por lo que se uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './shell/bash/bin/linuxsetup/03_update_all.bash'.
+No se usa un gestor de plugin para VIM/NeoVIM (esto me trajo algunos problemas al ser usado en contenedores), por lo que se uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './shell/bash/bin/linuxsetup/03_update_profile.bash'.
 
 Los pasos recomandos para configurar su SO son:
 
@@ -116,10 +116,10 @@ Los pasos recomandos para configurar su SO son:
    
    ```bash
    #Mostrar el menu para configurar el profile y VIM/NeoVIM
-   ~/.files/shell/bash/bin/linuxsetup/02_setup_profile.bash
+   ~/.files/shell/bash/bin/linuxsetup/02_install_profile.bash
    
    #Para mostrar los parametros del script, ingrese un parametro invalido como:
-   ~/.files/shell/bash/bin/linuxsetup/02_setup_profile.bash
+   ~/.files/shell/bash/bin/linuxsetup/02_install_profile.bash
    ```
 7. Opcional. Configuración de su profile del shell del SO:
    El script de profile '~/.bashrc' define algunas variable globales con valores por defecto, las cuales puede ser modificados, defiendo el archivo de configuración '_config.bash'.
@@ -176,10 +176,10 @@ Los pasos recomandos para configurar su SO son:
 
 Para la configuracion se puede usar una de las siguientes script de configuración.
 
-- Script '.\powershell\bin\windowssetup\02_setup_profile_win.ps1' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
-- Script '.\powershell\bin\windowssetup\03_update_all_win.ps1' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
+- Script '.\powershell\bin\windowssetup\02_install_profile.ps1' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
+- Script '.\powershell\bin\windowssetup\03_update_profile.ps1' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
 
-No se usa un gestor de plugin para VIM/NeoVIM (esto me trajo algunos problemas al ser usado en contenedores), por lo que se uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './shell/powershell/bin/windowssetup/03_update_all.ps1'.
+No se usa un gestor de plugin para VIM/NeoVIM (esto me trajo algunos problemas al ser usado en contenedores), por lo que se uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './shell/powershell/bin/windowssetup/03_update_profile.ps1'.
 
 Los pasos recomandos para configurar su SO son:
 
@@ -226,7 +226,7 @@ Los pasos recomandos para configurar su SO son:
    
    ```bash
    #Mostrar el menu para configurar el profile y VIM/NeoVIM
-   ${env:USERPROFILE}\.files\powershell\bin\windowssetup\02_setup_profile_win.ps1
+   ${env:USERPROFILE}\.files\powershell\bin\windowssetup\02_install_profile.ps1
    ```
 
 4. Cierre terminal y vuelve a iniciar la configuración.
@@ -241,7 +241,7 @@ Los pasos recomandos para configurar su SO son:
    
    ```bash
    #Mostrar el menu para actualizar los plugins de VIM/NeoVIM
-   ${env:USERPROFILE}\.files\powershell\bin\windowssetup\03_update_all_win.ps1
+   ${env:USERPROFILE}\.files\powershell\bin\windowssetup\03_update_profile.ps1
    ```
 
 # Configuracion en una 'proot-distro' de Termux (Android)

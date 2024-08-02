@@ -26,8 +26,8 @@
 #             ./linuxsetup/
 #                 ./00_setup_summary.bash
 #                 ./01_setup_commands.bash
-#                 ./02_setup_profile.bash
-#                 ./03_update_all.bash
+#                 ./02_install_profile.bash
+#                 ./03_update_profile.bash
 #                 ./04_setup_packages.bash
 #                 ........................
 #                 ........................
@@ -3596,6 +3596,18 @@ g_targethome_group=''
 #Ruta base del respositorio git del usuario donde se instalar el profile del usuario. Su valor es calculado por 'get_targethome_info'.
 g_repo_path=''
 
+#Usuario del owner del folder base de programa.
+g_programs_owner=''
+
+#Grupo de acceso del folder base de programa
+g_programs_group=''
+
+#Usuario del owner del folder base de comandos
+g_cmd_base_owner=''
+
+#Grupo de acceso del folder base de comandos
+g_cmd_base_group=''
+
 #Flag que determina si el usuario runner (el usuario que ejecuta este script de instalación) es el usuario objetivo o no. 
 #Su valor es calculado por 'get_targethome_info'.
 # - Si es '0', el runner es el usuario objetivo (onwer del "target home").
@@ -3809,6 +3821,7 @@ else
         #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
         # 6> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
         # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+        # 8> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'. 
 
 
         #Calcular el valor efectivo de 'g_repo_name'.
@@ -3877,6 +3890,10 @@ else
             g_setup_only_last_version=0
         fi
 
+        if [ "$8" = "0" ]; then
+            echo "$g_programs_path" > /tmp/prgpath.txt
+        fi
+
         #Validar los requisitos
         #  1 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
         #  2 > Flag '0' si se requere curl
@@ -3919,6 +3936,7 @@ else
         # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
         # 8> El estado de la credencial almacenada para el sudo.
         # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+        #10> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'. 
 
         _gp_opciones=0
         if [[ "$2" =~ ^[0-9]+$ ]]; then
@@ -4012,6 +4030,10 @@ else
         get_temp_path "$g_temp_path"
 
 
+        if [ "${10}" = "0" ]; then
+            echo "$g_programs_path" > /tmp/prgpath.txt
+        fi
+
         #Validar los requisitos
         #  1 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
         #  2 > Flag '0' si se requere curl
@@ -4064,7 +4086,7 @@ else
         #  8> El estado de la credencial almacenada para el sudo.
         #  9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
         # 10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
-        # 11> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
+        # 11> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'. 
         _gp_list_repo_ids="$2"
         if [ -z "$_gp_list_repo_ids" ] || [ "$_gp_list_repo_ids" = "EMPTY" ]; then
            echo "Parametro 2 \"$2\" debe ser un ID de repositorio valido"
@@ -4087,7 +4109,6 @@ else
         if [ "${10}" = "0" ]; then
             _g_show_title_on_onerepo=0
         fi
-
 
         #Calcular el valor efectivo de 'g_repo_name'.
         if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
@@ -4149,6 +4170,12 @@ else
 
         get_temp_path "$g_temp_path"
 
+
+        if [ "${11}" = "0" ]; then
+            echo "$g_programs_path" > /tmp/prgpath.txt
+        fi
+
+        #Validar los requisitos
         #Validar los requisitos
         #  1 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
         #  2 > Flag '0' si se requere curl

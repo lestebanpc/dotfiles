@@ -223,6 +223,8 @@ function get_targethome_info() {
 #       > 00010 (2) - La carpeta de programas tiene como owner a root. 
 #       > 00100 (4) - La carpeta de programas esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de programas NO es una ruta estandar  (ruta personalizada ingresada por el usuario)
+#   > '_g_programs_owner' owner del folder de programas ingresado.
+#   > '_g_programs_group' grupo de acceso del folder de programas ingresado.
 #Parametro de salida> Valor de retorno:
 #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de programas para el usuario objetivo):
 #    00 > La carpeta existe y tiene los permisos necesarios.
@@ -245,6 +247,8 @@ function _try_fix_program_basepath() {
 
     #2. Calcular algunas de las opciones del folder ingresado   
     _g_prg_path_options=0
+    _g_programs_owner=''
+    _g_programs_group=''
     
     #¿La carpeta esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas)?
     local l_folder_is_targethome=1
@@ -262,24 +266,36 @@ function _try_fix_program_basepath() {
     #3. Si la carpeta existe: intentar arreglar los permisos 
     #   Solo intentara reparar los permisos cuando el usuario tenga los permisos y lo permita. Caso contrario, no intentara reparar la carpeta y lo rechazara.
     #   Es decir, evitara usar sudo para reparar errores de configuracion de la carpeta enviada.
-    local l_folder_owner=''
     local l_aux=''
     local l_flag=1
+    local la_owners=()
 
     if [ -d "$p_programs_path" ]; then
 
         #A. Obtener el owner del folder ingresado
-        l_folder_owner=$(ls -ld "${p_programs_path}" | awk '{print $3}')
+        l_aux=$(ls -ld "${p_programs_path}" | awk '{print $3" "$4}')
+        if [ -z "$l_aux" ]; then
+            printf 'No se pueden obtener el owner del folder "%b%s%b".\n' "$g_color_gray1" "$l_script_path" "$g_color_reset"
+            return 99
+        fi
 
-        if [ "$l_folder_owner" = "root" ]; then
+        la_owners=(${l_aux})
+        if [ ${#la_owners[@]} -lt 2 ]; then
+            printf 'No se pueden obtener, de manera correcta, el owner del folder "%b%s%b".\n' "$g_color_gray1" "$l_script_path" "$g_color_reset"
+            return 99
+        fi
+        _g_programs_owner="${la_owners[0]}"
+        _g_programs_group="${la_owners[1]}"
+
+        if [ "$_g_programs_owner" = "root" ]; then
             _g_prg_path_options=$(( _g_prg_path_options + 2 ))
         fi
 
         #B. Si el onwer de la carpeta NO es el usuario objetivo
-        if [ "$l_folder_owner" != "$g_targethome_owner" ]; then
+        if [ "$_g_programs_owner" != "$g_targethome_owner" ]; then
 
             #B.1. Si el owner de la carpeta NO es root
-            if [ "$l_folder_owner" != "root" ]; then
+            if [ "$_g_programs_owner" != "root" ]; then
                 
                 #Solo intentar reparar, cuando el folder esta dentro de home y el runner es root el modo de suplantacion (del usario objetivo).
                 if [ $g_runner_is_target_user -ne 0 ] && [ $l_folder_is_targethome -eq 0 ]; then
@@ -400,6 +416,8 @@ function _try_fix_program_basepath() {
         if [ "$g_targethome_owner" = "root" ]; then
             _g_prg_path_options=$(( _g_prg_path_options + 2 ))
         fi
+        _g_programs_owner="$g_targethome_owner"
+        _g_programs_group="$g_targethome_group"
 
     else
 
@@ -408,6 +426,8 @@ function _try_fix_program_basepath() {
             _g_prg_path_options=$(( _g_prg_path_options + 1 ))
         fi
         _g_prg_path_options=$(( _g_prg_path_options + 2 ))
+        _g_programs_owner='root'
+        _g_programs_group='root'
 
     fi
 
@@ -558,6 +578,8 @@ function _try_fix_program_basepath() {
 #       > 00010 (2) - La carpeta de comandos tiene como owner a root. 
 #       > 00100 (4) - La carpeta de comandos esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de comandos NO es del sistema ni '~/.local'.
+#   > '_g_cmd_base_owner' owner del folder base de los comandos ingresado.
+#   > '_g_cmd_base_group' grupo de acceso del folder base de comandos ingresado.
 #Parametro de salida> Valor de retorno:
 #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
 #    00 > La carpeta existe y tiene los permisos necesarios.
@@ -577,6 +599,9 @@ function _try_fix_command_basepath() {
 
     #2. Calcular algunas de las opciones del folder ingresado   
     _g_cmd_path_options=0
+    _g_cmd_base_owner=''
+    _g_cmd_base_group=''
+
     local l_folder_is_targethome=1
     
     #¿La carpeta esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas)?
@@ -594,6 +619,8 @@ function _try_fix_command_basepath() {
     if [ -z "$p_cmd_base_path" ]; then
 
         #A. El owner del folder siempre es root.
+        _g_cmd_base_owner='root'
+        _g_cmd_base_group='root'
         _g_cmd_path_options=$(( _g_cmd_path_options + 2 ))
         if [ "$g_targethome_owner" = "root" ]; then
             _g_cmd_path_options=$(( _g_cmd_path_options + 1 ))
@@ -695,23 +722,35 @@ function _try_fix_command_basepath() {
     fi
 
     #3. Si es una carpeta NO es la carpeta reservada para el sistema
-    local l_folder_owner=''
-
+    local l_aux=''
+    local la_owners=()
     #3.1. Si existe la carpeta no reservada del sistema, intentar corregir permisos...
     if [ -d "$p_cmd_base_path" ]; then
 
         #A. Obtener el owner del folder ingresado
-        l_folder_owner=$(ls -ld "${p_cmd_base_path}" | awk '{print $3}')
+        l_aux=$(ls -ld "${p_cmd_base_path}" | awk '{print $3" "$4}')
+        if [ -z "$l_aux" ]; then
+            printf 'No se pueden obtener el owner del folder "%b%s%b".\n' "$g_color_gray1" "$l_script_path" "$g_color_reset"
+            return 99
+        fi
 
-        if [ "$l_folder_owner" = "root" ]; then
+        la_owners=(${l_aux})
+        if [ ${#la_owners[@]} -lt 2 ]; then
+            printf 'No se pueden obtener, de manera correcta, el owner del folder "%b%s%b".\n' "$g_color_gray1" "$l_script_path" "$g_color_reset"
+            return 99
+        fi
+        _g_cmd_base_owner="${la_owners[0]}"
+        _g_cmd_base_group="${la_owners[1]}"
+
+        if [ "$_g_cmd_base_owner" = "root" ]; then
             _g_cmd_path_options=$(( _g_cmd_path_options + 2 ))
         fi
 
         #B. Si el onwer de la carpeta NO es el usuario objetivo
-        if [ "$l_folder_owner" != "$g_targethome_owner" ]; then
+        if [ "$_g_cmd_base_owner" != "$g_targethome_owner" ]; then
 
             #B.1. Si el owner de la carpeta NO es root
-            if [ "$l_folder_owner" != "root" ]; then
+            if [ "$_g_cmd_base_owner" != "root" ]; then
                 
                 #Solo intentar reparar, cuando el folder esta dentro de home y el runner es root el modo de suplantacion (del usario objetivo).
                 if [ $g_runner_is_target_user -ne 0 ] && [ $l_folder_is_targethome -eq 0 ]; then
@@ -859,12 +898,13 @@ function _try_fix_command_basepath() {
 
 
     #3.2. Si no existe la carpeta no reservada del sistema, intentar crearlo ...
-    local l_aux=''
 
     #El owner del folder a crear dependera de la ubicacion de este    
     if [ $l_folder_is_targethome -eq 0 ]; then
 
         #El owner es el usuario efectivo
+        _g_cmd_base_owner="$g_targethome_owner"
+        _g_cmd_base_group="$g_targethome_group"
         _g_cmd_path_options=$(( _g_cmd_path_options + 1 ))
         if [ "$g_targethome_owner" = "root" ]; then
             _g_cmd_path_options=$(( _g_cmd_path_options + 2 ))
@@ -873,6 +913,8 @@ function _try_fix_command_basepath() {
     else
 
         #El owner es el root
+        _g_cmd_base_owner="root"
+        _g_cmd_base_group="root"
         if [ "$g_targethome_owner" = "root" ]; then
             _g_cmd_path_options=$(( _g_cmd_path_options + 1 ))
         fi
@@ -1005,12 +1047,14 @@ function _try_fix_command_basepath() {
 #  > 'g_targethome_path'
 #Parametros de salida> Variables globales:
 # > 'g_programs_path': la ruta del folder establecido
-# > '_g_prg_path_options' que define caracteristicas del folder obtenido. Su valor puede ser 0 o la suma binario
+# > 'g_prg_path_options' que define caracteristicas del folder obtenido. Su valor puede ser 0 o la suma binario
 #    de los siguientes flags:
 #       > 00001 (1) - La carpeta de programas tiene como owner al usuario OBJETIVO. 
 #       > 00010 (2) - La carpeta de programas tiene como owner a root. 
 #       > 00100 (4) - La carpeta de programas esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de programas NO es una ruta estandar  (ruta personalizada ingresada por el usuario)
+# > 'g_programs_owner' owner del folder de programas ingresado.
+# > 'g_programs_group' grupo de acceso del folder de programas ingresado.
 #Parametro de salida> Valor de retorno:
 #    0> Se establecio la ruta (el owner del home puede instalar programas en dicho folder).
 #    1> No se establecio los directorio (no se tiene los permisos correctos para crear o modificar el folder para que el owner del home pueda instalar programas).
@@ -1064,6 +1108,8 @@ function get_program_path() {
     if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
         g_programs_path="$l_programs_path"
         g_prg_path_options=$_g_prg_path_options
+        g_programs_owner="$_g_programs_owner"
+        g_programs_group="$_g_programs_group"
         return 0
     fi
     
@@ -1149,6 +1195,8 @@ function get_program_path() {
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
             g_programs_path="${la_additional_attemps[$l_atttemp_id]}"
             g_prg_path_options=$_g_prg_path_options
+            g_programs_owner="$_g_programs_owner"
+            g_programs_group="$_g_programs_group"
             return 0
         fi
 
@@ -1204,6 +1252,8 @@ function get_program_path() {
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
             g_programs_path="${la_additional_attemps[$l_atttemp_id]}"
             g_prg_path_options=$_g_prg_path_options
+            g_programs_owner="$_g_programs_owner"
+            g_programs_group="$_g_programs_group"
             return 0
         fi
 
@@ -1270,6 +1320,8 @@ function get_program_path() {
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
             g_programs_path="${la_additional_attemps[$l_atttemp_id]}"
             g_prg_path_options=$_g_prg_path_options
+            g_programs_owner="$_g_programs_owner"
+            g_programs_group="$_g_programs_group"
             return 0
         fi
 
@@ -1347,6 +1399,8 @@ function get_program_path() {
 #       > 00100 (4) - La carpeta de comandos esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de comandos NO es del sistema ni '~/.local'.
 #    Solo se debe usar cuando se pudo generar una ruta de folder para los programas (valor de retorno 0).
+#  > 'g_cmd_base_owner' owner del folder base de los comandos ingresado.
+#  > 'g_cmd_base_group' grupo de acceso del folder base de comandos ingresado.
 #Parametros de salida > Valor de retorno
 #  0> Se establecio la ruta (el owner del home puede instalar programas en dicho folder).
 #  1> No se establecio los directorio (no se tiene los permisos correctos para crear o modificar el folder para que el owner del home pueda instalar programas).
@@ -1399,6 +1453,8 @@ function get_command_path() {
             g_fonts_cmdpath="${g_cmd_base_path}/share/fonts"
         fi
         g_cmd_path_options=$_g_cmd_path_options
+        g_cmd_base_owner="$_g_cmd_base_owner"
+        g_cmd_base_group="$_g_cmd_base_group"
         return 0
     fi
 
@@ -1483,6 +1539,8 @@ function get_command_path() {
             g_man_cmdpath="/usr/local/man"
             g_fonts_cmdpath="/usr/share/fonts"
             g_cmd_path_options=$_g_cmd_path_options
+            g_cmd_base_owner="$_g_cmd_base_owner"
+            g_cmd_base_group="$_g_cmd_base_group"
             return 0
         fi
 
@@ -1553,6 +1611,8 @@ function get_command_path() {
             g_man_cmdpath="${g_cmd_base_path}/man"
             g_fonts_cmdpath="${g_cmd_base_path}/share/fonts"
             g_cmd_path_options=$_g_cmd_path_options
+            g_cmd_base_owner="$_g_cmd_base_owner"
+            g_cmd_base_group="$_g_cmd_base_group"
             return 0
         fi
 
@@ -1670,7 +1730,7 @@ function get_nodejs_version() {
 
 #
 #Parametros de entrada
-# 1> Path por defecto de todos los programas instalados por el instalador.
+# 1> Path por defecto donde estan todos los programas instalados por el instalador.
 # 2> Flag es '0' si se muestra información cuando esta instalado excepto cuando se registra en el path.
 # 3> Flag es '0' si se muestra información cuando se registra en el path.
 #Parametros de salida
@@ -1699,8 +1759,8 @@ function check_nodejs() {
     local l_version
     local l_status
 
-    #1. Si no esta instalado o fue instalado por gestor de paquetes (no se requiere adicionar al PATH)
-    if [ ! -f "${p_programs_path}/nodejs/bin/node" ]; then
+    #1. Si no se envio una ruta valida de programas del instalador o no fue instalado por el instalador
+    if [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/nodejs/bin/node" ]; then
 
         l_version=$(node --version 2> /dev/null)
         l_status=$?
@@ -1848,8 +1908,8 @@ function check_neovim() {
     local l_version
     local l_status
 
-    #1. Si no esta instalado o fue instalado por gestor de paquetes (no se requiere adicionar al PATH)
-    if [ ! -f "${p_programs_path}/neovim/bin/nvim" ]; then
+    #1. Si no se envio una ruta valida de programas del instalador o no fue instalado por el instalador
+    if  [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/neovim/bin/nvim" ]; then
 
         l_version=$(nvim --version 2> /dev/null)
         l_status=$?
@@ -2012,62 +2072,64 @@ function fulfill_preconditions() {
     #9. Mostar información adicional (Solo mostrar info adicional si la ejecución es interactiva)
     if [ $p_show_additional_info -eq 0 ]; then
 
-        printf '%bLinux distribution - Name   : (%s) %s\n' "$g_color_gray1" "${g_os_subtype_id}" "${g_os_subtype_name}"
-        printf 'Linux distribution - Version: (%s) %s (%s)\n' "$g_os_subtype_id" "$g_os_subtype_version" "$g_os_subtype_version_pretty"
-        printf 'Processor architecture type : %s\n' "$g_os_architecture_type"
+        printf '%bDistribution Name     : "%s" (Id= "%s")\n' "$g_color_gray1" "${g_os_subtype_name}" "${g_os_subtype_id}"
+        printf 'Distribution Version  : "%s" (PrettyVersion= "%s") (Id= "%s")\n' "$g_os_subtype_version" "$g_os_subtype_version_pretty" "${g_os_subtype_id}"
+        printf 'Processor Type        : "%s"\n' "$g_os_architecture_type"
 
-        local l_aux='Root ('
-        if [ $g_runner_is_root -eq 0 ]; then
-            l_aux="${l_aux}Yes)"
-        else
-            l_aux="${l_aux}No), Sudo Support ("
+        local l_aux=''
+        if [ $g_runner_is_root -ne 0 ]; then
             if [ $g_runner_sudo_support -eq 0 ]; then
-                l_aux="${l_aux}Sudo with password)"
+                l_aux="(Sudo with password)"
             elif [ $g_runner_sudo_support -eq 1 ]; then
-                l_aux="${l_aux}Sudo without password)"
+                l_aux="(Sudo without password)"
             elif [ $g_runner_sudo_support -eq 2 ]; then
-                l_aux="${l_aux}OS not support sudo)"
+                l_aux="(OS not support sudo)"
             elif [ $g_runner_sudo_support -eq 3 ]; then
-                l_aux="${l_aux}No access to run sudo)"
+                l_aux="(No access to run sudo)"
             else
-                l_aux="${l_aux}User is root. Don't need sudo"
+                l_aux="(Don't need sudo)"
             fi
         fi
 
-        printf 'Runner                      : (%s) %s\n' "$g_runner_user" "$l_aux"
-        printf 'Target user                 : Home (%s) Repository (%s) Owner (%s) Group (%s)\n' "$g_targethome_path" "$g_repo_name" \
-               "$g_targethome_owner" "$g_targethome_group"
+        printf 'Runner                : "%s" %s\n' "$g_runner_user" "$l_aux"
+        printf 'Target user           : "%s" (Home= "%s") (Repository= "%s") (Group= "%s")\n' "$g_targethome_owner" "$g_targethome_path" "$g_repo_name" \
+               "$g_targethome_group"
 
         if [ ! -z "$g_programs_path" ]; then
-            printf 'Default program path        : "%s"' "$g_programs_path"
-            if [ $g_os_type -eq 1 ] && [ ! -z "$g_win_programs_path" ]; then
-                printf ' (Windows "%s")' "$g_win_programs_path"
-            fi
+            printf 'Program path          : "%s" (Owner= "%s") (Group= "%s")' "$g_programs_path" "$g_programs_owner" "$g_programs_group"
 
             if [ "$g_setup_only_last_version" = "0" ]; then
-                printf ' (SetupOnlyLastVersion= "true")\n'
+                printf ' (SetupOnlyLastVersion= "true")'
             else
-                printf ' (SetupOnlyLastVersion= "false")\n'
+                printf ' (SetupOnlyLastVersion= "false")'
             fi
+
+            if [ $g_os_type -eq 1 ] && [ ! -z "$g_win_programs_path" ]; then
+                printf ' (Windows= "%s")' "$g_win_programs_path"
+            fi
+
+            printf '\n'
+
         fi
 
         if [ ! -z "$g_bin_cmdpath" ]; then
-            printf 'Default command path        : "%s"' "$g_bin_cmdpath"
+            printf 'Command path          : "%s" (Bin= "%s") (Owner= "%s") (Group= "%s")' "$g_cmd_base_path" "$g_bin_cmdpath" \
+                   "$g_programs_owner" "$g_programs_group"
             if [ $g_os_type -eq 1 ] && [ ! -z "$g_win_bin_path" ]; then
-                printf ' (Windows "%s")\n' "$g_win_bin_path"
+                printf ' (Windows= "%s")\n' "$g_win_bin_path"
             else
                 printf '\n'
             fi
         fi
 
         if [ ! -z "$g_temp_path" ]; then
-            printf 'Temporary data path         : "%s"\n' "$g_temp_path"
+            printf 'Temporary data path   : "%s"\n' "$g_temp_path"
         fi
 
 
         if [ $p_require_curl -eq 0 ]; then
             l_curl_version=$(echo "$l_curl_version" | head -n 1 | sed "$g_regexp_sust_version1")
-            printf '%bCURL version                : %s%b\n' "$g_color_gray1" "$l_curl_version" "$g_color_reset"
+            printf '%bCURL version          : "%s"%b\n' "$g_color_gray1" "$l_curl_version" "$g_color_reset"
         fi
 
     fi
@@ -2694,11 +2756,11 @@ function create_folderlink_on_home() {
                    "$p_target_path" "$g_color_red1" "$g_color_reset"
         fi
     fi
+
     local l_target_fulllink="${p_target_path}/${p_target_link}"
-
-
     local l_status=0
     local l_aux
+
     if [ -h "$l_target_fulllink" ] && [ -d "$l_target_fulllink" ]; then
         if [ $p_override_target_link -eq 0 ]; then
             ln -snf "${p_source_path}/" "$l_target_fulllink"
@@ -2711,12 +2773,12 @@ function create_folderlink_on_home() {
             fi
 
         else
-            l_aux=$(readlink "$p_target_link")
+            l_aux=$(readlink "$l_target_fulllink")
             printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$l_target_fulllink" "$g_color_gray1" "$l_aux" "$g_color_reset"
             l_status=0
         fi
     else
-        ln -snf "${p_source_path}/" "$p_target_link"
+        ln -snf "${p_source_path}/" "$l_target_fulllink"
         printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$l_target_fulllink" "$g_color_gray1" "$p_source_path" "$g_color_reset"
         l_status=2
 
@@ -2773,7 +2835,7 @@ function copy_file_on_home() {
     if [ -h "${p_target_path}/${p_target_filename}" ]; then
 
         printf '%sEliminando el enlace simbolico "%b%s%b" ...\n' "$p_tag" "$g_color_gray1" "${p_target_path}/${p_target_filename}" "$g_color_reset"
-        unlink "${l_target_path}"
+        unlink "${p_target_path}/${p_target_filename}"
         l_result=1
 
     else

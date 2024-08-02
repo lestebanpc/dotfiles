@@ -27,8 +27,8 @@
 #             ./linuxsetup/
 #                 ./00_setup_summary.bash
 #                 ./01_setup_commands.bash
-#                 ./02_setup_profile.bash
-#                 ./03_update_all.bash
+#                 ./02_install_profile.bash
+#                 ./03_update_profile.bash
 #                 ./04_setup_packages.bash
 #                 ........................
 #                 ........................
@@ -621,17 +621,17 @@ function _config_developer_vim() {
 
     printf '\n'
     print_line '-' $g_max_length_line  "$g_color_gray1"
-    printf '%s > Configurar/Inicializar los %bplugins%b de %bIDE%b de %b%s%b\n' "$l_tag" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" \
-           "$l_tag" "$g_color_reset"
+    printf '%s > Configurar/Inicializar los %bplugins%b de %bIDE%b de %b%s%b\n' "$l_tag" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" \
+           "$g_color_reset" "$g_color_gray1" "$l_tag" "$g_color_reset"
     print_line '-' $g_max_length_line  "$g_color_gray1"
 
 
     #Validar si esta instalado VIM/NeoVIM
     local l_status
     #local l_version
-    #if [ $p_is_neovim -eq 0  ]; then
+    #if [ $p_is_neovim -eq 0 ]; then
 
-    #    check_neovim "${g_programs_path}" 1 1
+    #    check_neovim "" 1 1
     #    l_status=$?    #Retorna 3 si no esta instalado
 
     #    #Si no esta instalado NeoVIM
@@ -650,7 +650,7 @@ function _config_developer_vim() {
     #fi
 
     #Validar si NodeJS esta instalado y registrarlo en el PATH de programas del usuario.
-    check_nodejs "${g_programs_path}" 1 1
+    check_nodejs "" 1 1
     l_status=$?    #Retorna 3 si no esta instalado
 
     #Si no esta instalado NodeJS
@@ -985,9 +985,9 @@ _install_nodejs() {
     printf 'NodeJS > Instalando %bNodeJS%b\n' "$g_color_cian1" "$g_color_reset" 
     print_line '-' $g_max_length_line  "$g_color_gray1"
 
-    #Validar si 'node' esta en el PATH
+    #Validar si 'node' esta instalado (puede no estar en el PATH)
     local l_status
-    check_nodejs "${g_programs_path}" 0 0
+    check_nodejs "" 0 0
     l_status=$?    #Retorna 3 si no esta instalado
 
     #Si ya esta instalado
@@ -1007,13 +1007,14 @@ _install_nodejs() {
     # 8> El estado de la credencial almacenada para el sudo.
     # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
     #10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+    #11> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'. 
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 2 "nodejs" "$g_targethome_path" "$g_repo_name" "$g_programs_path" "" "$g_temp_path" \
-            $g_status_crendential_storage 1 1
+        ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 2 "nodejs" "$g_targethome_path" "$g_repo_name" "" "" "" \
+            $g_status_crendential_storage 1 1 0
         l_status=$?
     else
-        ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 4 "nodejs" "$g_targethome_path" "$g_repo_name" "$g_programs_path" "" "$g_temp_path" \
-            $g_status_crendential_storage 1 1
+        ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 4 "nodejs" "$g_targethome_path" "$g_repo_name" "" "" "" \
+            $g_status_crendential_storage 1 1 0
         l_status=$?
     fi
 
@@ -1029,10 +1030,14 @@ _install_nodejs() {
     fi
 
     #Validar si 'node' esta en el PATH
-    echo "$PATH" | grep "${g_programs_path}/nodejs/bin" &> /dev/null
-    l_status=$?
-    if [ $l_status -ne 0 ]; then
-        export PATH=${g_programs_path}/nodejs/bin:$PATH
+    local l_programs_path=""
+    l_programs_path=$(cat /tmp/prgpath.txt | head -n 1)
+    if [ -d "$l_programs_path/nodejs/bin" ]; then
+        echo "$PATH" | grep "${l_programs_path}/nodejs/bin" &> /dev/null
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+            export PATH=${l_programs_path}/nodejs/bin:$PATH
+        fi
     fi
 
     #Si no se logro instalarlo
@@ -1494,8 +1499,8 @@ function _install_nvim() {
     printf 'NeoVIM > Instalando %bNeoVIM%b\n' "$g_color_cian1" "$g_color_reset"
     print_line '-' $g_max_length_line  "$g_color_gray1"
 
-    #Validar si 'nvim' esta en el PATH
-    check_neovim "${g_programs_path}" 0 0 
+    #Validar si 'nvim' esta instado (puede no estar en el PATH)
+    check_neovim "" 0 0 
     l_status=$?    #Retorna 3 si no esta instalado
 
     #Si esta instalado, terminar.
@@ -1542,14 +1547,15 @@ function _install_nvim() {
         # 8> El estado de la credencial almacenada para el sudo.
         # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
         #10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
+        #11> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'. 
         if [ $l_is_noninteractive -eq 1 ]; then
             
-            ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 2 "neovim" "$g_targethome_path" "$g_repo_name" "$g_programs_path" "" "$g_temp_path" \
-                $g_status_crendential_storage 1 1
+            ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 2 "neovim" "$g_targethome_path" "$g_repo_name" "" "" "" \
+                $g_status_crendential_storage 1 1 0
             l_status=$?
         else
-            ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 4 "neovim" "$g_targethome_path" "$g_repo_name" "$g_programs_path" "" "$g_temp_path" \
-                $g_status_crendential_storage 1 1
+            ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 4 "neovim" "$g_targethome_path" "$g_repo_name" "" "" "" \
+                $g_status_crendential_storage 1 1 0
             l_status=$?
         fi
 
@@ -1565,10 +1571,14 @@ function _install_nvim() {
         fi
 
         #Validar si 'nvim' esta en el PATH
-        echo "$PATH" | grep "${g_programs_path}/neovim/bin" &> /dev/null
-        l_status=$?
-        if [ $l_status -ne 0 ]; then
-            export PATH=${g_programs_path}/neovim/bin:$PATH
+        local l_programs_path=""
+        l_programs_path=$(cat /tmp/prgpath.txt | head -n 1)
+        if [ -d "$l_programs_path/neovim/bin" ]; then
+            echo "$PATH" | grep "${l_programs_path}/neovim/bin" &> /dev/null
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                export PATH=${l_programs_path}/neovim/bin:$PATH
+            fi
         fi
 
     fi
@@ -2036,9 +2046,9 @@ function _setup_user_profile() {
     l_status=$?
 
     create_folderpath_on_home ".config" "git"
-    copy_file_on_home "${g_repo_path}/etc/git" "template_main_gitconfig_linux" ".config/git" "main.toml" 1 "        > "
+    copy_file_on_home "${g_repo_path}/etc/git" "template_main_gitconfig_linux.toml" ".config/git" "main.toml" 1 "        > "
     l_status=$?
-    copy_file_on_home "${g_repo_path}/etc/git" "template_work_gitconfig_linux" ".config/git" "work_uc.toml" 1 "        > "
+    copy_file_on_home "${g_repo_path}/etc/git" "template_work_gitconfig_linux.toml" ".config/git" "work_uc.toml" 1 "        > "
     l_status=$?
     printf 'Profile > Edite los archivos "%b%s%b" y "%b%s%b" si desea personalizar las opciones a nivel global del usuario ("%b~/.gitconfig%b")\n' \
            "$g_color_gray1" "~/.config/git/main.toml" "$g_color_reset" "$g_color_gray1" "~/.config/git/work_uc.toml" "$g_color_reset" \
@@ -2408,8 +2418,8 @@ function _setup_vim_environment() {
         #Si aun no se ha revisado si se ha instalado
         if [ $l_is_nodejs_installed -eq -1 ]; then
 
-            #Validar si 'node' esta en el PATH
-            check_nodejs "${g_programs_path}" 1 1 
+            #Validar si 'node' esta instalado (puede no esta en el PATH)
+            check_nodejs "" 1 1 
             l_status=$?    #Retorna 3 si no esta instalado
 
             if [ $l_status -eq 3 ]; then
@@ -2924,7 +2934,7 @@ function _setup_vim_environment() {
             #Si aun no se conoce si esta instalado
             if [ $l_is_nvim_installed -eq -1 ]; then
 
-                check_neovim "$g_programs_path" 1 1
+                check_neovim "" 1 1
                 l_status=$?
                 if [ $l_status -eq 3 ]; then
                     l_is_nvim_installed=1
@@ -3005,7 +3015,7 @@ function _setup_vim_environment() {
         #Si aun no se conoce si esta instalado
         if [ $l_is_nvim_installed -eq -1 ]; then
 
-            check_neovim "$g_programs_path" 1 1
+            check_neovim "" 1 1
             l_status=$?
             if [ $l_status -eq 3 ]; then
                 l_is_nvim_installed=1
@@ -3099,13 +3109,14 @@ function _setup_vim_environment() {
         #Si aun no se conoce si esta instalado
         if [ $l_is_nvim_installed -eq -1 ]; then
 
-            check_neovim "$g_programs_path" 1 1
+            check_neovim "" 1 1
             l_status=$?
             if [ $l_status -eq 3 ]; then
                 l_is_nvim_installed=1
                 #No esta instalado NeoVIM, No configurarlo
                 l_flag_setup=1
-                printf 'NeoVIM > %bNeoVIM no esta instalado%b. Se requiere que NeoVIM este instalado para indexar la documentación de los plugins.\n' "$g_color_red1" "$g_color_reset"
+                printf 'NeoVIM > %bNeoVIM no esta instalado%b. Se requiere que NeoVIM este instalado para indexar la documentación de los plugins.\n' \
+                       "$g_color_red1" "$g_color_reset"
             else
                 l_is_nvim_installed=0
             fi
@@ -3114,7 +3125,8 @@ function _setup_vim_environment() {
         elif [ $l_is_nvim_installed -eq 1 ]; then
             #No esta instalado NeoVIM, No configurarlo
             l_flag_setup=1
-            printf 'NeoVIM > %bNeoVIM no esta instalado%b. Se requiere que NeoVIM este instalado para indexar la documentación de los plugins.\n' "$g_color_red1" "$g_color_reset"
+            printf 'NeoVIM > %bNeoVIM no esta instalado%b. Se requiere que NeoVIM este instalado para indexar la documentación de los plugins.\n' \
+                   "$g_color_red1" "$g_color_reset"
         fi
 
         #Indexar la documentación de los plugins
@@ -3137,8 +3149,9 @@ function _setup_vim_environment() {
                 l_status=$?
 
             fi
-        fi
 
+        fi
+ 
     fi
 
 
@@ -3152,50 +3165,18 @@ function _setup_vim_environment() {
 #
 function _setup() {
 
+
     #01. Argumentos
     local p_opciones=0
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_opciones=$1
     fi
     
-    #02. Actualizar los paquetes de los repositorios
     local l_is_noninteractive=1
     if [ $gp_type_calling -eq 2 ]; then
         l_is_noninteractive=0
     fi
-    
     g_status_crendential_storage=-1
-    local l_option=1
-    if [ $g_runner_sudo_support -ne 2 ] && [ $g_runner_sudo_support -ne 3 ]; then
-
-        if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-
-            #Solicitar credenciales de administrador y almacenarlas temporalmente
-            if [ $g_status_crendential_storage -eq 0 ]; then
-                storage_sudo_credencial
-                g_status_crendential_storage=$?
-                #Se requiere almacenar las credenciales para realizar cambio con sudo. 
-                #  Si es 0 o 1: la instalación/configuración es completar
-                #  Si es 2    : el usuario no acepto la instalación/configuración
-                #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
-                if [ $g_status_crendential_storage -eq 2 ]; then
-                    return 120
-                fi
-            fi
-            
-            #Actualizar los paquetes de los repositorios
-            printf '\n'
-            #print_line '─' $g_max_length_line  "$g_color_blue1"
-            print_line '-' $g_max_length_line  "$g_color_gray1"
-            printf "SO > Actualizar los paquetes del SO '%b%s %s%b'\n" "$g_color_cian1" "${g_os_subtype_name}" "${g_os_subtype_version}" "$g_color_reset"
-            print_line '-' $g_max_length_line "$g_color_gray1"
-            #print_line '─' $g_max_length_line "$g_color_blue1"
-
-            upgrade_os_packages $g_os_subtype_id $l_is_noninteractive 
-
-        fi
-    fi
-    
 
     #02. La configuracion requerido para tener VIM/NeoVIM como Editor/IDE (incluyendo la instalación de Python, NodeJS y VIM/NeoVIM)
     _setup_vim_environment $p_opciones
@@ -3301,9 +3282,6 @@ function _show_menu_core() {
 
     local l_max_digits=12
 
-    if [ $g_runner_sudo_support -ne 2 ] && [ $g_runner_sudo_support -ne 3 ]; then
-        printf "     (%b%0${l_max_digits}d%b) Actualizar los paquetes del SO\n" "$g_color_green1" "1" "$g_color_reset"
-    fi
     printf "     (%b%0${l_max_digits}d%b) Crear los enlaces simbolicos del profile del usuario\n" "$g_color_green1" "2" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Flag para %bre-crear%b un enlaces simbolicos en caso de existir\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
 
@@ -3581,13 +3559,13 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bConfigurando el profile del usuario/VIM/NeoVIM escogidos del menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/02_setup_profile.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/02_setup_profile.bash 0 TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' "$g_color_yellow1" \
+    printf '    %b%s/bash/bin/linuxsetup/02_install_profile.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/02_install_profile.bash 0 TARGET_HOME_PATH REPO_NAME\n%b' "$g_color_yellow1" \
            "$g_shell_path" "$g_color_reset"
     printf '  > %bConfigurando el profile del usuario/VIM/NeoVIM segun un grupo de opciones de menú indicados%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/02_install_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/02_setup_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS\n\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/02_install_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME SUDO-STORAGE-OPTIONS\n\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bTARGET_HOME_PATH %bRuta base donde el home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:%b\n' \
@@ -3601,10 +3579,6 @@ g_usage() {
     printf '    %b> El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si ninguno de los anteriores se establece, se usara el valor ".files".%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".%b\n' \
-           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bTEMP_PATH %bes la ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado "/tmp".%b\n' \
-           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bCALLING_TYPE%b Es 0 si se muestra un menu, caso contrario es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -3676,19 +3650,6 @@ g_targethome_path=''
 # - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 g_repo_name=''
 
-#Folder base donde se almacena los subfolderes de los programas.
-# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
-# - Si no es un valor valido, la funcion "get_program_path" asignara un sus posibles valores (segun orden de prioridad):
-#     > "/var/opt/tools"
-#     > "~/tools"
-g_programs_path=''
-
-#Folder base donde se almacena data temporal que sera eliminado automaticamente despues completar la configuración.
-# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
-# - Si no es valido, la funcion "get_temp_path" asignara segun orden de prioridad a '/var/tmp' o '/tmp'.
-# - Tener en cuenta que en muchas distribuciones el folder '/tmp' esta en la memoria y esta limitado a su tamaño.
-g_temp_path=''
-
 
 #Obtener los parametros del archivos de configuración
 if [ -f "${g_shell_path}/bash/bin/linuxsetup/.config.bash" ]; then
@@ -3757,9 +3718,6 @@ if [ $gp_type_calling -eq 0 ]; then
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
     #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
-    # 4> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado 
-    #    "/var/opt/tools" o "~/tools".
-    # 5> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
 
 
     #Calcular el valor efectivo de 'g_repo_name'.
@@ -3783,31 +3741,6 @@ if [ $gp_type_calling -eq 0 ]; then
     if [ $_g_status -ne 0 ]; then
         exit 111
     fi
-
-
-    #Obtener la ruta real del folder donde se alamacena los de programas 'g_programs_path'
-    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_programs_path="$3"
-    fi
-
-    _g_is_noninteractive=1
-    get_program_path $_g_is_noninteractive "$g_programs_path"
-    _g_status=$?
-    if [ $_g_status -ne 0 ]; then
-        printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
-        exit 111
-    fi
-
-
-    #Obtener la ruta rel del folder de los archivos temporales 'g_temp_path'
-    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_temp_path="$4"
-    fi
-
-    get_temp_path "$g_temp_path"
-
 
 
     #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
@@ -3841,11 +3774,7 @@ else
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
     #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
-    # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
-    #    "/var/opt/tools" o "~/tools".
-    # 6> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
-    # 7> El estado de la credencial almacenada para el sudo.
-    # 8> El GID y UID del usuario que ejecuta el script, siempre que no se el owner de repositorio, en formato "UID:GID".
+    # 5> El estado de la credencial almacenada para el sudo.
     gp_menu_options=0
     if [[ "$2" =~ ^[0-9]+$ ]]; then
         gp_menu_options=$2
@@ -3859,8 +3788,8 @@ else
         exit 110
     fi
 
-    if [[ "$7" =~ ^[0-2]$ ]]; then
-        g_status_crendential_storage=$7
+    if [[ "$5" =~ ^[0-2]$ ]]; then
+        g_status_crendential_storage=$5
 
         if [ $g_status_crendential_storage -eq 0 ]; then
             g_is_credential_storage_externally=0
@@ -3890,28 +3819,6 @@ else
     if [ $_g_status -ne 0 ]; then
         exit 111
     fi
-
-
-
-    #Obtener la ruta real del folder donde se alamacena los de programas 'g_programs_path'
-    if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_programs_path="$5"
-    fi
-
-    _g_is_noninteractive=0
-    if [ $gp_type_calling -eq 1 ]; then
-        _g_is_noninteractive=1
-    fi
-    get_program_path $_g_is_noninteractive "$g_programs_path"
-
-    #Obtener la ruta rel del folder de los archivos temporales 'g_temp_path'
-    if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_temp_path="$6"
-    fi
-
-    get_temp_path "$g_temp_path"
 
 
     #Validar los requisitos

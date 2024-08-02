@@ -2138,34 +2138,6 @@ function register_dynamiclibrary_to_system()
 
 
 
-#Si un nodo k0s esta iniciado solicitar su detención y deternerlo.
-#Parametros de entrada (argumentos y opciones):
-#Opcionales:
-#   1 > Flag '0' si se usara para desintalar, caso contrario se usara para instalar/actualizar.
-#   2 > ID del repositorio
-#   3 > Indice del artefato del repositorio que se desea instalar
-#Parametros de salida (valor de retorno):
-#   0 > El nodo no esta iniciado (no esta instalado o esta detenido).
-#   1 > El nodo está iniciado pero NO se acepto deternerlo.
-#   2 > El nodo esta iniciado y se acepto detenerlo.
-function request_stop_k0s_node() {
-
-    #1. Argumentos
-    local p_is_uninstalling=1
-    if [ "$1" = "0" ]; then
-        p_is_uninstalling=0
-    fi
-    local p_repo_id="$2"
-    local p_artifact_index=-1
-
-    fi
-
-    printf 'Actualizar el cache de las librerias: "%bsudo ldconfig%b" ...\n' "$g_color_gray1" "$g_color_reset"
-    sudo ldconfig
-    return 0
-
-}
-
 
 
 #Si un nodo k0s esta iniciado solicitar su detención y deternerlo.

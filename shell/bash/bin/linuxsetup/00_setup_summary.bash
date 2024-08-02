@@ -26,8 +26,8 @@
 #             ./linuxsetup/
 #                 ./00_setup_summary.bash
 #                 ./01_setup_commands.bash
-#                 ./02_setup_profile.bash
-#                 ./03_update_all.bash
+#                 ./02_install_profile.bash
+#                 ./03_update_profile.bash
 #                 ./04_setup_packages.bash
 #                 ........................
 #                 ........................
@@ -161,7 +161,7 @@ fi
 
 declare -r g_default_list_package_ids='curl,unzip,openssl,tmux'
 
-#Opciones de '02_setup_profile.bash' para configurar VIM/NeoVIM
+#Opciones de '02_install_profile.bash' para configurar VIM/NeoVIM
 #  0> Crear archivos de configuración como Editor
 #  1> Crear archivos de configuración como IDE
 #  2> Descargar plugins de Editor e indexarlos
@@ -182,7 +182,7 @@ declare -ra ga_title_config=(
     "Indexar la documentación (de plugins anteriormente descargados)"
     "Inicializar los plugins de IDE")
 
-#Opciones de '02_setup_profile.bash'para instalar lo necesario para VIM/NeoVIM
+#Opciones de '02_install_profile.bash'para instalar lo necesario para VIM/NeoVIM
 #  0> Instalar Python
 #  1> Instalar paquete de usuario de Python: 'jtbl'
 #  2> Instalar paquete de usuario de Python: 'jtbl', 'compiledb', 'rope' y 'pynvim'
@@ -202,7 +202,7 @@ declare -ra ga_title_install=(
     "VIM"
     "NeoVIM")
 
-#Opciones de '02_setup_profile.bash' generales
+#Opciones de '02_install_profile.bash' generales
 # 0> Actualizar los paquetes del SO
 # 1> Crear los enlaces simbolicos del profile del usuario
 # 2> Flag para re-crear un enlaces simbolicos en caso de existir
@@ -684,7 +684,7 @@ function g_install_options() {
         for (( l_i = 0; l_i < ${#ga_options_general[@]}; l_i++ )); do
             if [ "${la_options_general[${l_i}]}" = "0" ]; then
                 ((l_prg_options= l_prg_options + ${ga_options_general[${l_i}]}))
-                printf -v l_info '%s\n   > General > %b%s%b %b(opción de "02_setup_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_general[${l_i}]}" \
+                printf -v l_info '%s\n   > General > %b%s%b %b(opción de "02_install_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_general[${l_i}]}" \
                        "$g_color_reset" "$g_color_gray1" "${ga_options_general[${l_i}]}" "$g_color_reset"
             fi 
         done
@@ -692,7 +692,7 @@ function g_install_options() {
         for (( l_i = 0; l_i < ${#ga_options_install[@]}; l_i++ )); do
             if [ "${la_options_install[${l_i}]}" = "0" ]; then
                 ((l_prg_options= l_prg_options + ${ga_options_install[${l_i}]}))
-                printf -v l_info '%s\n   > Instalar %b%s%b %b(opción de "02_setup_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_install[${l_i}]}" \
+                printf -v l_info '%s\n   > Instalar %b%s%b %b(opción de "02_install_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_install[${l_i}]}" \
                        "$g_color_reset" "$g_color_gray1" "${ga_options_install[${l_i}]}" "$g_color_reset"
             fi 
         done
@@ -700,7 +700,7 @@ function g_install_options() {
         for (( l_i = 0; l_i < ${#ga_options_config_vim[@]}; l_i++ )); do
             if [ "${la_options_config_vim[${l_i}]}" = "0" ]; then
                 ((l_prg_options= l_prg_options + ${ga_options_config_vim[${l_i}]}))
-                printf -v l_info '%s\n   > Configuración VIM   > %b%s%b %b(opción de "02_setup_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_config[${l_i}]}" \
+                printf -v l_info '%s\n   > Configuración VIM   > %b%s%b %b(opción de "02_install_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_config[${l_i}]}" \
                        "$g_color_reset" "$g_color_gray1" "${ga_options_config_vim[${l_i}]}" "$g_color_reset"
             fi 
         done
@@ -708,7 +708,7 @@ function g_install_options() {
         for (( l_i = 0; l_i < ${#ga_options_config_nvim[@]}; l_i++ )); do
             if [ "${la_options_config_nvim[${l_i}]}" = "0" ]; then
                 ((l_prg_options= l_prg_options + ${ga_options_config_nvim[${l_i}]}))
-                printf -v l_info '%s\n   > Configuración NeoVIM > %b%s%b %b(opción de "02_setup_profile": %s)%b' "$l_info" "$g_color_blue1" \
+                printf -v l_info '%s\n   > Configuración NeoVIM > %b%s%b %b(opción de "02_install_profile": %s)%b' "$l_info" "$g_color_blue1" \
                     "${ga_title_config[${l_i}]}" "$g_color_reset" "$g_color_gray1" "${ga_options_config_nvim[${l_i}]}" "$g_color_reset"
             fi 
         done
@@ -732,16 +732,13 @@ function g_install_options() {
        # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
        # 5> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
        # 6> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
-       # 7> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado 
-       #    "/var/opt/tools" o "~/tools".
-       # 8> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
-       # 9> El estado de la credencial almacenada para el sudo.
+       # 7> El estado de la credencial almacenada para el sudo.
        if [ $l_is_noninteractive -eq 1 ]; then
-           ${g_shell_path}/bash/bin/linuxsetup/02_setup_profile.bash 1 $l_prg_options "$g_targethome_path" "$g_repo_name" "$g_programs_path" "$g_temp_path" \
+           ${g_shell_path}/bash/bin/linuxsetup/02_install_profile.bash 1 $l_prg_options "$g_targethome_path" "$g_repo_name" \
                $g_status_crendential_storage
            l_status=$?
        else
-           ${g_shell_path}/bash/bin/linuxsetup/02_setup_profile.bash 2 $l_prg_options "$g_targethome_path" "$g_repo_name" "$g_programs_path" "$g_temp_path" \
+           ${g_shell_path}/bash/bin/linuxsetup/02_install_profile.bash 2 $l_prg_options "$g_targethome_path" "$g_repo_name" \
                $g_status_crendential_storage
            l_status=$?
        fi
