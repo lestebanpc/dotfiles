@@ -36,7 +36,7 @@ runtime config.vim
 " Si es 1 ('true'), se habilita el uso de IDE (puede desabilitarse automatica si no cumple
 " requisitos minimos).
 " Valor '0' es considerado 'false', otro valor es considerado 'true'.
-let g:use_ide = 1
+let g:use_ide = 0
 
 " Habilita el uso del TabLine (barra superior donde se muestran los buffer y los tabs).
 " Valor por defecto es 1 ('true'). 

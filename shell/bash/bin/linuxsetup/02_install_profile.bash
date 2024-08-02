@@ -949,7 +949,7 @@ function _setup_vim_files() {
         l_target_path=".vim"
         l_target_link="ftplugin"
         l_source_path="${g_repo_name}/vim/ftplugin/editor"
-        create_folderlink_on_home "$l_source_path" "$p_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_ln
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_ln
 
 
     fi
