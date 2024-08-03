@@ -83,6 +83,7 @@ gA_packages=(
         ['trivy']='aquasecurity/trivy'
         ['ctags-win']='universal-ctags/ctags-win32'
         ['ctags-nowin']='universal-ctags/ctags-nightly-build'
+        ['tmux-fingers']='Morantron/tmux-fingers'
     )
 
 
@@ -127,7 +128,7 @@ ga_menu_options_title=(
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
 ga_menu_options_packages=(
-    "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
+    "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza,tmux-fingers"
     "xsv,yazi,jwt,step,butane"
     "protoc,grpcurl,evans"
     "nerd-fonts"
@@ -189,6 +190,7 @@ declare -A gA_repo_config_os_type=(
         ['kubelet']=6
         ['ctags-win']=1
         ['ctags-nowin']=14
+        ['tmux-fingers']=14
     )
 
 
@@ -204,6 +206,7 @@ declare -A gA_repo_config_proc_type=(
         ['less']=1
         ['clangd']=1
         ['neovim']=1
+        ['tmux-fingers']=1
     )
 
 #URL base del repositorio por defecto es 'https://github.com'.
@@ -1863,6 +1866,24 @@ function _get_repo_current_pretty_version() {
             fi
             ;;
 
+
+        tmux-fingers)
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            #Obtener la version
+            if [ -f "${g_programs_path}/tmux-fingers.info" ]; then
+                l_tmp=$(cat "${g_programs_path}/tmux-fingers.info" | head -n 1)
+            else
+                #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
+                echo "$g_version_none"
+                return 3
+            fi
+            ;;
+
+
         *)
             return 9
             ;;
@@ -3340,6 +3361,32 @@ function get_repo_artifacts() {
             ;;
 
 
+        tmux-fingers)
+            #No soportado para architecture ARM de 64 bits
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 1
+            fi
+
+            #No soportado para Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 1
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+            if [ $g_os_subtype_id -eq 1 ]; then
+                pna_artifact_names=("tmux-fingers-${p_repo_last_pretty_version}-linux-x86_64")
+            else
+                pna_artifact_names=("tmux-fingers-${p_repo_last_pretty_version}-linux-x86_64")
+            fi
+            pna_artifact_types=(0)
+            ;;
+
+
         *)
            pna_artifact_baseurl=()
            pna_artifact_names=()
@@ -3842,6 +3889,35 @@ function _copy_artifact_files() {
                 copy_man_files "${g_temp_path}/${l_source_path}" 5
 
             fi
+            ;;
+        
+
+
+        tmux-fingers)
+
+            #A. Si es WSL de Windows y se copia binarios de windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                return 40
+            fi
+
+
+            #B. Si es Linux (no WSL)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Renombrar el binario antes de copiarlo
+            echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/tmux-fingers\" ..."
+            mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/tmux-fingers"
+
+            #Copiar el comando
+            copy_binary_on_command "${l_source_path}" "tmux-fingers" 0 1
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "tmux-fingers.info" "$p_repo_last_pretty_version" 0
             ;;
             
 

@@ -995,6 +995,13 @@ _install_nodejs() {
         return 0
     fi
 
+    printf 'Se instalara NodeJS usando el script de instalación "%b%s%b" ...\n' "$g_color_gray1" "01_setup_commands.bash" "$g_color_reset"
+
+    printf 'Warning: %bLa ruta personalizada de instalación de programas solo puede ser ingresado por archivo "%b%s%b" de configuración%b.' \
+           "$g_color_yellow1" "$g_color_gray1" "config.bash" "$g_color_yellow1" "$g_color_reset" 
+    printf '         No soporta rutas personalizada por argumentos del script de instalación. Las rutas predeterminado a usar pueden ser "%b/var/opt/tools%b" o "%b~/tools%b".\n' \
+           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+
     #Parametros del script usados hasta el momento:
     # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
     # 2> Listado de ID del repositorios a instalar separados por coma.
@@ -1030,14 +1037,18 @@ _install_nodejs() {
     fi
 
     #Validar si 'node' esta en el PATH
-    local l_programs_path=""
-    l_programs_path=$(cat /tmp/prgpath.txt | head -n 1)
-    if [ -d "$l_programs_path/nodejs/bin" ]; then
+    local l_programs_path=$(cat /tmp/prgpath.txt | head -n 1)
+    if [ -z "$l_programs_path" ] || [ -d "$l_programs_path/nodejs/bin" ]; then
+        printf 'La ruta de de instalación de programa es "%b%s%b".\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
         echo "$PATH" | grep "${l_programs_path}/nodejs/bin" &> /dev/null
         l_status=$?
         if [ $l_status -ne 0 ]; then
+            printf 'Registrando, de manera temporal, la ruta "%b%s/nodejs/bin%b" de NodeJS en la variable de entorno "%bPATH%b".\n' "$g_color_gray1" \
+                   "$l_programs_path" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
             export PATH=${l_programs_path}/nodejs/bin:$PATH
         fi
+    else
+        printf 'La ruta de instalación de programa "%b%s%b" obtenida es invalida.\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
     fi
 
     #Si no se logro instalarlo
@@ -1535,6 +1546,13 @@ function _install_nvim() {
     #Actualmente (2023), en github solo existe binarios para x64 y no para arm64
     else
 
+        printf 'Se instalara NeoVIM usando el script de instalación "%b%s%b" ...\n' "$g_color_gray1" "01_setup_commands.bash" "$g_color_reset"
+
+        printf 'Warning: %bLa ruta personalizada de instalación de programas solo puede ser ingresado por archivo "%b%s%b" de configuración%b.' \
+               "$g_color_yellow1" "$g_color_gray1" "config.bash" "$g_color_yellow1" "$g_color_reset" 
+        printf '         No soporta rutas personalizada por argumentos del script de instalación. Las rutas predeterminado a usar pueden ser "%b/var/opt/tools%b" o "%b~/tools%b".\n' \
+               "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+
         #Parametros del script usados hasta el momento:
         # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
         # 2> Listado de ID del repositorios a instalar separados por coma.
@@ -1571,14 +1589,18 @@ function _install_nvim() {
         fi
 
         #Validar si 'nvim' esta en el PATH
-        local l_programs_path=""
-        l_programs_path=$(cat /tmp/prgpath.txt | head -n 1)
-        if [ -d "$l_programs_path/neovim/bin" ]; then
+        local l_programs_path=$(cat /tmp/prgpath.txt | head -n 1)
+        if [ -z "$l_programs_path" ] || [ -d "$l_programs_path/neovim/bin" ]; then
+            printf 'La ruta de de instalación de programa es "%b%s%b".\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
             echo "$PATH" | grep "${l_programs_path}/neovim/bin" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
+                printf 'Registrando, de manera temporal, la ruta "%b%s/neovim/bin%b" de NeoVIM en la variable de entorno "%bPATH%b".\n' "$g_color_gray1" \
+                       "$l_programs_path" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
                 export PATH=${l_programs_path}/neovim/bin:$PATH
             fi
+        else
+            printf 'La ruta de instalación de programa "%b%s%b" obtenida es invalida.\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
         fi
 
     fi
@@ -1902,7 +1924,6 @@ function _setup_user_profile() {
     fi
 
 
-
     #¿Esta habilitado la creacion de enlaces simbolicos del perfil?
     local l_option=2
     if [ $(( $p_opciones & $l_option )) -ne $l_option ]; then
@@ -2054,6 +2075,15 @@ function _setup_user_profile() {
            "$g_color_gray1" "~/.config/git/main.toml" "$g_color_reset" "$g_color_gray1" "~/.config/git/work_uc.toml" "$g_color_reset" \
            "$g_color_gray1" "$g_color_reset"
 
+    #Archivo de configuración para el comando UrlScan (hecho en python)
+    l_target_path=".config/urlscan"
+    create_folderpath_on_home ".config" "urlscan"
+    l_target_link="config.json"
+    l_source_path="${g_repo_name}/urlscan"
+    l_source_filename='default_config.json'
+
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
     #NerdCtl: Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD'
     l_target_path=".config/nerdctl"
     create_folderpath_on_home ".config" "nerdctl"
