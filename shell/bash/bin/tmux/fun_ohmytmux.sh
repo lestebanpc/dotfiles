@@ -839,12 +839,6 @@ _apply_bindings() {
     done
   fi
 
-  tmux_conf_urlscan_options=${tmux_conf_urlscan_options:---compact --dedupe}
-  if command -v urlscan > /dev/null 2>&1; then
-    tmux bind U run "sh '#{TMUX_FUNC}' _urlscan '#{pane_id}' $tmux_conf_urlscan_options"
-  elif command -v urlview > /dev/null 2>&1; then
-    tmux bind U run "sh '#{TMUX_FUNC}' _urlview '#{pane_id}'"
-  fi
 }
 
 _apply_theme() {

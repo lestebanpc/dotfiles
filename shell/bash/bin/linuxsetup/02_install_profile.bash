@@ -2079,7 +2079,7 @@ function _setup_user_profile() {
     l_target_path=".config/urlscan"
     create_folderpath_on_home ".config" "urlscan"
     l_target_link="config.json"
-    l_source_path="${g_repo_name}/urlscan"
+    l_source_path="${g_repo_name}/etc/urlscan"
     l_source_filename='default_config.json'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
