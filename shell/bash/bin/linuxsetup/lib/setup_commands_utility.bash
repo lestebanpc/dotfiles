@@ -645,9 +645,9 @@ function copy_binary_on_program()
 #Parametros de entrada> Argumentos:
 #  01> Source path donde esta el archivo de ayuda a copiar.
 #  02> Tipo de ayuda a copiar
-#      1 - Para la ayuda man1
-#      5 - Para la ayuda man5
-#      7 - Para la ayuda man7
+#      1 - Para la ayuda man1 (archivos '*.1' o archivos '*.1.gz')
+#      5 - Para la ayuda man5 (archivos '*.5' o archivos '*.5.gz')
+#      7 - Para la ayuda man7 (archivos '*.7' o archivos '*.7.gz')
 #Parametros de salida > Valor de retorno:
 #  0 - OK
 #  1 - No OK
@@ -687,14 +687,15 @@ function copy_man_files()
         fi
 
         #Copiar los archivos
-        printf 'Copiando los archivos "%b%s%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "${p_source_path}/*.${p_man_type}" \
-               "$g_color_reset" "$g_color_gray1" "${l_target_path}/" "$g_color_reset"
-
-        cp ${p_source_path}/*.${p_man_type} "${l_target_path}/"
+        printf 'Copiando los archivos "%b%s/*.%s%b" y "%b%s/*.%s.gz%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "$p_source_path" \
+               "$p_man_type" "$g_color_reset" "$g_color_gray1" "$p_source_path" "$p_man_type" "$g_color_reset" "$g_color_gray1" \
+               "${l_target_path}/" "$g_color_reset"
+        find "$p_source_path" -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" -exec cp {} "$l_target_path/" \;
 
         #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_command_owner -eq 0 ]; then
-            chown "${g_targethome_owner}:${g_targethome_group}" ${l_target_path}/*.${p_man_type}
+            find "$p_target_path" \( -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" \) ! -user "$g_targethome_owner" \
+                 -exec chown "${g_targethome_owner}:${g_targethome_group}" {} \:
         fi
 
         return 0
@@ -715,10 +716,10 @@ function copy_man_files()
 
     
     #Copiar los archivos
-    printf 'Copiando los archivos "%b%s%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "${p_source_path}/*.${p_man_type}" \
-           "$g_color_reset" "$g_color_gray1" "${l_target_path}/" "$g_color_reset"
-
-    sudo cp ${p_source_path}/*.${p_man_type} "${l_target_path}/"
+    printf 'Copiando los archivos "%b%s/*.%s%b" y "%b%s/*.%s.gz%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "$p_source_path" \
+           "$p_man_type" "$g_color_reset" "$g_color_gray1" "$p_source_path" "$p_man_type" "$g_color_reset" "$g_color_gray1" \
+           "${l_target_path}/" "$g_color_reset"
+    sudo find "$p_source_path" -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" -exec cp {} "$l_target_path/" \;
 
     return 0
 

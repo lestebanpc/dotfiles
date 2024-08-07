@@ -1,5 +1,6 @@
 # VIM - Archivos swap o temporales (formato '.filename.swp')
 **/*.swp
+**/*.swo
 
 # VIM - Archivos de 'persistence undo' (formato '.filename.un~')
 **/*.un~

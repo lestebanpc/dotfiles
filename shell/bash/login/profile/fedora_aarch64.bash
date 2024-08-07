@@ -59,6 +59,9 @@ if [ -z "$g_prompt_theme" ] || [ ! -f "$g_prompt_theme" ]; then
     g_prompt_theme=~/${g_repo_name}/etc/oh-my-posh/lepc-montys-1.omp.json
 fi
 
+#Usado por mi archivo de configuración de Tmux
+export MY_REPO_PATH="$HOME/$g_repo_name"
+
 
 #-----------------------------------------------------------------------------------
 # Variable de entorno> PATH y de otros programas

@@ -6,6 +6,7 @@
 
 # Nombre del repositorio git o la ruta relativa del repositorio git respecto al HOME. 
 # - Si no se establece (valor vacio), se usara el valor '.files'.
+# - Usado para generar la variable de entorno 'MY_REPO_PATH' usado en el archivo de configuración de TMUX
 #g_repo_name='.files'
 
 # Folder base donde se almacena los subfolderes de los programas.

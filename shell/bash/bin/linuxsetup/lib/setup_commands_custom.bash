@@ -84,6 +84,8 @@ gA_packages=(
         ['ctags-win']='universal-ctags/ctags-win32'
         ['ctags-nowin']='universal-ctags/ctags-nightly-build'
         ['tmux-fingers']='Morantron/tmux-fingers'
+        ['sesh']='joshmedeski/sesh'
+        ['gum']='charmbracelet/gum'
     )
 
 
@@ -128,8 +130,8 @@ ga_menu_options_title=(
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
 ga_menu_options_packages=(
-    "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza,tmux-fingers"
-    "xsv,yazi,jwt,step,butane"
+    "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
+    "xsv,yazi,jwt,step,butane,tmux-fingers,sesh,gum"
     "protoc,grpcurl,evans"
     "nerd-fonts"
     "neovim"
@@ -1884,6 +1886,41 @@ function _get_repo_current_pretty_version() {
             ;;
 
 
+        sesh)
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}sesh.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}sesh --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
+        gum)
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}gum.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}gum --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
+
         *)
             return 9
             ;;
@@ -3387,6 +3424,65 @@ function get_repo_artifacts() {
             ;;
 
 
+
+        sesh)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("sesh_Windows_arm64.zip")
+                else
+                    pna_artifact_names=("sesh_Windows_x86_64.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("sesh_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("sesh_Linux_x86_64.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("sesh_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("sesh_Linux_x86_64.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
+
+
+        gum)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_names=("gum_0.14.3_Windows_x86_64.zip")
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("gum_0.14.3_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("gum_0.14.3_Linux_x86_64.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("gum_0.14.3_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("gum_0.14.3_Linux_x86_64.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
+
+
         *)
            pna_artifact_baseurl=()
            pna_artifact_names=()
@@ -4086,6 +4182,7 @@ function _copy_artifact_files() {
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             copy_binary_on_command "${l_source_path}" "grpcurl" 0 1
             ;;
+
             
         evans)
 
@@ -4106,6 +4203,7 @@ function _copy_artifact_files() {
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             copy_binary_on_command "${l_source_path}" "evans" 0 1
             ;;
+
             
         dive)
 
@@ -4436,6 +4534,67 @@ function _copy_artifact_files() {
             
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
             save_prettyversion_on_program "" "rust-analyzer.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+        sesh)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si es WSL de Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                copy_binary_on_command "${l_source_path}" "sesh.exe" 1 1
+                return 0
+
+            fi
+
+            #B. Si es Linux (no WSL)
+
+            #Copiando el binario en una ruta del path
+            copy_binary_on_command "${l_source_path}" "sesh" 0 1
+            ;;
+
+
+        gum)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
+
+            #A. Si es WSL de Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                copy_binary_on_command "${l_source_path}" "gum.exe" 1 1
+                return 0
+
+            fi
+
+            #B. Si es Linux (no WSL)
+
+            #Copiando el binario en una ruta del path
+            copy_binary_on_command "${l_source_path}" "gum" 0 1
+
+            #Copiar los archivos de ayuda man para comando
+            copy_man_files "${g_temp_path}/${l_source_path}/manpages" 1
+
+            #Copiando los script para el autocompletado
+            echo "Copiando \"completions/gum.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
+            cp "${g_temp_path}/${l_source_path}/completions/gum.bash" ${g_repo_path}/shell/bash/login/autocomplete/gum.bash
+
+            echo "Copiando \"completions/gum.zsh\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
+            cp "${g_temp_path}/${l_source_path}/completions/gum.zsh" ${g_repo_path}/shell/zsh/login/autocomplete/gum.zsh
+
+            echo "Copiando \"completions/gum.fish\" a \"~/.files/shell/fish/login/autocomplete/\" ..."
+            cp "${g_temp_path}/${l_source_path}/completions/gum.fish" ${g_repo_path}/shell/fish/login/autocomplete/gum.fish
+
+            #Fix permisos
+            if [ $g_runner_is_target_user -ne 0 ]; then
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/gum.bash
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/zsh/login/autocomplete/gum.zsh
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/fish/login/autocomplete/gum.fish
+            fi
+
             ;;
 
 

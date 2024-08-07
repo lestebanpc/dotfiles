@@ -1,8 +1,14 @@
 #!/bin/sh 
 
-# Source: 'oh-my-tmux', creado por Gregory Pakosz (@gpakosz). 
-# URL   : https://github.com/gpakosz/.tmux 
-# Se modifica para tener shell en otro archivos y no dentro de los archivos de configuracion. 
+# Permite realizar personalizaciones de la barra de estado
+# Permite definir variables personalizadas '#{foo}' que se define en la barra de estado usando las variables entorno de 
+# 'tmux_conf_theme_status_left' y 'tmux_conf_theme_status_right'.
+# Donde 'foo' es:
+#   > Una funcion que devulve una cadena de texto que se ejecutara en modo backgrund.
+#   > Si la funcion invoa algun servicio de la red, para no tener saturar el servicio use sleep:
+#     sleep 900 (15 minutos)
+#     sleep 300 (05 minutos)
+#
 
 
 weather() {                                         # see https://github.com/chubin/wttr.in#one-line-output

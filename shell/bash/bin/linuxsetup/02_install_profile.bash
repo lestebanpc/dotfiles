@@ -2039,13 +2039,19 @@ function _setup_user_profile() {
 
     #5. Creando enlaces simbolico independiente del tipo de distribución Linux
 
-    #Crear el enlace de TMUX
-    l_target_path=""
-    l_target_link=".tmux.conf"
+    #Crear el enlace de TMUX (no usaramos '~/.tmux.conf', usaramos '~/.config/tmux/tmux.conf')
+    create_folderpath_on_home ".config" "tmux"
+    l_target_path=".config/tmux"
+    l_target_link="tmux.conf"
     l_source_path="${g_repo_name}/tmux"
     l_source_filename='tmux.conf'
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
+
+    copy_file_on_home "${g_repo_path}/tmux" "template_tmux_custom.conf" ".config/tmux" "tmux_custom.conf" 1 "        > "
+    l_status=$?
+    printf 'Profile > Edite los archivos "%b%s%b" si desea personalizar las opciones de tmux.\n' \
+           "$g_color_gray1" "~/.config/tmux/tmux_custom.conf" "$g_color_reset"
 
     #Archivo de configuración para pseudoterminal wezterm
     l_target_path=".config/wezterm"
@@ -2069,6 +2075,7 @@ function _setup_user_profile() {
     create_folderpath_on_home ".config" "git"
     copy_file_on_home "${g_repo_path}/etc/git" "template_main_gitconfig_linux.toml" ".config/git" "main.toml" 1 "        > "
     l_status=$?
+
     copy_file_on_home "${g_repo_path}/etc/git" "template_work_gitconfig_linux.toml" ".config/git" "work_uc.toml" 1 "        > "
     l_status=$?
     printf 'Profile > Edite los archivos "%b%s%b" y "%b%s%b" si desea personalizar las opciones a nivel global del usuario ("%b~/.gitconfig%b")\n' \
