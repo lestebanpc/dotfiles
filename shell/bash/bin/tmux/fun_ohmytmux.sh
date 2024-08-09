@@ -614,7 +614,7 @@ _split_window() {
 _apply_tmux_256color() {
   case "$(tmux show -gv default-terminal)" in
     tmux-256color|tmux-direct)
-      return
+     return
       ;;
   esac
 
@@ -770,26 +770,6 @@ _apply_bindings() {
       "$cfg"
   fi
 
-
-  tmux_conf_copy_to_os_clipboard=${tmux_conf_copy_to_os_clipboard:-false}
-  command -v xsel > /dev/null 2>&1 && command='xsel -i -b'
-  ! command -v xsel > /dev/null 2>&1 && command -v xclip > /dev/null 2>&1 && command='xclip -i -selection clipboard > \/dev\/null 2>\&1'
-  [ "$XDG_SESSION_TYPE" = "wayland" ] && command -v wl-copy > /dev/null 2>&1 && command='wl-copy'
-  command -v pbcopy > /dev/null 2>&1 && command='pbcopy'
-  command -v clip.exe > /dev/null 2>&1 && command='clip\.exe'
-  [ -c /dev/clipboard ] && command='cat > \/dev\/clipboard'
-
-  if [ -n "$command" ]; then
-    if ! _is_disabled "$tmux_conf_copy_to_os_clipboard" && _is_true "$tmux_conf_copy_to_os_clipboard"; then
-      perl -p -i -e "s/(?!.*?$command)\bcopy-(?:selection|pipe)(-end-of-line|-and-cancel|-end-of-line-and-cancel|-no-clear)?\b/copy-pipe\1 '$command'/g" "$cfg"
-    else
-      if [ "$_tmux_version" -ge 320 ]; then
-        perl -p -i -e "s/\bcopy-pipe(-end-of-line|-and-cancel|end-of-line-and-cancel|-no-clear)?\b\s+(\"|')?$command\2?/copy-pipe\1/g" "$cfg"
-      else
-        perl -p -i -e "s/\bcopy-pipe(-end-of-line|-and-cancel|end-of-line-and-cancel|-no-clear)?\b\s+(\"|')?$command\2?/copy-selection\1/g" "$cfg"
-      fi
-    fi
-  fi
 
   # until tmux >= 3.0, output of tmux list-keys can't be consumed back by tmux source-file without applying some escapings
   awk < "$cfg" \
@@ -1359,124 +1339,6 @@ _apply_theme() {
 
 }
 
-__apply_plugins() {
-  TMUX_PLUGIN_MANAGER_PATH="$1"
-  window_active="$2"
-  tmux_conf_update_plugins_on_launch="$3"
-  tmux_conf_update_plugins_on_reload="$4"
-  tmux_conf_uninstall_plugins_on_reload="$5"
-
-  if [ -z "$TMUX_PLUGIN_MANAGER_PATH" ]; then
-    return 255
-  fi
-  mkdir -p "$TMUX_PLUGIN_MANAGER_PATH"
-
-  tpm_plugins=$(tmux show -gvq '@tpm_plugins' 2>/dev/null)
-  if [ -z "$(tmux show -gv '@plugin' 2>/dev/null)" ] && [ -z "$tpm_plugins" ]; then
-    if _is_true "$tmux_conf_uninstall_plugins_on_reload" && [ -d "$TMUX_PLUGIN_MANAGER_PATH/tpm" ]; then
-      tmux display 'Uninstalling tpm and plugins...'
-      tmux set-environment -gu TMUX_PLUGIN_MANAGER_PATH
-      rm -rf "$TMUX_PLUGIN_MANAGER_PATH"
-      tmux display 'Done uninstalling tpm and plugins...'
-    fi
-  else
-    if [ "$(command tmux display -p '#{pid} #{version} #{socket_path}')" = "$($TMUX_PROGRAM display -p '#{pid} #{version} #{socket_path}')" ]; then
-      tpm_plugins=$(cat << EOF | tr ' ' '\n' | awk '/^\s*$/ {next;}; !seen[$0]++ { gsub(/^[ \t]+/,"",$0); gsub(/[ \t]+$/,"",$0); print $0 }'
-        $tpm_plugins
-        $(awk '/^[ \t]*set(-option)?.*[ \t]@plugin[ \t]/ { gsub(/'\''/, ""); gsub(/'\"'/, ""); print $NF }' "$TMUX_CUSTOM_CONF" 2>/dev/null)
-EOF
-      )
-      tmux set-environment -g TMUX_PLUGIN_MANAGER_PATH "$TMUX_PLUGIN_MANAGER_PATH"
-      tmux set -g '@tpm_plugins' "$tpm_plugins"
-
-      if [ -d "$TMUX_PLUGIN_MANAGER_PATH/tpm" ]; then
-        [ -z "$(tmux show -gqv '@tpm-install')" ] && tmux set -g '@tpm-install' 'I'
-        [ -z "$(tmux show -gqv '@tpm-update')" ] && tmux set -g '@tpm-update' 'u'
-        [ -z "$(tmux show -gqv '@tpm-clean')" ] && tmux set -g '@tpm-clean' 'M-u'
-        "$TMUX_PLUGIN_MANAGER_PATH/tpm/tpm" || tmux display "One or more tpm plugin(s) failed"
-      fi
-
-      if git ls-remote -hq https://github.com/gpakosz/.tmux.git master > /dev/null; then
-        if [ ! -d "$TMUX_PLUGIN_MANAGER_PATH/tpm" ]; then
-          install_tpm=true
-          tmux display 'Installing tpm and plugins...'
-          git clone --depth 1 https://github.com/tmux-plugins/tpm "$TMUX_PLUGIN_MANAGER_PATH/tpm"
-        elif { [ -z "$window_active" ] && _is_true "$tmux_conf_update_plugins_on_launch"; } || { [ -n "$window_active" ] && _is_true "$tmux_conf_update_plugins_on_reload"; }; then
-          update_tpm=true
-          tmux display 'Updating tpm and plugins...'
-          (cd "$TMUX_PLUGIN_MANAGER_PATH/tpm" && git fetch -q -p && git checkout -q master && git reset -q --hard origin/master)
-        fi
-        if [ "$install_tpm" = "true" ] || [ "$update_tpm" = "true" ]; then
-          perl -0777 -p -i -e 's/git clone(?!\s+--depth\s+1)/git clone --depth 1/g
-                              ;s/(install_plugin(.(?!&))*)\n(\s+)done/\1&\n\3done\n\3wait/g' "$TMUX_PLUGIN_MANAGER_PATH/tpm/scripts/install_plugins.sh"
-          perl -p -i -e 's/git submodule update --init --recursive(?!\s+--depth\s+1)/git submodule update --init --recursive --depth 1/g' "$TMUX_PLUGIN_MANAGER_PATH/tpm/scripts/update_plugin.sh"
-          perl -p -i -e 's,\$tmux_file\s+>/dev/null\s+2>\&1,$& || { tmux display "Plugin \$(basename \${plugin_path}) failed" && false; },' "$TMUX_PLUGIN_MANAGER_PATH/tpm/scripts/source_plugins.sh"
-        fi
-        if [ "$update_tpm" = "true" ]; then
-          {
-            {
-              printf 'List of discovered tpm plugins: %s\n' "$(printf '%s\n' "$tpm_plugins" | paste -s -d ' ' -)" | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              printf '%s\n' "Invoking $TMUX_PLUGIN_MANAGER_PATH/tpm/bin/install_plugins" | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              "$TMUX_PLUGIN_MANAGER_PATH/tpm/bin/install_plugins" 2>&1 | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              printf '%s\n' "Invoking $TMUX_PLUGIN_MANAGER_PATH/tpm/bin/update_plugins all" | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              "$TMUX_PLUGIN_MANAGER_PATH/tpm/bin/update_plugins" all 2>&1 | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              printf '%s\n' "Invoking $TMUX_PLUGIN_MANAGER_PATH/tpm/bin/clean_plugins all" | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              "$TMUX_PLUGIN_MANAGER_PATH/tpm/bin/clean_plugins" all 2>&1 | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              printf 'Done.\n' | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              printf '\n'
-            } >> "$TMUX_PLUGIN_MANAGER_PATH/tpm_log.txt"
-
-            tmux display 'Done updating tpm and plugins...'
-          } || tmux display 'Failed updating tpm and plugins...'
-        elif [ "$install_tpm" = "true" ]; then
-          {
-            {
-              printf 'List of discovered tpm plugins: %s\n' "$(printf '%s\n' "$tpm_plugins" | paste -s -d ' ' -)" | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              printf '%s\n' "Invoking $TMUX_PLUGIN_MANAGER_PATH/tpm/bin/install_plugins" | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              "$TMUX_PLUGIN_MANAGER_PATH/tpm/bin/install_plugins" 2>&1 | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              printf 'Done.\n' | perl -MPOSIX=strftime -MTime::HiRes=gettimeofday -pe 'my ($s, $us) = gettimeofday(); printf ("[%s.%03d]\t ", strftime("%Y-%m-%d %H:%M:%S", localtime $s), $us / 1000)'
-              printf '\n' >> "$TMUX_PLUGIN_MANAGER_PATH/tpm_log.txt"
-            } >> "$TMUX_PLUGIN_MANAGER_PATH/tpm_log.txt"
-
-            tmux display 'Done installing tpm and plugins...'
-
-            [ -z "$(tmux show -gqv '@tpm-install')" ] && tmux set -g '@tpm-install' 'I'
-            [ -z "$(tmux show -gqv '@tpm-update')" ] && tmux set -g '@tpm-update' 'u'
-            [ -z "$(tmux show -gqv '@tpm-clean')" ] && tmux set -g '@tpm-clean' 'M-u'
-            "$TMUX_PLUGIN_MANAGER_PATH/tpm/tpm" || tmux display "One or more tpm plugin(s) failed"
-          } || tmux display 'Failed installing tpm and plugins...'
-        fi
-      else
-        tmux display "GitHub doesn't seem to be reachable, skipping installing and/or updating tpm and plugins..."
-      fi
-    else
-      tmux run -b "sleep \$((#{display-time} / 1000)) && '$TMUX_PROGRAM' set display-time 3000 \; display 'Cannot use tpm which assumes a globally installed tmux' \; set -u display-time"
-    fi
-
-    if [ "$_tmux_version" -gt 260 ]; then
-      tmux set -gu '@tpm-install' \; set -gu '@tpm-update' \; set -gu '@tpm-clean' \; set -gu '@plugin' \; set -gu '@tpm_plugins'
-    else
-      tmux set -g '@tpm-install' '' \; set -g '@tpm-update' '' \; set -g '@tpm-clean' '' \; set -g '@plugin' '' \; set-gu '@tpm_plugins' ''
-    fi
-  fi
-}
-
-_apply_plugins() {
-  tmux_conf_update_plugins_on_launch=${tmux_conf_update_plugins_on_launch:-true}
-  tmux_conf_update_plugins_on_reload=${tmux_conf_update_plugins_on_reload:-true}
-  tmux_conf_uninstall_plugins_on_reload=${tmux_conf_uninstall_plugins_on_reload:-true}
-
-  if [ -z "$TMUX_PLUGIN_MANAGER_PATH" ]; then
-    if [ -f "$HOME/.tmux.conf" ]; then
-      TMUX_PLUGIN_MANAGER_PATH="$HOME/.tmux/plugins"
-    elif [ -z "$XDG_CONFIG_HOME" ]; then
-      TMUX_PLUGIN_MANAGER_PATH="$HOME/.config/tmux/plugins"
-    else
-      TMUX_PLUGIN_MANAGER_PATH="$XDG_CONFIG_HOME/tmux/plugins"
-    fi
-  fi
-  tmux run -b "sh '$TMUX_SHELL_OHMYTMUX' __apply_plugins '$TMUX_PLUGIN_MANAGER_PATH' '$window_active' '$tmux_conf_update_plugins_on_launch' '$tmux_conf_update_plugins_on_reload' '$tmux_conf_uninstall_plugins_on_reload'"
-}
 
 _apply_important() {
   cfg=$(mktemp) && trap 'rm -f $cfg*' EXIT
@@ -1532,8 +1394,7 @@ _apply_configuration() {
   _apply_bindings&
   wait
 
-  #Desactivar el uso de TMP-Plugin
-  #_apply_plugins
+  #Desactivar ¿se requiere?
   #_apply_important
 
   # shellcheck disable=SC2046

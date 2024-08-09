@@ -4757,8 +4757,8 @@ function _copy_artifact_files() {
             
             #/etc/containers/storage.conf (default: overlayfs)
             printf 'Descargando el archivo de configuracion requerido para "%s" con soporte a "Overlay" en "~/%s"\n' "/etc/containers/storage.conf" \
-                   ".files/etc/podman/storage_default.toml"
-            curl -fLo ${g_repo_path}/etc/podman/storage_default.toml \
+                   ".files/etc/podman/storage_overlay_default.toml"
+            curl -fLo ${g_repo_path}/etc/podman/storage_overlay_default.toml \
                  https://raw.githubusercontent.com/containers/podman/main/vendor/github.com/containers/storage/storage.conf
            
             #/etc/containers/storage.conf (btrfs)

@@ -3,6 +3,14 @@ local wezterm = require 'wezterm'
 -- CHANGE a "true" if use Windows
 local l_is_win = false
 
+-- Usar Wayland y solo si es Linux.
+-- Debido a que la version de Wayland esta en rescontruccion por lo se optara por usar X11. 
+-- Limitaciones al 2024.07.07:
+--  > No funciona correctamente el sopotte a OSC 52 para manejo del clipboard.
+--  > El estilo de ventanas funciona peor que el de X11.
+-- Si usa Wayland, revise que el compositor 'Xwayland' para X11 este activo: 'ps -fea | grep Xwayland'
+local l_enable_wayland = false
+
 -- Obtain the default configuration. See: https://wezfurlong.org/wezterm/config/lua/config/index.html
 local config = wezterm.config_builder()
 
@@ -12,7 +20,7 @@ local config = wezterm.config_builder()
 
 -- If false, do not try to use a Wayland protocol connection when starting the gui frontend, and instead use X11.
 if not l_is_win then
-    config.enable_wayland = true
+    config.enable_wayland = l_enable_wayland
 end
 
 -- What to set the TERM environment variable to. The default is xterm-256color, which should provide a good level of feature 
@@ -139,9 +147,12 @@ config.use_ime = false
 if l_is_win then
     config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
 else
-    --config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
-    config.window_decorations = "TITLE|RESIZE"
-    --config.window_decorations = "RESIZE"
+    if l_enable_wayland then
+        config.window_decorations = "TITLE|RESIZE"
+    else
+        config.window_decorations = "TITLE|RESIZE"
+        --config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
+    end
 end
 
 -- Configures the visual style of the tabbar-integrated titlebar button replacements that are shown when window_decorations = "INTEGRATED_BUTTONS|RESIZE".
@@ -217,8 +228,9 @@ config.exit_behavior = "Close"
 if l_is_win then
     config.default_cursor_style = "BlinkingBlock"
 else
-    -- En Wayland, 'BlinkingBlock' esta arrojando un error.
-    config.default_cursor_style = "SteadyBlock"
+    config.default_cursor_style = "BlinkingBlock"
+    -- En Wayland, 'BlinkingBlock' estaba arrojando un error, pero se corrigio
+    --config.default_cursor_style = "SteadyBlock"
 end
 
 -- Specifies the easing function to use when computing the color for the text cursor when it is set to a blinking style.
@@ -241,9 +253,18 @@ config.enable_tab_bar = true
 -- If set to true, when there is only a single tab, the tab bar is hidden from the display. If a second tab is created, the tab will be shown.
 -- Defult is false.
 if l_is_win then
+    --Recomendado para estilo de tipo "INTEGRATED_BUTTONS|RESIZE"
     config.hide_tab_bar_if_only_one_tab = false
 else
-    config.hide_tab_bar_if_only_one_tab = true
+    if l_enable_wayland then
+        --Recomendado para estilo de tipo "TITLE|RESIZE"
+        config.hide_tab_bar_if_only_one_tab = true
+    else
+        --Recomendado para estilo de tipo "TITLE|RESIZE"
+        config.hide_tab_bar_if_only_one_tab = true
+        --Recomendado para estilo de tipo "INTEGRATED_BUTTONS|RESIZE"
+        --config.hide_tab_bar_if_only_one_tab = false
+    end
 end
 
 -- When tab_bar_at_bottom = true, the tab bar will be rendered at the bottom of the window rather than the top of the window.
