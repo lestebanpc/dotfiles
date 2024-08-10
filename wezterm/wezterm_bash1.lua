@@ -1,5 +1,13 @@
 local wezterm = require 'wezterm'
 
+-- Obtain the default configuration. See: https://wezfurlong.org/wezterm/config/lua/config/index.html
+local config = wezterm.config_builder()
+
+
+------------------------------------------------------------------------------------
+-- My settings variables
+------------------------------------------------------------------------------------
+
 -- CHANGE a "true" if use Windows
 local l_is_win = false
 
@@ -11,8 +19,9 @@ local l_is_win = false
 -- Si usa Wayland, revise que el compositor 'Xwayland' para X11 este activo: 'ps -fea | grep Xwayland'
 local l_enable_wayland = false
 
--- Obtain the default configuration. See: https://wezfurlong.org/wezterm/config/lua/config/index.html
-local config = wezterm.config_builder()
+-- Si establece en false la navegacion solo lo puede hacer usando teclas para ingresar al modo copia, busqueda, copia rapida.
+local l_enable_scrollbar = false
+
 
 ------------------------------------------------------------------------------------
 -- Setting> General
@@ -116,7 +125,7 @@ config.font = wezterm.font_with_fallback({
 
 -- Specifies the size of the font, measured in points. You may use fractional point sizes, such as 13.3, to fine tune the size.
 -- The default font size is 12.0
-config.font_size = 10.7
+config.font_size = 10.5
 --config.font_size = 11
 
 --config.bold_brightens_ansi_colors = true
@@ -198,12 +207,21 @@ config.adjust_window_size_when_changing_font_size = true
 -- Controls the amount of padding between the window border and the terminal cells. Padding is measured in pixels.
 -- If enable_scroll_bar is true, then the value you set for right will control the width of the scrollbar. 
 -- If you have enabled the scrollbar and have set right to 0 then the right padding (and thus the scrollbar width) will instead match the width of a cell.
-config.window_padding = {
-    left = 5,
-    right = 10,
-    top = 5,
-    bottom = 5,
-  }
+if l_enable_scrollbar then
+    config.window_padding = {
+        left = 5,
+        right = 10,
+        top = 5,
+        bottom = 5,
+    }
+else
+    config.window_padding = {
+        left = 5,
+        right = 5,
+        top = 5,
+        bottom = 5,
+    }
+end
 
 -- Initial window size on startup
 config.initial_rows = 30
@@ -353,7 +371,7 @@ config.use_fancy_tab_bar = true
 ------------------------------------------------------------------------------------
 
 -- Enable the scrollbar. This is currently disabled by default. It will occupy the right window padding space.
-config.enable_scroll_bar = true
+config.enable_scroll_bar = l_enable_scrollbar
 
 -- Lines of scrollback you want to retain (in memory) per tab (default is 3500)
 config.scrollback_lines = 5000 

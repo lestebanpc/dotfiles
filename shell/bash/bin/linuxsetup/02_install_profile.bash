@@ -167,7 +167,7 @@ declare -r g_version_none='0.0.0'
 # Repositorios GIT donde estan los plugins VIM
 # Valores:
 #   (1) Perfil Basic - Tema
-#   (2) Perfil Basic - UI
+#   (2) Perfil Basic - UI y otros
 #   (3) Perfil Developer - Typing
 #   (4) Perfil Developer - IDE
 declare -A gA_repos_type=(
@@ -181,6 +181,7 @@ declare -A gA_repos_type=(
         ['christoomey/vim-tmux-navigator']=2
         ['junegunn/fzf']=2
         ['junegunn/fzf.vim']=2
+        ['ojroques/vim-oscyank']=2
         ['tpope/vim-surround']=3
         ['mg979/vim-visual-multi']=3
         ['mattn/emmet-vim']=3
@@ -228,6 +229,7 @@ declare -A gA_repos_scope=(
         ['ryanoasis/vim-devicons']=1
         ['preservim/nerdtree']=1
         ['puremourning/vimspector']=1
+        ['ojroques/vim-oscyank']=1
         ['folke/tokyonight.nvim']=2
         ['kyazdani42/nvim-web-devicons']=2
         ['nvim-lualine/lualine.nvim']=2
@@ -2053,12 +2055,22 @@ function _setup_user_profile() {
     printf 'Profile > Edite los archivos "%b%s%b" si desea personalizar las opciones de tmux.\n' \
            "$g_color_gray1" "~/.config/tmux/tmux_custom.conf" "$g_color_reset"
 
-    #Archivo de configuración para pseudoterminal wezterm
+    #Archivo de configuración para el emulador de terminal wezterm
     l_target_path=".config/wezterm"
     create_folderpath_on_home ".config" "wezterm"
     l_target_link="wezterm.lua"
     l_source_path="${g_repo_name}/wezterm"
     l_source_filename='wezterm_bash1.lua'
+
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+
+    #Archivo de configuración para el emulador de terminal foot
+    l_target_path=".config/foot"
+    create_folderpath_on_home ".config" "foot"
+    l_target_link="foot.ini"
+    l_source_path="${g_repo_name}/etc/foot"
+    l_source_filename='foot_default.ini'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?

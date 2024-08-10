@@ -136,7 +136,7 @@ nnoremap <silent> <leader>lg :GFiles<CR>
 "Listar archivos del 'Git Status Files', Seleccionar/Examinar e Ir
 nnoremap <silent> <leader>ls :GFiles?<CR>
 "Listar comandos VIM, seleccionar y ejecutar
-nnoremap <silent> <leader>cc :History:<CR>
+nnoremap <silent> <leader>lc :History:<CR>
 "Listar las marcas (marks), seleccionar e ir
 nnoremap <silent> <leader>mm :Marks<CR>
 "Listar los saltos (jumps), seleccionar e ir

@@ -7,8 +7,8 @@
 "Tipos de sistemas operativos
 "  0 - Windows
 "  1 - MacOS
-"  2 - Linux
-"  3 - WSL
+"  2 - Linux no-WSL
+"  3 - Linux WSL
 "
 if !exists("g:os_type")
     if has("win64") || has("win32") || has("win16")
@@ -54,12 +54,6 @@ else
     let g:has_python3 = 0
 endif
 
-"Si esta compilado para soporte Clipboard del sistema operativo
-if has('clipboard')
-    let g:has_clipboard = 1
-else
-    let g:has_clipboard = 0
-endif
 
 "Determinar si se usa TMUX
 "if (g:os_type != 0) && exists('$TMUX') && executable('tmux')
@@ -69,41 +63,218 @@ else
     let g:use_tmux = 0
 endif
 
-"Determinar automaticamente si esta configurado como IDE
-"let g:use_ide = 1
-
+"Si se esta en el modo IDE (g:use_ide se define en el archivo de inicialización), determinar 
+"si realmente se requiere usar el modo IDE
 if g:use_ide && $USE_EDITOR != ""
     "Para no remover la carpeta de 'ftplugin' del runtimepath en VIM instalado para
     "en cada 'file type' se validara esta variable antes de que se carge.
     let g:use_ide = 0
 endif
 
-"Path del home del usuario (siempre se usara como separador de carpetas es '/')
-"Si es Windows
+"Path del home del usuario
 if g:os_type == 0
+    "Si es Windows, siempre se usara como separador de carpetas es '/'
     let g:home_path=substitute($USERPROFILE,"\\","/","g")
 else
     let g:home_path=$HOME
 endif
 
-"Calcular variables que solo se usan en un IDE
-if g:use_ide
+"Si esta en modo IDE y es Neovim, establecer un nuevo path en el 'Runtime Path'
+"  > La variable de entorno 'USE_COC' pueden tener los siguientes valores:
+"     1 > Usar CoC como IDE
+"     0 y otro valor > Usar el LSP nativo de NeoVIM
+if g:use_ide && g:is_neovim
 
     "Si es NeoVim, el IDE puede usar CoC o el LSP interno
     "  > Usar '~/.config/nvim/ftplugin' solo para 'file types' comunes para el IDE CoC/No-CoC
     "  > Usar '~/.config/nvim/rte_cocide/ftplugin' solo para 'file types' del IDE CoC
     "  > Usar '~/.config/nvim/rte_nativeide/ftplugin' solo para 'file types' del IDE No-CoC
-    if g:is_neovim
-        if $USE_COC != ""
-            let g:use_coc_in_nvim = 1
-            let &runtimepath.=',' .. g:home_path .. '/.config/nvim/rte_cocide'
-        else
-            let g:use_coc_in_nvim = 0
-            let &runtimepath.=',' .. g:home_path .. '/.config/nvim/rte_nativeide'        
-         endif
+    if $USE_COC == 1
+        let g:use_coc_in_nvim = 1
+        let &runtimepath.=',' .. g:home_path .. '/.config/nvim/rte_cocide'
+    else
+        let g:use_coc_in_nvim = 0
+        let &runtimepath.=',' .. g:home_path .. '/.config/nvim/rte_nativeide'        
     endif
 	
 endif
+
+
+"----------------------------- Clipboard de SO         -----------------------------
+"
+"Uso de 'ctrl+C' para enviar texto al portapapeles y 'ctrl+V' para obtener texto del portapapeles:
+" > Cuando (el panel actual de) la terminal no está ejecutando un comando, las terminales procesan estas
+"   teclas y acceden al clipboard:
+"   > Ante cualquier texto seleccionado (ya sea con el ratón o con otros atajos de teclado), usando 'ctr+C', 
+"     la puede capturar el terminal y enviarla al clipboard del SO (donde está la terminal).
+"     > Algunas  terminales permiten el copiado automático ante cualquier texto seleccionado a la terminal, 
+"       solo requiere seleccionar y esto ya se copia en la terminal.
+"     > Esta opción permite enviar al portapapeles cual texto del STDOUT generado por el comando (después 
+"       de su ejecución).
+"     > Cuando este en la línea de ejecución del prompt  actual de la terminal, puede usar 'ctrl+V' para 
+"       obtener el texto del portapapeles y pegarlo después del prompt actual.
+" > Cuando (el panel actual de) la terminal está ejecutando un comando, las terminales la terminales reenvias
+"   las teclas al comando de ejecución:
+"   > Cuando se usa 'ctrl+V', es la terminal la que obtiene el texto del portapapeles y reenvía la tecla 
+"     'ctrl+V' al comando de ejecución.
+"   > Algunos comandos, como 'vim', 'nvim', 'tmux', 'ssh', …. implementan un acción frente a este evento 
+"     algunos no lo implementan.
+"   > Cuando se usa 'ctrl+C', este se envía al programa, pero muchos comandos una accion para gestionar el 
+"     portapapeles, debido a que acoplan la lógica del comando con el API de gestión de portapapeles del SO.
+"     VIM/Neovim no implementan logica de pegado al portapapeles con esta key.
+"
+
+"Si esta compilado tiene nativo para poder escribir en el clipboard del SO
+if has('clipboard')
+    let g:has_clipboard = 1
+else
+    let g:has_clipboard = 0
+endif
+
+
+"Establecer el mecanismo de escritura en el clipboard del SO. Variable 'g:set_clipboard_type' cuyos
+"valores son:
+"  0 > Usar el mecanismo nativo de VIM/NeoVIM (siempre que este esta habilitado).
+"  1 > Implementar un mecanismo usando OSC 52.
+"  2 > Implementar un mecanismo usando comandos externos de gestion de clipboard.
+"  9 > No se puedo Implementar ninguno de los menanismos.
+let g:set_clipboard_type = 9
+if g:is_neovim
+
+    " > La variable de entorno 'NVIM_CLIPBOARD' pueden tener los siguientes valores:
+    "    0 > Usar el mecanismo nativo de escritura al clipboard de NeoVIM
+    "    1 > Implementar el mecanismo de uso comandos externo del gestion de clipboard
+    "    Otro valor > Determinar automaticamente el mecanismo correcto segun order de prioridad: 
+    "      > Usar mecanismo nativo (SOC y comandos externos) si esta habilitado.
+    "      > Implementar el mecanismo de uso comandos externo del gestion de clipboard
+    if $NVIM_CLIPBOARD != '' && $NVIM_CLIPBOARD == 0
+        let g:set_clipboard_type = 0
+    elseif $NVIM_CLIPBOARD == 1
+        let g:set_clipboard_type = 2
+    else
+
+        "Determinar el mecanismo de escritura del clipboard a usar:
+        if g:has_clipboard
+            let g:set_clipboard_type = 0
+        else
+            let g:set_clipboard_type = 2
+        endif
+
+    endif
+
+
+else
+
+    " > La variable de entorno 'VIM_CLIPBOARD' pueden tener los siguientes valores:
+    "    0 > Usar el mecanismo nativo de escritura al clipboard de VIM
+    "    1 > Implementar el mecanismo de uso comandos externo del gestion de clipboard
+    "    2 > Implementar el mecanismo de uso OSC 52
+    "    Otro valor > Determinar automaticamente el mecanismo correcto segun order de prioridad: 
+    "      > Implementar el mecanismo OSC 52, si la terminal lo permite.
+    "      > Usar mecanismo nativo (API del SO) si esta habilitado.
+    "      > Implementar el mecanismo de uso comandos externo del gestion de clipboard
+    if $VIM_CLIPBOARD != '' && $VIM_CLIPBOARD == 0
+        let g:set_clipboard_type = 0
+    elseif $VIM_CLIPBOARD == 1
+        let g:set_clipboard_type = 2
+    elseif $VIM_CLIPBOARD == 2
+        let g:set_clipboard_type = 1
+    else
+
+        "1. Intentar determinar el valor adecuado automaticamente: Determinar si la terminal soporta OSC 52
+        "se usa parte de la logica 'setting_clipboard()' definida en './shell/bash/bin/tmux/fun_general.bash'
+        let s:terminal_use_osc54 = 0
+
+        "Si esta ejecutando sobre tmux
+        if g:use_tmux
+
+            "Si usa el archivo de configuracion './tmux/tmux.conf', se establece la variable de entorno 'TMUX_SET_CLIPBOARD'
+            "con valor 1 o 2, si se configurado tmux con soporte a OSC 52
+            if ($TMUX_SET_CLIPBOARD == 1) || ($TMUX_SET_CLIPBOARD == 2)
+                let s:terminal_use_osc54 = 1
+            endif
+
+        "Si esta ejecutando directamente sobre la terminal.
+        else
+            
+            "Los siguientes emuladores definen por defecto la variable de entorno 'TERM_PROGRAM'
+            if ($TERM_PROGRAM == 'WezTerm') || ($TERM_PROGRAM == 'contour') || ($TERM_PROGRAM == 'iTerm.app')
+
+                let s:terminal_use_osc54 = 1
+
+            "Los siguientes emuladores debera definir la variable 'TERM_PROGRAM' con este valor en su archivo de configuracion:
+            elseif ($TERM_PROGRAM == 'foot') || ($TERM_PROGRAM == 'kitty') || ($TERM_PROGRAM == 'alacritty')
+
+                let s:terminal_use_osc54 = 1
+
+            "Opcionalmente, aunque no se recomienta usar un TERM personalizado (no estan en todos los equipos que accede
+            "por SSH), algunas terminales definen un TERM personalizado (aunque por campatibilidad, puede modificarlo).
+            else
+                if ($TERM == 'xterm-kitty') || ($TERM == 'alacritty') || ($TERM == 'foot')
+                    let s:terminal_use_osc54 = 1
+                endif
+            endif
+
+        endif
+
+        "2. Determinar el mecanismo de escritura del clipboard a usar:
+        if s:terminal_use_osc54
+            let g:set_clipboard_type = 1
+        else
+            if g:has_clipboard
+                let g:set_clipboard_type = 0
+            else
+                let g:set_clipboard_type = 2
+            endif
+        endif
+
+    endif
+
+endif
+
+
+"Establecer la opcion VIM 'clipboard' para el uso del mecanismo nativo para acceder al clipboard del SO
+if g:set_clipboard_type == 0
+
+    "NeoVIM no interactua directamente con el clipboard del SO (no usa API del SO) y tiene una Integracion
+    "nativa con:
+    " > Usa el caracter de escape OSC 52 para enviar texto a la terminal, para que este lo interprete y escriba
+    "   al portapales del SO de la terminal.
+    " > Usa comandos externos de gestion de clipboard (backend de clipboard) las cuales registra a eventos de
+    "   establecer texto en registro de yank de VIM.
+    if g:is_neovim
+
+        "Si es NeoVIM, siempre se usa la opción 'unnamedplus'
+        set clipboard=unnamedplus
+    
+    "VIM puede interactuar directamente con el clipboard del SO (usa el API del SO para ello)
+    "La instegracion con comandos externos de gestion de clipboard y OSC 52, no lo hace de forma nativa.
+    elseif (g:os_type == 2) || (g:os_type == 3 )
+
+        "Si VIM y es Linux
+        
+        "Usar como registro predeterminado a '+' vinculado al portapales principal del SO 
+        "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
+        "Para copiar selecione y use 'CTRL + c', para pegar use 'CTRL + v'
+        set clipboard=unnamedplus
+
+        "Usar como registro predeterminado a '*' (que apunta al portapales 'PRIMARY' del servidor X11)
+        "Para copiar el al portapales solo selecione el texto, 
+        "Para pegar del portapales use el boton central o boton secundario o 'SHFIT + INSERT'
+        "Se esta usando esto en Linux porque es mas facil usar y mas eficiente en recursos
+        "set clipboard+=unnamed
+    else
+        "Si es VIM y no es Linux
+        set clipboard=unnamed
+    endif
+
+else
+
+    "Desabilitar el menanismo nativo de escritura del clipboard
+    set clipboard=
+
+endif
+
 
 "----------------------------- Validar los requisitos ------------------------------
 
@@ -149,11 +320,13 @@ set background=dark
 set t_ut=
 
 "Color de terminal de 24 bits ('True Colors'). Windows >= 10.1809 recien lo soportan. 
-"Los servidores linux por defecto trabaja con 'ANSI 256 Color', pero generalmente las terminales modernas traducen el color 16bits a 24 bits para mostrar el color sin problemas.
+"Los servidores linux por defecto trabaja con 'ANSI 256 Color', pero generalmente las terminales modernas traducen
+"el color 16bits a 24 bits para mostrar el color sin problemas.
 "Si su terminal no traduce bien los 16 bits de color que envia su servidor, COMENTE esta linea y habilite 'set t_Co=256'
 set termguicolors
 
-"Color de la terminal 'ANSI 256 Colors' (16 bits). Descomentar en Linux que se ven mal su terminal, en Windows >= 11 siempre debe estar comentado.
+"Color de la terminal 'ANSI 256 Colors' (16 bits). Descomentar en Linux que se ven mal su terminal, en Windows >= 11
+"siempre debe estar comentado.
 "set t_Co=256
 
 "Establcer el tipo de terminal (pseudoterminal o pty)
@@ -268,35 +441,6 @@ elseif (g:os_type == 2) || (g:os_type == 3)
 
 endif 
 
-
-"----------------------------- Clipboard de SO         -----------------------------
-
-if g:has_clipboard
-"if g:has_clipboard || g:is_gui_vim
-
-    "NeoVIM no usa API del SO (NeoVIM usa un backend de clipboard, es decir comandos externos, no se integra on el API del SO)
-    if g:is_neovim
-        set clipboard=unnamedplus
-    
-    "Si VIM y es Linux
-    elseif (g:os_type == 2) || (g:os_type == 3 )
-
-        "Usar como registro predeterminado a '+' vinculado al portapales principal del SO 
-        "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
-        "Para copiar selecione y use 'CTRL + c', para pegar use 'CTRL + v'
-        set clipboard=unnamedplus
-
-        "Usar como registro predeterminado a '*' (que apunta al portapales 'PRIMARY' del servidor X11)
-        "Para copiar el al portapales solo selecione el texto, 
-        "Para pegar del portapales use el boton central o boton secundario o 'SHFIT + INSERT'
-        "Se esta usando esto en Linux porque es mas facil usar y mas eficiente en recursos
-        "set clipboard+=unnamed
-    "Si es VIM y no es Linux
-    else
-        set clipboard=unnamed
-    endif
-
-endif 
 
 
 "Solo para Windows y MAC (Linux usa gVim la cual tiene su propio archivo ".gvimrc")

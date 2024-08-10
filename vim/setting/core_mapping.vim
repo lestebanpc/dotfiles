@@ -22,77 +22,120 @@ nnoremap <Leader>hh :set cursorline!<CR>
 nnoremap <Leader>vv :set cursorcolumn!<CR>
 
 "----------------------------- Portapapeles            -----------------------------
+"
+"NeoVIM no interactua directamente con el clipboard del SO (no usa API del SO) y tiene una Integracion
+"nativa con:
+" > Usa el caracter de escape OSC 52 para enviar texto a la terminal, para que este lo interprete y escriba
+"   al portapales del SO de la terminal.
+" > Usa comandos externos de gestion de clipboard (backend de clipboard) las cuales registra a eventos de
+"   establecer texto en registro de yank de VIM.
+"   
+"VIM puede interactuar directamente con el clipboard del SO (usa el API del SO para ello)
+"La instegracion con comandos externos de gestion de clipboard y OSC 52, no lo hace de forma nativa.
+"
 
-"Soporte adicional a los portapales
+"Obtener el comando externo para escribir el portapales
+let s:clipboard_commnad=''
+"let g:clipboard_commnad=''
+
+"Si es Linux (sea WSL y no-WSL)
 if (g:os_type == 2) || (g:os_type == 3)
 
-    if  exists('$WAYLAND_DISPLAY') && executable('wl-copy')
-
-        "Copiar el ultimo yank realizado al portapapeles ('CLIPBOARD' selecction)
-        nnoremap <Leader>cy :<C-u>call system('wl-copy', @0)<CR>
-
-        "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
-        nnoremap <Leader>cd :<C-u>call system('wl-copy', @1)<CR>
-
-        "Pegar el portapapeles al ultimo yank ('CLIPBOARD' selecction)
-        nnoremap <Leader>py :<C-u>let @0=system('wl-paste --no-newline 2> /dev/null')<CR>
-
-        "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
-        vnoremap <Leader>cl :w !wl-copy<CR><CR>
-
-        "Pegar del portapapeles ('CLIPBOARD' selecction) en nuevas lineas siguientes
-        nnoremap <Leader>pl :<C-u>r !wl-paste --no-newline<CR>
-
-        "Si no se tiene soporte al clipboard:
-        "Si no es NeoVIM (NeoVIM usa un backend de clipboard, es decir comandos externos, no se integra on el API del SO)
-        if !g:is_neovim && !g:has_clipboard
-            augroup Yank
-                autocmd!
-                autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system('wl-copy',@") | endif
-            augroup END
+    if  exists('$WAYLAND_DISPLAY') 
+        if executable('wl-copy')
+            let s:clipboard_commnad='wl-copy'
         endif
-
-    elseif exists('$DISPLAY') && executable('xclip')
-
-        "Copiar el ultimo yank realizado al portapapeles ('CLIPBOARD' selecction)
-        nnoremap <Leader>cy :<C-u>call system('xclip -i -selection clipboard', @0)<CR>
-
-        "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
-        nnoremap <Leader>cd :<C-u>call system('xclip -i -selection clipboard', @1)<CR>
-
-        "Pegar el portapapeles al ultimo yank ('CLIPBOARD' selecction)
-        nnoremap <Leader>py :<C-u>let @0=system('xclip -o -selection clipboard 2> /dev/null')<CR>
-
-        "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
-        vnoremap <Leader>cl :w !xclip -i -selection clipboard<CR><CR>
-
-        "Pegar del portapapeles ('CLIPBOARD' selecction) en nuevas lineas siguientes
-        nnoremap <Leader>pl :<C-u>r !xclip -o -selection clipboard<CR>
-
-        "Si no se tiene soporte al clipboard:
-        "Si no es NeoVIM (NeoVIM usa un backend de clipboard, es decir comandos externos, no se integra on el API del SO)
-        if !g:is_neovim && !g:has_clipboard
-            augroup Yank
-                autocmd!
-                autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system('xclip -i -selection clipboard',@") | endif
-            augroup END
+    elseif exists('$DISPLAY') 
+        if executable('xclip')
+            let s:clipboard_commnad='xclip -i -selection clipboard'
+        elseif executable('xclip')
+            let s:clipboard_commnad='xsel -i -b'
         endif
+    endif
+
+"Si es Windows
+elseif g:os_type == 0
+
+    if executable('clip.exe')
+        let s:clipboard_commnad='clip.exe'
+    endif
+
+"Si es MacOS
+elseif g:os_type == 1
+
+    if executable('pbcopy')
+        let s:clipboard_commnad='pbcopy'
+    endif
+
+endif
+
+
+"Comandos para escribir al portapales usando el comando externo
+if s:clipboard_commnad != ''
+    
+    "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
+    nnoremap <Leader>c1 :<C-u>call system(s:clipboard_commnad, @1)<CR>
+    
+    "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
+    "vnoremap <Leader>cl :w !s:clipboard_commnad<CR><CR>
+
+endif
+
+
+"Si se requiere usar OSC 52
+if g:set_clipboard_type == 1
+
+    if g:is_neovim
+
+        "No se puede establecer el mecanismo solicitado
+        let g:set_clipboard_type = 9
+
+    else
+
+        nmap <leader>c <Plug>OSCYankOperator
+        nmap <leader>cc <leader>c_
+        vmap <leader>c <Plug>OSCYankVisual
+
+        "Habilitar el envio automatico, al clipboard, del ultimo yank realizado.
+        augroup Yank
+            autocmd!
+            autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call OSCYankRegister('') | endif
+        augroup END
 
     endif
 
+"Si se requiere usar comandos externos de gestion de clicomandos externos de `gestion de clipboardd
+elseif g:set_clipboard_type == 2
 
-"elseif g:os_type == 0
+    if s:clipboard_commnad == ''
 
-"Si es WSL2:
-"  Aparte de usar como registro por defecto a '+' (el portapales principal de Linux, establecido por 'set clipboard=unnamedplus').
-"  Se usara requiere copiar el ultimo yank registro del portapapeles del SO.
-elseif g:os_type == 3
+        "No se puede establecer el mecanismo solicitado
+        let g:set_clipboard_type = 9
 
-    "Copia cualquier yank que esta en el registro " (por defecto) se copia al portapales del SO
-    augroup WslYank
-        autocmd!
-        autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system('/mnt/c/windows/system32/clip.exe ',@") | endif
-    augroup END
+    else
+
+        "Habilitar el envio automatico, al clipboard, del ultimo yank realizado.
+        augroup Yank
+            autocmd!
+            autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system(s:clipboard_commnad, @") | endif
+        augroup END
+    
+    
+        "Si es WSL2, habilitar el envio automatico, al clipboard del SO Windows, del ultimo yank realizado.
+        "  En WSL2, el portapapeles de Linux WSL2 es diferente al de Windows. Por tal motivo cuando se usa VIM/NeoVIM dentro de WSL2,
+        "  se requiere que aparte de copiar el buffer del yank al portapapeles de Linux, se usara requiere tambien copiarlo a Windows 
+        "  para poderlo ver desde cualquier aplicacion windows.
+        if g:os_type == 3
+        
+            "Copia cualquier yank que esta en el registro " (por defecto) se copia al portapales del SO
+            augroup WslYank
+                autocmd!
+                autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system('/mnt/c/windows/system32/clip.exe ',@") | endif
+            augroup END
+    
+        endif
+
+    endif
 
 endif
 

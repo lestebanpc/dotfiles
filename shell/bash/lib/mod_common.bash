@@ -28,7 +28,7 @@ fi
 #  05 > Emulador Bash MINGW  para Windows
 #  06 > Emulador Bash Termux para Linux Android
 #  09 > No identificado
-function _get_os_type() {
+function get_os_type() {
     local l_system=$(uname -s)
 
     local l_os_type=0

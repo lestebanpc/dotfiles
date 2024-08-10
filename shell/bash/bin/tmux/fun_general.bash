@@ -61,13 +61,13 @@ function _get_os_type() {
 #  > La variable de entorno 'TMUX_SET_CLIPBOARD' y cuyos valores son:
 #        > No se ha podido establecer un mecanismo del clipboard (se indica que usa comando externo, pero no se ubica.
 #      0 > Usar comandos externo de clipboard y la opcion 'set-clipboard' en 'off'
-#      1 > Usar OSC 54 con la opcion 'set-clipboard' en 'on'
-#      2 > Usar OSC 54 con la opcion 'set-clipboard' en 'external'
+#      1 > Usar OSC 52 con la opcion 'set-clipboard' en 'on'
+#      2 > Usar OSC 52 con la opcion 'set-clipboard' en 'external'
 setting_clipboard() {
 
     local p_key="$1"
 
-    #Obtener si se se usara el metodo 'OSC 54' o 'external command' para poder escribir automaticamente
+    #Obtener si se se usara el metodo 'OSC 52' o 'external command' para poder escribir automaticamente
     #el contenido del buffer a la terminal.
     local p_use_osc54=1
     if [ "$2" = "0" ]; then
@@ -77,13 +77,48 @@ setting_clipboard() {
     elif [ "$2" = "2" ]; then
         p_use_osc54=1
     else
-        #Determinar si la terminal soporta OSC54
+        #Determinar si la terminal soporta OSC 52
         case "$TERM_PROGRAM" in
+            #Los siguientes emuladores definen por defecto esta variable de entorno:
             WezTerm)
                 p_use_osc54=2
                 ;;
-            *)
-                p_use_osc54=0
+            contour)
+                p_use_osc54=2
+                ;;
+            iTerm.app)
+                p_use_osc54=2
+                ;;
+            #Los siguientes emuladores debera definir la variable con este valor en su archivo de configuracion:
+            kitty)
+                p_use_osc54=2
+                ;;
+            alacritty)
+                p_use_osc54=2
+                ;;
+            foot)
+                p_use_osc54=2
+                ;;
+            #Opcionalmente, aunque no se recomienta usar un TERM personalizado (no estan en todos los equipos que accede
+            #por SSH), algunas terminales definen un TERM personalizado (aunque por campatibilidad, puede modificarlo).
+            *)                
+                case "$TERM" in
+                    xterm-kitty)
+                        #Emulador de terminal Kitty
+                        p_use_osc54=2
+                        ;;
+                    alacritty)
+                        #Emulador de terminal Alacritty
+                        p_use_osc54=2
+                        ;;
+                    foot)
+                        #Emulador de terminal Food
+                        p_use_osc54=2
+                        ;;
+                    *)
+                        p_use_osc54=0
+                        ;;
+                esac
                 ;;
         esac
 
