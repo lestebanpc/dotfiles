@@ -1,3 +1,42 @@
+------------------------------------------------------------------------------------
+-- My functions 
+------------------------------------------------------------------------------------
+
+-- Obtener el tipo de SO
+-- Parametro de entrada
+--  > 'p_target_triple' se usa el valor 'wezterm.target_triple' el cual puede tener los siguientes valores
+--     > 'x86_64-unknown-linux-gnu'  - Linux
+--     > 'x86_64-pc-windows-msvc'    - Windows
+--     > 'aarch64-apple-darwin'      - macOS (Apple Silicon)
+--     > 'x86_64-apple-darwin'       - macOS (Intel)
+-- Parametors de salida> Valor de retorno
+--   0 > Si es Linux
+--   1 > Si es Windows
+--   2 > Si es MacOS (Apple Silicon)
+--   3 > Si es MacOS (Intel)
+local function l_get_os_type (p_target_triple)
+
+    local l_os_type = 0
+
+    if p_target_triple:find("linux") ~= nil then
+        l_os_type = 0
+    elseif p_target_triple:find("windows") ~= nil then
+        l_os_type = 1
+    elseif p_target_triple == "x86_64-apple-darwin" then
+        l_os_type = 3
+    else
+        l_os_type = 2
+    end
+
+    return l_os_type
+
+end
+
+
+------------------------------------------------------------------------------------
+-- Carge del modulo 'wezterm'
+------------------------------------------------------------------------------------
+
 local wezterm = require 'wezterm'
 
 -- Obtain the default configuration. See: https://wezfurlong.org/wezterm/config/lua/config/index.html
@@ -8,19 +47,44 @@ local config = wezterm.config_builder()
 -- My settings variables
 ------------------------------------------------------------------------------------
 
--- CHANGE a "true" if use Windows
-local l_is_win = false
+--1. Determinar el tipo de SO
+--   0 > Si es Linux
+--   1 > Si es Windows
+--   2 > Si es MacOS (Apple Silicon)
+--   3 > Si es MacOS (Intel)
+local l_os_type = l_get_os_type(wezterm.target_triple)
+--print(l_os_type)
 
--- Usar Wayland y solo si es Linux.
--- Debido a que la version de Wayland esta en rescontruccion por lo se optara por usar X11. 
--- Limitaciones al 2024.07.07:
---  > No funciona correctamente el sopotte a OSC 52 para manejo del clipboard.
---  > El estilo de ventanas funciona peor que el de X11.
--- Si usa Wayland, revise que el compositor 'Xwayland' para X11 este activo: 'ps -fea | grep Xwayland'
-local l_enable_wayland = false
+--2. Obtener las variables a usar al ejecutar el modulo/script de mis configuraciones
+local l_ok, l_myconfig = pcall(require, 'config')  
+if not l_ok then
 
--- Si establece en false la navegacion solo lo puede hacer usando teclas para ingresar al modo copia, busqueda, copia rapida.
-local l_enable_scrollbar = false
+    -- Establecer valores por defecto a las variables
+    l_myconfig = {
+
+        -- Usar Wayland y solo si es Linux.
+        -- Debido a que la version de Wayland esta en rescontruccion por lo se optara por usar X11. 
+        -- Limitaciones al 2024.07.07:
+        --  > No funciona correctamente el sopotte a OSC 52 para manejo del clipboard.
+        --  > El estilo de ventanas funciona peor que el de X11.
+        -- Si usa Wayland, revise que el compositor 'Xwayland' para X11 este activo: 'ps -fea | grep Xwayland'
+        enable_wayland = false,
+
+
+        -- Built-in scheme: https://wezfurlong.org/wezterm/colorschemes/index.html
+        color_scheme = 'Ayu Dark (Gogh)',
+
+        -- Si establece en false la navegacion solo lo puede hacer usando teclas para ingresar al modo copia, busqueda, copia rapida.
+        enable_scrollbar = false,
+
+        default_prog = nil,
+        default_domain = nil,
+        wsl_domains= nil,
+        ssh_domains = nil,
+        launch_menu = nil
+    }
+
+end
 
 
 ------------------------------------------------------------------------------------
@@ -28,8 +92,8 @@ local l_enable_scrollbar = false
 ------------------------------------------------------------------------------------
 
 -- If false, do not try to use a Wayland protocol connection when starting the gui frontend, and instead use X11.
-if not l_is_win then
-    config.enable_wayland = l_enable_wayland
+if l_os_type == 0 then
+    config.enable_wayland = l_myconfig.enable_wayland
 end
 
 -- What to set the TERM environment variable to. The default is xterm-256color, which should provide a good level of feature 
@@ -45,16 +109,12 @@ end
 --   $ rm $tempfile
 -- You can then set term = "wezterm". Using this, allow to use more advanced features such as colored underlines, styled underlines (eg: undercurl).
 -- If the system you are using has a relatively outdated ncurses installation, the wezterm terminfo will also enable italics and true color support.
-if l_is_win then
-    config.term = 'xterm-256color'
-else
-    --config.term = 'wezterm'
-    config.term = 'xterm-256color'
-end
+config.term = 'xterm-256color'
+--config.term = 'wezterm'
 
 -- Create my custom scheme based on a built-in schema.
 -- Built-in scheme: https://wezfurlong.org/wezterm/colorschemes/index.html
-local scheme = wezterm.get_builtin_color_schemes()['Ayu Dark (Gogh)']
+local scheme = wezterm.get_builtin_color_schemes()[l_myconfig.color_scheme]
 scheme.foreground = '#c0bfbc'
 scheme.background = '#000000'
 config.color_schemes = {
@@ -100,7 +160,7 @@ config.check_for_updates = false
 --   Newlines of any style are rewritten as CRLF.
 -- > "LineFeed"
 --   Newlines of any style are rewritten as LF.
---if l_is_win then
+--if l_os_type == 1 then
 --    config.canonicalize_pasted_newlines = "CarriageReturnAndLineFeed"
 --else
 --    config.canonicalize_pasted_newlines = "CarriageReturn"
@@ -153,15 +213,15 @@ config.use_ime = false
 -- > "INTEGRATED_BUTTONS|RESIZE"
 --   Place window management buttons (minimize, maximize, close) into the tab bar instead of showing a title bar.
 --   Wayland error: see https://github.com/wez/wezterm/issues/4963
-if l_is_win then
-    config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
-else
-    if l_enable_wayland then
+if l_os_type == 0 then
+    if l_myconfig.enable_wayland then
         config.window_decorations = "TITLE|RESIZE"
     else
         config.window_decorations = "TITLE|RESIZE"
         --config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
     end
+else
+    config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
 end
 
 -- Configures the visual style of the tabbar-integrated titlebar button replacements that are shown when window_decorations = "INTEGRATED_BUTTONS|RESIZE".
@@ -207,19 +267,19 @@ config.adjust_window_size_when_changing_font_size = true
 -- Controls the amount of padding between the window border and the terminal cells. Padding is measured in pixels.
 -- If enable_scroll_bar is true, then the value you set for right will control the width of the scrollbar. 
 -- If you have enabled the scrollbar and have set right to 0 then the right padding (and thus the scrollbar width) will instead match the width of a cell.
-if l_enable_scrollbar then
+if l_myconfig.enable_scrollbar then
     config.window_padding = {
-        left = 5,
+        left = 4,
         right = 10,
-        top = 5,
-        bottom = 5,
+        top = 4,
+        bottom = 4,
     }
 else
     config.window_padding = {
-        left = 5,
-        right = 5,
-        top = 5,
-        bottom = 5,
+        left = 4,
+        right = 4,
+        top = 4,
+        bottom = 4,
     }
 end
 
@@ -243,12 +303,12 @@ config.exit_behavior = "Close"
 -- (eg: an editor can change it depending on the mode), but this value controls how the cursor appears when it is reset to default.
 -- Acceptable values are SteadyBlock, BlinkingBlock, SteadyUnderline, BlinkingUnderline, SteadyBar, and BlinkingBar.
 -- The default is SteadyBlock.
-if l_is_win then
-    config.default_cursor_style = "BlinkingBlock"
-else
+if l_os_type == 0 then
     config.default_cursor_style = "BlinkingBlock"
     -- En Wayland, 'BlinkingBlock' estaba arrojando un error, pero se corrigio
     --config.default_cursor_style = "SteadyBlock"
+else
+    config.default_cursor_style = "BlinkingBlock"
 end
 
 -- Specifies the easing function to use when computing the color for the text cursor when it is set to a blinking style.
@@ -269,12 +329,9 @@ end
 config.enable_tab_bar = true
 
 -- If set to true, when there is only a single tab, the tab bar is hidden from the display. If a second tab is created, the tab will be shown.
--- Defult is false.
-if l_is_win then
-    --Recomendado para estilo de tipo "INTEGRATED_BUTTONS|RESIZE"
-    config.hide_tab_bar_if_only_one_tab = false
-else
-    if l_enable_wayland then
+-- Default is false.
+if l_os_type == 0 then
+    if l_myconfig.enable_wayland then
         --Recomendado para estilo de tipo "TITLE|RESIZE"
         config.hide_tab_bar_if_only_one_tab = true
     else
@@ -283,6 +340,9 @@ else
         --Recomendado para estilo de tipo "INTEGRATED_BUTTONS|RESIZE"
         --config.hide_tab_bar_if_only_one_tab = false
     end
+else
+    --Recomendado para estilo de tipo "INTEGRATED_BUTTONS|RESIZE"
+    config.hide_tab_bar_if_only_one_tab = false
 end
 
 -- When tab_bar_at_bottom = true, the tab bar will be rendered at the bottom of the window rather than the top of the window.
@@ -371,7 +431,7 @@ config.use_fancy_tab_bar = true
 ------------------------------------------------------------------------------------
 
 -- Enable the scrollbar. This is currently disabled by default. It will occupy the right window padding space.
-config.enable_scroll_bar = l_enable_scrollbar
+config.enable_scroll_bar = l_myconfig.enable_scrollbar
 
 -- Lines of scrollback you want to retain (in memory) per tab (default is 3500)
 config.scrollback_lines = 5000 
@@ -554,42 +614,13 @@ config.keys = {
 -- In domains other than the "local" one, the weztern GUI acts as a proxy (WSL/SSH/TLS client or IPC socket consumer).
 -- For more details, see: https://wezfurlong.org/wezterm/multiplexing.html
 
-if l_is_win then
-    config.wsl_domains = {
-      {
-        -- The name of this specific domain.  Must be unique amonst all types of domain in the configuration file.
-        name = 'wsl:ubuntu',
-        -- The name of the distribution.  This identifies the WSL distribution. It must match a valid distribution from your `wsl -l -v` output.
-        distribution = 'Ubuntu',
-        -- The username to use when spawning commands in the distribution. If omitted, the default user for that distribution will be used.
-        username = "lucianoepc",
-        -- The current working directory to use when spawning commands, if the SpawnCommand doesn't otherwise specify the directory.
-        default_cwd = "/home/lucianoepc"
-        -- The default command to run, if the SpawnCommand doesn't otherwise override it. Note that you may prefer to use `chsh` to set the
-        -- default shell for your user inside WSL to avoid needing to specify it here.
-        --default_prog = { "bash" }
-      },
-    }
+if not l_myconfig.wsl_domains then
+    config.wsl_domains = l_myconfig.wsl_domains
 end
 
---config.ssh_domains = {
---  {
---    -- The name of this specific domain.  Must be unique amongst all types of domain in the configuration file.
---    name = 'my.server',
---    -- Identifies the host:port pair of the remote server. Can be a DNS name or an IP address with an optional ":port" on the end.
---    remote_address = '192.168.1.1',
---    -- Whether agent auth should be disabled. Set to true to disable it. 
---    --no_agent_auth = false,
---    -- The username to use for authenticating with the remote host
---    username = 'yourusername',
---    -- If true, connect to this domain automatically at startup
---    --connect_automatically = true,
---    -- Specify an alternative read timeout
---    --timeout = 60,
---    -- The path to the wezterm binary on the remote host. Primarily useful if it isn't installed in the $PATH that is configure for ssh.
---    --remote_wezterm_path = "/home/yourusername/bin/wezterm"
---  },
---}
+if not l_myconfig.ssh_domains then
+    config.ssh_domains = l_myconfig.ssh_domains
+end
 
 
 ------------------------------------------------------------------------------------
@@ -597,78 +628,25 @@ end
 ------------------------------------------------------------------------------------
 
 -- Set default multiplexing domains. Default is "local" multiplexing domain (if not using the serial or connect subcommands).
---config.default_domain = "local"
---config.default_domain = "wsl:ubuntu"
+if not l_myconfig.default_domain then
+    config.default_domain = l_myconfig.default_domain
+end
 
 -- This field is a array where the 0th element is the command to run and the rest of the elements are passed as the positional arguments to that command.
 -- It is is the program used if the argument to the "start" subcommand is not specified. The default value is the current user's shell (executed in login mode).
-if l_is_win then
-    config.default_prog = { "pwsh" }
---else
---    config.default_prog = {"/usr/bin/bash", "-l"}
---    config.default_prog = {"/usr/bin/zsh", "-l"}
+if not l_myconfig.default_prog then
+    config.default_prog = l_myconfig.default_prog
 end
 
 -- The launcher menu is accessed from the new tab button in the tab bar UI; the + button to the right of the tabs. Left clicking on the button will spawn a new tab, 
 -- but right clicking on it will open the launcher menu. You may also bind a key to the ShowLauncher or ShowLauncherArgs action to trigger the menu.
 -- The launcher menu by default lists the various non-lolcal multiplexer domains and offers the option of connecting and spawning tabs/windows in those domains.
-if l_is_win then
-    config.launch_menu = {
-        { 
-            -- Optional label to show in the launcher. If omitted, a label is derived from the `args`.
-            label = " Windows PowerShell",
-            -- Command to run into new tab. The argument array to spawn. 
-            args = { "powershell" },
-            -- You can specify an alternative current working directory; if you don't specify one then a default based on the OSC 7
-            -- escape sequence will be used (see the Shell Integration docs), falling back to the home directory.
-            --cwd = "/some/path",
-            -- You can override environment variables just for this command by setting this here. 
-            --set_environment_variables = { FOO = "bar" },
-        },
-        { 
-            -- Optional label to show in the launcher. If omitted, a label is derived from the `args`.
-            label = "󰨊 PowerShell Core", 
-            -- Command to run into new tab. The argument array to spawn. 
-            args = { "pwsh" },
-            -- You can specify an alternative current working directory; if you don't specify one then a default based on the OSC 7
-            -- escape sequence will be used (see the Shell Integration docs), falling back to the home directory.
-            --cwd = "/some/path",
-            -- You can override environment variables just for this command by setting this here. 
-            --set_environment_variables = { FOO = "bar" },
-        },
-        { 
-            -- Optional label to show in the launcher. If omitted, a label is derived from the `args`.
-            label = " Cmd", 
-            -- Command to run into new tab. The argument array to spawn. 
-            args = { "cmd" },
-            -- You can specify an alternative current working directory; if you don't specify one then a default based on the OSC 7
-            -- escape sequence will be used (see the Shell Integration docs), falling back to the home directory.
-            --cwd = "/some/path",
-            -- You can override environment variables just for this command by setting this here. 
-            --set_environment_variables = { FOO = "bar" },
-        },
-      }
-else
-    config.launch_menu = {
-        { 
-            -- Optional label to show in the launcher. If omitted, a label is derived from the `args`.
-            label = " PowerShell Core", 
-            -- Command to run into new tab. The argument array to spawn. 
-            args =  { "pwsh" },
-            -- You can specify an alternative current working directory; if you don't specify one then a default based on the OSC 7
-            -- escape sequence will be used (see the Shell Integration docs), falling back to the home directory.
-            --cwd = "/some/path",
-            -- You can override environment variables just for this command by setting this here. 
-            --set_environment_variables = { FOO = "bar" },
-        },
-        { label = " Bash", args = { "bash", "-l" }, },
-        { label = " Btop", args = { "btop" }, },
-        --{ label = " Fish", args = { "/opt/homebrew/bin/fish" }, },
-        --{ label = " Nushell", args = { "/opt/homebrew/bin/nu" }, },
-        --{ label = " Zsh", args = { "zsh" } },
-      }
+if not l_myconfig.launch_menu then
+    config.launch_menu = l_myconfig.launch_menu 
 end
 
+------------------------------------------------------------------------------------
+--- End
 ------------------------------------------------------------------------------------
 
 -- Return the configuration to wezterm

@@ -275,6 +275,22 @@ else
 
 endif
 
+"BUG IN VIM : Cuanto la terminal soporta 'modifyOtherKeys' de nivel 2, cuando se apreta ciertos key 
+"reservados (usando 'ctrl', 'shfit', 'alt') se genera texto con caracteres escapa/control la cual puede generar
+"comportamiento inesperados cuando el comando no lo reconoce este tips de key y el tipp de 'modifyOtherKeys'.
+"En caso de VIM, estas secuenncias de escapa puede generar que algunos keybiding dejen de funcionar.
+" > Issue VIM  : https://github.com/vim/vim/issues/9014
+"                https://codeberg.org/dnkl/foot/wiki#ctrl-key-breaks-input-in-vim
+"                https://codeberg.org/dnkl/foot/issues/849
+" > WORKAROUND : Caundo la terminal soporte 'modifyOtherKeys' de nivel 2, forzar que VIM soporte los secuencias de 
+"   escape generados
+" > Los emuladores de terminal, como 'foot', no definir por defecto la variable 'TERM_PROGRAM', por lo que debera 
+"   definir manualmente este valor en su archivo de configuracion.
+if !g:is_neovim && ($TERM_PROGRAM == 'foot' || $TERM_PROGRAM == 'WezTerm')
+    let &t_TI = "\<Esc>[>4;2m"
+    let &t_TE = "\<Esc>[>4;m"
+endif
+
 
 "----------------------------- Validar los requisitos ------------------------------
 
@@ -324,6 +340,13 @@ set t_ut=
 "el color 16bits a 24 bits para mostrar el color sin problemas.
 "Si su terminal no traduce bien los 16 bits de color que envia su servidor, COMENTE esta linea y habilite 'set t_Co=256'
 set termguicolors
+
+"You might have to force true color when using regular vim inside tmux as the colorscheme can appear to be grayscale 
+"with 'termguicolors' option enabled.
+if !g:is_neovim && !g:is_gui_vim
+    let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+    let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+endif
 
 "Color de la terminal 'ANSI 256 Colors' (16 bits). Descomentar en Linux que se ven mal su terminal, en Windows >= 11
 "siempre debe estar comentado.
@@ -518,6 +541,7 @@ if g:use_ide && (!g:is_neovim || g:use_coc_in_nvim)
 
 endif
 
+"----------------------------- Completado               ----------------------------
 
 
 

@@ -2065,6 +2065,11 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
 
+    copy_file_on_home "${g_repo_path}/wezterm" "linux_config_template.lua" ".config/wezterm" "config.lua" 1 "        > "
+    l_status=$?
+    printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
+           "$g_color_gray1" "~/.config/wezterm/config.lua" "$g_color_reset"
+
     #Archivo de configuración para el emulador de terminal foot
     l_target_path=".config/foot"
     create_folderpath_on_home ".config" "foot"
