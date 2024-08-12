@@ -817,13 +817,14 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
     #Ubicar donde esta el archivo 'wezterm.exe', alli crear la carpeta 'wezterm_modules' y copiar el archivo '~/.files/wezterm/windows_config_template.lua'
     #como 'config.lua'
+    $g_win_base_path='C:\cli'
 	if(! (Test-Path "${g_win_base_path}\prgs\wezterm\wezterm_modules")) {
 		New-Item -ItemType Directory -Force -Path "${g_win_base_path}\prgs\wezterm\wezterm_modules"
     }
 	
     if(! (Test-Path "${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua" )) {
 		Write-Host "            > Creando el archivo '${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua' ..."
-        Copy-Item -Path "${env:USERPROFILE}\.files\etc\wezterm\windows_config_template.lua" -Destination "${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua"
+        Copy-Item -Path "${env:USERPROFILE}\.files\wezterm\windows_config_template.lua" -Destination "${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua"
         
         Write-Host "            > Edite '${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua' si desea modificar las opciones Wezterm."
 	}
