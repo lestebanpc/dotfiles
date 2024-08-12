@@ -2968,27 +2968,6 @@ function _setup() {
         return 120
     fi
     
-    #05. Configurar para tener el soporte a 'X11 forwarding for SSH Server'
-    _sutup_support_x11_clipboard $p_opciones
-    l_status=$?
-    #No se cumplen las precondiciones obligatorios
-    if [ $l_status -eq 111 ]; then
-        return 111
-    #No se acepto almacenar las credenciales para usar sudo.
-    elif [ $l_status -eq 120 ]; then
-        return 120
-    fi
-
-    #06. Configurar para tener el soporte a 'X11 forwarding for SSH Server'
-    _uninstall_support_x11_clipboard $p_opciones
-    l_status=$?
-    #No se cumplen las precondiciones obligatorios
-    if [ $l_status -eq 111 ]; then
-        return 111
-    #No se acepto almacenar las credenciales para usar sudo.
-    elif [ $l_status -eq 120 ]; then
-        return 120
-    fi
 
     #07. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
     #   Si no se invoca usando el menú y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo

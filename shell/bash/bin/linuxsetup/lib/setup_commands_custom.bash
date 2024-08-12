@@ -5796,6 +5796,7 @@ function _copy_artifact_files() {
             if [ $l_status -ne 0 ]; then
                 return 40
             fi
+            ;;
 
 
 
