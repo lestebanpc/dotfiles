@@ -815,21 +815,21 @@ function m_setup_profile($l_overwrite_ln_flag) {
 	$l_source_filename='wezterm.lua'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
-    #Ubicar donde esta el archivo 'wezterm.exe', alli crear la carpeta 'wezterm_modules' y copiar el archivo '~/.files/wezterm/windows_config_template.lua'
-    #como 'config.lua'
-    $g_win_base_path='C:\cli'
-	if(! (Test-Path "${g_win_base_path}\prgs\wezterm\wezterm_modules")) {
-		New-Item -ItemType Directory -Force -Path "${g_win_base_path}\prgs\wezterm\wezterm_modules"
-    }
+    #TODO this variable is null
+    #$g_win_base_path='C:\cli'
 	
-    if(! (Test-Path "${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua" )) {
-		Write-Host "            > Creando el archivo '${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua' ..."
-        Copy-Item -Path "${env:USERPROFILE}\.files\wezterm\windows_config_template.lua" -Destination "${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua"
+	#if(! (Test-Path "${g_win_base_path}\prgs\wezterm\wezterm_modules")) {
+	#	New-Item -ItemType Directory -Force -Path "${g_win_base_path}\prgs\wezterm\wezterm_modules"
+    #}
+	
+    if(! (Test-Path "${env:USERPROFILE}\.config\wezterm\config.lua" )) {
+		Write-Host "            > Creando el archivo '${env:USERPROFILE}\.config\wezterm\config.lua' ..."
+        Copy-Item -Path "${env:USERPROFILE}\.files\wezterm\windows_config_template.lua" -Destination "${env:USERPROFILE}\.config\wezterm\config.lua"
         
-        Write-Host "            > Edite '${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua' si desea modificar las opciones Wezterm."
+        Write-Host "            > Edite '${env:USERPROFILE}\.config\wezterm\config.lua' si desea modificar las opciones Wezterm."
 	}
     else {
-        Write-Host "            > Edite '${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua' si desea modificar las opciones Wezterm."
+        Write-Host "            > Edite '${env:USERPROFILE}\.config\wezterm\config.lua' si desea modificar las opciones Wezterm."
     }
 
     #Creando el profile del interprete shell

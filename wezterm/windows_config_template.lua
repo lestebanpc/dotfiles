@@ -11,14 +11,14 @@ local l_mod= {}
 local l_enable_scrollbar = false
 
 -- Built-in scheme: https://wezfurlong.org/wezterm/colorschemes/index.html
-local l_color_scheme = 'Ayu Dark (Gogh)',
+local l_color_scheme = 'Ayu Dark (Gogh)'
 
 -- This field is a array where the 0th element is the command to run and the rest of the elements are passed as the positional arguments to that command.
 -- It is is the program used if the argument to the "start" subcommand is not specified. The default value is the current user's shell (executed in login mode).
-local l_default_prog = {"pwsh"}
+local l_default_prog = { "pwsh" }
 --local l_default_prog = nil
---local l_default_prog = {"/usr/bin/bash", "-l"}
---local l_default_prog = {"/usr/bin/zsh", "-l"}
+--local l_default_prog = { "/usr/bin/bash", "-l" }
+--local l_default_prog = { "/usr/bin/zsh", "-l" }
 
 -- Specifies the size of the font, measured in points. You may use fractional point sizes, such as 13.3, to fine tune the size.
 -- The default font size is 12.0

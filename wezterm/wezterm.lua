@@ -56,7 +56,9 @@ local l_os_type = l_get_os_type(wezterm.target_triple)
 --print(l_os_type)
 
 --2. Obtener las variables a usar al ejecutar el modulo/script de mis configuraciones
-local l_ok, l_myconfig = pcall(require, 'config')  
+--local l_myconfig
+local l_ok, l_myconfig = pcall(require, 'config')
+--local l_ok = true  
 if not l_ok then
 
     -- Establecer valores por defecto a las variables
@@ -78,15 +80,21 @@ if not l_ok then
         enable_scrollbar = false,
 
         default_prog = nil,
-        font_size = 10.5
+        font_size = 10.5,
         default_domain = nil,
         wsl_domains= nil,
         ssh_domains = nil,
         launch_menu = nil
     }
+	
+	print("Module 'config' no load due to not exist ot have a error")
 
 end
 
+--l_myconfig = require("config")
+--print(l_myconfig.color_scheme)
+--print(l_myconfig.default_prog)
+--print(package.path)
 
 ------------------------------------------------------------------------------------
 -- Setting> General
@@ -615,11 +623,11 @@ config.keys = {
 -- In domains other than the "local" one, the weztern GUI acts as a proxy (WSL/SSH/TLS client or IPC socket consumer).
 -- For more details, see: https://wezfurlong.org/wezterm/multiplexing.html
 
-if not l_myconfig.wsl_domains then
+if l_myconfig.wsl_domains ~= nil then
     config.wsl_domains = l_myconfig.wsl_domains
 end
 
-if not l_myconfig.ssh_domains then
+if l_myconfig.ssh_domains ~= nil then
     config.ssh_domains = l_myconfig.ssh_domains
 end
 
@@ -629,20 +637,21 @@ end
 ------------------------------------------------------------------------------------
 
 -- Set default multiplexing domains. Default is "local" multiplexing domain (if not using the serial or connect subcommands).
-if not l_myconfig.default_domain then
+if l_myconfig.default_domain ~= nil then
     config.default_domain = l_myconfig.default_domain
 end
 
 -- This field is a array where the 0th element is the command to run and the rest of the elements are passed as the positional arguments to that command.
 -- It is is the program used if the argument to the "start" subcommand is not specified. The default value is the current user's shell (executed in login mode).
-if not l_myconfig.default_prog then
+if l_myconfig.default_prog ~= nil then
     config.default_prog = l_myconfig.default_prog
+	--print(config.default_prog)
 end
 
 -- The launcher menu is accessed from the new tab button in the tab bar UI; the + button to the right of the tabs. Left clicking on the button will spawn a new tab, 
 -- but right clicking on it will open the launcher menu. You may also bind a key to the ShowLauncher or ShowLauncherArgs action to trigger the menu.
 -- The launcher menu by default lists the various non-lolcal multiplexer domains and offers the option of connecting and spawning tabs/windows in those domains.
-if not l_myconfig.launch_menu then
+if l_myconfig.launch_menu ~= nil then
     config.launch_menu = l_myconfig.launch_menu 
 end
 
