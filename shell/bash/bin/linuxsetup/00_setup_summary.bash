@@ -170,8 +170,8 @@ declare -r g_default_list_package_ids='curl,unzip,openssl,tmux'
 #  5> Descargar plugins de IDE (sin indexarlos)
 #  6> Indexar la documentación (de plugins anteriormente descargados)
 #  7> Inicializar los plugins de IDE
-declare -ra ga_options_config_vim=(524288 1048576 2097152 4194304 8388608 16777216 33554432 67108864)
-declare -ra ga_options_config_nvim=(134217728 268435456 536870912 1073741824 2147483648 4294967296 8589934592 17179869184)
+declare -ra ga_options_config_vim=(32768 65536 131072 262144 524288 1048576 2097152 4194304)
+declare -ra ga_options_config_nvim=(8388608 16777216 33554432 67108864 134217728 268435456 536870912 1073741824)
 declare -ra ga_title_config=(
     "Crear archivos de configuración como Editor"
     "Crear archivos de Configuración como IDE"
@@ -191,7 +191,7 @@ declare -ra ga_title_config=(
 #  5> Instalar paquete globales de NodeJS: 'Prettier', 'NeoVIM' y 'TreeSitter CLI'
 #  6> Instalar VIM
 #  7> Instalar NeoVIM
-declare -ra ga_options_install=(8 131072 32 16 262144 64 128 1024)
+declare -ra ga_options_install=(8 8192 32 16 16384 64 128 1024)
 declare -ra ga_title_install=(
     "Python/Pip"
     "Paquetes de usuario de Python 'jtbl'"

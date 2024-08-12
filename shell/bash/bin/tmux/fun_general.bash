@@ -125,16 +125,33 @@ setting_clipboard() {
     fi
     
     #Activar el metodo de clipboard identicado
-    if [ $p_use_osc54 -eq 2 ]; then
-        $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -s set-clipboard external
-        $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-environment -g TMUX_SET_CLIPBOARD 2 
-        return 0
-    fi 
+    if [ $p_use_osc54 -eq 1 ] || [ $p_use_osc54 -eq 2 ]; then
 
-    if [ $p_use_osc54 -eq 1 ]; then
-        $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -s set-clipboard on
-        $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-environment -g TMUX_SET_CLIPBOARD 1
+        if [ $p_use_osc54 -eq 2 ]; then
+            $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -s set-clipboard external
+        else
+            $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -s set-clipboard on
+        fi
+
+        $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-environment -g TMUX_SET_CLIPBOARD $p_use_osc54
+
+        #Desde la version de tmux >= 3.3, por defecto. no se permite el reenvio de gran parte de la secuencias de escapa avanzadas
+        #entre ellas no se permite el reenvio de la secuencias de escapa de OSC 52 (si permite permite la secuancias del
+        #escapes basicas como el movimiento de prompt, sonido, ...).
+        #Para habilitar ello debe usar la opcion 'on' o 'all'
+        if [ $TMUX_VERSION -ge 330 ]; then
+            $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -w -g allow-passthrough on
+            #$TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -g allow-passthrough on
+        fi
+
+        if [ $TMUX_VERSION -lt 240 ]; then
+            $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} bind-key -tvi-copy "$p_key" send_key -X copy-selection-and-cancel
+        else
+            $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} bind-key -T copy-mode-vi "$p_key" send-key -X copy-selection-and-cancel
+        fi
+
         return 0
+
     fi
 
     #Usandpo comandos externos
@@ -191,6 +208,12 @@ setting_clipboard() {
         $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} display-message "Not definited command to manage clipboard for this OS"
         return 0
     fi
+
+    #Usar 'copy-pipe', tmux automaticamente, despues de copiar el buffer este copiara al Herramienta indicada por pipe.
+    #Algo similar a usar:
+
+    #tmux bind-key -T copy-mode-vi y send-key -X copy-selection-and-cancel
+    #tmux bind-key y run-shell -b "tmux save-buffer - > /dev/clipboard"
 
     if [ $TMUX_VERSION -lt 240 ]; then
 

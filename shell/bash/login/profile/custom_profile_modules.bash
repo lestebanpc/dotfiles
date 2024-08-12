@@ -11,8 +11,6 @@ source ~/${g_repo_name}/shell/bash/lib/mod_fzf.bash
 #Mis funciones sobre mi NAS 
 source ~/${g_repo_name}/shell/bash/lib/mod_mynas.bash
 
-#Funciones de ayuda para X11 
-source ~/${g_repo_name}/shell/bash/lib/mod_x11.bash
 
 
 

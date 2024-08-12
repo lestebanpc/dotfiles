@@ -110,18 +110,22 @@ endif
 "https://github.com/ojroques/vim-oscyank
 
 "if !g:is_neovim
-"
-"    "Maximum length of a selection
-"    let g:oscyank_max_length = 0
-"
-"    "Disable message on successful copy
-"    let g:oscyank_silent     = 0
-"
-"    "Trim surrounding whitespaces before copy
-"    let g:oscyank_trim       = 0
-"
-"    "The OSC52 format string to use
-"    let g:oscyank_osc52      = "\x1b]52;c;%s\x07"
-"
+
+    "Maximum length of a selection
+    "let g:oscyank_max_length = 0
+
+    "Disable message on successful copy
+    "let g:oscyank_silent     = 0
+
+    "Trim surrounding whitespaces before copy
+    "let g:oscyank_trim       = 0
+
+    "The OSC52 format string to use
+    "if g:use_tmux
+    "    let g:oscyank_osc52 = "\x1bPtmux;\x1b]52;c;%s\x07\x1b\\"
+    "else
+    "    let g:oscyank_osc52 = "\x1b]52;c;%s\x07"
+    "endif
+
 "endif
 

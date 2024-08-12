@@ -181,7 +181,6 @@ declare -A gA_repos_type=(
         ['christoomey/vim-tmux-navigator']=2
         ['junegunn/fzf']=2
         ['junegunn/fzf.vim']=2
-        ['ojroques/vim-oscyank']=2
         ['tpope/vim-surround']=3
         ['mg979/vim-visual-multi']=3
         ['mattn/emmet-vim']=3
@@ -229,7 +228,6 @@ declare -A gA_repos_scope=(
         ['ryanoasis/vim-devicons']=1
         ['preservim/nerdtree']=1
         ['puremourning/vimspector']=1
-        ['ojroques/vim-oscyank']=1
         ['folke/tokyonight.nvim']=2
         ['kyazdani42/nvim-web-devicons']=2
         ['nvim-lualine/lualine.nvim']=2
@@ -1621,302 +1619,6 @@ function _install_nvim() {
 
 # Parametros:
 # > Opcion ingresada por el usuario.
-function _sutup_support_x11_clipboard() {
-
-    #1. Argumentos
-    local p_opciones=0
-    if [[ "$1" =~ ^[0-9]+$ ]]; then
-        p_opciones=$1
-    fi
-
-    #2. Determinar si se requiere instalar VIM/NeoVIM
-    local l_option=32768
-    local l_flag_ssh_srv=1
-    if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-        l_flag_ssh_srv=0
-    fi
-    
-    l_option=16384
-    local l_flag_ssh_clt_without_xsrv=1
-    if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-        l_flag_ssh_clt_without_xsrv=0
-    fi
-
-    l_option=8192
-    local l_flag_ssh_clt_with_xsrv=1
-    if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-        l_flag_ssh_clt_with_xsrv=0
-    fi
-
-    #Si no se solicitar instalar VIM o NeoVIM no instalar ningun comando
-    if [ $l_flag_ssh_srv -ne 0 ] && [ $l_flag_ssh_clt_with_xsrv -ne 0 ] && [ $l_flag_ssh_clt_without_xsrv -ne 0 ]; then
-        return 99
-    fi
-   
-    #3. Mostrar el titulo de instalacion
-
-    #Obtener a quien aplica la configuración
-    local l_tmp1=""
-    if [ $l_flag_ssh_srv -eq 0 ]; then
-        l_tmp1="SSH Server"
-    fi
-
-    if [ $l_flag_ssh_clt_with_xsrv -eq 0 ] || [ $l_flag_ssh_clt_without_xsrv -eq 0 ]; then
-        if [ -z "$l_aux" ]; then
-            l_tmp1="SSH Client"
-        else
-            l_tmp1="${l_aux}/Client"
-        fi
-    fi
-
-
-    #Obtener lo que se va configurar/instalar
-    local l_tmp2=""
-    local l_pkg_options='xclip'
-    printf -v l_tmp2 "instalar '%bxclip%b'" "$g_color_gray1" "$g_color_reset"
-
-    if [ $l_flag_ssh_srv -eq 0 ]; then
-        printf -v l_tmp2 "%s, '%bxorg-x11-xauth%b', configurar %bOpenSSH server%b" "$l_tmp" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-        l_pkg_options="${l_pkg_options},xauth"
-    fi
-
-    if [ $l_flag_ssh_clt_without_xsrv -eq 0 ]; then
-        printf -v l_tmp2 "%s, X virtual server '%bXvfb%b'" "$l_tmp" "$g_color_gray1" "$g_color_reset"
-        l_pkg_options="${l_pkg_options},xvfb"
-    fi
-
-    printf '\n'
-    print_line '-' $g_max_length_line  "$g_color_gray1"
-    #print_line '─' $g_max_length_line  "$g_color_blue1"
-    printf "%bX11 Forwarding%b > Sobre '%b%s%b': %s\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_tmp1" "$g_color_reset" "$l_tmp2"
-    #print_line '─' $g_max_length_line "$g_color_blue1"
-    print_line '-' $g_max_length_line  "$g_color_gray1"
-
-    #2. Si no se tiene permisos para root, solo avisar
-    if [ $g_runner_sudo_support -eq 3 ] || {  [ $g_runner_is_root -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
-
-        printf '%bNo tiene soporte para ejecutar en modo "root"%b. Para usar el clipbboard de su servidor remotos linux, usando el "%bX11 forwading for SSH%b".\n' \
-               "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-        printf 'Se recomienda usar la siguiente configuración:\n'
-
-        printf ' > Instale el X cliente "XClip"\n'
-
-        if [ $l_flag_ssh_srv -eq 0 ]; then
-
-            printf ' > Configure el servidor SSH server %b(donde se ejecutará X client)%b\n' "$g_color_gray1" "$g_color_reset"
-            printf '   > Configure el servidor OpenSSH server:\n'
-            printf '     > Edite el archivo "%b%s%b" y modifique el campo  "%b%s%b" a "%b%sb".\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
-                   "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "yes"
-            printf '     > Reiniciar el servidor OpenSSH server: %b%s%b\n' "$g_color_gray1" "systemctl restart sshd.service" "$g_color_reset"
-            printf '   > Validar si la componente "%bxorg-x11-xauth%b" de autorizacion de X11 esta instalando.\n' "$g_color_gray1" "$g_color_reset"
-
-        fi
-
-        if [ $l_flag_ssh_clt_without_xsrv -eq 0 ]; then
-            printf ' > Configure el cliente SSH server en un "%bHeadless Server%b" %b(donde se ejecutará X server)%b\n' "$g_color_yellow1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-            printf '   > Instale el servidor X virtual "%bXvfb%b".\n' "$g_color_gray1" "$g_color_reset"
-        fi
-
-        return 1
-    fi
-
-    #3. Instalar los programas requeridos 
-    local l_version
-    local l_status
-    local l_is_noninteractive=1
-    if [ $gp_type_calling -eq 2 ]; then
-        l_is_noninteractive=0
-    fi
-
-
-    printf 'X forwarding> Iniciando %s...\n\n' "$l_tmp"
-
-    #Parametros:
-    # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-    # 2> Repositorios a instalar/acutalizar: 
-    # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
-    # 4> El estado de la credencial almacenada para el sudo
-    if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_shell_path}/bash/bin/linuxsetup/04_setup_packages.bash 2 "$l_pkg_options" $g_status_crendential_storage
-        l_status=$?
-    else
-        ${g_shell_path}/bash/bin/linuxsetup/04_setup_packages.bash 4 "$l_pkg_options" $g_status_crendential_storage
-        l_status=$?
-    fi
-
-    #No se cumplen las precondiciones obligatorios
-    if [ $l_status -eq 111 ]; then
-        return 111
-    #Si no se acepto almacenar credenciales
-    elif [ $l_status -eq 120 ]; then
-        return 120
-    #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-    elif [ $l_status -eq 119 ]; then
-       g_status_crendential_storage=0
-    fi
-
-
-    #5. Configurar OpenSSH server para soportar el 'X11 forwading'
-    local l_ssh_config_data=""
-    if [ $l_flag_ssh_srv -eq 0 ]; then
-
-        printf '\n'
-        print_line '-' $g_max_length_line  "$g_color_gray1"
-        printf '%bX11 Forwarding%b > Configurando el servidor OpenSSH...\n' "$g_color_gray1" "$g_color_reset"
-        print_line '-' $g_max_length_line "$g_color_gray1"
-
-        #Obtener la data del SSH config del servidor OpenSSH
-        if [ $g_runner_sudo_support -eq 4 ]; then
-            l_ssh_config_data=$(cat /etc/ssh/sshd_config 2> /dev/null)
-            l_status=$?
-        else
-            l_ssh_config_data=$(sudo cat /etc/ssh/sshd_config 2> /dev/null)
-            l_status=$?
-        fi
-
-        if [ $l_status -ne 0 ]; then
-            printf 'No se obtuvo información del archivo "%b%s%b".\n' "$g_color_red1" "/etc/ssh/sshd_config" "$g_color_reset"
-            return 1
-        fi
-
-    
-        if ! echo "$l_ssh_config_data"  | grep '^X11Forwarding\s\+yes\s*$' &> /dev/null; then
-
-            printf 'X forwarding> Modificando el archivo "%b%s%b": editanto el campo "%b%s%b" con el valor "%b%s%b".\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
-                   "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "yes" "$g_color_reset"
-
-            if [ $g_runner_sudo_support -eq 4 ]; then
-                echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' \
-                    > /etc/ssh/sshd_config
-            else
-                echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding yes/' | sed 's/^X11Forwarding\s\+no\s*$/X11Forwarding yes/' | \
-                    sudo tee /etc/ssh/sshd_config > /dev/null
-            fi
-
-            if [ $g_runner_sudo_support -eq 4 ]; then
-                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_gray1" "systemctl restart sshd.service" "$g_color_reset"
-                systemctl restart sshd.service
-            else
-                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_gray1" "sudo systemctl restart sshd.service" "$g_color_reset"
-                sudo systemctl restart sshd.service
-            fi
-
-        else
-
-            printf 'X forwarding> El archivo "%b%s%b" ya esta configurado (su campo "%b%s%b" tiene el valor "%b%s%b").\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
-                   "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "yes" "$g_color_reset"
-
-        fi
-
-    fi
-
-
-}
-
-
-# Parametros:
-# > Opcion ingresada por el usuario.
-function _uninstall_support_x11_clipboard() {
-
-    #1. Argumentos
-    local p_opciones=0
-    if [[ "$1" =~ ^[0-9]+$ ]]; then
-        p_opciones=$1
-    fi
-
-    #2. Determinar si se requiere instalar VIM/NeoVIM
-    local l_flag_ssh_srv=1
-
-    local l_option=65536
-    local l_flag=$(( $p_opciones & $l_option ))
-    if [ $l_flag -eq $l_option ]; then l_flag_ssh_srv=0; fi
-    
-    #Si no se solicitar instalar VIM o NeoVIM no instalar ningun comando
-    if [ $l_flag_ssh_srv -ne 0 ]; then
-        return 99
-    fi
-   
-    #3. Mostrar el titulo de instalacion
-    local l_title
-
-    #Obtener a quien aplica la configuración
-    local l_tmp="SSH Server"
-    #printf -v l_title '%s: %s' "$l_title" "$l_tmp"
-
-    printf '\n'
-    print_line '-' $g_max_length_line  "$g_color_blue1"
-    printf "%bX11 Forwarding%b > Remover la configuración en '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_tmp" "$g_color_reset"
-    print_line '-' $g_max_length_line "$g_color_blue1"
-
-    #2. Si no se tiene permisos para root, solo avisar
-    if [ $g_runner_sudo_support -eq 3 ] || {  [ $g_runner_is_root -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
-
-        printf '%bNo tiene soporte para ejecutar en modo "root"%b. Para remover la configuración "%bX11 forwading%b" del OpenSSH Server.\n' \
-               "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-        printf 'Se recomienda usar la siguiente configuración:\n'
-        printf ' > Edite el archivo "%b%s%b" y modifique el campo  "%b%s%b" a "%b%sb".\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
-               "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "no"
-
-        return 1
-    fi
-
-    #3. Configurar OpenSSH server para soportar el 'X11 forwading'
-    local l_ssh_config_data=""
-    if [ $l_flag_ssh_srv -eq 0 ]; then
-
-        printf '%bX forwarding%b> Configurando el servidor OpenSSH...\n' "$g_color_gray1" "$g_color_reset"
-
-        #Obtener la data del SSH config del servidor OpenSSH
-        if [ $g_runner_sudo_support -eq 4 ]; then
-            l_ssh_config_data=$(cat /etc/ssh/sshd_config 2> /dev/null)
-            l_status=$?
-        else
-            l_ssh_config_data=$(sudo cat /etc/ssh/sshd_config 2> /dev/null)
-            l_status=$?
-        fi
-
-        if [ $l_status -ne 0 ]; then
-            printf 'No se obtuvo información del archivo "%b%s%b".\n' "$g_color_red1" "/etc/ssh/sshd_config" "$g_color_reset"
-            return 1
-        fi
-
-    
-        if ! echo "$l_ssh_config_data"  | grep '^X11Forwarding\s\+no\s*$' &> /dev/null; then
-
-            printf 'X forwarding> Modificando el archivo "%b%s%b": editanto el campo "%b%s%b" con el valor "%b%s%b".\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
-                   "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "no" "$g_color_reset"
-
-            if [ $g_runner_sudo_support -eq 4 ]; then
-                echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding no/' | sed 's/^X11Forwarding\s\+yes\s*$/X11Forwarding no/' \
-                    > /etc/ssh/sshd_config
-            else
-                echo "$l_ssh_config_data" | sed 's/^#X11Forwarding\s\+\(no\|yes\)\s*$/X11Forwarding no/' | sed 's/^X11Forwarding\s\+yes\s*$/X11Forwarding no/' | \
-                    sudo tee /etc/ssh/sshd_config > /dev/null
-            fi
-
-            if [ $g_runner_sudo_support -eq 4 ]; then
-                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_gray1" "systemctl restart sshd.service" "$g_color_reset"
-                systemctl restart sshd.service
-            else
-                printf 'X forwarding> Reiniciando el servidor OpenSSH server: %b%s%b\n' "$g_color_gray1" "sudo systemctl restart sshd.service" "$g_color_reset"
-                sudo systemctl restart sshd.service
-            fi
-
-        else
-
-            printf 'X forwarding> El archivo "%b%s%b" ya esta configurado (su campo "%b%s%b" tiene el valor "%b%s%b").\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
-                   "$g_color_gray1" "X11Forwarding" "$g_color_reset" "$g_color_gray1" "no" "$g_color_reset"
-
-        fi
-
-    fi
-
-
-}
-
-
-# Parametros:
-# > Opcion ingresada por el usuario.
 function _setup_user_profile() {
 
     #1. Argumentos
@@ -2060,7 +1762,7 @@ function _setup_user_profile() {
     create_folderpath_on_home ".config" "wezterm"
     l_target_link="wezterm.lua"
     l_source_path="${g_repo_name}/wezterm"
-    l_source_filename='wezterm_bash1.lua'
+    l_source_filename='wezterm.lua'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
@@ -2190,7 +1892,7 @@ function _remove_vim_plugin_manager() {
     local l_flag_title=1
 
     #Eliminar VIM-Plug en VIM
-    local l_option=34359738368
+    local l_option=2147483648
     local l_flag_removed=1
     if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
 
@@ -2223,7 +1925,7 @@ function _remove_vim_plugin_manager() {
 
 
     #Eliminar VIM-Plug en NeoVIM
-    l_option=68719476736
+    l_option=4294967296
     l_flag_removed=1
     if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
 
@@ -2255,7 +1957,7 @@ function _remove_vim_plugin_manager() {
     fi
 
     #Eliminar Packer en NeoVIM
-    l_option=137438953472
+    l_option=8589934592
     l_flag_removed=1
     if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
 
@@ -2342,7 +2044,7 @@ function _setup_vim_environment() {
 
     #¿Instalar solo paquetes basicos: 'jtbl'?
     if [ $l_flag_setup -eq 2 ]; then
-        l_option=131072
+        l_option=8192
         if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
             l_flag_setup=0
         fi
@@ -2460,7 +2162,7 @@ function _setup_vim_environment() {
 
     #¿Instalar solo paquetes basicos: 'Prettier'?
     if [ $l_flag_setup -eq 2 ]; then
-        l_option=262144
+        l_option=16384
         if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
             l_flag_setup=1
         fi
@@ -2617,14 +2319,14 @@ function _setup_vim_environment() {
     if [ $l_flag_setup -ne 0 ]; then
 
         #¿Configurar como IDE?
-        l_option=1048576
+        l_option=65536
         if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
             l_flag_setup=0
         fi
 
         #¿Configurar como Editor?
         if [ $l_flag_setup -eq -1 ]; then
-            l_option=524288
+            l_option=32768
             if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
                 l_flag_setup=1
             fi
@@ -2652,7 +2354,7 @@ function _setup_vim_environment() {
     if [ $l_flag_setup -ne 0 ]; then
 
         #¿Configurar como IDE? (indexar la documentación)
-        l_option=8388608
+        l_option=524288
         if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
             l_flag_setup=0
             l_flag_non_index_docs=1
@@ -2660,7 +2362,7 @@ function _setup_vim_environment() {
 
         #¿Configurar como IDE? (no indexar la documentación)
         if [ $l_flag_setup -ne 0 ]; then
-            l_option=16777216
+            l_option=1048576
             if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
                 l_flag_setup=0
                 l_flag_non_index_docs=0
@@ -2669,7 +2371,7 @@ function _setup_vim_environment() {
 
         #¿Configurar como Editor? (indexar la documentación)
         if [ $l_flag_setup -eq -1 ]; then
-            l_option=2097152
+            l_option=131072
             if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
                 l_flag_setup=1
                 l_flag_non_index_docs=1
@@ -2678,7 +2380,7 @@ function _setup_vim_environment() {
 
         #¿Configurar como Editor? (no indexar la documentación)
         if [ $l_flag_setup -eq -1 ]; then
-            l_option=4194304
+            l_option=262144
             if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
                 l_flag_setup=1
                 l_flag_non_index_docs=0
@@ -2761,7 +2463,7 @@ function _setup_vim_environment() {
     #¿se configura los plugins del IDE?
     if [ $l_flag_setup -ne 0 ]; then
 
-        l_option=67108864
+        l_option=4194304
         if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
             l_flag_setup=0
         fi
@@ -2854,7 +2556,7 @@ function _setup_vim_environment() {
     l_flag_setup=1  #(1) No configurar, (0) Configurar.
     
     #¿se indexa la documentación de los plugins?
-    l_option=33554432
+    l_option=2097152
     if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
         l_flag_setup=0
     fi
@@ -2910,14 +2612,14 @@ function _setup_vim_environment() {
     if [ $l_flag_setup -ne 0 ]; then
 
         #¿Configurar como IDE?
-        l_option=268435456
+        l_option=16777216
         if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
             l_flag_setup=0
         fi
 
         #¿Configurar como Editor?
         if [ $l_flag_setup -eq -1 ]; then
-            l_option=134217728
+            l_option=8388608
             if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
                 l_flag_setup=1
             fi
@@ -2945,7 +2647,7 @@ function _setup_vim_environment() {
     if [ $l_flag_setup -ne 0 ]; then
 
         #¿Configurar como IDE? (indexar la documentación)
-        l_option=2147483648
+        l_option=134217728
         if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
             l_flag_setup=0
             l_flag_non_index_docs=1
@@ -2953,7 +2655,7 @@ function _setup_vim_environment() {
 
         #¿Configurar como IDE? (no indexar la documentación)
         if [ $l_flag_setup -ne 0 ]; then
-            l_option=4294967296
+            l_option=268435456
             if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
                 l_flag_setup=0
                 l_flag_non_index_docs=0
@@ -2962,7 +2664,7 @@ function _setup_vim_environment() {
 
         #¿Configurar como Editor? (indexar la documentación)
         if [ $l_flag_setup -eq -1 ]; then
-            l_option=536870912
+            l_option=33554432
             if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
                 l_flag_setup=1
                 l_flag_non_index_docs=1
@@ -2971,7 +2673,7 @@ function _setup_vim_environment() {
 
         #¿Configurar como Editor? (no indexar la documentación)
         if [ $l_flag_setup -eq -1 ]; then
-            l_option=1073741824
+            l_option=67108864
             if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
                 l_flag_setup=1
                 l_flag_non_index_docs=0
@@ -3055,7 +2757,7 @@ function _setup_vim_environment() {
     #¿se configura los plugins del IDE?
     if [ $l_flag_setup -ne 0 ]; then
 
-        l_option=17179869184
+        l_option=1073741824
         if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
             l_flag_setup=0
         fi
@@ -3151,7 +2853,7 @@ function _setup_vim_environment() {
     l_flag_setup=1  #(1) No configurar, (0) Configurar.
     
     #¿se indexa la documentación de los plugins?
-    l_option=8589934592
+    l_option=536870912
     if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
         l_flag_setup=0
     fi
@@ -3334,7 +3036,7 @@ function _show_menu_core() {
            "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
-    local l_max_digits=12
+    local l_max_digits=10
 
     printf "     (%b%0${l_max_digits}d%b) Crear los enlaces simbolicos del profile del usuario\n" "$g_color_green1" "2" "$g_color_reset"
     printf "     (%b%0${l_max_digits}d%b) Flag para %bre-crear%b un enlaces simbolicos en caso de existir\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
@@ -3363,58 +3065,49 @@ function _show_menu_core() {
     printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Configurar como %bIDE%b    %b(archivos de configuración, plugins y su documentación)%b\n" "$g_color_green1" "4096" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
-    printf "     (%b%0${l_max_digits}d%b) %bCliente  SSH%b> %bX11 forwading%b> server with %bX Server%b> Instalar 'xclip'\n" \
-           "$g_color_green1" "8192" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bCliente  SSH%b> %bX11 forwading%b> %bHeadless Server%b> Instalar el servidor X virtual '%bXvfb%b' e instalar 'xclip'\n" \
-           "$g_color_green1" "16384" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bServidor SSH%b> %bX11 forwading%b> Configurar OpenSSH server e instalar 'xclip', 'xorg-x11-xauth'\n" "$g_color_green1" \
-           "32768" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bServidor SSH%b> Eliminar el %bX11 forwading%b del OpenSSH server\n" "$g_color_green1" "65536" "$g_color_reset" \
-           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     #Adicionales
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes%b de usuario de %bPython%b: %b'jtbl'%b\n" "$g_color_green1" "131072" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes%b de usuario de %bPython%b: %b'jtbl'%b\n" "$g_color_green1" "8192" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes%b globales de %bNodeJS%b: %b'Prettier'%b\n" "$g_color_green1" "262144" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes%b globales de %bNodeJS%b: %b'Prettier'%b\n" "$g_color_green1" "16384" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Crear los %barchivos de configuración%b como %bEditor%b\n" "$g_color_green1" "524288" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Crear los %barchivos de configuración%b como %bEditor%b\n" "$g_color_green1" "32768" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Crear los %barchivos de configuración%b como %bIDE%b\n" "$g_color_green1" "1048576" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Crear los %barchivos de configuración%b como %bIDE%b\n" "$g_color_green1" "65536" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bEditor%b e %bindexar%b su documentación\n" "$g_color_green1" "2097152" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bEditor%b e %bindexar%b su documentación\n" "$g_color_green1" "131072" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bEditor%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "4194304" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bEditor%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "262144" \
             "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bIDE%b e %bindexar%b su documentación\n" "$g_color_green1" "8388608" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bIDE%b e %bindexar%b su documentación\n" "$g_color_green1" "524288" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bIDE%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "16777216" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Descargar los %bplugins%b de %bIDE%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "1048576" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > %bIndexar%b la documentación de los plugins existentes\n" "$g_color_green1" "33554432" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > %bIndexar%b la documentación de los plugins existentes\n" "$g_color_green1" "2097152" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Configurar los %bplugins de IDE%b\n" "$g_color_green1" "67108864" "$g_color_reset" "$g_color_cian1" \
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Configurar los %bplugins de IDE%b\n" "$g_color_green1" "4194304" "$g_color_reset" "$g_color_cian1" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Crearlos %barchivos de configuración%b como %bEditor%b\n" "$g_color_green1" "134217728" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Crearlos %barchivos de configuración%b como %bEditor%b\n" "$g_color_green1" "8388608" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Crear los %barchivos de configuración%b como %bIDE%b\n" "$g_color_green1" "268435456" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Crear los %barchivos de configuración%b como %bIDE%b\n" "$g_color_green1" "16777216" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bEditor%b e %bindexar%b su documentación\n" "$g_color_green1" "536870912" \
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bEditor%b e %bindexar%b su documentación\n" "$g_color_green1" "33554432" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bEditor%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "1073741824" \
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bEditor%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "67108864" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bIDE%b e %bindexar%b su documentación\n" "$g_color_green1" "2147483648" \
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bIDE%b e %bindexar%b su documentación\n" "$g_color_green1" "134217728" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bIDE%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "4294967296" \
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Descargar los %bplugins%b de %bIDE%b %b(sin indexar la documentación)%b \n" "$g_color_green1" "268435456" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > %bIndexar%b la documentación de los plugins existentes\n" "$g_color_green1" "8589934592" "$g_color_reset" \
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > %bIndexar%b la documentación de los plugins existentes\n" "$g_color_green1" "536870912" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Configurar los %bplugins de IDE%b\n" "$g_color_green1" "17179869184" "$g_color_reset" "$g_color_cian1" \
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Configurar los %bplugins de IDE%b\n" "$g_color_green1" "1073741824" "$g_color_reset" "$g_color_cian1" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset"
 
 
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Eliminar el gestor de plugins 'VIM-Plug'\n" "$g_color_green1" "34359738368" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Eliminar el gestor de plugins 'VIM-Plug'\n" "$g_color_green1" "68719476736" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Eliminar el gestor de plugins 'Packer'\n" "$g_color_green1" "137438953472" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bVIM%b    > Eliminar el gestor de plugins 'VIM-Plug'\n" "$g_color_green1" "2147483648" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Eliminar el gestor de plugins 'VIM-Plug'\n" "$g_color_green1" "4294967296" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b > Eliminar el gestor de plugins 'Packer'\n" "$g_color_green1" "8589934592" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_gray1"
 

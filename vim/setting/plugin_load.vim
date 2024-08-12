@@ -63,13 +63,6 @@ packadd fzf
 "Plug-In> UI> EXTENDED> FZF ("FuZzy Finder") - Comanfos VIM para usar mejor FzF
 packadd fzf.vim
 
-"Solo si es VIM
-if !g:is_neovim
-
-    "Soporte a OSC52 (no usar en NeoVIM, el cual desde la version 0.10 ya incluye uno integrado)
-    packadd vim-oscyank
-
-endif
 
 if g:use_ide
 

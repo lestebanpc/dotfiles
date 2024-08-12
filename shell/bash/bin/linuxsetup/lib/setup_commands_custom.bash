@@ -86,6 +86,7 @@ gA_packages=(
         ['tmux-fingers']='Morantron/tmux-fingers'
         ['sesh']='joshmedeski/sesh'
         ['gum']='charmbracelet/gum'
+        ['wezterm']='wez/wezterm'
     )
 
 
@@ -95,8 +96,8 @@ gA_packages=(
 #  - Cada entrada define un opcion de menú. Su valor define el titulo.
 ga_menu_options_title=(
     "Comandos basicos"
-    "Comandos alternativos"
-    "Comandos para gRPC"
+    "Comandos alternativos 1"
+    "Comandos alternativos 2"
     "Las fuentes 'Nerd Fonts'"
     "El editor 'NeoVim'"
     "Shell 'Powershell'"
@@ -131,8 +132,8 @@ ga_menu_options_title=(
 #    El binario se puede encontrar en nerdctl-full.
 ga_menu_options_packages=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
-    "xsv,yazi,jwt,step,butane,tmux-fingers,sesh,gum"
-    "protoc,grpcurl,evans"
+    "tmux-fingers,sesh,protoc,grpcurl,xsv,jwt"
+    "step,evans,yazi,gum,butane,wezterm"
     "nerd-fonts"
     "neovim"
     "powershell"
@@ -167,6 +168,7 @@ ga_menu_options_packages=(
 #
 declare -A gA_repo_config_os_type=(
         ['less']=1
+        ['wezterm']=1
         ['k0s']=4
         ['fzf']=7
         ['llvm']=14
@@ -209,6 +211,7 @@ declare -A gA_repo_config_proc_type=(
         ['clangd']=1
         ['neovim']=1
         ['tmux-fingers']=1
+        ['wezterm']=1
     )
 
 #URL base del repositorio por defecto es 'https://github.com'.
@@ -638,6 +641,19 @@ function get_repo_last_pretty_version() {
             #  2024.07.10+ac6c14ca616048b5b137e08ed60bee47b563305c
             #Obteniendo los 3 primeros enteros.
             l_aux=$(echo $p_version | sed -E 's/([0-9]+\.[0-9]+\.[0-9]+)\+.*/\1/')
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 1
+            fi
+
+            l_version="$l_aux"
+            ;;
+
+        wezterm)
+
+            #Ejemplo de versiones: solo obtener la fecha
+            #   wezterm 20240805_014059_9d285fa6
+            l_aux=$(echo $p_version | sed -e 's/[^0-9]*\([0-9]\+\).*/\1/')
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 1
@@ -1919,6 +1935,31 @@ function _get_repo_current_pretty_version() {
             fi
             ;;
 
+
+        wezterm)
+            
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_win_programs_path}/wezterm/"
+               else
+                  l_path_file="${g_programs_path}/wezterm/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}wezterm.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}wezterm --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | sed -e 's/[^0-9]*\([0-9]\+\).*/\1/')
+            fi
+            ;;
 
 
         *)
@@ -3481,6 +3522,20 @@ function get_repo_artifacts() {
             fi
             ;;
 
+
+        wezterm)
+
+            #No soportado para Linux
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 1
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_names=("WezTerm-windows-${p_repo_last_version}.zip")
+            pna_artifact_types=(21)
+            ;;
 
 
         *)
@@ -5721,6 +5776,26 @@ function _copy_artifact_files() {
             create_binarylink_to_command "powershell" "pwsh" "pwsh"
             ;;
 
+
+        wezterm)
+            
+            #A. Si son binarios Linux
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 0
+            fi
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Creando el folder si no existe y limpiarlo si existe
+            create_or_clean_folder_on_program "wezterm" "" 1 2
+
+            #Descomprimir
+            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 2 "wezterm" 0 "" ""
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 40
+            fi
 
 
 

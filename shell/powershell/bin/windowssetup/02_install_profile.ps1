@@ -812,26 +812,24 @@ function m_setup_profile($l_overwrite_ln_flag) {
     #Creando archivo de configuracion para Wezterm
     $l_target_link="${env:USERPROFILE}\.config\wezterm\wezterm.lua"
     $l_source_path="${env:USERPROFILE}\.files\wezterm"
-	$l_source_filename='wezterm_windows1.lua'
+	$l_source_filename='wezterm.lua'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
-    #TODO: Ubicar donde esta el archivo 'wezterm.exe', alli crear la carpeta 'wezterm_modules' y copiar el archivo '~/.files/wezterm/windows_config_template.lua'
+    #Ubicar donde esta el archivo 'wezterm.exe', alli crear la carpeta 'wezterm_modules' y copiar el archivo '~/.files/wezterm/windows_config_template.lua'
     #como 'config.lua'
-	#if(! (Test-Path "${env:USERPROFILE}\.config\git")) {
-	#	New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\.config\git"
-    #}
+	if(! (Test-Path "${g_win_base_path}\prgs\wezterm\wezterm_modules")) {
+		New-Item -ItemType Directory -Force -Path "${g_win_base_path}\prgs\wezterm\wezterm_modules"
+    }
 	
-    #if(! (Test-Path "${env:USERPROFILE}\.config\git\main.toml" )) {
-	#	Write-Host "            > Creando el archivo '~\.config\git\main.toml' ..."
-    #    Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\template_main_gitconfig_windows.toml" -Destination "${env:USERPROFILE}\.config\git\main.toml"
-    #    Write-Host "            > Creando el archivo '~\.config\git\work_uc.toml' ..."
-    #    Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\template_work_gitconfig_windows.toml" -Destination "${env:USERPROFILE}\.config\git\work_uc.toml"
-    #    
-    #    Write-Host "            > Edite '~\.config\git\main.toml' y '~\.config\git\work_uc.toml' si desea crear modificar las opciones de '~/.gitignore'."
-	#}
-    #else {
-    #    Write-Host "            > Edite '~\.config\git\main.toml' y '~\.config\git\work_uc.toml' si desea crear modificar las opciones de '~/.gitignore'."
-    #}
+    if(! (Test-Path "${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua" )) {
+		Write-Host "            > Creando el archivo '${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua' ..."
+        Copy-Item -Path "${env:USERPROFILE}\.files\etc\wezterm\windows_config_template.lua" -Destination "${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua"
+        
+        Write-Host "            > Edite '${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua' si desea modificar las opciones Wezterm."
+	}
+    else {
+        Write-Host "            > Edite '${g_win_base_path}\prgs\wezterm\wezterm_modules\config.lua' si desea modificar las opciones Wezterm."
+    }
 
     #Creando el profile del interprete shell
     #$l_target_link="${HOME}\.bashrc"
