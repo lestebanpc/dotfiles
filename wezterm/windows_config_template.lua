@@ -20,6 +20,10 @@ local l_default_prog = {"pwsh"}
 --local l_default_prog = {"/usr/bin/bash", "-l"}
 --local l_default_prog = {"/usr/bin/zsh", "-l"}
 
+-- Specifies the size of the font, measured in points. You may use fractional point sizes, such as 13.3, to fine tune the size.
+-- The default font size is 12.0
+local l_font_size = 10.5
+
 
 ------------------------------------------------------------------------------------
 -- Setting> Non-Local Multiplexing Damains
@@ -131,6 +135,7 @@ local l_launch_menu = {
 l_mod.enable_wayland = false
 l_mod.enable_scroll_bar = l_enable_scrollbar
 l_mod.color_scheme = l_color_scheme
+l_mod.font_size = l_font_size
 l_mod.default_prog = l_default_prog
 l_mod.default_domain = l_default_domain
 l_mod.wsl_domains= l_wsl_domains

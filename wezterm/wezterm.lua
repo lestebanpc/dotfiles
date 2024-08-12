@@ -78,6 +78,7 @@ if not l_ok then
         enable_scrollbar = false,
 
         default_prog = nil,
+        font_size = 10.5
         default_domain = nil,
         wsl_domains= nil,
         ssh_domains = nil,
@@ -185,7 +186,7 @@ config.font = wezterm.font_with_fallback({
 
 -- Specifies the size of the font, measured in points. You may use fractional point sizes, such as 13.3, to fine tune the size.
 -- The default font size is 12.0
-config.font_size = 10.5
+config.font_size = l_myconfig.font_size
 --config.font_size = 11
 
 --config.bold_brightens_ansi_colors = true
