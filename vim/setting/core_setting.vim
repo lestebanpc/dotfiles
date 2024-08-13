@@ -194,7 +194,7 @@ if g:is_neovim
         if g:has_clipboard
             let g:set_clipboard_type = 0
         else
-            let g:set_clipboard_type = 2
+            let g:set_clipboard_type = 1
         endif
 
     endif
