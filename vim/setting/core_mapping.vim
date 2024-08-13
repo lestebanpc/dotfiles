@@ -34,103 +34,61 @@ nnoremap <Leader>vv :set cursorcolumn!<CR>
 "La instegracion con comandos externos de gestion de clipboard y OSC 52, no lo hace de forma nativa.
 "
 
-"Obtener el comando externo para escribir el portapales
-let s:clipboard_commnad=''
-"let g:clipboard_commnad=''
-
-"Si es Linux (sea WSL y no-WSL)
-if (g:os_type == 2) || (g:os_type == 3)
-
-    if  exists('$WAYLAND_DISPLAY') 
-        if executable('wl-copy')
-            let s:clipboard_commnad='wl-copy'
-        endif
-    elseif exists('$DISPLAY') 
-        if executable('xclip')
-            let s:clipboard_commnad='xclip -i -selection clipboard'
-        elseif executable('xclip')
-            let s:clipboard_commnad='xsel -i -b'
-        endif
-    endif
-
-"Si es Windows
-elseif g:os_type == 0
-
-    if executable('clip.exe')
-        let s:clipboard_commnad='clip.exe'
-    endif
-
-"Si es MacOS
-elseif g:os_type == 1
-
-    if executable('pbcopy')
-        let s:clipboard_commnad='pbcopy'
-    endif
-
-endif
-
 
 "Si se requiere usar OSC 52
 if g:set_clipboard_type == 1
 
-    if g:is_neovim
+    runtime setting/utils/osc52.vim
 
-        "No se puede establecer el mecanismo solicitado
-        let g:set_clipboard_type = 9
-
-    else
-
-        runtime setting/utils/osc52.vim
-
-        "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
-        nnoremap <Leader>c1 :<C-u>call SendViaOSC52(getreg('@1'))<CR>
-        "nnoremap <Leader>c1 :<C-u>call OSCYankRegister('@1')<CR>
+    "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
+    nnoremap <Leader>c1 :<C-u>call SendViaOSC52(getreg('@1'))<CR>
+    "nnoremap <Leader>c1 :<C-u>call OSCYankRegister('@1')<CR>
     
-        "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
-        "vnoremap <Leader>cl :w !s:clipboard_commnad<CR><CR>
+    "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
+    "vnoremap <Leader>cl :w !g:clipboard_command<CR><CR>
 
-        "Opciones que usan el plugion
-        "nmap <leader>c <Plug>OSCYankOperator
-        "nmap <leader>cc <leader>c_
-        "vmap <leader>c <Plug>OSCYankVisual
+    "Opciones que usan el plugion
+    "nmap <leader>c <Plug>OSCYankOperator
+    "nmap <leader>cc <leader>c_
+    "vmap <leader>c <Plug>OSCYankVisual
 
-        "let s:VimOSCYankPostRegisters = ['', '+', '*']
-        "function! s:VimOSCYankPostCallback(event)
-        "    if a:event.operator == 'y' && index(s:VimOSCYankPostRegisters, a:event.regname) != -1
-        "        call OSCYankRegister(a:event.regname)
-        "    endif
-        "endfunction
+    "let s:VimOSCYankPostRegisters = ['', '+', '*']
+    "function! s:VimOSCYankPostCallback(event)
+    "    if a:event.operator == 'y' && index(s:VimOSCYankPostRegisters, a:event.regname) != -1
+    "        call OSCYankRegister(a:event.regname)
+    "    endif
+    "endfunction
 
-        "Habilitar el envio automatico, al clipboard, del ultimo yank realizado.
-        augroup VimYank
-            autocmd!
-            "autocmd TextYankPost * call s:VimOSCYankPostCallback(v:event)
-            autocmd TextYankPost * call SendViaOSC52(getreg('"'))
-            "autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call OSCYankRegister('') | endif
-        augroup END
+    "Habilitar el envio automatico, al clipboard, del ultimo yank realizado.
+    augroup VimYank
+        autocmd!
+        "autocmd TextYankPost * call s:VimOSCYankPostCallback(v:event)
+        autocmd TextYankPost * call SendViaOSC52(getreg('"'))
+        "autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call OSCYankRegister('') | endif
+    augroup END
 
-    endif
 
 "Si se requiere usar comandos externos de gestion de clicomandos externos de `gestion de clipboardd
 elseif g:set_clipboard_type == 2
 
-    if s:clipboard_commnad == ''
+    if g:clipboard_command == ''
 
         "No se puede establecer el mecanismo solicitado
         let g:set_clipboard_type = 9
+        echo 'Not exist clipboard backend'
 
     else
 
         "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
-        nnoremap <Leader>c1 :<C-u>call system(s:clipboard_commnad, @1)<CR>
+        nnoremap <Leader>c1 :<C-u>call system(g:clipboard_command, @1)<CR>
     
         "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
-        "vnoremap <Leader>cl :w !s:clipboard_commnad<CR><CR>
+        "vnoremap <Leader>cl :w !g:clipboard_command<CR><CR>
 
         "Habilitar el envio automatico, al clipboard, del ultimo yank realizado.
         augroup VimYank
             autocmd!
-            autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system(s:clipboard_commnad, @") | endif
+            autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system(g:clipboard_command, @") | endif
         augroup END
     
     
@@ -152,13 +110,13 @@ elseif g:set_clipboard_type == 2
 
 elseif g:set_clipboard_type != 9
 
-    if s:clipboard_commnad != ''
+    if g:clipboard_command != ''
 
         "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
-        nnoremap <Leader>c1 :<C-u>call system(s:clipboard_commnad, @1)<CR>
+        nnoremap <Leader>c1 :<C-u>call system(g:clipboard_command, @1)<CR>
     
         "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
-        "vnoremap <Leader>cl :w !s:clipboard_commnad<CR><CR>
+        "vnoremap <Leader>cl :w !g:clipboard_command<CR><CR>
 
     endif
 

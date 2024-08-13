@@ -132,6 +132,40 @@ else
 endif
 
 
+"Determinar si existe el backend de gestion del clipboard y obtener del comando externo para escribir el portapapeles
+let g:clipboard_command=''
+
+"Si es Linux (sea WSL y no-WSL)
+if (g:os_type == 2) || (g:os_type == 3)
+
+    if  exists('$WAYLAND_DISPLAY') 
+        if executable('wl-copy')
+            let g:clipboard_command='wl-copy'
+        endif
+    elseif exists('$DISPLAY') 
+        if executable('xclip')
+            let g:clipboard_command='xclip -i -selection clipboard'
+        elseif executable('xclip')
+            let g:clipboard_command='xsel -i -b'
+        endif
+    endif
+
+"Si es Windows
+elseif g:os_type == 0
+
+    if executable('clip.exe')
+        let g:clipboard_command='clip.exe'
+    endif
+
+"Si es MacOS
+elseif g:os_type == 1
+
+    if executable('pbcopy')
+        let g:clipboard_command='pbcopy'
+    endif
+
+endif
+
 "Establecer el mecanismo de escritura en el clipboard del SO. Variable 'g:set_clipboard_type' cuyos
 "valores son:
 "  0 > Usar el mecanismo nativo de VIM/NeoVIM (siempre que este esta habilitado).
@@ -144,13 +178,16 @@ if g:is_neovim
     " > La variable de entorno 'NVIM_CLIPBOARD' pueden tener los siguientes valores:
     "    0 > Usar el mecanismo nativo de escritura al clipboard de NeoVIM
     "    1 > Implementar el mecanismo de uso comandos externo del gestion de clipboard
+    "    2 > Implementar el mecanismo de uso OSC 52
     "    Otro valor > Determinar automaticamente el mecanismo correcto segun order de prioridad: 
     "      > Usar mecanismo nativo (SOC y comandos externos) si esta habilitado.
-    "      > Implementar el mecanismo de uso comandos externo del gestion de clipboard
+    "      > Implementar el mecanismo OSC 52.
     if $NVIM_CLIPBOARD != '' && $NVIM_CLIPBOARD == 0
         let g:set_clipboard_type = 0
     elseif $NVIM_CLIPBOARD == 1
         let g:set_clipboard_type = 2
+    elseif $NVIM_CLIPBOARD == 2
+        let g:set_clipboard_type = 1
     else
 
         "Determinar el mecanismo de escritura del clipboard a usar:
