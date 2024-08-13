@@ -29,6 +29,7 @@ $gd_repos_type= @{
         'OmniSharp/omnisharp-vim'= 4
         'SirVer/ultisnips'= 4
         'honza/vim-snippets'= 4
+        'ludovicchabant/vim-gutentags'=4
         'puremourning/vimspector'= 4
         'folke/tokyonight.nvim'= 1
         'kyazdani42/nvim-web-devicons'= 2
