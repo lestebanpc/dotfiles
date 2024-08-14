@@ -171,23 +171,23 @@ endif
 "  0 > Usar el mecanismo nativo de VIM/NeoVIM (siempre que este esta habilitado).
 "  1 > Implementar un mecanismo usando OSC 52.
 "  2 > Implementar un mecanismo usando comandos externos de gestion de clipboard.
-"  9 > No se puedo Implementar ninguno de los menanismos.
+"  9 > No se puedo Implementar ninguno de los mecanismos.
 let g:set_clipboard_type = 9
 if g:is_neovim
 
     " > La variable de entorno 'NVIM_CLIPBOARD' pueden tener los siguientes valores:
     "    0 > Usar el mecanismo nativo de escritura al clipboard de NeoVIM
-    "    1 > Implementar el mecanismo de uso comandos externo del gestion de clipboard
-    "    2 > Implementar el mecanismo de uso OSC 52
+    "    1 > Implementar el mecanismo de uso OSC 52
+    "    2 > Implementar el mecanismo de uso comandos externo del gestion de clipboard
     "    Otro valor > Determinar automaticamente el mecanismo correcto segun order de prioridad: 
     "      > Usar mecanismo nativo (SOC y comandos externos) si esta habilitado.
     "      > Implementar el mecanismo OSC 52.
     if $NVIM_CLIPBOARD != '' && $NVIM_CLIPBOARD == 0
         let g:set_clipboard_type = 0
     elseif $NVIM_CLIPBOARD == 1
-        let g:set_clipboard_type = 2
-    elseif $NVIM_CLIPBOARD == 2
         let g:set_clipboard_type = 1
+    elseif $NVIM_CLIPBOARD == 2
+        let g:set_clipboard_type = 2
     else
 
         "Determinar el mecanismo de escritura del clipboard a usar:
@@ -204,18 +204,19 @@ else
 
     " > La variable de entorno 'VIM_CLIPBOARD' pueden tener los siguientes valores:
     "    0 > Usar el mecanismo nativo de escritura al clipboard de VIM
-    "    1 > Implementar el mecanismo de uso comandos externo del gestion de clipboard
-    "    2 > Implementar el mecanismo de uso OSC 52
+    "    1 > Implementar el mecanismo de uso OSC 52
+    "    2 > Implementar el mecanismo de uso comandos externo del gestion de clipboard
     "    Otro valor > Determinar automaticamente el mecanismo correcto segun order de prioridad: 
     "      > Implementar el mecanismo OSC 52, si la terminal lo permite.
     "      > Usar mecanismo nativo (API del SO) si esta habilitado.
     "      > Implementar el mecanismo de uso comandos externo del gestion de clipboard
+    "      > Si no existe comando externo, se Implementara el mecanismo OSC 52
     if $VIM_CLIPBOARD != '' && $VIM_CLIPBOARD == 0
         let g:set_clipboard_type = 0
     elseif $VIM_CLIPBOARD == 1
-        let g:set_clipboard_type = 2
-    elseif $VIM_CLIPBOARD == 2
         let g:set_clipboard_type = 1
+    elseif $VIM_CLIPBOARD == 2
+        let g:set_clipboard_type = 2
     else
 
         "1. Intentar determinar el valor adecuado automaticamente: Determinar si la terminal soporta OSC 52
@@ -261,7 +262,11 @@ else
             if g:has_clipboard
                 let g:set_clipboard_type = 0
             else
-                let g:set_clipboard_type = 2
+                if g:clipboard_command != ''
+                    let g:set_clipboard_type = 2
+                else
+                    let g:set_clipboard_type = 1
+                endif
             endif
         endif
 
