@@ -86,6 +86,7 @@ gA_packages=(
         ['tmux-fingers']='Morantron/tmux-fingers'
         ['sesh']='joshmedeski/sesh'
         ['gum']='charmbracelet/gum'
+        ['tmux-thumbs']='fcsonline/tmux-thumbs'
         ['wezterm']='wez/wezterm'
     )
 
@@ -132,7 +133,7 @@ ga_menu_options_title=(
 #    El binario se puede encontrar en nerdctl-full.
 ga_menu_options_packages=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
-    "tmux-fingers,sesh,protoc,grpcurl,xsv,jwt"
+    "tmux-thumbs,tmux-fingers,sesh,protoc,grpcurl,xsv,jwt"
     "step,evans,yazi,gum,butane,wezterm"
     "nerd-fonts"
     "neovim"
@@ -195,6 +196,7 @@ declare -A gA_repo_config_os_type=(
         ['ctags-win']=1
         ['ctags-nowin']=14
         ['tmux-fingers']=14
+        ['tmux-thumbs']=14
     )
 
 
@@ -211,6 +213,7 @@ declare -A gA_repo_config_proc_type=(
         ['clangd']=1
         ['neovim']=1
         ['tmux-fingers']=1
+        ['tmux-thumbs']=1
         ['wezterm']=1
     )
 
@@ -1902,6 +1905,23 @@ function _get_repo_current_pretty_version() {
             ;;
 
 
+        tmux-thumbs)
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            l_tmp=$(${l_path_file}tmux-fingers --version 2> /dev/null)
+            l_status=$?
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
+
         sesh)
 
             #Obtener la version
@@ -3465,6 +3485,33 @@ function get_repo_artifacts() {
             ;;
 
 
+        tmux-thumbs)
+            #No soportado para architecture ARM de 64 bits
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 1
+            fi
+
+            #No soportado para Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 1
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+            if [ $g_os_subtype_id -eq 1 ]; then
+                pna_artifact_names=("tmux-thumbs_${p_repo_last_pretty_version}_x86_64-unknown-linux-musl.tar.gz")
+            else
+                pna_artifact_names=("tmux-thumbs_${p_repo_last_pretty_version}_x86_64-unknown-linux-musl.tar.gz")
+            fi
+            pna_artifact_types=(10)
+            ;;
+
+
+
 
         sesh)
             #Generar los datos de artefactado requeridos para su configuración:
@@ -4069,6 +4116,29 @@ function _copy_artifact_files() {
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
             save_prettyversion_on_program "" "tmux-fingers.info" "$p_repo_last_pretty_version" 0
+            ;;
+            
+
+
+        tmux-thumbs)
+
+            #A. Si es WSL de Windows y se copia binarios de windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                return 40
+            fi
+
+
+            #B. Si es Linux (no WSL)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando
+            copy_binary_on_command "${l_source_path}" "tmux-thumbs" 0 1
+            copy_binary_on_command "${l_source_path}" "thumbs" 0 1
             ;;
             
 

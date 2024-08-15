@@ -376,5 +376,57 @@ show_urls() {
 
 }
 
+
+#function _get-opt-value() {
+#  tmux show -vg "@thumbs-${1}" 2> /dev/null
+#}
+#
+#function _get-opt-arg() {
+#
+#  local opt type value
+#  opt="${1}"; type="${2}"
+#  value="$(_get-opt-value "${opt}")" || true
+#
+#  if [ "${type}" = string ]; then
+#    [ -n "${value}" ] && echo "--${opt}=${value}"
+#  elif [ "${type}" = boolean ]; then
+#    [ "${value}" = 1 ] && echo "--${opt}"
+#  else
+#    return 1
+#  fi
+#
+#}
+#
+#
+#PARAMS=()
+#
+#function _add-param() {
+#
+#  local type opt arg
+#  opt="${1}"; type="${2}"
+#
+#  if arg="$(_get-opt-arg "${opt}" "${type}")"; then
+#    PARAMS+=("${arg}")
+#  fi
+#}
+#
+#
+#
+#start_tmux_thumbs() {
+#
+#
+#    _add-param command        string
+#    _add-param upcase-command string
+#    _add-param multi-command  string
+#    _add-param osc52          boolean
+#
+#    #echo "${PARAMS[@]}"
+#
+#    tmux-thumbs "${PARAMS[@]}" || true
+#
+#
+#}
+
+
 "$@"
 

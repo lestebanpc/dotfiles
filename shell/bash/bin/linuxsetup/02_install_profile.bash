@@ -1700,7 +1700,13 @@ function _setup_user_profile() {
     create_folderpath_on_home "" "$l_target_path"
     l_target_link="Microsoft.PowerShell_profile.ps1"
     l_source_path="${g_repo_name}/shell/powershell/login/linuxprofile"
-    if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+    if [ $g_os_subtype_id -eq 1 ]; then
+        if [ "$g_os_architecture_type" = "aarch64" ]; then
+            l_source_filename='alphine_aarch64.ps1'
+        else
+            l_source_filename='alphine_x64.ps1'
+        fi
+    elif [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
         if [ "$g_os_architecture_type" = "aarch64" ]; then
             l_source_filename='debian_aarch64.ps1'
         else
@@ -1722,7 +1728,13 @@ function _setup_user_profile() {
     l_target_link=".bashrc"
     l_source_path="${g_repo_name}/shell/bash/login/profile"
 
-    if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
+    if [ $g_os_subtype_id -eq 1 ]; then
+        if [ "$g_os_architecture_type" = "aarch64" ]; then
+            l_source_filename='alphine_aarch64.bash'
+        else
+            l_source_filename='alphine_x64.bash'
+        fi
+    elif [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
         if [ "$g_os_architecture_type" = "aarch64" ]; then
             l_source_filename='debian_aarch64.bash'
         else

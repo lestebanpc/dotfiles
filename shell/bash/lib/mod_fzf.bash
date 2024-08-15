@@ -54,10 +54,15 @@ ge_ls() {
     [ ! -z "$1" ] && _g_fzf_fd="${_g_fzf_fd} . '$1'"
 
     #echo "$_g_fzf_fd"
-
+    
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
     #3. Usar FZF
     FZF_DEFAULT_COMMAND="$_g_fzf_fd" \
-    fzf --tmux center,100%,80% --prompt 'All> ' \
+    fzf $l_fzf_size --prompt 'All> ' \
         --bind "ctrl-d:change-prompt(📁 Directories> )+reload(${_g_fzf_fd} -t d)" \
         --bind "ctrl-f:change-prompt(📄 Files> )+reload(${_g_fzf_fd} -t f)" \
         --header $'CTRL-d (Search directories), CTRL-f (Search files)\n'
@@ -70,8 +75,14 @@ ge_files() {
     local l_cmd_ls="fd -H -t f -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
     [ ! -z "$1" ] && l_cmd_ls="${l_cmd_ls} . '$1'"
 
+    
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
     FZF_DEFAULT_COMMAND="$l_cmd_ls" \
-    fzf --tmux center,100%,80% --preview "$_g_fzf_bat --style=numbers {}" \
+    fzf $l_fzf_size --preview "$_g_fzf_bat --style=numbers {}" \
         --prompt '📄 File> ' -m \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
         --bind "ctrl-a:execute:$_g_fzf_bat --paging always --style=numbers,header-filename,grid {}" \
@@ -81,8 +92,14 @@ ge_files() {
 
 # Listar los procesos del SO
 ge_ps() {
+    
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
     (echo "Date: $(date '+%F %T') (Use CTRL-r to reload screen)"; ps -ef) |
-    fzf --tmux center,100%,80% --bind=$'ctrl-r:reload(echo "Date: $(date \'+%F %T\') (Use CTRL-r to reload screen)"; ps -ef)' \
+    fzf $l_fzf_size --bind=$'ctrl-r:reload(echo "Date: $(date \'+%F %T\') (Use CTRL-r to reload screen)"; ps -ef)' \
         --prompt '🔧 Process> ' --header-lines=2 \
         --preview='echo {}' --preview-window=down,3,wrap \
         --layout=reverse --height=80% | awk '{print $2}'
@@ -95,9 +112,15 @@ _g_fzf_rg_initial_query=""
 ge_rg() {
     #Todo los Argumentos pasados se le quitaran el entrecomillado y se pasara como criterio de busqueda
     _g_fzf_rg_initial_query="${*:-}"
+    
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
 
     FZF_DEFAULT_COMMAND="$_g_fzf_rg $(printf %q "$_g_fzf_rg_initial_query")" \
-    fzf --tmux center,100%,80% --ansi \
+    fzf $l_fzf_size --ansi \
         --color "hl:-1:underline,hl+:-1:underline:reverse" \
         --header 'CTRL-r (ripgrep mode), CTRL-f (fzf mode), ENTER (Exit & view file)' \
         --disabled --query "$_g_fzf_rg_initial_query" \
@@ -160,11 +183,17 @@ t () {
            "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_path" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_path" "$g_color_reset"
 
-    local l_session_or_path=$(sesh list | fzf --tmux center,99%,60% --height=60% \
-		--no-sort --ansi --prompt '⚡ Session or Path> ' \
+    
+    local l_fzf_size='--height 60%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,99%,60%'
+    fi
+    
+    local l_session_or_path=$(sesh list | fzf $l_fzf_size \
+		--no-sort --ansi --prompt '⚡Session or Path> ' \
         --header "$l_title" \
 		--bind 'tab:down,btab:up' \
-		--bind 'ctrl-a:change-prompt(⚡ Session or Path> )+reload(sesh list)' \
+		--bind 'ctrl-a:change-prompt(⚡Session or Path> )+reload(sesh list)' \
 		--bind 'ctrl-t:change-prompt(🪟 Active sessions> )+reload(sesh list -t)' \
 		--bind 'ctrl-i:change-prompt(⚙️ Configured sessions> )+reload(sesh list -c)' \
 		--bind 'ctrl-x:change-prompt(📁 Zoxide folder> )+reload(sesh list -z)' \
@@ -203,12 +232,18 @@ t () {
 
 # Redefine this function to change the options
 _fzf_git_fzf() {
-    fzf --tmux center,100%,80% \
+    
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
+    fzf $l_fzf_size \
         --layout=reverse --multi --min-height=20 --border \
         --color='header:italic:underline' \
         --preview-window='right,50%,border-left' \
         --bind='ctrl-/:change-preview-window(down,50%,border-top|hidden|)' "$@"
-        #--height=50%
+
 }
 
 _fzf_git_check() {
@@ -511,10 +546,16 @@ kc_resources() {
 
     #echo "$_g_fzf_oc_pod_path"
     #echo "$l_awk_template"
+    
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
 
     #3. Generar el reporte deseado con la data ingresada
     FZF_DEFAULT_COMMAND="$l_cmd" \
-    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=1 -m \
+    fzf $l_fzf_size --info=inline --layout=reverse --header-lines=1 -m \
         --prompt "${l_resource_name}> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-r (reload), CTRL-a (View yaml)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(oc get ${_g_fzf_kc_options} -o yaml) > /dev/tty" \
@@ -580,9 +621,15 @@ oc_projects() {
         return 3
     fi
     
+    
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
+    fzf $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
         --prompt "Project> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-d (Set Default), CTRL-e (View Events)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/fun_k8s.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}') > /dev/tty" \
@@ -656,9 +703,15 @@ kc_ns() {
         return 3
     fi
     
+    
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
+    fzf $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
         --prompt "Project> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTR-d (Set Default), CTRL-e (View Events)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/fun_k8s.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}') > /dev/tty" \
@@ -742,9 +795,15 @@ kc_po() {
         return 3
     fi
     
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
+    
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
+    fzf $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Not-succeeded Pod> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-e (Exit & Terminal), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs), ALT-a (View all Pods), ATL-b (View Not-succeeded pods)\n' \
         --bind "alt-a:change-prompt(Pod> )+reload:bash \"${_g_script_path}/fun_k8s.bash\" show_pods_table \"${_g_fzf_kc_data_file}\" 1" \
@@ -832,9 +891,15 @@ kc_containers() {
         return 3
     fi
     
+    
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
+    fzf $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Not-succeeded Pod's Container> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-e (Exit & Terminal), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs), ALT-a (View all Pods), ATL-b (View Not-succeeded pods)\n' \
         --bind "alt-a:change-prompt(Pod's Container> )+reload:bash \"${_g_script_path}/fun_k8s.bash\" show_containers_table \"${_g_fzf_kc_data_file}\" 1" \
@@ -926,9 +991,15 @@ kc_deploy() {
         return 3
     fi
     
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
+    
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
+    fzf $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Deployment> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (View Preview), CTRL-d (View Revisions), CTRL-w (Watch pods)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/fun_k8s.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
@@ -1016,9 +1087,15 @@ kc_rs() {
         return 3
     fi
     
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+    
+    
     #5. Mostrar el reporte
     echo "$l_data" |
-    fzf --tmux center,100%,80% --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
+    fzf --tmux $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Active ReplicaSet> " \
         --header "$(_fzf_kc_get_context_info)"$'\nALT-a (View all rs), ATL-b (View rs with pods), CTRL-a (View yaml), CTRL-b (View Preview), CTRL-d (View Revisions), CTRL-w (Watch pods)\n' \
         --bind "alt-a:change-prompt(All Replicaset> )+reload:bash \"${_g_script_path}/fun_k8s.bash\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 1" \

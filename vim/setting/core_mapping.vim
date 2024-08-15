@@ -40,9 +40,12 @@ if g:set_clipboard_type == 1
 
     runtime setting/utils/osc52.vim
 
-    "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
+    "Copiar el registro al clipboard (tener en cuenta que el evento 'TextYankPost' solo se invoca de manera interativa)
+    nnoremap <Leader>c" :<C-u>call SendViaOSC52(getreg('@"'))<CR>
+    nnoremap <Leader>c0 :<C-u>call SendViaOSC52(getreg('@0'))<CR>
     nnoremap <Leader>c1 :<C-u>call SendViaOSC52(getreg('@1'))<CR>
-    "nnoremap <Leader>c1 :<C-u>call OSCYankRegister('@1')<CR>
+    nnoremap <Leader>c2 :<C-u>call SendViaOSC52(getreg('@2'))<CR>
+    nnoremap <Leader>c3 :<C-u>call SendViaOSC52(getreg('@3'))<CR>
     
     "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
     "vnoremap <Leader>cl :w !g:clipboard_command<CR><CR>
@@ -112,8 +115,12 @@ elseif g:set_clipboard_type != 9
 
     if g:clipboard_command != ''
 
-        "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
+        "Copiar el registro al clipboard (tener en cuenta que el evento 'TextYankPost' solo se invoca de manera interativa)
+        nnoremap <Leader>c" :<C-u>call system(g:clipboard_command, @")<CR>
+        nnoremap <Leader>c0 :<C-u>call system(g:clipboard_command, @0)<CR>
         nnoremap <Leader>c1 :<C-u>call system(g:clipboard_command, @1)<CR>
+        nnoremap <Leader>c2 :<C-u>call system(g:clipboard_command, @2)<CR>
+        nnoremap <Leader>c3 :<C-u>call system(g:clipboard_command, @3)<CR>
     
         "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
         "vnoremap <Leader>cl :w !g:clipboard_command<CR><CR>
