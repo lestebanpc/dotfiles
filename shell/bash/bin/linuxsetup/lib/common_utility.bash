@@ -1343,7 +1343,7 @@ function get_program_path() {
 
 
     #6. Realizar el intento del folder '~/tools' (ID=0)
-    if [ $l_atttemp_id -eq 1 ]; then
+    if [ $l_atttemp_id -eq 0 ]; then
 
         #Parametro de salida> Valor de retorno:
         #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
