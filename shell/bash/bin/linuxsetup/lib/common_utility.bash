@@ -1462,7 +1462,7 @@ function get_command_path() {
                             # 2 - Se uso la carpeta personalizado
                             # 1 - Se uso la carpeta por defecto del sistema para todos lo usuaris
                             # 0 - Se uso la carpeta por defecto '~/.local'
-    local la_additional_attemps=('system' "${g_targethome_path}/.local")
+    local la_additional_attemps=("${g_targethome_path}/.local" '/usr/local/bin')
 
     #3. Realizar el 1er intento
     local l_status=0
