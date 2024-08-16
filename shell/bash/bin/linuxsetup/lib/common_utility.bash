@@ -81,6 +81,51 @@ declare -a ga_menu_options_packages=(
 # funciones, cuyo nombre inicia con '_g_'.
 #
 
+#Devuelve una cadena formado por el nombre de usuario owner y el nombre del grupo de acceso de un folder, separado un espacio.
+function get_owner_of_folder() {
+
+    local p_folder_path="$1"
+
+    local l_owner=''
+    local l_group=''
+
+    local l_aux=''
+    if l_aux=$(stat -c '%U' "$p_folder_path" 2> /dev/null); then
+        l_owner="$l_aux"
+    fi
+
+    if l_aux=$(stat -c '%G' "$p_folder_path" 2> /dev/null); then
+        l_group="$l_aux"
+    fi
+
+    if [ ! -z "$l_owner" ] && [ ! -z "$l_group" ]; then
+        echo "${l_owner} ${l_group}"
+        return 0
+    fi
+
+    local l_owner=()
+    if l_aux=$(ls -ld "${p_folder_path}" | awk '{print $3" "$4}' 2> /dev/null); then
+
+        if [ -z "$l_aux" ]; then
+            return 1
+        fi
+
+        la_owners=(${l_aux})
+        if [ ${#la_owners[@]} -lt 2 ]; then
+            return 1
+        fi
+
+        l_owner="${la_owners[0]}"
+        l_group="${la_owners[1]}"
+
+        echo "${l_owner} ${l_group}"
+        return 0
+    fi
+
+    return 1
+
+}
+
 #Obtener la informacion del target home (home del usuario OBJETIVO, donde se encuentan el repositorio con los archivos de configuración usados para configurar
 #su profile, comandos y/o programas). Adicionalmente, validar si el usuario runner (responsable de configurar el home del setup) pueda ser uno de las 
 #siguientes opciones:
@@ -144,7 +189,8 @@ function get_targethome_info() {
     fi
 
     #Obteniendo el owner del home del usuario OBJETIVO (donde se configura el profile)
-    l_aux=$(ls -ld "${g_targethome_path}" | awk '{print $3" "$4}')
+    local l_aux
+    l_aux=$(get_owner_of_folder "$g_targethome_path")
     l_status=$?
 
     if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
@@ -153,11 +199,6 @@ function get_targethome_info() {
     fi
 
     local la_owners=(${l_aux})
-    if [ ${#la_owners[@]} -lt 2 ]; then
-       printf 'No se pueden obtener, de manera correcta, el owner del target home "%b%s%b".\n' "$g_color_gray1" "$l_script_path" "$g_color_reset"
-       return 1
-    fi
-
     g_targethome_owner="${la_owners[0]}"
     g_targethome_group="${la_owners[1]}"
 
@@ -275,7 +316,7 @@ function _try_fix_program_basepath() {
     if [ -d "$p_programs_path" ]; then
 
         #A. Obtener el owner del folder ingresado
-        l_aux=$(ls -ld "${p_programs_path}" | awk '{print $3" "$4}')
+        l_aux=$(get_owner_of_folder "$p_programs_path")
         if [ -z "$l_aux" ]; then
             printf 'No se pueden obtener el owner del folder "%b%s%b".\n' "$g_color_gray1" "$l_script_path" "$g_color_reset"
             return 99
@@ -730,7 +771,7 @@ function _try_fix_command_basepath() {
     if [ -d "$p_cmd_base_path" ]; then
 
         #A. Obtener el owner del folder ingresado
-        l_aux=$(ls -ld "${p_cmd_base_path}" | awk '{print $3" "$4}')
+        l_aux=$(get_owner_of_folder "$p_cmd_base_path")
         if [ -z "$l_aux" ]; then
             printf 'No se pueden obtener el owner del folder "%b%s%b".\n' "$g_color_gray1" "$l_script_path" "$g_color_reset"
             return 99
