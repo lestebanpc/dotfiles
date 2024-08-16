@@ -218,6 +218,8 @@ function get_linux_type_info() {
 #Permite obtener informacion del usuario y establece las variables globales 'g_runner_is_root' y 'g_runner_sudo_support'. Devuelve:
 # > Retorna 0 si se encontro informacion de la distribucion Linux, caso contrario retorna 1.
 # > Parametro de salida> Variales globales:
+#    > 'g_runner_id'                     : ID del usuario actual (UID).
+#    > 'g_runner_user'                   : Nombre del usuario actual.
 #    > 'g_runner_is_root'                : 0 si es root. Caso contrario no es root.
 #    > 'g_runner_sudo_support'           : Si el so y el usuario soportan el comando 'sudo'
 # > Parametro de salida> Valor de retorno:
@@ -228,10 +230,36 @@ function get_linux_type_info() {
 #       > 4 : El usuario es root (no requiere sudo)
 function get_runner_options() {
 
-    #Si es root, salir
+    g_runner_id=-1
+    g_runner_user=''
     g_runner_is_root=1
     g_runner_sudo_support=2
-    if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
+
+    #Obtener el UID del usuario actual
+    local l_aux
+    if [ ! -z "$UID" ]; then
+        g_runner_id=$UID
+    elif [ ! -z "$EUID" ]; then
+        g_runner_id=$EUID
+    elif l_aux=$(id -u 2> /dev/null); then
+        g_runner_id=$l_aux
+    else
+        return 1
+    fi
+
+    #Obtener el nombre del usuario actual
+    if l_aux=$(id -un 2> /dev/null); then
+        g_runner_user="$l_aux"
+    elif [ ! -z "$USER" ]; then
+        g_runner_user="$USER"
+    elif l_aux=$(whoami 2> /dev/null); then
+        g_runner_user="$l_aux"
+    else
+        return 1
+    fi
+
+    #Si es root, salir
+    if [ $g_runner_id -eq 0 ]; then
         g_runner_is_root=0
         g_runner_sudo_support=4
         return 0
@@ -239,7 +267,6 @@ function get_runner_options() {
 
     #Soporta de sudo
     local l_status
-    local l_aux
     if ! sudo --version 1> /dev/null 2>&1; then
         g_runner_sudo_support=2
     else

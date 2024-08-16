@@ -45,11 +45,6 @@
 #  > 'g_shell_path' usualmente es '$HOME/.file/shell'.
 g_shell_path=''
 
-#Usuario que ejecuta el script y realiza la configuracion deseada para owner del home (donde se encuentan el repositorio con los archivos de configuración
-#usados para configurar el profile, comandos y/o programas). Este usuario solo puede ser:
-# - El onwer del home del setup.
-# - Si no es onwer del home del setup, solo puede ser el usuario root (root realizará la configuracion para el owner del home del setup, nunca para root).
-g_runner_user=''
 
 #Permite obtener  'g_shell_path' es cual es la ruta donde estan solo script, incluyendo los script instalacion.
 #Parametros de entrada: Ninguno
@@ -78,15 +73,6 @@ function _get_current_script_info() {
         return 1
     fi
 
-
-    #Obtener el usuario actual
-    g_runner_user=$(id -un 2> /dev/null)
-    #g_runner_user=$(whoami 2> /dev/null)
-    #g_runner_user="$USER"
-    if [ -z "$g_runner_user" ]; then
-       printf 'No se pueden obtener el usuario actual "%s" de ejecución del script.\n' "$l_current_user"
-       return 1
-    fi
 
     return 0
 
@@ -144,6 +130,8 @@ fi
 if [ -z "$g_runner_is_root" ]; then
 
     #Determinar si es root y el soporte de sudo
+    # > 'g_runner_id'                     : ID del usuario actual (UID).
+    # > 'g_runner_user'                   : Nombre del usuario actual.
     # > 'g_runner_is_root'                : 0 si es root. Caso contrario no es root.
     # > 'g_runner_sudo_support'           : Si el so y el usuario soportan el comando 'sudo'
     #    > 0 : se soporta el comando sudo con password
@@ -152,7 +140,17 @@ if [ -z "$g_runner_is_root" ]; then
     #    > 3 : El usuario no tiene permisos para ejecutar sudo
     #    > 4 : El usuario es root (no requiere sudo)
     get_runner_options
+    _g_status=$?
+    if [ $_g_status -ne 0 ]; then
+        printf 'No se pueden obtener la información del usuario actual de ejecución del script: Name="%s", UID="%s".\n' "$g_runner_user" "$g_runner_id"
+        exit 111
+    fi
 
+fi
+
+if [ $g_runner_id -lt 0 ] || [ -z "$g_runner_user" ]; then
+    printf 'No se pueden obtener la información del usuario actual de ejecución del script: Name="%s", UID="%s".\n' "$g_runner_user" "$g_runner_id"
+    exit 111
 fi
 
 

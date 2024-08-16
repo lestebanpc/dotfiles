@@ -17,6 +17,8 @@
 #   # > 'g_os_subtype_version_pretty' : Version corta de la distribucion Linux
 #   # > 'g_os_architecture_type'      : Tipo de la arquitectura del procesador
 #   get_linux_type_info
+#   # > 'g_runner_id'                     : ID del usuario actual (UID).
+#   # > 'g_runner_user'                   : Nombre del usuario actual.
 #   # > 'g_runner_is_root'            : 0 si es root. Caso contrario no es root.
 #   # > 'g_runner_sudo_support'       : Si el so y el usuario soportan el comando 'sudo'
 #   get_runner_options
@@ -2064,7 +2066,7 @@ function fulfill_preconditions() {
     #8. Lo que se instalar requiere permisos de root.
     if [ $p_require_root -eq 0 ]; then
         if [ $g_runner_is_root -eq 0 ] || [ $g_runner_sudo_support -eq 2 ] || [ $g_runner_sudo_support -eq 3 ]; then
-            printf 'ERROR: el usuario no tiene permisos para ejecutar sudo (o el SO no tiene implementa sudo y el usuario no es root).'
+            printf 'ERROR: el usuario no tiene permisos para ejecutar sudo (o el SO no tiene implementa sudo y el usuario no es root).\n'
             return 1
         fi
     fi
