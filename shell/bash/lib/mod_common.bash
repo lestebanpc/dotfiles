@@ -235,12 +235,12 @@ function get_runner_options() {
 
     #Obtener el UID del usuario actual
     local l_aux
-    if [ ! -z "$UID" ]; then
+    if l_aux=$(id -u 2> /dev/null); then
+        g_runner_id=$l_aux
+    elif [ ! -z "$UID" ]; then
         g_runner_id=$UID
     elif [ ! -z "$EUID" ]; then
         g_runner_id=$EUID
-    elif l_aux=$(id -u 2> /dev/null); then
-        g_runner_id=$l_aux
     else
         return 1
     fi

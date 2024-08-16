@@ -2134,7 +2134,7 @@ function fulfill_preconditions() {
             fi
         fi
 
-        printf 'Runner                : "%s" %s\n' "$g_runner_user" "$l_aux"
+        printf 'Runner                : "%s" (UID= "%s") %s\n' "$g_runner_user" "$g_runner_id" "$l_aux"
         printf 'Target user           : "%s" (Home= "%s") (Repository= "%s") (Group= "%s")\n' "$g_targethome_owner" "$g_targethome_path" "$g_repo_name" \
                "$g_targethome_group"
 
