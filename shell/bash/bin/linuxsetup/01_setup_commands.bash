@@ -125,12 +125,11 @@ if [ -z "$g_os_type" ]; then
 fi
 
 #Obtener informacion basica del usuario
-if [ -z "$g_runner_is_root" ]; then
+if [ -z "$g_runner_id" ]; then
 
     #Determinar si es root y el soporte de sudo
     # > 'g_runner_id'                     : ID del usuario actual (UID).
     # > 'g_runner_user'                   : Nombre del usuario actual.
-    # > 'g_runner_is_root'                : 0 si es root. Caso contrario no es root.
     # > 'g_runner_sudo_support'           : Si el so y el usuario soportan el comando 'sudo'
     #    > 0 : se soporta el comando sudo con password
     #    > 1 : se soporta el comando sudo sin password
@@ -524,7 +523,7 @@ function _install_artifacts() {
 
             #Instalar y/o actualizar el paquete si ya existe
             printf 'Instalando/Actualizando el paquete/artefacto "%b[%s]" ("%s") en el SO ...\n' "${l_tag}" "${l_i}" "${l_artifact_filename}"
-            if [ $g_runner_is_root -eq 0 ]; then
+            if [ $g_runner_id -eq 0 ]; then
                 dpkg -i "${g_temp_path}/${p_repo_id}/${l_i}/${l_artifact_filename}"
             else
                 sudo dpkg -i "${g_temp_path}/${p_repo_id}/${l_i}/${l_artifact_filename}"

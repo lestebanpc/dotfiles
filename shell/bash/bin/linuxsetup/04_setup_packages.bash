@@ -126,12 +126,11 @@ if [ -z "$g_os_type" ]; then
 fi
 
 #Obtener informacion basica del usuario
-if [ -z "$g_runner_is_root" ]; then
+if [ -z "$g_runner_id" ]; then
 
     #Determinar si es root y el soporte de sudo
     # > 'g_runner_id'                     : ID del usuario actual (UID).
     # > 'g_runner_user'                   : Nombre del usuario actual.
-    # > 'g_runner_is_root'                : 0 si es root. Caso contrario no es root.
     # > 'g_runner_sudo_support'           : Si el so y el usuario soportan el comando 'sudo'
     #    > 0 : se soporta el comando sudo con password
     #    > 1 : se soporta el comando sudo sin password

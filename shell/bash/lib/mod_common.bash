@@ -215,12 +215,11 @@ function get_linux_type_info() {
 
 }
 
-#Permite obtener informacion del usuario y establece las variables globales 'g_runner_is_root' y 'g_runner_sudo_support'. Devuelve:
+#Permite obtener informacion del usuario y establece las variables globales 'g_runner_id' y 'g_runner_sudo_support'. Devuelve:
 # > Retorna 0 si se encontro informacion de la distribucion Linux, caso contrario retorna 1.
 # > Parametro de salida> Variales globales:
 #    > 'g_runner_id'                     : ID del usuario actual (UID).
 #    > 'g_runner_user'                   : Nombre del usuario actual.
-#    > 'g_runner_is_root'                : 0 si es root. Caso contrario no es root.
 #    > 'g_runner_sudo_support'           : Si el so y el usuario soportan el comando 'sudo'
 # > Parametro de salida> Valor de retorno:
 #       > 0 : se soporta el comando sudo con password
@@ -232,7 +231,6 @@ function get_runner_options() {
 
     g_runner_id=-1
     g_runner_user=''
-    g_runner_is_root=1
     g_runner_sudo_support=2
 
     #Obtener el UID del usuario actual
@@ -260,7 +258,6 @@ function get_runner_options() {
 
     #Si es root, salir
     if [ $g_runner_id -eq 0 ]; then
-        g_runner_is_root=0
         g_runner_sudo_support=4
         return 0
     fi
@@ -750,7 +747,7 @@ upgrade_os_packages() {
     fi
 
     #Si no se calculo, Calcularlo 
-    if [ -z "$g_runner_is_root" ]; then
+    if [ -z "$g_runner_id" ]; then
         get_runner_options
     fi
 
@@ -758,7 +755,7 @@ upgrade_os_packages() {
     if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
 
         #Distribución: Ubuntu
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
             apt-get $p_non_interative update
             apt-get $p_non_interative upgrade
         else
@@ -771,7 +768,7 @@ upgrade_os_packages() {
     elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
 
         #Distribución: Fedora
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
             dnf $p_non_interative upgrade
         else
             sudo dnf $p_non_interative upgrade
@@ -781,7 +778,7 @@ upgrade_os_packages() {
     #Si es Alpine
     elif [ $p_os_subtype_id -eq 1 ]; then
 
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
             apk $p_non_interative update
             apk $p_non_interative upgrade
         else
@@ -839,7 +836,7 @@ install_os_package() {
     local l_status=0
 
     #Si no se calculo, Calcularlo 
-    if [ -z "$g_runner_is_root" ]; then
+    if [ -z "$g_runner_id" ]; then
         get_runner_options
     fi
 
@@ -847,7 +844,7 @@ install_os_package() {
     if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
 
         #Distribución: Ubuntu
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
            apt-get $p_non_interative install $p_package_name
         else
            sudo apt-get $p_non_interative install $p_package_name
@@ -858,7 +855,7 @@ install_os_package() {
     elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
 
         #Distribución: Fedora
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
            dnf $p_non_interative install $p_package_name
         else
            sudo dnf $p_non_interative install $p_package_name
@@ -868,7 +865,7 @@ install_os_package() {
     #Si es Alpine
     elif [ $p_os_subtype_id -eq 1 ]; then
 
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
            apk $p_non_interative add $p_package_name
         else
            sudo apk $p_non_interative add $p_package_name
@@ -924,7 +921,7 @@ uninstall_os_package() {
     fi
 
     #Si no se calculo, Calcularlo 
-    if [ -z "$g_runner_is_root" ]; then
+    if [ -z "$g_runner_id" ]; then
         get_runner_options
     fi
 
@@ -932,7 +929,7 @@ uninstall_os_package() {
     if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
 
         #Distribución: Ubuntu
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
            apt-get $p_non_interative purge $p_package_name
            #apt-get autoremove
         else
@@ -945,7 +942,7 @@ uninstall_os_package() {
     elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
 
         #Distribución: Fedora
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
            dnf $p_non_interative erase $p_package_name
         else
            sudo dnf $p_non_interative erase $p_package_name
@@ -955,7 +952,7 @@ uninstall_os_package() {
     #Si es Alpine
     elif [ $p_os_subtype_id -eq 1 ]; then
 
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
            apk $p_non_interative del $p_package_name
         else
            sudo apk $p_non_interative del $p_package_name
@@ -1007,7 +1004,7 @@ clean_os_cache() {
     local l_status=0
 
     #Si no se calculo, Calcularlo 
-    if [ -z "$g_runner_is_root" ]; then
+    if [ -z "$g_runner_id" ]; then
         get_runner_options
     fi
 
@@ -1015,7 +1012,7 @@ clean_os_cache() {
     if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
 
         #Distribución: Ubuntu
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
            apt-get $p_non_interative clean
         else
            sudo apt-get $p_non_interative clean
@@ -1026,7 +1023,7 @@ clean_os_cache() {
     elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
 
         #Distribución: Fedora
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
            dnf $p_non_interative clean all
         else
            sudo dnf $p_non_interative clean all
@@ -1036,7 +1033,7 @@ clean_os_cache() {
     #Si es Alpine
     elif [ $p_os_subtype_id -eq 1 ]; then
 
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
            apk $p_non_interative cache clean
            rm -rf /var/cache/apk/*
         else

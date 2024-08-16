@@ -17,9 +17,8 @@
 #   # > 'g_os_subtype_version_pretty' : Version corta de la distribucion Linux
 #   # > 'g_os_architecture_type'      : Tipo de la arquitectura del procesador
 #   get_linux_type_info
-#   # > 'g_runner_id'                     : ID del usuario actual (UID).
-#   # > 'g_runner_user'                   : Nombre del usuario actual.
-#   # > 'g_runner_is_root'            : 0 si es root. Caso contrario no es root.
+#   # > 'g_runner_id'                 : ID del usuario actual (UID).
+#   # > 'g_runner_user'               : Nombre del usuario actual.
 #   # > 'g_runner_sudo_support'       : Si el so y el usuario soportan el comando 'sudo'
 #   get_runner_options
 #   # > 'g_repo_name'                 : Nombre o ruta relativa del repositorio a GIT.
@@ -210,9 +209,9 @@ function get_targethome_info() {
 
 
     #Si el runner no es el usuario objetivo o no es root
-    if [ $g_runner_is_root -ne 0 ]; then
-        printf 'El usuario runner "%b%s%b" no puede usar el target home "%b%s%b". Este target home solo lo puede usar el usuario "%b%s%b" o el usuario "%broot%b". Cambie el target home o ejecute con otro usuario.\n' \
-               "$g_color_gray1" "$g_runner_user" "$g_color_reset" "$g_color_gray1" "$g_targethome_path" "$g_color_reset" \
+    if [ $g_runner_id -ne 0 ]; then
+        printf 'El usuario runner "%b%s%b" (ID="%b%s%b") no puede usar el target home "%b%s%b". Este target home solo lo puede usar el usuario "%b%s%b" o el usuario "%broot%b". Cambie el target home o ejecute con otro usuario.\n' \
+               "$g_color_gray1" "$g_runner_user" "$g_color_reset" "$g_color_gray1" "$g_runner_id" "$g_color_reset" "$g_color_gray1" "$g_targethome_path" "$g_color_reset" \
                "$g_color_gray1" "$g_targethome_owner" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
         return 1
     fi
@@ -366,9 +365,9 @@ function _try_fix_program_basepath() {
             #Se rechazar el folder ingresado, si el usuario runner no tiene permisos para ejecutar como root
             # - El sistema operativo no soporte sudo y el usuario ejecutor no es root.
             # - El sistema operativo soporta sudo y el usario ejecutor no es root y no tiene permiso para sudo.
-            if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_is_root -ne 0 -a  $g_runner_sudo_support -eq 2 ]; then
-            #if [ $g_runner_sudo_support -eq 3 ] || [[ $g_runner_is_root -ne 0  &&  $g_runner_sudo_support -eq 2 ]]; then
-            #if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_is_root -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+            if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_id -ne 0 -a  $g_runner_sudo_support -eq 2 ]; then
+            #if [ $g_runner_sudo_support -eq 3 ] || [[ $g_runner_id -ne 0  &&  $g_runner_sudo_support -eq 2 ]]; then
+            #if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
             
                 return 4
 
@@ -509,14 +508,14 @@ function _try_fix_program_basepath() {
     #Se rechaza el folder ingresado, si el usuario runner no tiene permisos para ejecutar como root
     # - El sistema operativo no soporte sudo y el usuario ejecutor no es root.
     # - El sistema operativo soporta sudo y el usario ejecutor no es root y no tiene permiso para sudo.
-    if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_is_root -ne 0 -a $g_runner_sudo_support -eq 2 ]; then
-    #if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_is_root -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+    if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_id -ne 0 -a $g_runner_sudo_support -eq 2 ]; then
+    #if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
         return 6
     fi
 
     #Crear el folder
     # - Si runner es root (puede estar o no estar en modo suplantacion de usuario objetivo)
-    if [ $g_runner_is_root -eq 0 ]; then
+    if [ $g_runner_id -eq 0 ]; then
 
         if ! mkdir -pm 755 "$p_programs_path"; then
             return 7
@@ -670,7 +669,7 @@ function _try_fix_command_basepath() {
         fi
 
         #B. Si el runner es root 
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
 
             #Crear los subfolderes si no existen
             l_flag=1
@@ -695,8 +694,8 @@ function _try_fix_command_basepath() {
         #C. Si el runner es el usuario es el usuario objetivo
 
         #Si no tiene permisos de root (ser root o poder ejecutar SUDO), rechazar la carpeta
-        if  [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_is_root -ne 0 -a $g_runner_sudo_support -eq 2 ]; then
-        #if  [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_is_root -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+        if  [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_id -ne 0 -a $g_runner_sudo_support -eq 2 ]; then
+        #if  [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
             
             #Se rechazar los casos:
             # - El sistema operativo no soporte sudo y el usuario ejecutor no es root.
@@ -709,7 +708,7 @@ function _try_fix_command_basepath() {
         l_flag=1
 
         # - Si es root
-        if [ $g_runner_is_root -eq 0 ]; then
+        if [ $g_runner_id -eq 0 ]; then
 
             if [ ! -d "/usr/local/man" ]; then
                 mkdir -pm 755 /usr/local/man
@@ -841,8 +840,8 @@ function _try_fix_command_basepath() {
             #Se rechazar la carpeta, si el usuario runner no tiene permisos para ejecutar como root
             # - El sistema operativo no soporte sudo y el usuario ejecutor no es root.
             # - El sistema operativo soporta sudo y el usario ejecutor no es root y no tiene permiso para sudo.
-            if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_is_root -ne 0 -a $g_runner_sudo_support -eq 2 ]; then
-            #if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_is_root -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+            if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_id -ne 0 -a $g_runner_sudo_support -eq 2 ]; then
+            #if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
             
                 return 4
 
@@ -1015,14 +1014,14 @@ function _try_fix_command_basepath() {
     #Se rechaza el folder ingresado, si el usuario runner no tiene permisos para ejecutar como root
     # - El sistema operativo no soporte sudo y el usuario ejecutor no es root.
     # - El sistema operativo soporta sudo y el usario ejecutor no es root y no tiene permiso para sudo.
-    if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_is_root -ne 0 -a $g_runner_sudo_support -eq 2 ]; then
-    #if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_is_root -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+    if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_id -ne 0 -a $g_runner_sudo_support -eq 2 ]; then
+    #if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
         return 6
     fi
 
     #Crear el folder
     # - Si runner es root (puede estar o no estar en modo suplantacion de usuario objetivo)
-    if [ $g_runner_is_root -eq 0 ]; then
+    if [ $g_runner_id -eq 0 ]; then
 
         if ! mkdir -pm 755 "$p_cmd_base_path"; then
             return 7
@@ -2106,7 +2105,7 @@ function fulfill_preconditions() {
 
     #8. Lo que se instalar requiere permisos de root.
     if [ $p_require_root -eq 0 ]; then
-        if [ $g_runner_is_root -eq 0 ] || [ $g_runner_sudo_support -eq 2 ] || [ $g_runner_sudo_support -eq 3 ]; then
+        if [ $g_runner_id -eq 0 ] || [ $g_runner_sudo_support -eq 2 ] || [ $g_runner_sudo_support -eq 3 ]; then
             printf 'ERROR: el usuario no tiene permisos para ejecutar sudo (o el SO no tiene implementa sudo y el usuario no es root).\n'
             return 1
         fi
@@ -2120,7 +2119,7 @@ function fulfill_preconditions() {
         printf 'Processor Type        : "%s"\n' "$g_os_architecture_type"
 
         local l_aux=''
-        if [ $g_runner_is_root -ne 0 ]; then
+        if [ $g_runner_id -ne 0 ]; then
             if [ $g_runner_sudo_support -eq 0 ]; then
                 l_aux="(Sudo with password)"
             elif [ $g_runner_sudo_support -eq 1 ]; then
@@ -2481,7 +2480,7 @@ function request_stop_systemd_unit() {
 
 
     printf 'Deteniendo la unidad "%s" a nivel sistema ...\n' "$p_unit_name"
-    if [ $g_runner_is_root -eq 0 ]; then
+    if [ $g_runner_id -eq 0 ]; then
         systemctl stop "$p_unit_name"
     else
         sudo systemctl stop "$p_unit_name"

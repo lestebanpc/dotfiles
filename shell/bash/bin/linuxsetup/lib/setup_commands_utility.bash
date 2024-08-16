@@ -2096,7 +2096,7 @@ function register_dynamiclibrary_to_system()
     #Se rechazar el folder ingresado, si el usuario runner no tiene permisos para ejecutar como root
     # - El sistema operativo no soporte sudo y el usuario ejecutor no es root.
     # - El sistema operativo soporta sudo y el usario ejecutor no es root y no tiene permiso para sudo.
-    if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_is_root -ne 0 -a  $g_runner_sudo_support -eq 2 ]; then
+    if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_id -ne 0 -a  $g_runner_sudo_support -eq 2 ]; then
         printf '%bNo se tiene permisos para registrar sus liberias dinamicas "%b%s%b" a nivel sistema.%b\n' "$g_color_red1" "$g_color_gray1" \
                "$p_library_path" "$g_color_red1" "$g_color_reset" 
         return 2
@@ -2110,7 +2110,7 @@ function register_dynamiclibrary_to_system()
     fi
 
     #Registrar la ruta de librerias en forma permanente
-    if [ $g_runner_is_root -eq 0 ]; then 
+    if [ $g_runner_id -eq 0 ]; then 
 
         printf 'Registrar sus librerias dinamicas en forma permanente: "%becho "%s" > /etc/ld.so.conf.d/%s.conf%b" ...\n' \
                "$g_color_gray1" "${p_library_path}" "$p_config_filename" "$g_color_reset"
@@ -2125,7 +2125,7 @@ function register_dynamiclibrary_to_system()
     fi
 
     #Actualizar el cache de librerias
-    if [ $g_runner_is_root -eq 0 ]; then 
+    if [ $g_runner_id -eq 0 ]; then 
         printf 'Actualizar el cache de las librerias: "%bldconfig%b" ...\n' "$g_color_gray1" "$g_color_reset"
         ldconfig
     else
@@ -2245,7 +2245,7 @@ function request_stop_k0s_node() {
 
     #4. Detener el nodo k0s
     printf 'Deteniendo el nodo k0s %s ...\n' "$l_nodo_type"
-    if [ $g_runner_is_root -eq 0 ]; then
+    if [ $g_runner_id -eq 0 ]; then
         k0s stop
     else
         sudo k0s stop

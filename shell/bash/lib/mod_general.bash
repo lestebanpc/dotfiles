@@ -36,9 +36,22 @@ start_nerdctl() {
         l_tag_mode="root"
     fi
 
-    local l_runner_is_root=1
-    if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
-        l_runner_is_root=0
+    #Obtener el UID del usuario actual
+    local l_runner_id=-1
+    local l_aux
+
+    if [ ! -z "$UID" ]; then
+        l_runner_id=$UID
+    elif [ ! -z "$EUID" ]; then
+        l_runner_id=$EUID
+    elif l_aux=$(id -u 2> /dev/null); then
+        l_runner_id=$l_aux
+    else
+        return 1
+    fi
+
+    #Si es root
+    if [ $l_runner_id -eq 0 ]; then
         p_root_mode=0
         l_tag_mode="root"
     fi
@@ -129,7 +142,7 @@ start_nerdctl() {
         if systemctl is-active containerd.service 2>&1 > /dev/null; then
             printf 'La unidad systemd %b%s%b ya esta iniciado.\n' "$g_color_gray1" "containerd.service" "$g_color_reset"
         else
-            if [ $l_runner_is_root -eq 0 ]; then
+            if [ $l_runner_id -eq 0 ]; then
                 printf 'La unidad systemd %b%s%b se esta iniciando: "%b%s%b".\n' "$g_color_cian1" "containerd.service" "$g_color_reset" \
                        "$g_color_gray1" "systemctl start containerd.service" "$g_color_reset"
                 systemctl start containerd.service
@@ -160,7 +173,7 @@ start_nerdctl() {
                 printf 'La unidad systemd %b%s%b ya esta iniciado.\n' "$g_color_gray1" "buildkit.service" "$g_color_reset"
             else
                 sleep 1
-                if [ $l_runner_is_root -eq 0 ]; then
+                if [ $l_runner_id -eq 0 ]; then
                     printf 'La unidad systemd %b%s%b se esta iniciando: "%b%s%b".\n' "$g_color_cian1" "buildkit.service" "$g_color_reset" \
                            "$g_color_gray1" "systemctl start buildkit.service" "$g_color_reset"
                     systemctl start buildkit.service
@@ -188,9 +201,22 @@ stop_nerdctl() {
         l_tag_mode="root"
     fi
 
-    local l_runner_is_root=1
-    if [ "$UID" -eq 0 -o "$EUID" -eq 0 ]; then
-        l_runner_is_root=0
+    #Obtener el UID del usuario actual
+    local l_runner_id=-1
+    local l_aux
+
+    if [ ! -z "$UID" ]; then
+        l_runner_id=$UID
+    elif [ ! -z "$EUID" ]; then
+        l_runner_id=$EUID
+    elif l_aux=$(id -u 2> /dev/null); then
+        l_runner_id=$l_aux
+    else
+        return 1
+    fi
+
+    #Si es root
+    if [ $l_runner_id -eq 0 ]; then
         p_root_mode=0
         l_tag_mode="root"
     fi
@@ -211,7 +237,7 @@ stop_nerdctl() {
     else
 
         if systemctl is-active buildkit.service 2>&1 > /dev/null; then
-            if [ $l_runner_is_root -eq 0 ]; then
+            if [ $l_runner_id -eq 0 ]; then
                 printf 'La unidad systemd %b%s%b se esta deteniendo: "%b%s%b".\n' "$g_color_cian1" "buildkit.service" "$g_color_reset" \
                        "$g_color_gray1" "systemctl stop buildkit.service" "$g_color_reset"
                 systemctl stop buildkit.service
@@ -225,7 +251,7 @@ stop_nerdctl() {
         fi
 
         if systemctl is-active buildkit.socket 2>&1 > /dev/null; then
-            if [ $l_runner_is_root -eq 0 ]; then
+            if [ $l_runner_id -eq 0 ]; then
                 printf 'La unidad systemd %b%s%b se esta deteniendo: "%b%s%b".\n' "$g_color_cian1" "buildkit.socket" "$g_color_reset" \
                        "$g_color_gray1" "systemctl stop containerd.socket" "$g_color_reset"
                 systemctl stop buildkit.socket
@@ -251,7 +277,7 @@ stop_nerdctl() {
         fi
     else
         if systemctl is-active containerd.service 2>&1 > /dev/null; then
-            if [ $l_runner_is_root -eq 0 ]; then
+            if [ $l_runner_id -eq 0 ]; then
                 printf 'La unidad systemd %b%s%b se esta deteniendo: "%b%s%b".\n' "$g_color_cian1" "containerd.service" "$g_color_reset" \
                        "$g_color_gray1" "systemctl stop containerd.service" "$g_color_reset"
                 systemctl stop containerd.service

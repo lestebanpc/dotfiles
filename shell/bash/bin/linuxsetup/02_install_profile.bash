@@ -127,12 +127,11 @@ if [ -z "$g_os_type" ]; then
 fi
 
 #Obtener informacion basica del usuario
-if [ -z "$g_runner_is_root" ]; then
+if [ -z "$g_runner_id" ]; then
 
     #Determinar si es root y el soporte de sudo
     # > 'g_runner_id'                     : ID del usuario actual (UID).
     # > 'g_runner_user'                   : Nombre del usuario actual.
-    # > 'g_runner_is_root'                : 0 si es root. Caso contrario no es root.
     # > 'g_runner_sudo_support'           : Si el so y el usuario soportan el comando 'sudo'
     #    > 0 : se soporta el comando sudo con password
     #    > 1 : se soporta el comando sudo sin password
@@ -1237,7 +1236,7 @@ _install_python() {
     fi
 
     #Para instalar python, se requiere acceso de root
-    if [ $g_runner_sudo_support -eq 3 ] || {  [ $g_runner_is_root -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+    if [ $g_runner_sudo_support -eq 3 ] || {  [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
         printf 'Se requiere permisos de root para instalar Python/Pip\n'
         if [ ! -z "$l_version_pip" ]; then
             return 1
@@ -1444,7 +1443,7 @@ function _install_vim() {
     fi
     
     #No instalar si no tiene acceso a sudo
-    if [ $g_runner_sudo_support -eq 3 ] || {  [ $g_runner_is_root -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+    if [ $g_runner_sudo_support -eq 3 ] || {  [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
         printf 'VIM > %bVIM puede ser instalado debido a que carece de accesos a root. Se recomienda su instalación%b.\n' "$g_color_red1" "$g_color_reset"
         return 1
     fi
@@ -1833,7 +1832,7 @@ function _setup_user_profile() {
     #NerdCtl/ContainerD y Podman para el usuario root, no almacena su configuración en su home, lo almacena en '/etc'
     #Para usuario root, la configuracion es manual. Solo e configura automaticamente para modo rootless.
     #Permitir solo cuando el runner no es root o es root pero en modo suplantacion del usuario objetivo.
-    if [ $g_runner_is_root -ne 0 ] || [ $g_runner_is_target_user -ne 0 ]; then
+    if [ $g_runner_id -ne 0 ] || [ $g_runner_is_target_user -ne 0 ]; then
 
         #Podman: Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
         l_target_path=".config/containers"

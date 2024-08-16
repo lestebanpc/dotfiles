@@ -96,12 +96,11 @@ if [ -z "$g_os_type" ]; then
 fi
 
 #Obtener informacion basica del usuario
-if [ -z "$g_runner_is_root" ]; then
+if [ -z "$g_runner_id" ]; then
 
     #Determinar si es root y el soporte de sudo
     # > 'g_runner_id'                     : ID del usuario actual (UID).
     # > 'g_runner_user'                   : Nombre del usuario actual.
-    # > 'g_runner_is_root'                : 0 si es root. Caso contrario no es root.
     # > 'g_runner_sudo_support'           : Si el so y el usuario soportan el comando 'sudo'
     #    > 0 : se soporta el comando sudo con password
     #    > 1 : se soporta el comando sudo sin password
@@ -308,7 +307,7 @@ function _sutup_support_x11_clipboard() {
     print_line '-' $g_max_length_line  "$g_color_gray1"
 
     #2. Si no se tiene permisos para root, solo avisar
-    if [ $g_runner_sudo_support -eq 3 ] || {  [ $g_runner_is_root -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+    if [ $g_runner_sudo_support -eq 3 ] || {  [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
 
         printf '%bNo tiene soporte para ejecutar en modo "root"%b. Para usar el clipbboard de su servidor remotos linux, usando el "%bX11 forwading for SSH%b".\n' \
                "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
@@ -464,7 +463,7 @@ function _uninstall_support_x11_clipboard() {
     print_line '-' $g_max_length_line "$g_color_blue1"
 
     #2. Si no se tiene permisos para root, solo avisar
-    if [ $g_runner_sudo_support -eq 3 ] || {  [ $g_runner_is_root -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+    if [ $g_runner_sudo_support -eq 3 ] || {  [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
 
         printf '%bNo tiene soporte para ejecutar en modo "root"%b. Para remover la configuración "%bX11 forwading%b" del OpenSSH Server.\n' \
                "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"

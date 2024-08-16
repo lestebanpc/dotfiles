@@ -4903,7 +4903,7 @@ function _copy_artifact_files() {
 
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'podman.service'
-                if [ $g_runner_is_root -eq 0 ]; then
+                if [ $g_runner_id -eq 0 ]; then
                     systemctl start podman.service 
                 else
                     sudo systemctl start podman.service 
@@ -4959,7 +4959,7 @@ function _copy_artifact_files() {
 
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
-                if [ $g_runner_is_root -eq 0 ]; then
+                if [ $g_runner_id -eq 0 ]; then
                     systemctl start containerd.service 
                 else
                     sudo systemctl start containerd.service 
@@ -5015,7 +5015,7 @@ function _copy_artifact_files() {
 
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
-                if [ $g_runner_is_root -eq 0 ]; then
+                if [ $g_runner_id -eq 0 ]; then
                     systemctl start containerd.service 
                 else
                     sudo systemctl start containerd.service 
@@ -5071,7 +5071,7 @@ function _copy_artifact_files() {
 
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
-                if [ $g_runner_is_root -eq 0 ]; then
+                if [ $g_runner_id -eq 0 ]; then
                     systemctl start containerd.service 
                 else
                     sudo systemctl start containerd.service 
@@ -5138,7 +5138,7 @@ function _copy_artifact_files() {
 
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
-                if [ $g_runner_is_root -eq 0 ]; then
+                if [ $g_runner_id -eq 0 ]; then
                     systemctl start containerd.service 
                 else
                     sudo systemctl start containerd.service 
@@ -5345,7 +5345,7 @@ function _copy_artifact_files() {
 
                     #Iniciar a nivel system
                     printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
-                    if [ $g_runner_is_root -eq 0 ]; then
+                    if [ $g_runner_id -eq 0 ]; then
                         systemctl start containerd.service 
                     else
                         sudo systemctl start containerd.service 
@@ -5735,7 +5735,7 @@ function _copy_artifact_files() {
 
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
-                if [ $g_runner_is_root -eq 0 ]; then
+                if [ $g_runner_id -eq 0 ]; then
                     systemctl start containerd.service 
                 else
                     sudo systemctl start containerd.service 
@@ -7019,7 +7019,7 @@ _uninstall_repository() {
 
                     if [ -f /usr/lib/systemd/system/${l_aux} ]; then
 
-                        if [ $g_runner_is_root -eq 0 ]; then
+                        if [ $g_runner_id -eq 0 ]; then
 
                             #Si esta configurado para inicio automatico desactivarlo
                             printf "Disable la unidad systemd '%s'" "$l_aux"
