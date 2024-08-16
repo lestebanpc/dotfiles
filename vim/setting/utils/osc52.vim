@@ -142,6 +142,7 @@ endfunction
 
 " Send a string to the terminal's clipboard using the OSC 52 sequence.
 function! SendViaOSC52 (str)
+
   " Since tmux defaults to setting TERM=screen (ugh), we need to detect it here
   " specially.
   if !empty($TMUX)
@@ -151,6 +152,7 @@ function! SendViaOSC52 (str)
   else
     let osc52 = s:get_OSC52(a:str)
   endif
+
   let len = strlen(osc52)
   if len < g:max_osc52_sequence
     call s:rawecho(osc52)
@@ -158,6 +160,36 @@ function! SendViaOSC52 (str)
   else
     echo "[OSC52] Selection too long to send to terminal: " . len
   endif
+
+endfunction
+
+
+" Parametros de entrada>
+" 1> 'osc52_format' tipo de formato a enviar el texto por OSC52. Esto puede ser:
+"    0 u otro valor > Formato normal capturado directamente por una terminal que no use como '$TERM' a screen.
+"    1 > Formato 'DSC chunking' (partido en pedazos)  capturado directamente por una terminal que use como '$TERM' a screen.
+"    2 > Formato enmascarado por TMUX (tmux requiere un formato y recien asi, si esta configurado, este se encargara de
+"        traducir al formato normal y reenviarlo a la terminal donde corre tmux).
+" 2> 'text' que se debe enviar a la terminal.
+
+function! SendViaOSC52By (osc52_format, text)
+
+  if a:osc52_format == 2
+    let l_osc52_data = s:get_OSC52_tmux(a:text)
+  elseif a:osc52_format == 1
+    let l_osc52_data = s:get_OSC52_DCS(a:text)
+  else
+    let l_osc52_data = s:get_OSC52(a:text)
+  endif
+
+  let l_len = strlen(l_osc52_data)
+  if l_len < g:max_osc52_sequence
+    call s:rawecho(l_osc52_data)
+    echo '[OSC52] ' . l_len . ' characters copied'
+  else
+    echo "[OSC52] Selection too long to send to terminal: " . l_len
+  endif
+
 endfunction
 
 

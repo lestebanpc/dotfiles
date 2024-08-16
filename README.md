@@ -180,6 +180,7 @@ Los pasos recomandos para configurar su SO son:
 12. Otras configuraciones> Configuración del cliente SSH
 
 13. Uso de VIM/NeoVIM/Tmux
+
     En NeoVIM se puede usar las siguientes variables de entorno:
     - La variable de entorno 'USE_EDITOR' desactiva el plugins usado para modo IDE
     - La variable de entorno 'USE_COC' es 1 usa CoC en vez del LSP nativo (como lo hace VIM)
@@ -190,8 +191,17 @@ Los pasos recomandos para configurar su SO son:
       - Otro valor > Determinar automaticamente el mecanismo correcto segun order de prioridad: 
         - Usar mecanismo nativo (SOC y comandos externos) si esta habilitado.
         - Implementar el mecanismo OSC 52.
+    - La variable de entorno 'OSC52_FORMAT'. Esta variable solo sera usado cuando 'g:set_clipboard_type' es '1' y puede tener 
+      los siguientes posibles valores:
+      - 0 > Formato normal capturado directamente por una terminal que soporte OSC52 y que no use como '$TERM' a screen.
+      - 1 > Formato 'DSC chunking' (partido en pedazos)  capturado directamente por una terminal que use como '$TERM' a screen.
+      - 2 > Formato enmascarado por TMUX (tmux requiere un formato y recien asi, si esta configurado, este se encargara de traducir al formato normal y reenviarlo a la terminal donde corre tmux).
+      Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.
+
      Ejemplo de uso: 
      - NVIM_CLIPBOARD=1 nvim
+     - NVIM_CLIPBOARD=1 OSC52_FORMAT=2 nvim
+     - NVIM_CLIPBOARD=1 OSC52_FORMAT=2 USE_COC=1 nvim
      - NVIM_CLIPBOARD=1 USE_COC=1 nvim
      - USE_EDITOR=1 nvim
 
@@ -206,6 +216,17 @@ Los pasos recomandos para configurar su SO son:
         - Usar mecanismo nativo (API del SO) si esta habilitado.
         - Implementar el mecanismo de uso comandos externo del gestion de clipboard
         - Si no existe comando externo, se Implementara el mecanismo OSC 52
+    - La variable de entorno 'OSC52_FORMAT'. Esta variable solo sera usado cuando 'g:set_clipboard_type' es '1' y puede tener 
+      los siguientes posibles valores:
+      - 0 > Formato normal capturado directamente por una terminal que soporte OSC52 y que no use como '$TERM' a screen.
+      - 1 > Formato 'DSC chunking' (partido en pedazos)  capturado directamente por una terminal que use como '$TERM' a screen.
+      - 2 > Formato enmascarado por TMUX (tmux requiere un formato y recien asi, si esta configurado, este se encargara de traducir al formato normal y reenviarlo a la terminal donde corre tmux).
+      Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.
+
+     Ejemplo de uso: 
+     - VIM_CLIPBOARD=1 nvim
+     - VIM_CLIPBOARD=1 OSC52_FORMAT=2 nvim
+     - USE_EDITOR=1 vim
 
     En TMUX, autogenera los siguiente variables de entorno:
     - La variable de entorno 'TMUX_SET_CLIPBOARD' cuyos posibles valores son:

@@ -131,9 +131,8 @@ else
     let g:has_clipboard = 0
 endif
 
-
 "Determinar si existe el backend de gestion del clipboard y obtener del comando externo para escribir el portapapeles
-let g:clipboard_command=''
+let g:clipboard_command = ''
 
 "Si es Linux (sea WSL y no-WSL)
 if (g:os_type == 2) || (g:os_type == 3)
@@ -316,6 +315,46 @@ else
     set clipboard=
 
 endif
+
+"Determinar el formato OSC52 a usar. Ello dependera del valor de la variable de entorno 'OSC52_FORMAT'. Esta variable
+"solo sera usado cuando 'g:set_clipboard_type' es '1' y puede tener los siguientes posibles valores:
+"    0 > Formato normal capturado directamente por una terminal que soporte OSC52 y que no use como '$TERM' a screen.
+"    1 > Formato 'DSC chunking' (partido en pedazos)  capturado directamente por una terminal que use como '$TERM' a screen.
+"    2 > Formato enmascarado por TMUX (tmux requiere un formato y recien asi, si esta configurado, este se encargara de
+"        traducir al formato normal y reenviarlo a la terminal donde corre tmux).
+"    Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta
+"    de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un 
+"    contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.   
+let g:osc52_format = 0
+
+if g:set_clipboard_type == 1
+
+    if $OSC52_FORMAT != '' && $OSC52_FORMAT == 0
+        let g:osc52_format = 0
+    elseif $OSC52_FORMAT == 1
+        let g:osc52_format = 1
+    elseif $OSC52_FORMAT == 2
+        let g:osc52_format = 2
+    else
+
+        "Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM 
+        "se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh 
+        "o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM'
+        "a screen.   
+        if g:use_tmux
+            let g:osc52_format = 2
+        elseif match($TERM, 'screen') > -1
+            let g:osc52_format = 1
+        else
+            let g:osc52_format = 0
+        endif
+
+    endif
+
+endif
+
+
+
 
 "BUG IN VIM : Cuanto la terminal soporta 'modifyOtherKeys' de nivel 2, cuando se apreta ciertos key 
 "reservados (usando 'ctrl', 'shfit', 'alt') se genera texto con caracteres escapa/control la cual puede generar
