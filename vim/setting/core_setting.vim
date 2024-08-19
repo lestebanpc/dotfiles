@@ -318,10 +318,11 @@ endif
 
 "Determinar el formato OSC52 a usar. Ello dependera del valor de la variable de entorno 'OSC52_FORMAT'. Esta variable
 "solo sera usado cuando 'g:set_clipboard_type' es '1' y puede tener los siguientes posibles valores:
-"    0 > Formato normal capturado directamente por una terminal que soporte OSC52 y que no use como '$TERM' a screen.
-"    1 > Formato 'DSC chunking' (partido en pedazos)  capturado directamente por una terminal que use como '$TERM' a screen.
-"    2 > Formato enmascarado por TMUX (tmux requiere un formato y recien asi, si esta configurado, este se encargara de
-"        traducir al formato normal y reenviarlo a la terminal donde corre tmux).
+"    0 > Formato OSC 52 estandar que es enviado directmente una terminal que NO use como '$TERM' a GNU screen.
+"    1 > Formato OSC52 es dividio en pequeños trozos y enmascador en formato DSC, para enviarlo directmente a una terminal 
+"        basada en GNU ('$TERM' inicia con screen).
+"    2 > Formato OSC52 se enmascara DSC enmascarado para TMUX (tmux requiere un formato determinado) y sera este el que 
+"        decida si este debera reenvíarse a la terminal donde corre tmux (en este caso Tmux desenmacara y lo envia).
 "    Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta
 "    de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un 
 "    contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.   

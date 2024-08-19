@@ -376,7 +376,7 @@ config.use_fancy_tab_bar = true
 --config.show_new_tab_button_in_tab_bar = true
 
 -- If set to true, when the active tab is closed, the previously activated tab will be activated. 
--- Otherwise, the tab to the left of the active tab will be activated. Defult is false.
+-- Otherwise, the tab to the left of the active tab will be activated. Default is false.
 --config.switch_to_last_active_tab_when_closing_tab = true
 
 
@@ -479,134 +479,275 @@ config.scrollback_lines = 5000
 ------------------------------------------------------------------------------------
 -- Setting> Key bindings
 ------------------------------------------------------------------------------------
-
--- If you don't want the default assignments to be registered, you can disable all of them with this configuration; 
--- if you chose to do this, you must explicitly register every binding.
--- Default key binding: https://wezfurlong.org/wezterm/config/default-keys.html
---config.disable_default_key_bindings = false
-
 -- Los 'keybord shorcut' capturados por la ventana wezterm, no es enviado a los paneles. Por tal motivo desabilitelo, si desea
 -- que estos no sean procesados por la ventana y sean procesados por el panel actual.
+-- La lista inicial se obtuvo de 'wezterm show-keys --lua' y luego se depurando para nuestro layout de teclado en ingles.
+-- TODO: Adecuar para MacOS ¿por ejemplo cambiar SUPER con ..? 
+
+
+-- If you don't want the default assignments to be registered, you can disable all of them with this configuration; 
+-- Default key binding: https://wezfurlong.org/wezterm/config/default-keys.html
+-- Wezterm ofrece un default keybinding que soporta diferentes layout de teclado, por lo que genera muchos mapeos adicionales.
+-- Por tal motivo no usaremos el por defecto.
+config.disable_default_key_bindings = true
+
+
+-- Controls how keys without an explicit phys: or mapped: prefix are treated.
+-- If key_map_preference = "Mapped" (the default), then mapped: is assumed. If key_map_preference = "Physical" then phys: is assumed.
+config.key_map_preference = "Mapped"
+
 
 -- Leader key (called 'LEADER') stays active until a keypress is registered (whether it matches a key binding or not), 
 -- or until it has been active for the duration specified by timeout_milliseconds, at which point it will automatically cancel itself.
 config.leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
+-- Keybinding del modo normal
+local l_action = wezterm.action
 config.keys = {
-    -- Eliminar la acceso de teclado para maximizar la ventana actual
-    {
-        key = 'Enter', mods = 'ALT',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    -- Eliminar el acceso de teclado para minimizar la ventana actual
-    {
-        key = 'm', mods = 'SUPER',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    -- Eliminar el acceso de teclado para crear una nueva ventana wezterm 
-    {
-        key = 'n', mods = 'SUPER',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    -- Eliminar el acceso de teclado para crear una nueva ventana wezterm 
-    {
-        key = 'n', mods = 'CTRL|SHIFT',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    -- Eliminar el acceso de teclado para crear una tab (solo se usar 'CTRL + T') 
-    {
-        key = 't', mods = 'SUPER',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    -- Eliminar el acceso de teclado para recargar la configuracion (solo se usar 'CTRL + R') 
-    {
-        key = 'r', mods = 'SUPER',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    -- Eliminar el acceso de teclado para redimencionar el panel actual y crear panels 
-    {
-        key = 'LeftArrow', mods = 'CTRL|SHIFT|ALT',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    {
-        key = 'RightArrow', mods = 'CTRL|SHIFT|ALT',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    {
-        key = 'UpArrow', mods = 'CTRL|SHIFT|ALT',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    {
-        key = 'UpArrow', mods = 'CTRL|SHIFT|ALT',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    -- Eliminar el acceso de teclado para crear panels 
-    {
-        key = '"', mods = 'CTRL|SHIFT|ALT',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    {
-        key = '%', mods = 'CTRL|SHIFT|ALT',
-        action = wezterm.action.DisableDefaultAssignment,
-    },
-    -- Send key leader "CTRL + a" to the terminal when pressing CTRL + a, CTRL + a
-    { 
-        key = 'a', mods = 'LEADER|CTRL', 
-        action = wezterm.action.SendString '\x01', 
-    },
-    -- Crear los nuevos acceso de teclado para redimencionar el panel actual 
-    {
-        key = 'h', mods = 'ALT|SHIFT',
-        action = wezterm.action.AdjustPaneSize { 'Left', 1 },
-    },
-    {
-        key = 'LeftArrow', mods = 'ALT|SHIFT',
-        action = wezterm.action.AdjustPaneSize { 'Left', 1 },
-    },
-    {
-        key = 'j', mods = 'ALT|SHIFT',
-        action = wezterm.action.AdjustPaneSize { 'Down', 1 },
-    },
-    {
-        key = 'DownArrow', mods = 'ALT|SHIFT',
-        action = wezterm.action.AdjustPaneSize { 'Down', 1 },
-    },
-    {
-        key = 'k', mods = 'ALT|SHIFT',
-        action = wezterm.action.AdjustPaneSize { 'Up', 1 },
-    },
-    {
-        key = 'UpArrow', mods = 'ALT|SHIFT',
-        action = wezterm.action.AdjustPaneSize { 'Up', 1 },
-    },
-    {
-        key = 'l', mods = 'ALT|SHIFT',
-        action = wezterm.action.AdjustPaneSize { 'Right', 1 },
-    },
-    {
-        key = 'RightArrow', mods = 'ALT|SHIFT',
-        action = wezterm.action.AdjustPaneSize { 'Right', 1 },
-    },
-    -- Crear los nuevos acceso de teclado para crear el panel actual
-    { 
-        key = '-', mods = 'LEADER', 
-        action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain' }, 
-    },
-    { 
-        key = '=', mods = 'LEADER', 
-        action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' }, 
-    },
-    -- Activate the Launcher Menu in the current tab
-    {
-        key = '1', mods = 'ALT',
-        action = wezterm.action.ShowLauncherArgs { flags = 'LAUNCH_MENU_ITEMS' },
-    },
-    {
-        key = '2', mods = 'ALT',
-        action = wezterm.action.ShowLauncherArgs { flags = 'FUZZY|DOMAINS' },
-    },
+
+    --1. Ingresar a un determinado modo
+    { key = 'f', mods = 'CTRL|SHIFT', action = l_action.Search 'CurrentSelectionOrEmptyString' },
+    --{ key = 'f', mods = 'SUPER', action = l_action.Search 'CurrentSelectionOrEmptyString' },
+    { key = 'phys:Space', mods = 'CTRL|SHIFT', action = l_action.QuickSelect },
+    { key = 'w', mods = 'CTRL|SHIFT', action = l_action.ActivateCopyMode },
+    { key = 'u', mods = 'CTRL|SHIFT', action = l_action.CharSelect{ copy_on_select = true, copy_to =  'ClipboardAndPrimarySelection' } },
+
+
+    --2. Scrollback del panel actual en modo normal (Limpieza y navegacion)
+    --{ key = 'k', mods = 'CTRL|SHIFT', action = l_action.ClearScrollback 'ScrollbackOnly' },
+    --{ key = 'k', mods = 'SUPER', action = l_action.ClearScrollback 'ScrollbackOnly' },
+    { key = 'PageUp', mods = 'SHIFT', action = l_action.ScrollByPage(-1) },
+    { key = 'PageDown', mods = 'SHIFT', action = l_action.ScrollByPage(1) },
+    { key = 'UpArrow', mods = 'CTRL|SHIFT', action = l_action.ScrollByLine(-1) },
+    { key = 'DownArrow', mods = 'CTRL|SHIFT', action = l_action.ScrollByLine(1) },
+    { key = 'Home', mods = 'SHIFT', action = l_action.ScrollToTop },
+    { key = 'End', mods = 'SHIFT', action = l_action.ScrollToBottom },
+    { key = 'z', mods = 'CTRL|SHIFT', action = l_action.ScrollToPrompt(-1) },
+    { key = 'x', mods = 'CTRL|SHIFT', action = l_action.ScrollToPrompt(1) },
+
+    --3. Gestion del Tab de la terminal
+    { key = '1', mods = 'ALT', action = l_action.ActivateTab(0) },
+    --{ key = '1', mods = 'SUPER', action = l_action.ActivateTab(0) },
+    { key = '2', mods = 'ALT', action = l_action.ActivateTab(1) },
+    --{ key = '2', mods = 'SUPER', action = l_action.ActivateTab(1) },
+    { key = '3', mods = 'ALT', action = l_action.ActivateTab(2) },
+    --{ key = '3', mods = 'SUPER', action = l_action.ActivateTab(2) },
+    { key = '4', mods = 'ALT', action = l_action.ActivateTab(3) },
+    --{ key = '4', mods = 'SUPER', action = l_action.ActivateTab(3) },
+    { key = '5', mods = 'ALT', action = l_action.ActivateTab(4) },
+    --{ key = '5', mods = 'SUPER', action = l_action.ActivateTab(4) },
+    { key = '6', mods = 'ALT', action = l_action.ActivateTab(5) },
+    --{ key = '6', mods = 'SUPER', action = l_action.ActivateTab(5) },
+    { key = '7', mods = 'ALT', action = l_action.ActivateTab(6) },
+    --{ key = '7', mods = 'SUPER', action = l_action.ActivateTab(6) },
+    { key = '8', mods = 'ALT', action = l_action.ActivateTab(7) },
+    --{ key = '8', mods = 'SUPER', action = l_action.ActivateTab(7) },
+    { key = '9', mods = 'ALT', action = l_action.ActivateTab(-1) },
+    --{ key = '9', mods = 'SUPER', action = l_action.ActivateTab(-1) },
+
+    --{ key = 'Tab', mods = 'CTRL', action = l_action.ActivateTabRelative(1) },
+    --{ key = ']', mods = 'SUPER|SHIFT', action = l_action.ActivateTabRelative(1) },
+    --{ key = 'PageDown', mods = 'CTRL', action = l_action.ActivateTabRelative(1) },
+    --{ key = '[', mods = 'SUPER|SHIFT', action = l_action.ActivateTabRelative(-1) },
+    --{ key = 'Tab', mods = 'CTRL|SHIFT', action = l_action.ActivateTabRelative(-1) },
+    --{ key = 'PageUp', mods = 'CTRL', action = l_action.ActivateTabRelative(-1) },
+
+    --{ key = 'w', mods = 'CTRL|SHIFT', action = l_action.CloseCurrentTab{ confirm = true } },
+    --{ key = 'w', mods = 'SUPER', action = l_action.CloseCurrentTab{ confirm = true } },
+    { key = 't', mods = 'SUPER|SHIFT', action = l_action.SpawnTab 'DefaultDomain' },
+    --{ key = 't', mods = 'SUPER', action = l_action.SpawnTab 'CurrentPaneDomain' },
+    { key = 't', mods = 'CTRL|SHIFT', action = l_action.SpawnTab 'CurrentPaneDomain' },
+
+    --4. Gestion del Panel del tab activo de la terminal
+
+    { key = '-', mods = 'LEADER', action = l_action.SplitVertical{ domain =  'CurrentPaneDomain' } },
+    { key = '=', mods = 'LEADER', action = l_action.SplitHorizontal{ domain =  'CurrentPaneDomain' } },
+
+    { key = 'z', mods = 'LEADER', action = l_action.TogglePaneZoomState },
+    
+    { key = 'a', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'activate_pane', timeout_milliseconds = 1000, } },
+    { key = 's', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'resize_pane', timeout_milliseconds = 1000, } },
+
+    --5. Gestion de la fuente usado por la terminal
+    { key = '+', mods = 'CTRL', action = l_action.IncreaseFontSize },
+    { key = '=', mods = 'CTRL', action = l_action.IncreaseFontSize },
+    --{ key = '=', mods = 'SUPER', action = l_action.IncreaseFontSize },
+    { key = '-', mods = 'CTRL', action = l_action.DecreaseFontSize },
+    --{ key = '-', mods = 'SUPER', action = l_action.DecreaseFontSize },
+    { key = '0', mods = 'CTRL', action = l_action.ResetFontSize },
+    --{ key = '0', mods = 'SUPER', action = l_action.ResetFontSize },
+
+    --6. Gestion del clipboard
+    { key = 'c', mods = 'CTRL|SHIFT', action = l_action.CopyTo 'Clipboard' },
+    --{ key = 'c', mods = 'SUPER', action = l_action.CopyTo 'Clipboard' },
+    --{ key = 'Copy', mods = 'NONE', action = l_action.CopyTo 'Clipboard' },
+
+    { key = 'v', mods = 'CTRL|SHIFT', action = l_action.PasteFrom 'Clipboard' },
+    --{ key = 'v', mods = 'SUPER', action = l_action.PasteFrom 'Clipboard' },
+    --{ key = 'Paste', mods = 'NONE', action = l_action.PasteFrom 'Clipboard' },
+
+    { key = 'Insert', mods = 'CTRL', action = l_action.CopyTo 'PrimarySelection' },
+    { key = 'Insert', mods = 'SHIFT', action = l_action.PasteFrom 'PrimarySelection' },
+
+
+    -- Generales
+    { key = '1', mods = 'CTRL|SHIFT', action = l_action.ShowLauncherArgs{ flags =  'LAUNCH_MENU_ITEMS' } },
+    { key = '2', mods = 'CTRL|SHIFT', action = l_action.ShowLauncherArgs{ flags =  'FUZZY|DOMAINS' } },
+
+    --{ key = 'a', mods = 'LEADER|CTRL', action = l_action.SendString '\u{1}' },
+    { key = 'l', mods = 'LEADER', action = l_action.ShowDebugOverlay },
+    --{ key = 'm', mods = 'CTRL|SHIFT', action = l_action.Hide },
+    --{ key = 'p', mods = 'CTRL|SHIFT', action = l_action.ActivateCommandPalette },
+    { key = 'r', mods = 'LEADER', action = l_action.ReloadConfiguration },
+
   }
 
+
+-- Keybinding de los otros modos y los 'ActivateKeyTable' del modo normal.
+config.key_tables = {
+
+    --------------------------------------------------------------------------
+    -- Modo de copia
+    --------------------------------------------------------------------------
+    copy_mode = {
+
+      -- Salir del modo copia (de submodo inicial y submodo seleccion)
+      { key = 'c', mods = 'CTRL', action = l_action.Multiple{ 'ScrollToBottom', { CopyMode =  'Close' } } },
+      { key = 'g', mods = 'CTRL', action = l_action.Multiple{ 'ScrollToBottom', { CopyMode =  'Close' } } },
+      { key = 'q', mods = 'NONE', action = l_action.Multiple{ 'ScrollToBottom', { CopyMode =  'Close' } } },
+      { key = 'Escape', mods = 'NONE', action = l_action.Multiple{ 'ScrollToBottom', { CopyMode =  'Close' } } },
+
+      -- Con una seleccion (desde el submodo seleccion), copiar al clipboard y salir de modo copia
+      { key = 'y', mods = 'NONE', action = l_action.Multiple{ { CopyTo =  'ClipboardAndPrimarySelection' }, { Multiple = { 'ScrollToBottom', { CopyMode =  'Close' } } } } },
+
+      -- Ingresar la submodo seleccion
+      { key = 'Space', mods = 'NONE', action = l_action.CopyMode{ SetSelectionMode =  'Cell' } },
+      { key = 'v', mods = 'NONE', action = l_action.CopyMode{ SetSelectionMode =  'Cell' } },
+      { key = 'v', mods = 'SHIFT', action = l_action.CopyMode{ SetSelectionMode =  'Line' } },
+      { key = 'v', mods = 'CTRL', action = l_action.CopyMode{ SetSelectionMode =  'Block' } },
+
+      -- Modificar la selección actual horizontalmente (usado frecuentemente en ua selección rectangular) 
+      { key = 'o', mods = 'NONE', action = l_action.CopyMode 'MoveToSelectionOtherEnd' },
+      { key = 'o', mods = 'SHIFT', action = l_action.CopyMode 'MoveToSelectionOtherEndHoriz' },
+
+      -- Navegacion basica (en el submodo inicio y selección)
+      { key = 'h', mods = 'NONE', action = l_action.CopyMode 'MoveLeft' },
+      { key = 'j', mods = 'NONE', action = l_action.CopyMode 'MoveDown' },
+      { key = 'k', mods = 'NONE', action = l_action.CopyMode 'MoveUp' },
+      { key = 'l', mods = 'NONE', action = l_action.CopyMode 'MoveRight' },
+      { key = 'LeftArrow', mods = 'NONE', action = l_action.CopyMode 'MoveLeft' },
+      { key = 'RightArrow', mods = 'NONE', action = l_action.CopyMode 'MoveRight' },
+      { key = 'UpArrow', mods = 'NONE', action = l_action.CopyMode 'MoveUp' },
+      { key = 'DownArrow', mods = 'NONE', action = l_action.CopyMode 'MoveDown' },
+
+      -- Moverse en la misma linea actual
+      { key = '^', mods = 'NONE', action = l_action.CopyMode 'MoveToStartOfLineContent' },
+      { key = '^', mods = 'SHIFT', action = l_action.CopyMode 'MoveToStartOfLineContent' },
+      { key = 'm', mods = 'ALT', action = l_action.CopyMode 'MoveToStartOfLineContent' },
+
+      { key = '$', mods = 'NONE', action = l_action.CopyMode 'MoveToEndOfLineContent' },
+      { key = '$', mods = 'SHIFT', action = l_action.CopyMode 'MoveToEndOfLineContent' },
+      { key = 'End', mods = 'NONE', action = l_action.CopyMode 'MoveToEndOfLineContent' },
+
+      { key = '0', mods = 'NONE', action = l_action.CopyMode 'MoveToStartOfLine' },
+      { key = 'Home', mods = 'NONE', action = l_action.CopyMode 'MoveToStartOfLine' },
+
+      -- Moverse al inicio de la siguiente linea a la actual
+      { key = 'Enter', mods = 'NONE', action = l_action.CopyMode 'MoveToStartOfNextLine' },
+
+      -- Moverse entre palabras anterior/siguiente
+      { key = 'w', mods = 'NONE', action = l_action.CopyMode 'MoveForwardWord' },
+      { key = 'f', mods = 'ALT', action = l_action.CopyMode 'MoveForwardWord' },
+      { key = 'Tab', mods = 'NONE', action = l_action.CopyMode 'MoveForwardWord' },
+
+      { key = 'b', mods = 'NONE', action = l_action.CopyMode 'MoveBackwardWord' },
+      { key = 'b', mods = 'ALT', action = l_action.CopyMode 'MoveBackwardWord' },
+      { key = 'LeftArrow', mods = 'ALT', action = l_action.CopyMode 'MoveBackwardWord' },
+      { key = 'RightArrow', mods = 'ALT', action = l_action.CopyMode 'MoveForwardWord' },
+      { key = 'Tab', mods = 'SHIFT', action = l_action.CopyMode 'MoveBackwardWord' },
+
+      { key = 'e', mods = 'NONE', action = l_action.CopyMode 'MoveForwardWordEnd' },
+      
+      -- Moverse verticalmente dentro buffer del scrollback 
+      { key = 'g', mods = 'NONE', action = l_action.CopyMode 'MoveToScrollbackBottom' },
+      { key = 'g', mods = 'SHIFT', action = l_action.CopyMode 'MoveToScrollbackBottom' },
+
+      { key = 'b', mods = 'CTRL', action = l_action.CopyMode 'PageUp' },
+      { key = 'PageUp', mods = 'NONE', action = l_action.CopyMode 'PageUp' },
+      { key = 'u', mods = 'CTRL', action = l_action.CopyMode{ MoveByPage = (-0.5) } },
+      { key = 'f', mods = 'CTRL', action = l_action.CopyMode 'PageDown' },
+      { key = 'PageDown', mods = 'NONE', action = l_action.CopyMode 'PageDown' },
+      { key = 'd', mods = 'CTRL', action = l_action.CopyMode{ MoveByPage = (0.5) } },
+
+      -- Mover el viewport dentro buffer del scrollback 
+      { key = 'h', mods = 'SHIFT', action = l_action.CopyMode 'MoveToViewportTop' },
+      { key = 'l', mods = 'SHIFT', action = l_action.CopyMode 'MoveToViewportBottom' },
+      { key = 'm', mods = 'SHIFT', action = l_action.CopyMode 'MoveToViewportMiddle' },
+
+      -- Navegacion por ¿busqueda?
+      { key = ',', mods = 'NONE', action = l_action.CopyMode 'JumpReverse' },
+      { key = ';', mods = 'NONE', action = l_action.CopyMode 'JumpAgain' },
+      { key = 'f', mods = 'NONE', action = l_action.CopyMode{ JumpForward = { prev_char = false } } },
+      --{ key = 'f', mods = 'SHIFT', action = l_action.CopyMode{ JumpBackward = { prev_char = false } } },
+      { key = 't', mods = 'NONE', action = l_action.CopyMode{ JumpForward = { prev_char = true } } },
+      --{ key = 't', mods = 'SHIFT', action = l_action.CopyMode{ JumpBackward = { prev_char = true } } },
+
+
+    },
+    
+    --------------------------------------------------------------------------
+    -- Modo de busqueda
+    --------------------------------------------------------------------------
+    search_mode = {
+      -- Cambia el modo de búsqueda, reiniciando la búsqueda. Los modos de busqueda: "case-sensitive", "case-inssensitive" y "expresiones regulares".
+      { key = 'r', mods = 'CTRL', action = l_action.CopyMode 'CycleMatchType' },
+      -- Salir del modo de Busqeuda
+      { key = 'Escape', mods = 'NONE', action = l_action.CopyMode 'Close' },
+      -- Resetear la búsqueda (Limpia el criterio de búsqueda actual, pero no sale del modo de búsqueda)
+      { key = 'u', mods = 'CTRL', action = l_action.CopyMode 'ClearPattern' },
+      -- Busqueda de la siguiente/anterior coincidencia:
+      { key = 'p', mods = 'CTRL', action = l_action.CopyMode 'PriorMatch' },
+      { key = 'Enter', mods = 'NONE', action = l_action.CopyMode 'PriorMatch' },
+      { key = 'UpArrow', mods = 'NONE', action = l_action.CopyMode 'PriorMatch' },
+      { key = 'DownArrow', mods = 'NONE', action = l_action.CopyMode 'NextMatch' },
+      { key = 'n', mods = 'CTRL', action = l_action.CopyMode 'NextMatch' },
+      { key = 'PageUp', mods = 'NONE', action = l_action.CopyMode 'PriorMatchPage' },
+      { key = 'PageDown', mods = 'NONE', action = l_action.CopyMode 'NextMatchPage' },
+    },
+
+
+    --------------------------------------------------------------------------
+    -- 'ActivateKeyTable' del modo normal
+    --------------------------------------------------------------------------
+     activate_pane = {
+        { key = 'LeftArrow', action = l_action.ActivatePaneDirection 'Left' },
+        { key = 'h', action = l_action.ActivatePaneDirection 'Left' },
+
+        { key = 'RightArrow', action = l_action.ActivatePaneDirection 'Right' },
+        { key = 'l', action = l_action.ActivatePaneDirection 'Right' },
+
+        { key = 'UpArrow', action = l_action.ActivatePaneDirection 'Up' },
+        { key = 'k', action = l_action.ActivatePaneDirection 'Up' },
+
+        { key = 'DownArrow', action = l_action.ActivatePaneDirection 'Down' },
+        { key = 'j', action = l_action.ActivatePaneDirection 'Down' },
+    },
+
+    resize_pane = {
+        { key = 'LeftArrow', action = l_action.AdjustPaneSize { 'Left', 1 } },
+        { key = 'h', action = l_action.AdjustPaneSize { 'Left', 1 } },
+
+        { key = 'RightArrow', action = l_action.AdjustPaneSize { 'Right', 1 } },
+        { key = 'l', action = l_action.AdjustPaneSize { 'Right', 1 } },
+
+        { key = 'UpArrow', action = l_action.AdjustPaneSize { 'Up', 1 } },
+        { key = 'k', action = l_action.AdjustPaneSize { 'Up', 1 } },
+
+        { key = 'DownArrow', action = l_action.AdjustPaneSize { 'Down', 1 } },
+        { key = 'j', action = l_action.AdjustPaneSize { 'Down', 1 } },
+    },
+
+  }
 
 ------------------------------------------------------------------------------------
 -- Setting> Non-Local Multiplexing Damains
@@ -654,6 +795,20 @@ end
 if l_myconfig.launch_menu ~= nil then
     config.launch_menu = l_myconfig.launch_menu 
 end
+
+
+------------------------------------------------------------------------------------
+-- Wezterm Events
+------------------------------------------------------------------------------------
+
+-- Show which key table is active in the status area
+wezterm.on('update-right-status', function(window, pane)
+  local name = window:active_key_table()
+  if name then
+    name = 'TABLE: ' .. name
+  end
+  window:set_right_status(name or '')
+end)
 
 ------------------------------------------------------------------------------------
 --- End

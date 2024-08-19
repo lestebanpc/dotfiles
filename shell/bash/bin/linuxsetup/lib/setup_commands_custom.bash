@@ -3850,8 +3850,8 @@ function _copy_artifact_files() {
                 echo "Copiando el script \"./shell/key-bindings.zsh\" como \"~/.files/shell/zsh/login/keybindings/fzf.zsh\" ..."
                 cp "${g_temp_path}/${l_source_path}/shell/key-bindings.zsh" "${g_repo_path}/shell/zsh/login/keybindings/fzf.zsh"
            
-                echo "Copiando \"./bin/fzf-preview.sh\" como \"~/.files/shell/bash/bin/fzf/fzf-preview.bash\"..."
-                cp "${g_temp_path}/${l_source_path}/bin/fzf-preview.sh" "${g_repo_path}/shell/bash/bin/fzf/fzf-preview.bash"
+                echo "Copiando \"./bin/fzf-preview.sh\" como \"~/.files/shell/bash/bin/cmds/fzf-preview.bash\"..."
+                cp "${g_temp_path}/${l_source_path}/bin/fzf-preview.sh" "${g_repo_path}/shell/bash/bin/cmds/fzf-preview.bash"
 
                 if [ $g_runner_is_target_user -ne 0 ]; then
                     chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/autocomplete/fzf.bash 
@@ -3859,8 +3859,8 @@ function _copy_artifact_files() {
                     chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/keybindings/fzf.bash
                     chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/keybindings/fzf.fish
                     chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/keybindings/fzf.zsh
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/bin/fzf/fzf-tmux.bash
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/bin/fzf/fzf-preview.bash
+                    #chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/bin/cmds/fzf-tmux.bash
+                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/bin/cmds/fzf-preview.bash
                 fi
 
             fi
@@ -5275,7 +5275,7 @@ function _copy_artifact_files() {
                 #Archivos para instalar 'containerd' de modo rootless
                 echo "Copiando \"${l_source_path}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/shell/sh/containerd\" ..."
                 cp "${g_temp_path}/${l_source_path}/containerd-rootless.sh" ${g_repo_path}/shell/sh/bin/containerd
-                chmod u+x ${g_repo_path}/shell/sh/bin/containerd/containerd-rootless.sh
+                chmod u+x ${g_repo_path}/shell/sh/bin/cmds/containerd-rootless.sh
 
                 echo "Copiando \"${l_source_path}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/shell/sh/containerd\" ..."
                 cp "${g_temp_path}/${l_source_path}/containerd-rootless-setuptool.sh" ${g_repo_path}/shell/sh/containerd

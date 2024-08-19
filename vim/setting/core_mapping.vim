@@ -41,11 +41,11 @@ if g:set_clipboard_type == 1
     runtime setting/utils/osc52.vim
 
     "Copiar el registro al clipboard (tener en cuenta que el evento 'TextYankPost' solo se invoca de manera interativa)
-    nnoremap <Leader>c" :<C-u>call SendViaOSC52By(g:osc52_format, getreg('@"'))<CR>
-    nnoremap <Leader>c0 :<C-u>call SendViaOSC52By(g:osc52_format, getreg('@0'))<CR>
-    nnoremap <Leader>c1 :<C-u>call SendViaOSC52By(g:osc52_format, getreg('@1'))<CR>
-    nnoremap <Leader>c2 :<C-u>call SendViaOSC52By(g:osc52_format, getreg('@2'))<CR>
-    nnoremap <Leader>c3 :<C-u>call SendViaOSC52By(g:osc52_format, getreg('@3'))<CR>
+    nnoremap <Leader>c" :<C-u>call PutClipboard(g:osc52_format, getreg('@"'))<CR>
+    nnoremap <Leader>c0 :<C-u>call PutClipboard(g:osc52_format, getreg('@0'))<CR>
+    nnoremap <Leader>c1 :<C-u>call PutClipboard(g:osc52_format, getreg('@1'))<CR>
+    nnoremap <Leader>c2 :<C-u>call PutClipboard(g:osc52_format, getreg('@2'))<CR>
+    nnoremap <Leader>c3 :<C-u>call PutClipboard(g:osc52_format, getreg('@3'))<CR>
     
     "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
     "vnoremap <Leader>cl :w !g:clipboard_command<CR><CR>
@@ -66,7 +66,7 @@ if g:set_clipboard_type == 1
     augroup VimYank
         autocmd!
         "autocmd TextYankPost * call s:VimOSCYankPostCallback(v:event)
-        autocmd TextYankPost * call SendViaOSC52By(g:osc52_format, getreg('"'))
+        autocmd TextYankPost * call PutClipboard(g:osc52_format, getreg('"'))
         "autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call OSCYankRegister('') | endif
     augroup END
 

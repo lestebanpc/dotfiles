@@ -193,9 +193,9 @@ Los pasos recomandos para configurar su SO son:
         - Implementar el mecanismo OSC 52.
     - La variable de entorno 'OSC52_FORMAT'. Esta variable solo sera usado cuando 'g:set_clipboard_type' es '1' y puede tener 
       los siguientes posibles valores:
-      - 0 > Formato normal capturado directamente por una terminal que soporte OSC52 y que no use como '$TERM' a screen.
-      - 1 > Formato 'DSC chunking' (partido en pedazos)  capturado directamente por una terminal que use como '$TERM' a screen.
-      - 2 > Formato enmascarado por TMUX (tmux requiere un formato y recien asi, si esta configurado, este se encargara de traducir al formato normal y reenviarlo a la terminal donde corre tmux).
+      - 0 > Formato OSC 52 estandar que es enviado directmente una terminal que NO use como '$TERM' a GNU screen.
+      - 1 > Formato DSC chunking que es enviado directmente a una terminal que use como '$TERM' a GNU screen. La data es enviada por varias trozos pequeños en formato DSC.
+      - 2 > Formato DSC enmascarado para TMUX (tmux requiere un formato determinado, y si esta configurado, este se encargara de traducir al formato OSC 52 estandar y reenviarlo a la terminal donde corre tmux). Enmascara el OSC52 como un parametro de una secuancia de escape DSC.
       Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.
 
      Ejemplo de uso: 
@@ -218,9 +218,9 @@ Los pasos recomandos para configurar su SO son:
         - Si no existe comando externo, se Implementara el mecanismo OSC 52
     - La variable de entorno 'OSC52_FORMAT'. Esta variable solo sera usado cuando 'g:set_clipboard_type' es '1' y puede tener 
       los siguientes posibles valores:
-      - 0 > Formato normal capturado directamente por una terminal que soporte OSC52 y que no use como '$TERM' a screen.
-      - 1 > Formato 'DSC chunking' (partido en pedazos)  capturado directamente por una terminal que use como '$TERM' a screen.
-      - 2 > Formato enmascarado por TMUX (tmux requiere un formato y recien asi, si esta configurado, este se encargara de traducir al formato normal y reenviarlo a la terminal donde corre tmux).
+      - 0 > Formato OSC 52 estandar que es enviado directmente una terminal que NO use como '$TERM' a GNU screen.
+      - 1 > Formato DSC chunking que es enviado directmente a una terminal que use como '$TERM' a GNU screen. La data es enviada por varias trozos pequeños en formato DSC.
+      - 2 > Formato DSC enmascarado para TMUX (tmux requiere un formato determinado, y si esta configurado, este se encargara de traducir al formato OSC 52 estandar y reenviarlo a la terminal donde corre tmux). Enmascara el OSC52 como un parametro de una secuancia de escape DSC.
       Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.
 
      Ejemplo de uso: 
