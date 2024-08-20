@@ -562,14 +562,20 @@ config.keys = {
 
     { key = '-', mods = 'LEADER', action = l_action.SplitVertical{ domain =  'CurrentPaneDomain' } },
     { key = '=', mods = 'LEADER', action = l_action.SplitHorizontal{ domain =  'CurrentPaneDomain' } },
+    { key = '|', mods = 'LEADER', action = l_action.SplitHorizontal{ domain =  'CurrentPaneDomain' } },
+    { key = '|', mods = 'LEADER|SHIFT', action = l_action.SplitHorizontal{ domain =  'CurrentPaneDomain' } },
+    --{ key = '|', mods = 'LEADER|SHIFT', action = l_action.SplitHorizontal{ domain =  'CurrentPaneDomain' } },
 
     { key = 'z', mods = 'LEADER', action = l_action.TogglePaneZoomState },
     
-    { key = 'a', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'activate_pane', timeout_milliseconds = 1000, } },
-    { key = 's', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'resize_pane', timeout_milliseconds = 1000, } },
+    { key = 'a', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'activate_pane', one_shot = false, } },
+    { key = 's', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'resize_pane', one_shot = false, } },
+    --{ key = 'a', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'activate_pane', timeout_milliseconds = 1000, } },
+    --{ key = 's', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'resize_pane', timeout_milliseconds = 1000, } },
 
     --5. Gestion de la fuente usado por la terminal
     { key = '+', mods = 'CTRL', action = l_action.IncreaseFontSize },
+    { key = '+', mods = 'CTRL|SHIFT', action = l_action.IncreaseFontSize },
     { key = '=', mods = 'CTRL', action = l_action.IncreaseFontSize },
     --{ key = '=', mods = 'SUPER', action = l_action.IncreaseFontSize },
     { key = '-', mods = 'CTRL', action = l_action.DecreaseFontSize },
@@ -591,8 +597,8 @@ config.keys = {
 
 
     -- Generales
-    { key = '1', mods = 'CTRL|SHIFT', action = l_action.ShowLauncherArgs{ flags =  'LAUNCH_MENU_ITEMS' } },
-    { key = '2', mods = 'CTRL|SHIFT', action = l_action.ShowLauncherArgs{ flags =  'FUZZY|DOMAINS' } },
+    { key = 'phys:1', mods = 'CTRL|SHIFT', action = l_action.ShowLauncherArgs{ flags =  'LAUNCH_MENU_ITEMS' } },
+    { key = 'phys:2', mods = 'CTRL|SHIFT', action = l_action.ShowLauncherArgs{ flags =  'FUZZY|DOMAINS' } },
 
     --{ key = 'a', mods = 'LEADER|CTRL', action = l_action.SendString '\u{1}' },
     { key = 'l', mods = 'LEADER', action = l_action.ShowDebugOverlay },
@@ -731,6 +737,9 @@ config.key_tables = {
 
         { key = 'DownArrow', action = l_action.ActivatePaneDirection 'Down' },
         { key = 'j', action = l_action.ActivatePaneDirection 'Down' },
+
+        -- Cancel the mode by pressing escape
+        { key = "Escape", action = "PopKeyTable" },
     },
 
     resize_pane = {
@@ -745,6 +754,9 @@ config.key_tables = {
 
         { key = 'DownArrow', action = l_action.AdjustPaneSize { 'Down', 1 } },
         { key = 'j', action = l_action.AdjustPaneSize { 'Down', 1 } },
+
+        -- Cancel the mode by pressing escape
+        { key = "Escape", action = "PopKeyTable" },
     },
 
   }
