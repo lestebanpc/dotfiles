@@ -17,9 +17,6 @@ tags
 # Paquetes locales de NodeJS (binarios de NodeJs)
 node_modules/*
 
-# Archivos para la terminal> Oh-My-Posh> Temas
-etc/oh-my-posh/default/*
-
 # Archivo de configuracion para los archivos de setup del SO y el profile del usuario
 shell/bash/bin/linuxsetup/.config.bash
 shell/bash/bin/termuxsetup/.config.bash
@@ -32,5 +29,20 @@ shell/powershell/bin/windowssetup/config.ps1
 #!etc/git/custom/template_linux_work.toml
 #!etc/git/custom/template_windows_main.toml
 #!etc/git/custom/template_windows_work.toml
+
+# Autogenerado que cambian frecuentemente> Temas de Oh-My-Posh
+etc/oh-my-posh/default/*
+
+# Autogenerado que cambian frecuentemente> Autocomplete de comandos instalados
+#shell/bash/login/autocomplete/yazi.*
+#shell/bash/login/autocomplete/ya.*
+#shell/fish/login/autocomplete/yazi.*
+#shell/fish/login/autocomplete/ya.*
+#shell/zsh/login/autocomplete/yazi.*
+#shell/zsh/login/autocomplete/ya.*
+#shell/others/login/autocomplete/yazi.*
+#shell/others/login/autocomplete/ya.*
+#shell/powershell/login/autocomplete/ya.*
+#shell/powershell/login/autocomplete/yazi.*
 
 
