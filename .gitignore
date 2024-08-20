@@ -34,15 +34,15 @@ shell/powershell/bin/windowssetup/config.ps1
 etc/oh-my-posh/default/*
 
 # Autogenerado que cambian frecuentemente> Autocomplete de comandos instalados
-#shell/bash/login/autocomplete/yazi.*
-#shell/bash/login/autocomplete/ya.*
-#shell/fish/login/autocomplete/yazi.*
-#shell/fish/login/autocomplete/ya.*
-#shell/zsh/login/autocomplete/yazi.*
-#shell/zsh/login/autocomplete/ya.*
-#shell/others/login/autocomplete/yazi.*
-#shell/others/login/autocomplete/ya.*
-#shell/powershell/login/autocomplete/ya.*
-#shell/powershell/login/autocomplete/yazi.*
+shell/bash/login/autocomplete/yazi.*
+shell/bash/login/autocomplete/ya.*
+shell/fish/login/autocomplete/yazi.*
+shell/fish/login/autocomplete/ya.*
+shell/zsh/login/autocomplete/yazi.*
+shell/zsh/login/autocomplete/ya.*
+shell/others/login/autocomplete/yazi.*
+shell/others/login/autocomplete/ya.*
+shell/powershell/login/autocomplete/ya.*
+shell/powershell/login/autocomplete/yazi.*
 
 
