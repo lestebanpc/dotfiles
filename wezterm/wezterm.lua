@@ -84,7 +84,9 @@ if not l_ok then
         default_domain = nil,
         wsl_domains= nil,
         ssh_domains = nil,
-        launch_menu = nil
+        launch_menu = nil,
+        windows_style = 0,
+        
     }
 	
 	print("Module 'config' no load due to not exist ot have a error")
@@ -209,6 +211,31 @@ config.use_ime = false
 -- Setting> Windows> General
 ------------------------------------------------------------------------------------
 
+--print(l_myconfig.windows_style)
+
+-- Si no esta definido el estilo de la ventana, definirlo
+-- Estilo a usar en la ventana de la terminal
+--  0 > Se establece el por defecto.
+--  1 > Se usa el estilo 'TITLE|RESIZE'
+--  2 > Se usa el estilo 'INTEGRATED_BUTTONS|RESIZE'
+if l_myconfig.windows_style == 0 then
+    
+    if l_os_type == 0 then
+        if l_myconfig.enable_wayland then
+            l_myconfig.windows_style = 1
+        else
+            --l_myconfig.windows_style = 1
+            l_myconfig.windows_style = 2
+        end
+    else
+        l_myconfig.windows_style = 2
+    end
+    
+end
+
+--print(l_myconfig.windows_style)
+
+
 -- Configures whether the window has a title bar and/or resizable border.
 -- > "NONE" 
 --   Disables titlebar and border (borderless mode), but causes problems with resizing and minimizing the window, so you probably want to use RESIZE 
@@ -222,14 +249,9 @@ config.use_ime = false
 -- > "INTEGRATED_BUTTONS|RESIZE"
 --   Place window management buttons (minimize, maximize, close) into the tab bar instead of showing a title bar.
 --   Wayland error: see https://github.com/wez/wezterm/issues/4963
-if l_os_type == 0 then
-    if l_myconfig.enable_wayland then
-        config.window_decorations = "TITLE|RESIZE"
-    else
-        config.window_decorations = "TITLE|RESIZE"
-        --config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
-    end
-else
+if l_myconfig.windows_style == 1 then
+    config.window_decorations = "TITLE|RESIZE"
+elseif l_myconfig.windows_style == 2 then
     config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
 end
 
@@ -312,13 +334,7 @@ config.exit_behavior = "Close"
 -- (eg: an editor can change it depending on the mode), but this value controls how the cursor appears when it is reset to default.
 -- Acceptable values are SteadyBlock, BlinkingBlock, SteadyUnderline, BlinkingUnderline, SteadyBar, and BlinkingBar.
 -- The default is SteadyBlock.
-if l_os_type == 0 then
-    config.default_cursor_style = "BlinkingBlock"
-    -- En Wayland, 'BlinkingBlock' estaba arrojando un error, pero se corrigio
-    --config.default_cursor_style = "SteadyBlock"
-else
-    config.default_cursor_style = "BlinkingBlock"
-end
+config.default_cursor_style = "BlinkingBlock"
 
 -- Specifies the easing function to use when computing the color for the text cursor when it is set to a blinking style.
 --config.cursor_blink_ease_in = "Constant"
@@ -331,7 +347,7 @@ end
 --config.cursor_blink_rate = 700
 
 ------------------------------------------------------------------------------------
--- Setting> Windows> Tab
+-- Setting> Windows> TabBar autogenerado por Wezterm
 ------------------------------------------------------------------------------------
 
 -- Controls whether the tab bar is enabled. Set to false to disable it.
@@ -339,28 +355,45 @@ config.enable_tab_bar = true
 
 -- If set to true, when there is only a single tab, the tab bar is hidden from the display. If a second tab is created, the tab will be shown.
 -- Default is false.
-if l_os_type == 0 then
-    if l_myconfig.enable_wayland then
-        --Recomendado para estilo de tipo "TITLE|RESIZE"
-        config.hide_tab_bar_if_only_one_tab = true
-    else
-        --Recomendado para estilo de tipo "TITLE|RESIZE"
-        config.hide_tab_bar_if_only_one_tab = true
-        --Recomendado para estilo de tipo "INTEGRATED_BUTTONS|RESIZE"
-        --config.hide_tab_bar_if_only_one_tab = false
-    end
-else
+if l_myconfig.windows_style == 2 then
+
     --Recomendado para estilo de tipo "INTEGRATED_BUTTONS|RESIZE"
     config.hide_tab_bar_if_only_one_tab = false
+
+elseif l_myconfig.windows_style == 1 then
+
+    --Recomendado para estilo de tipo "TITLE|RESIZE"
+    config.hide_tab_bar_if_only_one_tab = true
+
+    --Wayland error: No muestra la barra de titulo generado por el sistema/Wayland
+    if (l_os_type == 0) and l_myconfig.enable_wayland then
+        config.hide_tab_bar_if_only_one_tab = false
+    end
+
 end
 
 -- When tab_bar_at_bottom = true, the tab bar will be rendered at the bottom of the window rather than the top of the window.
 -- The default is false.
 --config.tab_bar_at_bottom = false
 
--- When set to true (the default), the tab bar is rendered in a native style with proportional fonts.
--- When set to false, the tab bar is rendered using a retro aesthetic using the main terminal font.
-config.use_fancy_tab_bar = true
+-- When set to true (the default), the tab bar is rendered in a 'native tabbar style' with proportional fonts.
+-- When set to false, the tab bar is rendered using a 'retro tabbar style' using the main terminal font.
+-- Retro  TabBar Style: https://wezfurlong.org/wezterm/config/appearance.html#retro-tab-bar-appearance
+-- Native TabBar Style (Fancy TabBar Style): https://wezfurlong.org/wezterm/config/appearance.html#tab-bar-appearance-colors
+-- Futuras mejoras: https://github.com/wez/wezterm/issues/1180#issuecomment-1493128725
+config.use_fancy_tab_bar = true 
+
+-- Estilo de borde de la ventana el cual incluye:
+--  > Estilo por defecto del TabBar autogenerado por Wezterm.
+--  > Estilo del borde de la ventana. 
+--    En Linux, X11 no permite cambiar el borde de la ventana en Wayland si 
+-- No incluye la barra de titulo por defecto generado por el gestor de ventana o escritorio.
+-- Url: https://wezfurlong.org/wezterm/config/lua/config/window_frame.html?h=window_frame
+config.window_frame = {
+    --'Roboto' es una fuente no-mono (proporcional) integrada/built-in dentro del binario de wezterm 
+    font = wezterm.font 'Roboto',
+    font_size = 10,
+}
 
 -- Specifies the maximum width that a tab can have in the tab bar when using retro tab mode. It is ignored when using fancy tab mode.
 -- Defaults to 16 glyphs in width.
@@ -379,6 +412,10 @@ config.use_fancy_tab_bar = true
 -- Otherwise, the tab to the left of the active tab will be activated. Default is false.
 --config.switch_to_last_active_tab_when_closing_tab = true
 
+
+-- Event 'format-tab-title' usado para cambiar el estilo del tab activo/inactivo, remplazando a la funcion 'tab_bar_style'.
+-- Esto complementa el estilo usado para el tab 'https://wezfurlong.org/wezterm/config/appearance.html#retro-tab-bar-appearance'.
+-- Url: 'https://wezfurlong.org/wezterm/config/lua/window-events/format-tab-title.html'
 
 ---- Callback that change returns the suggested title for a tab. 
 ---- It prefers the title that was set via `tab:set_title()` or `wezterm cli set-tab-title`, 
@@ -817,7 +854,7 @@ end
 wezterm.on('update-right-status', function(window, pane)
   local name = window:active_key_table()
   if name then
-    name = 'TABLE: ' .. name
+    name = 'Key table: ' .. name .. ' '
   end
   window:set_right_status(name or '')
 end)

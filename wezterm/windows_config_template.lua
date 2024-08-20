@@ -24,6 +24,12 @@ local l_default_prog = { "pwsh" }
 -- The default font size is 12.0
 local l_font_size = 10.5
 
+-- Estilo a usar en la ventana de la terminal
+--  0 > Se establece el por defecto.
+--  1 > Se usa el estilo 'TITLE|RESIZE'
+--  2 > Se usa el estilo 'INTEGRATED_BUTTONS|RESIZE'
+local l_windows_style = 0
+
 
 ------------------------------------------------------------------------------------
 -- Setting> Non-Local Multiplexing Damains
@@ -141,6 +147,7 @@ l_mod.default_domain = l_default_domain
 l_mod.wsl_domains= l_wsl_domains
 l_mod.ssh_domains = l_ssh_domains
 l_mod.launch_menu = l_launch_menu
+l_mod.windows_style = l_windows_style
 
 return l_mod
 
