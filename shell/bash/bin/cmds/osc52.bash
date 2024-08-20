@@ -127,12 +127,15 @@ _usage() {
     cat <<EOF
 Usage: osc52 [options] [string]
 Send an arbitrary string to the terminal clipboard using the OSC 52 escape sequence as specified in xterm.
-The data can either be read from stdin:
-  $ echo "hello world" | osc52 -i
-  $ echo "hello world" | osc52 -it 2
-Or specified on the command line:
-  $ osc52 "hello world"
-  $ osc52 -t 2 "hello world"
+
+Examples:
+  > The data can either be read from stdin:
+    $ echo "hello world" | osc52 -i
+    $ echo "hello world" | osc52 -it 2
+  > Specified on the command line:
+    $ osc52 "hello world"
+    $ osc52 -t 2 "hello world"
+
 Options:
   -h    This screen.
   -f    Ignore max byte limit (${OSC_52_MAX_SEQUENCE})
