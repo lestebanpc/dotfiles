@@ -2104,10 +2104,14 @@ function fulfill_preconditions() {
     fi
 
     #8. Lo que se instalar requiere permisos de root.
-    if [ $p_require_root -eq 0 ]; then
-        if [ $g_runner_id -ne 0 ] || [ $g_runner_sudo_support -eq 2 ] || [ $g_runner_sudo_support -eq 3 ]; then
-            printf 'ERROR: el usuario runner (Name="%b%s%b", ID="%b%s%b") no tiene permisos para ejecutar sudo (o el SO no tiene implementa sudo y el usuario no es root).\n'
-                   "$g_color_gray1" "$g_runner_user" "$g_color_reset" "$g_color_gray1" "$g_runner_id" "$g_color_reset"
+    if [ $p_require_root -eq 0 ] && [ $g_runner_id -ne 0 ]; then
+        if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_id -ne 0 -a  $g_runner_sudo_support -eq 2 ]; then
+            #Se rechazar el folder ingresado, si el usuario runner no tiene permisos para ejecutar como root
+            # - El sistema operativo no soporte sudo y el usuario ejecutor no es root.
+            # - El sistema operativo soporta sudo y el usario ejecutor no es root y no tiene permiso para sudo.
+            printf 'ERROR: el usuario runner (Name="%b%s%b", ID="%b%s%b") no es root o tiene permisos para ejecutar sudo (SudoSupport="").\n' \
+                   "$g_color_gray1" "$g_runner_user" "$g_color_reset" "$g_color_gray1" "$g_runner_id" "$g_color_reset" "$g_color_gray1" \
+                   "$g_runner_sudo_support" "$g_color_reset"
             return 1
         fi
     fi
