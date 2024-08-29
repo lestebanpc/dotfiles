@@ -3547,22 +3547,22 @@ function get_repo_artifacts() {
         gum)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
-                pna_artifact_names=("gum_0.14.3_Windows_x86_64.zip")
+                pna_artifact_names=("gum_${p_repo_last_pretty_version}_Windows_x86_64.zip")
                 pna_artifact_types=(11)
             else
                 #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
                 if [ $g_os_subtype_id -eq 1 ]; then
                     #No hay soporte para libc, solo musl
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("gum_0.14.3_Linux_arm64.tar.gz")
+                        pna_artifact_names=("gum_${p_repo_last_pretty_version}_Linux_arm64.tar.gz")
                     else
-                        pna_artifact_names=("gum_0.14.3_Linux_x86_64.tar.gz")
+                        pna_artifact_names=("gum_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
                     fi
                 else
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("gum_0.14.3_Linux_arm64.tar.gz")
+                        pna_artifact_names=("gum_${p_repo_last_pretty_version}_Linux_arm64.tar.gz")
                     else
-                        pna_artifact_names=("gum_0.14.3_Linux_x86_64.tar.gz")
+                        pna_artifact_names=("gum_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
                     fi
                 fi
                 pna_artifact_types=(10)
