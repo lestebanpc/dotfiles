@@ -44,53 +44,103 @@ shell/others/login/autocomplete/yazi.*
 shell/others/login/autocomplete/ya.*
 shell/powershell/login/autocomplete/ya.*
 shell/powershell/login/autocomplete/yazi.*
+shell/bash/login/keybindings/yazi.*
+shell/bash/login/keybindings/ya.*
+shell/fish/login/keybindings/yazi.*
+shell/fish/login/keybindings/ya.*
+shell/zsh/login/keybindings/yazi.*
+shell/zsh/login/keybindings/ya.*
+shell/others/login/keybindings/yazi.*
+shell/others/login/keybindings/ya.*
+shell/powershell/login/keybindings/ya.*
+shell/powershell/login/keybindings/yazi.*
 
 shell/bash/login/autocomplete/eza.*
 shell/fish/login/autocomplete/eza.*
 shell/zsh/login/autocomplete/eza.*
 shell/others/login/autocomplete/eza.*
 shell/powershell/login/autocomplete/eza.*
+shell/bash/login/keybindings/eza.*
+shell/fish/login/keybindings/eza.*
+shell/zsh/login/keybindings/eza.*
+shell/others/login/keybindings/eza.*
+shell/powershell/login/keybindings/eza.*
 
 shell/bash/login/autocomplete/zoxide.*
 shell/fish/login/autocomplete/zoxide.*
 shell/zsh/login/autocomplete/zoxide.*
 shell/others/login/autocomplete/zoxide.*
 shell/powershell/login/autocomplete/zoxide.*
+shell/bash/login/keybindings/zoxide.*
+shell/fish/login/keybindings/zoxide.*
+shell/zsh/login/keybindings/zoxide.*
+shell/others/login/keybindings/zoxide.*
+shell/powershell/login/keybindings/zoxide.*
 
 shell/bash/login/autocomplete/gum.*
 shell/fish/login/autocomplete/gum.*
 shell/zsh/login/autocomplete/gum.*
 shell/others/login/autocomplete/gum.*
 shell/powershell/login/autocomplete/gum.*
+shell/bash/login/keybindings/gum.*
+shell/fish/login/keybindings/gum.*
+shell/zsh/login/keybindings/gum.*
+shell/others/login/keybindings/gum.*
+shell/powershell/login/keybindings/gum.*
 
 shell/bash/login/autocomplete/fzf.*
 shell/fish/login/autocomplete/fzf.*
 shell/zsh/login/autocomplete/fzf.*
 shell/others/login/autocomplete/fzf.*
 shell/powershell/login/autocomplete/fzf.*
+shell/bash/login/keybindings/fzf.*
+shell/fish/login/keybindings/fzf.*
+shell/zsh/login/keybindings/fzf.*
+shell/others/login/keybindings/fzf.*
+shell/powershell/login/keybindings/fzf.*
 
 shell/bash/login/autocomplete/fd.*
 shell/fish/login/autocomplete/fd.*
 shell/zsh/login/autocomplete/fd.*
 shell/others/login/autocomplete/fd.*
 shell/powershell/login/autocomplete/fd.*
+shell/bash/login/keybindings/fd.*
+shell/fish/login/keybindings/fd.*
+shell/zsh/login/keybindings/fd.*
+shell/others/login/keybindings/fd.*
+shell/powershell/login/keybindings/fd.*
 
 shell/bash/login/autocomplete/bat.*
 shell/fish/login/autocomplete/bat.*
 shell/zsh/login/autocomplete/bat.*
 shell/others/login/autocomplete/bat.*
 shell/powershell/login/autocomplete/bat.*
+shell/bash/login/keybindings/bat.*
+shell/fish/login/keybindings/bat.*
+shell/zsh/login/keybindings/bat.*
+shell/others/login/keybindings/bat.*
+shell/powershell/login/keybindings/bat.*
 
 shell/bash/login/autocomplete/rg.*
 shell/fish/login/autocomplete/rg.*
 shell/zsh/login/autocomplete/rg.*
 shell/others/login/autocomplete/rg.*
 shell/powershell/login/autocomplete/rg.*
+shell/bash/login/keybindings/rg.*
+shell/fish/login/keybindings/rg.*
+shell/zsh/login/keybindings/rg.*
+shell/others/login/keybindings/rg.*
+shell/powershell/login/keybindings/rg.*
 
 shell/bash/login/autocomplete/step.*
 shell/fish/login/autocomplete/step.*
 shell/zsh/login/autocomplete/step.*
 shell/others/login/autocomplete/step.*
 shell/powershell/login/autocomplete/step.*
+shell/bash/login/keybindings/step.*
+shell/fish/login/keybindings/step.*
+shell/zsh/login/keybindings/step.*
+shell/others/login/keybindings/step.*
+shell/powershell/login/keybindings/step.*
 
 
