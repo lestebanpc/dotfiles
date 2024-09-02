@@ -5430,13 +5430,13 @@ function _copy_artifact_files() {
             if [ $p_flag_install -eq 0 ]; then
 
                 #Ejecutando los script de instalación
-                exec_setupscript_to_program "${l_source_path}/aws" "install" "aws-cli" "-i " "-b \"${g_programs_path}/aws-cli\""
+                exec_setupscript_to_program "${l_source_path}/aws" "install" "aws-cli" "-i " "-b ${g_programs_path}/aws-cli"
 
             #Actualizando
             else
 
                 #Ejecutando los script de instalación
-                exec_setupscript_to_program "${l_source_path}/aws" "install" "aws-cli" "-i " "-b \"${g_programs_path}/aws-cli\" --update"
+                exec_setupscript_to_program "${l_source_path}/aws" "install" "aws-cli" "-i " "-b ${g_programs_path}/aws-cli --update"
 
             fi
             ;;
