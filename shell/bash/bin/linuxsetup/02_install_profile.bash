@@ -1890,7 +1890,7 @@ function _setup_user_profile() {
 
     #Archivo de configuración de SSH
     create_folderpath_on_home "" ".ssh"
-    copy_file_on_home "${g_repo_path}/etc/ssh" "template_linux.yaml" ".ssh" "config" 1 "Profile > "
+    copy_file_on_home "${g_repo_path}/etc/ssh" "template_linux.conf" ".ssh" "config" 1 "Profile > "
     l_status=$?
 
     return 0
