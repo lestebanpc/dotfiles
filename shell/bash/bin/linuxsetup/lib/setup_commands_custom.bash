@@ -5163,7 +5163,7 @@ function _copy_artifact_files() {
                 printf '%b   Opcional:%b\n' "$g_color_gray1" "$g_color_reset"
                 printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" \
                        "$g_color_yellow1" "$g_color_reset"
-                printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_gray1" \ 
+                printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_gray1" \
                        "$g_color_yellow1" "$g_color_reset"
                 printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" \
                        "containerd.service" "$g_color_yellow1" "$g_color_reset"
