@@ -3655,7 +3655,7 @@ function _copy_artifact_files() {
 
     #3. Copiar loa archivos del artefactos segun el prefijo
     local l_status=0
-    local l_aux
+    local l_aux=''
 
     case "$p_repo_id" in
 
@@ -4402,7 +4402,7 @@ function _copy_artifact_files() {
             l_status=$?
             if [ $l_status -eq 0 ]; then
                 printf 'Creando el archivo "%b~/.files/etc/kubelet/systemd/kubelet.service%b" ... \n' "$g_color_gray1" "$g_color_reset"
-                echo "$l_aux" | sed "s:/usr/bin:${l_target_path}:g" > ${g_repo_path}/etc/kubelet/systemd/kubelet.service
+                echo "$l_aux" | sed "s:/usr/bin:${g_bin_cmdpath}:g" > ${g_repo_path}/etc/kubelet/systemd/kubelet.service
 
                 #Fix permisos
                 if [ $g_runner_is_target_user -ne 0 ]; then
@@ -4437,7 +4437,7 @@ function _copy_artifact_files() {
             l_status=$?
             if [ $l_status -eq 0 ]; then
                 printf 'Creando el archivo "%b~/.files/etc/kubeadm/10-kubeadm.conf%b" ... \n' "$g_color_gray1" "$g_color_reset"
-                echo "$l_aux" | sed "s:/usr/bin:${l_target_path}:g" > ${g_repo_path}/etc/kubeadm/10-kubeadm.conf
+                echo "$l_aux" | sed "s:/usr/bin:${g_bin_cmdpath}:g" > ${g_repo_path}/etc/kubeadm/10-kubeadm.conf
 
                 #Fix permisos
                 if [ $g_runner_is_target_user -ne 0 ]; then
@@ -5273,18 +5273,23 @@ function _copy_artifact_files() {
                 copy_binary_on_command "${l_source_path}" "nerdctl" 0 1
 
                 #Archivos para instalar 'containerd' de modo rootless
-                echo "Copiando \"${l_source_path}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/shell/sh/containerd\" ..."
-                cp "${g_temp_path}/${l_source_path}/containerd-rootless.sh" ${g_repo_path}/shell/sh/bin/containerd
+                echo "Copiando \"${l_source_path}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/shell/sh/bin/cmds\" ..."
+                cp "${g_temp_path}/${l_source_path}/containerd-rootless.sh" ${g_repo_path}/shell/sh/bin/cmds/
                 chmod u+x ${g_repo_path}/shell/sh/bin/cmds/containerd-rootless.sh
 
-                echo "Copiando \"${l_source_path}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/shell/sh/containerd\" ..."
-                cp "${g_temp_path}/${l_source_path}/containerd-rootless-setuptool.sh" ${g_repo_path}/shell/sh/containerd
+                echo "Copiando \"${l_source_path}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/shell/sh/bin/containerd\" ..."
+                cp "${g_temp_path}/${l_source_path}/containerd-rootless-setuptool.sh" ${g_repo_path}/shell/sh/bin/containerd/
                 chmod u+x ${g_repo_path}/shell/sh/bin/containerd/containerd-rootless-setuptool.sh
 
                 #Fix permisos
                 if [ $g_runner_is_target_user -ne 0 ]; then
                     chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/sh/bin/containerd/
+                    chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/sh/bin/cmds/
                 fi
+
+                #Crear el enlace simbolico de comandos basicos
+                create_folderpath_on_home "" ".local/bin"
+                create_filelink_on_home "${g_repo_name}/shell/sh/bin/cmds" "containerd-rootless.sh" ".local/bin" "containerd-rootless" "" 0
 
             #3. Configuración: Instalación de binarios de complementos que su reposotrio no ofrece el compilado (solo la fuente). Para ello se usa el full
             else
@@ -5295,7 +5300,7 @@ function _copy_artifact_files() {
                 #3.2. Configurar 'rootless-containers/bypass4netns' usado para accelar 'Slirp4netns' (NAT o port-forwading de llamadas del exterior al contenedor)
 
                 #Comparar la versión actual con la versión descargada
-                _compare_version_current_with "bypass4netns" "$l_source_path" $p_install_win_cmds
+                _compare_version_current_with "bypass4netns" "${g_temp_path}/$l_source_path" $p_install_win_cmds
                 l_status=$?
 
                 #Actualizar solo no esta configurado o tiene una version menor a la actual
