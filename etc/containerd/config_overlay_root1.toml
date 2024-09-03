@@ -26,7 +26,9 @@ root = "/dt3/containerd/root"
 #[cgroup]
 #    path = ""
 #
-#[plugins]
+[plugins]
+    [plugins."io.containerd.grpc.v1.cri".cni]
+        bin_dir = "/var/opt/tools/cni_plugins"
 #    [plugins."io.containerd.grpc.v1.cri".containerd]
 #        snapshotter = "overlayfs"
 #        default_runtime_name = "crun"
