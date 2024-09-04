@@ -88,6 +88,7 @@ gA_packages=(
         ['gum']='charmbracelet/gum'
         ['tmux-thumbs']='fcsonline/tmux-thumbs'
         ['wezterm']='wez/wezterm'
+        ['cilium']='cilium/cilium-cli'
     )
 
 
@@ -104,9 +105,9 @@ ga_menu_options_title=(
     "Shell 'Powershell'"
     "LL Container Runtine, comandos root-less, CNI plugins"
     "HL Container Runtime ContainerD: ContainerD, BuildKit y NerdCtl"
-    "HL Container Runtime CRI-O: CriCtl"
-    "Tools para gestionar imagenes: Dive, HadoLint, Trivy"
-    "Tools para K8S: kubectl, oc, helm, operator-sdk, ..."
+    "Binarios para gestionar imagenes: Dive, HadoLint, Trivy"
+    "Binarios basicos para K8S: CriCtl, KubeCtl, Cilium, Helm"
+    "Binarios adicionales para K8S: oc, operator-sdk, ..."
     "Binarios para un nodo K8S de 'K0S'"
     "Binarios para un nodo K8S de 'KubeAdm'"
     ".NET  ${g_color_reset}>${g_color_green1} RTE y SDK"
@@ -140,9 +141,9 @@ ga_menu_options_packages=(
     "powershell"
     "runc,crun,rootlesskit,slirp4netns,fuse-overlayfs,cni-plugins"
     "containerd,buildkit,nerdctl"
-    "crictl"
     "dive,hadolint,trivy"
-    "kubectl,oc,helm,operator-sdk,3scale-toolbox,pgo"
+    "crictl,kubectl,cilium,helm"
+    "operator-sdk,3scale-toolbox,pgo"
     "k0s"
     "cni-plugins,kubectl,kubelet,kubeadm"
     "net-sdk"
@@ -197,6 +198,7 @@ declare -A gA_repo_config_os_type=(
         ['ctags-nowin']=14
         ['tmux-fingers']=14
         ['tmux-thumbs']=14
+        ['cilium']=14
     )
 
 
@@ -1888,6 +1890,33 @@ function _get_repo_current_pretty_version() {
             ;;
 
 
+        cilium)
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/cilium.info" ]; then
+                    l_tmp=$(cat "${g_win_programs_path}/cilium.info" | head -n 1)
+                else
+                    #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
+                    echo "$g_version_none"
+                    return 3
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/cilium.info" ]; then
+                    l_tmp=$(cat "${g_programs_path}/cilium.info" | head -n 1)
+                else
+                    #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
+                    echo "$g_version_none"
+                    return 3
+                fi
+
+            fi
+
+            ;;
+
+
         tmux-fingers)
 
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -2409,6 +2438,36 @@ function get_repo_artifacts() {
                         pna_artifact_names=("yq_linux_arm64.tar.gz")
                     else
                         pna_artifact_names=("yq_linux_amd64.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
+
+        cilium)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("cilium-windows-arm64.zip")
+                else
+                    pna_artifact_names=("cilium-windows-amd64.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("cilium-linux-arm64.tar.gz")
+                    else
+                        pna_artifact_names=("cilium-linux-amd64.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("cilium-linux-arm64.tar.gz")
+                    else
+                        pna_artifact_names=("cilium-linux-amd64.tar.gz")
                     fi
                 fi
                 pna_artifact_types=(10)
@@ -4376,6 +4435,30 @@ function _copy_artifact_files() {
             ;;
 
             
+        cilium)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+            
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                #Copiar el comando
+                copy_binary_on_command "${l_source_path}" "cilium" 0 1
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "cilium.info" "$p_repo_last_pretty_version" 0
+
+            else
+
+                #Copiar el comando
+                copy_binary_on_command "${l_source_path}" "cilium.exe" 1 1
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "cilium.info" "$p_repo_last_pretty_version" 1
+            fi
+            ;;
+
             
         kubelet)
 
