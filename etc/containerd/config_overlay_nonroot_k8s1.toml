@@ -1,5 +1,6 @@
 #More info: https://github.com/containerd/containerd/blob/main/docs/man/containerd-config.toml.5.md
 #           https://github.com/containerd/containerd/blob/main/docs/cri/config.md
+#Para ver la configuracion actual use: 'containerd config dump'
 
 version = 2
 
@@ -7,60 +8,79 @@ version = 2
 #state = "/run/containerd"
 #oom_score = 0
 #imports = ["/etc/containerd/runtime_*.toml", "./debug.toml"]
-#
+
 #[grpc]
-#    address = "/run/containerd/containerd.sock"
-#    uid = 0
-#    gid = 0
-#
+#  address = "/run/containerd/containerd.sock"
+#  uid = 0
+#  gid = 0
+
 #[debug]
-#    address = "/run/containerd/debug.sock"
-#    uid = 0
-#    gid = 0
-#    level = "info"
-#
+#  address = "/run/containerd/debug.sock"
+#  uid = 0
+#  gid = 0
+#  level = "info"
+
 #[metrics]
-#    address = ""
-#    grpc_histogram = false
-#
+#  address = ""
+#  grpc_histogram = false
+
 #[cgroup]
-#    path = ""
+#  path = ""
 #
 
 [plugins]
+
+  # Plugin CRI que implementa el API reqerido por Kubelet de K8S (es ignorado si usar nerdctl/docker)
+  [plugins."io.containerd.grpc.v1.cri"]
+    sandbox_image = "registry.k8s.io/pause:3.10"
+
     [plugins."io.containerd.grpc.v1.cri".cni]
-        bin_dir = "/var/opt/tools/cni_plugins"
-#    [plugins."io.containerd.grpc.v1.cri".containerd]
-#        snapshotter = "overlayfs"
-#        default_runtime_name = "crun"
-#        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
-#            # crun: https://github.com/containers/crun
-#            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun]
-#            runtime_type = "io.containerd.runc.v2"
-#                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun.options]
-#                BinaryName = "/usr/local/bin/crun"
-#            # gVisor: https://gvisor.dev/
-#            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.gvisor]
-#            runtime_type = "io.containerd.runsc.v1"
-#            # Kata Containers: https://katacontainers.io/
-#            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
-#            runtime_type = "io.containerd.kata.v2"
-#    [plugins."io.containerd.monitor.v1.cgroups"]
-#        no_prometheus = false
-#    [plugins."io.containerd.service.v1.diff-service"]
-#        default = ["walking"]
-#    [plugins."io.containerd.gc.v1.scheduler"]
-#        pause_threshold = 0.02
-#        deletion_threshold = 0
-#        mutation_threshold = 100
-#        schedule_delay = 0
-#        startup_delay = "100ms"
-#    [plugins."io.containerd.runtime.v2.task"]
-#        platforms = ["linux/amd64"]
-#        sched_core = true
-#    [plugins."io.containerd.service.v1.tasks-service"]
-#        blockio_config_file = ""
-#        rdt_config_file = ""
-#
+      bin_dir = "/var/opt/tools/cni_plugins"
+
+    [plugins."io.containerd.grpc.v1.cri".containerd]
+    #  snapshotter = "overlayfs"
+    #  default_runtime_name = "runc"
+
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
+
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]  
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options] 
+            SystemdCgroup = true 
+
+      ## crun: https://github.com/containers/crun
+      #[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun]
+      #  runtime_type = "io.containerd.runc.v2"
+      #    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun.options]
+      #    BinaryName = "/usr/local/bin/crun"
+      
+      ## gVisor: https://gvisor.dev/
+      #[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.gvisor]
+      #  runtime_type = "io.containerd.runsc.v1"
+      
+      ## Kata Containers: https://katacontainers.io/
+      #[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
+      #  runtime_type = "io.containerd.kata.v2"
+
+  #[plugins."io.containerd.monitor.v1.cgroups"]
+  #  no_prometheus = false
+  
+  #[plugins."io.containerd.service.v1.diff-service"]
+  #  default = ["walking"]
+  
+  #[plugins."io.containerd.gc.v1.scheduler"]
+  #  pause_threshold = 0.02
+  #  deletion_threshold = 0
+  #  mutation_threshold = 100
+  #  schedule_delay = 0
+  #  startup_delay = "100ms"
+  
+  #[plugins."io.containerd.runtime.v2.task"]
+  #  platforms = ["linux/amd64"]
+  #  sched_core = true
+  
+  #[plugins."io.containerd.service.v1.tasks-service"]
+  #  blockio_config_file = ""
+  #  rdt_config_file = ""
+  #
 
 
