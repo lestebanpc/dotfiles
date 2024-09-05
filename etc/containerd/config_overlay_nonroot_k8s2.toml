@@ -35,7 +35,7 @@ version = 2
     sandbox_image = "registry.k8s.io/pause:3.10"
 
     [plugins."io.containerd.grpc.v1.cri".cni]
-      bin_dir = "/opt/cni/bin"
+      bin_dir = "/var/opt/tools/cni_plugins"
 
     [plugins."io.containerd.grpc.v1.cri".containerd]
     #  snapshotter = "overlayfs"
@@ -43,9 +43,9 @@ version = 2
 
       [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
 
-        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]  
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
           runtime_type = "io.containerd.runc.v2"
-          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options] 
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
             SystemdCgroup = true 
 
       ## crun: https://github.com/containers/crun
