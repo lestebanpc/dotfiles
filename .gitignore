@@ -32,7 +32,7 @@ shell/powershell/bin/windowssetup/config.ps1
 
 # Autogenerado que cambian frecuentemente
 etc/oh-my-posh/default/*
-#etc/trivy/templates/*
+etc/trivy/templates/*
 
 # Autogenerado que cambian frecuentemente> Autocomplete de comandos instalados
 shell/bash/login/autocomplete/yazi.*
