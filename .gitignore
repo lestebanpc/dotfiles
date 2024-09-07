@@ -30,8 +30,9 @@ shell/powershell/bin/windowssetup/config.ps1
 #!etc/git/custom/template_windows_main.toml
 #!etc/git/custom/template_windows_work.toml
 
-# Autogenerado que cambian frecuentemente> Temas de Oh-My-Posh
+# Autogenerado que cambian frecuentemente
 etc/oh-my-posh/default/*
+#etc/trivy/templates/*
 
 # Autogenerado que cambian frecuentemente> Autocomplete de comandos instalados
 shell/bash/login/autocomplete/yazi.*
