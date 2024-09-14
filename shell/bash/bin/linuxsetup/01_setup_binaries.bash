@@ -25,10 +25,10 @@
 #         ./bin/
 #             ./linuxsetup/
 #                 ./00_setup_summary.bash
-#                 ./01_setup_commands.bash
-#                 ./02_install_profile.bash
-#                 ./03_update_profile.bash
-#                 ./04_setup_packages.bash
+#                 ./01_setup_binaries.bash
+#                 ./04_install_profile.bash
+#                 ./05_update_profile.bash
+#                 ./03_setup_repo_packages.bash
 #                 ........................
 #                 ........................
 #                 ........................
@@ -157,10 +157,10 @@ declare -r g_version_none='0.0.0'
 . ${g_shell_path}/bash/bin/linuxsetup/lib/common_utility.bash
 
 #Funcions de utilidad solo para el configurador de comandos:
-. ${g_shell_path}/bash/bin/linuxsetup/lib/setup_commands_utility.bash
+. ${g_shell_path}/bash/bin/linuxsetup/lib/setup_binaries_utility.bash
 
 #Funciones de utilidad a modificar cuando se adiciona un nuevo comando al configurador de comandos.
-. ${g_shell_path}/bash/bin/linuxsetup/lib/setup_commands_custom.bash
+. ${g_shell_path}/bash/bin/linuxsetup/lib/setup_binaries_custom.bash
 
 
 #}}}

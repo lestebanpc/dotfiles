@@ -8,27 +8,27 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bDesintalar repositorios mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset" 
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_commands.bash uninstall\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_commands.bash uninstall TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash uninstall\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash uninstall TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '  > %bInstalar repositorios mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_commands.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_commands.bash 0\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_commands.bash 0 TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SETUP_ONLYLAST_VERSION\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash 0\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash 0 TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SETUP_ONLYLAST_VERSION\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un grupo de repositorios sin mostrar el menú y usando los ID del menu%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_commands.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 1 si es interactivo, 3 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un repositorio sin mostrar el  menú y usando los ID de los repositorios%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID%b\n' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS%b\n' \
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE LIST-REPO-ID%b\n' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE LIST-REPO-ID TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS%b\n' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_commands.bash CALLING_TYPE LIST-REPO-ID TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION SHOW-TITLE-1REPO%b\n' \
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE LIST-REPO-ID TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION SHOW-TITLE-1REPO%b\n' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"

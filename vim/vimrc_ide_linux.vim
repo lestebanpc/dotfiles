@@ -1,5 +1,5 @@
 "
-" Se recomienda ejecutar ('~/.files/shell/bash/bin/linuxsetup/02_install_profile.bash') el script de 
+" Se recomienda ejecutar ('~/.files/shell/bash/bin/linuxsetup/04_install_profile.bash') el script de 
 " configuración del profile y escoger uno de los modos Editor o IDE, el cual creara los enlaces simbolicos
 " requeridos para la inicialización de NeoVIM en dicho modo. El runtime path donde se encuentra el archivo 
 " de inicialización de NeoVIM ('~/.vim') tiene la siguiente estructura:

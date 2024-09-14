@@ -25,10 +25,10 @@
 #              ./bin/
 #                  ./linuxsetup/             <- Requerido en el proceso de instalación en Linux
 #                      ./00_setup_summary.bash
-#                      ./01_setup_commands.bash
-#                      ./02_install_profile.bash
-#                      ./03_update_profile.bash
-#                      ./04_setup_packages.bash
+#                      ./01_setup_binaries.bash
+#                      ./04_install_profile.bash
+#                      ./05_update_profile.bash
+#                      ./03_setup_repo_packages.bash
 #                      ........................
 #                      ........................
 #                      ........................
@@ -143,7 +143,7 @@
 
 
 ##############################################################################################
-# Usado por los script "00_setup_summary.bash", "01_setup_commands.bash"
+# Usado por los script "00_setup_summary.bash", "01_setup_binaries.bash"
 ##############################################################################################
 
 # Folder base donde se almacena el comando y sus archivos afines.
@@ -179,7 +179,7 @@
 
 
 ##############################################################################################
-# Usado por los script "01_setup_commands.bash"
+# Usado por los script "01_setup_binaries.bash"
 ##############################################################################################
 
 # Folder base, generados solo para Linux WSL, donde se almacena el programas, comando y afines usados por Windows.
@@ -195,7 +195,7 @@
 
 
 ##############################################################################################
-# Usado por los script "01_setup_commands.bash", "03_update_profile.bash"
+# Usado por los script "01_setup_binaries.bash", "05_update_profile.bash"
 ##############################################################################################
 
 # Folder base, generados solo para Linux WSL, donde se almacena el programas, comando y afines usados por Windows.

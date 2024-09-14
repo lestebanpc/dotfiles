@@ -26,10 +26,10 @@
 #         ./lib/
 #             ./linuxsetup/
 #                 ./00_setup_summary.bash
-#                 ./01_setup_commands.bash
-#                 ./02_install_profile.bash
-#                 ./03_update_profile.bash
-#                 ./04_setup_packages.bash
+#                 ./01_setup_binaries.bash
+#                 ./04_install_profile.bash
+#                 ./05_update_profile.bash
+#                 ./03_setup_repo_packages.bash
 #                 ........................
 #                 ........................
 #                 ........................
@@ -992,7 +992,7 @@ _install_nodejs() {
         return 0
     fi
 
-    printf 'Se instalara NodeJS usando el script de instalación "%b%s%b" ...\n' "$g_color_gray1" "01_setup_commands.bash" "$g_color_reset"
+    printf 'Se instalara NodeJS usando el script de instalación "%b%s%b" ...\n' "$g_color_gray1" "01_setup_binaries.bash" "$g_color_reset"
 
     printf 'Warning: %bLa ruta personalizada de instalación de programas solo puede ser ingresado por archivo "%b%s%b" de configuración%b.' \
            "$g_color_yellow1" "$g_color_gray1" "config.bash" "$g_color_yellow1" "$g_color_reset" 
@@ -1013,11 +1013,11 @@ _install_nodejs() {
     #10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
     #11> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'. 
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 2 "nodejs" "$g_targethome_path" "$g_repo_name" "" "" "" \
+        ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 2 "nodejs" "$g_targethome_path" "$g_repo_name" "" "" "" \
             $g_status_crendential_storage 1 1 0
         l_status=$?
     else
-        ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 4 "nodejs" "$g_targethome_path" "$g_repo_name" "" "" "" \
+        ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 4 "nodejs" "$g_targethome_path" "$g_repo_name" "" "" "" \
             $g_status_crendential_storage 1 1 0
         l_status=$?
     fi
@@ -1253,10 +1253,10 @@ _install_python() {
     # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     # 4> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_shell_path}/bash/bin/linuxsetup/04_setup_packages.bash 2 "$l_packages_to_install" $g_status_crendential_storage
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 2 "$l_packages_to_install" $g_status_crendential_storage
         l_status=$?
     else
-        ${g_shell_path}/bash/bin/linuxsetup/04_setup_packages.bash 4 "$l_packages_to_install" $g_status_crendential_storage
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 4 "$l_packages_to_install" $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -1456,10 +1456,10 @@ function _install_vim() {
     # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     # 4> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_shell_path}/bash/bin/linuxsetup/04_setup_packages.bash 2 'vim' $g_status_crendential_storage
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 2 'vim' $g_status_crendential_storage
         l_status=$?
     else
-        ${g_shell_path}/bash/bin/linuxsetup/04_setup_packages.bash 4 'vim' $g_status_crendential_storage
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 4 'vim' $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -1525,10 +1525,10 @@ function _install_nvim() {
         # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
         # 4> El estado de la credencial almacenada para el sudo
         if [ $l_is_noninteractive -eq 1 ]; then
-            ${g_shell_path}/bash/bin/linuxsetup/04_setup_packages.bash 2 "nvim" $g_status_crendential_storage
+            ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 2 "nvim" $g_status_crendential_storage
             l_status=$?
         else
-            ${g_shell_path}/bash/bin/linuxsetup/04_setup_packages.bash 4 "nvim" $g_status_crendential_storage
+            ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 4 "nvim" $g_status_crendential_storage
             l_status=$?
         fi
 
@@ -1543,7 +1543,7 @@ function _install_nvim() {
     #Actualmente (2023), en github solo existe binarios para x64 y no para arm64
     else
 
-        printf 'Se instalara NeoVIM usando el script de instalación "%b%s%b" ...\n' "$g_color_gray1" "01_setup_commands.bash" "$g_color_reset"
+        printf 'Se instalara NeoVIM usando el script de instalación "%b%s%b" ...\n' "$g_color_gray1" "01_setup_binaries.bash" "$g_color_reset"
 
         printf 'Warning: %bLa ruta personalizada de instalación de programas solo puede ser ingresado por archivo "%b%s%b" de configuración%b.' \
                "$g_color_yellow1" "$g_color_gray1" "config.bash" "$g_color_yellow1" "$g_color_reset" 
@@ -1565,11 +1565,11 @@ function _install_nvim() {
         #11> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'. 
         if [ $l_is_noninteractive -eq 1 ]; then
             
-            ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 2 "neovim" "$g_targethome_path" "$g_repo_name" "" "" "" \
+            ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 2 "neovim" "$g_targethome_path" "$g_repo_name" "" "" "" \
                 $g_status_crendential_storage 1 1 0
             l_status=$?
         else
-            ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 4 "neovim" "$g_targethome_path" "$g_repo_name" "" "" "" \
+            ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 4 "neovim" "$g_targethome_path" "$g_repo_name" "" "" "" \
                 $g_status_crendential_storage 1 1 0
             l_status=$?
         fi
@@ -3304,13 +3304,13 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bConfigurando el profile del usuario/VIM/NeoVIM escogidos del menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/02_install_profile.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/02_install_profile.bash 0 TARGET_HOME_PATH REPO_NAME\n%b' "$g_color_yellow1" \
+    printf '    %b%s/bash/bin/linuxsetup/04_install_profile.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/04_install_profile.bash 0 TARGET_HOME_PATH REPO_NAME\n%b' "$g_color_yellow1" \
            "$g_shell_path" "$g_color_reset"
     printf '  > %bConfigurando el profile del usuario/VIM/NeoVIM segun un grupo de opciones de menú indicados%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/02_install_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/04_install_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/02_install_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME SUDO-STORAGE-OPTIONS\n\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/04_install_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME SUDO-STORAGE-OPTIONS\n\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bTARGET_HOME_PATH %bRuta base donde el home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:%b\n' \

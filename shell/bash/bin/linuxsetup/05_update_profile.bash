@@ -25,10 +25,10 @@
 #         ./bin/
 #             ./linuxsetup/
 #                 ./00_setup_summary.bash
-#                 ./01_setup_commands.bash
-#                 ./02_install_profile.bash
-#                 ./03_update_profile.bash
-#                 ./04_setup_packages.bash
+#                 ./01_setup_binaries.bash
+#                 ./04_install_profile.bash
+#                 ./05_update_profile.bash
+#                 ./03_setup_repo_packages.bash
 #                 ........................
 #                 ........................
 #                 ........................
@@ -777,13 +777,13 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bActualizaciones usando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/03_update_profile.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/03_update_profile.bash 0 TARGET_HOME_PATH REPO_NAME\n%b' "$g_color_yellow1" \
+    printf '    %b%s/bash/bin/linuxsetup/05_update_profile.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/05_update_profile.bash 0 TARGET_HOME_PATH REPO_NAME\n%b' "$g_color_yellow1" \
            "$g_shell_path" "$g_color_reset"
     printf '  > %bActualizaciones SIN usar un menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/03_update_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME\n%b' "$g_color_yellow1" \
+    printf '    %b%s/bash/bin/linuxsetup/05_update_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME\n%b' "$g_color_yellow1" \
            "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/03_update_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME SUDO-STORAGE-OPTIONS\n\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/05_update_profile.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME SUDO-STORAGE-OPTIONS\n\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b Es 0 si se muestra un menu, caso contrario es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"

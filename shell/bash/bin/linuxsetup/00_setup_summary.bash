@@ -25,10 +25,10 @@
 #         ./bin/
 #             ./linuxsetup/
 #                 ./00_setup_summary.bash
-#                 ./01_setup_commands.bash
-#                 ./02_install_profile.bash
-#                 ./03_update_profile.bash
-#                 ./04_setup_packages.bash
+#                 ./01_setup_binaries.bash
+#                 ./04_install_profile.bash
+#                 ./05_update_profile.bash
+#                 ./03_setup_repo_packages.bash
 #                 ........................
 #                 ........................
 #                 ........................
@@ -157,7 +157,7 @@ fi
 
 declare -r g_default_list_package_ids='curl,unzip,openssl,tmux'
 
-#Opciones de '02_install_profile.bash' para configurar VIM/NeoVIM
+#Opciones de '04_install_profile.bash' para configurar VIM/NeoVIM
 #  0> Crear archivos de configuración como Editor
 #  1> Crear archivos de configuración como IDE
 #  2> Descargar plugins de Editor e indexarlos
@@ -178,7 +178,7 @@ declare -ra ga_title_config=(
     "Indexar la documentación (de plugins anteriormente descargados)"
     "Inicializar los plugins de IDE")
 
-#Opciones de '02_install_profile.bash'para instalar lo necesario para VIM/NeoVIM
+#Opciones de '04_install_profile.bash'para instalar lo necesario para VIM/NeoVIM
 #  0> Instalar Python
 #  1> Instalar paquete de usuario de Python: 'jtbl'
 #  2> Instalar paquete de usuario de Python: 'jtbl', 'compiledb', 'rope' y 'pynvim'
@@ -198,7 +198,7 @@ declare -ra ga_title_install=(
     "VIM"
     "NeoVIM")
 
-#Opciones de '02_install_profile.bash' generales
+#Opciones de '04_install_profile.bash' generales
 # 0> Actualizar los paquetes del SO
 # 1> Crear los enlaces simbolicos del profile del usuario
 # 2> Flag para re-crear un enlaces simbolicos en caso de existir
@@ -293,10 +293,10 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_shell_path}/bash/bin/linuxsetup/04_setup_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             else
-                ${g_shell_path}/bash/bin/linuxsetup/04_setup_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             fi
 
@@ -352,11 +352,11 @@ function g_install_options() {
             # 8> El estado de la credencial almacenada para el sudo.
             # 9> Install only last version: por defecto es 1 (representa a 'false'). Solo si su valor es 0 representa a 'true'.
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 1 4 "$g_targethome_path" "$g_repo_name" "$g_programs_path" "$g_cmd_base_path" \
+                ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 1 4 "$g_targethome_path" "$g_repo_name" "$g_programs_path" "$g_cmd_base_path" \
                     "$g_temp_path" $g_status_crendential_storage 0
                 l_status=$?
             else
-                ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 3 4 "$g_targethome_path" "$g_repo_name" "$g_programs_path" "$g_cmd_base_path" \
+                ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 3 4 "$g_targethome_path" "$g_repo_name" "$g_programs_path" "$g_cmd_base_path" \
                     "$g_temp_path" $g_status_crendential_storage 0
                 l_status=$?
             fi
@@ -444,11 +444,11 @@ function g_install_options() {
         #10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1' 
         if [ $l_is_noninteractive -eq 1 ]; then
             
-            ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 2 "$p_list_repo_ids" "$g_targethome_path" "$g_repo_name" "$g_programs_path" \
+            ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 2 "$p_list_repo_ids" "$g_targethome_path" "$g_repo_name" "$g_programs_path" \
                 "$g_cmd_base_path" "$g_temp_path" $g_status_crendential_storage 0 1
             l_status=$?
         else
-            ${g_shell_path}/bash/bin/linuxsetup/01_setup_commands.bash 4 "$p_list_repo_ids" "$g_targethome_path" "$g_repo_name" "$g_programs_path" \
+            ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 4 "$p_list_repo_ids" "$g_targethome_path" "$g_repo_name" "$g_programs_path" \
                 "$g_cmd_base_path" "$g_temp_path" $g_status_crendential_storage 0 1
             l_status=$?
         fi
@@ -730,11 +730,11 @@ function g_install_options() {
        # 6> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
        # 7> El estado de la credencial almacenada para el sudo.
        if [ $l_is_noninteractive -eq 1 ]; then
-           ${g_shell_path}/bash/bin/linuxsetup/02_install_profile.bash 1 $l_prg_options "$g_targethome_path" "$g_repo_name" \
+           ${g_shell_path}/bash/bin/linuxsetup/04_install_profile.bash 1 $l_prg_options "$g_targethome_path" "$g_repo_name" \
                $g_status_crendential_storage
            l_status=$?
        else
-           ${g_shell_path}/bash/bin/linuxsetup/02_install_profile.bash 2 $l_prg_options "$g_targethome_path" "$g_repo_name" \
+           ${g_shell_path}/bash/bin/linuxsetup/04_install_profile.bash 2 $l_prg_options "$g_targethome_path" "$g_repo_name" \
                $g_status_crendential_storage
            l_status=$?
        fi

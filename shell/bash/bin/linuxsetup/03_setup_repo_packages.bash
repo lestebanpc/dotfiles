@@ -25,10 +25,10 @@
 #         ./bin/
 #             ./linuxsetup/
 #                 ./00_setup_summary.bash
-#                 ./01_setup_commands.bash
-#                 ./02_install_profile.bash
-#                 ./03_update_profile.bash
-#                 ./04_setup_packages.bash
+#                 ./01_setup_binaries.bash
+#                 ./04_install_profile.bash
+#                 ./05_update_profile.bash
+#                 ./03_setup_repo_packages.bash
 #                 ........................
 #                 ........................
 #                 ........................
@@ -158,7 +158,7 @@ fi
 
 
 #Funciones modificables para el instalador.
-. ${g_shell_path}/bash/bin/linuxsetup/lib/setup_packages_custom.bash
+. ${g_shell_path}/bash/bin/linuxsetup/lib/setup_repo_packages_custom.bash
 
 
 #}}}
@@ -1759,22 +1759,22 @@ g_usage() {
 
     printf 'Usage:\n'
     printf '  > %bDesintalar paquetes mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset" 
-    printf '    %b%s/bash/bin/linuxsetup/04_setup_packages.bash uninstall\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/04_setup_packages.bash uninstall REPO_NAME\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/03_setup_repo_packages.bash uninstall\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/03_setup_repo_packages.bash uninstall REPO_NAME\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '  > %bInstalar paquetes mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/04_setup_packages.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/04_setup_packages.bash 0 REPO_NAME\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/03_setup_repo_packages.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/03_setup_repo_packages.bash 0 REPO_NAME\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un grupo de paquetes sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/04_setup_packages.bash CALLING_TYPE MENU-OPTIONS REPO_NAME\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/04_setup_packages.bash CALLING_TYPE MENU-OPTIONS REPO_NAME SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" \
+    printf '    %b%s/bash/bin/linuxsetup/03_setup_repo_packages.bash CALLING_TYPE MENU-OPTIONS REPO_NAME\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/03_setup_repo_packages.bash CALLING_TYPE MENU-OPTIONS REPO_NAME SUDO-STORAGE-OPTIONS\n%b' "$g_color_yellow1" \
            "$g_shell_path" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 1 si es interactivo y 3 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un listado paquete sin mostrar el  menú%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS REPO_NAME%b\n' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS REPO_NAME SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" \
+    printf '    %b%s/bash/bin/linuxsetup/03_setup_repo_packages.bash CALLING_TYPE LIST-REPO-IDS REPO_NAME%b\n' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/03_setup_repo_packages.bash CALLING_TYPE LIST-REPO-IDS REPO_NAME SUDO-STORAGE-OPTIONS%b\n' "$g_color_yellow1" \
            "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/04_setup_packages.bash CALLING_TYPE LIST-REPO-IDS REPO_NAME SUDO-STORAGE-OPTIONS UPGRADE-OS-PACKAGES%b\n' \
+    printf '    %b%s/bash/bin/linuxsetup/03_setup_repo_packages.bash CALLING_TYPE LIST-REPO-IDS REPO_NAME SUDO-STORAGE-OPTIONS UPGRADE-OS-PACKAGES%b\n' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"

@@ -29,7 +29,7 @@ Las estructura folderes es:
 
 Para la configuracion se puede usar una de las siguientes script de configuración.
 
-- Script './shell/bash/bin/linuxsetup/01_setup_commands.bash' descarga y configura comandos (un binario) y programas (conjunto de binarios) de repositorio que no sean del SO (usualmente GitHub).
+- Script './shell/bash/bin/linuxsetup/01_setup_binaries.bash' descarga y configura comandos (un binario) y programas (conjunto de binarios) de repositorio que no sean del SO (usualmente GitHub).
   Se recomienda si ejecute con un usuario que no sea root para que los binarios/programas sean compartidos para todos los usuario, pero podria usarlo.
   Por defecto, aunque puede moficarse usando los archivos de configuración, se usaran la siguientes rutas de configuración:
   - Los programas se instalaran:
@@ -45,10 +45,10 @@ Para la configuracion se puede usar una de las siguientes script de configuraci�
     - Los programas los descargará en 'C:\cli\prgs'.
     - Los comandos los descargará en 'C:\cli\cmds\bin'. 
 
-- Script './shell/bash/bin/linuxsetup/02_install_profile.bash' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
-- Script './shell/bash/bin/linuxsetup/03_update_profile.bash' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
+- Script './shell/bash/bin/linuxsetup/04_install_profile.bash' permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
+- Script './shell/bash/bin/linuxsetup/05_update_profile.bash' permite actualizar los comandos/programas descargados de los repositorios que no son del SO, actualizar los plugin de VIM/NoeVIM.
 
-No uso un gestor de plugin para VIM/NeoVIM, uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './shell/bash/bin/linuxsetup/03_update_profile.bash'.
+No uso un gestor de plugin para VIM/NeoVIM, uso paquetes nativo de VIM/NeoVIM. Para actualizar los paquetes de VIM/NeoVIM use la opción './shell/bash/bin/linuxsetup/05_update_profile.bash'.
 
 Los pasos recomandos para configurar su SO son:
 
@@ -105,10 +105,10 @@ Los pasos recomandos para configurar su SO son:
    
    ```shell
    #Mostrar el menu para instalar/actualizar comandos/programas:
-   ~/.files/shell/bash/bin/linuxsetup/01_setup_commands.bash
+   ~/.files/shell/bash/bin/linuxsetup/01_setup_binaries.bash
    
    #Para mostrar los parametros del script, ingrese un parametro invalido como:
-   ~/.files/shell/bash/bin/linuxsetup/01_setup_commands.bash x
+   ~/.files/shell/bash/bin/linuxsetup/01_setup_binaries.bash x
    ```
 
 5. Configure la terminal.
@@ -122,10 +122,10 @@ Los pasos recomandos para configurar su SO son:
    
    ```bash
    #Mostrar el menu para configurar el profile y VIM/NeoVIM
-   ~/.files/shell/bash/bin/linuxsetup/02_install_profile.bash
+   ~/.files/shell/bash/bin/linuxsetup/04_install_profile.bash
    
    #Para mostrar los parametros del script, ingrese un parametro invalido como:
-   ~/.files/shell/bash/bin/linuxsetup/02_install_profile.bash
+   ~/.files/shell/bash/bin/linuxsetup/04_install_profile.bash
    ```
 7. Opcional. Configuración de su profile del shell del SO:
    El script de profile '~/.bashrc' define algunas variable globales con valores por defecto, las cuales puede ser modificados, defiendo el archivo de configuración '.config.bash'.
@@ -259,7 +259,7 @@ Los pasos recomandos para configurar su SO son:
    #
    ```
    
-   Si cuenta con WSL, 'NodeJS', '. Net' y 'Powershell Core'y lo podra instalar usando la opcion el menu mostrado al ejecutar el script '~/.files/shell/bash/bin/linuxsetup/01_setup_commands.bash'
+   Si cuenta con WSL, 'NodeJS', '. Net' y 'Powershell Core'y lo podra instalar usando la opcion el menu mostrado al ejecutar el script '~/.files/shell/bash/bin/linuxsetup/01_setup_binaries.bash'
    
    - Usando la opcion '1048576' del menu para instalar la ultima version de 'NodeJS' en 'D:\CLI\Programs\NodeJS'.
      En las variables de entorno del sistema debe registrar la la ruta 'D:\CLI\Programs\NodeJS'.

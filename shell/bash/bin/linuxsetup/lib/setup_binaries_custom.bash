@@ -2310,9 +2310,9 @@ function get_repo_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
                 if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("zoxide-0.9.4-aarch64-pc-windows-msvc.zip")
+                    pna_artifact_names=("zoxide-${p_repo_last_pretty_version}-aarch64-pc-windows-msvc.zip")
                 else
-                    pna_artifact_names=("zoxide-0.9.4-x86_64-pc-windows-msvc.zip")
+                    pna_artifact_names=("zoxide-${p_repo_last_pretty_version}-x86_64-pc-windows-msvc.zip")
                 fi
                 pna_artifact_types=(11)
             else
@@ -2320,15 +2320,15 @@ function get_repo_artifacts() {
                 if [ $g_os_subtype_id -eq 1 ]; then
                     #No hay soporte para libc, solo musl
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("zoxide-0.9.4-aarch64-unknown-linux-musl.tar.gz")
+                        pna_artifact_names=("zoxide-${p_repo_last_pretty_version}-aarch64-unknown-linux-musl.tar.gz")
                     else
-                        pna_artifact_names=("zoxide-0.9.4-x86_64-unknown-linux-musl.tar.gz")
+                        pna_artifact_names=("zoxide-${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.tar.gz")
                     fi
                 else
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("zoxide-0.9.4-aarch64-unknown-linux-musl.tar.gz")
+                        pna_artifact_names=("zoxide-${p_repo_last_pretty_version}-aarch64-unknown-linux-musl.tar.gz")
                     else
-                        pna_artifact_names=("zoxide-0.9.4-x86_64-unknown-linux-musl.tar.gz")
+                        pna_artifact_names=("zoxide-${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.tar.gz")
                     fi
                 fi
                 pna_artifact_types=(10)
@@ -6431,10 +6431,10 @@ install_initialize_menu_option() {
                 # 3> El estado de la credencial almacenada para el sudo
                 # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
                 if [ $l_is_noninteractive -eq 1 ]; then
-                    ${g_repo_path}/shell/bash/bin/linuxsetup/04_setup_packages.bash 2 'dotnetlib' $g_status_crendential_storage 1
+                    ${g_repo_path}/shell/bash/bin/linuxsetup/03_setup_repo_packages.bash 2 'dotnetlib' $g_status_crendential_storage 1
                     l_status=$?
                 else
-                    ${g_repo_path}/shell/bash/bin/linuxsetup/04_setup_packages.bash 4 'dotnetlib' $g_status_crendential_storage 1
+                    ${g_repo_path}/shell/bash/bin/linuxsetup/03_setup_repo_packages.bash 4 'dotnetlib' $g_status_crendential_storage 1
                     l_status=$?
                 fi
 

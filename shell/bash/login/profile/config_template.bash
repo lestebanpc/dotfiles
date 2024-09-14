@@ -14,7 +14,7 @@
 #g_programs_path='/var/opt/tools'
 
 # Folder donde se almacena los binarios de tipo comando.
-# - Si los comandos instalados por el script '~/.files/shell/bash/bin/linuxsetup/01_setup_commands.bash' se ha instalado en 
+# - Si los comandos instalados por el script '~/.files/shell/bash/bin/linuxsetup/01_setup_binaries.bash' se ha instalado en 
 #   una ruta personalizado (diferente a '/usr/local/bin' o '~/.local/bin'), es obligatorio establecer la ruta correcta en 
 #   dicha variable.
 # - Si no se especifica (es vacio), se considera la ruta estandar '/usr/local/bin'
