@@ -1,0 +1,24 @@
+#
+# OpenSSL extension file 
+# Archivos usado para definir extension seccion nombradas de extension para crear certificados
+# firmados/autofirmados y CSR.
+# Notas:
+#  > Para usar alguna de estas extension nombradaas use las opcion '-extfile <extension-file-path>'
+#    y definir la seccion a usar '-extensions <seccion-name>' el cual replazara la seccion de extension
+#    definida por defecto para definirlo en el certificado creado.
+#  > Documentación: "man x509v3_config"
+#
+
+[x509_exten]
+basicConstraints = critical, CA:TRUE, pathlen:0
+keyUsage = critical, cRLSign, keyCertSign, digitalSignature
+subjectKeyIdentifier = hash
+authorityKeyIdentifier =keyid:always,issuer
+
+[x509_exten_v2]
+basicConstraints = critical, CA:TRUE, pathlen:0
+keyUsage = critical, cRLSign, keyCertSign, digitalSignature
+subjectKeyIdentifier = hash
+authorityKeyIdentifier =keyid:always,issuer
+nsComment = "OpenSSL Generated Certificate"
+

@@ -1,0 +1,76 @@
+#
+# OpenSSL extension file 
+# Archivos usado para definir extension seccion nombradas de extension para crear certificados
+# firmados/autofirmados y CSR.
+# Notas:
+#  > Para usar alguna de estas extension nombradaas use las opcion '-extfile <extension-file-path>'
+#    y definir la seccion a usar '-extensions <seccion-name>' el cual replazara la seccion de extension
+#    definida por defecto para definirlo en el certificado creado.
+#  > Documentación: "man x509v3_config"
+#
+
+#
+# Extension basica para CSR de certificados que no sean CA.
+#
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment, dataEncipherment
+subjectKeyIdentifier = hash
+
+
+#
+# Extension para certificados auto-firmados para el CA (root)
+# Usado en: 'openssl req -new -x509 ...  -extensions v3_ca' 
+#
+[ v3_ca ]
+basicConstraints = critical,CA:true
+keyUsage = critical, cRLSign, keyCertSign, digitalSignature
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+#nsCertType = sslCA, emailCA # Uso que se dara al certificado
+#subjectAltName=
+#issuerAltName=
+#obj=DER:02:03 # DER hex encoding of an extension: Where 'obj' is a standard or added object
+#basicConstraints= critical, DER:30:03:01:01:FF # You can even override a supported extension
+
+#
+# Extension para certificados firmado para un CA (Intermedio)
+#
+[ v3_intermediate_ca ]
+basicConstraints = critical, CA:true, pathlen:0 # 'pathlen:0' indica que no puede haber mas CAs debajo de este.
+keyUsage = critical, cRLSign, keyCertSign, digitalSignature
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+#nsCertType = sslCA, emailCA # Uso que se dara al certificado
+#subjectAltName=
+#issuerAltName=
+#obj=DER:02:03 # DER hex encoding of an extension: Where 'obj' is a standard or added object
+#basicConstraints= critical, DER:30:03:01:01:FF # You can even override a supported extension
+
+#
+# Extension para certificados firmados para un Usuario: Cliente TLS
+#
+[ client_cert ]
+basicConstraints = CA:FALSE
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth, emailProtection
+nsCertType = client, email
+nsComment = "OpenSSL Generated Client Certificate"
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+#subjectAltName=
+
+#
+# Extension para certificados firmados para un Usuario: Servidor TLS
+#
+[ server_cert ]
+basicConstraints = CA:FALSE
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+nsCertType = server
+nsComment = "OpenSSL Generated Server Certificate"
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer:always
+#subjectAltName=
+
+

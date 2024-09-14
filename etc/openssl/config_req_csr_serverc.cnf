@@ -1,0 +1,37 @@
+#
+# OpenSSL configuration file 
+# Archivo de configuracion usadno por el subcomando 'openssl req' para crear CSR
+# Notas:
+#   > Comando: "openssl req -new ...".
+#   > Los CSR son usuado para crear crear certificados para CA intermedio, un seervidor TLS, un cliente TLS, etc.
+#   > No confundir con el comando "openssl req -x509 -new ..."  usado para crear certificados
+#     auto-firmados (usualmente es el certificado usado para un CA root).
+#
+
+[req]
+distinguished_name = req_dname
+req_extensions = req_exten
+prompt = no
+
+[req_dname]
+C = PE
+ST = Lima
+L = Lima
+O = Grupo Quyllur
+OU = Sistemas Perú
+CN = server1.quyllur.pe.home
+
+[req_exten]
+basicConstraints = CA:FALSE
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+nsCertType = server
+nsComment = "OpenSSL Generated Server Certificate"
+subjectKeyIdentifier =hash
+#authorityKeyIdentifier = keyid,issuer:always
+subjectAltName = @alternate_names
+
+[alternate_names]
+IP.1 = 192.168.30.98
+DNS.1 = server1.quyllur.pe.home
+DNS.2 = server1

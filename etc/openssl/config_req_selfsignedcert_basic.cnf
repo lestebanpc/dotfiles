@@ -1,0 +1,53 @@
+#
+# OpenSSL configuration file 
+# Archivo de configuracion que es usado cuando se crea certificados autoafirmados.
+# Notas:
+#    > Comando: "openssl req -x509 -new ..." 
+#    > Usando generalmente cuando se crea certificado del CA root.
+#
+
+[req]
+distinguished_name = req_dname
+x509_extensions = v3_ca
+prompt = no
+
+[req_dname]
+C = PE
+ST = Lima
+L = Lima
+O = Grupo Quyllur
+OU = Sistemas
+CN = quyllur.home
+emailAddress = noreply@quyllur.com
+
+#
+# Extension por defecto para certificados auto-firmados para el CA (root)
+#
+[ v3_ca ]
+basicConstraints = critical,CA:true
+keyUsage = critical, cRLSign, keyCertSign, digitalSignature
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+
+
+#----------------------------------------------------------------------------------------------------------------
+# Extension adicionales para certificados auto-firmados
+#----------------------------------------------------------------------------------------------------------------
+
+# 
+# Extension para certificados auto-firmados para el CA (root)
+# Uso: 'openssl req -new -x509 ...  -extensions v3_ca2' 
+#
+[ v3_ca2 ]
+basicConstraints = CA:TRUE
+keyUsage = critical, cRLSign, keyCertSign, digitalSignature, keyEncipherment
+subjectKeyIdentifier = hash
+authorityKeyIdentifier= keyid:always,issuer
+nsComment = "OpenSSL Generated Certificate"
+#nsCertType = sslCA, emailCA # Uso que se dara al certificado
+#subjectAltName=
+#issuerAltName=
+#obj=DER:02:03 # DER hex encoding of an extension: Where 'obj' is a standard or added object
+#basicConstraints= critical, DER:30:03:01:01:FF # You can even override a supported extension
+
+

@@ -1,0 +1,61 @@
+#
+# OpenSSL configuration file 
+# Notas:
+#  > La version es una modificacion de "openssl.cnf" (ubicado en 'openssl version -d')
+#  > Usando por el subcomando a usar: 'openssl ca ...'
+#  > Para usar openssl en modo CA, require definir la ruta donde estan los archivo del CA.
+#    Por ejemplo, si desea firmar/crear certificado con el CA root CN='quyllur.home' :
+#      export CA_PATH=~/userkeys/tls/ca/quyllur.home
+#    Por ejemplo, si desea firmar/crear certificado con el CA Intermedio CN='quyllur.pe.home':
+#      export CA_PATH=~/userkeys/tls/ca/quyllur.pe.home
+#
+
+[ ca ] 
+default_ca      = CA_default # The default ca section 
+ 
+
+[ CA_default ] 
+# Directory de apoyo del CA 
+dir             = $ENV::CA_PATH # Where everything is kept 
+certs           = $dir/certs # Where the issued certs are kept 
+crl_dir         = $dir/crl # Where the issued crl are kept 
+new_certs_dir   = $dir/newcerts # default place for new certs. 
+
+# Archivos de apoyo del CA 
+database        = $dir/index.txt # database index file. 
+serial          = $dir/serial # The current serial number 
+
+# Clave privada y el certificado del CA usados para crear certificado firmados 
+private_key     = $dir/private/cakey.pem # The private key 
+certificate     = $dir/cacert.pem # The CA certificate 
+
+# Opciones adicionales: 
+default_days        = 365 # how long to certify for 
+default_md          = sha256 # 'default' use public key default MD 
+preserve            = no # keep passed DN ordering 
+#unique_subject      = no # Set to 'no' to allow creation of several certs with same subject. 
+copy_extensions     = copy # Valores: "none" (valor por defecto), "copy", "copyall" 
+
+# Politica por defecto usado por el CA firmante 
+policy              = policy_match 
+
+# Extensiones adicionado al certificado firmado a crear 
+x509_extensions     = v3_intermediate_ca # The extensions to add to the cert 
+ 
+
+# Politicas del CA 
+[ policy_match ] 
+countryName             = match 
+stateOrProvinceName     = match 
+organizationName        = match 
+organizationalUnitName  = optional 
+commonName              = supplied 
+emailAddress            = optional 
+ 
+# Extension para certificados firmados para un Usuario: Servidor TLS o Cliente TLS 
+[ v3_intermediate_ca ] 
+basicConstraints = critical, CA:TRUE, pathlen:0 
+keyUsage = critical, cRLSign, keyCertSign, digitalSignature 
+subjectKeyIdentifier =hash 
+authorityKeyIdentifier =keyid:always,issuer
+

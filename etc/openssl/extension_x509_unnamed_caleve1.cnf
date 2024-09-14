@@ -1,0 +1,14 @@
+#
+# OpenSSL extension file 
+# Archivos usado para definir extension seccion nombradas de extension para crear certificados
+# firmados/autofirmados y CSR.
+# Notas:
+#  > Para usar esta extension unnamed use las opcion '-extfile <extension-file-path>'
+#    y pero sin definir la seccion a usar (no usar '-extensions <seccion-name>').
+#  > Documentación: "man x509v3_config"
+#
+
+basicConstraints = critical, CA:TRUE, pathlen:0
+keyUsage = critical, cRLSign, keyCertSign, digitalSignature
+subjectKeyIdentifier =hash
+authorityKeyIdentifier =keyid:always,issuer
