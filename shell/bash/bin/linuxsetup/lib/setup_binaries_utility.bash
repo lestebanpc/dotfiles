@@ -687,10 +687,10 @@ function copy_man_files()
         fi
 
         #Copiar los archivos
-        printf 'Copiando los archivos "%b%s/*.%s%b" y "%b%s/*.%s.gz%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "$p_source_path" \
+        printf 'Copiando los archivos "%b%s/*.%s%b" y/o "%b%s/*.%s.gz%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "$p_source_path" \
                "$p_man_type" "$g_color_reset" "$g_color_gray1" "$p_source_path" "$p_man_type" "$g_color_reset" "$g_color_gray1" \
                "${l_target_path}/" "$g_color_reset"
-        find "$p_source_path" -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" -exec cp {} "$l_target_path/" \;
+               find "$p_source_path" \( -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" \) -exec cp {} "$l_target_path/" \;
 
         #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_command_owner -eq 0 ]; then
@@ -716,10 +716,10 @@ function copy_man_files()
 
     
     #Copiar los archivos
-    printf 'Copiando los archivos "%b%s/*.%s%b" y "%b%s/*.%s.gz%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "$p_source_path" \
+    printf 'Copiando los archivos "%b%s/*.%s%b" y/o "%b%s/*.%s.gz%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "$p_source_path" \
            "$p_man_type" "$g_color_reset" "$g_color_gray1" "$p_source_path" "$p_man_type" "$g_color_reset" "$g_color_gray1" \
            "${l_target_path}/" "$g_color_reset"
-    sudo find "$p_source_path" -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" -exec cp {} "$l_target_path/" \;
+           sudo find "$p_source_path" \( -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" \) -exec cp {} "$l_target_path/" \;
 
     return 0
 

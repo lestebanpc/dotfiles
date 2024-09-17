@@ -89,6 +89,8 @@ gA_packages=(
         ['tmux-thumbs']='fcsonline/tmux-thumbs'
         ['wezterm']='wez/wezterm'
         ['cilium']='cilium/cilium-cli'
+        ['rclone']="$g_empty_str"
+        ['marksman']='artempyanykh/marksman'
     )
 
 
@@ -110,18 +112,16 @@ ga_menu_options_title=(
     "Binarios adicionales para K8S: oc, operator-sdk, ..."
     "Binarios para un nodo K8S de 'K0S'"
     "Binarios para un nodo K8S de 'KubeAdm'"
-    ".NET  ${g_color_reset}>${g_color_green1} RTE y SDK"
-    ".NET  ${g_color_reset}>${g_color_green1} LSP y DAP server"
-    "Java  ${g_color_reset}>${g_color_green1} RTE 'GraalVM CE'"
-    "Java  ${g_color_reset}>${g_color_green1} LSP y DAP server"
+    ".NET  ${g_color_reset}>${g_color_green1} SDK, LSP y DAP server"
+    "Java  ${g_color_reset}>${g_color_green1} RTE/SDK 'GraalVM CE', LSP/DAP server"
     "C/C++ ${g_color_reset}>${g_color_green1} Compiler LLVM/CLang: 'clang', 'clang++', 'lld', 'lldb', 'clangd'"
     "C/C++ ${g_color_reset}>${g_color_green1} Developments tools"
     "NodeJS${g_color_reset}>${g_color_green1} RTE"
-    "Rust  ${g_color_reset}>${g_color_green1} Compiler"
-    "Rust  ${g_color_reset}>${g_color_green1} LSP server"
+    "Rust  ${g_color_reset}>${g_color_green1} Compiler, LSP server"
     "Go    ${g_color_reset}>${g_color_green1} RTE"
     "AWS CLI v2"
     "CTags (indexador de archivos lenguajes de programacion)"
+    "LSP otros: Markdown"
     )
 
 #WARNING: Un cambio en el orden implica modificar los indices de los eventos:
@@ -135,7 +135,7 @@ ga_menu_options_title=(
 ga_menu_options_packages=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
     "tmux-thumbs,tmux-fingers,sesh,protoc,grpcurl,xsv,jwt"
-    "step,evans,yazi,gum,butane,wezterm"
+    "rclone,step,evans,yazi,gum,butane,wezterm"
     "nerd-fonts"
     "neovim"
     "powershell"
@@ -146,18 +146,16 @@ ga_menu_options_packages=(
     "operator-sdk,3scale-toolbox,pgo"
     "k0s"
     "cni-plugins,kubectl,kubelet,kubeadm"
-    "net-sdk"
-    "roslyn,netcoredbg"
-    "graalvm"
-    "jdtls"
+    "net-sdk,roslyn,netcoredbg"
+    "graalvm,jdtls"
     "llvm"
     "clangd,cmake,ninja"
     "nodejs"
-    "rust"
-    "rust-analyzer"
+    "rust,rust-analyzer"
     "go"
     "awscli"
     "ctags-win,ctags-nowin"
+    "marksman"
     )
 
 #Tipos de SO donde se puede configurar los repositorio 
@@ -235,6 +233,7 @@ declare -A gA_repo_base_url=(
         ['oc']='https://mirror.openshift.com/pub/openshift-v4'
         ['helm']='https://get.helm.sh'
         ['awscli']='https://awscli.amazonaws.com'
+        ['rclone']='https://downloads.rclone.org'
     )
 
 #Si el repositorio es un paquete del SO (esto no se puede instalar si no es root o se tiene acceso a sudo)
@@ -383,6 +382,16 @@ function get_repo_last_version() {
 
             l_aux0=${l_aux0%.tar.gz}
             l_repo_last_version=$(echo "$l_aux0" | sed -e "$g_regexp_sust_version2")
+            ;;
+
+        rclone)
+            l_aux0=$(curl -fLs ${l_base_url_fixed}/version.txt)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            l_repo_last_version=$(echo "$l_aux0" | sed -e "$g_regexp_sust_version1")
             ;;
 
         go)
@@ -543,7 +552,7 @@ function get_repo_last_version() {
 }
 
 
-#Obtener la version normalizar de la version actual.
+#Obtener la version normalizada (comparable) de la version actual/instalada.
 #Los argumentos de entrada son:
 #   1 - El ID del repositorio.
 #   2 - El nombre del repositorio
@@ -572,7 +581,7 @@ function get_repo_last_pretty_version() {
             ;;
 
 
-        jdtls|rust-analyzer)
+        jdtls|rust-analyzer|marksman)
 
             l_version="${p_version//-/.}"
             ;;
@@ -1036,6 +1045,23 @@ function _get_repo_current_pretty_version() {
             else
                 l_tmp=$(${l_path_file}evans --version 2> /dev/null)
                 l_status=$?
+            fi
+            ;;
+
+
+        rclone)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}rclone.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}rclone --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            else
+                l_tmp=""
             fi
             ;;
 
@@ -1558,6 +1584,7 @@ function _get_repo_current_pretty_version() {
             fi
             ;;
 
+
         rust-analyzer)
 
             #Obtener la version
@@ -1913,7 +1940,32 @@ function _get_repo_current_pretty_version() {
                 fi
 
             fi
+            ;;
 
+
+        marksman)
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/marksman.info" ]; then
+                    l_tmp=$(cat "${g_win_programs_path}/marksman.info" | head -n 1)
+                else
+                    #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
+                    echo "$g_version_none"
+                    return 3
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/marksman.info" ]; then
+                    l_tmp=$(cat "${g_programs_path}/marksman.info" | head -n 1)
+                else
+                    #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
+                    echo "$g_version_none"
+                    return 3
+                fi
+
+            fi
             ;;
 
 
@@ -2122,7 +2174,7 @@ _compare_version_current_with() {
 #     solo una URL, la misma URL se replicara para los demas se repitira el mismo valor
 #  6> Un arreglo de tipo de artefacto donde cada item puede ser:
 #     Un archivo no comprimido
-#       >  0 si es un binario o archivo no empaquetado o comprimido
+#       >  0 si es un binario (no empaquetado o comprimido)
 #       >  1 si es un package
 #     Comprimidos no tan pesados (se descomprimen y copian en el lugar deseado)
 #       > 10 si es un .tar.gz
@@ -2386,6 +2438,43 @@ function get_repo_artifacts() {
                         pna_artifact_names=("yazi-aarch64-unknown-linux-gnu.zip")
                     else
                         pna_artifact_names=("yazi-x86_64-unknown-linux-gnu.zip")
+                    fi
+                fi
+                pna_artifact_types=(11)
+            fi
+            ;;
+
+
+        rclone)
+            #URL base fijo     : "https://downloads.rclone.org"
+            #URL base variable :
+            l_base_url_variable="v${p_repo_last_pretty_version}"
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("rclone-v${p_repo_last_pretty_version}-windows-arm64.zip")
+                else
+                    pna_artifact_names=("rclone-v${p_repo_last_pretty_version}-windows-amd64.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("rclone-v${p_repo_last_pretty_version}-linux-arm64.zip")
+                    else
+                        pna_artifact_names=("rclone-v${p_repo_last_pretty_version}-linux-amd64.zip")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("rclone-v${p_repo_last_pretty_version}-linux-arm64.zip")
+                    else
+                        pna_artifact_names=("rclone-v${p_repo_last_pretty_version}-linux-amd64.zip")
                     fi
                 fi
                 pna_artifact_types=(11)
@@ -3603,6 +3692,36 @@ function get_repo_artifacts() {
 
 
 
+        marksman)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("marksman.exe")
+                else
+                    pna_artifact_names=("marksman.exe")
+                fi
+                pna_artifact_types=(0)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("marksman-linux-arm64")
+                    else
+                        pna_artifact_names=("marksman-linux-x64")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("marksman-linux-arm64")
+                    else
+                        pna_artifact_names=("marksman-linux-x64")
+                    fi
+                fi
+                pna_artifact_types=(0)
+            fi
+            ;;
+
+
         gum)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -3978,6 +4097,27 @@ function _copy_artifact_files() {
 
                 #Copiar el comando
                 copy_binary_on_command "${l_source_path}" "yq.exe" 1 1
+            fi
+            ;;
+
+
+        rclone)
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
+
+            #Renombrar el binario antes de copiarlo
+            if [ $p_install_win_cmds -ne 0 ]; then
+                
+                #Copiar el comando
+                copy_binary_on_command "${l_source_path}" "rclone" 0 1
+
+                #Copiar los archivos de ayuda man para comando
+                copy_man_files "${g_temp_path}/${l_source_path}" 1
+
+            else
+
+                #Copiar el comando
+                copy_binary_on_command "${l_source_path}" "rclone.exe" 1 1
             fi
             ;;
 
@@ -4435,6 +4575,35 @@ function _copy_artifact_files() {
             ;;
 
             
+            
+        marksman)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/marksman\" ..."
+                mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/marksman"
+
+                #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+                copy_binary_on_command "${l_source_path}" "marksman" 0 1
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "marksman.info" "$p_repo_last_pretty_version" 0
+
+            else
+
+                #Copiar el comando
+                copy_binary_on_command "${l_source_path}" "marksman.exe" 1 1
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "marksman.info" "$p_repo_last_pretty_version" 1
+
+            fi
+            ;;
+            
+            
         cilium)
 
             #Ruta local de los artefactos
@@ -4442,6 +4611,7 @@ function _copy_artifact_files() {
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $p_install_win_cmds -ne 0 ]; then
+
 
                 #Copiar el comando
                 copy_binary_on_command "${l_source_path}" "cilium" 0 1
