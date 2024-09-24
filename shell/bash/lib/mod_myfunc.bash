@@ -23,14 +23,14 @@ fi
 start_music() {
 
     #1. Argumentos
-    local l_card_id='D50s'
+    local p_card_id='D50s'
     if [ ! -z "$1" ]; then
-        l_card_id='$1'
+        p_card_id='$1'
     fi
 
-    local l_device_index=0
+    local p_device_index=0
     if [[ "$2" =~ ^[0-9]+$ ]]; then
-        l_device_index=$2
+        p_device_index=$2
     fi
 
     #2. Buscar si la tarjeta indicada existe (fue reconocida por el kernel)
@@ -43,12 +43,12 @@ start_music() {
     #                      BEHRINGER UMC204HD 192k at usb-0000:08:00.3-6.2.2, high speed
     #
     local l_aux
-    l_aux=$(cat /proc/asound/cards | grep '\['"$l_card_id"'\s*\]' -A 1 | head -n 2)
+    l_aux=$(cat /proc/asound/cards | grep '\['"$p_card_id"'\s*\]' -A 1 | head -n 2)
     local l_status=$?
 
     if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
         printf 'La tarjeta de sonido con ID "%b%s%b" no esta instalado o no es reconocido por el kernel (revise "%b%s%b").\n' \
-               "$g_color_gray1" "$l_card_id" "$g_color_reset" "$g_color_gray1" "cat /proc/asound/cards" "$g_color_reset" 
+               "$g_color_gray1" "$p_card_id" "$g_color_reset" "$g_color_gray1" "cat /proc/asound/cards" "$g_color_reset" 
         return 1 
     fi
 
@@ -75,15 +75,15 @@ start_music() {
     fi
     
     printf 'La tarjeta de sonido "%b%s%b", con ID "%b%s%b" e Index "%b%s%b", ha sido detectado por el kernel de Linux.\n' \
-           "$g_color_cian1" "$l_card_description" "$g_color_reset" "$g_color_cian1" "$l_card_id" "$g_color_reset" \
+           "$g_color_cian1" "$l_card_description" "$g_color_reset" "$g_color_cian1" "$p_card_id" "$g_color_reset" \
            "$g_color_cian1" "$l_card_index" "$g_color_reset" 
 
     #3. Identificar si el device existe (fue reconocida por el kernel)
-    l_aux=$(aplay -l | grep '^card '"$l_card_index"':.*\sdevice\s'"$l_device_index")
+    l_aux=$(aplay -l | grep '^card '"$l_card_index"':.*\sdevice\s'"$p_device_index")
     l_status=$?
     if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
         printf 'El device "%b%s%b" de la tarjeta de sonido "%b%s%b" no es reconocido por el kernel (revise "%b%s%b").\n' \
-               "$g_color_gray1" "$l_device_index" "$g_color_reset" "$g_color_gray1" "$l_card_description" "$g_color_reset" \
+               "$g_color_gray1" "$p_device_index" "$g_color_reset" "$g_color_gray1" "$l_card_description" "$g_color_reset" \
                "$g_color_gray1" "aplay -l" "$g_color_reset" 
         return 3 
     fi
@@ -146,7 +146,7 @@ start_music() {
         printf "audio_output {\n"
         printf "    type                \"alsa\"\n"
         printf "    name                \"ALSA Hi-Fi DAC\"\n"
-        printf "    device              \"hw:${l_card_index},${l_device_index}\"    #ID del soundcard y el ID del device es obtenido de 'aplay --list-devices'\n"
+        printf "    device              \"hw:${l_card_index},${p_device_index}\"    #ID del soundcard y el ID del device es obtenido de 'aplay --list-devices'\n"
         printf "    auto_resample       \"no\"        #otherwise, ALSA will convert everything to PCM"\n
         printf "    auto_channels       \"no\"\n"
         printf "    auto_format         \"no\"\n"
@@ -176,7 +176,7 @@ start_music() {
     fi
 
     #Cambiar el valor de campo "device" archivo "/etc/mpd.conf"
-    local l_device_new_value="hw:${l_card_index},${l_device_index}"
+    local l_device_new_value="hw:${l_card_index},${p_device_index}"
     if [ "$l_device_value" != "$l_device_new_value" ]; then
 
         printf 'Modificando el valor del campo %bdevice%b de "%b%s%b" de "%b%s%b" (seccion %b%s%b con nombre "%b%s%b" del archivo "%b%s%b") ...\n' \
@@ -280,6 +280,108 @@ stop_music() {
         
 }
 
+
+################################################################################################
+# Sincronizar la data de mis notas en obsidian ubicado en mi Google Drive 'lucianoepc@gmail.com'
+################################################################################################
+
+declare -A gA_localpath=(
+        ['it']="$HOME/notes/it_disiplines"
+        ['personal']="$HOME/notes/personal"
+        ['sciences']="$HOME/notes/sciences_and_disiplines"
+        ['management']="$HOME/notes/management_disiplines"
+    )
+
+
+bisync_vault () {
+
+    #1. Argumentos
+    local p_vault_sufix=''
+    if [ ! -z "$1" ]; then
+        p_vault_sufix="$1"
+    fi
+
+    local p_homologate=1
+    if [ "$2" = "0" ]; then
+        p_homologate=0
+    fi
+
+    #Validaciones de los parametros
+    local l_aux
+    if [ -z "$p_vault_sufix" ]; then
+        printf 'Debe especificar el sufijo del vault obsidian a sincronizar.\nLos sufijos validos son: '
+        printf '"%b%s%b", "%b%s%b", "%b%s%b" y "%b%s%b".\n' "$g_color_gray1" "it" "$g_color_reset" \
+               "$g_color_gray1" "personal" "$g_color_reset" "$g_color_gray1" "sciences" "$g_color_reset" \
+               "$g_color_gray1" "management" "$g_color_reset"
+        return 1
+    else
+        l_aux="${gA_localpath[$p_vault_sufix]}"
+        if [ -z "$l_aux" ]; then
+            printf 'El sufijo "%b%s%b" del vault obsidian especificado no tiene una ruta local asociada.\nLos sufijos validos son: ' \
+                   "$g_color_gray1" "$p_vault_sufix" "$g_color_reset"
+            printf '"%b%s%b", "%b%s%b", "%b%s%b" y "%b%s%b".\n' "$g_color_gray1" "it" "$g_color_reset" \
+                   "$g_color_gray1" "personal" "$g_color_reset" "$g_color_gray1" "sciences" "$g_color_reset" \
+                   "$g_color_gray1" "management" "$g_color_reset"
+            return 2
+        fi
+    fi
+    local l_localpath="$l_aux"
+    if [ ! -d "$l_localpath" ]; then
+        printf 'El directorio "%b%s%b" asociada al sufijos "%b%s%b" no existe.\n' \
+               "$g_color_gray1" "$l_localpath" "$g_color_reset" "$g_color_gray1" "$p_vault_sufix" "$g_color_reset"
+        return 3
+    fi
+
+    #2. Precondiciones
+
+    #Validar si esta instalado 'rclone'
+    local l_version=''
+    l_aux=$(rclone --version 2> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
+        printf 'El binario %brclone%b no esta instalado o configurado.\n' "$g_color_gray1" "$g_color_reset"
+        return 4
+    else
+        l_version=$(echo "$l_aux" | head -n 1 | sed ${g_regexp_sust_version1})
+    fi
+
+    if [ -z "$l_version" ]; then
+        printf 'No se puede determinar la version del %brclone%b instalado.\n' "$g_color_gray1" "$g_color_reset"
+        return 5
+    fi
+
+    printf 'Comando %brclone%b : Version "%b%s%b".\n' "$g_color_gray1" "$g_color_reset" \
+        "$g_color_gray1" "$l_version" "$g_color_reset"
+
+    #Validar si se encuentra el comando 'jq'
+    if ! jq --version &> /dev/null; then
+        printf 'El binario %bjq%b no esta instalado o configurado.\n' "$g_color_gray1" "$g_color_reset"
+        return 6
+    fi
+
+    #Validar si existe el vault ¿y esta configurado correctamente?
+    l_aux=$(rclone config dump | jq -r ".gd_vault_${p_vault_sufix}.type")
+    l_status=$?
+    if [ $l_status -ne 0 ] || [ -z "$l_aux" ] || [ "$l_aux" = "null" ]; then
+        printf 'No se encuentra la configuracion "%bgd_vault_%s%b que se desea configurar.\n' "$g_color_gray1" "$g_color_reset"
+        return 7
+    fi
+
+    printf 'Path1 (%bremote%b) : Provider type "%b%s%b".\n' "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_aux" "$g_color_reset"
+    printf 'Path2 (%blocal%b ) : "%b%s%b".\n' "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_localpath" "$g_color_reset"
+
+    #Iniciar la sincronizacion
+    local l_parameters="-MvP --compare size,modtime,checksum --drive-skip-gdocs --modify-window 2s"
+    if [ $p_homologate -eq 0 ]; then
+        l_parameters="${l_parameters} --resync"
+    fi
+
+    printf 'Iniciando la sincronizacion entre Path1 y Path2 ...\n'
+    printf 'Ejecutando "%brclone bisync gd_vault_%s:/ %s %s%b" ...\n' "$g_color_gray1" \
+           "$p_vault_sufix" "$l_localpath" "$l_parameters" "$g_color_reset"
+    rclone bisync gd_vault_${p_vault_sufix}:/ $l_localpath $l_parameters
+
+}
 
 
 
