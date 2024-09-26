@@ -91,6 +91,7 @@ gA_packages=(
         ['cilium']='cilium/cilium-cli'
         ['rclone']="$g_empty_str"
         ['marksman']='artempyanykh/marksman'
+        ['biome']='biomejs/biome'
     )
 
 
@@ -135,7 +136,7 @@ ga_menu_options_title=(
 ga_menu_options_packages=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
     "tmux-thumbs,tmux-fingers,sesh,protoc,grpcurl,xsv,jwt"
-    "rclone,step,evans,yazi,gum,butane,wezterm"
+    "rclone,biome,step,evans,yazi,gum,butane,wezterm"
     "nerd-fonts"
     "neovim"
     "powershell"
@@ -990,6 +991,19 @@ function _get_repo_current_pretty_version() {
             fi
             ;;
            
+        biome)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}biome.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}biome --version 2> /dev/null)
+                l_status=$?
+            fi
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
         step)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}step.exe --version 2> /dev/null)
@@ -2718,6 +2732,46 @@ function get_repo_artifacts() {
             fi
             ;;
 
+
+        biome)
+
+            #URL base fijo     :  "https://github.com"
+            #l_base_url_fixed="${gA_repo_base_url[${p_repo_id}]:-https://github.com}"
+            #URL base variable :
+            l_base_url_variable="${p_repo_name}/releases/download/cli%2Fv${p_repo_last_pretty_version}"
+
+            #URL base para un repositorio GitHub
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("biome-win32-arm64.exe")
+                else
+                    pna_artifact_names=("biome-win32-x64.exe")
+                fi
+                pna_artifact_types=(0)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("biome-linux-arm64-musl")
+                    else
+                        pna_artifact_names=("biome-linux-x64-musl")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("biome-linux-arm64")
+                    else
+                        pna_artifact_names=("biome-linux-x64")
+                    fi
+                fi
+                pna_artifact_types=(0)
+            fi
+            ;;
+
+
         oh-my-posh)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -3922,6 +3976,37 @@ function _copy_artifact_files() {
             fi
             ;;
 
+
+        biome)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+            
+            #Si es WSL Linux
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/biome.exe\" ..."
+                mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/biome.exe"
+
+                #Copiar el comando
+                copy_binary_on_command "${l_source_path}" "biome.exe" 1 1
+
+                return 0
+            fi
+
+            #Si es Linux non-WSL
+
+            echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/biome\" ..."
+            mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/biome"
+
+            #Copiar el comando
+            copy_binary_on_command "${l_source_path}" "biome" 0 1
+            return 0
+            ;;
+
+
+
         delta)
 
             #Ruta local de los artefactos
@@ -3929,6 +4014,7 @@ function _copy_artifact_files() {
             
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $p_install_win_cmds -ne 0 ]; then
+
 
                 #Copiar el comando
                 copy_binary_on_command "${l_source_path}" "delta" 0 1
