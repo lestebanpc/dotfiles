@@ -292,6 +292,21 @@ declare -A gA_localpath=(
         ['management']="$HOME/notes/management_disiplines"
     )
 
+_g_usage_bysync_vault() {
+
+    printf 'Usage:\n'
+    printf '    %b%sbisync_vault\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%sbisync_vault HOMOLOGATE PATH1_MUST_BE_LOCALPATH\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf 'Donde:\n'
+    printf '  > %bHOMOLOGATE %bSi es 0, se inicia la homolagacion entre el path1 y el path2. Si no se especifica o es 1, no se homologa, se sincroniza%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bPATH1_MUST_BE_LOCALPATH%b Es 0, el path1 es la ruta local y path2 es la ruta remota (%blocalpath -> remotepath%b).\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_green1" "$g_color_gray1"
+    printf '    Si no se especifica o es 1, path1 es ruta remota y path2 es la ruta ruta local (%bremotepath -> localpath%b).%b\n\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+}
+
 
 bisync_vault () {
 
@@ -299,32 +314,48 @@ bisync_vault () {
     local p_vault_sufix=''
     if [ ! -z "$1" ]; then
         p_vault_sufix="$1"
+    else
+        printf 'Debe especificar el sufijo del vault obsidian a sincronizar.\nLos sufijos validos son: '
+        printf '"%b%s%b", "%b%s%b", "%b%s%b" y "%b%s%b".\n' "$g_color_gray1" "it" "$g_color_reset" \
+               "$g_color_gray1" "personal" "$g_color_reset" "$g_color_gray1" "sciences" "$g_color_reset" \
+               "$g_color_gray1" "management" "$g_color_reset"
+        _g_usage_bysync_vault
+        return 1
     fi
 
     local p_homologate=1
     if [ "$2" = "0" ]; then
         p_homologate=0
+    elif [ -z "$2" ] || [ "$2" = "1" ]; then
+        p_homologate=1
+    else
+        _g_usage_bysync_vault
+        return 1
+    fi
+
+    local p_path1_must_be_localpath=1
+    if [ "$3" = "0" ]; then
+        p_path1_must_be_localpath=0
+    elif [ -z "$3" ] || [ "$3" = "1" ]; then
+        p_path1_must_be_localpath=1
+    else
+        _g_usage_bysync_vault
+        return 1
     fi
 
     #Validaciones de los parametros
     local l_aux
-    if [ -z "$p_vault_sufix" ]; then
-        printf 'Debe especificar el sufijo del vault obsidian a sincronizar.\nLos sufijos validos son: '
+    l_aux="${gA_localpath[$p_vault_sufix]}"
+    if [ -z "$l_aux" ]; then
+        printf 'El sufijo "%b%s%b" del vault obsidian especificado no tiene una ruta local asociada.\nLos sufijos validos son: ' \
+               "$g_color_gray1" "$p_vault_sufix" "$g_color_reset"
         printf '"%b%s%b", "%b%s%b", "%b%s%b" y "%b%s%b".\n' "$g_color_gray1" "it" "$g_color_reset" \
                "$g_color_gray1" "personal" "$g_color_reset" "$g_color_gray1" "sciences" "$g_color_reset" \
                "$g_color_gray1" "management" "$g_color_reset"
-        return 1
-    else
-        l_aux="${gA_localpath[$p_vault_sufix]}"
-        if [ -z "$l_aux" ]; then
-            printf 'El sufijo "%b%s%b" del vault obsidian especificado no tiene una ruta local asociada.\nLos sufijos validos son: ' \
-                   "$g_color_gray1" "$p_vault_sufix" "$g_color_reset"
-            printf '"%b%s%b", "%b%s%b", "%b%s%b" y "%b%s%b".\n' "$g_color_gray1" "it" "$g_color_reset" \
-                   "$g_color_gray1" "personal" "$g_color_reset" "$g_color_gray1" "sciences" "$g_color_reset" \
-                   "$g_color_gray1" "management" "$g_color_reset"
-            return 2
-        fi
+        _g_usage_bysync_vault
+        return 2
     fi
+
     local l_localpath="$l_aux"
     if [ ! -d "$l_localpath" ]; then
         printf 'El directorio "%b%s%b" asociada al sufijos "%b%s%b" no existe.\n' \
@@ -367,8 +398,13 @@ bisync_vault () {
         return 7
     fi
 
-    printf 'Path1 (%bremote%b) : Provider type "%b%s%b".\n' "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_aux" "$g_color_reset"
-    printf 'Path2 (%blocal%b ) : "%b%s%b".\n' "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_localpath" "$g_color_reset"
+    if [ $p_path1_must_be_localpath -ne 0 ]; then
+        printf 'Path1 (%bremote%b) : Provider type "%b%s%b".\n' "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_aux" "$g_color_reset"
+        printf 'Path2 (%blocal%b ) : "%b%s%b".\n' "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_localpath" "$g_color_reset"
+    else
+        printf 'Path1 (%blocal%b ) : "%b%s%b".\n' "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_localpath" "$g_color_reset"
+        printf 'Path2 (%bremote%b) : Provider type "%b%s%b".\n' "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_aux" "$g_color_reset"
+    fi
 
     #Iniciar la sincronizacion
     local l_parameters="-MvP --compare size,modtime,checksum --drive-skip-gdocs --modify-window 2s"
@@ -377,9 +413,15 @@ bisync_vault () {
     fi
 
     printf 'Iniciando la sincronizacion entre Path1 y Path2 ...\n'
-    printf 'Ejecutando "%brclone bisync gd_vault_%s:/ %s %s%b" ...\n' "$g_color_gray1" \
-           "$p_vault_sufix" "$l_localpath" "$l_parameters" "$g_color_reset"
-    rclone bisync gd_vault_${p_vault_sufix}:/ $l_localpath $l_parameters
+    if [ $p_path1_must_be_localpath -ne 0 ]; then
+        printf 'Ejecutando "%brclone bisync gd_vault_%s:/ %s %s%b" ...\n' "$g_color_gray1" \
+               "$p_vault_sufix" "$l_localpath" "$l_parameters" "$g_color_reset"
+        rclone bisync gd_vault_${p_vault_sufix}:/ $l_localpath $l_parameters
+    else
+        printf 'Ejecutando "%brclone bisync %s gd_vault_%s:/ %s%b" ...\n' "$g_color_gray1" \
+              "$l_localpath" "$p_vault_sufix" "$l_parameters" "$g_color_reset"
+        rclone bisync $l_localpath gd_vault_${p_vault_sufix}:/ $l_parameters
+    fi
 
 }
 

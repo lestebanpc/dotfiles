@@ -17,6 +17,9 @@ tags
 # Paquetes locales de NodeJS (binarios de NodeJs)
 node_modules/*
 
+# Las claves secretas del usuario
+secretkeys/*
+
 # Archivo de configuracion para los archivos de setup del SO y el profile del usuario
 shell/bash/bin/linuxsetup/.config.bash
 shell/bash/bin/termuxsetup/.config.bash
