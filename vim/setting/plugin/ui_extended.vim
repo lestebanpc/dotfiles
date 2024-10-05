@@ -149,10 +149,8 @@ nnoremap <silent> <leader>tb :BTags<CR>
 "Listar, Selexionar/Examinar e Ir al buffer
 nnoremap <silent> <leader>bb :Buffers<CR>
 
-"Busqueda de archivos del proyecto usando busqueda difuso 'Ag'.
-nnoremap <silent> <leader>fa :Ag<CR>
-"Busqueda de archivos del proyecto usando busqueda difuso 'Rg'.
-nnoremap <silent> <leader>fr :Rg<CR>
+"Busqueda de archivos del proyecto usando busqueda difuso 'ripgrep'.
+nnoremap <silent> <leader>ff :Rg<CR>
 
 
 "###################################################################################

@@ -396,7 +396,7 @@ set softtabstop=0
 set expandtab
 
 
-"Enable hidden buffers (permitir cerrar split que sean el unico que muestre un buffer modificado)
+"Permite crear hidden buffers (buffer que tiene cambios y no se muestran en ningun split)
 set hidden
 
 "----------------------------- Opciones de busqueda   ------------------------------
