@@ -184,7 +184,7 @@ main() {
                     _usage "Option '-t' has invalid value '%s'." "$l_aux"
                     return 9
                 fi
-                l_format=$l_aux                
+                l_format=$l_aux
                 ;;
 
             *)

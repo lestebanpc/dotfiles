@@ -40,9 +40,11 @@ if g:set_clipboard_type == 1
 
     runtime setting/utils/osc52.vim
 
-    "Copiar el registro al clipboard (tener en cuenta que el evento 'TextYankPost' solo se invoca de manera interativa)
+    "Copiar el registro por defecto al clipboard (el ultimo yank o delete)
     nnoremap <Leader>c" :<C-u>call PutClipboard(g:osc52_format, getreg('@"'))<CR>
+    "Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
     nnoremap <Leader>c0 :<C-u>call PutClipboard(g:osc52_format, getreg('@0'))<CR>
+    "Copiar el registro de los ultimo deletes al clipboard
     nnoremap <Leader>c1 :<C-u>call PutClipboard(g:osc52_format, getreg('@1'))<CR>
     nnoremap <Leader>c2 :<C-u>call PutClipboard(g:osc52_format, getreg('@2'))<CR>
     nnoremap <Leader>c3 :<C-u>call PutClipboard(g:osc52_format, getreg('@3'))<CR>
@@ -62,12 +64,13 @@ if g:set_clipboard_type == 1
     "    endif
     "endfunction
 
-    "Habilitar el envio automatico, al clipboard, del ultimo yank realizado.
+    "Habilitar el envio automatico al clipboard del ultimo yank realizado 
+    "(se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim)
     augroup VimYank
         autocmd!
-        "autocmd TextYankPost * call s:VimOSCYankPostCallback(v:event)
-        autocmd TextYankPost * call PutClipboard(g:osc52_format, getreg('"'))
+        autocmd TextYankPost * if v:event.operator ==# 'y' | call PutClipboard(g:osc52_format, getreg('"')) | endif
         "autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call OSCYankRegister('') | endif
+        "autocmd TextYankPost * call s:VimOSCYankPostCallback(v:event)
     augroup END
 
 
@@ -89,6 +92,7 @@ elseif g:set_clipboard_type == 2
         "vnoremap <Leader>cl :w !g:clipboard_command<CR><CR>
 
         "Habilitar el envio automatico, al clipboard, del ultimo yank realizado.
+        "(se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim)
         augroup VimYank
             autocmd!
             autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system(g:clipboard_command, @") | endif
@@ -102,6 +106,7 @@ elseif g:set_clipboard_type == 2
         if g:os_type == 3
         
             "Copia cualquier yank que esta en el registro " (por defecto) se copia al portapales del SO
+            "(se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim)
             augroup WslYank
                 autocmd!
                 autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system('/mnt/c/windows/system32/clip.exe ',@") | endif
@@ -115,9 +120,11 @@ elseif g:set_clipboard_type != 9
 
     if g:clipboard_command != ''
 
-        "Copiar el registro al clipboard (tener en cuenta que el evento 'TextYankPost' solo se invoca de manera interativa)
+       "Copiar el registro por defecto al clipboard (el ultimo yank o delete)
         nnoremap <Leader>c" :<C-u>call system(g:clipboard_command, @")<CR>
+        "Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
         nnoremap <Leader>c0 :<C-u>call system(g:clipboard_command, @0)<CR>
+        "Copiar el registro de los ultimo deletes
         nnoremap <Leader>c1 :<C-u>call system(g:clipboard_command, @1)<CR>
         nnoremap <Leader>c2 :<C-u>call system(g:clipboard_command, @2)<CR>
         nnoremap <Leader>c3 :<C-u>call system(g:clipboard_command, @3)<CR>
