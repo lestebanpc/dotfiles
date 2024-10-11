@@ -160,9 +160,10 @@ main() {
     local l_data=''
 
     #2. Leer las opciones
+    unset OPTIND
     local l_option
     local l_aux
-    while getopts "hift::" l_option; do
+    while getopts ":hift::" l_option; do
 
         case "$l_option" in
             h)
@@ -187,8 +188,12 @@ main() {
                 l_format=$l_aux
                 ;;
 
-            *)
-                _usage "Option '-%s' is invalid." "$l_option"
+            :)
+                _usage "Option '-${OPTARG}' not have value."
+                return 9
+                ;;
+            \?)
+                _usage "Option '-${OPTARG}' is invalid."
                 return 9
                 ;;
         esac
