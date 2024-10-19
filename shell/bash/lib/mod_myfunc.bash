@@ -289,11 +289,11 @@ stop_music() {
 _g_sync_vault () {
 
     #Sincronización bidireccional
-    #_g_sync_vault "gd_vault_${l_vault_sufix}" "$l_local_path" 0 $l_path_position $l_flag_dry_run "$l_conflict_winner" "$l_losser_action" $l_flag_force
+    #_g_sync_vault "${l_remote_name}" "$l_local_path" 0 $l_path_position $l_flag_dry_run "$l_conflict_winner" "$l_losser_action" $l_flag_force
     #Homologación
-    #_g_sync_vault "gd_vault_${l_vault_sufix}" "$l_local_path" 1 $l_path_position $l_flag_dry_run "$l_homologation_mode"
+    #_g_sync_vault "${l_remote_name}" "$l_local_path" 1 $l_path_position $l_flag_dry_run "$l_homologation_mode"
     #Sincronización unidireccional
-    #_g_sync_vault "gd_vault_${l_vault_sufix}" "$l_local_path" 2 $l_path_position $l_flag_dry_run
+    #_g_sync_vault "${l_remote_name}" "$l_local_path" 2 $l_path_position $l_flag_dry_run
 
     #1. Argumentos
     local p_remote_name="$1"
@@ -457,10 +457,11 @@ _g_sync_vault () {
 
 
 declare -A gA_local_path=(
-        ['it']="$HOME/notes/it_disiplines"
-        ['personal']="$HOME/notes/personal"
-        ['sciences']="$HOME/notes/sciences_and_disiplines"
-        ['management']="$HOME/notes/management_disiplines"
+        ['note_it']="$HOME/notes/it_disiplines"
+        ['note_sciences']="$HOME/notes/sciences_and_disiplines"
+        ['note_management']="$HOME/notes/management_disiplines"
+        ['note_personal']="$HOME/notes/personal"
+        ['secret_personal']="$HOME/secrets/personal"
     )
 
 _g_usage_sync_vault() {
@@ -654,14 +655,15 @@ sync_vault () {
     shift $((OPTIND-1))
 
     #4. Leer los argumentos
-    local l_vault_sufix=''
+    local l_remote_name=''
     if [ ! -z "$1" ]; then
-        l_vault_sufix="$1"
+        l_remote_name="$1"
     else
         printf 'El 1er argumento debe especificar el sufijo del vault obsidian a sincronizar.\nLos sufijos validos son: '
-        printf '"%b%s%b", "%b%s%b", "%b%s%b" y "%b%s%b".\n\n' "$g_color_gray1" "it" "$g_color_reset" \
-               "$g_color_gray1" "personal" "$g_color_reset" "$g_color_gray1" "sciences" "$g_color_reset" \
-               "$g_color_gray1" "management" "$g_color_reset"
+        printf '"%b%s%b", "%b%s%b", "%b%s%b", "%b%s%b" y "%b%s%b".\n\n' "$g_color_gray1" "note_it" "$g_color_reset" \
+               "$g_color_gray1" "note_personal" "$g_color_reset" "$g_color_gray1" "note_sciences" "$g_color_reset" \
+               "$g_color_gray1" "note_management" "$g_color_reset" "$g_color_gray1" "secret_personal" "$g_color_reset"
+
         _g_usage_sync_vault
         return 8
     fi
@@ -683,13 +685,13 @@ sync_vault () {
     #5. Validaciones de los parametros (argumentos y opciones)
 
     #Validacion de nombre del vault
-    l_aux="${gA_local_path[$l_vault_sufix]}"
+    l_aux="${gA_local_path[$l_remote_name]}"
     if [ -z "$l_aux" ]; then
         printf 'El sufijo "%b%s%b" del vault obsidian especificado no tiene una ruta local asociada.\nLos sufijos validos son: ' \
-               "$g_color_gray1" "$l_vault_sufix" "$g_color_reset"
-        printf '"%b%s%b", "%b%s%b", "%b%s%b" y "%b%s%b".\n\n' "$g_color_gray1" "it" "$g_color_reset" \
-               "$g_color_gray1" "personal" "$g_color_reset" "$g_color_gray1" "sciences" "$g_color_reset" \
-               "$g_color_gray1" "management" "$g_color_reset"
+               "$g_color_gray1" "$l_remote_name" "$g_color_reset"
+        printf '"%b%s%b", "%b%s%b", "%b%s%b", "%b%s%b" y "%b%s%b".\n\n' "$g_color_gray1" "note_it" "$g_color_reset" \
+               "$g_color_gray1" "note_personal" "$g_color_reset" "$g_color_gray1" "note_sciences" "$g_color_reset" \
+               "$g_color_gray1" "note_management" "$g_color_reset" "$g_color_gray1" "secret_personal" "$g_color_reset"
         _g_usage_sync_vault
         return 8
     fi
@@ -698,7 +700,7 @@ sync_vault () {
     local l_local_path="$l_aux"
     if [ ! -d "$l_local_path" ]; then
         printf 'El directorio "%b%s%b" asociada al sufijos "%b%s%b" no existe.\n' \
-               "$g_color_gray1" "$l_local_path" "$g_color_reset" "$g_color_gray1" "$l_vault_sufix" "$g_color_reset"
+               "$g_color_gray1" "$l_local_path" "$g_color_reset" "$g_color_gray1" "$l_remote_name" "$g_color_reset"
         return 1
     fi
 
@@ -740,7 +742,7 @@ sync_vault () {
             l_losser_action='num'
         fi
 
-        _g_sync_vault "gd_vault_${l_vault_sufix}" "$l_local_path" 0 $l_path_position $l_flag_dry_run "$l_conflict_winner" "$l_losser_action" $l_flag_force
+        _g_sync_vault "${l_remote_name}" "$l_local_path" 0 $l_path_position $l_flag_dry_run "$l_conflict_winner" "$l_losser_action" $l_flag_force
 
     elif [ $l_operation_type -eq 1 ]; then
 
@@ -764,7 +766,7 @@ sync_vault () {
             l_losser_action=''
         fi
 
-        _g_sync_vault "gd_vault_${l_vault_sufix}" "$l_local_path" 1 $l_path_position $l_flag_dry_run "$l_homologation_mode"
+        _g_sync_vault "${l_remote_name}" "$l_local_path" 1 $l_path_position $l_flag_dry_run "$l_homologation_mode"
 
 
     elif [ $l_operation_type -eq 2 ]; then
@@ -790,7 +792,7 @@ sync_vault () {
             l_losser_action=''
         fi
 
-        _g_sync_vault "gd_vault_${l_vault_sufix}" "$l_local_path" 2 $l_path_position $l_flag_dry_run
+        _g_sync_vault "${l_remote_name}" "$l_local_path" 2 $l_path_position $l_flag_dry_run
 
 
     fi

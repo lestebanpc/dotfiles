@@ -18,7 +18,10 @@ tags
 node_modules/*
 
 # Las claves secretas del usuario
-secretkeys/*
+keys/secret/*
+
+# Las claves compartidas o publicas del usuario
+keys/shared/*
 
 # Archivo de configuracion para los archivos de setup del SO y el profile del usuario
 shell/bash/bin/linuxsetup/.config.bash
