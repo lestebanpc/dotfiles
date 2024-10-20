@@ -8,7 +8,7 @@
 #     > "${g_win_base_path}/cmds/doc" : subfolder donde se almacena documentacion del comando.
 #     > "${g_win_base_path}/cmds/etc" : subfolder donde se almacena archivos adicionales del comando.
 #     > "${g_win_base_path}/fonts" : subfolder donde se almacena los archivos de fuentes tipograficas.
-#$g_win_base_path='D:\cli\'
+#$g_win_base_path='D:\cli'
 
 # Folder base donde se almacena data temporal que sera eliminado automaticamente despues completar la configuración.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).

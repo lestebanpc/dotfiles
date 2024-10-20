@@ -7,7 +7,7 @@
 #
 
 #-----------------------------------------------------------------------------------
-# Variables globales
+# Variables globales generales
 #-----------------------------------------------------------------------------------
 
 # Nombre del repositorio git o la ruta relativa del repositorio git respecto al HOME. 
@@ -32,8 +32,23 @@
 
 # Si su valor es 0, se cargara (ejecutara como importacion de libreria) dentro de profile del usuario el archivo.
 # de funciones no genericas " ~/${g_repo_name}/shell/bash/lib/mod_myfunc.bash".
-# Cualquier otro valor, no se cargara este script.
+# Cualquier otro valor, no se cargara este script. Su valor por defecto es 1 (no se carga el script).
 #g_load_myfunc=0
+
+
+#-----------------------------------------------------------------------------------
+# Variables globales solo para Linux en WSL2
+#-----------------------------------------------------------------------------------
+
+# Folder base, donde se almacena el programas, comando y afines usados por Windows.
+# - Si no se ingresa un valor valido o no existe, se asignara su valor por defecto "/mnt/c/cli" (es decir "c:\cli").
+# - En este folder almacena la siguiente estructura de folderes donde estan:
+#     > "${g_win_base_path}/prgs"     : subfolder donde se almacena los subfolder de los programas.
+#     > "${g_win_base_path}/cmds/bin" : subfolder donde se almacena los comandos.
+#     > "${g_win_base_path}/cmds/doc" : subfolder donde se almacena documentacion del comando.
+#     > "${g_win_base_path}/cmds/etc" : subfolder donde se almacena archivos adicionales del comando.
+#     > "${g_win_base_path}/fonts" : subfolder donde se almacena los archivos de fuentes tipograficas.
+#$g_win_base_path='/mnt/d/cli'
 
 
 #-----------------------------------------------------------------------------------

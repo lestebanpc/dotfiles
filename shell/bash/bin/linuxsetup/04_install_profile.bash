@@ -1656,8 +1656,13 @@ function _setup_user_profile() {
 
     #3. Crear algunos carpetas basicas (no es obligatorios, pero es deseado)
     
-    #Claves SSH y TLS de uso personales
-    create_folderpath_on_home "${g_repo_name}" "keys/tls"
+    #Folderes para almacenar las claves secretas y compartidas (por ejemplo claves SSH y TLS)
+    create_folderpath_on_home "${g_repo_name}" "keys/shared"
+    create_folderpath_on_home "${g_repo_name}/keys" "secret"
+    create_folderpath_on_home "${g_repo_name}/keys/secret" "ssh"
+    create_folderpath_on_home "${g_repo_name}/keys/secret" "tls"
+    create_folderpath_on_home "${g_repo_name}/keys/shared" "ssh"
+    create_folderpath_on_home "${g_repo_name}/keys/shared" "tls"
 
     #4. Creando enlaces simbolico dependientes del tipo de distribución Linux
     local l_target_path

@@ -59,6 +59,11 @@ if [ -z "$g_prompt_theme" ] || [ ! -f "$g_prompt_theme" ]; then
     g_prompt_theme=~/${g_repo_name}/etc/oh-my-posh/lepc-montys-1.omp.json
 fi
 
+# Solo WSL: Folder base, donde se almacena el programas, comando y afines usados por Windows.
+if [ -z "$g_win_base_path" ] || [ ! -d "$g_win_base_path" ]; then
+    g_win_base_path='/mnt/c/cli'
+fi
+
 #Usado por mi archivo de configuración de Tmux
 export MY_REPO_PATH="$HOME/$g_repo_name"
 
