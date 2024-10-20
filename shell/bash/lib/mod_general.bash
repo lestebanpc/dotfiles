@@ -350,13 +350,12 @@ connect_win_sshagent() {
     fi
 
     SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
-    printf 'Kernel Linux     : "%b%s%b"\n' "$g_color_gray1" "$l_kernel" "$g_color_reset"
-    printf 'Socat version    : "%b%s%b"\n' "$g_color_gray1" "$l_socat_version" "$g_color_reset"
-    printf 'NPipeRelay path  : "%b%s%b"\n' "$g_color_gray1" "$g_win_base_path/cmds/bin/npiperelay.exe" "$g_color_reset"
-    printf 'Socket IPC a usar: "%b%s%b"\n' "$g_color_gray1" "$SSH_AUTH_SOCK" "$g_color_reset"
+    printf 'Kernel Linux (WSL): "%b%s%b"\n' "$g_color_gray1" "$l_kernel" "$g_color_reset"
+    printf 'Socat version     : "%b%s%b"\n' "$g_color_gray1" "$l_socat_version" "$g_color_reset"
+    printf 'NPipeRelay path   : "%b%s%b"\n' "$g_color_gray1" "$g_win_base_path/cmds/bin/npiperelay.exe" "$g_color_reset"
+    printf 'Socket IPC a usar : "%b%s%b"\n' "$g_color_gray1" "$SSH_AUTH_SOCK" "$g_color_reset"
 
     #2.3 Validar si el socket se esta usando
-
     if ss -a | grep -q "$SSH_AUTH_SOCK"; then
         printf 'El socket "%b%s%b" ya se esta usando. Valida si su agente esta funcionando o dentenga el servicio que genera el socket.\n' \
                "$g_color_gray1" "$SSH_AUTH_SOCK" "$g_color_reset"
@@ -364,9 +363,11 @@ connect_win_sshagent() {
     fi
 
     #3. Iniciar un socket IPC que se conecta al SSH agente de Windows
-    printf 'Iniciando el socket IPC "%b%s%b" que se conecte al agente SSH de Windows...\n' "$g_color_gray1" "$l_aux" "$g_color_reset"
+    printf 'Iniciando el socket IPC "%b%s%b" que se conecte al agente SSH de Windows...\n' "$g_color_gray1" "$SSH_AUTH_SOCK" "$g_color_reset"
 
-    if [ -f "$SSH_AUTH_SOCK" ]; then
+    export SSH_AUTH_SOCK
+
+    if [ -e "$SSH_AUTH_SOCK" ]; then
         rm -f "$SSH_AUTH_SOCK"
     fi
 
