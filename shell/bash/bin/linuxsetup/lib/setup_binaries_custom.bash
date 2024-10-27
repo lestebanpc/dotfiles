@@ -518,6 +518,13 @@ function get_repo_last_version() {
             fi
             ;;
 
+        #wezterm)
+
+            #No se obtiene la version de la metadata. Solo el hash, el cual no tiene comparacion > o <, solo =
+            #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/tags"
+            #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/tags" | jq '.[] | select(.name == "nightly")'
+            #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/commits/c53ca64c33d1658602b9a3aaa412eca9c6544294"
+            #;;
 
         *)
             #Si no esta instalado 'jq' no continuar

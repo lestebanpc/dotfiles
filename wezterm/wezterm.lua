@@ -799,6 +799,19 @@ config.key_tables = {
   }
 
 ------------------------------------------------------------------------------------
+-- Setting> Otros
+------------------------------------------------------------------------------------
+
+-- Sets which ssh backend should be used by default for the integrated ssh client.
+-- Possible values are:
+-- - "Ssh2"   - use libssh2
+-- - "LibSsh" - use libssh
+--config.ssh_backend = "Libssh"
+
+-- When set to true (the default), wezterm will configure the SSH_AUTH_SOCK environment variable for panes spawned in the local domain.
+config.mux_enable_ssh_agent = false
+
+------------------------------------------------------------------------------------
 -- Setting> Non-Local Multiplexing Damains
 ------------------------------------------------------------------------------------
 
