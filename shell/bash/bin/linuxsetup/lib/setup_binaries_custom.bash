@@ -447,7 +447,7 @@ function get_repo_last_version() {
                 return 1
             fi
             
-            #Usando el API resumido del repositorio de GitHub
+            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
             l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_bin_cmdpath}/jq -r '.tag_name')
             l_status=$?
             if [ $l_status -ne 0 ]; then
@@ -595,24 +595,6 @@ function get_repo_last_pretty_version() {
             ;;
 
 
-        neovim)
-            #Si no esta instalado 'jq' no continuar
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
-                return 1
-            fi
-            
-            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            l_aux=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | ${g_bin_cmdpath}/jq -r '.body' | \
-                  head -n 2 | tail -1)
-            l_status=$?
-            if [ $l_status -ne 0 ]; then
-                return 1
-            fi
-
-            l_version=$(echo "$l_aux" | sed -e "$g_regexp_sust_version1")
-            ;;
-
-
        less)
 
             l_aux=$(echo "$p_version" | sed -e "$g_regexp_sust_version4")
@@ -683,6 +665,12 @@ function get_repo_last_pretty_version() {
 
             l_version="$l_aux"
             ;;
+
+
+        #neovim)
+
+            #l_version=$(echo "$p_version" | sed -e "$g_regexp_sust_version1")
+            #;;
 
 
         *)

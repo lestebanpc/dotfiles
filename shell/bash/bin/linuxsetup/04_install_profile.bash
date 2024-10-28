@@ -1753,7 +1753,16 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
 
-
+    #Para WSL copiar el archivo de configuracion del profile
+    if [ $g_os_type -eq 1 ]; then
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "config_template_wsl.bash" "" ".config.bash" 1 "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
+              "$g_color_gray1" "~/.config.bash" "$g_color_reset"
+    else
+        printf 'Profile > Si desea personalizar el profile, realize: "%bcp ~/.files/shell/bash/login/profile/config_template_nonwsl.bash ~/.config.bash%b"\n' \
+              "$g_color_gray1" "$g_color_reset"
+    fi
 
     #5. Creando enlaces simbolico independiente del tipo de distribución Linux
 
