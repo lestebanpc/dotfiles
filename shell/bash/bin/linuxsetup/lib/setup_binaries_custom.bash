@@ -382,7 +382,7 @@ function get_repo_last_version() {
             fi
 
             l_aux0=${l_aux0%.tar.gz}
-            l_repo_last_version=$(echo "$l_aux0" | sed -e "$g_regexp_sust_version2")
+            l_repo_last_version=$(echo "$l_aux0" | head -n 1 | sed -e "$g_regexp_sust_version2")
             ;;
 
         rclone)

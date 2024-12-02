@@ -29,7 +29,7 @@
 #                 ./01_setup_binaries.bash
 #                 ./04_install_profile.bash
 #                 ./05_update_profile.bash
-#                 ./03_setup_repo_packages.bash
+#                 ./03_setup_repo_os_pkgs.bash
 #                 ........................
 #                 ........................
 #                 ........................
@@ -1253,10 +1253,10 @@ _install_python() {
     # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     # 4> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 2 "$l_packages_to_install" $g_status_crendential_storage
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 2 "$l_packages_to_install" $g_status_crendential_storage
         l_status=$?
     else
-        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 4 "$l_packages_to_install" $g_status_crendential_storage
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 4 "$l_packages_to_install" $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -1456,10 +1456,10 @@ function _install_vim() {
     # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     # 4> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 2 'vim' $g_status_crendential_storage
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 2 'vim' $g_status_crendential_storage
         l_status=$?
     else
-        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 4 'vim' $g_status_crendential_storage
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 4 'vim' $g_status_crendential_storage
         l_status=$?
     fi
 
@@ -1525,10 +1525,10 @@ function _install_nvim() {
         # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
         # 4> El estado de la credencial almacenada para el sudo
         if [ $l_is_noninteractive -eq 1 ]; then
-            ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 2 "nvim" $g_status_crendential_storage
+            ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 2 "nvim" $g_status_crendential_storage
             l_status=$?
         else
-            ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 4 "nvim" $g_status_crendential_storage
+            ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 4 "nvim" $g_status_crendential_storage
             l_status=$?
         fi
 

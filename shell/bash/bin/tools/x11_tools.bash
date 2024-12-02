@@ -351,10 +351,10 @@ function _sutup_support_x11_clipboard() {
     # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     # 4> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
-        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 2 "$l_pkg_options" $g_status_crendential_storage
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 2 "$l_pkg_options" $g_status_crendential_storage
         l_status=$?
     else
-        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 4 "$l_pkg_options" $g_status_crendential_storage
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 4 "$l_pkg_options" $g_status_crendential_storage
         l_status=$?
     fi
 

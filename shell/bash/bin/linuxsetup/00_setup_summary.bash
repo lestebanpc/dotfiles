@@ -28,7 +28,7 @@
 #                 ./01_setup_binaries.bash
 #                 ./04_install_profile.bash
 #                 ./05_update_profile.bash
-#                 ./03_setup_repo_packages.bash
+#                 ./03_setup_repo_os_pkgs.bash
 #                 ........................
 #                 ........................
 #                 ........................
@@ -293,10 +293,10 @@ function g_install_options() {
             # 3> El estado de la credencial almacenada para el sudo
             # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
             if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             else
-                ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_packages.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
+                ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
                 l_status=$?
             fi
 
