@@ -1321,7 +1321,8 @@ _install_user_pckg_python() {
         echo "Python > Instalando el comando 'jtbl' (modulo python) para mostrar arreglos json en una consola en formato tabular."
         
         #Se instalar a nivel usuario
-        pip3 install jtbl --break-system-packages
+        #pip3 install jtbl --break-system-packages
+        pip3 install jtbl --user
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1343,7 +1344,8 @@ _install_user_pckg_python() {
         echo "Python > Instalando el comando 'compiledb' (modulo python) para generar una base de datos de compilacion Clang desde un make file."
         
         #Se instalar a nivel usuario
-        pip3 install compiledb --break-system-packages
+        #pip3 install compiledb --break-system-packages
+        pip3 install compiledb --user
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1360,7 +1362,8 @@ _install_user_pckg_python() {
         echo "Python > Instalando la libreria python 'rope' para refactorización de Python (https://github.com/python-rope/rope)."
         
         #Se instalara a nivel usuario
-        pip3 install rope --break-system-packages
+        #pip3 install rope --break-system-packages
+        pip3 install rope --user
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1377,7 +1380,8 @@ _install_user_pckg_python() {
         echo "Python > Instalando el paquete 'pynvim' de Python3 para soporte de plugins en dicho RTE"
         
         #Se instalara a nivel usuario
-        pip3 install pynvim --break-system-packages
+        #pip3 install pynvim --break-system-packages
+        pip3 install pynvim --user
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1394,7 +1398,8 @@ _install_user_pckg_python() {
         echo "Python > Instalando el paquete 'urlscan' de Python3 para busquedas de URL en texto (uso por tmux)"
         
         #Se instalara a nivel usuario
-        pip3 install urlscan --break-system-packages
+        #pip3 install urlscan --break-system-packages
+        pip3 install urlscan --user
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
