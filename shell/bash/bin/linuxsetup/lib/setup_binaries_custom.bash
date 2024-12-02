@@ -6159,7 +6159,7 @@ function _copy_artifact_files() {
                 create_or_clean_folder_on_program "powershell" "" 1 2
 
                 #Descomprimir
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 2 "powershell" 0 "" ""
+                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "powershell" 0 "" ""
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6175,7 +6175,7 @@ function _copy_artifact_files() {
             create_or_clean_folder_on_program "powershell" "" 0 2
 
             #Descomprimir
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 1 "powershell" 0 "" ""
+            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "powershell" 0 "" ""
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6200,7 +6200,7 @@ function _copy_artifact_files() {
             create_or_clean_folder_on_program "wezterm" "" 1 2
 
             #Descomprimir
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 2 "wezterm" 0 "" ""
+            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "wezterm" 0 "" ""
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6219,7 +6219,7 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Descomprimir
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 2 "" 0 "neovim" "$p_artifact_filename_woext"
+                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "" 0 "neovim" "$p_artifact_filename_woext"
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6232,7 +6232,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
             
             #Descomprimir
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 1 "" 0 "neovim" "$p_artifact_filename_woext"
+            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "neovim" "$p_artifact_filename_woext"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6265,7 +6265,7 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Descomprimir
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 1 "" 0 "llvm" "clang+llvm"
+            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "llvm" "clang+llvm"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6298,7 +6298,7 @@ function _copy_artifact_files() {
                 if [ $p_flag_install -eq 0  ]; then
 
                     #Descomprimiendo el archivo sin eliminar el contenido existente
-                    uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 2 "dotnet" 1 "" ""
+                    uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "dotnet" 1 "" ""
                     l_status=$?
                     if [ $l_status -ne 0 ]; then
                         return 40
@@ -6329,7 +6329,7 @@ function _copy_artifact_files() {
             if [ $p_flag_install -eq 0  ]; then
 
                 #Descomprimiendo el archivo
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 1 "dotnet" 1 "" ""
+                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "dotnet" 1 "" ""
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6377,7 +6377,7 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Descomprimiendo el archivo
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 2 "" 0 "go" ""
+                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "" 0 "go" ""
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6394,7 +6394,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Descomprimiendo el archivo
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 1 "" 0 "go" ""
+            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "go" ""
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6451,7 +6451,7 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Descomprimiendo el archivo
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 2 "" 0 "nodejs" "${p_artifact_filename_woext}"
+                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $(p_artifact_type - 20)) 2 "" 0 "nodejs" "${p_artifact_filename_woext}"
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6465,7 +6465,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Descomprimiendo el archivo
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 1 "" 0 "nodejs" "${p_artifact_filename_woext}"
+            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "nodejs" "${p_artifact_filename_woext}"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6494,7 +6494,7 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Descomprimiendo el archivo
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 2 "" 0 "cmake" "${p_artifact_filename_woext}"
+                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "" 0 "cmake" "${p_artifact_filename_woext}"
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6508,7 +6508,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Descomprimiendo el archivo
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 1 "" 0 "cmake" "${p_artifact_filename_woext}"
+            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "cmake" "${p_artifact_filename_woext}"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6553,7 +6553,7 @@ function _copy_artifact_files() {
                 fi
 
                 #Descomprimiendo el archivo
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 2 "" 0 "$l_target_path" "graalvm-community-"
+                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "" 0 "$l_target_path" "graalvm-community-"
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6571,7 +6571,7 @@ function _copy_artifact_files() {
             fi
 
             #Descomprimiendo el archivo
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((l_artifact_type - 20)) 1 "" 0 "$l_target_path" "graalvm-community-"
+            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "$l_target_path" "graalvm-community-"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
