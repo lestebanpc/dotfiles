@@ -6451,7 +6451,7 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Descomprimiendo el archivo
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $(p_artifact_type - 20)) 2 "" 0 "nodejs" "${p_artifact_filename_woext}"
+                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "" 0 "nodejs" "${p_artifact_filename_woext}"
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
