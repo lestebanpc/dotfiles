@@ -14,7 +14,7 @@ if(-not ${g_repo_name}) {
 
 # Tema por defecto de Oh-My-Posh:
 if(-not ${g_prompt_theme}) {
-    $g_prompt_theme= "${env:HOME}/${g_repo_name}/etc/oh-my-posh/lepc-montys-1.omp.json"
+    $g_prompt_theme= "${env:HOME}/${g_repo_name}/etc/oh-my-posh/defaut_settings.json"
 }
 
 #Write-Host "g_prompt_theme2= ${g_prompt_theme}"

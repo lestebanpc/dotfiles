@@ -37,6 +37,8 @@ shell/powershell/bin/windowssetup/config.ps1
 #!etc/git/custom/template_windows_work.toml
 
 # Autogenerado que cambian frecuentemente
+etc/oh-my-posh/default_settings.json
+etc/oh-my-posh/default_settings.json.bak
 etc/oh-my-posh/default/*
 etc/trivy/templates/*
 
