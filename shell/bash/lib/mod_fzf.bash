@@ -105,13 +105,34 @@ ge_ps() {
         --layout=reverse --height=80% | awk '{print $2}'
 }        
 
-_g_fzf_rg="rg --column --line-number --no-heading --color=always --smart-case "
+_g_fzf_rg_cmd=''
 _g_fzf_rg_initial_query=""
 
-
+#Uselo para buscar contenido de archivos en carpetas (recursivamente).
+#Restricciones:
+# - No es pensado para busqueda en un archivo use directamente el comando 'ripgrep' o simplemente 'grep'.
+# - Solo permite la busqueda de un query de busqueda. No esta diseñado usar muilples query con '-e' o '-f'.
+# - RipGrep solo esta pensado para criterios de busqueda usando expresiones regulares extendidas.
 ge_rg() {
-    #Todo los Argumentos pasados se le quitaran el entrecomillado y se pasara como criterio de busqueda
-    _g_fzf_rg_initial_query="${*:-}"
+
+    local l_initial_query="$1"
+    local l_path="$2"
+
+    if [ -z "$l_initial_query" ]; then
+        printf 'You must specify the first parameter.\nUsage:\n'
+        printf '    ge_rg QUERY\n'
+        printf '    ge_rg QUERY PATH\n'
+        return 1
+    fi
+
+    #Anteponer el caracter de escape "\" a los caracteres especial de una cadena 
+    _g_fzf_rg_initial_query=$(printf %q "$l_initial_query")
+
+    if [ ! -z "$l_path" ]; then
+        _g_fzf_rg_cmd="rg --column --line-number --no-heading --color=always --smart-case ${l_path} -e"
+    else
+        _g_fzf_rg_cmd='rg --column --line-number --no-heading --color=always --smart-case -e'
+    fi
     
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
@@ -119,14 +140,14 @@ ge_rg() {
     fi
     
 
-    FZF_DEFAULT_COMMAND="$_g_fzf_rg $(printf %q "$_g_fzf_rg_initial_query")" \
+    FZF_DEFAULT_COMMAND="${_g_fzf_rg_cmd} ${_g_fzf_rg_initial_query}" \
     fzf $l_fzf_size --ansi \
         --color "hl:-1:underline,hl+:-1:underline:reverse" \
         --header 'CTRL-r (ripgrep mode), CTRL-f (fzf mode), ENTER (Exit & view file)' \
         --disabled --query "$_g_fzf_rg_initial_query" \
-        --bind "change:reload:sleep 0.1; $_g_fzf_rg {q} || true" \
+        --bind "change:reload:sleep 0.1; $_g_fzf_rg_cmd {q} || true" \
         --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt(🔦 fzf> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-r; cat /tmp/rg-fzf-f)" \
-        --bind "ctrl-r:unbind(ctrl-r)+change-prompt(🔍 ripgrep> )+disable-search+reload($_g_fzf_rg {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-f; cat /tmp/rg-fzf-r)" \
+        --bind "ctrl-r:unbind(ctrl-r)+change-prompt(🔍 ripgrep> )+disable-search+reload($_g_fzf_rg_cmd {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-f; cat /tmp/rg-fzf-r)" \
         --bind "start:unbind(ctrl-r)" \
         --prompt '🔍 ripgrep> ' \
         --delimiter : \
