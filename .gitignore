@@ -13,6 +13,7 @@
 
 # Archivos de tag generado por Universal CTags
 tags
+tags.lock
 
 # Paquetes locales de NodeJS (binarios de NodeJs)
 node_modules/*
