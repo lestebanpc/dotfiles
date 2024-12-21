@@ -1819,7 +1819,7 @@ uncompress_on_folder() {
 
 
     #B. Descomprimir
-    _uncompress_file "$p_source_path" "$p_source_filename" $p_source_filename "$p_target_path" 0
+    _uncompress_file "$p_source_path" "$p_source_filename" $p_source_filetype "$p_target_path" 0
 
     #C. Si es modelo 1 (el contenido del programa esta directamente en el folder destino), salir 
     if [ -z "$p_foldername" ]; then
