@@ -140,7 +140,7 @@ get_package_name() {
                 l_package_name_custom="py3-pip"
                 l_search_type=1
             elif [ $p_os_subtype_id -eq 19 ]; then
-                l_package_name_custom="python3-pip.noarch"
+                l_package_name_custom="python3-pip"
                 l_search_type=1
             fi 
             ;;

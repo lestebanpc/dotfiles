@@ -16,6 +16,11 @@ if [ -z "$g_regexp_sust_version1" ]; then
     declare -r g_regexp_sust_version6='s/^\([0-9.]\+\).*/\1/'
 fi
 
+#Constantes: Colores
+g_color_reset="\x1b[0m"
+g_color_gray1="\x1b[90m"
+
+
 #Funciones de utilidad de Inicialización {{{
 
 #Determinar el tipo de SO compatible con interprete shell POSIX.
@@ -656,6 +661,7 @@ is_package_installed() {
         #ii  python3-pip                       23.0.1+dfsg-1ubuntu0.2                  all          Python package installer
         #ii  python3-pip-whl                   23.0.1+dfsg-1ubuntu0.2                  all          Python package installer (pip wheel)
         #
+        printf 'Buscando OS packages: %bdpkg -l | grep "%s" 2> /dev/null%b\n' "$g_color_gray1" "$p_package_name_part" "$g_color_reset"
         l_aux=$(dpkg -l | grep "$p_package_name_part" 2> /dev/null)
         l_status=$?
         
@@ -675,6 +681,7 @@ is_package_installed() {
         #containerd.io.x86_64                   1.6.20-3.1.fc36                    @docker-ce-stable
         #
         
+        printf 'Buscando OS packages: %bdnf list installed | grep "%s" 2> /dev/null%b\n' "$g_color_gray1" "$p_package_name_part" "$g_color_reset"
         l_aux=$(dnf list installed | grep "$p_package_name_part" 2> /dev/null)
         l_status=$?
 
@@ -704,6 +711,7 @@ is_package_installed() {
         #python3-tkinter-tests-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
        
         #Opcion '-q' se requiere para que se muestren los mensajes 'WARNING: ....'
+        printf 'Buscando OS packages: %bapk list -q --installed | grep "%s" 2> /dev/null%b\n' "$g_color_gray1" "$p_package_name_part" "$g_color_reset"
         l_aux=$(apk list -q --installed | grep "$p_package_name_part" 2> /dev/null)
         l_status=$?
 
@@ -845,8 +853,10 @@ install_os_package() {
 
         #Distribución: Ubuntu
         if [ $g_runner_id -eq 0 ]; then
+           printf 'Instalando un OS package: %bapt-get %s install %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            apt-get $p_non_interative install $p_package_name
         else
+           printf 'Instalando un OS package: %bsudo apt-get %s install %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            sudo apt-get $p_non_interative install $p_package_name
         fi
         l_status=$?
@@ -856,8 +866,10 @@ install_os_package() {
 
         #Distribución: Fedora
         if [ $g_runner_id -eq 0 ]; then
+           printf 'Instalando un OS package: %bdnf %s install %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            dnf $p_non_interative install $p_package_name
         else
+           printf 'Instalando un OS package: %bsudo dnf %s install %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            sudo dnf $p_non_interative install $p_package_name
         fi
         l_status=$?
@@ -866,8 +878,10 @@ install_os_package() {
     elif [ $p_os_subtype_id -eq 1 ]; then
 
         if [ $g_runner_id -eq 0 ]; then
+           printf 'Instalando un OS package: %bapk %s install %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            apk $p_non_interative add $p_package_name
         else
+           printf 'Instalando un OS package: %bsudo apk %s install %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            sudo apk $p_non_interative add $p_package_name
         fi
         l_status=$?
@@ -930,9 +944,11 @@ uninstall_os_package() {
 
         #Distribución: Ubuntu
         if [ $g_runner_id -eq 0 ]; then
+           printf 'Eliminando un OS package instalado: %bapt-get %s purge %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            apt-get $p_non_interative purge $p_package_name
            #apt-get autoremove
         else
+           printf 'Eliminando un OS package instalado: %bsudo apt-get %s purge %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            sudo apt-get $p_non_interative purge $p_package_name
            #sudo apt-get autoremove
         fi
@@ -943,8 +959,10 @@ uninstall_os_package() {
 
         #Distribución: Fedora
         if [ $g_runner_id -eq 0 ]; then
+           printf 'Instalando un OS package instalado: %bdnf %s erase %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            dnf $p_non_interative erase $p_package_name
         else
+           printf 'Eliminando un OS package instalado: %bsudo dnf %s erase %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            sudo dnf $p_non_interative erase $p_package_name
         fi
         l_status=$?
@@ -953,8 +971,10 @@ uninstall_os_package() {
     elif [ $p_os_subtype_id -eq 1 ]; then
 
         if [ $g_runner_id -eq 0 ]; then
+           printf 'Eliminando un OS package instalado: %bapk %s del %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            apk $p_non_interative del $p_package_name
         else
+           printf 'Eliminando un OS package instalado: %bsudo apk %s del %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            sudo apk $p_non_interative del $p_package_name
         fi
         l_status=$?
