@@ -640,7 +640,7 @@ is_package_installed() {
             p_package_name_part=" ${1} "
         #Si es un distribucion de la familia Fedora
         elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
-            p_package_name_part="^${1}."
+            p_package_name_part="^${1}\\."
         #Si es Alpine
         elif [ $p_os_subtype_id -eq 1 ]; then
             p_package_name_part="^${1}-[0-9]"
