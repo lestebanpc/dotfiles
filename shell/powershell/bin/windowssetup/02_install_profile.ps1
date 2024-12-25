@@ -759,13 +759,13 @@ function m_setup_profile($l_overwrite_ln_flag) {
     if(! (Test-Path "${env:USERPROFILE}\.config\git\main.toml" )) {
 		Write-Host "            > Creando el archivo '~\.config\git\main.toml' ..."
         Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\template_main_gitconfig_windows.toml" -Destination "${env:USERPROFILE}\.config\git\main.toml"
-        Write-Host "            > Creando el archivo '~\.config\git\work_uc.toml' ..."
-        Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\template_work_gitconfig_windows.toml" -Destination "${env:USERPROFILE}\.config\git\work_uc.toml"
+        Write-Host "            > Creando el archivo '~\.config\git\work_mywork.toml' ..."
+        Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\template_work_gitconfig_windows.toml" -Destination "${env:USERPROFILE}\.config\git\work_mywork.toml"
         
-        Write-Host "            > Edite '~\.config\git\main.toml' y '~\.config\git\work_uc.toml' si desea crear modificar las opciones de '~/.gitignore'."
+        Write-Host "            > Edite '~\.config\git\main.toml' y '~\.config\git\work_mywork.toml' si desea crear modificar las opciones de '~/.gitignore'."
 	}
     else {
-        Write-Host "            > Edite '~\.config\git\main.toml' y '~\.config\git\work_uc.toml' si desea crear modificar las opciones de '~/.gitignore'."
+        Write-Host "            > Edite '~\.config\git\main.toml' y '~\.config\git\work_mywork.toml' si desea crear modificar las opciones de '~/.gitignore'."
     }
 
     #Archivo de configuracion de SSH

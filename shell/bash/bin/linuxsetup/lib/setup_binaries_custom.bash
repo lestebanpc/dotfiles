@@ -144,7 +144,7 @@ ga_menu_options_packages=(
     "containerd,buildkit,nerdctl"
     "dive,hadolint,trivy"
     "crictl,kubectl,cilium,helm"
-    "operator-sdk,3scale-toolbox,pgo"
+    "oc,operator-sdk,3scale-toolbox,pgo"
     "k0s"
     "cni-plugins,kubectl,kubelet,kubeadm"
     "net-sdk,roslyn,netcoredbg"

@@ -1833,10 +1833,10 @@ function _setup_user_profile() {
     copy_file_on_home "${g_repo_path}/etc/git" "template_main_gitconfig_linux.toml" ".config/git" "main.toml" 1 "        > "
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/etc/git" "template_work_gitconfig_linux.toml" ".config/git" "work_uc.toml" 1 "        > "
+    copy_file_on_home "${g_repo_path}/etc/git" "template_work_gitconfig_linux.toml" ".config/git" "work_mywork.toml" 1 "        > "
     l_status=$?
     printf 'Profile > Edite los archivos "%b%s%b" y "%b%s%b" si desea personalizar las opciones a nivel global del usuario ("%b~/.gitconfig%b")\n' \
-           "$g_color_gray1" "~/.config/git/main.toml" "$g_color_reset" "$g_color_gray1" "~/.config/git/work_uc.toml" "$g_color_reset" \
+           "$g_color_gray1" "~/.config/git/main.toml" "$g_color_reset" "$g_color_gray1" "~/.config/git/work_mywork.toml" "$g_color_reset" \
            "$g_color_gray1" "$g_color_reset"
 
     #Archivo de configuración de Oh-My-Posh

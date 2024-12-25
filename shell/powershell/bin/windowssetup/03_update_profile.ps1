@@ -576,21 +576,21 @@ function m_changes_plugins_fzf()
 	
 	Write-Host ""
     Write-Host ">   VIM> Copiando los archivos de la fuente corregida al plugin 'fzf' y 'fzf.vim': "
-    Write-Host "cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf\plugin\" -ForegroundColor DarkGray
-    cp ${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf\plugin\
-    Write-Host "cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\" -ForegroundColor DarkGray
-    cp ${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\
-	Write-Host "cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1 `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\bin\" -ForegroundColor DarkGray
-	cp ${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1 ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\bin\
+    Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf\plugin\fzf.vim `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf\plugin\" -ForegroundColor DarkGray
+    cp ${env:USERPROFILE}\.files\vim\fixes\fzf\plugin\fzf.vim ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf\plugin\
+    Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf.vim\autoload\fzf\vim.vim `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\" -ForegroundColor DarkGray
+    cp ${env:USERPROFILE}\.files\vim\fixes\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\
+	Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf.vim\bin\preview.ps1 `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\bin\" -ForegroundColor DarkGray
+	cp ${env:USERPROFILE}\.files\vim\fixes\fzf.vim\bin\preview.ps1 ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\bin\
 
 	Write-Host ""
     Write-Host ">NeoVIM> Copiando los archivos de la fuente corregida al plugin 'fzf' y 'fzf.vim': "
-	Write-Host "cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf\plugin\" -ForegroundColor DarkGray
-	cp ${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf\plugin\
-    Write-Host "cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\" -ForegroundColor DarkGray
-    cp ${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\
-	Write-Host "cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1 `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\bin\" -ForegroundColor DarkGray
-	cp ${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1 ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\bin\
+	Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf\plugin\fzf.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf\plugin\" -ForegroundColor DarkGray
+	cp ${env:USERPROFILE}\.files\vim\fixes\fzf\plugin\fzf.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf\plugin\
+    Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf.vim\autoload\fzf\vim.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\" -ForegroundColor DarkGray
+    cp ${env:USERPROFILE}\.files\vim\fixes\fzf.vim\autoload\fzf\vim.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\
+	Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf.vim\bin\preview.ps1 `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\bin\" -ForegroundColor DarkGray
+	cp ${env:USERPROFILE}\.files\vim\fixes\fzf.vim\bin\preview.ps1 ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\bin\
 
 	Write-Host ""
 	Write-Host ""
@@ -598,7 +598,7 @@ function m_changes_plugins_fzf()
 	
 	
 	Write-Host ""
-    Write-Host "1> Opcional: subir los cambios de la fuentes corregida al repositorio remoto" -ForegroundColor Green
+    Write-Host "1> Opcional: Si ha realizado cambios, subir estos cambios de la fuentes corregida al repositorio remoto" -ForegroundColor Green
 	Write-Host "   cd `${env:USERPROFILE}\.files"
 	Write-Host "   git add vim\packages\fixes\fzf\plugin\fzf.vim"
 	Write-Host "   git add vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim"
