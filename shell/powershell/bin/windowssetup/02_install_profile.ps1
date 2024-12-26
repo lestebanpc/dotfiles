@@ -770,11 +770,15 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
     #Archivo de configuracion de SSH
     $l_target_link="${env:USERPROFILE}\.ssh\config"
-    $l_source_path="${env:USERPROFILE}\.files\etc\ssh\template_windows.conf"
+    $l_source_path="${env:USERPROFILE}\.files\etc\ssh\template_windows_withpublickey.conf"
 	
+	if(! (Test-Path "${env:USERPROFILE}\.ssh")) {
+		New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\.ssh"
+    }
+
 	$l_info= Get-Item "$l_target_link" | Select-Object LinkType, LinkTarget 2> $null
     
-    if(! (Test-Path "$l_profile_path")) {
+    if(! (Test-Path "$l_target_link")) {
 		if ( $l_info -and ($l_info.LinkType -eq "SymbolicLink") ) {
             Write-Host "General     > Remplazado el enlace simbolico '~\.ssh\config' por un archivo ..."
 			Remove-Item -Path "$l_target_link"
