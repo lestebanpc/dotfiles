@@ -1829,6 +1829,7 @@ function _get_repo_current_pretty_version() {
             
             if [ $l_status -eq 0 ]; then
                 l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_sustitution_regexp='s/.*\sv\([0-9.]\+\).*/\1/'
             fi
             ;;
 
