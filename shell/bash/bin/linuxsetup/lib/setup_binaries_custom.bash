@@ -800,13 +800,6 @@ function _get_repo_current_pretty_version() {
     local p_path_file="$3"              #Ruta donde se obtendra el comando para obtener la versión
                                         #es usado para programas que deben ser descargados para recien obtener la ultima versión.
 
-    #2. Obtener la version actual
-    local l_sustitution_regexp="$g_regexp_sust_version1"
-    local l_repo_current_version=""
-    local l_tmp=""
-    local l_status=0
-    #local l_aux=""
-
     #Calcular la ruta de archivo/comando donde se obtiene la version (esta ruta termina en "/")
     local l_path_file="" 
     if [ -z "$p_path_file" ]; then
@@ -818,6 +811,16 @@ function _get_repo_current_pretty_version() {
     else
         l_path_file="${p_path_file}/"
     fi
+
+
+
+    #2. Obtener la version actual
+    local l_sustitution_regexp="$g_regexp_sust_version1"
+    local l_repo_current_version=""
+    local l_tmp=""
+    local l_status=0
+    #local l_aux=""
+
 
     case "$p_repo_id" in
 
@@ -1752,7 +1755,7 @@ function _get_repo_current_pretty_version() {
                 fi
 
                 #CNI vlan plugin v1.2.0
-                l_tmp=$(${l_path_file}vlan --version 2> /dev/null)
+                l_tmp=$(${l_path_file}vlan --version 2>&1)
                 l_status=$?
             
                 if [ $l_status -eq 0 ]; then
@@ -5492,10 +5495,10 @@ function _copy_artifact_files() {
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
                 printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "containerd.service" \
                        "$g_color_yellow1" "$g_color_reset"
-                printf '%b   export PATH="$PATH:$HOME/.files/shell/sh/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
-                printf '%b   containerd-rootless-setuptool.sh install%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/shell/sh/cmds"%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   ~/.files/shell/sh/bin/containerd/containerd-rootless-setuptool.sh install%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   Opcional:%b\n' "$g_color_gray1" "$g_color_reset"
-                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" \
+                printf '%b      > Para ingresar al user-namespace creado use:%b ~/.files/shell/sh/bin/containerd/containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" \
                        "$g_color_yellow1" "$g_color_reset"
                 printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_gray1" \
                        "$g_color_yellow1" "$g_color_reset"
@@ -5567,10 +5570,10 @@ function _copy_artifact_files() {
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
                 printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "buildkit.service" \
                        "$g_color_yellow1" "$g_color_reset"
-                printf '%b   export PATH="$PATH:$HOME/.files/shell/sh/containerd"%b\n' "$g_color_yellow1" "$g_color_reset"
-                printf '%b   containerd-rootless-setuptool.sh install-buildkit%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   export PATH="$PATH:$HOME/.files/shell/sh/bin/cmds"%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   ~/.files/shell/sh/bin/containerd/containerd-rootless-setuptool.sh install-buildkit%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   Opcional:%b\n' "$g_color_gray1" "$g_color_reset"
-                printf '%b      > Para ingresar al user-namespace creado use:%b containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" "$g_color_yellow1" \
+                printf '%b      > Para ingresar al user-namespace creado use:%b ~/.files/shell/sh/bin/containerd/containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" "$g_color_yellow1" \
                        "$g_color_reset"
                 printf '%b      > Establezca el servicio buildkit para inicio manual:%b systemctl --user disable buildkit.service%b\n' "$g_color_gray1" \
                        "$g_color_yellow1" "$g_color_reset"
