@@ -1159,7 +1159,7 @@ function save_prettyversion_on_program()
     printf 'Almacenando la version "%b%s%b" instalada/actualizada en el archivo "%b%s%b" ...\n' "$g_color_gray1" "${p_pretty_version}" \
            "$g_color_reset" "$g_color_gray1" "${p_target_path}/${p_target_filename}" "$g_color_reset"
     
-    sudo echo "${p_pretty_version}" > "${p_target_path}/${p_target_filename}"
+    sudo sh -c "echo ${p_pretty_version} > ${p_target_path}/${p_target_filename}"
     sudo chmod +r "${p_target_path}/${p_target_filename}"
 
     return 0
