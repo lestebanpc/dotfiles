@@ -213,6 +213,9 @@ eval "$(zoxide init bash)"
 # MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC 
 export MPD_HOST=/run/mpd/socket
 
+# Editor por defecto para "systemctl edit"
+export SYSTEMD_EDITOR=vim
+
 
 #-----------------------------------------------------------------------------------
 # Alias> Otros
