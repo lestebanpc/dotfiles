@@ -3172,7 +3172,8 @@ function get_repo_artifacts() {
                 pna_artifact_names=("nvim-win64.zip")
                 pna_artifact_types=(21)
             else
-                pna_artifact_names=("nvim-linux64.tar.gz")
+                #pna_artifact_names=("nvim-linux64.tar.gz")
+                pna_artifact_names=("nvim-linux-x86_64.tar.gz")
                 #Si se instala, no se descomprime, se realizara la logica de descomprención.
                 pna_artifact_types=(20)
             fi
