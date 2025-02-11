@@ -1,7 +1,7 @@
-# Usuario personal
+# Usuario personal principal
 [user]
-	email = lpenac@mymail.com
-	name  = Mi name
+	email = lucianoepc@gmail.com
+	name  = Luciano Esteban
 
 
 # Incluir los temas del comando 'delta'
@@ -25,8 +25,12 @@
     log2-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(auto)%d%C(reset)%n          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'
     log3-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n          %C(white)%s%C(reset)%n        %C(dim white)- %an <%ae> %C(reset) %C(dim white)(committer: %cn <%ce>)%C(reset)'
 
+# Usuario de personal alternativo
+#[includeIf "gitdir:~/code/myuser2/"]
+#    path = myuser2.toml
 
-# Usuario de work 'mywork'
+
+# Usuario de trabajo 'mywork'
 #[includeIf "gitdir:~/code/mywork/"]
 #    path = work_mywork.toml
 
