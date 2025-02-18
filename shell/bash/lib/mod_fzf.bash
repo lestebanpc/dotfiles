@@ -198,11 +198,11 @@ t () {
 
     #Escoger el nombre de la sesion o la ruta de inicio de la sesion
     local l_title=''
-    printf -v l_title "%bShow%b: (%bctrl+a%b) all, (%bctrl+t%b) active session, (%bctrl+i%b) configured session, (%bctrl+x%b) zoxide path. %bActions%b: (%bctrl+d%b) kill session \n%bShow%b: (%bctrl+g%b) sufolder git of '%b%s%b', (%bctrl+f%b) sufolder of '%b%s%b'" \
-           "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" \
-           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_path" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_path" "$g_color_reset"
+    printf -v l_title "%bSession%b: (%bctrl+t%b) show active, (%bctrl+i%b) show configured, (%bctrl+d%b) kill. %bShow all%b: (%bctrl+a%b) session + zoxide folder\n%bFolder%b: (%bctrl+x%b) zoxide. %bSubfolder%b of %b%s%b: (%bctrl+g%b) git, (%bctrl+f%b) all" \
+           "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$l_path" "$g_color_reset" "$g_color_cian1" "$g_color_reset"\
+           "$g_color_cian1" "$g_color_reset"
 
     
     local l_fzf_size='--height 60%'
@@ -210,11 +210,11 @@ t () {
         l_fzf_size='--tmux center,99%,60%'
     fi
    
-    #--preview-window 'right:55%' --preview 'sesh preview {}' \
 
     local l_session_or_path=$(sesh list --icons | fzf $l_fzf_size \
 		--no-sort --ansi --prompt '⚡Session or Path> ' \
         --header "$l_title" \
+        --preview-window 'right:40%' --preview 'sesh preview {}' \
 		--bind 'tab:down,btab:up' \
 		--bind 'ctrl-a:change-prompt(⚡Session or Path> )+reload(sesh list --icons)' \
 		--bind 'ctrl-t:change-prompt(🪟 Active sessions> )+reload(sesh list -t --icons)' \

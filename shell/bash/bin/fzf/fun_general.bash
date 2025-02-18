@@ -34,7 +34,7 @@ list_work_folder() {
     #        -name "Videos" -o -name "personal" -o -name "photos" \) -prune -o \( -type d -writable -print \)
     # find . -mindepth 1 -maxdepth 10 -type d \( -name ".*" -o -name "Documents" -o -name "Downloads" -o -name "Desktop" -o -name "Pictures" -o -name "Videos" -o -name "personal" -o -name "photos" \) -prune -o -type d -print
     # find . -mindepth 1 -maxdepth 10 -type d -name ".git" -print -o -type d \( -name ".*" -o -name "Documents" -o -name "Downloads" -o -name "Desktop" -o -name "Pictures" -o -name "Videos" -o -name "personal" -o -name "photos" \) -prune
-    find "$p_path" -mindepth $p_mindepth -maxdepth $p_maxdepth -type d \( -name '.*' -o $l_exclude_options \) -prune -o -type d -print
+    find "$p_path" -mindepth $p_mindepth -maxdepth $p_maxdepth -type d \( -name '.*' -o $l_exclude_options \) -prune -o -type d -print | sed "s|^$HOME|~|"
 
 }
 
@@ -57,7 +57,7 @@ list_git_folder() {
 
     #echo "$l_exclude_options"
 
-    find "$p_path" -mindepth $p_mindepth -maxdepth $p_maxdepth -type d -name ".git" -exec dirname "{}" \; -o -type d \( -name '.*' -o $l_exclude_options \) -prune
+    find "$p_path" -mindepth $p_mindepth -maxdepth $p_maxdepth -type d -name ".git" -exec dirname "{}" \; -o -type d \( -name '.*' -o $l_exclude_options \) -prune | sed "s|^$HOME|~|"
 
 }
 

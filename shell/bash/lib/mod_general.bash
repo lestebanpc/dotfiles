@@ -21,6 +21,17 @@ fi
 # Funciones Generales
 ################################################################################################
 
+bhelp() {
+
+    if [ -z "$1" ]; then
+        printf 'Ingrese el comando que muestra una ayuda para poder presentarlo.\n'
+        return 1
+    fi
+
+    $1 | bat --style plain -l man
+
+}
+
 
 ################################################################################################
 # Funciones de NerdCtl con CRT 'ContainerD'
