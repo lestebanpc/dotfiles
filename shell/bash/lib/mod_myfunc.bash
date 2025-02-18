@@ -16,6 +16,27 @@ if [ -z "$g_regexp_sust_version1" ]; then
 fi
 
 
+
+set_first_dns_server() {
+
+    #De las interfaces de red xxx y la brigde, validar
+    # - Validar que el primer DNS esta activo
+    # - Validar que el current DNS no sea el primer servidor DNS de la lista de algunas interfaces de red
+    #Si alguno de ellos no lo estan homologados, reiniciarlo para que vuelva a escoger el primer servidor DNS
+
+    #Reiniciar
+    printf 'Reiniciando el "%bDNS Resolver%b" (%bsudo systemctl restart systemd-resolved.service%b)...\n' \
+           "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    sudo systemctl restart systemd-resolved.service
+
+    #Establecer los DNS a la interface brigde (copiar los DNS de la interface ....)
+    sudo resolvectl dns br0 192.168.2.202 8.8.8.8 200.48.225.130
+
+
+}
+
+
+
 ################################################################################################
 # Inicializar/Finalizar la musica de la NAS 
 ################################################################################################
