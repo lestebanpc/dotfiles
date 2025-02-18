@@ -28,7 +28,12 @@ bhelp() {
         return 1
     fi
 
-    $1 | bat --style plain -l man
+    local l_paging='--paging=auto'
+    if [ "$2" -eq 0 ]; then
+        l_paging='--paging=always'
+    fi
+
+    $1 | bat --style plain -l man $l_paging
 
 }
 
