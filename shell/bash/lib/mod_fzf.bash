@@ -198,7 +198,7 @@ t () {
 
     #Escoger el nombre de la sesion o la ruta de inicio de la sesion
     local l_title=''
-    printf -v l_title "%bSession%b: (%bctrl+t%b) show active, (%bctrl+i%b) show configured, (%bctrl+d%b) kill. %bShow all%b: (%bctrl+a%b) session + zoxide folder\n%bFolder%b: (%bctrl+x%b) zoxide. %bSubfolder%b of %b%s%b: (%bctrl+g%b) git, (%bctrl+f%b) all" \
+    printf -v l_title "%bSession%b: (%bctrl+t%b) show active, (%bctrl+i%b) show configured, (%bctrl+d%b) kill. %bSession + zoxide%b folders: (%bctrl+a%b)\n%bFolders%b: (%bctrl+x%b) zoxide. %bSubfolders%b of %b%s%b: (%bctrl+g%b) git, (%bctrl+f%b) all" \
            "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
            "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
            "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$l_path" "$g_color_reset" "$g_color_cian1" "$g_color_reset"\
@@ -212,17 +212,17 @@ t () {
    
 
     local l_session_or_path=$(sesh list --icons | fzf $l_fzf_size \
-		--no-sort --ansi --prompt '⚡Session or Path> ' \
+		--no-sort --ansi --prompt '⚡Session + Zoxide> ' \
         --header "$l_title" \
         --preview-window 'right:40%' --preview 'sesh preview {}' \
 		--bind 'tab:down,btab:up' \
-		--bind 'ctrl-a:change-prompt(⚡Session or Path> )+reload(sesh list --icons)' \
+		--bind 'ctrl-a:change-prompt(⚡Session + Zoxide> )+reload(sesh list --icons)' \
 		--bind 'ctrl-t:change-prompt(🪟 Active sessions> )+reload(sesh list -t --icons)' \
 		--bind 'ctrl-i:change-prompt(⚙️ Configured sessions> )+reload(sesh list -c --icons)' \
 		--bind 'ctrl-x:change-prompt(📁 Zoxide folder> )+reload(sesh list -z --icons)' \
 		--bind "ctrl-f:change-prompt(🔎 Work folder> )" --bind "ctrl-f:+reload:bash ${_g_script_path}/fun_general.bash list_work_folder '${_g_fzf_gnrl_path}' 1 7" \
 		--bind "ctrl-g:change-prompt(🔎 Git folder> )" --bind "ctrl-g:+reload:bash ${_g_script_path}/fun_general.bash list_git_folder '${_g_fzf_gnrl_path}' 1 7" \
-        --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡ Session or Path> )+reload(sesh list --icons)')
+        --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡ Session + Zoxide> )+reload(sesh list --icons)')
 
     if [ -z "$l_session_or_path" ]; then
         return 0

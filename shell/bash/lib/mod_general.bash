@@ -29,7 +29,7 @@ bhelp() {
     fi
 
     local l_paging='--paging=auto'
-    if [ "$2" -eq 0 ]; then
+    if [ "$2" = "0" ]; then
         l_paging='--paging=always'
     fi
 
