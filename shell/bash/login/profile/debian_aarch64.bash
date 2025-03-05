@@ -189,13 +189,30 @@ export PATH
 # FZF> Variables de entorno
 export FZF_COMPLETION_PATH_OPTS="--walker=file,dir,hidden,follow"
 export FZF_COMPLETION_DIR_OPTS="--walker=dir,hidden,follow"
-export FZF_DEFAULT_OPTS="--height=80% --tmux=center,100%,80% --layout=reverse --walker-skip=.git,node_modules --info=inline --border --color=bg+:#293739,bg:#1B1D1E,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"
+
+export FZF_DEFAULT_OPTS="--height=80% --tmux=center,100%,80%
+    --layout=reverse --walker-skip=.git,node_modules
+    --info=inline --border
+    --color=bg+:#293739,bg:#1B1D1E,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"
 #export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --walker-skip=.git,node_modules --info=inline --border --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"
-export FZF_CTRL_R_OPTS="--prompt 'History> '"
-export FZF_CTRL_T_OPTS="--prompt 'Select> ' --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 5 {} | head -n 300; else bat --color=always --style=numbers,header-filename,grid --line-range :500 {}; fi'"
-export FZF_ALT_C_OPTS="--prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {} | head -n 300'"
+
+export FZF_CTRL_R_OPTS="--prompt 'History> '
+    --preview 'echo {2..} | bat --color=always -pl sh'
+    --preview-window up:3:hidden:wrap
+    --bind 'ctrl-/:toggle-preview'
+    --bind 'ctrl-t:track+clear-query'
+    --bind 'ctrl-y:execute-silent(echo -n {2..} | wl-copy)+abort'
+    --header '(Ctrl+/) Toggle preview, (Ctrl+t) Clear query, (Ctrl+y) Copy command'
+    --color header:italic"
+
+export FZF_CTRL_T_OPTS="--prompt 'Select> '
+    --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 5 {} | head -n 300; else bat --color=always --style=numbers,header-filename,grid --line-range :500 {}; fi'"
 #export FZF_CTRL_T_COMMAND="fd -H -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
+
+export FZF_ALT_C_OPTS="--prompt 'Go to Folder> '
+    --preview 'eza --tree --color=always --icons always -L 5 {} | head -n 300'"
 #export FZF_ALT_C_COMMAND="fd -H -t d -E '.git' -E 'node_modules'"
+
 
 # FZF> El script "key bindings" y "fuzzy completion" (no puede ser modificado)
 eval "$(fzf --bash)"
