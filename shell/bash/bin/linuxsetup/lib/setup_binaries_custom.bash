@@ -92,6 +92,7 @@ gA_packages=(
         ['rclone']="$g_empty_str"
         ['marksman']='artempyanykh/marksman'
         ['biome']='biomejs/biome'
+        ['uv']='astral-sh/uv'
     )
 
 
@@ -120,6 +121,7 @@ ga_menu_options_title=(
     "NodeJS${g_color_reset}>${g_color_green1} RTE"
     "Rust  ${g_color_reset}>${g_color_green1} Compiler, LSP server"
     "Go    ${g_color_reset}>${g_color_green1} RTE"
+    "Python${g_color_reset}>${g_color_green1} Tools"
     "AWS CLI v2"
     "CTags (indexador de archivos lenguajes de programacion)"
     "LSP otros: Markdown"
@@ -154,6 +156,7 @@ ga_menu_options_packages=(
     "nodejs"
     "rust,rust-analyzer"
     "go"
+    "uv"
     "awscli"
     "ctags-win,ctags-nowin"
     "marksman"
@@ -2076,6 +2079,20 @@ function _get_repo_current_pretty_version() {
             ;;
 
 
+        uv)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}uv.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}uv --version 2> /dev/null)
+                l_status=$?
+            fi
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | head -n 1)
+            fi
+            ;;
+
+
         *)
             return 9
             ;;
@@ -3815,6 +3832,37 @@ function get_repo_artifacts() {
             pna_artifact_names=("WezTerm-windows-${p_repo_last_version}.zip")
             pna_artifact_types=(21)
             ;;
+
+
+        uv)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("uv-aarch64-pc-windows-msvc.zip")
+                else
+                    pna_artifact_names=("uv-x86_64-pc-windows-msvc.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("uv-aarch64-unknown-linux-musl.tar.gz")
+                    else
+                        pna_artifact_names=("uv-x86_64-unknown-linux-musl.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("uv-aarch64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("uv-x86_64-unknown-linux-gnu.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
 
 
         *)
@@ -6596,6 +6644,25 @@ function _copy_artifact_files() {
             fi
             ;;
 
+        uv)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
+
+            if [ $p_install_win_cmds -ne 0 ]; then
+
+                #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+                copy_binary_on_command "${l_source_path}" "uv" 0 1
+                copy_binary_on_command "${l_source_path}" "uvx" 0 1
+
+            else
+
+                #Copiar el comando
+                copy_binary_on_command "${l_source_path}" "uv.exe" 1 1
+                copy_binary_on_command "${l_source_path}" "uvx.exe" 1 1
+
+            fi
+            ;;
 
 
 
