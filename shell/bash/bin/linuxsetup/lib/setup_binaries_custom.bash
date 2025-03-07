@@ -3670,9 +3670,9 @@ function get_repo_artifacts() {
 
             #Generar los datos de artefactado requeridos para su configuración:
             if [ "$g_os_architecture_type" = "aarch64" ]; then
-                pna_artifact_names=("uctags-${p_repo_last_pretty_version}-linux-aarch64.tar.gz")
+                pna_artifact_names=("uctags-${p_repo_last_pretty_version}-linux-aarch64.release.tar.gz")
             else
-                pna_artifact_names=("uctags-${p_repo_last_pretty_version}-linux-x86_64.tar.gz")
+                pna_artifact_names=("uctags-${p_repo_last_pretty_version}-linux-x86_64.release.tar.gz")
             fi
             pna_artifact_types=(10)
             ;;
