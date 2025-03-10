@@ -709,7 +709,7 @@ if g:set_clipboard_type == 1
     augroup END
 
 
-"Si se requiere usar comandos externos de gestion de clicomandos externos de `gestion de clipboardd
+"Si se requiere usar comandos externos de gestion de clicomandos externos de gestion de clipboardd
 elseif g:set_clipboard_type == 2
 
     if g:clipboard_command == ''

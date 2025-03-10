@@ -1,5 +1,5 @@
 "###################################################################################
-" IDE> Configuracion exclusivas para NeoVim (si no se usa CoC)
+" IDE> Configuracion exclusivas para NeoVim si no se usa CoC
 "###################################################################################
 "
 
@@ -43,8 +43,58 @@ if g:is_neovim && !g:use_coc_in_nvim
     lua require('ide.native_lsp')
 
 
+endif
+
+
+"###################################################################################
+" IDE> AI Autocomplete
+"###################################################################################
+"
+
+"Pacakege IDE> Core> AI Completition
+packadd copilot.vim
+
+"Cambiar el <Tab> por <Ctrl + Enter> para aceptar el autocompletado
+imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
+let g:copilot_no_tab_map = v:true
+
+"Por defecto se desabilita copilot.
+"Se habilitara cuando se use ':Copilot enable' o ':let g:copilot_enabled = 1'
+let g:copilot_enabled = 0
+
+"let g:copilot_filetypes = {
+"\   '*': v:false,
+"\   'lua': v:false,
+"\   'vimscript': v:false,
+"\   'javascript': v:true,
+"\   'typescript': v:true,
+"\   'bash': v:false,
+"\   'c': v:true,
+"\   'c++': v:true,
+"\   'c#': v:true,
+"\   'go': v:true,
+"\   'rust': v:true,
+"\   'python': v:true,
+"\  }
+
+
+
+"###################################################################################
+" IDE> Configuracion exclusivas y final para NeoVim si no se usa CoC
+"###################################################################################
+"
+
+if g:is_neovim && !g:use_coc_in_nvim
+
     "Pacakege IDE> Copilot Chat, Copilot Agents
-    packadd CopilotChat.nvim
+    "packadd CopilotChat.nvim
+
+    "Pacakege IDE> AI Chat, AI Agents
+    packadd avante.nvim
+    packadd dressing.nvim
+    packadd nui.nvim
+    packadd render-markdown.nvim
+    packadd img-clip.nvim
 
     lua require('ide.extended')
 
@@ -406,8 +456,8 @@ nmap <Leader>al  <Plug>(coc-codeaction-line)
 nmap <Leader>ap  <Plug>(coc-codeaction-cursor)
 
 "d> Listar, seleccionar y ejecutar un 'Code Actions' existente que pueden aplicar a todo una region/selección actual.
-xmap <Leader>ar  <Plug>(coc-codeaction-selected)
-nmap <Leader>ar  <Plug>(coc-codeaction-selected)
+xmap <Leader>ac  <Plug>(coc-codeaction-selected)
+nmap <Leader>ac  <Plug>(coc-codeaction-selected)
 
 
 "2. Code Actions > Refactoring (Listar, seleccionar y ejecutar)
@@ -524,46 +574,22 @@ packadd omnisharp-vim
 
 
 "###################################################################################
-" IDE> AI Autocomplete
-"###################################################################################
-"
-
-"Pacakege IDE> Core> AI Completition
-packadd copilot.vim
-
-"Cambiar el <Tab> por <Ctrl + Enter> para aceptar el autocompletado
-imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
-let g:copilot_no_tab_map = v:true
-
-"Por defecto se desabilita copilot.
-"Se habilitara cuando se use ':Copilot enable' o ':let g:copilot_enabled = 1'
-let g:copilot_enabled = 0
-
-"let g:copilot_filetypes = {
-"\   '*': v:false,
-"\   'lua': v:false,
-"\   'vimscript': v:false,
-"\   'javascript': v:true,
-"\   'typescript': v:true,
-"\   'bash': v:false,
-"\   'c': v:true,
-"\   'c++': v:true,
-"\   'c#': v:true,
-"\   'go': v:true,
-"\   'rust': v:true,
-"\   'python': v:true,
-"\  }
-
-
-"###################################################################################
 " IDE> Configuracion exclusivas para NeoVim (si usas CoC)
 "###################################################################################
 "
 
 if g:is_neovim
 
+
     "Pacakege IDE> Copilot Chat, Copilot Agents
-    packadd CopilotChat.nvim
+    "packadd CopilotChat.nvim
+
+    "Pacakege IDE> AI Chat, AI Agents
+    packadd avante.nvim
+    packadd dressing.nvim
+    packadd nui.nvim
+    packadd render-markdown.nvim
+    packadd img-clip.nvim
 
     lua require('ide.extended')
 

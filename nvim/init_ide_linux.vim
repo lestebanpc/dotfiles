@@ -94,7 +94,7 @@ runtime setting/setting_basic.vim
 
 
 "#########################################################################################################
-" Setup plugins de UI
+" Setup plugins basicos
 "#########################################################################################################
 
 "Tema, Iconos, StatusLine, TabLine, Explorador NERDTree, ...
@@ -103,8 +103,9 @@ runtime setting/plugin/ui_basic.vim
 "Utilitarios basicos: FZF, TMUX, ...
 runtime setting/plugin/ui_extended.vim
 
+
 "#########################################################################################################
-" Setup plugins (IDE)
+" Setup plugins de IDE
 "#########################################################################################################
 
 if !g:use_ide
@@ -116,7 +117,7 @@ endif
 runtime setting/plugin/ide_utils.vim
 
 "LSP client, Completition, Diagnostic (Linting y Fixing), ...
-"En NoeVIM se define:
+"En VIM se define:
 "   - Diagnostico : ALE
 "   - Interprese Lenguage Server (incluye LSP server) y Completition : CoC.nvim o el cliente LSP Nativo
 "   - Snippets : UltiSnippets
@@ -134,5 +135,7 @@ runtime setting/plugin/ide_debugger.vim
 "   - Source de autocompletado para Coc (y otros motores de autocompletado
 "   - Source para UltiSnippets
 runtime setting/plugin/ide_lsp_cs.vim
+
+
 
 

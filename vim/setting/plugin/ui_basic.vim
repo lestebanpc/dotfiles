@@ -51,7 +51,7 @@ else
 
     "Esquema de color del tema
     "colorscheme molokai
-    "let g:molokai_original = 1
+    "let g:main_theme = 'powerlineish'
     "let g:main_theme = 'molokai'
 
 

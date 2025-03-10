@@ -88,7 +88,7 @@ runtime setting/setting_basic.vim
 
 
 "#########################################################################################################
-" Setup plugins (UI)
+" Setup plugins basicos
 "#########################################################################################################
 
 "Tema, Iconos, StatusLine, TabLine, Explorador NERDTree, ...
@@ -97,8 +97,9 @@ runtime setting/plugin/ui_basic.vim
 "Utilitarios basicos: FZF, TMUX, ...
 runtime setting/plugin/ui_extended.vim
 
+
 "#########################################################################################################
-" Setup plugins (IDE)
+" Setup plugins de IDE
 "#########################################################################################################
 
 if !g:use_ide

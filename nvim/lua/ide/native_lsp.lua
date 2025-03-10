@@ -151,8 +151,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
         
         -- 'Code Actions' > Listar, Selecionar e Ir a 'Code Actions' disponibles en la posición del cursor
         vim.keymap.set('n', '<Leader>al', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
-        --vim.keymap.set('x', '<Leader>ar', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', opts)
-        --vim.keymap.set('n', '<Leader>ar', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', opts)
+        --vim.keymap.set('x', '<Leader>ac', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', opts)
+        --vim.keymap.set('n', '<Leader>ac', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', opts)
 
         -- Renombrar símbolo
         vim.keymap.set('n', '<Leader>rn', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)

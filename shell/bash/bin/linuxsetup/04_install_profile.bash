@@ -170,7 +170,6 @@ declare -r g_version_none='0.0.0'
 declare -A gA_repos_type=(
         ['morhetz/gruvbox']=1
         ['joshdick/onedark.vim']=1
-        ['tomasr/molokai']=1
         ['vim-airline/vim-airline']=2
         ['vim-airline/vim-airline-themes']=2
         ['preservim/nerdtree']=2
@@ -214,7 +213,11 @@ declare -A gA_repos_type=(
         ['rcarriga/nvim-dap-ui']=4
         ['nvim-neotest/nvim-nio']=4
         ['github/copilot.vim']=4
-        ['CopilotC-Nvim/CopilotChat.nvim']=4
+        ['stevearc/dressing.nvim']=4
+        ['MunifTanjim/nui.nvim']=4
+        ['MeanderingProgrammer/render-markdown.nvim']=4
+        ['HakonHarnes/img-clip.nvim']=4
+        ['yetone/avante.nvim']=4
     )
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
@@ -223,7 +226,6 @@ declare -A gA_repos_type=(
 declare -A gA_repos_scope=(
         ['morhetz/gruvbox']=1
         ['joshdick/onedark.vim']=1
-        ['tomasr/molokai']=1
         ['vim-airline/vim-airline']=1
         ['vim-airline/vim-airline-themes']=1
         ['ryanoasis/vim-devicons']=1
@@ -253,7 +255,11 @@ declare -A gA_repos_scope=(
         ['theHamsta/nvim-dap-virtual-text']=2
         ['rcarriga/nvim-dap-ui']=2
         ['nvim-neotest/nvim-nio']=2
-        ['CopilotC-Nvim/CopilotChat.nvim']=2
+        ['stevearc/dressing.nvim']=2
+        ['MunifTanjim/nui.nvim']=2
+        ['MeanderingProgrammer/render-markdown.nvim']=2
+        ['HakonHarnes/img-clip.nvim']=2
+        ['yetone/avante.nvim']=2
     )
 
 # Repositorios Git - Branch donde esta el plugin no es el por defecto
