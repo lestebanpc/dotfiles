@@ -83,21 +83,8 @@ let g:using_lsp_server_cs_win = get(g:, 'using_lsp_server_cs_win', 0)
 " Basic Settings
 "#########################################################################################################
 
-runtime setting/core_setting.vim
-runtime setting/core_mapping.vim
+runtime setting/setting_basic.vim
 
-
-"#########################################################################################################
-" Load plugins
-"#########################################################################################################
-
-"Registro de los plugin en los gestores de plugins (si se usa)
-"Carga automatica de algunos plugins por el gestor de paquetes
-"Carga manual de plugin
-"Configuracion de basica de plugins basicos:
-"  - Configuracion basica requeridos antes de la carga de un plugin
-"  - Establecer el 'Color Schema' del tema (requerido antes de cualquier plugin UI)
-runtime setting/plugin_load.vim
 
 
 "#########################################################################################################

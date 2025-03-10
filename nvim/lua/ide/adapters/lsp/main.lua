@@ -3,23 +3,6 @@ local lsp_config_util = require('lspconfig/util')
 local lsp_server_path = ""
 
 --------------------------------------------------------------------------------------------------
---No-LSP> Ligting, Code Formatting (incluyendo Fixers) de servidores No-LSP
---------------------------------------------------------------------------------------------------
-
-local null_ls = require("null-ls")
-
-null_ls.setup({
-    sources = {
-        null_ls.builtins.formatting.prettier,
-        null_ls.builtins.diagnostics.eslint,
-        --null_ls.builtins.completion.spell,
-        --null_ls.builtins.formatting.shfmt,        -- shell script formatting
-        --null_ls.builtins.diagnostics.shellcheck,  -- shell script diagnostics
-        --null_ls.builtins.code_actions.shellcheck, -- shell script code actions
-    },
-})
-
---------------------------------------------------------------------------------------------------
 --LSP Adapters> C# (Adaptador para OmniSharp Roslyn)
 --------------------------------------------------------------------------------------------------
 

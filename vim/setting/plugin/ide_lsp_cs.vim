@@ -4,7 +4,7 @@ if g:is_neovim && !g:use_coc_in_nvim
 endif
 
 "###################################################################################
-" Settings> IDE > Package: Omnisharp-Vim (Pluing del Client LSP para Roslyn)
+" IDE > Package: Omnisharp-Vim (Pluing del Client LSP para Roslyn)
 "###################################################################################
 
 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

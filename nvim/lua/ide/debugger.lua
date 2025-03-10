@@ -1,3 +1,10 @@
+
+--Si se usa COC
+if (vim.g.use_coc_in_nvim == 1) then
+    return
+end
+
+
 --------------------------------------------------------------------------------------------------
 --DAP Client> Configuracion del DAP Client nVim.DAP
 --------------------------------------------------------------------------------------------------
@@ -141,15 +148,29 @@ vim.keymap.set("n", "<Leader><F12>", "<cmd>lua require('dap').step_out()<CR>", o
 
 --vim.keymap.set("n", "<Leader>dh", "<cmd>lua require('dapui').eval()<CR>", opts)
 
---4. Paquete 'telescope-dap.nvim': Integracion entre Telescope y nVim.DAP
-local telescope = require('telescope')
-telescope.load_extension('dap')
+
+--Open a REPL / Debug-console.
+--nnoremap <Leader>dr <Cmd>lua require('dap').repl.open()<CR>
+--Re-runs the last debug adapter / configuration that ran using
+--noremap <Leader>dl <Cmd>lua require('dap').run_last()<CR>
 
 
---5. Paquete 'nvim-dap-virtual-text': Adicionar texto de ayuda en la depuracion
+
+--------------------------------------------------------------------------------------------------
+--DAP Client> Mejoras del UI asociado a nVim.DAP
+--------------------------------------------------------------------------------------------------
+
+--1. Paquete 'nvim-dap-virtual-text': Adicionar texto de ayuda en la depuracion
 local dap_virtual_text = require('nvim-dap-virtual-text')
 dap_virtual_text.setup ({
     commented = true,              -- prefix virtual text with comment string
 })
 
+
+
+--------------------------------------------------------------------------------------------------
+--DAP Client> DAP adapters
+--------------------------------------------------------------------------------------------------
+
+require('ide.adapters.dap.main')
 

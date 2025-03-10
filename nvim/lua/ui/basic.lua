@@ -28,7 +28,7 @@ local sec_item_diagnostic = {
 require('lualine').setup({
     options = {
         icons_enabled = true,
-        theme = 'tokyonight',
+        theme = vim.g.main_theme,
         component_separators = { left = '', right = ''},
         section_separators = { left = '', right = ''},
         disabled_filetypes = {

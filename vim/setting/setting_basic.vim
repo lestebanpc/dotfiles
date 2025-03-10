@@ -1,9 +1,6 @@
-"###################################################################################
-" Settings - Core
-"###################################################################################
-
+"
 "----------------------------- Calcular de Variables  ------------------------------
-
+"
 "Tipos de sistemas operativos
 "  0 - Windows
 "  1 - MacOS
@@ -100,6 +97,7 @@ if g:use_ide && g:is_neovim
 endif
 
 
+"
 "----------------------------- Clipboard de SO         -----------------------------
 "
 "Uso de 'ctrl+C' para enviar texto al portapapeles y 'ctrl+V' para obtener texto del portapapeles:
@@ -374,12 +372,15 @@ if !g:is_neovim && ($TERM_PROGRAM == 'foot' || $TERM_PROGRAM == 'WezTerm')
 endif
 
 
+"
 "----------------------------- Validar los requisitos ------------------------------
-
+"
 "Si es VIM y no tiene tiene instalado python3, no soporta Snippets
 "Si es VIM y no tiene instalado nodejs, no soporta CoC
 
+"
 "----------------------------- Opciones del Encoding   -----------------------------
+"
 set encoding=utf-8
 set fileencoding=utf-8
 set fileencodings=utf-8
@@ -399,7 +400,9 @@ set expandtab
 "Permite crear hidden buffers (buffer que tiene cambios y no se muestran en ningun split)
 set hidden
 
+"
 "----------------------------- Opciones de busqueda   ------------------------------
+"
 "Sombrear la coincidiencias
 set hlsearch
 "Busqueda incremental
@@ -409,8 +412,9 @@ set ignorecase
 "Excepto se tenga al menos una letra en mayuscula
 set smartcase
 
-
+"
 "----------------------------- Apariencia : Color     ------------------------------
+"
 syntax on
 
 set background=dark
@@ -478,7 +482,9 @@ endif
 "highlight Terminal guibg='#040404' guifg='#EBEBEB' ctermbg='#040404' ctermfg='#EBEBEB'
 "highlight Terminal guibg=#040404 guifg=#EBEBEB
 
+"
 "----------------------------- Apareciencia : Otros   ------------------------------
+"
 set ruler
 set relativenumber
 "set number
@@ -554,8 +560,9 @@ if g:is_gui_vim
     set gfn=Cousine\ Nerd\ Font\ Mono:h10
 endif
 
-
+"
 "------------------------------- TabLine y StatusLine    ----------------------------
+"
 "Mostrar siempre StatusLine (barra de estado): 0 (ocultar), 1 (solo si existe 1 buffer) 
 set laststatus=2
 
@@ -608,8 +615,9 @@ else
     endif
 endif
 
+"
 "----------------------------- Configuraciones de CoC   ----------------------------
-
+"
 if g:use_ide && (!g:is_neovim || g:use_coc_in_nvim)
 
     "Some servers have issues with backup files
@@ -623,7 +631,190 @@ if g:use_ide && (!g:is_neovim || g:use_coc_in_nvim)
 
 endif
 
-"----------------------------- Completado               ----------------------------
 
+"
+"----------------------------- Mappings - General      -----------------------------
+"
+"Usando como Key Leader
+let mapleader=','
+
+"Usando como Key Local Leader: '\', '[SPACE]'
+let maplocalleader = "\\"
+"let maplocalleader = "\<Space>"
+
+"Search mappings: These will make it so that going to the next one in a search will center on the line it's found in.
+nnoremap n nzzzv
+nnoremap N Nzzzv
+
+
+"
+"----------------------------- Mappings - Apariencia   -----------------------------
+"
+"Habilitar/Desabiliar la linea de resaltado ('Highlight Line') Horizonal
+nnoremap <Leader>hh :set cursorline!<CR>
+
+"Habilitar/Desabiliar la linea de resaltado ('Highlight Line') Vertical
+nnoremap <Leader>vv :set cursorcolumn!<CR>
+
+"----------------------------- Mappings - Clipboards   -----------------------------
+"
+"NeoVIM no interactua directamente con el clipboard del SO (no usa API del SO) y tiene una Integracion
+"nativa con:
+" > Usa el caracter de escape OSC 52 para enviar texto a la terminal, para que este lo interprete y escriba
+"   al portapales del SO de la terminal.
+" > Usa comandos externos de gestion de clipboard (backend de clipboard) las cuales registra a eventos de
+"   establecer texto en registro de yank de VIM.
+"   
+"VIM puede interactuar directamente con el clipboard del SO (usa el API del SO para ello)
+"La instegracion con comandos externos de gestion de clipboard y OSC 52, no lo hace de forma nativa.
+"
+
+
+"Si se requiere usar OSC 52
+if g:set_clipboard_type == 1
+
+    runtime setting/utils/osc52.vim
+
+    "Copiar el registro por defecto al clipboard (el ultimo yank o delete)
+    nnoremap <Leader>c" :<C-u>call PutClipboard(g:osc52_format, getreg('@"'))<CR>
+    "Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
+    nnoremap <Leader>c0 :<C-u>call PutClipboard(g:osc52_format, getreg('@0'))<CR>
+    "Copiar el registro de los ultimo deletes al clipboard
+    nnoremap <Leader>c1 :<C-u>call PutClipboard(g:osc52_format, getreg('@1'))<CR>
+    nnoremap <Leader>c2 :<C-u>call PutClipboard(g:osc52_format, getreg('@2'))<CR>
+    nnoremap <Leader>c3 :<C-u>call PutClipboard(g:osc52_format, getreg('@3'))<CR>
+    
+    "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
+    "vnoremap <Leader>cl :w !g:clipboard_command<CR><CR>
+
+    "Opciones que usan el plugion
+    "nmap <leader>c <Plug>OSCYankOperator
+    "nmap <leader>cc <leader>c_
+    "vmap <leader>c <Plug>OSCYankVisual
+
+    "let s:VimOSCYankPostRegisters = ['', '+', '*']
+    "function! s:VimOSCYankPostCallback(event)
+    "    if a:event.operator == 'y' && index(s:VimOSCYankPostRegisters, a:event.regname) != -1
+    "        call OSCYankRegister(a:event.regname)
+    "    endif
+    "endfunction
+
+    "Habilitar el envio automatico al clipboard del ultimo yank realizado 
+    "(se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim)
+    augroup VimYank
+        autocmd!
+        autocmd TextYankPost * if v:event.operator ==# 'y' | call PutClipboard(g:osc52_format, getreg('"')) | endif
+        "autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call OSCYankRegister('') | endif
+        "autocmd TextYankPost * call s:VimOSCYankPostCallback(v:event)
+    augroup END
+
+
+"Si se requiere usar comandos externos de gestion de clicomandos externos de `gestion de clipboardd
+elseif g:set_clipboard_type == 2
+
+    if g:clipboard_command == ''
+
+        "No se puede establecer el mecanismo solicitado
+        let g:set_clipboard_type = 9
+        echo 'Not exist clipboard backend'
+
+    else
+
+        "Copiar el ultimo delete realizado al portapapeles ('CLIPBOARD' selection)
+        nnoremap <Leader>c1 :<C-u>call system(g:clipboard_command, @1)<CR>
+    
+        "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
+        "vnoremap <Leader>cl :w !g:clipboard_command<CR><CR>
+
+        "Habilitar el envio automatico, al clipboard, del ultimo yank realizado.
+        "(se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim)
+        augroup VimYank
+            autocmd!
+            autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system(g:clipboard_command, @") | endif
+        augroup END
+    
+    
+        "Si es WSL2, habilitar el envio automatico, al clipboard del SO Windows, del ultimo yank realizado.
+        "  En WSL2, el portapapeles de Linux WSL2 es diferente al de Windows. Por tal motivo cuando se usa VIM/NeoVIM dentro de WSL2,
+        "  se requiere que aparte de copiar el buffer del yank al portapapeles de Linux, se usara requiere tambien copiarlo a Windows 
+        "  para poderlo ver desde cualquier aplicacion windows.
+        if g:os_type == 3
+        
+            "Copia cualquier yank que esta en el registro " (por defecto) se copia al portapales del SO
+            "(se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim)
+            augroup WslYank
+                autocmd!
+                autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system('/mnt/c/windows/system32/clip.exe ',@") | endif
+            augroup END
+    
+        endif
+
+    endif
+
+elseif g:set_clipboard_type != 9
+
+    if g:clipboard_command != ''
+
+       "Copiar el registro por defecto al clipboard (el ultimo yank o delete)
+        nnoremap <Leader>c" :<C-u>call system(g:clipboard_command, @")<CR>
+        "Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
+        nnoremap <Leader>c0 :<C-u>call system(g:clipboard_command, @0)<CR>
+        "Copiar el registro de los ultimo deletes
+        nnoremap <Leader>c1 :<C-u>call system(g:clipboard_command, @1)<CR>
+        nnoremap <Leader>c2 :<C-u>call system(g:clipboard_command, @2)<CR>
+        nnoremap <Leader>c3 :<C-u>call system(g:clipboard_command, @3)<CR>
+    
+        "Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
+        "vnoremap <Leader>cl :w !g:clipboard_command<CR><CR>
+
+    endif
+
+endif
+
+
+"
+"----------------------------- Mappings - Splits       -----------------------------
+"
+"Navegación stre splits (no es necesario especificar, lo define el Plug-In 'vim-tmux-navigator').
+"noremap <C-j> <C-w>j
+"noremap <C-k> <C-w>k
+"noremap <C-l> <C-w>l
+"noremap <C-h> <C-w>h
+
+"Terminal : Abrir una terminal
+if g:is_neovim
+
+    "set termwinsize=15*0
+    nnoremap <Leader>th :split <bar> resize 20 <bar> terminal<CR>i
+    "nnoremap <Leader>th :split <bar> terminal<CR>i
+    nnoremap <Leader>tv :vsplit <bar> terminal<CR>i
+    
+else
+    
+    "set termwinsize=15*0
+    nnoremap <Leader>tv :botright vertical terminal<CR>
+    nnoremap <Leader>th :botright terminal<CR>
+   
+endif
+
+"Terminal : Salir de modo 'Terminal-Job' e ingresar en modo lectura ('Terminal-Normal')
+"noremap <C-N> <C-\><C-n>
+
+"
+"----------------------------- Mappings - Tabs         -----------------------------
+"nnoremap <silent> <S-t> :tabnew<CR>
+"
+
+"
+"----------------------------- Mappings - Otros        -----------------------------
+"
+"Set working directory
+"nnoremap <leader>. :lcd %:p:h<CR>
+
+"Opens an edit command with the path of the currently edited file filled in
+"noremap <Leader>e :e <C-R>=expand("%:p:h") . "/" <CR>
+
+"Opens a tab edit command with the path of the currently edited file filled
+"noremap <Leader>te :tabe <C-R>=expand("%:p:h") . "/" <CR>
 
 

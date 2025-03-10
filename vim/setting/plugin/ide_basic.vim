@@ -1,47 +1,75 @@
 "###################################################################################
-" Settings> IDE> VIM/NeoVIM> Paquete de soporte a Universal CTags
+" IDE> Configuracion exclusivas para NeoVim (si no se usa CoC)
 "###################################################################################
+"
 
-"let g:gutentags_trace = 1
-"let g:gutentags_ctags_extra_args = ['--tag-relative=always', ]
-let g:gutentags_generate_on_empty_buffer = 1
-"let g:gutentags_exclude_filetypes= []
-"let g:gutentags_ctags_exclude = ['build', 'dist', '*css', '*json', '*yaml', '*md', '.venv', '*rst']
-let g:gutentags_ctags_exclude = [
-\   '.git',
-\   'build',
-\   'dist',
-\   'node_modules',
-\   '.venv',
-\   '*swp', '*json', '*yaml', '*toml', '*md', '*css'
-\]
-
-"###################################################################################
-" Settings> IDE> NeoVIM> Configuracion del LSP nativo y completado usa CMP
-"###################################################################################
 if g:is_neovim && !g:use_coc_in_nvim
 
-    lua require('nativeide.lsp')
-    lua require('nativeide.completition')
-    lua require('nativeide.diagnostic')
-    lua require('nativeide.dap')
-    "lua require('native.ide.others')
-    lua require('nativeide.lsp_adapters')
-    lua require('nativeide.dap_adapters')
+    "Package IDE> LSP Client (nativo de NeoVim)
+    packadd nvim-lspconfig
+    
+    "Package IDE> CMP (Framework de autocompletado)
+    packadd nvim-cmp
 
-    "Open a REPL / Debug-console.
-    "nnoremap <Leader>dr <Cmd>lua require('dap').repl.open()<CR>
-    "Re-runs the last debug adapter / configuration that ran using
-    "nnoremap <Leader>dl <Cmd>lua require('dap').run_last()<CR>
+    "Package IDE> Mejor soporte a popup 'signature-help' en el completado de un metodo
+    "packadd cmp-nvim-lsp-signature-help
+    packadd lsp_signature.nvim
 
+    "Package IDE> Core> Fuente CMP: Cliente LSP
+    packadd cmp-nvim-lsp
+
+    "Package IDE> Fuente CMP: Buffer (Sugiere palabras que se encuentra en el archivo actual)
+    packadd cmp-buffer
+
+    "Package UI> Core> Fuente CMP: FileSystem Path
+    packadd cmp-path
+
+    "Package IDE> Motor/Frameework de Snippet
+    "             Muestra los snippets cargados. Si elegimos un snippet lo expande.
+    packadd LuaSnip  
+
+    "Package IDE> Implementacion de Snippet para LuaSnip
+    packadd friendly-snippets
+
+    "Package IDE> Fuente CMP: Snippet tipo LuaSnip
+    packadd cmp_luasnip
+    
+    "Package IDE> Linting, Code Formatting (Fixing) de servidores No-LSP
+    packadd null-ls.nvim
+
+    "Package IDE> Lightbulb para Code Actions 
+    packadd nvim-lightbulb
+
+    lua require('ide.native_lsp')
+
+
+    "Pacakege IDE> Copilot Chat, Copilot Agents
+    packadd CopilotChat.nvim
+
+    lua require('ide.extended')
+
+    "Solo continuar si se usa NeoVim para CoC
     finish
 
 endif
 
+
+
 "###################################################################################
-" Settings> IDE> VIM> Package: ALE (Diagnostic: Linting y Fixing)
+" IDE> ALE (Diagnostic: Linting y Fixing)
 "###################################################################################
+"
 "https://github.com/dense-analysis/ale/blob/master/doc/ale.txt
+"
+
+"Desabilitar LSP : Se usara CoC o Vim-LSP.
+let g:ale_disable_lsp = 1
+
+"Desabilitar 'Completition' : Se usara CoC o comp-nvim.
+let g:ale_completion_enabled = 0
+
+"Plugin IDE> Linting (analisis y diagnostico sin compilar)
+packadd ale
 
 "Signos que se mostraran cuando se realizo el diagnostico:
 let g:ale_sign_error = '✘'
@@ -98,12 +126,18 @@ nmap <silent> [d <Plug>(ale_previous)
 "Habilitar o desabilitar el diagnostico del buffer
 "nmap <silent> <Leader>dd <Plug>(ale_toggle_buffer)
 
+
+
 "###################################################################################
-" Settings> IDE > Package: UltiSnippets (Framework para snippets)
+" IDE > UltiSnippets (Framework para snippets)
 "###################################################################################
+"
 "Los snippet son usuados en el modo edición
 if g:has_python3
-    
+
+    "Plugin IDE> UltiSnips: Motor/Framework de Snippets
+    packadd ultisnips
+
     "Expandir el snippet manualmente :
     " > La mayoria de los 'Completion', cuando se acepta un item de tipo snippet, automaticamente
     "   el snippet se expande.
@@ -128,17 +162,32 @@ if g:has_python3
     "Listar los snippets existentes para el 'filetype'.
     let g:UltiSnipsListSnippets="<C-;>"
 
+
+
+    "Plugin IDE> UltiSnips: Implementacion de Snippet para diferentes lenguajes de programacion
+    packadd vim-snippets
+
 endif
 
 
 "###################################################################################
-" Settings> IDE > Package: CoC (Conquer Of Completion)
+" IDE > CoC (Conquer Of Completion)
 "###################################################################################
+"
+"
+"Plugin IDE> Completado, LSP Client (y otros complementos de 3ros)
+"   El diganostico se enviara ALE (no se usara el integrado de CoC).
+"   El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')
+"   Se deberá instalar los adaptadores a los diferentes servidores LSP.
+"   Se integrará con el motor de snippets 'UtilSnips' (no usara el por defecto)
+packadd coc.nvim
 
 
 "-----------------------------------------------------------------------------------
 " CoC> Built-in Popup Windows> Completition Popup Windows (modo inserción)
 "-----------------------------------------------------------------------------------
+"
+
 
 "Funciones usado para navegación siguente
 function! CheckBackspace() abort
@@ -199,7 +248,6 @@ nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(
 inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
 vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
 
-" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "1. Signature-help Popup (modo inserción)
 "
 " > Abrir automaticamente el popup: Cuando acepta el completado de un metodo
@@ -207,13 +255,12 @@ vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(
 " > Cerrar el popup: Si se mueva fuera de () o use '↑', '↓' 
 
 
-" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "2. Documentation Popup (modo normal)
 "
 "Muesta la documentación definida para un simbolo (definicion, variable, ...).
 "Si no se define una documentación, se muestra solo como de define el simbolo.
 
-" > Abrir manualmente el popup:
+"a> Abrir manualmente el popup:
 function! ShowDocumentation()
   if CocAction('hasProvider', 'hover')
     call CocActionAsync('doHover')
@@ -224,9 +271,9 @@ endfunction
 
 nnoremap <silent> K :call ShowDocumentation()<CR>
 
-" > Cerrar manualmente el popup: '←', '→', '↑', '↓'
+"b> Cerrar manualmente el popup: '←', '→', '↑', '↓'
 
-" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 "3. Preview Popup (modo normal)
 "
 "Mustra parte de la definicion o implementation de un simbolo.
@@ -244,48 +291,47 @@ nnoremap <silent> K :call ShowDocumentation()<CR>
 
 "2. 'Location' (dentro de todo el 'workspace') basado en el simbolo actual:
 "
-" > Ir a la definición del simbolo actual (donde esta el prompt)
+"a> Ir a la definición del simbolo actual (donde esta el prompt)
 nmap <silent> gd <Plug>(coc-definition)
 
-" > Ir al tipo de definición del simbolo actual (donde esta el prompt)
+"b> Ir al tipo de definición del simbolo actual (donde esta el prompt)
 nmap <silent> gy <Plug>(coc-type-definition)
 
-" > Ir a la implementación del simbolo actual (donde esta el prompt)
+"c> Ir a la implementación del simbolo actual (donde esta el prompt)
 nmap <silent> gc <Plug>(coc-declaration)
 
-" > Ir a la implementación del simbolo actual (donde esta el prompt)
+"d> Ir a la implementación del simbolo actual (donde esta el prompt)
 nmap <silent> gi <Plug>(coc-implementation)
 
-" > Ir a la referencias/usos del simbolo actual (donde esta el prompt)
+"f> Ir a la referencias/usos del simbolo actual (donde esta el prompt)
 "   Excluyendo los declaraciones del simbolo.
 nmap <silent> gr <Plug>(coc-references)
 
-" > Ir a la referencias o uso del simbolo actual (donde esta el prompt)
+"g> Ir a la referencias o uso del simbolo actual (donde esta el prompt)
 "   Excluyendo los declaraciones del simbolo.
 nmap <silent> gu <Plug>(coc-references-used)
 
 
-" > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el buffer
+"h> Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el buffer
 nnoremap <silent><nowait> <Leader>ls :<C-u>CocList outline<cr>
 
-" > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el workspace
+"i> Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el workspace
 nnoremap <silent><nowait> <Leader>lw  :<C-u>CocList -I symbols<cr>
 
-" > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'type' en el proyecto
+"j> Listar, Selecionar (en este caso tambien buscar) e Ir a un 'type' en el proyecto
 "nmap <silent> <buffer> <Leader>lt <Plug>(omnisharp_find_type)
 
-" > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'members' de las clases asociados al buffer actual
+"k> Listar, Selecionar (en este caso tambien buscar) e Ir a un 'members' de las clases asociados al buffer actual
 "nmap <silent> <buffer> <Leader>lm <Plug>(omnisharp_find_members)
 
 
-" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-" > Diagnostico: Un error y/o warning en el proyecto
+"3. Diagnostico: Un error y/o warning en el proyecto
 "
-" > Listar, Selecionar e Ir a un error y/o warning del workspace.
+"a> Listar, Selecionar e Ir a un error y/o warning del workspace.
 "   En CoC, se inica su popup 'Fuzzy' (no es un panel vim), la cual se cierra usando '[ESC]'.
 nnoremap <silent><nowait> <Leader>ld  :<C-u>CocList diagnostics<cr>
 
-" > Navegar en por el los diagnostico del workspace
+"b> Navegar en por el los diagnostico del workspace
 "   Usar solos los de definidos en ALE?
 "nmap <silent> [d <Plug>(coc-diagnostic-prev)
 "nmap <silent> ]d <Plug>(coc-diagnostic-next)
@@ -294,25 +340,27 @@ nnoremap <silent><nowait> <Leader>ld  :<C-u>CocList diagnostics<cr>
 "-----------------------------------------------------------------------------------
 " CoC> LSP Client> Selección
 "-----------------------------------------------------------------------------------
+"
 "NOTE : Requires 'textDocument.documentSymbol' support from the language server.
+"
 
 "1. Selección de una funcion
 "
-" > Selección la parte interior del metodo.
+"a> Selección la parte interior del metodo.
 xmap im <Plug>(coc-funcobj-i)
 omap im <Plug>(coc-funcobj-i)
 
-" > Selección de todo el metodo.
+"b> Selección de todo el metodo.
 xmap am <Plug>(coc-funcobj-a)
 omap am <Plug>(coc-funcobj-a)
 
 "2. Selección de una funcion
 "
-" > Selección la parte interior del clase.
+"a> Selección la parte interior del clase.
 xmap ic <Plug>(coc-classobj-i)
 omap ic <Plug>(coc-classobj-i)
 
-" > Selección de todo el clase.
+"b> Selección de todo el clase.
 xmap ac <Plug>(coc-classobj-a)
 omap ac <Plug>(coc-classobj-a)
 
@@ -347,37 +395,39 @@ command! -nargs=0 Format :call CocActionAsync('format')
 "-----------------------------------------------------------------------------------
 
 "1. Code Actions > All (Listar, seleccionar y ejecutar)
-"   >  Listar, seleccionar y ejecutar un 'Code Actions' existentes en del buffer actual.
+
+"a>  Listar, seleccionar y ejecutar un 'Code Actions' existentes en del buffer actual.
 nmap <Leader>ab  <Plug>(coc-codeaction)
 
-"   > Listar, seleccionar y ejecutar un 'Code Actions' existentes en la linea actual.
+"b> Listar, seleccionar y ejecutar un 'Code Actions' existentes en la linea actual.
 nmap <Leader>al  <Plug>(coc-codeaction-line)
 
-"   > Listar, seleccionar y ejecutar un 'Code Actions' existente en el prompt actual.
+"c> Listar, seleccionar y ejecutar un 'Code Actions' existente en el prompt actual.
 nmap <Leader>ap  <Plug>(coc-codeaction-cursor)
 
-"   > Listar, seleccionar y ejecutar un 'Code Actions' existente que pueden aplicar a todo una region/selección actual.
+"d> Listar, seleccionar y ejecutar un 'Code Actions' existente que pueden aplicar a todo una region/selección actual.
 xmap <Leader>ar  <Plug>(coc-codeaction-selected)
 nmap <Leader>ar  <Plug>(coc-codeaction-selected)
 
 
 "2. Code Actions > Refactoring (Listar, seleccionar y ejecutar)
-"   > Listar, seleccionar y ejecutar un 'Refactoring' de existente en el prompt actual.
+
+"a> Listar, seleccionar y ejecutar un 'Refactoring' de existente en el prompt actual.
 nmap <Leader>rp  <Plug>(coc-codeaction-refactor)
 
-"  > Listar, seleccionar y ejecutar un 'Refactoring' existente que puede aplicar a todo un rango selecionado.
+"b> Listar, seleccionar y ejecutar un 'Refactoring' existente que puede aplicar a todo un rango selecionado.
 xmap <Leader>rr  <Plug>(coc-codeaction-refactor-selected)
 nmap <Leader>rr  <Plug>(coc-codeaction-refactor-selected)
 
-"  > Listar,  seleccionar y ejecutar un 'Refactoring' de todo el archivo (buffer).
+"c> Listar,  seleccionar y ejecutar un 'Refactoring' de todo el archivo (buffer).
 nmap <Leader>rb  <Plug>(coc-codeaction-source)
 
 
 "3. Code Actions > Ejecutar un 'Code Fix'
-"   > Acción de reparación: Organización y/o reparar las refencias de importaciones usadas por el archivo
+"a> Acción de reparación: Organización y/o reparar las refencias de importaciones usadas por el archivo
 nnoremap <silent> fi :call CocAction('organizeImport')<CR>
 
-"   > Acción de reparación: Acción de repación rapida
+"b> Acción de reparación: Acción de repación rapida
 nmap <Leader>fx  <Plug>(coc-fix-current)
 
 
@@ -437,35 +487,9 @@ nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
 "nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 
 
-"###################################################################################
-" Settings> IDE > Package: DAP Client (Adaptadores de DAP clientes y el Graphical Debugger)
-"###################################################################################
-
-if g:has_python3
-   
-    "Key-mappings adicionales al por defecto (se usa 'HUMAM')
-    nnoremap <Leader><F4> :call vimspector#Reset()<CR>
-
-    "nmap <F5>         <Plug>VimspectorContinue
-    "nmap <leader><F5> <Plug>VimspectorLaunch
-    "nmap <F3>         <Plug>VimspectorStop
-    "nmap <F4>         <Plug>VimspectorRestart
-    "nmap <F6>         <Plug>VimspectorPause
-    "nmap <F9>         <Plug>VimspectorToggleBreakpoint
-    "nmap <leader><F9> <Plug>VimspectorToggleConditionalBreakpoint
-    "nmap <F8>         <Plug>VimspectorAddFunctionBreakpoint
-    "nmap <leader><F8> <Plug>VimspectorRunToCursor
-    "nmap <F10>        <Plug>VimspectorStepOver
-    "nmap <F11>        <Plug>VimspectorStepInto
-    "nmap <F12>        <Plug>VimspectorStepOut
-
-endif
-
-
-
-"###################################################################################
-" Settings> IDE > Autocomandos (Eventos usados por el IDE)
-"###################################################################################
+"-----------------------------------------------------------------------------------
+" CoC> IDE> Autocomandos 
+"-----------------------------------------------------------------------------------
 
 "¿Porque no usa un autogroup?
 "Highlight the symbol and its references when holding the cursor.
@@ -485,6 +509,70 @@ augroup mygroup
     autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
 
 augroup end
+
+
+
+
+"###################################################################################
+" IDE> C#>  Cliente LSP de Roslyn para C#
+"###################################################################################
+"
+
+"Plugin IDE> LSP Cliente de Roslyn para C# y adaptadores para usar con otros plugins
+packadd omnisharp-vim
+
+
+
+"###################################################################################
+" IDE> AI Autocomplete
+"###################################################################################
+"
+
+"Pacakege IDE> Core> AI Completition
+packadd copilot.vim
+
+"Cambiar el <Tab> por <Ctrl + Enter> para aceptar el autocompletado
+imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
+let g:copilot_no_tab_map = v:true
+
+"Por defecto se desabilita copilot.
+"Se habilitara cuando se use ':Copilot enable' o ':let g:copilot_enabled = 1'
+let g:copilot_enabled = 0
+
+"let g:copilot_filetypes = {
+"\   '*': v:false,
+"\   'lua': v:false,
+"\   'vimscript': v:false,
+"\   'javascript': v:true,
+"\   'typescript': v:true,
+"\   'bash': v:false,
+"\   'c': v:true,
+"\   'c++': v:true,
+"\   'c#': v:true,
+"\   'go': v:true,
+"\   'rust': v:true,
+"\   'python': v:true,
+"\  }
+
+
+"###################################################################################
+" IDE> Configuracion exclusivas para NeoVim (si usas CoC)
+"###################################################################################
+"
+
+if g:is_neovim
+
+    "Pacakege IDE> Copilot Chat, Copilot Agents
+    packadd CopilotChat.nvim
+
+    lua require('ide.extended')
+
+endif
+
+
+"###################################################################################
+"IDE> AI Chats and IA Agents
+"###################################################################################
 
 
 

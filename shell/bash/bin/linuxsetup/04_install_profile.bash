@@ -168,8 +168,9 @@ declare -r g_version_none='0.0.0'
 #   (3) Perfil Developer - Typing
 #   (4) Perfil Developer - IDE
 declare -A gA_repos_type=(
+        ['morhetz/gruvbox']=1
+        ['joshdick/onedark.vim']=1
         ['tomasr/molokai']=1
-        ['dracula/vim']=1
         ['vim-airline/vim-airline']=2
         ['vim-airline/vim-airline-themes']=2
         ['preservim/nerdtree']=2
@@ -178,6 +179,7 @@ declare -A gA_repos_type=(
         ['christoomey/vim-tmux-navigator']=2
         ['junegunn/fzf']=2
         ['junegunn/fzf.vim']=2
+        ['ibhagwan/fzf-lua']=2
         ['tpope/vim-surround']=3
         ['mg979/vim-visual-multi']=3
         ['mattn/emmet-vim']=3
@@ -189,11 +191,11 @@ declare -A gA_repos_type=(
         ['puremourning/vimspector']=4
         ['ludovicchabant/vim-gutentags']=4
         ['folke/tokyonight.nvim']=1
+        ['catppuccin/nvim']=1
         ['kyazdani42/nvim-web-devicons']=2
         ['nvim-lualine/lualine.nvim']=2
         ['akinsho/bufferline.nvim']=2
         ['nvim-lua/plenary.nvim']=2
-        ['nvim-telescope/telescope.nvim']=2
         ['nvim-tree/nvim-tree.lua']=2
         ['nvim-treesitter/nvim-treesitter']=4
         ['jose-elias-alvarez/null-ls.nvim']=4
@@ -211,26 +213,29 @@ declare -A gA_repos_type=(
         ['theHamsta/nvim-dap-virtual-text']=4
         ['rcarriga/nvim-dap-ui']=4
         ['nvim-neotest/nvim-nio']=4
-        ['nvim-telescope/telescope-dap.nvim']=4
+        ['github/copilot.vim']=4
+        ['CopilotC-Nvim/CopilotChat.nvim']=4
     )
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
 #  1 - Para VIM
 #  2 - Para NeoVIM
 declare -A gA_repos_scope=(
+        ['morhetz/gruvbox']=1
+        ['joshdick/onedark.vim']=1
         ['tomasr/molokai']=1
-        ['dracula/vim']=1
         ['vim-airline/vim-airline']=1
         ['vim-airline/vim-airline-themes']=1
         ['ryanoasis/vim-devicons']=1
         ['preservim/nerdtree']=1
         ['puremourning/vimspector']=1
         ['folke/tokyonight.nvim']=2
+        ['catppuccin/nvim']=2
         ['kyazdani42/nvim-web-devicons']=2
+        ['ibhagwan/fzf-lua']=2
         ['nvim-lualine/lualine.nvim']=2
         ['akinsho/bufferline.nvim']=2
         ['nvim-lua/plenary.nvim']=2
-        ['nvim-telescope/telescope.nvim']=2
         ['nvim-tree/nvim-tree.lua']=2
         ['nvim-treesitter/nvim-treesitter']=2
         ['jose-elias-alvarez/null-ls.nvim']=2
@@ -248,7 +253,7 @@ declare -A gA_repos_scope=(
         ['theHamsta/nvim-dap-virtual-text']=2
         ['rcarriga/nvim-dap-ui']=2
         ['nvim-neotest/nvim-nio']=2
-        ['nvim-telescope/telescope-dap.nvim']=2
+        ['CopilotC-Nvim/CopilotChat.nvim']=2
     )
 
 # Repositorios Git - Branch donde esta el plugin no es el por defecto
