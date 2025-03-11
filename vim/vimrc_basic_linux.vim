@@ -79,7 +79,7 @@ runtime setting/setting_basic.vim
 "#########################################################################################################
 
 "StatusLine, TabLine, TMUX, ...
-runtime setting/plugin/ui_core.vim
+runtime setting/plugin/ui_basic.vim
 
 "Utilitarios basicos: FZF, NERDTree, ...
 runtime setting/plugin/ui_extended.vim
