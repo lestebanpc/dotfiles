@@ -98,7 +98,6 @@ $gd_repos_scope= @{
         'mfussenegger/nvim-dap'= 2
         'theHamsta/nvim-dap-virtual-text'= 2
         'rcarriga/nvim-dap-ui'= 2
-        'github/copilot.vim'= 2
         'stevearc/dressing.nvim'= 2
         'MunifTanjim/nui.nvim'= 2
         'MeanderingProgrammer/render-markdown.nvim'= 2
