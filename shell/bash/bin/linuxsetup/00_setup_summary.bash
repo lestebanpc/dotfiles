@@ -787,47 +787,47 @@ function _show_menu_install_core() {
     local l_max_digits=7
 
     printf " ( ) Configuración personalizado para el usuario:\n"
-    printf "     (%b%0${l_max_digits}d%b) Configurar el %bprofile del usuario%b\n" "$g_color_green1" "1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes usuario%b de %bPython%b: 'jtbl'\n" "$g_color_green1" "2" \
+    printf "     (%b%${l_max_digits}d%b) Configurar el %bprofile del usuario%b\n" "$g_color_green1" "1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) Instalar %bpaquetes usuario%b de %bPython%b: 'jtbl'\n" "$g_color_green1" "2" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b como %bEditor%b    > Crear archivos de configuración, Descargar plugins e indexarlos\n" "$g_color_green1" "4" \
+    printf "     (%b%${l_max_digits}d%b) %bVIM%b como %bEditor%b    > Crear archivos de configuración, Descargar plugins e indexarlos\n" "$g_color_green1" "4" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b como %bIDE%b       > Crear archivos de configuración, Descargar plugins e indexarlos, Inicializar los plugins\n" "$g_color_green1" "8" \
+    printf "     (%b%${l_max_digits}d%b) %bVIM%b como %bIDE%b       > Crear archivos de configuración, Descargar plugins e indexarlos, Inicializar los plugins\n" "$g_color_green1" "8" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b como %bEditor%b > Crear archivos de configuración, Descargar plugins e indexarlos\n" "$g_color_green1" "16" \
+    printf "     (%b%${l_max_digits}d%b) %bNeoVIM%b como %bEditor%b > Crear archivos de configuración, Descargar plugins e indexarlos\n" "$g_color_green1" "16" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b como %bIDE%b    > Crear archivos de configuración, Descargar plugins e indexarlos, Inicializar los plugins\n" "$g_color_green1" "32" \
+    printf "     (%b%${l_max_digits}d%b) %bNeoVIM%b como %bIDE%b    > Crear archivos de configuración, Descargar plugins e indexarlos, Inicializar los plugins\n" "$g_color_green1" "32" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b como %bEditor%b    > Crear archivos de configuración, Indexar plugins\n" "$g_color_green1" "64" \
+    printf "     (%b%${l_max_digits}d%b) %bVIM%b como %bEditor%b    > Crear archivos de configuración, Indexar plugins\n" "$g_color_green1" "64" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bVIM%b como %bIDE%b       > Crear archivos de configuración, Indexar plugins, Inicializar los plugins\n" "$g_color_green1" "128" \
+    printf "     (%b%${l_max_digits}d%b) %bVIM%b como %bIDE%b       > Crear archivos de configuración, Indexar plugins, Inicializar los plugins\n" "$g_color_green1" "128" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b como %bEditor%b > Crear archivos de configuración, Indexar plugins\n" "$g_color_green1" "256" \
+    printf "     (%b%${l_max_digits}d%b) %bNeoVIM%b como %bEditor%b > Crear archivos de configuración, Indexar plugins\n" "$g_color_green1" "256" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) %bNeoVIM%b como %bIDE%b    > Crear archivos de configuración, Indexar plugins, Inicializar los plugins\n" "$g_color_green1" "512" \
+    printf "     (%b%${l_max_digits}d%b) %bNeoVIM%b como %bIDE%b    > Crear archivos de configuración, Indexar plugins, Inicializar los plugins\n" "$g_color_green1" "512" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
 
     printf " ( ) Programas requeridos a instalar %b(usualmente instalado como root)%b:\n" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes basicos%b: %b%s%b\n" "$g_color_green1" "1024" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" \
+    printf "     (%b%${l_max_digits}d%b) Instalar %bpaquetes basicos%b: %b%s%b\n" "$g_color_green1" "1024" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" \
            "$l_pckg_ids" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bcomandos basicos%b: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd, zoxide y eza.%b\n" "$g_color_green1" \
+    printf "     (%b%${l_max_digits}d%b) Instalar %bcomandos basicos%b: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd, zoxide y eza.%b\n" "$g_color_green1" \
            "2048" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bNodeJS%b y %bNpm%b\n" "$g_color_green1" "4096" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bpaquetes globales%b de %bNodeJS%b: %b'Prettier'%b\n" "$g_color_green1" "8192" "$g_color_reset" "$g_color_cian1" \
+    printf "     (%b%${l_max_digits}d%b) Instalar %bNodeJS%b y %bNpm%b\n" "$g_color_green1" "4096" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) Instalar %bpaquetes globales%b de %bNodeJS%b: %b'Prettier'%b\n" "$g_color_green1" "8192" "$g_color_reset" "$g_color_cian1" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bPython%b y %bPip%b\n" "$g_color_green1" "16384" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bVIM%b\n" "$g_color_green1" "32768" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Instalar %bNeoVIM%b\n" "$g_color_green1" "65536" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de Editor%b de %bVIM%b\n" "$g_color_green1" "131072" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+    printf "     (%b%${l_max_digits}d%b) Instalar %bPython%b y %bPip%b\n" "$g_color_green1" "16384" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) Instalar %bVIM%b\n" "$g_color_green1" "32768" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) Instalar %bNeoVIM%b\n" "$g_color_green1" "65536" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) Descargar %bPlugins de Editor%b de %bVIM%b\n" "$g_color_green1" "131072" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de Editor%b de %bNeoVIM%b\n" "$g_color_green1" "262144" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+    printf "     (%b%${l_max_digits}d%b) Descargar %bPlugins de Editor%b de %bNeoVIM%b\n" "$g_color_green1" "262144" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de IDE%b    de %bVIM%b\n" "$g_color_green1" "524288" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+    printf "     (%b%${l_max_digits}d%b) Descargar %bPlugins de IDE%b    de %bVIM%b\n" "$g_color_green1" "524288" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Descargar %bPlugins de IDE%b    de %bNeoVIM%b\n" "$g_color_green1" "1048576" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+    printf "     (%b%${l_max_digits}d%b) Descargar %bPlugins de IDE%b    de %bNeoVIM%b\n" "$g_color_green1" "1048576" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de .NET : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "2097152" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) LSP/DAP de Java : %bJdtls%b\n" "$g_color_green1" "4194304" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) LSP/DAP de .NET : %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "2097152" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) LSP/DAP de Java : %bJdtls%b\n" "$g_color_green1" "4194304" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_gray1"
 

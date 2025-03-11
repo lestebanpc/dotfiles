@@ -715,8 +715,8 @@ function _show_menu_core() {
 
     local l_max_digits=$?
 
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de VIM    existentes e inicializarlos\n" "$g_color_green1" "1" "$g_color_reset"
-    printf "     (%b%0${l_max_digits}d%b) Actualizar los plugin de NeoVIM existentes e inicializarlos\n" "$g_color_green1" "2" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) Actualizar los plugin de VIM    existentes e inicializarlos\n" "$g_color_green1" "1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) Actualizar los plugin de NeoVIM existentes e inicializarlos\n" "$g_color_green1" "2" "$g_color_reset"
 
     print_line '-' $g_max_length_line "$g_color_gray1" 
 
