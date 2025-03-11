@@ -809,7 +809,7 @@ function _setup_nvim_files() {
         l_target_path=".config/nvim"
         l_target_link="init.vim"
         l_source_path="${g_repo_name}/nvim"
-        l_source_filename='init_ide_linux.vim'
+        l_source_filename='init_ide.vim'
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
         l_target_path=".config/nvim"
@@ -848,7 +848,7 @@ function _setup_nvim_files() {
         l_target_path=".config/nvim"
         l_target_link="init.vim"
         l_source_path="${g_repo_name}/nvim"
-        l_source_filename='init_basic_linux.vim'
+        l_source_filename='init_editor.vim'
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_ln
 
         l_target_path=".config/nvim"
@@ -934,19 +934,13 @@ function _setup_vim_files() {
         l_target_path=""
         l_target_link=".vimrc"
         l_source_path="${g_repo_name}/vim"
-        l_source_filename='vimrc_ide_linux.vim'
+        l_source_filename='vimrc_ide.vim'
 
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_ln
 
 
     #Configurar VIM como Editor basico
     else
-
-        l_target_path=""
-        l_target_link=".vimrc"
-        l_source_path="${g_repo_name}/vim"
-        l_source_filename='vimrc_basic_linux.vim'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_ln
 
         l_target_path=".vim"
         l_target_link="setting"
@@ -957,6 +951,12 @@ function _setup_vim_files() {
         l_target_link="ftplugin"
         l_source_path="${g_repo_name}/vim/ftplugin/editor"
         create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_ln
+
+        l_target_path=""
+        l_target_link=".vimrc"
+        l_source_path="${g_repo_name}/vim"
+        l_source_filename='vimrc_editor.vim'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_ln
 
 
     fi
@@ -1331,8 +1331,11 @@ _install_user_pckg_python() {
         echo "Python > Instalando el comando 'jtbl' (modulo python) para mostrar arreglos json en una consola en formato tabular."
         
         #Se instalar a nivel usuario
-        #pip3 install jtbl --break-system-packages
-        pip3 install jtbl --user
+        if [ $g_os_type -eq 19 ]; then
+            pip3 install jtbl --user
+        else
+            pip3 install jtbl --user --break-system-packages
+        fi
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1354,8 +1357,11 @@ _install_user_pckg_python() {
         echo "Python > Instalando el comando 'compiledb' (modulo python) para generar una base de datos de compilacion Clang desde un make file."
         
         #Se instalar a nivel usuario
-        #pip3 install compiledb --break-system-packages
-        pip3 install compiledb --user
+        if [ $g_os_type -eq 19 ]; then
+            pip3 install compiledb --user
+        else
+            pip3 install compiledb --user --break-system-packages
+        fi
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1372,8 +1378,11 @@ _install_user_pckg_python() {
         echo "Python > Instalando la libreria python 'rope' para refactorización de Python (https://github.com/python-rope/rope)."
         
         #Se instalara a nivel usuario
-        #pip3 install rope --break-system-packages
-        pip3 install rope --user
+        if [ $g_os_type -eq 19 ]; then
+            pip3 install rope --user
+        else
+            pip3 install rope --user --break-system-packages
+        fi
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1390,8 +1399,11 @@ _install_user_pckg_python() {
         echo "Python > Instalando el paquete 'pynvim' de Python3 para soporte de plugins en dicho RTE"
         
         #Se instalara a nivel usuario
-        #pip3 install pynvim --break-system-packages
-        pip3 install pynvim --user
+        if [ $g_os_type -eq 19 ]; then
+            pip3 install pynvim --user
+        else
+            pip3 install pynvim --user --break-system-packages
+        fi
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1408,8 +1420,11 @@ _install_user_pckg_python() {
         echo "Python > Instalando el paquete 'urlscan' de Python3 para busquedas de URL en texto (uso por tmux)"
         
         #Se instalara a nivel usuario
-        #pip3 install urlscan --break-system-packages
-        pip3 install urlscan --user
+        if [ $g_os_type -eq 19 ]; then
+            pip3 install urlscan --user
+        else
+            pip3 install urlscan --user --break-system-packages
+        fi
 
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
@@ -1458,7 +1473,7 @@ function _install_vim() {
     fi
     
     #No instalar si no tiene acceso a sudo
-    if [ $g_runner_sudo_support -eq 3 ] || {  [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+    if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
         printf 'VIM > %bVIM puede ser instalado debido a que carece de accesos a root. Se recomienda su instalación%b.\n' "$g_color_red1" "$g_color_reset"
         return 1
     fi

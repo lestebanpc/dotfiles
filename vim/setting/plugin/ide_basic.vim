@@ -51,32 +51,37 @@ endif
 "###################################################################################
 "
 
-"Pacakege IDE> Core> AI Completition
-packadd copilot.vim
 
-"Cambiar el <Tab> por <Ctrl + Enter> para aceptar el autocompletado
-imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
-let g:copilot_no_tab_map = v:true
+if g:use_ai_plugins
 
-"Por defecto se desabilita copilot.
-"Se habilitara cuando se use ':Copilot enable' o ':let g:copilot_enabled = 1'
-let g:copilot_enabled = 0
+    "Pacakege IDE> Core> AI Completition
+    packadd copilot.vim
+    
+    "Cambiar el <Tab> por <Ctrl + Enter> para aceptar el autocompletado
+    imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
+    let g:copilot_no_tab_map = v:true
+    
+    "Por defecto se desabilita copilot.
+    "Se habilitara cuando se use ':Copilot enable' o ':let g:copilot_enabled = 1'
+    let g:copilot_enabled = 0
+    
+    "let g:copilot_filetypes = {
+    "\   '*': v:false,
+    "\   'lua': v:false,
+    "\   'vimscript': v:false,
+    "\   'javascript': v:true,
+    "\   'typescript': v:true,
+    "\   'bash': v:false,
+    "\   'c': v:true,
+    "\   'c++': v:true,
+    "\   'c#': v:true,
+    "\   'go': v:true,
+    "\   'rust': v:true,
+    "\   'python': v:true,
+    "\  }
 
-"let g:copilot_filetypes = {
-"\   '*': v:false,
-"\   'lua': v:false,
-"\   'vimscript': v:false,
-"\   'javascript': v:true,
-"\   'typescript': v:true,
-"\   'bash': v:false,
-"\   'c': v:true,
-"\   'c++': v:true,
-"\   'c#': v:true,
-"\   'go': v:true,
-"\   'rust': v:true,
-"\   'python': v:true,
-"\  }
 
+endif
 
 
 "###################################################################################
@@ -86,15 +91,19 @@ let g:copilot_enabled = 0
 
 if g:is_neovim && !g:use_coc_in_nvim
 
-    "Pacakege IDE> Copilot Chat, Copilot Agents
-    "packadd CopilotChat.nvim
+    if g:use_ai_plugins
 
-    "Pacakege IDE> AI Chat, AI Agents
-    packadd avante.nvim
-    packadd dressing.nvim
-    packadd nui.nvim
-    packadd render-markdown.nvim
-    packadd img-clip.nvim
+        "Pacakege IDE> Copilot Chat, Copilot Agents
+        "packadd CopilotChat.nvim
+
+        "Pacakege IDE> AI Chat, AI Agents
+        packadd avante.nvim
+        packadd dressing.nvim
+        packadd nui.nvim
+        packadd render-markdown.nvim
+        packadd img-clip.nvim
+
+    endif
 
     lua require('ide.extended')
 
@@ -580,18 +589,21 @@ packadd omnisharp-vim
 
 if g:is_neovim
 
+    if g:use_ai_plugins
 
-    "Pacakege IDE> Copilot Chat, Copilot Agents
-    "packadd CopilotChat.nvim
+        "Pacakege IDE> Copilot Chat, Copilot Agents
+        "packadd CopilotChat.nvim
 
-    "Pacakege IDE> AI Chat, AI Agents
-    packadd avante.nvim
-    packadd dressing.nvim
-    packadd nui.nvim
-    packadd render-markdown.nvim
-    packadd img-clip.nvim
+        "Pacakege IDE> AI Chat, AI Agents
+        packadd avante.nvim
+        packadd dressing.nvim
+        packadd nui.nvim
+        packadd render-markdown.nvim
+        packadd img-clip.nvim
 
-    lua require('ide.extended')
+    endif
+
+    "lua require('ide.extended')
 
 endif
 
