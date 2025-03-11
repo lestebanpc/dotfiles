@@ -59,7 +59,12 @@
 "      > En es un enlace simbolico a '~/.files/nvim/ftplugin/cocide/'.
 "  ./config.vim
 "      Archivo que permite modificar las variables globales de este secript.
-"      Por defecto no existe.
+"      Por defecto no existe pero la plantilla se puede obtener de '~/.files/nvim/config_template.vim' o
+"      '~/.files/vim/config_template.vim':
+"        cp ~/.files/vim/config_template.vim ~/.vim/config.vim
+"        cp ~/.files/nvim/config_template.vim ~/.config/nvim/config.vim
+"        cp ${env:USERPROFILE}/.files/vim/config_template.vim ${env:USERPROFILE}/vimfiles/config.vim
+"        cp ${env:USERPROFILE}/.files/nvim/config_template.vim ${env:LOCALAPPDATA}/nvim/config.vim
 "
 "
 "

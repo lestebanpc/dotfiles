@@ -215,7 +215,6 @@ declare -A gA_repo_config_proc_type=(
         ['jwt']=1
         ['less']=1
         ['clangd']=1
-        ['neovim']=1
         ['tmux-fingers']=1
         ['tmux-thumbs']=1
         ['wezterm']=1
@@ -3176,23 +3175,20 @@ function get_repo_artifacts() {
             fi
             ;;
 
-        neovim)
-            #No soportado para architecture ARM de 64 bits
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                pna_artifact_baseurl=()
-                pna_artifact_names=()
-                return 1
-            fi
 
+        neovim)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_names=("nvim-win64.zip")
                 pna_artifact_types=(21)
             else
-                #pna_artifact_names=("nvim-linux64.tar.gz")
-                pna_artifact_names=("nvim-linux-x86_64.tar.gz")
-                #Si se instala, no se descomprime, se realizara la logica de descomprención.
-                pna_artifact_types=(20)
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("nvim-linux-arm64.tar.gz")
+                    pna_artifact_types=(20)
+                else
+                    pna_artifact_names=("nvim-linux-x86_64.tar.gz")
+                    pna_artifact_types=(20)
+                fi
             fi
             ;;
 

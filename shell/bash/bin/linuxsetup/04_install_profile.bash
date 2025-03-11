@@ -1547,7 +1547,8 @@ function _install_nvim() {
     fi
 
     #Los binarios para arm64 y alpine, se debera usar los repositorios de los SO
-    if [ "$g_os_architecture_type" = "aarch64" ] || [ $g_os_subtype_id -eq 1 ]; then
+    #if [ "$g_os_architecture_type" = "aarch64" ] || [ $g_os_subtype_id -eq 1 ]; then
+    if [ $g_os_subtype_id -eq 1 ]; then
 
         #Parametros:
         # 1> Tipo de ejecución: 2/4 (ejecución sin menu no-interactiva/interactiva para instalar/actualizar paquetes)
