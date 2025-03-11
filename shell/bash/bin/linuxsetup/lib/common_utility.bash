@@ -2322,10 +2322,10 @@ function check_vim_profile() {
         l_profile_path="${HOME}/.config/nvim/init.vim"
     fi
 
-    #'vimrc_ide_linux_xxxx.vim'
-    #'vimrc_basic_linux.vim'
-    #'init_ide_linux_xxxx.vim'
-    #'init_basic_linux.vim'
+    #vimrc_ide.vim
+    #vimrc_editor.vim
+    #init_ide.vim
+    #init_editor.vim
     l_real_path=$(readlink "$l_profile_path" 2> /dev/null)
     local l_status=$?
     if [ $l_status -ne 0 ]; then
@@ -2336,14 +2336,14 @@ function check_vim_profile() {
 
     #Si es NeoVIM
     if [ $p_is_neovim -eq 0  ]; then
-        if [[ "$l_real_path" == init_ide_* ]]; then
+        if [[ "$l_real_path" == init_ide* ]]; then
             return 1 
         fi
         return 0
     fi
 
     #Si es VIM
-    if [[ "$l_real_path" =~ vimrc_ide_* ]]; then
+    if [[ "$l_real_path" =~ vimrc_ide* ]]; then
         return 1 
     fi
     return 0
