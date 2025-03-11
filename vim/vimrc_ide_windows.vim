@@ -91,7 +91,7 @@ runtime setting/setting_basic.vim
 "#########################################################################################################
 
 "StatusLine, TabLine, TMUX, ...
-runtime setting/plugin/ui_core.vim
+runtime setting/plugin/ui_basic.vim
 
 "Utilitarios basicos: FZF, NERDTree, ...
 runtime setting/plugin/ui_extended.vim
@@ -113,7 +113,7 @@ runtime setting/plugin/ide_typing.vim
 "   - Diagnostico : ALE
 "   - Interprese Lenguage Server (incluye LSP server) y Completition : CoC.nvim
 "   - Snippets : UltiSnippets
-runtime setting/plugin/ide_core.vim
+runtime setting/plugin/ide_basic.vim
 
 "Adaptadores de Lenguajes personalizados: C# (OmniSharp)
 "Implementa :
