@@ -11,8 +11,8 @@ $g_max_length_line= 130
 #   (3) Perfil Developer - Typing
 #   (4) Perfil Developer - IDE
 $gd_repos_type= @{
-        'tomasr/molokai'= 1
-        'dracula/vim'= 1
+        'morhetz/gruvbox'= 1
+        'joshdick/onedark.vim'= 1
         'vim-airline/vim-airline'= 2
         'vim-airline/vim-airline-themes'= 2
         'preservim/nerdtree'= 2
@@ -21,6 +21,7 @@ $gd_repos_type= @{
         'christoomey/vim-tmux-navigator'= 2
         'junegunn/fzf'= 2
         'junegunn/fzf.vim'= 2
+        'ibhagwan/fzf-lua'= 2
         'tpope/vim-surround'= 3
         'mg979/vim-visual-multi'= 3
         'mattn/emmet-vim'= 3
@@ -32,6 +33,7 @@ $gd_repos_type= @{
         'ludovicchabant/vim-gutentags'=4
         'puremourning/vimspector'= 4
         'folke/tokyonight.nvim'= 1
+        'catppuccin/nvim'= 1
         'kyazdani42/nvim-web-devicons'= 2
         'nvim-lualine/lualine.nvim'= 2
         'akinsho/bufferline.nvim'= 2
@@ -54,20 +56,24 @@ $gd_repos_type= @{
         'nvim-neotest/nvim-nio'=4
         'theHamsta/nvim-dap-virtual-text'= 4
         'rcarriga/nvim-dap-ui'= 4
-        'nvim-telescope/telescope-dap.nvim'= 4
+        'github/copilot.vim'= 4
+        'stevearc/dressing.nvim'= 4
+        'MunifTanjim/nui.nvim'= 4
+        'MeanderingProgrammer/render-markdown.nvim'= 4
+        'HakonHarnes/img-clip.nvim'= 4
+        'yetone/avante.nvim'= 4
 	}
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
 #  1 - Para VIM
 #  2 - Para NeoVIM
 $gd_repos_scope= @{
-        'tomasr/molokai'= 1
-        'dracula/vim'= 1
+        'morhetz/gruvbox'= 1
+        'joshdick/onedark.vim'= 1
         'vim-airline/vim-airline'= 1
         'vim-airline/vim-airline-themes'= 1
         'ryanoasis/vim-devicons'= 1
         'preservim/nerdtree'= 1
-        'puremourning/vimspector'= 1
         'folke/tokyonight.nvim'= 2
         'kyazdani42/nvim-web-devicons'= 2
         'nvim-lualine/lualine.nvim'= 2
@@ -76,6 +82,7 @@ $gd_repos_scope= @{
         'nvim-telescope/telescope.nvim'= 2
         'nvim-tree/nvim-tree.lua'= 2
         'nvim-treesitter/nvim-treesitter'= 2
+        'ibhagwan/fzf-lua'= 2
         'jose-elias-alvarez/null-ls.nvim'= 2
         'neovim/nvim-lspconfig'= 2
         'hrsh7th/nvim-cmp'= 2
@@ -91,7 +98,12 @@ $gd_repos_scope= @{
         'mfussenegger/nvim-dap'= 2
         'theHamsta/nvim-dap-virtual-text'= 2
         'rcarriga/nvim-dap-ui'= 2
-        'nvim-telescope/telescope-dap.nvim'= 2
+        'github/copilot.vim'= 2
+        'stevearc/dressing.nvim'= 2
+        'MunifTanjim/nui.nvim'= 2
+        'MeanderingProgrammer/render-markdown.nvim'= 2
+        'HakonHarnes/img-clip.nvim'= 2
+        'yetone/avante.nvim'= 2
 	}
 
 # Repositorios Git - Branch donde esta el plugin no es el por defecto
@@ -103,6 +115,7 @@ $gd_repos_branch= @{
 $gd_repos_depth= @{
         'neoclide/coc.nvim'= 1
         'junegunn/fzf'= 1
+        'dense-analysis/ale'= 1
 	}
 
 $g_is_nodejs_installed= $true

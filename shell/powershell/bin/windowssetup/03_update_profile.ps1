@@ -505,25 +505,25 @@ function m_rollback_changes_plugins_fzf()
 	Write-Host "git restore autoload\fzf\vim.vim" -ForegroundColor DarkGray
     git restore autoload\fzf\vim.vim
 		
-	Write-Host ""
-    Write-Host ">NeoVIM> Restaurando las modificaciones realizada al plugin 'fzf': " -NoNewline	
-	Write-Host "${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf" -ForegroundColor DarkGray -NoNewline
-	Write-Host "\plugin\fzf.vim" -ForegroundColor Blue
-    cd ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf
-	Write-Host "git pull origin master" -ForegroundColor DarkGray
-    git pull origin master
-	Write-Host "git restore autoload\fzf\vim.vim" -ForegroundColor DarkGray
-    git restore plugin\fzf.vim
+	#Write-Host ""
+    #Write-Host ">NeoVIM> Restaurando las modificaciones realizada al plugin 'fzf': " -NoNewline	
+	#Write-Host "${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf" -ForegroundColor DarkGray -NoNewline
+	#Write-Host "\plugin\fzf.vim" -ForegroundColor Blue
+    #cd ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf
+	#Write-Host "git pull origin master" -ForegroundColor DarkGray
+    #git pull origin master
+	#Write-Host "git restore autoload\fzf\vim.vim" -ForegroundColor DarkGray
+    #git restore plugin\fzf.vim
 
-	Write-Host ""
-	Write-Host ">NeoVIM> Restaurando las modificaciones realizada al plugin 'fzf.vim': " -NoNewline	
-	Write-Host "${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim" -ForegroundColor DarkGray -NoNewline
-	Write-Host "\autoload\fzf\vim.vim" -ForegroundColor Blue
-    cd ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim
-	Write-Host "git pull origin master" -ForegroundColor DarkGray
-    git pull origin master
-	Write-Host "git restore autoload\fzf\vim.vim" -ForegroundColor DarkGray
-    git restore autoload\fzf\vim.vim
+	#Write-Host ""
+	#Write-Host ">NeoVIM> Restaurando las modificaciones realizada al plugin 'fzf.vim': " -NoNewline	
+	#Write-Host "${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim" -ForegroundColor DarkGray -NoNewline
+	#Write-Host "\autoload\fzf\vim.vim" -ForegroundColor Blue
+    #cd ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim
+	#Write-Host "git pull origin master" -ForegroundColor DarkGray
+    #git pull origin master
+	#Write-Host "git restore autoload\fzf\vim.vim" -ForegroundColor DarkGray
+    #git restore autoload\fzf\vim.vim
 	
 	Write-Host ""
 	Write-Host ""
@@ -550,10 +550,10 @@ function m_rollback_changes_plugins_fzf()
     Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf\plugin\"
     Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\autoload\fzf\"
 	Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1 `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\bin\"
-	Write-Host "   > Reparando NeoVIM:" -ForegroundColor DarkGray
-	Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf\plugin\"
-    Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\"
-	Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1 `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\bin\"
+	#Write-Host "   > Reparando NeoVIM:" -ForegroundColor DarkGray
+	#Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf\plugin\fzf.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf\plugin\"
+    #Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\autoload\fzf\vim.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\"
+	#Write-Host "     cp `${env:USERPROFILE}\.files\vim\packages\fixes\fzf.vim\bin\preview.ps1 `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\bin\"
 	
 	Write-Host ""
     Write-Host "3> Opcional: subir los cambios de la fuentes corregida al repositorio remoto" -ForegroundColor Green
@@ -583,14 +583,14 @@ function m_changes_plugins_fzf()
 	Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf.vim\bin\preview.ps1 `${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\bin\" -ForegroundColor DarkGray
 	cp ${env:USERPROFILE}\.files\vim\fixes\fzf.vim\bin\preview.ps1 ${env:USERPROFILE}\vimfiles\pack\ui\opt\fzf.vim\bin\
 
-	Write-Host ""
-    Write-Host ">NeoVIM> Copiando los archivos de la fuente corregida al plugin 'fzf' y 'fzf.vim': "
-	Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf\plugin\fzf.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf\plugin\" -ForegroundColor DarkGray
-	cp ${env:USERPROFILE}\.files\vim\fixes\fzf\plugin\fzf.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf\plugin\
-    Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf.vim\autoload\fzf\vim.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\" -ForegroundColor DarkGray
-    cp ${env:USERPROFILE}\.files\vim\fixes\fzf.vim\autoload\fzf\vim.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\
-	Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf.vim\bin\preview.ps1 `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\bin\" -ForegroundColor DarkGray
-	cp ${env:USERPROFILE}\.files\vim\fixes\fzf.vim\bin\preview.ps1 ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\bin\
+	#Write-Host ""
+    #Write-Host ">NeoVIM> Copiando los archivos de la fuente corregida al plugin 'fzf' y 'fzf.vim': "
+	#Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf\plugin\fzf.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf\plugin\" -ForegroundColor DarkGray
+	#cp ${env:USERPROFILE}\.files\vim\fixes\fzf\plugin\fzf.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf\plugin\
+    #Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf.vim\autoload\fzf\vim.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\" -ForegroundColor DarkGray
+    #cp ${env:USERPROFILE}\.files\vim\fixes\fzf.vim\autoload\fzf\vim.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\autoload\fzf\
+	#Write-Host "cp `${env:USERPROFILE}\.files\vim\fixes\fzf.vim\bin\preview.ps1 `${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\bin\" -ForegroundColor DarkGray
+	#cp ${env:USERPROFILE}\.files\vim\fixes\fzf.vim\bin\preview.ps1 ${env:LOCALAPPDATA}\nvim-data\site\pack\ui\opt\fzf.vim\bin\
 
 	Write-Host ""
 	Write-Host ""

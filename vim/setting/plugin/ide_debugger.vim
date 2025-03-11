@@ -30,11 +30,12 @@ endif
 
 if g:has_python3
    
-        "Package UI> IDE> Core> Graphical Debugger
-        "Habilitar el tipo de key-mapping por defecto de tipo 'HUMAN'
-        let g:vimspector_enable_mappings = 'HUMAN'
-        "let g:vimspector_enable_mappings = 'VISUAL_STUDIO'
-        packadd vimspector
+    "Habilitar el tipo de key-mapping por defecto de tipo 'HUMAN'
+    let g:vimspector_enable_mappings = 'HUMAN'
+    "let g:vimspector_enable_mappings = 'VISUAL_STUDIO'
+    
+    "Package UI> IDE> Core> Graphical Debugger
+    packadd vimspector
 
     "Key-mappings adicionales al por defecto (se usa 'HUMAM')
     nnoremap <Leader><F4> :call vimspector#Reset()<CR>

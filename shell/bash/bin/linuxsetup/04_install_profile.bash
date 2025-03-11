@@ -230,7 +230,6 @@ declare -A gA_repos_scope=(
         ['vim-airline/vim-airline-themes']=1
         ['ryanoasis/vim-devicons']=1
         ['preservim/nerdtree']=1
-        ['puremourning/vimspector']=1
         ['folke/tokyonight.nvim']=2
         ['catppuccin/nvim']=2
         ['kyazdani42/nvim-web-devicons']=2
