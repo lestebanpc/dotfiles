@@ -1836,6 +1836,18 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
     l_status=$?
 
+
+    #Archivo de configuración para Lazygit
+    l_target_path=".config/lazygit"
+    create_folderpath_on_home ".config" "lazygit"
+    l_target_link="config.yml"
+    l_source_path="${g_repo_name}/etc/lazygit"
+    l_source_filename='config_defualt.yaml'
+
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+
+
     #Crear el enlace simbolico de comandos basicos
     create_folderpath_on_home "" ".local/bin"
     l_target_path=".local/bin"

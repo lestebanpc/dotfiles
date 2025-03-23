@@ -36,7 +36,7 @@
 " Habilitar el plugin de AI. Valor por defecto es 1 ('true').
 " Valor '0' es considerado 'false', otro valor es considerado 'true'.
 " Si cambia este valor, recargar/cerrar VIM para volver a cargar los plugin.
-"let g:use_ai_plugins = get(g:, 'use_ai_plugins', 1)
+"let g:use_ai_plugins = 0
 
 
 " Ruta base para los servidores LSP y DAP. Los valores por defecto son:

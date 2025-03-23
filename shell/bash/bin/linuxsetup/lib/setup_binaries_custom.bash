@@ -33,6 +33,7 @@ gA_packages=(
         ['zoxide']='ajeetdsouza/zoxide'
         ['eza']='eza-community/eza'
         ['yazi']='sxyazi/yazi'
+        ['lazygit']='jesseduffield/lazygit'
         ['step']='smallstep/cli'
         ['jwt']='mike-engel/jwt-cli'
         ['butane']='coreos/butane'
@@ -138,7 +139,7 @@ ga_menu_options_title=(
 ga_menu_options_packages=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
     "tmux-thumbs,tmux-fingers,sesh,protoc,grpcurl,xsv,jwt"
-    "rclone,biome,step,evans,yazi,gum,butane,wezterm"
+    "rclone,biome,step,evans,yazi,lazygit,gum,butane,wezterm"
     "nerd-fonts"
     "neovim"
     "powershell"
@@ -952,11 +953,13 @@ function _get_repo_current_pretty_version() {
                 l_tmp=$(${l_path_file}eza --version 2> /dev/null)
                 l_status=$?
             fi
+
             if [ $l_status -eq 0 ]; then
                 l_tmp=$(echo "$l_tmp" | tail -n 2 | head -n 1)
                 #l_sustitution_regexp="$g_regexp_sust_version3"
             fi
             ;;
+
 
         yazi)
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -967,6 +970,23 @@ function _get_repo_current_pretty_version() {
                 l_status=$?
             fi
             ;;
+
+
+
+       lazygit)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_tmp=$(${l_path_file}lazygit.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_tmp=$(${l_path_file}lazygit --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_tmp=$(echo "$l_tmp" | sed -e 's/.*, version=\([0-9]\+\.[0-9.]\+\).*/\1/')
+            fi
+            ;;
+
 
         less)
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -2078,6 +2098,8 @@ function _get_repo_current_pretty_version() {
             ;;
 
 
+
+
         uv)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_tmp=$(${l_path_file}uv.exe --version 2> /dev/null)
@@ -2470,6 +2492,26 @@ function get_repo_artifacts() {
                     fi
                 fi
                 pna_artifact_types=(11)
+            fi
+            ;;
+
+
+        lazygit)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("lazygit_${p_repo_last_pretty_version}_Windows_arm64.zip")
+                else
+                    pna_artifact_names=("lazygit_${p_repo_last_pretty_version}_Windows_x86_64.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("lazygit_${p_repo_last_pretty_version}_Linux_arm64.tar.gz")
+                else
+                    pna_artifact_names=("lazygit_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
 
@@ -4560,6 +4602,28 @@ function _copy_artifact_files() {
 
             fi
             ;;
+
+
+        lazygit)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+
+            #A. Si es WSL de Windows y se copia binarios de windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                copy_binary_on_command "${l_source_path}" "lazygit.exe" 1 1
+                return 0
+
+            fi
+
+            #B. Si es Linux (no WSL)
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            copy_binary_on_command "${l_source_path}" "lazygit" 0 1
+            ;;
+
 
 
         fd)

@@ -24,36 +24,6 @@ vim.keymap.set('n', '<leader>ee', '<cmd>NvimTreeToggle<cr>', { noremap = true })
 -- Package UI> EXTENDED> FZF (FuZzy Finder)
 ------------------------------------------------------------------------------------------------
 
-----Si no se usa TMUX
---if (vim.g.os_type == 0) then
---
---    local fzf_opts = {
---        ["--ansi"]           = true,
---        ["--info"]           = "inline-right",
---        ["--height"]         = "80%",
---        ["--width"]         =  "99%",
---        ["--layout"]         = "reverse",
---        ["--border"]         = "none",
---        ["--highlight-line"] = true,
---     }
---
-----Si se usa TMUX
---else
---
---    local fzf_opts = {
---        ["--ansi"]           = true,
---        ["--info"]           = "inline-right",
---        ["--height"]         = "80%",
---        ["--width"]         =  "99%",
---        ["--layout"]         = "reverse",
---        ["--border"]         = "none",
---        ["--highlight-line"] = true,
---        ["--tmux"]           = "center,99%,80%"
---     }
---
---end
-
-
 
 local fzf_lua= require("fzf-lua")
 local actions= require("fzf-lua").actions
@@ -62,15 +32,36 @@ fzf_lua.setup({
     winopts = { 
         width  = 0.99,
         height = 0.80,
+        preview = {
+            --Use fzf native previewers (not use 'neovim floating window' in order to support tmux)
+            default        = "bat",
+        }
+    },
+    fzf_opts= {
+        ["--ansi"]           = true,
+        ["--border"]         = "none",
+        ["--no-separator"]   = "",
+        ["--info"]           = "inline-right",
+        ["--layout"]         = "reverse",
+        ["--highlight-line"] = true,
+        ["--tmux"]           = "center,99%,80%"
     },
     fzf_colors= {
         true,
+        --["bg"]      = { "bg", "Normal" },
+        --["fg"]      = { "fg", "Normal" },
+        --["border"]  = { "fg", "Normal" },
     },
     files = {
         actions = {
             ["enter"]   = actions.file_edit,
         },
     },
+    --Use fzf native previewers (not use 'neovim floating window' in order to support tmux)
+    manpages = { previewer = "man_native" },
+    helptags = { previewer = "help_native" },
+    tags = { previewer = "bat_async" },
+    btags = { previewer = "bat_async" },
 })
 
 

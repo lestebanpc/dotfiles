@@ -379,38 +379,204 @@ endif
 "Si es VIM y no tiene instalado nodejs, no soporta CoC
 
 "
-"----------------------------- Opciones del Encoding   -----------------------------
+"------------------------------- Opciones basicas        ----------------------------
 "
+"1. Mostrar siempre la barra de pesatañas (tabLine):
+"   (0) Ocultar, 
+"   (1) Solo si existe 1 buffer
+if g:use_tabline 
+    set showtabline=2
+else
+    set showtabline=0
+endif
+
+
+"2. Mostrar siempre StatusLine (barra/linea de estado):
+"   (0) Ocultar
+"   (1) Solo si existe 1 buffer
+"   (2) Siempre mostrar 
+"   (3) La barra de estado global y unica para todos los splits (solo Neovim).
+if g:is_neovim
+    set laststatus=3
+else
+    set laststatus=2
+endif
+
+
+"3. Formato estandar del statusline (barra/linea de estado)
+
+" - Muestra la regla en la liena de estado. Ubicado en esquina inferior derecha y muestra: 
+"   - nro linea, 
+"   - nro de columna, 
+"   - % del archivo
+"set ruler
+
+
+"4. Formato personalizado del statusline (la barra/linea de estado)
+"set statusline=%F%m%r%h%w%=(%{&ff}/%Y)\ (line\ %l\/%L,\ col\ %c)\
+
+"if exists("*fugitive#statusline")
+"    set statusline+=%{fugitive#statusline()}
+"endif
+
+
+"5. Numero de la linea
+set relativenumber
+"set number
+
+
+"6. Habilitar los hidden buffers (buffer que tiene cambios y no se muestran en ningun split)
+set hidden
+
+
+"7. Convertir el key <tab> en espacio en blancos
+
+set expandtab
+
+" - Tamaño del <tab> en forma visual
+set tabstop=4
+
+" - Tamaño del <tab> en forma real
+"   - Si es 0 y 'expandtab' esta desactivado, siempre se guardara el tab 
+"   - Si es 0 y 'expandtab' esta activo, el tamaño real del <tab> es lo indicado por 'tabstop'
+set softtabstop=0
+
+" - Tamano del tab en la indentacion usando '>>' o '<<'
+set shiftwidth=4
+
+
+
+"8. Establecer el titulo en la barra de terminal (cuando VIM esta ejecutandose)
+"   TMUX sobrescribe el titulo de la barra de estado.
+if !g:use_tmux
+
+    set title
+
+    "set titleold="Terminal"
+
+    "Personaliza lo que se muestra el titulo de la barra de titulo del menú
+    " - Nuestra la ruta completa del archivo
+    set titlestring=%F
+
+endif
+
+
+"9. Habilitar el key <backspace> en modo edicion
+set backspace=indent,eol,start
+
+
+"
+"----------------------------- Opciones adicionales     -----------------------------
+"
+
+"1. Opciones de busqueda
+
+" - Sombrear la coincidiencias
+set hlsearch
+
+" - Busqueda incremental
+set incsearch
+
+" - Busqueda ignora las maysucualas y minusculas, excepto ...
+set ignorecase
+
+" - Excepto se tenga al menos una letra en mayuscula
+set smartcase
+
+"2. Opciones de encoding
 set encoding=utf-8
 set fileencoding=utf-8
 set fileencodings=utf-8
-set ttyfast
 set fileformats=unix,dos,mac
 
-"Habilitar el key <backspace> en modo edicion
-set backspace=indent,eol,start
 
-"Convertir el key <tab> en 3 espacio en blancos
-set tabstop=4
-set shiftwidth=4
-set softtabstop=0
-set expandtab
+"3. Soporte del mouse
+
+" - Habilitar la selección usando el mouse
+"   (n)     Habilita el ratón en modo normal.
+"   (v)     Habilita el ratón en modo visual.
+"   (i)     Habilita el ratón en modo insert.
+"   (c)     Habilita el ratón en el modo de comandos.
+"   (h)     Habilita el ratón en el modo de ayuda (:help).
+"   (a)     Habilita el ratón en todos los modos.
+"   (r)     Habilita el ratón en modos terminal y prompt.
+"   (vacío)	Desactiva el uso del ratón.
+set mouse=a
+
+" - Controla cómo se interpretan los clics del ratón
+"   (extend) Valor por defecto
+"     - Shift + Left click   Expande la selección (similar a seleccionar texto en modo visual).
+"     - Rigth click          Abre un menú contextual en GUI (si está disponible).
+"   (popup)
+"     - Rigth click          Abre un menú contextual en GUI.
+"     - Shift + Left click   Se comporta igual que un clic normal.
+"   (popup_setpos)
+"     - Right Click          Abre un menú contextual y mueve el cursor a la posición del clic.
+"     - Shift + Left clic    Igual que un clic normal.
+set mousemodel=popup
+
+"4. Soporte de controladores (sintaxis, indentación y plugins) segun el tipo de archivo
+
+" - Habilitar la detección automática 
+"   Detectar el tipo de archivo si se abre un archivo.
+filetype on
+
+" - Habilitar scripts de configuración específicos del tipo de archivo ('./ftplugin/')
+"   Permite que Vim cargue configuraciones adicionales basadas en el tipo de archivo.
+filetype plugin on
+
+" - Habilitar scripts de indentación específicos ('./indent/')
+"   Activa reglas de indentación específicas según el tipo de archivo.
+filetype indent on
 
 
-"Permite crear hidden buffers (buffer que tiene cambios y no se muestran en ningun split)
-set hidden
+"5. Soporte a 'modeline overrides'
+"   Si esta activado, se analiza lineas de comentario al inicio y al final del archivo,
+"   en busqueda de configuracion para definir opciones personalizado para este archivo.
+"   Formato : 
+"     vim: option1 option2 option3:
 
-"
-"----------------------------- Opciones de busqueda   ------------------------------
-"
-"Sombrear la coincidiencias
-set hlsearch
-"Busqueda incremental
-set incsearch
-"Busqueda ignora las maysucualas y minusculas, excepto ...
-set ignorecase
-"Excepto se tenga al menos una letra en mayuscula
-set smartcase
+" - Activa el modoline
+set modeline
+
+" - Define el numero de lineas al inicio/final del archivo para buscar el comentario especial 
+set modelines=10
+
+
+"6. Menu de opciones de autocompletado de linea de comandos
+
+" - Mejora la forma de mostrar las opciones de autocompletado de la linea de comandos.
+"   Si se activa muestra una lista más visible y navegable.
+set wildmenu
+
+" - La primera vez que presionas <Tab>, se complete hasta la parte más larga en común.
+"   Si sigues presionando Tab, se muestren todas las opciones disponibles en una lista.
+set wildmode=longest:full,full
+
+
+
+"7. Otros
+
+" - Permite optimizar la redibujación y mejorar el rendimiento de la GUI de la terminal
+"   Vim reduce la cantidad de actualizaciones parciales en la pantalla, lo que lo hace más fluido
+"   en terminales rápidas.
+set ttyfast
+
+" - Resaltar linea actual (current line highlighting)
+set cursorline
+
+"Resaltar columna actual (COMENTAR: Activala a demanda debido a que afecta la performance)
+"set cursorcolumn
+
+
+"Disable the blinking cursor.
+"set guicursor=a:blinkon0
+
+"Cuando se mueve entre paginas del buffer, siempre trata colocar la linea actual, 'n'
+"lineas por abajo/arriba de la primera/ultima linea de la pagina a moverse
+"set scrolloff=3
+
+
 
 "
 "----------------------------- Apariencia : Color     ------------------------------
@@ -418,6 +584,7 @@ set smartcase
 syntax on
 
 set background=dark
+
 "Permite que las parte final de la linea sin texto no tenga un color del fondo diferente
 set t_ut=
 
@@ -482,46 +649,6 @@ endif
 "highlight Terminal guibg='#040404' guifg='#EBEBEB' ctermbg='#040404' ctermfg='#EBEBEB'
 "highlight Terminal guibg=#040404 guifg=#EBEBEB
 
-"
-"----------------------------- Apareciencia : Otros   ------------------------------
-"
-set ruler
-set relativenumber
-"set number
-"let no_buffers_menu=1
-
-"Resaltar linea actual (current line highlighting)
-set cursorline
-
-"Resaltar columna actual (COMENTAR: Activala a demanda debido a que afecta la performance)
-"set cursorcolumn
-
-"Better command line completion
-set wildmenu
-
-"Mouse support: Permite la selección usando el mouse
-set mouse=a
-"Mouse support:
-set mousemodel=popup
-
-
-"Disable the blinking cursor.
-"set guicursor=a:blinkon0
-
-"Cuando se mueve entre paginas del buffer, siempre trata colocar la linea actual, 'n'
-"lineas por abajo/arriba de la primera/ultima linea de la pagina a moverse
-"set scrolloff=3
-
-"Use modeline overrides
-set modeline
-set modelines=10
-
-"Activa la detecion del tipo de archivo
-filetype on
-"Cuando se detecta el tipo de archivo se carga su contralador de './ftplugin/'
-filetype plugin on
-"Cuando se detecta el tipo de archivo se carga su contralador de './indent/'
-filetype indent on
 
 "----------------------------- Defualt Shell           -----------------------------
 "Usado para ejecutar 'system('cmd')' o usando ':!cmd'. No usado para terminales
@@ -560,31 +687,6 @@ if g:is_gui_vim
     set gfn=Cousine\ Nerd\ Font\ Mono:h10
 endif
 
-"
-"------------------------------- TabLine y StatusLine    ----------------------------
-"
-"Mostrar siempre StatusLine (barra de estado): 0 (ocultar), 1 (solo si existe 1 buffer) 
-set laststatus=2
-
-"Mostrar siempre TabLine (barra de buffer y tab): 0 (ocultar), 1 (solo si existe 1 buffer)
-if g:use_tabline 
-    set showtabline=2
-else
-    set showtabline=0
-endif
-
-"Habilitar un titulo en la barra de estado
-set title
-"Establecer como titulo de la barra de estado el nombre del archivo
-set titleold="Terminal"
-set titlestring=%F
-
-"Establecer el estado de la barra de estado
-"set statusline=%F%m%r%h%w%=(%{&ff}/%Y)\ (line\ %l\/%L,\ col\ %c)\
-
-"if exists("*fugitive#statusline")
-"    set statusline+=%{fugitive#statusline()}
-"endif
 
 "----------------------------- Completado               ----------------------------
 "El completado de VIM se realiza usando diferentes fuentes de completado:
