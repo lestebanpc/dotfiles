@@ -59,45 +59,44 @@ function _get_os_type() {
 #  2 > Parametro donde se indica que tipo de metodo de copiado del clipboard usar
 # Parametro de salidad> Variables de entorno
 #  > La variable de entorno 'TMUX_SET_CLIPBOARD' y cuyos valores son:
-#        > No se ha podido establecer un mecanismo del clipboard (se indica que usa comando externo, pero no se ubica.
-#      0 > Usar comandos externo de clipboard y la opcion 'set-clipboard' en 'off'
-#      1 > Usar OSC 52 con la opcion 'set-clipboard' en 'on'
-#      2 > Usar OSC 52 con la opcion 'set-clipboard' en 'external'
+#        > No se ha podido establecer un mecanismo del clipboard (usar comnados externos pero no se estan instalados).
+#      0 > Usa 'set-clipboard off' (desactivar el escribir al clipboard).
+#      1 > Usa 'set-clipboard on' y usar el OSC52 para escribir en el clipboard.
+#      2 > Usa 'set-clipboard external' y usar comandos externos para escribir en el clipboard.
 setting_clipboard() {
 
     local p_key="$1"
 
-    #Obtener si se se usara el metodo 'OSC 52' o 'external command' para poder escribir automaticamente
-    #el contenido del buffer a la terminal.
-    local p_use_osc54=1
+    #1. Obtener el modo de escritura al clipboard que se usara para TMUX
+    local p_clipboard_mode=0
     if [ "$2" = "0" ]; then
-        p_use_osc54=0
+        p_clipboard_mode=0
     elif [ "$2" = "1" ]; then
-        p_use_osc54=1
+        p_clipboard_mode=1
     elif [ "$2" = "2" ]; then
-        p_use_osc54=1
+        p_clipboard_mode=2
     else
         #Determinar si la terminal soporta OSC 52
         case "$TERM_PROGRAM" in
-            #Los siguientes emuladores definen por defecto esta variable de entorno:
+            #Los siguientes emuladores, que soportan OSC52, definen por defecto esta variable de entorno 'TERM_PROGRAM':
             WezTerm)
-                p_use_osc54=2
+                p_clipboard_mode=1
                 ;;
             contour)
-                p_use_osc54=2
+                p_clipboard_mode=1
                 ;;
             iTerm.app)
-                p_use_osc54=2
+                p_clipboard_mode=1
                 ;;
-            #Los siguientes emuladores debera definir la variable con este valor en su archivo de configuracion:
+            #Los siguientes emuladores, que soportan OSC52, deberan definir la variable 'TERM_PROGRAM' en su archivo de configuracion:
             kitty)
-                p_use_osc54=2
+                p_clipboard_mode=1
                 ;;
             alacritty)
-                p_use_osc54=2
+                p_clipboard_mode=1
                 ;;
             foot)
-                p_use_osc54=2
+                p_clipboard_mode=1
                 ;;
             #Opcionalmente, aunque no se recomienta usar un TERM personalizado (no estan en todos los equipos que accede
             #por SSH), algunas terminales definen un TERM personalizado (aunque por campatibilidad, puede modificarlo).
@@ -105,45 +104,57 @@ setting_clipboard() {
                 case "$TERM" in
                     xterm-kitty)
                         #Emulador de terminal Kitty
-                        p_use_osc54=2
+                        p_clipboard_mode=1
                         ;;
                     alacritty)
                         #Emulador de terminal Alacritty
-                        p_use_osc54=2
+                        p_clipboard_mode=1
                         ;;
                     foot)
                         #Emulador de terminal Food
-                        p_use_osc54=2
+                        p_clipboard_mode=1
                         ;;
                     *)
-                        p_use_osc54=0
+                        p_clipboard_mode=2
                         ;;
                 esac
                 ;;
         esac
 
     fi
-    
-    #Activar el metodo de clipboard identicado
-    if [ $p_use_osc54 -eq 1 ] || [ $p_use_osc54 -eq 2 ]; then
+   
+    #2. Si se se usa desactivar en TMUX escritura al clipboard
+    if [ $p_clipboard_mode -eq 0 ]; then
 
-        if [ $p_use_osc54 -eq 2 ]; then
-            $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -s set-clipboard external
+        $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -s set-clipboard off
+        $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-environment -g TMUX_SET_CLIPBOARD $p_clipboard_mode
+
+        # Definir el keybinding a usar el modo copia para 'copy-selection-and-cancel'
+        if [ $TMUX_VERSION -lt 240 ]; then
+            $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} bind-key -tvi-copy "$p_key" send_key -X copy-selection-and-cancel
         else
-            $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -s set-clipboard on
+            $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} bind-key -T copy-mode-vi "$p_key" send-key -X copy-selection-and-cancel
         fi
+        return 0
 
-        $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-environment -g TMUX_SET_CLIPBOARD $p_use_osc54
+    fi
 
-        #Desde la version de tmux >= 3.3, por defecto. no se permite el reenvio de gran parte de la secuencias de escapa avanzadas
-        #entre ellas no se permite el reenvio de la secuencias de escapa de OSC 52 (si permite permite la secuancias del
-        #escapes basicas como el movimiento de prompt, sonido, ...).
-        #Para habilitar ello debe usar la opcion 'on' o 'all'
+    #3. Si se se usa activa en TMUX la escritura nativo al clipboard (usando OSC52)
+    if [ $p_clipboard_mode -eq 1 ]; then
+
+        $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -s set-clipboard on
+        $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-environment -g TMUX_SET_CLIPBOARD $p_clipboard_mode
+
+        # Desde la version de tmux >= 3.3, por defecto. no se permite el reenvio de gran parte de la secuencias de escapa avanzadas
+        # entre ellas no se permite el reenvio de la secuencias de escapa de OSC 52 (si permite permite la secuancias del escapes 
+        # basicas como el movimiento de prompt, sonido, ...).
+        # Para habilitar ello debe usar la opcion 'on' o 'all'
         if [ $TMUX_VERSION -ge 330 ]; then
             $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -w -g allow-passthrough on
             #$TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -g allow-passthrough on
         fi
 
+        # Definir el keybinding a usar el modo copia para 'copy-selection-and-cancel'
         if [ $TMUX_VERSION -lt 240 ]; then
             $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} bind-key -tvi-copy "$p_key" send_key -X copy-selection-and-cancel
         else
@@ -154,7 +165,10 @@ setting_clipboard() {
 
     fi
 
-    #Usandpo comandos externos
+    #4. Si se se usa activa en TMUX la escritura al clipboard usando comandos externos
+
+
+    #4.1. Identificar el comando externo a usar
     _get_os_type
     local l_os_type=$?
     local l_command=''
@@ -209,11 +223,11 @@ setting_clipboard() {
         return 0
     fi
 
-    #Usar 'copy-pipe', tmux automaticamente, despues de copiar el buffer este copiara al Herramienta indicada por pipe.
-    #Algo similar a usar:
 
-    #tmux bind-key -T copy-mode-vi y send-key -X copy-selection-and-cancel
-    #tmux bind-key y run-shell -b "tmux save-buffer - > /dev/clipboard"
+    #4.2. Configurar el comando externo
+    $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -s set-clipboard external
+    $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-environment -g TMUX_SET_CLIPBOARD $p_clipboard_mode
+
 
     if [ $TMUX_VERSION -lt 240 ]; then
 
@@ -236,7 +250,11 @@ setting_clipboard() {
 
     fi
 
-    $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-environment -g TMUX_SET_CLIPBOARD 0
+    #Usar 'copy-pipe', tmux automaticamente, despues de copiar el buffer este copiara al Herramienta indicada por pipe.
+    #Algo similar a usar:
+    #tmux bind-key -T copy-mode-vi y send-key -X copy-selection-and-cancel
+    #tmux bind-key y run-shell -b "tmux save-buffer - > /dev/clipboard"
+
     return 0
 
 }

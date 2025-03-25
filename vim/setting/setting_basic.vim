@@ -207,7 +207,7 @@ else
     "      > Implementar el mecanismo OSC 52, si la terminal lo permite.
     "      > Usar mecanismo nativo (API del SO) si esta habilitado.
     "      > Implementar el mecanismo de uso comandos externo del gestion de clipboard
-    "      > Si no existe comando externo, se Implementara el mecanismo OSC 52
+    "      > Si no existe comando externo, se implementara el mecanismo OSC 52
     if $VIM_CLIPBOARD != '' && $VIM_CLIPBOARD == 0
         let g:set_clipboard_type = 0
     elseif $VIM_CLIPBOARD == 1
