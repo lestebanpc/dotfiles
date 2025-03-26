@@ -40,6 +40,15 @@ else
     "Plugin UI> Tema Onedark
     packadd onedark.vim
 
+    "Personalizar el schema
+    "Donde por tipo de color se tiene los siguientes campos:
+    " - 'gui'     : is the hex color code used in GUI mode/nvim true-color mode
+    " - 'cterm'   : is the color code used in 256-color mode
+    " - 'cterm16' : is the color code used in 16-color mode
+    let g:onedark_color_overrides = {
+    \ "background": {"gui": "#181818", "cterm": "233", "cterm16": "0" }
+    \}
+
     "Esquema de color del tema
     colorscheme onedark
     let g:main_theme = 'onedark'
