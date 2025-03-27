@@ -904,6 +904,52 @@ function m_setup_profile($l_overwrite_ln_flag) {
     #$l_source_filename='default_config.yaml'
     #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
+    #Configuracion por Lazygit
+    $l_target_link="${env:LOCALAPPDATA}\lazygit\config.yml"
+    $l_source_path="${env:USERPROFILE}\.files\wezterm"
+    $l_source_filename='config_default.yaml'
+
+	if(! (Test-Path "${env:LOCALAPPDATA}\lazygit")) {
+		New-Item -ItemType Directory -Force -Path "${env:LOCALAPPDATA}\lazygit"
+    }
+    m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+
+    #Configuracion por Yazi
+    $l_target_link="${env:APPDATA}\yazi\config\yazi.toml"
+    $l_source_path="${env:USERPROFILE}\.files\etc\yazi"
+    $l_source_filename='yazi_default.toml'
+
+	if(! (Test-Path "${env:APPDATA}\yazi\config")) {
+		New-Item -ItemType Directory -Force -Path "${env:APPDATA}\yazi\config"
+    }
+    m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+    $l_target_link="${env:APPDATA}\yazi\config\keymap.toml"
+    $l_source_path="${env:USERPROFILE}\.files\etc\yazi"
+    $l_source_filename='keymap_default.toml'
+    m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+    $l_target_link="${env:APPDATA}\yazi\config\theme.toml"
+    $l_source_path="${env:USERPROFILE}\.files\etc\yazi"
+    $l_source_filename='theme_default.toml'
+    m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+
+	if(! (Test-Path "${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi")) {
+		New-Item -ItemType Directory -Force -Path "${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi"
+    }
+
+    $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\flavor.toml"
+    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\catppuccin-mocha\flavor.toml"
+    Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
+
+    $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\tmtheme.xml"
+    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\catppuccin-mocha\tmtheme.xml"
+    Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
+
+
+
     #5. Instalar el modulo PSFzf
 
     #Buscar si el modulo esta instado

@@ -4581,6 +4581,12 @@ function _copy_artifact_files() {
             cp "${g_temp_path}/${l_source_path}/completions/_ya.ps1" ${g_repo_path}/shell/powershell/login/autocomplete/ya.ps1
 
 
+            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "flavor.toml" "~/.cofig/yazi/flavors/catppuccin-mocha.yazi/"
+            curl -fLo ${g_repo_path}/etc/yazi/catppuccin-mocha/flavor.toml https://raw.githubusercontent.com/yazi-rs/flavors/main/catppuccin-mocha.yazi/flavor.toml
+
+            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "flavor.toml" "~/.cofig/yazi/flavors/catppuccin-mocha.yazi/"
+            curl -fLo ${g_repo_path}/etc/yazi/catppuccin-mocha/tmtheme.xml  https://raw.githubusercontent.com/yazi-rs/flavors/main/catppuccin-mocha.yazi/tmtheme.xml
+
             if [ $g_runner_is_target_user -ne 0 ]; then
 
                 chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/yazi.bash
@@ -4600,6 +4606,8 @@ function _copy_artifact_files() {
                 chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/others/login/autocomplete/ya.ts
                 chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/powershell/login/autocomplete/ya.ps1
 
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/yazi/catppuccin-mocha/flavor.toml
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/yazi/catppuccin-mocha/tmtheme.xml
             fi
             ;;
 

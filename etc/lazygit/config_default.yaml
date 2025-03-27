@@ -4,6 +4,10 @@
 
 # Config relating to git
 git:
+  theme:
+    lightTheme: false
+    #selectedLineBgColor:
+    #  - reverse
   paging:
     colorArg: always
     pager: delta --dark --paging=never

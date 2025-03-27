@@ -1842,9 +1842,41 @@ function _setup_user_profile() {
     create_folderpath_on_home ".config" "lazygit"
     l_target_link="config.yml"
     l_source_path="${g_repo_name}/etc/lazygit"
-    l_source_filename='config_defualt.yaml'
+    l_source_filename='config_default.yaml'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+
+
+    #Archivo de configuración para Yazi
+    l_target_path=".config/yazi"
+    create_folderpath_on_home ".config" "yazi"
+
+    l_target_link="yazi.toml"
+    l_source_path="${g_repo_name}/etc/yazi"
+    l_source_filename='yazi_default.toml'
+
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+
+    l_target_link="keymap.toml"
+    l_source_path="${g_repo_name}/etc/yazi"
+    l_source_filename='keymap_default.toml'
+
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+
+    l_target_link="theme.toml"
+    l_source_path="${g_repo_name}/etc/yazi"
+    l_source_filename='theme_default.toml'
+
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_ln
+    l_status=$?
+
+    create_folderpath_on_home ".config" "yazi/flavors/catppuccin-mocha.yazi"
+    copy_file_on_home "${g_repo_path}/etc/yazi/catppuccin-mocha" "flavor.toml" ".config/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" 0 "        > "
+    l_status=$?
+    copy_file_on_home "${g_repo_path}/etc/yazi/catppuccin-mocha" "tmtheme.xml" ".config/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" 0 "        > "
     l_status=$?
 
 
