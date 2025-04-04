@@ -61,6 +61,32 @@ list_git_folder() {
 
 }
 
+
+show_sesh_preview() {
+
+    #Incluye el icono y el nombre de la sesion/folder
+    local p_sesh_item="$1"
+
+    #Considerando un folder si inicia con:
+    # '~': '~/.files', ....
+    # '.': './files', '../files', '../../files'
+    # '/': '/etc/alsa'
+    local l_sesh_prefix="${p_sesh_item:2:1}"
+    
+    if [ "$l_sesh_prefix" = '~' ] || [ "$l_sesh_prefix" = '.' ] || [ "$l_sesh_prefix" = '/' ]; then
+
+        local l_sesh_subfix="${p_sesh_item:2}"
+        #TODO: Evitar usar eval obligar la expansion
+        eza --tree --color=always --icons always -L 1 $(eval echo "$l_sesh_subfix") | head -n 300
+        return 0
+
+    fi
+
+    sesh preview "$p_sesh_item"
+
+}
+
+
 #Los parametros debe ser la funcion y los parametros
 "$@"
 

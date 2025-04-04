@@ -214,7 +214,7 @@ t () {
     local l_session_or_path=$(sesh list --icons | fzf $l_fzf_size \
 		--no-sort --ansi --prompt '⚡Session + Zoxide> ' \
         --header "$l_title" \
-        --preview-window 'right:40%' --preview 'sesh preview {}' \
+        --preview-window 'right:40%' --preview "bash ${_g_script_path}/fun_general.bash show_sesh_preview {}" \
 		--bind 'tab:down,btab:up' \
 		--bind 'ctrl-a:change-prompt(⚡Session + Zoxide> )+reload(sesh list --icons)' \
 		--bind 'ctrl-t:change-prompt(🪟 Active sessions> )+reload(sesh list -t --icons)' \
