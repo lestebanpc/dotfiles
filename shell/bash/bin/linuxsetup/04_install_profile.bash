@@ -686,9 +686,9 @@ function _config_developer_vim() {
         #Requiere un compilador C/C++ y NodeJS: https://tree-sitter.github.io/tree-sitter/creating-parsers#installation
         local l_version=$(_get_gcc_version)
         if [ ! -z "$l_version" ]; then
-            printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash%b"\n' \
+            printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall html latex css javascript jq json yaml xml toml typescript proto make sql bash%b"\n' \
                    "$g_color_gray1" "$g_color_reset"
-            nvim --headless -c 'TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash' -c 'qa'
+            nvim --headless -c 'TSInstall html latex css javascript jq json yaml xml toml typescript proto make sql bash' -c 'qa'
 
             printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall java kotlin llvm lua rust swift c cpp go c_sharp%b"\n' \
                    "$g_color_gray1" "$g_color_reset"

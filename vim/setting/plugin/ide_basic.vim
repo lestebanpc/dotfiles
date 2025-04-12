@@ -35,7 +35,7 @@ if g:is_neovim && !g:use_coc_in_nvim
     packadd cmp_luasnip
     
     "Package IDE> Linting, Code Formatting (Fixing) de servidores No-LSP
-    packadd null-ls.nvim
+    "packadd null-ls.nvim
 
     "Package IDE> Lightbulb para Code Actions 
     packadd nvim-lightbulb
