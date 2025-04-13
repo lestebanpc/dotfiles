@@ -84,17 +84,23 @@ vim.keymap.set('n', '<leader>mm', ':lua require("fzf-lua").marks()<CR>', { norem
 --Listar los saltos (jumps), seleccionar e ir
 vim.keymap.set('n', '<leader>jj', ':lua require("fzf-lua").jumps()<CR>', { noremap = true, silent = true })
 
---Generar los tags del proyecto ('ctags -R').
-vim.keymap.set('n', '<leader>tt', ':lua require("fzf-lua").tags()<CR>', { noremap = true, silent = true })
-
---Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
-vim.keymap.set('n', '<leader>tb', ':lua require("fzf-lua").btags()<CR>', { noremap = true, silent = true })
-
 --Listar, Selexionar/Examinar e Ir al buffer
 vim.keymap.set('n', '<leader>bb', ':lua require("fzf-lua").buffers()<CR>', { noremap = true, silent = true })
 
 --Busqueda de archivos del proyecto usando busqueda difuso 'ripgrep'.
 vim.keymap.set('n', '<leader>ff', ':lua require("fzf-lua").grep_project()<CR>', { noremap = true, silent = true })
+
+--Recomendaciones del uso de tags:
+-- - Regenerar los tags cuando realiza cambios ejecutando 'ctags -R' en el folder root del proyecto.
+-- - Crear archivos 'option files' dentro del proyecto (ubicados usualmente carpata './.ctags.d/'),
+--   donde defina las opciones por defecto cuando se ejecuta 'ctags', por ejemplo, coloque los archivos
+--   y carpetas de exclusiion.
+
+--Listar todos los tags del proyecto. (Si no se encuenta el archivo tags, lo genera usando 'ctags -R')
+vim.keymap.set('n', '<leader>tt', ':lua require("fzf-lua").tags()<CR>', { noremap = true, silent = true })
+
+--Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
+vim.keymap.set('n', '<leader>tb', ':lua require("fzf-lua").btags()<CR>', { noremap = true, silent = true })
 
 
 

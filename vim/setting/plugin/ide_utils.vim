@@ -58,21 +58,23 @@ endif
 "###################################################################################
 
 "Plugin IDE> Soporte a Universal CTags
-packadd vim-gutentags
+"packadd vim-gutentags
 
 "let g:gutentags_trace = 1
 "let g:gutentags_ctags_extra_args = ['--tag-relative=always', ]
-let g:gutentags_generate_on_empty_buffer = 1
+
+"let g:gutentags_generate_on_empty_buffer = 1
+
 "let g:gutentags_exclude_filetypes= []
-"let g:gutentags_ctags_exclude = ['build', 'dist', '*css', '*json', '*yaml', '*md', '.venv', '*rst']
-let g:gutentags_ctags_exclude = [
-\   '.git',
-\   'build',
-\   'dist',
-\   'node_modules',
-\   '.venv',
-\   '*swp', '*json', '*yaml', '*toml', '*md', '*css'
-\]
+
+"let g:gutentags_ctags_exclude = [
+"\   '.git',
+"\   'build',
+"\   'dist',
+"\   'node_modules',
+"\   '.venv',
+"\   '*swp', '*json', '*yaml', '*toml', '*md', '*css'
+"\]
 
 
 

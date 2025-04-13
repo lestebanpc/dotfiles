@@ -103,7 +103,11 @@ if !g:is_neovim
       \ 'marker':     ['fg', 'Keyword'],
       \ 'spinner':    ['fg', 'Label'],
       \ 'header':     ['fg', 'Comment'] }
-    
+   
+
+    "let g:fzf_vim.tags_command = 'ctags -R'
+
+
     "Listar archivos del proyecto, Seleccionar/Examinar e Ir
     nnoremap <silent> <leader>ll :Files<CR>
     "Listar archivos del 'Git Files', Seleccionar/Examinar e Ir
@@ -116,16 +120,25 @@ if !g:is_neovim
     nnoremap <silent> <leader>mm :Marks<CR>
     "Listar los saltos (jumps), seleccionar e ir
     nnoremap <silent> <leader>jj :Jumps<CR>
-    "Generar los tags del proyecto ('ctags -R')
-    nnoremap <silent> <leader>mt :Tags<CR>
-    "Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
-    nnoremap <silent> <leader>tt :BTags<CR>
-    
+
     "Listar, Selexionar/Examinar e Ir al buffer
     nnoremap <silent> <leader>bb :Buffers<CR>
     
     "Busqueda de archivos del proyecto usando busqueda difuso 'ripgrep'.
     nnoremap <silent> <leader>ff :Rg<CR>
+
+    "Recomendaciones del uso de tags:
+    " - Regenerar los tags cuando realiza cambios ejecutando 'ctags -R' en el folder root del proyecto.
+    " - Crear archivos 'option files' dentro del proyecto (ubicados usualmente carpata './.ctags.d/'),
+    "   donde defina las opciones por defecto cuando se ejecuta 'ctags', por ejemplo, coloque los archivos
+    "   y carpetas de exclusiion.
+
+    "Listar todos los tags del proyecto. (Si no se encuenta el archivo tags, lo genera usando 'ctags -R')
+    nnoremap <silent> <leader>tt :Tags<CR>
+
+    "Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
+    nnoremap <silent> <leader>tb :BTags<CR>
+    
     
 endif
 
