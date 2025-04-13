@@ -183,7 +183,7 @@ nmap <silent> ]d <Plug>(ale_next)
 nmap <silent> [d <Plug>(ale_previous)
 
 "Habilitar o desabilitar el diagnostico del buffer
-"nmap <silent> <Leader>dd <Plug>(ale_toggle_buffer)
+"nmap <silent> <space>dd <Plug>(ale_toggle_buffer)
 
 
 
@@ -372,23 +372,23 @@ nmap <silent> gu <Plug>(coc-references-used)
 
 
 "h> Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el buffer
-nnoremap <silent><nowait> <Leader>ls :<C-u>CocList outline<cr>
+nnoremap <silent><nowait> <space>ls :<C-u>CocList outline<cr>
 
 "i> Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el workspace
-nnoremap <silent><nowait> <Leader>lw  :<C-u>CocList -I symbols<cr>
+nnoremap <silent><nowait> <space>lw  :<C-u>CocList -I symbols<cr>
 
 "j> Listar, Selecionar (en este caso tambien buscar) e Ir a un 'type' en el proyecto
-"nmap <silent> <buffer> <Leader>lt <Plug>(omnisharp_find_type)
+"nmap <silent> <buffer> <space>lt <Plug>(omnisharp_find_type)
 
 "k> Listar, Selecionar (en este caso tambien buscar) e Ir a un 'members' de las clases asociados al buffer actual
-"nmap <silent> <buffer> <Leader>lm <Plug>(omnisharp_find_members)
+"nmap <silent> <buffer> <space>lm <Plug>(omnisharp_find_members)
 
 
 "3. Diagnostico: Un error y/o warning en el proyecto
 "
 "a> Listar, Selecionar e Ir a un error y/o warning del workspace.
 "   En CoC, se inica su popup 'Fuzzy' (no es un panel vim), la cual se cierra usando '[ESC]'.
-nnoremap <silent><nowait> <Leader>ld  :<C-u>CocList diagnostics<cr>
+nnoremap <silent><nowait> <space>ld  :<C-u>CocList diagnostics<cr>
 
 "b> Navegar en por el los diagnostico del workspace
 "   Usar solos los de definidos en ALE?
@@ -427,12 +427,12 @@ omap ac <Plug>(coc-classobj-a)
 "   NOTE : Requires 'textDocument/selectionRange' support of language server.
 
 "Select range forward (Expand Selection)
-nmap <silent> <Leader>se <Plug>(coc-range-select)
-xmap <silent> <Leader>se <Plug>(coc-range-select)
+nmap <silent> <space>se <Plug>(coc-range-select)
+xmap <silent> <space>se <Plug>(coc-range-select)
 
 "Select range backward (Shrink Selection)
-nmap <silent> <Leader>ss <Plug>(coc-range-select)
-xmap <silent> <Leader>ss <Plug>(coc-range-select)
+nmap <silent> <space>ss <Plug>(coc-range-select)
+xmap <silent> <space>ss <Plug>(coc-range-select)
 
 
 "-----------------------------------------------------------------------------------
@@ -440,8 +440,8 @@ xmap <silent> <Leader>ss <Plug>(coc-range-select)
 "-----------------------------------------------------------------------------------
 
 "1. Formateo de una selección/buffer (Acciones personalizadas VIM)
-xmap <Leader>cf  <Plug>(coc-format-selected)
-nmap <Leader>cf  <Plug>(coc-format-selected)
+xmap <space>cf  <Plug>(coc-format-selected)
+nmap <space>cf  <Plug>(coc-format-selected)
 
 
 "2. Formateo del buffer ':Format' (Comando personalizado de VIM)
@@ -456,30 +456,30 @@ command! -nargs=0 Format :call CocActionAsync('format')
 "1. Code Actions > All (Listar, seleccionar y ejecutar)
 
 "a>  Listar, seleccionar y ejecutar un 'Code Actions' existentes en del buffer actual.
-nmap <Leader>ab  <Plug>(coc-codeaction)
+nmap <space>ab  <Plug>(coc-codeaction)
 
 "b> Listar, seleccionar y ejecutar un 'Code Actions' existentes en la linea actual.
-nmap <Leader>al  <Plug>(coc-codeaction-line)
+nmap <space>al  <Plug>(coc-codeaction-line)
 
 "c> Listar, seleccionar y ejecutar un 'Code Actions' existente en el prompt actual.
-nmap <Leader>ap  <Plug>(coc-codeaction-cursor)
+nmap <space>ap  <Plug>(coc-codeaction-cursor)
 
 "d> Listar, seleccionar y ejecutar un 'Code Actions' existente que pueden aplicar a todo una region/selección actual.
-xmap <Leader>ac  <Plug>(coc-codeaction-selected)
-nmap <Leader>ac  <Plug>(coc-codeaction-selected)
+xmap <space>ar  <Plug>(coc-codeaction-selected)
+nmap <space>ar  <Plug>(coc-codeaction-selected)
 
 
 "2. Code Actions > Refactoring (Listar, seleccionar y ejecutar)
 
 "a> Listar, seleccionar y ejecutar un 'Refactoring' de existente en el prompt actual.
-nmap <Leader>rp  <Plug>(coc-codeaction-refactor)
+nmap <space>rp  <Plug>(coc-codeaction-refactor)
 
 "b> Listar, seleccionar y ejecutar un 'Refactoring' existente que puede aplicar a todo un rango selecionado.
-xmap <Leader>rr  <Plug>(coc-codeaction-refactor-selected)
-nmap <Leader>rr  <Plug>(coc-codeaction-refactor-selected)
+xmap <space>rr  <Plug>(coc-codeaction-refactor-selected)
+nmap <space>rr  <Plug>(coc-codeaction-refactor-selected)
 
 "c> Listar,  seleccionar y ejecutar un 'Refactoring' de todo el archivo (buffer).
-nmap <Leader>rb  <Plug>(coc-codeaction-source)
+nmap <space>rb  <Plug>(coc-codeaction-source)
 
 
 "3. Code Actions > Ejecutar un 'Code Fix'
@@ -487,7 +487,7 @@ nmap <Leader>rb  <Plug>(coc-codeaction-source)
 nnoremap <silent> fi :call CocAction('organizeImport')<CR>
 
 "b> Acción de reparación: Acción de repación rapida
-nmap <Leader>fx  <Plug>(coc-fix-current)
+nmap <space>fx  <Plug>(coc-fix-current)
 
 
 "Do default action for next item.
@@ -502,7 +502,7 @@ nmap <Leader>fx  <Plug>(coc-fix-current)
 "-----------------------------------------------------------------------------------
 
 "1. Renombrar un simbolo.
-nmap <Leader>rn <Plug>(coc-rename)
+nmap <space>rn <Plug>(coc-rename)
 
 
 
@@ -518,10 +518,10 @@ command! -nargs=? Fold   :call CocAction('fold', <f-args>)
 command! -nargs=0 OR     :call CocActionAsync('runCommand', 'editor.action.organizeImport')
 
 "2. Open link under cursor
-nmap <Leader>ol <Plug>(coc-openlink)
+nmap <space>ol <Plug>(coc-openlink)
 
 "3. CodeLens: Listas, Selecionar y Ejecutar acciones personalizadas asociadas a una linea:
-nmap <Leader>le <Plug>(coc-codelens-action)
+nmap <space>le <Plug>(coc-codelens-action)
 
 "-----------------------------------------------------------------------------------
 " CoC> IDE>  Integración con barra de estado (Status Line)
@@ -537,10 +537,10 @@ set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 
 "Mappings for CoCList
 "Manage extensions.
-nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
+nnoremap <silent><nowait> <space>ee  :<C-u>CocList extensions<cr>
 
 "Show commands.
-nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
+nnoremap <silent><nowait> <space>cc  :<C-u>CocList commands<cr>
 
 "Resume latest coc list.
 "nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>

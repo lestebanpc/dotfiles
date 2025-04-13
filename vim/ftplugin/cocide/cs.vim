@@ -28,8 +28,8 @@ nmap <silent> <buffer> K <Plug>(omnisharp_documentation)
 "Popup de Vista Previa (Preview Popup)
 "
 " > Mostrar el 'Preview Popup'
-nmap <silent> <buffer> <Leader>pd <Plug>(omnisharp_preview_definition)
-nmap <silent> <buffer> <Leader>pi <Plug>(omnisharp_preview_implementations)
+nmap <silent> <buffer> <space>pd <Plug>(omnisharp_preview_definition)
+nmap <silent> <buffer> <space>pi <Plug>(omnisharp_preview_implementations)
 
 "
 " > Mostrar el 'Signature Help'
@@ -41,10 +41,10 @@ imap <silent> <buffer> <C-\> <Plug>(omnisharp_signature_help)
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "
 " > Mostrar el tipo del simbolo en la 'Barra de estado'
-nmap <silent> <buffer> <Leader>ty <Plug>(omnisharp_type_lookup)
+nmap <silent> <buffer> <space>ty <Plug>(omnisharp_type_lookup)
 
 "¿?
-"nmap <silent> <buffer> <Leader>hi <Plug>(omnisharp_highlight_type)
+"nmap <silent> <buffer> <space>hi <Plug>(omnisharp_highlight_type)
 
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -72,17 +72,17 @@ nmap <silent> <buffer> gi <Plug>(omnisharp_find_implementations)
 nmap <silent> <buffer> gu <Plug>(omnisharp_find_usages)
 
 " > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el proyecto
-nmap <silent> <buffer> <Leader>ls <Plug>(omnisharp_find_symbol)
+nmap <silent> <buffer> <space>ls <Plug>(omnisharp_find_symbol)
 
 " > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'type' en el proyecto
-nmap <silent> <buffer> <Leader>lt <Plug>(omnisharp_find_type)
+nmap <silent> <buffer> <space>lt <Plug>(omnisharp_find_type)
 
 " > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'members' de las clases asociados al buffer actual
-nmap <silent> <buffer> <Leader>lm <Plug>(omnisharp_find_members)
+nmap <silent> <buffer> <space>lm <Plug>(omnisharp_find_members)
 
 " > Listar, Selecionar e Ir a un error y/o warning en el proyecto ('Diagnostic')
 "   Muestra un panel vim 'QuickFix' la cual se puede cerrar usando ':close'
-nmap <silent> <buffer> <Leader>ld <Plug>(omnisharp_global_code_check)
+nmap <silent> <buffer> <space>ld <Plug>(omnisharp_global_code_check)
 
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -90,14 +90,14 @@ nmap <silent> <buffer> <Leader>ld <Plug>(omnisharp_global_code_check)
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "
 "Formatear el codigo del buffer actual
-nmap <silent> <buffer> <Leader>cf <Plug>(omnisharp_code_format)
+nmap <silent> <buffer> <space>cf <Plug>(omnisharp_code_format)
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "2.5. Asociados al 'Refactoring'
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "
 " > Renombrar un simbolo
-nmap <silent> <buffer> <Leader>rn <Plug>(omnisharp_rename)
+nmap <silent> <buffer> <space>rn <Plug>(omnisharp_rename)
 
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -108,18 +108,18 @@ nmap <silent> <buffer> <Leader>rn <Plug>(omnisharp_rename)
 "   Muestra un popup fzf la cual se puede cerrar usando '[ESC]'
 
 "   > Listar, seleccionar y ejecutar un 'Code Actions' existentes en la linea actual.
-nmap <silent> <buffer> <Leader>al <Plug>(omnisharp_code_actions)
+nmap <silent> <buffer> <space>al <Plug>(omnisharp_code_actions)
 
 "   > Listar, seleccionar y ejecutar un 'Code Actions' existentes que aplican a un rango de codigo selecionado.
-xmap <silent> <buffer> <Leader>ar <Plug>(omnisharp_code_actions)
+xmap <silent> <buffer> <space>ar <Plug>(omnisharp_code_actions)
 
 "   > Repetir el ultima 'Code Actions' ejecutado
-nmap <silent> <buffer> <Leader>a. <Plug>(omnisharp_code_action_repeat)
-xmap <silent> <buffer> <Leader>a. <Plug>(omnisharp_code_action_repeat)
+nmap <silent> <buffer> <space>a. <Plug>(omnisharp_code_action_repeat)
+xmap <silent> <buffer> <space>a. <Plug>(omnisharp_code_action_repeat)
 
 "3. Code Actions > Ejecutar un 'Code Fix'
 "   > Acción de reparación:  Organización y/o reparar las refencias de importaciones usadas por el archivo
-nmap <silent> <buffer> <Leader>fi <Plug>(omnisharp_fix_usings)
+nmap <silent> <buffer> <space>fi <Plug>(omnisharp_fix_usings)
 
 
 
@@ -128,11 +128,11 @@ nmap <silent> <buffer> <Leader>fi <Plug>(omnisharp_fix_usings)
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 "Restart server (Omnisharp/Roslyn)
-nmap <silent> <buffer> <Leader>or <Plug>(omnisharp_restart_server)
+nmap <silent> <buffer> <space>or <Plug>(omnisharp_restart_server)
 "Start server (Omnisharp/Roslyn)
-nmap <silent> <buffer> <Leader>os <Plug>(omnisharp_start_server)
+nmap <silent> <buffer> <space>os <Plug>(omnisharp_start_server)
 "Stop/Down server (Omnisharp/Roslyn)
-nmap <silent> <buffer> <Leader>od <Plug>(omnisharp_stop_server)
+nmap <silent> <buffer> <space>od <Plug>(omnisharp_stop_server)
 
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -140,17 +140,17 @@ nmap <silent> <buffer> <Leader>od <Plug>(omnisharp_stop_server)
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "
 "Unit test : Build en Debug, Run en Debug hasta el prompt actual.
-nmap <silent> <buffer> <Leader>dbp <Plug>(omnisharp_debug_test)
+nmap <silent> <buffer> <space>dbp <Plug>(omnisharp_debug_test)
 "Unit test : Run en Debug el hasta el prompt actual.
-nmap <silent> <buffer> <Leader>drp <Plug>(omnisharp_debug_test_no_build)
+nmap <silent> <buffer> <space>drp <Plug>(omnisharp_debug_test_no_build)
 "Unit test : Build en Release, Run en Release hasta el prompt actual.
-nmap <silent> <buffer> <Leader>rbp <Plug>(omnisharp_run_test)
+nmap <silent> <buffer> <space>rbp <Plug>(omnisharp_run_test)
 "Unit test : Run en Release hasta el prompt actual.
-nmap <silent> <buffer> <Leader>rrp <Plug>(omnisharp_run_test_no_build)
+nmap <silent> <buffer> <space>rrp <Plug>(omnisharp_run_test_no_build)
 "Unit test : Build en Release, Run en Release del File actual.
-nmap <silent> <buffer> <Leader>rbf <Plug>(omnisharp_run_tests_in_file)
+nmap <silent> <buffer> <space>rbf <Plug>(omnisharp_run_tests_in_file)
 "Unit test : Run en Release del File actual.
-nmap <silent> <buffer> <Leader>rrf <Plug>(omnisharp_run_tests_in_file_no_build)
+nmap <silent> <buffer> <space>rrf <Plug>(omnisharp_run_tests_in_file_no_build)
 
 "--------------------------------------------------------------------------------
 "3. Fuente de diagnostico para ALE

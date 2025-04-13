@@ -106,13 +106,13 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- 3. Listar, Seleccionar e Ir 
 
         -- > Listar, Seleccionar e Ir a un 'symbol' en el buffer.
-        vim.keymap.set('n', '<Leader>ls', '<cmd>lua vim.lsp.buf.document_symbol()<cr>', opts)
+        vim.keymap.set('n', '<space>ls', '<cmd>lua vim.lsp.buf.document_symbol()<cr>', opts)
 
         -- > Diagnostico: Listar, Seleccionar e Ir un diagnóstico (error y/o warning) del workspace (Telescope)
-        vim.keymap.set('n', '<Leader>ld', '<cmd>Telescope diagnostics<CR>', opts)
+        vim.keymap.set('n', '<space>ld', '<cmd>Telescope diagnostics<CR>', opts)
 
         -- > Diagnostico: Listar, Seleccionar e Ir a un diagnósticos de la línea actual
-        vim.keymap.set('n', '<Leader>dl', '<cmd>lua vim.diagnostic.open_float()<cr>', opts)
+        vim.keymap.set('n', '<space>dl', '<cmd>lua vim.diagnostic.open_float()<cr>', opts)
 
         -- > Diagnostico: Ir al siguiente diagnostico desde la posicion actual y dentro del buffer
         vim.keymap.set('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<cr>', opts)
@@ -126,14 +126,14 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- ---------------------------------------------------------------------------------------------
         
         -- Formateo del codigo
-        vim.keymap.set('n', '<Leader>cf', '<cmd>lua vim.lsp.buf.formatting()<cr>', opts)
+        vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.formatting()<cr>', opts)
         --Neovim 0.7 - timeout 2 segundos
-        --vim.keymap.set('n', '<Leader>cf', '<cmd>lua vim.lsp.buf.formatting_sync(nil, 2000)<cr>', opts)
+        --vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.formatting_sync(nil, 2000)<cr>', opts)
         --Neovim 0.8 - timeout 2 segundos
-        --vim.keymap.set('n', '<Leader>cf', '<cmd>lua vim.lsp.buf.format({ timeout_ms = 2000 })<cr>', opts)
+        --vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.format({ timeout_ms = 2000 })<cr>', opts)
 
         -- Formateo del codigo de rango seleccionado
-        vim.keymap.set('x', '<Leader>cf', '<cmd>lua vim.lsp.buf.range_formatting()<CR>', opts)
+        vim.keymap.set('x', '<space>cf', '<cmd>lua vim.lsp.buf.range_formatting()<CR>', opts)
 
 
         -- ---------------------------------------------------------------------------------------------
@@ -141,8 +141,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- ---------------------------------------------------------------------------------------------
         
         -- Acciones relacionados al 'Workspace' (proyecto)
-        vim.keymap.set('n', '<Leader>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
-        vim.keymap.set('n', '<Leader>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
+        vim.keymap.set('n', '<space>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
+        vim.keymap.set('n', '<space>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
         
 
         -- ---------------------------------------------------------------------------------------------
@@ -150,12 +150,12 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- ---------------------------------------------------------------------------------------------
         
         -- 'Code Actions' > Listar, Selecionar e Ir a 'Code Actions' disponibles en la posición del cursor
-        vim.keymap.set('n', '<Leader>al', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
-        --vim.keymap.set('x', '<Leader>ac', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', opts)
-        --vim.keymap.set('n', '<Leader>ac', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', opts)
+        vim.keymap.set('n', '<space>al', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
+        --vim.keymap.set('x', '<space>ar', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', opts)
+        --vim.keymap.set('n', '<space>ar', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', opts)
 
         -- Renombrar símbolo
-        vim.keymap.set('n', '<Leader>rn', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
+        vim.keymap.set('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
 
         
         -- ---------------------------------------------------------------------------------------------

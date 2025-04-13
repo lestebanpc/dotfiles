@@ -38,7 +38,7 @@ if g:has_python3
     packadd vimspector
 
     "Key-mappings adicionales al por defecto (se usa 'HUMAM')
-    nnoremap <Leader><F4> :call vimspector#Reset()<CR>
+    nnoremap <space><F4> :call vimspector#Reset()<CR>
 
     "nmap <F5>         <Plug>VimspectorContinue
     "nmap <leader><F5> <Plug>VimspectorLaunch

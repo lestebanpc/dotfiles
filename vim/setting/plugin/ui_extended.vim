@@ -116,10 +116,10 @@ if !g:is_neovim
     nnoremap <silent> <leader>mm :Marks<CR>
     "Listar los saltos (jumps), seleccionar e ir
     nnoremap <silent> <leader>jj :Jumps<CR>
-    "Listar los tags (generados por ctags) del proyecto ('ctags -R'), seleccionar e ir
-    nnoremap <silent> <leader>tt :Tags<CR>
+    "Generar los tags del proyecto ('ctags -R')
+    nnoremap <silent> <leader>mt :Tags<CR>
     "Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
-    nnoremap <silent> <leader>tb :BTags<CR>
+    nnoremap <silent> <leader>tt :BTags<CR>
     
     "Listar, Selexionar/Examinar e Ir al buffer
     nnoremap <silent> <leader>bb :Buffers<CR>

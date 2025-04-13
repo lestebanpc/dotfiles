@@ -135,24 +135,24 @@ dap.listeners.before.event_exited["dapui_config"] = function()
 local opts = { noremap = true, silent = true }
 
 vim.keymap.set("n", "<F5>", "<cmd>lua require('dap').continue()<CR>", opts)
-vim.keymap.set("n", "<Leader><F4>", "<cmd>lua require('dap').terminate()<CR>", opts)
+vim.keymap.set("n", "<space><F4>", "<cmd>lua require('dap').terminate()<CR>", opts)
 
 vim.keymap.set("n", "<F9>", "<cmd>lua require('dap').toggle_breakpoint()<CR>", opts)
-vim.keymap.set("n", "<Leader><F9>", "<cmd>lua require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>", opts)
---vim.keymap.set("n", "<Leader><F9>", "<cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>", opts)
+vim.keymap.set("n", "<space><F9>", "<cmd>lua require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>", opts)
+--vim.keymap.set("n", "<space><F9>", "<cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>", opts)
 
-vim.keymap.set("n", "<Leader><F8>", "<cmd>lua require('dap').run_to_cursor()<CR>", opts)
-vim.keymap.set("n", "<Leader><F10>", "<cmd>lua require('dap').step_over()<CR>", opts)
-vim.keymap.set("n", "<Leader><F11>", "<cmd>lua require('dap').step_into()<CR>", opts)
-vim.keymap.set("n", "<Leader><F12>", "<cmd>lua require('dap').step_out()<CR>", opts)
+vim.keymap.set("n", "<space><F8>", "<cmd>lua require('dap').run_to_cursor()<CR>", opts)
+vim.keymap.set("n", "<space><F10>", "<cmd>lua require('dap').step_over()<CR>", opts)
+vim.keymap.set("n", "<space><F11>", "<cmd>lua require('dap').step_into()<CR>", opts)
+vim.keymap.set("n", "<space><F12>", "<cmd>lua require('dap').step_out()<CR>", opts)
 
---vim.keymap.set("n", "<Leader>dh", "<cmd>lua require('dapui').eval()<CR>", opts)
+--vim.keymap.set("n", "<space>dh", "<cmd>lua require('dapui').eval()<CR>", opts)
 
 
 --Open a REPL / Debug-console.
---nnoremap <Leader>dr <Cmd>lua require('dap').repl.open()<CR>
+--nnoremap <space>dr <Cmd>lua require('dap').repl.open()<CR>
 --Re-runs the last debug adapter / configuration that ran using
---noremap <Leader>dl <Cmd>lua require('dap').run_last()<CR>
+--noremap <space>dl <Cmd>lua require('dap').run_last()<CR>
 
 
 
