@@ -1,0 +1,32 @@
+# Esto se evalua por cada directorio de analisis (si usa 'ctags -R' se evalua en el directorio actual y en los subdirectorios).
+
+# Excluyendo archivos
+--exclude=*.md
+--exclude=*.swp
+--exclude=*.swo
+--exclude=*.yaml
+--exclude=*.json
+--exclude=*.css
+--exclude=*.tmux
+--exclude=*.conf
+
+# Excluyendo todos los archivos y carpetas ocultas
+--exclude='.*'
+
+# Excluyendo carpetas
+--exclude=etc
+--exclude=vim/fixes
+--exclude=shell/sh/login/autocomplete
+--exclude=shell/sh/login/keybindings
+--exclude=shell/bash/login/autocomplete
+--exclude=shell/bash/login/keybindings
+--exclude=shell/zsh/login/autocomplete
+--exclude=shell/zsh/login/keybindings
+--exclude=shell/fish/login/autocomplete
+--exclude=shell/fish/login/keybindings
+--exclude=shell/powershell/login/autocomplete
+--exclude=shell/powershell/hlogin/keybindings
+--exclude=shell/others/login/autocomplete
+--exclude=shell/others/hlogin/keybindings
+
+
