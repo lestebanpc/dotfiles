@@ -165,7 +165,7 @@
           "template": " {{ if gt .Code 0 }}\uf467{{ else }}\uf42e{{ end }}",
           "foreground": "#ffffff",
           "powerline_symbol": "\ue0b0",
-          "background": "#522e58",
+          "background": "#5b4600",
           "type": "status",
           "style": "diamond",
           "background_templates": ["{{ if gt .Code 0 }}red{{ end }}"]
@@ -181,7 +181,7 @@
             "cache_duration": "none"
           },
           "template": "\ue3bf ",
-          "foreground": "#574b90",
+          "foreground": "#fdb13f",
           "type": "root",
           "style": "plain"
         },
@@ -189,8 +189,8 @@
           "properties": {
             "cache_duration": "none"
           },
-          "template": "<#522e58>\udb81\uded5</> {{.UserName}} <#522e58>❯</>",
-          "foreground": "#574b90",
+          "template": "<#5b4600>\udb81\uded5</> {{.UserName}} <#5b4600>❯</>",
+          "foreground": "#fdb13f",
           "type": "text",
           "style": "plain"
         }

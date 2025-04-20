@@ -181,7 +181,7 @@
             "cache_duration": "none"
           },
           "template": "\ue3bf ",
-          "foreground": "#cd5e42",
+          "foreground": "#239b5d",
           "type": "root",
           "style": "plain"
         },
@@ -189,7 +189,7 @@
           "properties": {
             "cache_duration": "none"
           },
-          "template": "<#0b6a3c>\udb81\uded5</> {{if .Root}}<#cd5e42>{{.UserName}}</>{{else}}{{.UserName}}{{end}} <#0b6a3c>❯</>",
+          "template": "<#0b6a3c>\udb81\uded5</> {{.UserName}} <#0b6a3c>❯</>",
           "foreground": "#239b5d",
           "type": "text",
           "style": "plain"
