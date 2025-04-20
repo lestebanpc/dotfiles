@@ -1909,7 +1909,11 @@ function _setup_user_profile() {
            "$g_color_gray1" "$g_color_reset"
 
     #Archivo de configuración de Oh-My-Posh
-    copy_file_on_home "${g_repo_path}/etc/oh-my-posh" "lepc-montys-1.omp.json" "${g_repo_name}/etc/oh-my-posh" "default_settings.json" 1 "        > "
+    if [ $g_runner_id -eq 0 ] || [ $g_runner_is_target_user -eq 0 ]; then
+        copy_file_on_home "${g_repo_path}/etc/oh-my-posh" "lepc-montys-purple1.json" "${g_repo_name}/etc/oh-my-posh" "default_settings.json" 1 "        > "
+    else
+        copy_file_on_home "${g_repo_path}/etc/oh-my-posh" "lepc-montys-cyan1.json" "${g_repo_name}/etc/oh-my-posh" "default_settings.json" 1 "        > "
+    fi
     l_status=$?
     printf 'Profile > Edite los archivos "%b%s%b" si desea personalizar las opciones de oh-my-posh\n' \
            "$g_color_gray1" "~/.config/etc/oh-my-posh/defaut_settings.json" "$g_color_reset"

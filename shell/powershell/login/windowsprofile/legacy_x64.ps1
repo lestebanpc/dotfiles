@@ -14,7 +14,7 @@ if(-not ${g_repo_name}) {
 
 # Tema por defecto de Oh-My-Posh:
 if((-not ${g_prompt_theme}) -or (Test-Path "$g_prompt_theme")) {
-    $g_prompt_theme= "${env:USERPROFILE}/${g_repo_name}/etc/oh-my-posh/lepc-montys-1.omp.json"
+    $g_prompt_theme= "${env:USERPROFILE}/${g_repo_name}/etc/oh-my-posh/default_settings.json"
 }
 
 # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).

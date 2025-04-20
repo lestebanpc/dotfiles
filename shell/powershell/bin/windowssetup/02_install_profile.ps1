@@ -839,6 +839,18 @@ function m_setup_profile($l_overwrite_ln_flag) {
 	#	New-Item -ItemType Directory -Force -Path "${g_win_base_path}\prgs\wezterm\wezterm_modules"
     #}
 	
+    if(! (Test-Path "${env:USERPROFILE}\.files\etc\default_settings.json" )) {
+		Write-Host "            > Creando el archivo '${env:USERPROFILE}\.files\etc\default_settings.json' ..."
+        Copy-Item -Path "${env:USERPROFILE}\.files\etc\lepc-montys-cyan1.json" "${env:USERPROFILE}\.files\etc\default_settings.json"
+        
+        Write-Host "            > Edite '${env:USERPROFILE}\.files\etc\default_settings.json' si desea modificar las opciones Wezterm."
+	}
+    else {
+        Write-Host "            > Edite '${env:USERPROFILE}\.files\etc\default_settings.json' si desea modificar las opciones Wezterm."
+    }
+
+
+
     if(! (Test-Path "${env:USERPROFILE}\.config\wezterm\config.lua" )) {
 		Write-Host "            > Creando el archivo '${env:USERPROFILE}\.config\wezterm\config.lua' ..."
         Copy-Item -Path "${env:USERPROFILE}\.files\wezterm\windows_config_template.lua" -Destination "${env:USERPROFILE}\.config\wezterm\config.lua"
@@ -848,6 +860,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
     else {
         Write-Host "            > Edite '${env:USERPROFILE}\.config\wezterm\config.lua' si desea modificar las opciones Wezterm."
     }
+
 
     #Creando el profile del interprete shell
     #$l_target_link="${HOME}\.bashrc"
