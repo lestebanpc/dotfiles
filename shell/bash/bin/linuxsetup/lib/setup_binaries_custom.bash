@@ -5567,8 +5567,8 @@ function _copy_artifact_files() {
 
 
             #3. Configurar: Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "containerd-shim" 0 1
-            copy_binary_on_command "${l_source_path}" "containerd-shim-runc-v1" 0 1
+            #copy_binary_on_command "${l_source_path}" "containerd-shim" 0 1
+            #copy_binary_on_command "${l_source_path}" "containerd-shim-runc-v1" 0 1
             copy_binary_on_command "${l_source_path}" "containerd-shim-runc-v2" 0 1
             copy_binary_on_command "${l_source_path}" "containerd-stress" 0 1
             copy_binary_on_command "${l_source_path}" "ctr" 0 1
