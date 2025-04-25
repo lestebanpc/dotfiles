@@ -252,6 +252,8 @@ local select_opts = {behavior = cmp.SelectBehavior.Select}
 
 cmp.setup({
 
+    --preselect = cmp.PreselectMode.None,
+
     --Configuracion de los Snippets
     snippet = {
         --Expansion de un snippets
@@ -287,32 +289,32 @@ cmp.setup({
         format = function(entry, item)
                 --Iconos de tipo de item
                 local kind_icons = {
-                    Class = "ﴯ",
-                    Color = "",
-                    Constant = "",
-                    Constructor = "",
-                    Enum = "",
-                    EnumMember = "",
-                    Event = "",
-                    Field = "",
-                    File = "",
-                    Folder = "",
-                    Function = "",
-                    Interface = "",
-                    Keyword = "",
-                    Method = "",
-                    Module = "",
-                    Operator = "",
-                    Property = "ﰠ",
-                    Reference = "",
-                    Snippet = "",
-                    Struct = "",
-                    Text = "",
-                    TypeParameter = "",
-                    Unit = "",
-                    Value = "",
-                    Variable = "",
-                }
+                     Text = " ",
+                     Method = "󰆧 ",
+                     Function = "󰊕 ",
+                     Constructor = " ",
+                     Field = "󰇽 ",
+                     Variable = "󰂡 ",
+                     Class = "󰠱 ",
+                     Interface = " ",
+                     Module = " ",
+                     Property = "󰜢 ",
+                     Unit = " ",
+                     Value = "󰎠 ",
+                     Enum = " ",
+                     Keyword = "󰌋 ",
+                     Snippet = " ",
+                     Color = "󰏘 ",
+                     File = "󰈙 ",
+                     Reference = " ",
+                     Folder = "󰉋 ",
+                     EnumMember = " ",
+                     Constant = "󰏿 ",
+                     Struct = " ",
+                     Event = " ",
+                     Operator = "󰆕 ",
+                     TypeParameter = "󰅲 ",
+               }
                 
                 --Mostrar tipo de elemento con su icono antepuesto (concetenadolo)
                 item.kind = string.format("%s %s", kind_icons[item.kind], item.kind)
