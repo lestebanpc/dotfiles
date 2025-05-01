@@ -22,7 +22,7 @@
 "     USE_EDITOR=1 nvim
 "   > La limitacion del ultimo caso es que los no plugins filetypes de modo editor no se cargaran
 " 
-" Para NeoVIM, el script de instalacion crea link de archivos/carpetas en su runtimepath por defecto:
+" Para VIM/NeoVIM, el script de instalacion crea link de archivos/carpetas en su runtimepath por defecto:
 "  ~/vimrc                   (VIM)
 "      Archivo de inicialización de VIM
 "      > En modo IDE, es un enlace simbolico a '~/.files/vim/vimrc_ide.vim' 
@@ -103,24 +103,17 @@ let g:use_typing_visual_multi = get(g:, 'use_typing_visual_multi', 0)
 " Si cambia este valor, recargar/cerrar VIM para volver a cargar los plugin.
 let g:use_ai_plugins = get(g:, 'use_ai_plugins', 1)
 
-" Ruta base para los servidores LSP y DAP. Los valores por defecto son:
-" En Linux :
-"   > Path base del LSP Server : '/var/opt/tools/lsp_servers'
-"   > Path base del DAP Server : '/var/opt/tools/dap_servers'
-" En Windows :
-"   > Path base del LSP Server : 'c:/cli/prgs/lsp_servers'
-"   > Path base del DAP Server : 'c:/cli/prgs/dap_servers'
-" Modiquelo si desea cambiar ese valor.
-let g:home_path_lsp_server = get(g:, 'home_path_lsp_server', '/var/opt/tools/lsp_servers')
-"let g:home_path_lsp_server = get(g:, 'home_path_lsp_server', 'c:/cli/prgs/lsp_servers')
-let g:home_path_dap_server = get(g:, 'home_path_dap_server', '/var/opt/tools/dap_servers')
-"let g:home_path_dap_server = get(g:, 'home_path_dap_server', 'c:/cli/prgs/dap_servers')
-
-" Solo para Linux WSL donde Rosalyn tambien esta instalado en Windows.
-" Si es 1 ('true'), se re-usara el LSP Server C# (Roslyn) instalado en Windows.
-" Valor '0' es considerado 'false', otro valor es considerado 'true'.
-" Su valor por defecto es 0 ('false').
-let g:using_lsp_server_cs_win = get(g:, 'using_lsp_server_cs_win', 0)
+" Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.
+" Sus valores por defecto son:
+"   > En Linux   : '/var/opt/tools'
+"   > En Windows : 'c:/cli/prgs'
+" Dentro de esta ruta se debe encontrar (entre otros) los subfolderes:
+"   > Ruta base donde estan los LSP Server            : './lsp_servers/'
+"   > Ruta base donde estan los DAP Server            : './dap_servers/'
+"   > Ruta base donde estan las extensiones de vscode : './vsc_extensions/'
+" Modiquelo si desea cambiar ese valor el valor por defecto.
+let g:programs_base_path = get(g:, 'programs_base_path', '/var/opt/tools')
+"let g:programs_base_path = get(g:, 'programs_base_path', 'c:/cli/prgs')
 
 
 
@@ -140,11 +133,11 @@ runtime setting/setting_basic.vim
 " Setup plugins basicos
 "#########################################################################################################
 
-"StatusLine, TabLine, TMUX, ...
-runtime setting/plugin/ui_basic.vim
+" StatusLine, TabLine, TMUX, ...
+runtime setting/ui/ui_basic.vim
 
-"Utilitarios basicos: FZF, NERDTree, ...
-runtime setting/plugin/ui_extended.vim
+" Utilitarios basicos: FZF, NERDTree, ...
+runtime setting/ui/ui_extended.vim
 
 
 "#########################################################################################################
@@ -155,22 +148,18 @@ if !g:use_ide
     finish
 endif
 
-"Setting Typing del IDE:
-runtime setting/plugin/ide_utils.vim
+" Setting Typing del IDE:
+runtime setting/ide/ide_utils.vim
 
-"Setting IDE Core : Diagnostic (Linting y Fixing), LSP client, Completition, ...
-"En VIM se define:
+" Setting IDE Core : Diagnostic (Linting y Fixing), LSP client, Completition, ...
+" En VIM se define:
 "   - Diagnostico : ALE
 "   - Interprese Lenguage Server (incluye LSP server) y Completition : CoC.nvim
 "   - Snippets : UltiSnippets
-runtime setting/plugin/ide_basic.vim
+runtime setting/ide/ide_basic.vim
 
-"Adaptadores de Lenguajes personalizados: C# (OmniSharp)
-"Implementa :
-"   - LSO cliente para LSP server Roslyn
-"   - Source para ALE linting (Linter para C#)
-"   - Source de autocompletado para Coc (y otros motores de autocompletado
-"   - Source para UltiSnippets
-runtime setting/plugin/ide_lsp_cs.vim
+" Adaptadores de Lenguajes personalizados
+" Por ejemplo: adaptador LSP para C# (OmniSharp)
+runtime setting/ide/ide_adapters.vim
 
 

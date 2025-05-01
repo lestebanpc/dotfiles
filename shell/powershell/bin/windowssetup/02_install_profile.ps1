@@ -56,6 +56,8 @@ $gd_repos_type= @{
         'nvim-neotest/nvim-nio'=4
         'theHamsta/nvim-dap-virtual-text'= 4
         'rcarriga/nvim-dap-ui'= 4
+        'seblyng/roslyn.nvim'=4
+        'mfussenegger/nvim-jdtls'=4
         'github/copilot.vim'= 4
         'stevearc/dressing.nvim'= 4
         'MunifTanjim/nui.nvim'= 4
@@ -98,6 +100,8 @@ $gd_repos_scope= @{
         'mfussenegger/nvim-dap'= 2
         'theHamsta/nvim-dap-virtual-text'= 2
         'rcarriga/nvim-dap-ui'= 2
+        'seblyng/roslyn.nvim'=2
+        'mfussenegger/nvim-jdtls'=2
         'stevearc/dressing.nvim'= 2
         'MunifTanjim/nui.nvim'= 2
         'MeanderingProgrammer/render-markdown.nvim'= 2
@@ -597,6 +601,14 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
         $l_target_link="${env:LOCALAPPDATA}\nvim\rte_nativeide\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\nvim\ftplugin\nativeide"
         m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
+
+
+        #Creando la carpeta base para los metadata de los proyecto usados por el LSP JDTLS
+    	if(! (Test-Path "${env:APPDATA}\eclipse\jdtls")) {
+	    	New-Item -ItemType Directory -Force -Path "${env:APPDATA}\eclipse\jdtls"
+        }
+	
+
 		
 	}
     #Configurar NeoVIM como Editor
@@ -960,6 +972,8 @@ function m_setup_profile($l_overwrite_ln_flag) {
     $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\tmtheme.xml"
     $l_source_path="${env:USERPROFILE}\.files\etc\yazi\catppuccin-mocha\tmtheme.xml"
     Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
+
+
 
 
 

@@ -364,7 +364,12 @@ function _download_artifacts() {
     local p_repo_id="$1"
     declare -nr pnra_artifact_baseurl=$2
     declare -nr pnra_artifact_names=$3   #Parametro por referencia: Arreglo de los nombres de los artefactos
-    local p_arti_subversion_version="$4"    
+    local p_arti_subversion_version="$4"
+
+    local p_baseurl_not_include_filename=0
+    if [ "$5" = "1" ]; then
+        p_baseurl_not_include_filename=1
+    fi
 
 
     #2. Descargar los artectos del repositorio
@@ -396,8 +401,13 @@ function _download_artifacts() {
         # 2> Ruta relativa a temp donde se almacenara el artefacto a descargar.
         # 3> Nombre del artefacto con la que se almacenara el archivo a descargar.
         # 4> Etiqueta del artefacto a descargar
-        download_artifact_on_temp "${l_base_url}/${l_artifact_filename}" "${p_repo_id}/${l_i}" "${l_artifact_filename}" "${l_tag}[${l_i}]"
-        l_status=$?
+        if [ $p_baseurl_not_include_filename -eq 0 ]; then
+            download_artifact_on_temp "${l_base_url}/${l_artifact_filename}" "${p_repo_id}/${l_i}" "${l_artifact_filename}" "${l_tag}[${l_i}]"
+            l_status=$?
+        else
+            download_artifact_on_temp "${l_base_url}" "${p_repo_id}/${l_i}" "${l_artifact_filename}" "${l_tag}[${l_i}]"
+            l_status=$?
+        fi
 
         if [ $l_status -ne 0 ]; then
             return $l_status
@@ -537,7 +547,9 @@ function _install_artifacts() {
 
             #Descomprimiendo el archivo
             printf 'Descomprimiendo el artefacto "%b[%s]" ("%s") en "%s" ...\n' "${l_tag}" "${l_i}" "${l_artifact_filename}" "${g_temp_path}/${p_repo_id}/${l_i}"
-            uncompress_on_folder "${p_repo_id}/${l_i}" "${l_artifact_filename}" $((l_artifact_type - 10)) 0 "${p_repo_id}/${l_i}" "" ""
+
+            _uncompress_file "${g_temp_path}/${p_repo_id}/${l_i}" "$l_artifact_filename" $((l_artifact_type - 10)) "${g_temp_path}/${p_repo_id}/${l_i}" 1
+
             l_artifact_filename_without_ext=$(get_filename_withoutextension "$l_artifact_filename"  $((l_artifact_type - 10)))
 
 
@@ -640,10 +652,11 @@ function _install_repository_internal() {
     local la_artifact_baseurl
     local la_artifact_names
     local la_artifact_types
+    local l_baseurl_not_include_filename
     get_repo_artifacts "$p_repo_id" "$p_repo_name" "$p_repo_last_version" "$p_repo_last_pretty_version" la_artifact_baseurl la_artifact_names la_artifact_types \
                     "$p_arti_subversion_version" $p_install_win_cmds $p_flag_install
-    l_status=$?    
-    if [ $l_status -ne 0 ]; then
+    l_baseurl_not_include_filename=$?    
+    if [ $l_baseurl_not_include_filename -ne 0 ] && [ $l_baseurl_not_include_filename -ne 1 ]; then
         printf 'ERROR: No esta configurado correctamente los artefactos para el repositorio "%b"\n' ${l_tag}
         return 99
     fi
@@ -683,7 +696,7 @@ function _install_repository_internal() {
     fi
 
     #5. Descargar el artifacto en la carpeta
-    if ! _download_artifacts "$p_repo_id" la_artifact_baseurl la_artifact_names "$p_arti_subversion_version"; then
+    if ! _download_artifacts "$p_repo_id" la_artifact_baseurl la_artifact_names "$p_arti_subversion_version" $l_baseurl_not_include_filename; then
         printf 'ERROR: No se ha podido descargar los artefactos del repositorio "%b".\n' ${l_tag}
         _clean_temp "$p_repo_id"
         return 23
@@ -2275,6 +2288,11 @@ function g_install_repositories_byid() {
         
         #A.1. Nombre a mostrar del paquete
         l_repo_id="${pa_packages[$l_x]}"
+        if [ -z "$l_repo_id" ]; then
+            #Omitir los campos vacios ingresados por error
+            continue
+        fi
+
         l_repo_name_aux="${gA_packages[${l_repo_id}]}"
         if [ -z "$l_repo_name_aux" ]; then
             printf 'El %brepositorio "%s"%b no esta definido en "gA_packages" para su instalacion.\n' \

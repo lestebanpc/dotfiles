@@ -67,7 +67,7 @@ fzf_lua.setup({
 
 
 --Listar archivos del proyecto, Seleccionar/Examinar e Ir
-vim.keymap.set('n', '<leader>ll', ':lua require("fzf-lua").files({ cwd_prompt = false })<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>ll', ':lua require("fzf-lua").files({ cwd_prompt = true })<CR>', { noremap = true, silent = true })
 
 --Listar archivos del 'Git Files', Seleccionar/Examinar e Ir
 vim.keymap.set('n', '<leader>lg', ':lua require("fzf-lua").git_files()<CR>', { noremap = true, silent = true })

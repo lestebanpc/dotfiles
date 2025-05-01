@@ -121,12 +121,12 @@ function get_filename_withoutextension() {
 }
 
 
-#Obtener 2 versiones menores a la actual
+#Devulve la version ingresada y 2 versiones menores a la ingresada separados por ' '
 #Parametros de salida:
 #  > Valor de retorno:
 #    0 - OK
 #    1 - No OK
-#  > STDOUT: Las 2 versiones separadas por ' '
+#  > STDOUT: La version ingresada y 2 versiones menores encontradas, separadas por ' '
 function _dotnet_get_subversions()
 {
     local p_repo_name="$1"
@@ -258,19 +258,134 @@ function _dotnet_exist_version()
 }
 
 
+#La funcion considerara la ruta de un folder como: "program_path/PATH_THAT_MUST_EXIST/PATH_THAT_MAYNOT_EXIST", donde
+#  > 'PATH_THAT_MUST_EXIST' es parte de la ruta del folder que debe existir y tener permisos de escritura, si no lo esta, arroajara el error 2.
+#  > 'PATH_THAT_MAYNOT_EXIST' es la parte de la ruta del folder que puede o no existir, por lo que requiere ser creada.
+#  > No se altero el permiso de los folderes existentes, solo de los nuevos a crear.
+#Parametros de entrada> Argumentos y opciones
+#  1> Si es programa de window usar 1. Caso contrario es Linux (0)
+#  2> Ruta 'PATH_THAT_MUST_EXIST', relativa al home del usuario, que debera existir.
+#  3> Ruta 'PATH_THAT_MAYNOT_EXIST', relativa al home del usuario, que pueda que no exista por lo que se intentara crearlo.
+#     Para establecer los permisos correctos, se recomienda que el folder padra existe con el permiso correcto.
+#Parametros de entrada> Variables globales
+# - 'g_programs_path', 'g_win_programs_path', 'g_runner_user', 'g_targethome_owner', 'g_targethome_group'
+#Parametos de salida> Valor de retorno
+#  0> Se creo todo o parte de los subfolderes de la ruta indicada con exito.
+#  1> El folder ya existe y no se creo ningun folder.
+#  2> NOOK: El folder que debe existir no existe o no se tiene permisos de escritura.
+#  3> NOOK: Error en la creacion del folder.
+function create_folderpath_on_program() {
+
+    local p_is_lnx_prgs=0  #Es linux
+    if [ "$1" = "1" ]; then
+        p_is_lnx_prgs=1 #Es windows
+    fi
+
+    local p_folderpath_must_exist="$2"
+    local p_folderpath_maynot_exist="$3"
+
+    #2. Inicializaciones
+
+    #3. Validar que la ruta que debe existir existe y tener permisos de escritura
+    local l_target_base_path="${g_programs_path}"
+    if [ $p_is_lnx_prgs -ne 0 ]; then
+        l_target_base_path="${g_win_programs_path}"
+    fi
+
+
+    if [ ! -z "$p_folderpath_must_exist" ]; then
+
+        l_target_base_path="${l_target_base_path}/${p_folderpath_must_exist}"
+        if [ ! -d "$l_target_base_path" ] || [ ! -w "$l_target_base_path" ]; then
+            return 2
+        fi
+    fi
+
+    if [ -z "$p_folderpath_maynot_exist" ]; then
+        return 0
+    fi
+        
+    #4. Creando los folderes del ruta que no puede existir
+    local IFS='/'
+    la_foldernames=($p_folderpath_maynot_exist)
+    local l_n=${#la_foldernames[@]}
+
+    local l_runner_is_program_owner=1
+    if [ $p_is_lnx_prgs -eq 0 ] && [ $(( g_prg_path_options & 1 )) -eq 1 ]; then
+        l_runner_is_program_owner=0
+    fi
+
+    local l_i=0
+    local l_folder_created=0
+    local l_foldername=""
+
+    local l_folder_path="$l_target_base_path"
+    for(( l_i=0; l_i < ${l_n}; l_i++ )); do
+
+        #Obtener el folder
+        l_foldername="${la_foldernames[${l_i}]}"
+        if [ -z "$l_foldername" ]; then
+            continue
+        fi
+        l_folder_path="${l_folder_path}/${l_foldername}"
+
+        #Si el folder existe, no hacer nada continuar con el sigueinte de la ruta
+        if [ -d "$l_folder_path" ]; then
+            continue
+        fi
+
+        #Si no existe crearlo con los permisos deseados:
+        l_folder_created=$((l_folder_created + 1)) 
+        printf 'Creando la carpeta "%b%s%b"...\n' "$g_color_gray1" "${l_folder_path}" \
+               "$g_color_reset"
+
+        if [ $p_is_lnx_prgs -ne 0 ]; then
+            mkdir -pm 755 "$l_folder_path"
+        else
+
+            # Si el usuario runner tiene los permisos necesarios para la instalación (sin requerir sudo)
+            if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
+
+                mkdir -pm 755 "$l_folder_path"
+
+                #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+                if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
+                    chown "${g_targethome_owner}:${g_targethome_group}" "${l_folder_path}"
+                fi
+
+            # Si el usuario runner solo puede realizar la instalación usando sudo para root.
+            else
+
+                sudo mkdir -pm 755 "$l_folder_path"
+                sudo chown "${g_targethome_owner}:${g_targethome_group}" "${l_folder_path}"
+
+            fi
+        fi
+
+    done
+
+    if [ $l_folder_created -eq 0 ]; then
+        return 1
+    fi
+    return 0
+
+}
+
+
+
 #Crea folderes de programa si no existen y si existen puede limpiar el contenido de esos folderes
 #Parametros de entrada> Argumentos:
-#  1> Nombre del folder base del programa que se creara si no existe
-#     No puede tener un valor vacio (un programa siempre se almacena en un folder dentro del folder de programas)
-#  2> Nombre del subfolder del programa que se creara y/o se realizara una limpieza.
-#     Si esta vacio, la limpiza se realizara al folder base (argumento 1).
-#  3> Tipo de ruta target donde se de programas a usar:
-#     0 - Si se mueven a folder de programas de Linux (puede requerir permisos)
-#     1 - Si se mueven a folder de programas de Windows (NO requiere permisos y solo aplica en el windows asociado al WSL)
-#  4> Si el folder existe, el tipo de limpieza que se realizara al contenido de este. Por defecto es 0.
+#  1> Tipo de target.
+#     0 - Si es un subfolder de programas esta en Linux (puede requerir permisos)
+#     1 - Si es un subfolder de programas esta en Windows (NO requiere permisos y solo aplica en el windows asociado al WSL)
+#  2> Ruta relativo del subfolder de programa
+#     No puede ser vacio (un programa siempre se almacena dentro de un subfolder dentro de la ruta base de programas)
+#  3> Tipo de operacion de limpieza (si el subfolder existe). Valor por defecto es 0
 #     0 - No realizar ninguna limpieza (no eliminar ningun contenido del subfolder)
 #     1 - Eliminar todos los archivos existentes antes del copiado
 #     2 - Eliminar todo el subfolder y crearlo nuevamente antes del copiado
+#     3 - Renombrar la carpeta con el nombre indicado en el paremetro 5
+#  4> Solo si el parametro 4 es 3. Sufijo adicionar a la nombre del subfolder existenten 
 #Parametros de salida > Valor de retorno:
 #  0 - OK
 #  1 - No OK
@@ -278,87 +393,88 @@ function create_or_clean_folder_on_program()
 {
 
     #1. Argumentos
-    local p_program_basefolder="$1"
+    local p_is_lnx_prgs=0
+    if [ "$1" = "1" ]; then
+        p_is_lnx_prgs=1
+    fi
+
+    if [ -z "$2" ]; then
+        printf 'Error: %bla ruta retativa del folder del programa a crear/limpiar debe especificarse%b.\n' "$g_color_red1" "$g_color_reset"
+        return 1
+    fi
     local p_program_subfolder="$2"
 
-    local p_target_path_type=0
-    if [ "$3" = "1" ]; then
-        p_target_path_type=1
-    fi
 
     local p_clean_type=0
-    if [ "$4" = "1" ]; then
+    if [ "$3" = "1" ]; then
         p_clean_type=1
-    elif [ "$4" = "2" ]; then
+    elif [ "$3" = "2" ]; then
         p_clean_type=2
+    elif [ "$3" = "3" ]; then
+        p_clean_type=3
     fi
 
-    #2. Si son programas Windows
+    local p_sufix_subfolder="$4"
+
+    #2. Si no existe las folder crearlo
     local l_target_path=''
-    if [ $p_target_path_type -eq 1 ]; then
+    local l_status=0
 
-        l_target_path="${g_win_programs_path}/${p_program_basefolder}"
-        if [ ! -z "$p_program_subfolder" ]; then
-            l_target_path="${l_target_path}/${p_program_subfolder}"
+    if [ $p_is_lnx_prgs -eq 0 ]; then
+        l_target_path="${g_programs_path}/${p_program_subfolder}"
+    else
+        l_target_path="${g_win_programs_path}/${p_program_subfolder}"
+    fi
+
+    if [ ! -d "$l_target_path" ]; then
+        create_folderpath_on_program $p_is_lnx_prgs "" "$p_program_subfolder"
+        l_status=$?
+        
+        if [ l_status -ne 0 ]; then
+            printf 'Error: %bno se ha podido crear con exito la ruta retativa "%b%s%b" del folder del programa%b.\n' "$g_color_red1" \ 
+                   "$g_color_gray1" "$p_program_subfolder" "$g_color_red1" "$g_color_reset"
+            return 1
         fi
+        return 0
+    fi
 
-        #A. Si no existe las folder base crearlo
-        if [ ! -d "${g_win_programs_path}/${p_program_basefolder}" ]; then
+    #3. Si existe el folder, limpiarlo (segun lo especificado)
 
-            printf 'Creando el folder "%b%s%b"...\n' "$g_color_gray1" "${g_win_programs_path}/${p_program_basefolder}" "$g_color_reset"
-            mkdir -pm 755 "${g_win_programs_path}/${p_program_basefolder}"
+    #3.1. Si son programas Windows
+    if [ $p_is_lnx_prgs -eq 1 ]; then
 
 
-        #B. Si existe el folder base y no se define un subfolder, realizar la limpieza solicitada del folder base
-        elif [ -z "$p_program_subfolder" ]; then
+        #Validar si se requiere realizar limpieza antes del copiado
+        if [ $p_clean_type -eq 1 ]; then
 
-            #Validar si se requiere realizar limpieza antes del copiado
-            if [ $p_clean_type -eq 1 ]; then
+            printf 'Eliminando el contenido del folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+            rm -rf ${l_target_path}/*
 
-                printf 'Eliminando el contenido del folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-                rm -rf ${l_target_path}/*
+        elif [ $p_clean_type -eq 2 ]; then
 
-            elif [ $p_clean_type -eq 2 ]; then
+            printf 'Eliminado todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+            rm -rf ${l_target_path}/
+            mkdir -pm 755 "${l_target_path}"
+
+        elif [ $p_clean_type -eq 3 ]; then
+
+            if [ -d "${l_target_path}${p_sufix_subfolder}" ]; then
+
+                #Si el folder existe se intentara mover la carpeta dentro de otro la cual no es el comportamiento deseado
+                printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
+               
+                #return 1 
 
                 printf 'Eliminado todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
                 rm -rf ${l_target_path}/
                 mkdir -pm 755 "${l_target_path}"
 
-            fi
-
-        fi
-
-        #C. Si se indica un subfolder
-        if [ ! -z "$p_program_subfolder" ]; then
-
-            #C.1. Si no existe el subfolder, crearlo
-            if [ ! -d "${l_target_path}" ]; then
-
-                printf 'Creando el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-                mkdir -pm 755 "$l_target_path"
-
-                #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
-                if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
-                    chown "${g_targethome_owner}:${g_targethome_group}" "${l_target_path}"
-                fi
-
-            #C.2. Si existe el subfolder, realizar la limpieza
             else
-
-                #Validar si se requiere realizar limpieza antes del copiado
-                if [ $p_clean_type -eq 1 ]; then
-
-                    printf 'Eliminando el contenido del folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-                    rm -rf ${l_target_path}/*
-
-                elif [ $p_clean_type -eq 2 ]; then
-
-                    printf 'Eliminado todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-                    rm -rf ${l_target_path}/
-                    mkdir -pm 755 "${l_target_path}"
-
-                fi
-
+                printf 'Renombrando el folder "%b%s%b" a "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset" \
+                       "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset"
+                mv "$l_target_path" "${l_target_path}${p_sufix_subfolder}"
             fi
 
         fi
@@ -367,44 +483,45 @@ function create_or_clean_folder_on_program()
 
     fi
 
-    #2. Inicializaciones
-    l_target_path="${g_programs_path}/${p_program_basefolder}"
-    if [ ! -z "$p_program_subfolder" ]; then
-        l_target_path="${l_target_path}/${p_program_subfolder}"
-    fi
 
+    #3.2 Si el usuario runner tiene los permisos necesarios para la instalación (sin requerir sudo)
+    #   Solo se puede dar en estos 2 posibles escenarios:
+    #   - Si el runner es root en modo de suplantacion del usuario objetivo.
+    #   - Si el runner es el owner de la carpeta de programas (el cual a su vez, es usuario objetivo).
     local l_runner_is_program_owner=1
     if [ $(( g_prg_path_options & 1 )) -eq 1 ]; then
         l_runner_is_program_owner=0
     fi
 
-    #3. Si el usuario runner tiene los permisos necesarios para la instalación (sin requerir sudo)
-    #   Solo se puede dar en estos 2 posibles escenarios:
-    #   - Si el runner es root en modo de suplantacion del usuario objetivo.
-    #   - Si el runner es el owner de la carpeta de programas (el cual a su vez, es usuario objetivo).
     if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
 
-        #A. Si no existe las folder base crearlo
-        if [ ! -d "${g_programs_path}/${p_program_basefolder}" ]; then
+        #Validar si se requiere realizar limpieza antes del copiado
+        if [ $p_clean_type -eq 1 ]; then
 
-            printf 'Creando el folder "%b%s%b"...\n' "$g_color_gray1" "${g_programs_path}/${p_program_basefolder}" "$g_color_reset"
-            mkdir -pm 755 "${g_programs_path}/${p_program_basefolder}"
+            printf 'Eliminando el contenido del folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+            rm -rf ${l_target_path}/*
+
+        elif [ $p_clean_type -eq 2 ]; then
+
+            printf 'Eliminado todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+            rm -rf ${l_target_path}/
+            mkdir -pm 755 "${l_target_path}"
 
             #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
             if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
-                chown "${g_targethome_owner}:${g_targethome_group}" "${g_programs_path}/${p_program_basefolder}"
+                chown "${g_targethome_owner}:${g_targethome_group}" "${l_target_path}"
             fi
 
-        #B. Si existe el folder base y no se define un subfolder, realizar la limpieza solicitada del folder base
-        elif [ -z "$p_program_subfolder" ]; then
+        elif [ $p_clean_type -eq 3 ]; then
 
-            #Validar si se requiere realizar limpieza antes del copiado
-            if [ $p_clean_type -eq 1 ]; then
+            if [ -d "${l_target_path}${p_sufix_subfolder}" ]; then
 
-                printf 'Eliminando el contenido del folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-                rm -rf ${l_target_path}/*
-
-            elif [ $p_clean_type -eq 2 ]; then
+                #Si el folder existe se intentara mover la carpeta dentro de otro la cual no es el comportamiento deseado
+                printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
+               
+                #return 1 
 
                 printf 'Eliminado todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
                 rm -rf ${l_target_path}/
@@ -414,111 +531,243 @@ function create_or_clean_folder_on_program()
                 if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
                     chown "${g_targethome_owner}:${g_targethome_group}" "${l_target_path}"
                 fi
-            fi
 
-        fi
-
-        #C. Si se indica un subfolder
-        if [ ! -z "$p_program_subfolder" ]; then
-
-            #C.1. Si no existe el subfolder, crearlo
-            if [ ! -d "${l_target_path}" ]; then
-
-                printf 'Creando el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-                mkdir -pm 755 "$l_target_path"
-
-                #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
-                if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
-                    chown "${g_targethome_owner}:${g_targethome_group}" "${l_target_path}"
-                fi
-
-            #C.2. Si existe el subfolder, realizar la limpieza
             else
-
-                #Validar si se requiere realizar limpieza antes del copiado
-                if [ $p_clean_type -eq 1 ]; then
-
-                    printf 'Eliminando el contenido del folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-                    rm -rf ${l_target_path}/*
-
-                elif [ $p_clean_type -eq 2 ]; then
-
-                    printf 'Eliminando todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-                    rm -rf ${l_target_path}/
-                    mkdir -pm 755 "${l_target_path}"
-
-                    #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
-                    if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
-                        chown "${g_targethome_owner}:${g_targethome_group}" "${l_target_path}"
-                    fi
-
-                fi
-
+                printf 'Renombrando el folder "%b%s%b" a "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset" \
+                       "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset"
+                mv "$l_target_path" "${l_target_path}${p_sufix_subfolder}"
             fi
 
         fi
-        
+
         return 0
     
     fi
 
-    #4. Si el usuario runner solo puede realizar la instalación usando sudo para root.
+    #3.3 Si el usuario runner solo puede realizar la instalación usando sudo para root.
     #   - Este escenario solo puede ser: el runner es el usuario objetivo y el owner del folder de los programas es root.
 
-    #A. Si no existe el folder, crearlo
-    if [ ! -d "${g_programs_path}/${p_program_basefolder}" ]; then
+    #Validar si se requiere realizar limpieza antes del copiado
+    if [ $p_clean_type -eq 1 ]; then
 
-        printf 'Creando el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-        sudo mkdir -pm 755 "${g_programs_path}/${p_program_basefolder}"
+        printf 'Eliminando el contenido del folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+        sudo rm -rf ${l_target_path}/*
 
-    #B. Si existe y no esta definido el subfolder, limpiarlo
-    elif [ -z "$p_program_subfolder" ]; then
+    elif [ $p_clean_type -eq 2 ]; then
+
+        printf 'Eliminando todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+        sudo rm -rf ${l_target_path}/
+        sudo mkdir -pm 755 "${l_target_path}"
+
+    elif [ $p_clean_type -eq 3 ]; then
+
+        if [ -d "${l_target_path}${p_sufix_subfolder}" ]; then
+
+            #Si el folder existe se intentara mover la carpeta dentro de otro la cual no es el comportamiento deseado
+            printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
+                   "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
+                   "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
+           
+            #return 1 
+
+            printf 'Eliminado todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+            sudo rm -rf ${l_target_path}/
+            sudo mkdir -pm 755 "${l_target_path}"
+
+        else
+            printf 'Renombrando el folder "%b%s%b" a "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset" \
+                   "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset"
+            sudo mv "$l_target_path" "${l_target_path}${p_sufix_subfolder}"
+        fi
+
+
+    fi
+
+    return 0
+
+}
+
+
+#Elimina/limpia un subfolder de programa y opcionalmente puede crear la ruta donde esta este subfolder (pero sin crear el subfolder)
+#Parametros de entrada> Argumentos:
+#  1> Tipo de target.
+#     0 - Si es un subfolder de programas esta en Linux (puede requerir permisos)
+#     1 - Si es un subfolder de programas esta en Windows (NO requiere permisos y solo aplica en el windows asociado al WSL)
+#  2> Ruta base relativo al folder de programa donde esta el subfolder.
+#     Puede ser vacio. Si no es vacio y no existe este ruta siempre se creara.
+#  3> Nombre del subfolder de programa (no puede ser vacio)
+#  4> Tipo de operacion de limpieza (si el subfolder existe). Valor por defecto es 0
+#     0 - Eliminar todo el subfolder
+#     1 - Renombrar la carpeta con el nombre indicado en el paremetro 5
+#  5> Solo si el parametro 4 es 2. Sufijo adicionar a la nombre del subfolder existentente
+#Parametros de salida > Valor de retorno:
+#  0 - OK
+#  1 - No OK
+function clean_folder_on_program()
+{
+
+    #1. Argumentos
+    local p_is_lnx_prgs=0
+    if [ "$1" = "1" ]; then
+        p_is_lnx_prgs=1
+    fi
+
+    local p_relative_base_path="$2"
+
+    if [ -z "$3" ]; then
+        printf 'Error: %bdebe especificarse el nombre de subfolder del programa%b.\n' "$g_color_red1" "$g_color_reset"
+        return 1
+    fi
+    local p_subfolder_name="$3"
+
+
+    local p_clean_type=0
+    if [ "$4" = "1" ]; then
+        p_clean_type=1
+    fi
+
+    local p_sufix_subfolder="$5"
+
+    #2. Crear toda la ruta donde se ubicara el subfolder, si no existe
+    local l_target_path=''
+    if [ $p_is_lnx_prgs -eq 0 ]; then
+        l_target_path="${g_programs_path}"
+    else
+        l_target_path="${g_win_programs_path}"
+    fi
+
+    if [ ! -z "$p_relative_base_path" ]; then
+
+        l_target_path="${l_target_path}/${p_relative_base_path}"
+
+        #Si no existe la ruta donde esta el subfolder, crearlo
+        if [ ! -d "$l_target_path" ]; then
+            create_folderpath_on_program $p_is_lnx_prgs "" "$p_relative_base_path"
+            return 0
+        fi
+
+    fi
+
+    #3. Si existe la ruta base del subfolder y no existe el subfolder, salir con exito
+    l_target_path="${l_target_path}/${p_subfolder_name}"
+    if [ ! -d "$l_target_path" ]; then
+        return 0
+    fi
+
+    #4. Si existe la ruta base del subfolder pero existe el subfolder, limpiarlo
+
+    #3.1. Si son programas Windows
+    if [ $p_is_lnx_prgs -eq 1 ]; then
+
 
         #Validar si se requiere realizar limpieza antes del copiado
         if [ $p_clean_type -eq 1 ]; then
 
-            printf 'Eliminando el contenido del folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-            sudo rm -rf ${l_target_path}/*
+            printf 'Eliminado todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+            rm -rf ${l_target_path}/
 
         elif [ $p_clean_type -eq 2 ]; then
 
-            printf 'Eliminando todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-            sudo rm -rf ${l_target_path}/
-            sudo mkdir -pm 755 "${l_target_path}"
+            if [ -d "${l_target_path}${p_sufix_subfolder}" ]; then
 
-        fi
+                #Si el folder existe se intentara mover la carpeta dentro de otro la cual no es el comportamiento deseado
+                printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
+               
+                #return 1 
 
-    fi
+                printf 'Eliminado todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+                rm -rf ${l_target_path}/
 
-    #C. Si esta definido el subfolder
-    if [ ! -z "$p_program_subfolder" ]; then
-
-        #C.1. Si no existe el subfolder, crearlo
-        if [ ! -d "${l_target_path}" ]; then
-
-            printf 'Creando el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-            sudo mkdir -pm 755 "${l_target_path}"
-
-        #C.2. Si existe el subfolder, limpiarlo
-        else
-
-            #Validar si se requiere realizar limpieza antes del copiado
-            if [ $p_clean_type -eq 1 ]; then
-
-                printf 'Eliminando el contenido del folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-                sudo rm -rf ${l_target_path}/*
-
-            elif [ $p_clean_type -eq 2 ]; then
-
-                printf 'Eliminando todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
-                sudo rm -rf ${l_target_path}/
-                sudo mkdir -pm 755 "${l_target_path}"
-
+            else
+                printf 'Renombrando el folder "%b%s%b" a "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset" \
+                       "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset"
+                mv "$l_target_path" "${l_target_path}${p_sufix_subfolder}"
             fi
 
         fi
+
+        return 0
+
     fi
+
+
+    #3.2 Si el usuario runner tiene los permisos necesarios para la instalación (sin requerir sudo)
+    #   Solo se puede dar en estos 2 posibles escenarios:
+    #   - Si el runner es root en modo de suplantacion del usuario objetivo.
+    #   - Si el runner es el owner de la carpeta de programas (el cual a su vez, es usuario objetivo).
+    local l_runner_is_program_owner=1
+    if [ $(( g_prg_path_options & 1 )) -eq 1 ]; then
+        l_runner_is_program_owner=0
+    fi
+
+    if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
+
+        #Validar si se requiere realizar limpieza antes del copiado
+        if [ $p_clean_type -eq 1 ]; then
+
+            printf 'Eliminado todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+            rm -rf ${l_target_path}/
+
+        elif [ $p_clean_type -eq 2 ]; then
+
+            if [ -d "${l_target_path}${p_sufix_subfolder}" ]; then
+
+                #Si el folder existe se intentara mover la carpeta dentro de otro la cual no es el comportamiento deseado
+                printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
+               
+                #return 1 
+
+                printf 'Eliminado todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+                rm -rf ${l_target_path}/
+
+            else
+                printf 'Renombrando el folder "%b%s%b" a "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset" \
+                       "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset"
+                mv "$l_target_path" "${l_target_path}${p_sufix_subfolder}"
+            fi
+
+        fi
+
+        return 0
     
+    fi
+
+    #3.3 Si el usuario runner solo puede realizar la instalación usando sudo para root.
+    #   - Este escenario solo puede ser: el runner es el usuario objetivo y el owner del folder de los programas es root.
+
+    #Validar si se requiere realizar limpieza antes del copiado
+    if [ $p_clean_type -eq 1 ]; then
+
+        printf 'Eliminando todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+        sudo rm -rf ${l_target_path}/
+        sudo mkdir -pm 755 "${l_target_path}"
+
+    elif [ $p_clean_type -eq 2 ]; then
+
+        if [ -d "${l_target_path}${p_sufix_subfolder}" ]; then
+
+            #Si el folder existe se intentara mover la carpeta dentro de otro la cual no es el comportamiento deseado
+            printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
+                   "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
+                   "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
+           
+            #return 1 
+
+            printf 'Eliminado todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+            sudo rm -rf ${l_target_path}/
+
+        else
+            printf 'Renombrando el folder "%b%s%b" a "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset" \
+                   "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset"
+            sudo mv "$l_target_path" "${l_target_path}${p_sufix_subfolder}"
+        fi
+
+
+    fi
 
     return 0
 
@@ -549,13 +798,13 @@ function copy_binary_on_program()
     local p_source_path="${g_temp_path}/$1"
     local p_source_filename="$2"
 
-    local p_target_path_type=0
+    local p_is_lnx_prgs=0
     if [ "$3" = "1" ]; then
-        p_target_path_type=1
+        p_is_lnx_prgs=1
     fi
 
     local p_target_path="${g_programs_path}/$4"
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
         p_target_path="${g_win_programs_path}/$4"
     fi
 
@@ -565,7 +814,7 @@ function copy_binary_on_program()
     fi
 
     #2. Si son binarios Windows
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
 
         #Copiar los archivos
         printf 'Copiando el archivo "%b%s%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "${p_source_path}/${p_source_filename}" \
@@ -745,13 +994,13 @@ function copy_font_files()
     #1. Argumentos
     local p_source_path="${g_temp_path}/$1"
 
-    local p_target_path_type=0
+    local p_is_lnx_prgs=0
     if [ "$2" = "1" ]; then
-        p_target_path_type=1
+        p_is_lnx_prgs=1
     fi
 
     local p_target_path="${g_fonts_cmdpath}/$3"
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
         p_target_path="${g_win_font_path}/$3"
     fi
 
@@ -761,7 +1010,7 @@ function copy_font_files()
     fi
 
     #2. Si son binarios Windows
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
 
         #Si no existe las carpetas destino, crearlo
         if [ ! -d "$p_target_path" ]; then
@@ -889,9 +1138,9 @@ function copy_binary_on_command()
     local p_source_path="${g_temp_path}/$1"
     local p_source_filename="$2"
 
-    local p_target_path_type=0
+    local p_is_lnx_prgs=0
     if [ "$3" = "1" ]; then
-        p_target_path_type=1
+        p_is_lnx_prgs=1
     fi
 
     local p_use_pattern=1
@@ -900,12 +1149,12 @@ function copy_binary_on_command()
     fi
 
     local l_target_path="${g_bin_cmdpath}"
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
         l_target_path="${g_win_bin_path}"
     fi
 
     #2. Si son binarios Windows
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
 
         #Copiar los archivos
         printf 'Copiando el archivo "%b%s%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "${p_source_path}/${p_source_filename}" \
@@ -1074,6 +1323,121 @@ function create_binarylink_to_command()
 }
 
 
+#Crea un enlace simbolico blando dentro del folder de programas (solo para archivos de linux, no windows)
+#Parametros en entraga> Argumentos y Opciones
+# 1 > Ruta de folder origin (source) relativa al folder programas al cual se desea crear un enlace simbolico.
+# 2 > Ruta del folder destino (target) relativa del folder de programas donde se creara el enlace simbolico.
+# 3 > Nombre del enlace simbolico que se desea crear ubicado en el folder de programas.
+# 4 > Flag '0' si se desea sobrescribir un enlace simbolico ya existente.
+# 5 > Prefijo que se muestra al inicio de cada linea de texto que se escribe en el SDTOUT.
+#Parametros de salida (valores de retorno):
+# 0 > Ya existe el enlace simbolico y no se realizo ningun cambio.
+# 1 > Ya existe el enlace simbolico pero se ha recreado en enlace simbolico.
+# 2 > Se creo el enlace simbolico
+function create_folderlink_on_program() {
+
+    #Argumentos
+    local p_source_path="$1"
+    local p_target_path="$2"
+    local p_target_link="$3"
+
+    local p_override_target_link=1
+    if [ "$4" = "0" ]; then
+        p_override_target_link=0
+    fi
+    local p_tag="$5"
+
+    #2. Inicializaciones
+    if [ -z "$p_source_path" ]; then
+        p_source_path="${g_programs_path}"
+    else
+        p_source_path="${g_programs_path}/${p_source_path}"
+        if [ ! -d "$p_source_path" ]; then
+            printf "%s%bEl folder '%b%s%b' source del enlace simbolico no existe.%b\n" "$p_tag" "$g_color_red1" "$g_color_gray1" \
+                   "$p_source_path" "$g_color_red1" "$g_color_reset"
+        fi
+    fi
+
+    if [ -z "$p_target_path" ]; then
+        p_target_path="${g_programs_path}"
+    else
+        p_target_path="${g_programs_path}/${p_target_path}"
+        if [ ! -d "$p_target_path" ]; then
+            printf "%s%bEl folder '%b%s%b' donde se crea el enlace simbolico no existe.%b\n" "$p_tag" "$g_color_red1" "$g_color_gray1" \
+                   "$p_target_path" "$g_color_red1" "$g_color_reset"
+        fi
+    fi
+
+    local l_target_fulllink="${p_target_path}/${p_target_link}"
+    local l_status=0
+    local l_aux
+
+    local l_runner_is_program_owner=1
+    if [ $(( g_prg_path_options & 1 )) -eq 1 ]; then
+        l_runner_is_program_owner=0
+    fi
+
+    if [ -h "$l_target_fulllink" ] && [ -d "$l_target_fulllink" ]; then
+
+        if [ $p_override_target_link -eq 0 ]; then
+
+
+            # Si el usuario runner tiene los permisos necesarios para la instalación (sin requerir sudo)
+            if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
+
+                ln -snf "${p_source_path}/" "$l_target_fulllink"
+
+                #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+                if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
+                    chown -h "${g_trgethome_owner}:${g_targethome_group}" "${l_target_fulllink}"
+                fi
+
+            # Si el usuario runner solo puede realizar la instalación usando sudo para root.
+            else
+
+                sudo ln -snf "${p_source_path}/" "$l_target_fulllink"
+                sudo chown -h "${g_trgethome_owner}:${g_targethome_group}" "${l_target_fulllink}"
+
+            fi
+
+            printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$l_target_fulllink" "$g_color_gray1" "$p_source_path" "$g_color_reset"
+            l_status=1
+
+        else
+            l_aux=$(readlink "$l_target_fulllink")
+            printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$l_target_fulllink" "$g_color_gray1" "$l_aux" "$g_color_reset"
+            l_status=0
+        fi
+
+    else
+
+        # Si el usuario runner tiene los permisos necesarios para la instalación (sin requerir sudo)
+        if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
+
+            ln -snf "${p_source_path}/" "$l_target_fulllink"
+
+            #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+            if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
+                chown -h "${g_targethome_owner}:${g_targethome_group}" "${l_target_fulllink}"
+            fi
+
+        # Si el usuario runner solo puede realizar la instalación usando sudo para root.
+        else
+
+            sudo ln -snf "${p_source_path}/" "$l_target_fulllink"
+            sudo chown -h "${g_trgethome_owner}:${g_targethome_group}" "${l_target_fulllink}"
+
+        fi
+
+        printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$l_target_fulllink" "$g_color_gray1" "$p_source_path" "$g_color_reset"
+        l_status=2
+
+    fi
+
+    return $l_status
+
+}
+
 
 
 #Alamacer la version del actual de un comando/programa instalado en un archivo dentro de programas.
@@ -1091,13 +1455,13 @@ function save_prettyversion_on_program()
 {
 
     #1. Argumentos
-    local p_target_path_type=0
+    local p_is_lnx_prgs=0   #Es un binario linux
     if [ "$4" = "1" ]; then
-        p_target_path_type=1
+        p_is_lnx_prgs=1     #Es un binario de Windows
     fi
 
     local p_target_path="${g_programs_path}"
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
         p_target_path="${g_win_programs_path}"
     fi
 
@@ -1111,7 +1475,7 @@ function save_prettyversion_on_program()
 
 
     #2. Si son binarios Windows
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
 
 
         #Almacenando la info del programa/comando
@@ -1189,19 +1553,19 @@ function move_tempfoldercontent_on_program()
 
     #1. Argumentos
     local p_source_path="${g_temp_path}/$1"
-    local p_target_path_type=0
+    local p_is_lnx_prgs=0
     if [ "$2" = "1" ]; then
-        p_target_path_type=1
+        p_is_lnx_prgs=1
     fi
 
     local p_target_path="${g_programs_path}/$3"
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
         p_target_path="${g_win_programs_path}/$3"
     fi
     local p_find_options="$4"
 
     #2. Si son programas Windows
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
 
         #Mover todos objetos del cotenido del primer nivel
         printf 'Moviendo el contenido del source folder "%b%s%b" al target folder "%b%s%b" ...\n' "$g_color_gray1" "${p_source_path}" \
@@ -1275,18 +1639,18 @@ function move_tempfolder_on_program()
     local p_source_path="${g_temp_path}/$1"
     local p_source_foldername="$2"
 
-    local p_target_path_type=0
+    local p_is_lnx_prgs=0
     if [ "$3" = "1" ]; then
-        p_target_path_type=1
+        p_is_lnx_prgs=1
     fi
 
     local p_target_path="${g_programs_path}/$4"
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
         p_target_path="${g_win_programs_path}/$4"
     fi
 
     #2. Si son programas Windows
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
 
         #Mover el folder
         printf 'Moviendo el source folder "%b%s%b", ubicado en "%b%s%b", al target folder "%b%s%b" ...\n' "$g_color_gray1" "${p_source_foldername}" \
@@ -1461,9 +1825,9 @@ _uncompress_file() {
         printf 'gunzip -q "%b%s%b"\n' "$g_color_gray1" "${p_source_path}/${p_source_filename}" "$g_color_reset"
 
         if [ $p_using_sudo -ne 0 ]; then
-            unzip -q "${p_source_path}/${p_source_filename}"
+            gunzip -q "${p_source_path}/${p_source_filename}"
         else
-            sudo unzip -q "${p_source_path}/${p_source_filename}"
+            sudo gunzip -q "${p_source_path}/${p_source_filename}"
         fi
 
 
@@ -1511,119 +1875,90 @@ _uncompress_file() {
 # - Modelo 2: El archivo comprimido contiene un folder y recien dentro de ese folder esta el cotenido del programa. Esto de descomprime el folder programa,
 #             y luego si el folder no coindice con el nombre del subfolder del programa este se renombra a este programa.
 #Parametros de entrada
-#  1> Ruta source, relativa respecto a la temporal, donde esta el archivo comprimido.
-#  2> Nombre del archivo source (archivos comprimido ubicado dentro de un folder ruta 1)
-#  3> Source filetype. El tipo de formato de archivo de comprension
+#  1> Target path type. Tipo de ruta base target donde se descomprime el archivo, puede ser:
+#     0 - Un subfolder del programas de Linux
+#     1 - Un subfolder del programas de Windows
+#  2> Ruta source, relativa respecto al temporal donde estan los archivos comprimido.
+#  3> Nombre del archivo source (archivos comprimido ubicado dentro de un folder ruta 1)
+#  4> Source filetype. El tipo de formato de archivo de comprension
 #       > 0 si es un .tar.gz
 #       > 1 si es un .zip
 #       > 2 si es un .gz
 #       > 3 si es un .tgz
 #       > 4 si es un .tar.xz
-#  4> Target path type. Tipo de ruta base target donde se descomprime el archivo, puede ser:
-#     0 - Un folder del temporal path (NO se requiere permisos adicionales)
-#     1 - Un folder del programas de Linux (se requere permisos adicionales)
-#     2 - Un folder del programas de Windows (NO se requere permisos adicionales)
-#  5> Ruta target, relativa al folder del tipo ruta base target (indicado en parametro 4), donde se descomprime el archivo
-#     Puede ser vacio.
-#  6> Flag '0' para limpiar la carpeta destino antes descromprimir el contenido. Valor por defecto es '0'.
-#  7> El nombre del subfolder del programa (solo es necesario especificarlo solo para el modelo 2).
-#  8> Solo se especifica para el modelo 2 y cuando se desea renombrar el folder generado al descromprimir, el cual esta el contenido del programa.
-#     Prefijo (parte inicial) del nombre de folder autogenerado por la descomprención y la cual se desea mofidicar.
-#     Si es el modelo 2 y no se desea modificar el folder autogenerado enviar vacio.
+#  5> Ruta relativa al folder de programas (parametro 1), donde se descomprime el archivo
+#     Puede o no incluir el nombre del subfolder del programa. Puede ser vacio.
+#  6> El nombre del subfolder del programa
+#     Solo es necesario cuando el comprimido genera un subfolder y se desea renombrarlo con este nombre.
+#  7> Prefijo (parte inicial) del nombre de subfolder autogenerado por la descomprención y la cual se desea renombrar.
+#     Solo es necesario cuando el comprimido genera un subfolder y se desea renombrarlo con este nombre.
 #Parametros de salida
-#   > Valor de retorno: 0 si es exitoso, 1 si hubo un erorr.
+#   > Valor de retorno: 
+#      0 si es exitoso, 
+#      1 si hubo un erorr.
 uncompress_on_folder() {
 
     #1. Argumentos
-    local p_source_path="${g_temp_path}/$1"
-    local p_source_filename="$2"
-    local p_source_filetype=$3
-
-    local p_target_path_type=0
-    if [ "$4" = "1" ]; then
-        p_target_path_type=1
-    elif [ "$4" = "2" ]; then
-        p_target_path_type=2
+    local p_is_lnx_prgs=0  #es un binario de Linux
+    if [ "$1" = "1" ]; then
+        p_is_lnx_prgs=1    #es un binario de Windows
     fi
 
+
+    local p_source_path="${g_temp_path}/$2"
+    local p_source_filename="$3"
+    local p_source_filetype=$4
+
+
     local p_target_path=""
-    if [ $p_target_path_type -eq 1 ]; then
-        p_target_path="${g_programs_path}"
-    elif [ $p_target_path_type -eq 2 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
         p_target_path="${g_win_programs_path}"
     else
-        p_target_path="${g_temp_path}"
+        p_target_path="${g_programs_path}"
     fi
 
     if [ ! -z "$5" ]; then
         p_target_path="${p_target_path}/$5"
     fi
 
-    local p_flag_clean=0
-    if [ "$6" = "1" ]; then
-        p_flag_clean=1
-    fi
 
-    local p_foldername="$7"
+    local p_foldername="$6"
 
     local p_foldername_searchprefix=""
     if [ -z "$p_foldername" ]; then
         p_foldername_searchprefix=''
         p_foldername=''
     else
-        p_foldername_searchprefix="$8"
+        p_foldername_searchprefix="$7"
     fi
 
-    #El modelo 1 tiene que descromprimirse en una subcarpete del directorio programas.
-    if [ -z "$p_foldername" ] && [ -z "$5" ]; then
-        return 2
-    fi
 
     #g_filename_without_ext=$(get_filename_withoutextension "$p_source_filename" $p_source_filetype)
 
-    #2. Si el destino es una carpeta del temporal o de programa de Windows (no verificar los permisos)
+    #Validar que existe el folder donde se descromprimira el archivo
+    if [ ! -d "$p_target_path" ]; then
+
+        printf 'Error: %bLa carpeta %b"%b%s%b"%b donde se descomprimira %b"%b%s%b"%b no existe%b.\n' \
+               "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$p_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
+               "$g_color_gray1" "$p_source_filename" "$g_color_reset" "$g_color_red1" "$g_color_reset" 
+        return 1
+    fi
+
+
+    #2. Si el binario de Windows
     local l_current_fullfoldername=''
-    if [ $p_target_path_type -eq 0 ] || [ $p_target_path_type -eq 2 ]; then
-
-        #A. Limpieza del contenido del programa si este existe
-
-        #Si es modelo 1 (el contenido del programa esta directamente en el folder destino), eliminar el contenido del folder destino
-        if [ -z "$p_foldername" ]; then
-
-            #Si el comprimido esta en el mismo lugar que el folder a limpiar, no hacer limpieza
-            if [ ! -z "$5" ] && [ -d "$p_target_path" ] && [ "$p_target_path" != "$p_source_path" ] && [ $p_flag_clean -eq 0 ]; then
-
-                printf 'Eliminando el folder "%b%s%b" y todo su contenido ...\n' "$g_color_gray1" "$p_target_path" "$g_color_reset"
-                rm -rf "${p_target_path}"
-
-                printf 'Creando el folder "%b%s%b"...\n' "$g_color_gray1" "$p_target_path" "$g_color_reset"
-                mkdir -pm 755 "${p_target_path}"
-
-            fi
-
-        #Si el modelo 2 (el contenido del programa esta en un subfolder generado en la descomprención), eliminar el contenido del folder destino
-        else
-
-            #Si el comprimido esta en el mismo lugar que el folder a limpiar, no hacer limpieza
-            if [ -d "${p_target_path}/${p_foldername}" ] && [ "${p_target_path}/${p_foldername}" != "$p_source_path" ] && [ $p_flag_clean -eq 0 ]; then
-
-                printf 'Eliminando el subfolder "%b%s%b" y todo su contenido ...\n' "$g_color_gray1" "${p_target_path}/${p_foldername}" \
-                       "$g_color_reset"
-                rm -rf ${p_target_path}/${p_foldername}
-
-            fi
-        fi
+    if [ $p_is_lnx_prgs -eq 1 ]; then
 
 
-        #B. Descomprimir
+        #A. Descomprimir
         _uncompress_file "$p_source_path" "$p_source_filename" $p_source_filetype "$p_target_path" 1
 
-        #C. Si es modelo 1 (el contenido del programa esta directamente en el folder destino), salir.
+        #B. Si no requiere renombrar uns subfolder generado
         if [ -z "$p_foldername" ]; then
             return 0
         fi
 
-        #D. Si el modelo 2 (el contenido del programa esta en un subfolder generado en la descomprención), renombrar el folder generado
+        #C. Si no requiere renombrar uns subfolder generado
 
         #Si se debe buscar y renombrar el folder autogenerado por la descomprención:
         if [ ! -z "$p_foldername_searchprefix" ]; then
@@ -1683,45 +2018,10 @@ uncompress_on_folder() {
     if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
         
 
-        #A. Limpieza del contenido del programa si este existe
-
-        #Si es modelo 1 (el contenido del programa esta directamente en el folder destino), eliminar el contenido del folder destino
-        if [ -z "$p_foldername" ]; then
-
-            #Si el comprimido esta en el mismo lugar que el folder a limpiar, no hacer limpieza
-            if [ ! -z "$5" ] && [ -d "$p_target_path" ] && [ "$p_target_path" != "$p_source_path" ] && [ $p_flag_clean -eq 0 ]; then
-
-                printf 'Eliminando el folder "%b%s%b" y todo su contenido ...\n' "$g_color_gray1" "$p_target_path" "$g_color_reset"
-                rm -rf "${p_target_path}"
-
-                printf 'Creando el folder "%b%s%b"...\n' "$g_color_gray1" "$p_target_path" "$g_color_reset"
-                mkdir -pm 755 "${p_target_path}"
-
-                #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
-                if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_command_owner -eq 0 ]; then
-                    chown "${g_targethome_owner}:${g_targethome_group}" "${p_target_path}"
-                fi
-
-            fi
-
-        #Si el modelo 2 (el contenido del programa esta en un subfolder generado en la descomprención), eliminar el contenido del folder destino
-        else
-
-            #Si el comprimido esta en el mismo lugar que el folder a limpiar, no hacer limpieza
-            if [ -d "${p_target_path}/${p_foldername}" ] && [ "${p_target_path}/${p_foldername}" != "$p_source_path" ] && [ $p_flag_clean -eq 0 ]; then
-
-                printf 'Eliminando el subfolder "%b%s%b" y todo su contenido ...\n' "$g_color_gray1" "${p_target_path}/${p_foldername}" \
-                       "$g_color_reset"
-                rm -rf ${p_target_path}/${p_foldername}
-
-            fi
-        fi
-
-
-        #B. Descomprimir
+        #A. Descomprimir
         _uncompress_file "$p_source_path" "$p_source_filename" $p_source_filetype "$p_target_path" 1
 
-        #C. Si es modelo 1 (el contenido del programa esta directamente en el folder destino), establecer permisos en caso de requierlo
+        #B. Si no requiere renombrar uns subfolder generado
         if [ -z "$p_foldername" ]; then
 
             #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
@@ -1733,7 +2033,7 @@ uncompress_on_folder() {
 
         fi
 
-        #D. Si el modelo 2 (el contenido del programa esta en un subfolder generado en la descomprención), renombrar el folder generado y establecer los persmisos
+        #C. Si no requiere renombrar uns subfolder generado
 
         #Si se debe buscar y renombrar el folder autogenerado por la descomprención:
         if [ ! -z "$p_foldername_searchprefix" ]; then
@@ -1788,45 +2088,15 @@ uncompress_on_folder() {
     #   - Este escenario solo puede ser: el runner es el usuario objetivo y el owner del folder de los programas es root.
 
 
-    #A. Limpieza del contenido del programa si este existe
-
-    #Si es modelo 1 (el contenido del programa esta directamente en el folder destino), eliminar el contenido del folder destino
-    if [ -z "$p_foldername" ]; then
-
-        #Si el comprimido esta en el mismo lugar que el folder a limpiar, no hacer limpieza
-        if [ ! -z "$5" ] && [ -d "$p_target_path" ] && [ "$p_target_path" != "$p_source_path" ] && [ $p_flag_clean -eq 0 ]; then
-
-            printf 'Eliminando el folder "%b%s%b" y todo su contenido ...\n' "$g_color_gray1" "$p_target_path" "$g_color_reset"
-            sudo rm -rf "${p_target_path}"
-
-            printf 'Creando el folder "%b%s%b"...\n' "$g_color_gray1" "$p_target_path" "$g_color_reset"
-            sudo mkdir -pm 755 "${p_target_path}"
-
-        fi
-
-    #Si el modelo 2 (el contenido del programa esta en un subfolder generado en la descomprención), eliminar el contenido del folder destino
-    else
-
-        #Si el comprimido esta en el mismo lugar que el folder a limpiar, no hacer limpieza
-        if [ -d "${p_target_path}/${p_foldername}" ] && [ "${p_target_path}/${p_foldername}" != "$p_source_path" ] && [ $p_flag_clean -eq 0 ]; then
-
-            printf 'Eliminando el subfolder "%b%s%b" y todo su contenido ...\n' "$g_color_gray1" "${p_target_path}/${p_foldername}" \
-                   "$g_color_reset"
-            sudo rm -rf ${p_target_path}/${p_foldername}
-
-        fi
-    fi
-
-
-    #B. Descomprimir
+    #A. Descomprimir
     _uncompress_file "$p_source_path" "$p_source_filename" $p_source_filetype "$p_target_path" 0
 
-    #C. Si es modelo 1 (el contenido del programa esta directamente en el folder destino), salir 
+    #B. Si no requiere renombrar uns subfolder generado
     if [ -z "$p_foldername" ]; then
         return 0
     fi
 
-    #D. Si el modelo 2 (el contenido del programa esta en un subfolder generado en la descomprención), renombrar el folder generado
+    #C. Si no requiere renombrar uns subfolder generado
 
     #Si se debe buscar y renombrar el folder autogenerado por la descomprención:
     if [ ! -z "$p_foldername_searchprefix" ]; then
@@ -1867,9 +2137,8 @@ uncompress_on_folder() {
 
     fi
 
-
-
     return 0
+
 
 }
 
@@ -1888,13 +2157,13 @@ syncronize_folders() {
     #1. Argumentos
     local p_source_path="${g_temp_path}/$1"
 
-    local p_target_path_type=0
+    local p_is_lnx_prgs=0
     if [ "$2" = "1" ]; then
-        p_target_path_type=1
+        p_is_lnx_prgs=1
     fi
 
     local p_target_path="${g_programs_path}/$3"
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
         p_target_path="${g_win_programs_path}/$3"
     fi
 
@@ -1910,7 +2179,7 @@ syncronize_folders() {
 
     #2. Si el destino es una caepeta del temporal o de programa de Windows (no verificar los permisos)
     local l_aux=''
-    if [ $p_target_path_type -eq 1 ]; then
+    if [ $p_is_lnx_prgs -eq 1 ]; then
 
         #Sincronizar (copiar y remplazar los archivos modificados sin advertencia interactiva)
         printf 'Ejecutando "%brsync -a --stats %s/ %s%b"...\n' "$g_color_gray1" "$p_source_path" "$p_target_path" "$g_color_reset"

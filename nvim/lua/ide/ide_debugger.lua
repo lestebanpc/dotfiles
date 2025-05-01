@@ -141,18 +141,24 @@ vim.keymap.set("n", "<F9>", "<cmd>lua require('dap').toggle_breakpoint()<CR>", o
 vim.keymap.set("n", "<space><F9>", "<cmd>lua require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>", opts)
 --vim.keymap.set("n", "<space><F9>", "<cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>", opts)
 
+--vim.keymap.set("n", <leader>br', "<cmd>lua require'dap'.clear_breakpoints()<cr>", "Clear breakpoints")
+
 vim.keymap.set("n", "<space><F8>", "<cmd>lua require('dap').run_to_cursor()<CR>", opts)
 vim.keymap.set("n", "<space><F10>", "<cmd>lua require('dap').step_over()<CR>", opts)
 vim.keymap.set("n", "<space><F11>", "<cmd>lua require('dap').step_into()<CR>", opts)
 vim.keymap.set("n", "<space><F12>", "<cmd>lua require('dap').step_out()<CR>", opts)
 
+
+--vim.keymap.set("n", nnoremap('<leader>dd', "<cmd>lua require'dap'.disconnect()<cr>", "Disconnect")
+--vim.keymap.set("n", nnoremap('<leader>dt', "<cmd>lua require'dap'.terminate()<cr>", "Terminate")
+
 --vim.keymap.set("n", "<space>dh", "<cmd>lua require('dapui').eval()<CR>", opts)
 
 
---Open a REPL / Debug-console.
---nnoremap <space>dr <Cmd>lua require('dap').repl.open()<CR>
---Re-runs the last debug adapter / configuration that ran using
---noremap <space>dl <Cmd>lua require('dap').run_last()<CR>
+-- Open a REPL / Debug-console.
+--vim.keymap.set("n", noremap("<leader>dr", "<cmd>lua require'dap'.repl.toggle()<cr>", "Open REPL")
+-- Re-runs the last debug adapter / configuration that ran using
+--vim.keymap.set("n", noremap("<leader>dl", "<cmd>lua require'dap'.run_last()<cr>", "Run last")
 
 
 
@@ -172,5 +178,11 @@ dap_virtual_text.setup ({
 --DAP Client> DAP adapters
 --------------------------------------------------------------------------------------------------
 
-require('ide.adapters.dap.main')
+-- Configuraciones del cliente DAO
+require('ide.adapters.dap_basics')
+
+-- Configuraciones del un adaptador de un cliente DAP
+--   > DAP cliente complejos de configurar o 
+--   > DAP cliente que requieren adapatadores que lo conviertan el DAP server estandar
+require('ide.adapters.dap_plugins')
 

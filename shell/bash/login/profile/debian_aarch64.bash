@@ -174,6 +174,9 @@ fi
 # CTags
 [ -d "${g_programs_path}/ctags" ] && PATH="${g_programs_path}/ctags/bin:$PATH"
 
+# Lua LS 
+[ -d "${g_programs_path}/lsp_servers/luals/bin" ] && PATH="${g_programs_path}/lsp_servers/luals/bin:$PATH"
+
 # CNI Plugin> Ruta por defecto de los binarios de CNI plugin (no se usara, se usara su archivo de configuración nerdctl.tom)
 #[ -d "${g_programs_path}/cni_plugins" ] && export CNI_PATH=${g_programs_path}/cni_plugins
 

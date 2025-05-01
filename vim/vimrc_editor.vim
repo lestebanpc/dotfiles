@@ -22,7 +22,7 @@
 "     USE_EDITOR=1 nvim
 "   > La limitacion del ultimo caso es que los no plugins filetypes de modo editor no se cargaran
 " 
-" Para NeoVIM, el script de instalacion crea link de archivos/carpetas en su runtimepath por defecto:
+" Para Vim/NeoVIM, el script de instalacion crea link de archivos/carpetas en su runtimepath por defecto:
 "  ~/vimrc                   (VIM)
 "      Archivo de inicialización de VIM
 "      > En modo IDE, es un enlace simbolico a '~/.files/vim/vimrc_ide.vim' 
@@ -85,9 +85,7 @@ let g:use_typing_surround = 0
 let g:use_typing_surround = 0
 let g:use_typing_html_emmet = 0 
 let g:use_ai_plugins = 0
-let g:home_path_lsp_server = ''
-let g:home_path_dap_server = ''
-let g:using_lsp_server_cs_win = 0
+let g:programs_base_path = ''
 
 
 "#########################################################################################################
@@ -107,9 +105,9 @@ runtime setting/setting_basic.vim
 "#########################################################################################################
 
 "StatusLine, TabLine, TMUX, ...
-runtime setting/plugin/ui_basic.vim
+runtime setting/ui/ui_basic.vim
 
 "Utilitarios basicos: FZF, NERDTree, ...
-runtime setting/plugin/ui_extended.vim
+runtime setting/ui/ui_extended.vim
 
 

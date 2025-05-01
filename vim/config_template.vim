@@ -39,24 +39,17 @@
 "let g:use_ai_plugins = 0
 
 
-" Ruta base para los servidores LSP y DAP. Los valores por defecto son:
-" En Linux :
-"   > Path base del LSP Server : '/var/opt/tools/lsp_servers'
-"   > Path base del DAP Server : '/var/opt/tools/dap_servers'
-" En Windows :
-"   > Path base del DAP Server : 'C:/cli/prgs/dap_servers'
-"   > Path base del LSP Server : 'C:/cli/prgs/lsp_servers'
-" Modiquelo si desea cambiar ese valor.
-"let g:home_path_dap_server = 'D:/cli/prgs/dap_Servers'
-"let g:home_path_lsp_server = 'D:/cli/prgs/lsp_Servers'
-"let g:home_path_lsp_server = $HOME .. '/tools/lsp_servers'
-"let g:home_path_dap_server = $HOME .. '/tools/dap_servers'
+" Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.
+" Sus valores por defecto son:
+"   > En Linux   : '/var/opt/tools'
+"   > En Windows : 'c:/cli/prgs'
+" Dentro de esta ruta se debe encontrar (entre otros) los subfolderes:
+"   > Ruta base donde estan los LSP Server            : './lsp_servers/'
+"   > Ruta base donde estan los DAP Server            : './dap_servers/'
+"   > Ruta base donde estan las extensiones de vscode : './vsc_extensions/'
+" Modiquelo si desea cambiar ese valor el valor por defecto.
+"let g:programs_base_path = 'D:/cli/prgs'
+"let g:programs_base_path = $HOME .. '/tools'
 
-
-" Solo para Linux WSL donde Rosalyn tambien esta instalado en Windows.
-" Si es 1 ('true'), se re-usara el LSP Server C# (Roslyn) instalado en Windows.
-" Valor '0' es considerado 'false', otro valor es considerado 'true'.
-" Su valor por defecto es 0 ('false').
-"let g:using_lsp_server_cs_win = 0
 
 

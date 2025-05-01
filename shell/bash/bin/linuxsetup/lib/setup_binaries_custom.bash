@@ -10,7 +10,6 @@
 #> Variables globales de inicialización y constantes {{{
 #------------------------------------------------------------------------------------------------------------------
 
-#TODO incluir maven
 #TODO si se incluye .net runtime con el SDK podria actualizarse un runtime independientemente de su SDK.
 #     por ello se esta desabilitando la instalacion de runtime por aqui
 
@@ -50,7 +49,7 @@ gA_packages=(
         ['3scale-toolbox']='3scale-labs/3scale_toolbox_packaging'
         ['nerd-fonts']='ryanoasis/nerd-fonts'
         ['powershell']='PowerShell/PowerShell'
-        ['roslyn']='OmniSharp/omnisharp-roslyn'
+        ['omnisharp-ls']='OmniSharp/omnisharp-roslyn'
         ['netcoredbg']='Samsung/netcoredbg'
         ['go']='golang'
         ['cmake']='Kitware/CMake'
@@ -94,6 +93,14 @@ gA_packages=(
         ['marksman']='artempyanykh/marksman'
         ['biome']='biomejs/biome'
         ['uv']='astral-sh/uv'
+        ['jbang']='jbangdev/jbang'
+        ['maven']="$g_empty_str"
+        ['vscode-java-test']="$g_empty_str"
+        ['vscode-java-debug']="$g_empty_str"
+        ['luals']='LuaLS/lua-language-server'
+        ['roslyn-ls-lnx']="$g_empty_str"
+        ['roslyn-ls-win']="$g_empty_str"
+
     )
 
 
@@ -116,7 +123,7 @@ ga_menu_options_title=(
     "Binarios para un nodo K8S de 'K0S'"
     "Binarios para un nodo K8S de 'KubeAdm'"
     ".NET  ${g_color_reset}>${g_color_green1} SDK, LSP y DAP server"
-    "Java  ${g_color_reset}>${g_color_green1} RTE/SDK 'GraalVM CE', LSP/DAP server"
+    "Java  ${g_color_reset}>${g_color_green1} RTE/SDK 'GraalVM CE', LSP/DAP server, otros"
     "C/C++ ${g_color_reset}>${g_color_green1} Compiler LLVM/CLang: 'clang', 'clang++', 'lld', 'lldb', 'clangd'"
     "C/C++ ${g_color_reset}>${g_color_green1} Developments tools"
     "NodeJS${g_color_reset}>${g_color_green1} RTE"
@@ -125,7 +132,7 @@ ga_menu_options_title=(
     "Python${g_color_reset}>${g_color_green1} Tools"
     "AWS CLI v2"
     "CTags (indexador de archivos lenguajes de programacion)"
-    "LSP otros: Markdown"
+    "LSP otros: Markdown, LUA"
     )
 
 #WARNING: Un cambio en el orden implica modificar los indices de los eventos:
@@ -150,8 +157,8 @@ ga_menu_options_packages=(
     "oc,operator-sdk,3scale-toolbox,pgo"
     "k0s"
     "cni-plugins,kubectl,kubelet,kubeadm"
-    "net-sdk,roslyn,netcoredbg"
-    "graalvm,jdtls"
+    "net-sdk,omnisharp-ls,roslyn-ls-lnx,roslyn-ls-win,netcoredbg"
+    "graalvm,maven,jbang,jdtls,vscode-java-debug,vscode-java-test"
     "llvm"
     "clangd,cmake,ninja"
     "nodejs"
@@ -160,7 +167,7 @@ ga_menu_options_packages=(
     "uv"
     "awscli"
     "ctags-win,ctags-nowin"
-    "marksman"
+    "marksman", "luals"
     )
 
 #Tipos de SO donde se puede configurar los repositorio 
@@ -202,6 +209,8 @@ declare -A gA_repo_config_os_type=(
         ['tmux-fingers']=14
         ['tmux-thumbs']=14
         ['cilium']=14
+        ['roslyn-ls-lnx']=14
+        ['roslyn-ls-win']=1
     )
 
 
@@ -238,6 +247,9 @@ declare -A gA_repo_base_url=(
         ['helm']='https://get.helm.sh'
         ['awscli']='https://awscli.amazonaws.com'
         ['rclone']='https://downloads.rclone.org'
+        ['maven']='https://dlcdn.apache.org'
+        ['vscode-java-test']='https://marketplace.visualstudio.com'
+        ['vscode-java-debug']='https://marketplace.visualstudio.com'
     )
 
 #Si el repositorio es un paquete del SO (esto no se puede instalar si no es root o se tiene acceso a sudo)
@@ -255,44 +267,6 @@ declare -A gA_repo_is_os_package=(
 
 #Funciones modificables de nivel 1 {{{
 
-
-#Validar si una subversion de un repositorio esta instalada
-#Parametros de salida:
-#  > Valor de retorno:
-#    0 - Esta instalado (Existe)
-#    1 - NO esta instalado (No existe)
-function is_installed_repo_subversion()
-{
-    local p_repo_id="$1"
-    local p_arti_subversion_version="$2"
-    local p_install_win_cmds=1          #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                        #(1) Los binarios de los comandos se estan instalando en Linux
-    if [ "$3" = "0" ]; then
-        p_install_win_cmds=0
-    fi
-
-    #Por defecto las subversiones de un repositorio no esta intalado
-    local l_is_instelled=1
-    local l_status
-
-    #Indicar si alguna subversion ya esta instalado
-    case "$p_repo_id" in
-
-        net-sdk|net-rt-core|net-rt-aspnet)
-
-            #Validar que existe la version no esta instalado
-            _dotnet_exist_version "$p_repo_id" "$p_arti_subversion_version" $p_install_win_cmds
-            l_status=$?
-            if [ $l_status -eq 0 ]; then
-                l_is_instelled=0
-            fi
-            ;;
-    
-    esac
-
-    return $l_is_instelled
-
-}
 
 
 #Obtiene la ultima version de realease obtenido en un repositorio
@@ -378,15 +352,39 @@ function get_repo_last_version() {
         
 
         jdtls)
-            l_aux0=$(curl -Ls ${l_base_url_fixed}/jdtls/snapshots/latest.txt)
+
+            l_aux0=$(curl -s https://download.eclipse.org/jdtls/milestones/ | grep -oP "(?<=/jdtls/milestones/)[0-9]+\.[0-9]+\.[0-9]+" | sort -V | tail -n 1)
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 2
             fi
 
-            l_aux0=${l_aux0%.tar.gz}
-            l_repo_last_version=$(echo "$l_aux0" | head -n 1 | sed -e "$g_regexp_sust_version2")
+            l_aux1=$(curl -Ls ${l_base_url_fixed}/jdtls/milestones/${l_aux0}/latest.txt)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            l_aux1=${l_aux1%.tar.gz}
+            l_repo_last_version=$(echo "$l_aux1" | head -n 1 | sed -e "$g_regexp_sust_version2")
             ;;
+
+
+
+        maven)
+
+            #Busqueda en el repositorio maven por defecto:
+            # Grupo ID    (g): org.apache.maven
+            # Artifact ID (a): apache-maven
+            l_aux0=$(curl -s "https://search.maven.org/solrsearch/select?q=g:org.apache.maven+a:apache-maven&core=gav&rows=20&wt=json" | jq -r '.response.docs[].v' | grep -v -E "alpha|beta|rc|M" | head -n 1)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            l_repo_last_version="$l_aux0"
+            ;;
+
 
         rclone)
             l_aux0=$(curl -fLs ${l_base_url_fixed}/version.txt)
@@ -491,24 +489,8 @@ function get_repo_last_version() {
             if [ $l_status -ne 0 ]; then
                 return 2
             fi
-            ;;
+            ;;        
 
-        graalvm)
-            #Si no esta instalado 'jq' no continuar
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
-                return 1
-            fi
-
-            #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_bin_cmdpath}/jq -r '.tag_name')
-            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | \
-            #                     ${g_bin_cmdpath}/jq -r '.tag_name')
-            l_status=$?
-            if [ $l_status -ne 0 ]; then
-                return 2
-            fi
-            ;;
 
 
         rust)
@@ -521,6 +503,65 @@ function get_repo_last_version() {
             fi
             ;;
 
+
+        vscode-java-test)
+
+            #Si no esta instalado 'jq' no continuar
+            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+                return 1
+            fi
+
+            #Usando el API resumido del repositorio de GitHub
+            l_repo_last_version=$(curl -s -X POST "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery" \
+               -H "Content-Type: application/json" \
+               -H "Accept: application/json;api-version=3.0-preview.1" \
+               -d '{
+                 "filters": [{
+                   "criteria": [{
+                     "filterType": 7,
+                     "value": "vscjava.vscode-java-test"
+                   }]
+                 }],
+                 "assetTypes": ["Microsoft.VisualStudio.Services.VSIXPackage"],
+                 "flags": 0x402
+               }' | ${g_bin_cmdpath}/jq -r '.results[0].extensions[0].versions[0].version')
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+            ;;
+
+
+        vscode-java-debug)
+
+            #Si no esta instalado 'jq' no continuar
+            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+                return 1
+            fi
+
+            #Usando el API resumido del repositorio de GitHub
+            l_repo_last_version=$(curl -s -X POST "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery" \
+               -H "Content-Type: application/json" \
+               -H "Accept: application/json;api-version=3.0-preview.1" \
+               -d '{
+                 "filters": [{
+                   "criteria": [{
+                     "filterType": 7,
+                     "value": "vscjava.vscode-java-debug"
+                   }]
+                 }],
+                 "assetTypes": ["Microsoft.VisualStudio.Services.VSIXPackage"],
+                 "flags": 0x402
+               }' | ${g_bin_cmdpath}/jq -r '.results[0].extensions[0].versions[0].version')
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+            ;;
+
+
         #wezterm)
 
             #No se obtiene la version de la metadata. Solo el hash, el cual no tiene comparacion > o <, solo =
@@ -528,6 +569,87 @@ function get_repo_last_version() {
             #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/tags" | jq '.[] | select(.name == "nightly")'
             #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/commits/c53ca64c33d1658602b9a3aaa412eca9c6544294"
             #;;
+
+
+        roslyn-ls-lnx)
+
+            #Prefijo usadas para Linux:
+            #  alpine-arm64
+            #  alpine-x64
+            #  linux-arm64
+            #  linux-musl-arm64
+            #  linux-musl-x64
+            #  linux-x64
+
+            #Obtener el prefijo
+            l_aux0=''
+            if [ $g_os_type -le 1 ]; then  #Si es Linux
+
+                #Alpine Linux
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ $g_os_architecture_type = "x86_64" ]; then
+                        l_aux0='alpine-x64'
+                    elif [ $g_os_architecture_type = "aarch64" ]; then
+                        l_aux0='alpine-arm64'
+                    fi
+                #Otra distribucion
+                else
+                    if [ $g_os_architecture_type = "x86_64" ]; then
+                        l_aux0='linux-x64'
+                    elif [ $g_os_architecture_type = "aarch64" ]; then
+                        l_aux0='linux-arm64'
+                    fi
+                fi
+
+            fi
+
+            if [ -z "$l_aux0" ]; then
+                return 2
+            fi
+
+            #Obtener la ultima version
+            l_repo_last_version=$(curl -Ls "https://feeds.dev.azure.com/azure-public/vside/_apis/packaging/feeds/vs-impl/packages?packageNameQuery=Microsoft.CodeAnalysis.LanguageServer.${l_aux0}&packageType=nuget" | jq -r '.value[].versions[].version' | grep -vE '(preview|beta|rc)' | sort -V | tail -n 1)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+            ;;
+
+
+        roslyn-ls-win)
+
+            #Prefijo usadas por MacOS
+            #  osx-arm64
+            #  osx-x64
+            #Prefijo usadas por Windows
+            #  win-arm64
+            #  win-x64
+            #  win-x86
+
+            #Obtener el prefijo
+            l_aux0=''
+            if [ $g_os_type -eq 1 ]; then  #Si es Linux WSL2
+
+                if [ $g_os_architecture_type = "x86_64" ]; then
+                    l_aux0='win-x64'
+                elif [ $g_os_architecture_type = "aarch64" ]; then
+                    l_aux0='win-arm64'
+                fi
+
+            fi
+
+            if [ -z "$l_aux0" ]; then
+                return 2
+            fi
+
+            #Obtener la ultima version
+            l_repo_last_version=$(curl -Ls "https://feeds.dev.azure.com/azure-public/vside/_apis/packaging/feeds/vs-impl/packages?packageNameQuery=Microsoft.CodeAnalysis.LanguageServer.${l_aux0}&packageType=nuget" | jq -r '.value[].versions[].version' | grep -vE '(preview|beta|rc)' | sort -V | tail -n 1)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+            ;;
+
 
         *)
             #Si no esta instalado 'jq' no continuar
@@ -592,7 +714,16 @@ function get_repo_last_pretty_version() {
             ;;
 
 
-        jdtls|rust-analyzer|marksman)
+        jdtls)
+
+            #Ejemplo de version
+            #  File: jdt-language-server-1.46.1-202504011455.tar.gz
+            #  Version:
+            #     1.46.1-202504011455   -> 1.46.1
+            l_version="${p_version%-*}"
+            ;;
+
+        rust-analyzer|marksman|roslyn-ls-lnx|roslyn-ls-win)
 
             l_version="${p_version//-/.}"
             ;;
@@ -708,7 +839,8 @@ function get_repo_last_pretty_version() {
 #   3 - Version del respositorio a obtener las subversiones.
 #   4 - Version amigable del respositorio a obtener las subversiones.
 #Parametros salida> STDOUT
-#   Una cadena con las subversiones separadas por espacios.
+#   > Una cadena con las subversiones separadas por espacios. Las subversion puede ser una version amigable (solo numeros comprables o texto), 
+#     o no amigable, ello dependera como se usan en las funciones 'is_installed_repo_subversion', 'get_repo_artifacts' y '_copy_artifact_files'
 #Parametros salida> Valor de retorno:
 #   0 - Tiene subversiones.
 #   1 - No tiene subversiones
@@ -723,6 +855,7 @@ function get_repo_last_subversions() {
     local l_base_url_fixed="${gA_repo_base_url[${p_repo_id}]:-https://github.com}"
     local l_status
     local l_arti_subversions=""
+    local l_aux=''
 
     case "$p_repo_id" in
 
@@ -734,8 +867,11 @@ function get_repo_last_subversions() {
             else
 
                 #printf 'RepoID: "%s", RepoName: "%s", LastVersion: "%s"\n' "$p_repo_id" "$p_repo_name" "$l_repo_last_pretty_version"
+
                 #Obtener las subversiones: estara formado por la ultima version y 2 versiones inferiores 
+                #Devulve la version ingresada y 2 versiones menores a la ingresada separados por ' '
                 l_arti_subversions=$(_dotnet_get_subversions "$p_repo_name" "$l_repo_last_pretty_version")
+
                 #printf 'LastVersion: "%s", Subversiones: "%s"\n' "$l_repo_last_pretty_version" "${l_arti_subversions[@]}"
 
                 #Si solo tiene uns subversion y es la misma que la version, no existe subversiones
@@ -749,22 +885,29 @@ function get_repo_last_subversions() {
 
 
         graalvm)
+
             #Si no esta instalado 'jq' no continuar
             if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
                 return 1
             fi
 
-            l_arti_subversions=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | \
-                ${g_bin_cmdpath}/jq -r '.assets[].name' | grep -e '^graalvm-community-jdk-.*_linux-x64_bin\.tar\.gz$' | \
-                sed -e 's/graalvm-community-jdk-\(.*\)_linux-x64_bin.*/\1/' | sort -r)
 
-            #l_arti_subversions=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | \
-            #   ${g_bin_cmdpath}/jq -r '.assets[].name' | grep -e '^graalvm-ce-java.*-linux-amd64-.*\.tar\.gz$' | \
-            #   sed -e 's/graalvm-ce-java\(.*\)-linux-amd64-.*/\1/' | sort -r)
+            #Obtener las subversiones: estara formado por la ultima version y 3 versiones inferiores
+            #Devulve la version no amigable y 2 versiones menores no amigable separados por ' '
+            #Ejemplo del formato de la subversion 'jdk-24.0.1'
+            l_aux=$(curl -s "https://api.github.com/repos/graalvm/graalvm-ce-builds/releases?per_page=15" | jq -r '.[] | select(.prerelease == false) | .tag_name' | grep 'jdk-' | sort -V -r | awk -F'[.-]' '!seen[$2]++' | head -n 3)
+            #l_aux=$(curl -s "https://api.github.com/repos/graalvm/graalvm-ce-builds/releases?per_page=15" | jq -r '.[] | select(.prerelease == false) | .tag_name' | grep 'jdk-' | sort -V -r | awk -F'[.-]' '!seen[$2]++' | sed 's/^jdk-//' | head -n 3)
 
             #Si solo tiene uns subversion y es la misma que la version, no existe subversiones
-            if [ "$l_repo_last_pretty_version" = "$l_arti_subversions" ]; then
+            if [ "$l_repo_last_version" = "$l_aux" ]; then
                 l_arti_subversions=""
+            else
+                l_arti_subversions=$(echo "$l_aux" | tr '\n' ' ')
+                l_status=$?
+
+                if [ $l_status -ne 0 ]; then
+                    return 1
+                fi
             fi
 
             ;;
@@ -778,6 +921,82 @@ function get_repo_last_subversions() {
 
     echo "$l_arti_subversions"
     return 0
+
+}
+
+
+
+#Validar si una subversion de un repositorio esta instalada
+#Parametros de salida:
+#  > Valor de retorno:
+#    0 - Esta instalado (Existe)
+#    1 - NO esta instalado (No existe)
+function is_installed_repo_subversion()
+{
+    local p_repo_id="$1"
+    local p_arti_subversion_version="$2"
+    local p_install_win_cmds=1          #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+                                        #(1) Los binarios de los comandos se estan instalando en Linux
+    if [ "$3" = "0" ]; then
+        p_install_win_cmds=0
+    fi
+
+    #Por defecto las subversiones de un repositorio no esta intalado
+    local l_is_instelled=1
+    local l_status=1
+    local l_aux1=''
+    local l_aux2=''
+
+    #Indicar si alguna subversion ya esta instalado
+    case "$p_repo_id" in
+
+
+        net-sdk|net-rt-core|net-rt-aspnet)
+
+            #Validar que existe la version no esta instalado
+            _dotnet_exist_version "$p_repo_id" "$p_arti_subversion_version" $p_install_win_cmds
+            l_status=$?
+            if [ $l_status -eq 0 ]; then
+                l_is_instelled=0
+            fi
+            ;;
+    
+
+        graalvm)
+
+            #Ejemplo del formato de la subversion 'jdk-24.0.1'
+            #Obtener el 1er numero de la version
+            l_aux1=$(echo "$p_arti_subversion_version" | sed -n 's/^jdk-\([0-9]*\)\..*/\1/p')
+
+            #Obtener el folder donde se almacena esta subversion
+            l_aux2="${g_programs_path}/graalvm_${l_aux1}"
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_aux2="${g_win_programs_path}/graalvm_${l_aux1}"
+            fi
+
+            if [ -d "${g_win_programs_path}/graalvm_${l_aux1}" ]; then
+
+                #Obtener la version pretty de la version indicada
+                l_aux2=$(_g_repo_current_pretty_version "graalvm" $p_install_win_cmds "${l_aux2}")
+                l_status=$?
+
+                if [ $l_status -eq 0 ]; then
+
+                    #Obteniendo la version amigable del artecto
+                    l_aux1=$(echo "$p_arti_subversion_version" | sed 's/^jdk-//')
+                    if [ "$l_aux1" = "$l_aux2" ]; then
+                        l_is_instelled=0
+                    fi
+
+               fi
+
+            fi
+            ;;
+
+
+    esac
+
+    return $l_is_instelled
 
 }
 
@@ -820,142 +1039,143 @@ function _get_repo_current_pretty_version() {
     #2. Obtener la version actual
     local l_sustitution_regexp="$g_regexp_sust_version1"
     local l_repo_current_version=""
-    local l_tmp=""
-    local l_status=0
-    #local l_aux=""
+    local l_result=""
+    local l_status=1
 
 
     case "$p_repo_id" in
 
         jq)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}jq.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}jq.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}jq --version 2> /dev/null)
+                l_result=$(${l_path_file}jq --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
+
         yq)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}yq.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}yq.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_files}yq --version 2> /dev/null)
+                l_result=$(${l_path_files}yq --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
+
         fzf)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}fzf.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}fzf.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}fzf --version 2> /dev/null)
+                l_result=$(${l_path_file}fzf --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
 
         helm)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}helm.exe version --short 2> /dev/null)
+                l_result=$(${l_path_file}helm.exe version --short 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}helm version --short 2> /dev/null)
+                l_result=$(${l_path_file}helm version --short 2> /dev/null)
                 l_status=$?
             fi
             ;;
 
         delta)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}delta.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}delta.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}delta --version 2> /dev/null)
+                l_result=$(${l_path_file}delta --version 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
-                #l_tmp=$(echo "$l_tmp" | tr '\n' '' | cut -d ' ' -f 2)
-                l_tmp=$(echo "$l_tmp" | cut -d ' ' -f 2 | head -n 1)
+                #l_result=$(echo "$l_result" | tr '\n' '' | cut -d ' ' -f 2)
+                l_result=$(echo "$l_result" | cut -d ' ' -f 2 | head -n 1)
             fi
             ;;
 
         ripgrep)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}rg.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}rg.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}rg --version 2> /dev/null)
+                l_result=$(${l_path_file}rg --version 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
         xsv)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}xsv.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}xsv.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}xsv --version 2> /dev/null)
+                l_result=$(${l_path_file}xsv --version 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
         bat)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}bat.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}bat.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}bat --version 2> /dev/null)
+                l_result=$(${l_path_file}bat --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
 
         oh-my-posh)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}oh-my-posh.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}oh-my-posh.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}oh-my-posh --version 2> /dev/null)
+                l_result=$(${l_path_file}oh-my-posh --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
 
         fd)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}fd.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}fd.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}fd --version 2> /dev/null)
+                l_result=$(${l_path_file}fd --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
 
         zoxide)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}zoxide.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}zoxide.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}zoxide --version 2> /dev/null)
+                l_result=$(${l_path_file}zoxide --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
 
         eza)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}eza.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}eza.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}eza --version 2> /dev/null)
+                l_result=$(${l_path_file}eza --version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | tail -n 2 | head -n 1)
+                l_result=$(echo "$l_result" | tail -n 2 | head -n 1)
                 #l_sustitution_regexp="$g_regexp_sust_version3"
             fi
             ;;
@@ -963,10 +1183,10 @@ function _get_repo_current_pretty_version() {
 
         yazi)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}yazi.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}yazi.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}yazi --version 2> /dev/null)
+                l_result=$(${l_path_file}yazi --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
@@ -975,65 +1195,65 @@ function _get_repo_current_pretty_version() {
 
        lazygit)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}lazygit.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}lazygit.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}lazygit --version 2> /dev/null)
+                l_result=$(${l_path_file}lazygit --version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | sed -e 's/.*, version=\([0-9]\+\.[0-9.]\+\).*/\1/')
+                l_result=$(echo "$l_result" | sed -e 's/.*, version=\([0-9]\+\.[0-9.]\+\).*/\1/')
             fi
             ;;
 
 
         less)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}less.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}less.exe --version 2> /dev/null)
                 l_status=$?
             else
                 return 9;
             fi
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
                 l_sustitution_regexp="$g_regexp_sust_version3"
             fi
             ;;
            
         jwt)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}jwt.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}jwt.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}jwt --version 2> /dev/null)
+                l_result=$(${l_path_file}jwt --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
            
         biome)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}biome.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}biome.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}biome --version 2> /dev/null)
+                l_result=$(${l_path_file}biome --version 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
         step)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}step.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}step.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}step --version 2> /dev/null)
+                l_result=$(${l_path_file}step --version 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
                 #l_sustitution_regexp="$g_regexp_sust_version3"
             fi
             ;;
@@ -1050,34 +1270,34 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}protoc.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}protoc.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}protoc --version 2> /dev/null)
+                l_result=$(${l_path_file}protoc --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
 
         grpcurl)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}grpcurl.exe --version 2>&1)
+                l_result=$(${l_path_file}grpcurl.exe --version 2>&1)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}grpcurl --version 2>&1)
+                l_result=$(${l_path_file}grpcurl --version 2>&1)
                 l_status=$?
             fi
 
             if [ $l_status -ne 0 ]; then
-                l_tmp=""
+                l_result=""
             fi
             ;;
 
         evans)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}evans.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}evans.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}evans --version 2> /dev/null)
+                l_result=$(${l_path_file}evans --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
@@ -1085,17 +1305,17 @@ function _get_repo_current_pretty_version() {
 
         rclone)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}rclone.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}rclone.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}rclone --version 2> /dev/null)
+                l_result=$(${l_path_file}rclone --version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             else
-                l_tmp=""
+                l_result=""
             fi
             ;;
 
@@ -1104,12 +1324,12 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}aws --version 2> /dev/null)
+            l_result=$(${l_path_file}aws --version 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             else
-                l_tmp=""
+                l_result=""
             fi
             ;;
 
@@ -1118,12 +1338,12 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}hadolint --version 2> /dev/null)
+            l_result=$(${l_path_file}hadolint --version 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             else
-                l_tmp=""
+                l_result=""
             fi
             ;;
 
@@ -1132,25 +1352,25 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}trivy --version 2> /dev/null)
+            l_result=$(${l_path_file}trivy --version 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             else
-                l_tmp=""
+                l_result=""
             fi
             ;;
 
         kubectl)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}kubectl.exe version --client=true -o json 2> /dev/null)
+                l_result=$(${l_path_file}kubectl.exe version --client=true -o json 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}kubectl version --client=true -o json 2> /dev/null)
+                l_result=$(${l_path_file}kubectl version --client=true -o json 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | ${g_bin_cmdpath}/jq -r '.clientVersion.gitVersion' 2> /dev/null)
+                l_result=$(echo "$l_result" | ${g_bin_cmdpath}/jq -r '.clientVersion.gitVersion' 2> /dev/null)
                 if [ $? -ne 0 ]; then
                     return 9;
                 fi
@@ -1159,14 +1379,14 @@ function _get_repo_current_pretty_version() {
 
         oc)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}oc.exe version --client=true -o json 2> /dev/null)
+                l_result=$(${l_path_file}oc.exe version --client=true -o json 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}oc version --client=true -o json 2> /dev/null)
+                l_result=$(${l_path_file}oc version --client=true -o json 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | ${g_bin_cmdpath}/jq -r '.releaseClientVersion' 2> /dev/null)
+                l_result=$(echo "$l_result" | ${g_bin_cmdpath}/jq -r '.releaseClientVersion' 2> /dev/null)
                 if [ $? -ne 0 ]; then
                     return 9;
                 fi
@@ -1178,10 +1398,10 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}kubelet --version 2> /dev/null)
+            l_result=$(${l_path_file}kubelet --version 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
                 #l_sustitution_regexp="$g_regexp_sust_version3"
             fi
             ;;
@@ -1191,10 +1411,10 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}kubeadm version -o json 2> /dev/null)
+            l_result=$(${l_path_file}kubeadm version -o json 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | ${g_bin_cmdpath}/jq -r '.clientVersion.gitVersion' 2> /dev/null)
+                l_result=$(echo "$l_result" | ${g_bin_cmdpath}/jq -r '.clientVersion.gitVersion' 2> /dev/null)
                 if [ $? -ne 0 ]; then
                     return 9;
                 fi
@@ -1205,7 +1425,7 @@ function _get_repo_current_pretty_version() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
             else
-                l_tmp=$(${l_path_file}operator-sdk version 2> /dev/null)
+                l_result=$(${l_path_file}operator-sdk version 2> /dev/null)
                 l_status=$?
             fi
             ;;
@@ -1214,7 +1434,7 @@ function _get_repo_current_pretty_version() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
             else
-                l_tmp=$(${l_path_file}3scale --version 2> /dev/null)
+                l_result=$(${l_path_file}3scale --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
@@ -1223,7 +1443,7 @@ function _get_repo_current_pretty_version() {
 
             if [ $p_install_win_cmds -eq 0 ]; then
                 if [ -f "${g_win_programs_path}/pgo.info" ]; then
-                    l_tmp=$(cat "${g_win_programs_path}/pgo.info" | head -n 1)
+                    l_result=$(cat "${g_win_programs_path}/pgo.info" | head -n 1)
                 else
                     #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
                     echo "$g_version_none"
@@ -1231,7 +1451,7 @@ function _get_repo_current_pretty_version() {
                 fi
             else
                 if [ -f "${g_programs_path}/pgo.info" ]; then
-                    l_tmp=$(cat "${g_programs_path}/pgo.info" | head -n 1)
+                    l_result=$(cat "${g_programs_path}/pgo.info" | head -n 1)
                 else
                     #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
                     echo "$g_version_none"
@@ -1242,37 +1462,81 @@ function _get_repo_current_pretty_version() {
 
         k0s)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}k0s.exe version 2> /dev/null)
+                l_result=$(${l_path_file}k0s.exe version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}k0s version 2> /dev/null)
+                l_result=$(${l_path_file}k0s version 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | cut -d ' ' -f 2 | head -n 1)
+                l_result=$(echo "$l_result" | cut -d ' ' -f 2 | head -n 1)
             fi
             ;;
 
-        roslyn)
+        omnisharp-ls)
 
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
-                  l_path_file="${g_win_programs_path}/lsp_servers/omnisharp_roslyn/"
+                  l_path_file="${g_win_programs_path}/lsp_servers/omnisharp_ls/"
                else
-                  l_path_file="${g_programs_path}/lsp_servers/omnisharp_roslyn/"
+                  l_path_file="${g_programs_path}/lsp_servers/omnisharp_ls/"
                fi
             fi
 
             #Obtener la version
             if [ -f "${l_path_file}OmniSharp.deps.json" ]; then
-                l_tmp=$(${g_bin_cmdpath}/jq -r '.targets[][].dependencies."OmniSharp.Stdio"' "${l_path_file}OmniSharp.deps.json" | grep -v "null" | \
+                l_result=$(${g_bin_cmdpath}/jq -r '.targets[][].dependencies."OmniSharp.Stdio"' "${l_path_file}OmniSharp.deps.json" | grep -v "null" | \
                       head -n 1 2> /dev/null)
                 l_status=$?
             else
                 l_status=1
             fi
             ;;
+
+        roslyn-ls-lnx)
+
+            l_status=1
+            l_result=""
+
+            #Solo binarios linux
+            if [ $p_install_win_cmds -eq 0 ]; then
+                return 9
+            fi
+
+            #Obtener la version
+            if [ -f "${g_programs_path}/roslyn_ls.info" ]; then
+                l_result=$(cat "${g_programs_path}/roslyn_ls.info" | head -n 1)
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    l_status=1
+                    l_result=""
+                fi
+            fi
+            ;;
+
+
+        roslyn-ls-win)
+
+            l_status=1
+            l_result=""
+
+            #Solo binarios Windows
+            if [ $p_install_win_cmds -ne 0 ]; then
+                return 9
+            fi
+
+            #Obtener la version
+            if [ -f "${g_win_programs_path}/roslyn_ls.info" ]; then
+                l_result=$(cat "${g_win_programs_path}/roslyn_ls.info" | head -n 1)
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    l_status=1
+                    l_result=""
+                fi
+            fi
+            ;;
+
 
         netcoredbg)
             
@@ -1286,22 +1550,18 @@ function _get_repo_current_pretty_version() {
             fi
 
             #Obtener la version
-            if [ -f "${l_path_file}netcoredbg.info" ]; then
-                l_tmp=$(cat "${l_path_file}netcoredbg.info" | head -n 1)
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_result=$(${l_path_file}netcoredbg.exe --version 2> /dev/null)
+                l_status=$?
             else
-                if [ $p_install_win_cmds -eq 0 ]; then
-                    l_tmp=$(${l_path_file}netcoredbg.exe --version 2> /dev/null)
-                    l_status=$?
-                else
-                    l_tmp=$(${l_path_file}netcoredbg --version 2> /dev/null)
-                    l_status=$?
-                fi
-                if [ $l_status -eq 0 ]; then
-                    l_tmp=$(echo "$l_tmp" | head -n 1)
-                    l_sustitution_regexp="$g_regexp_sust_version2"
-                fi
+                l_result=$(${l_path_file}netcoredbg --version 2> /dev/null)
+                l_status=$?
             fi
-            l_tmp=${l_tmp//-/.}
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+                l_result=${l_result//-/.}
+                l_sustitution_regexp="$g_regexp_sust_version2"
+            fi
             ;;
 
         neovim)
@@ -1317,15 +1577,15 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}nvim.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}nvim.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}nvim --version 2> /dev/null)
+                l_result=$(${l_path_file}nvim --version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1342,10 +1602,10 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}node.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}node.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}node --version 2> /dev/null)
+                l_result=$(${l_path_file}node --version 2> /dev/null)
                 l_status=$?
             fi
             ;;
@@ -1353,7 +1613,7 @@ function _get_repo_current_pretty_version() {
         nerd-fonts)
             if [ $p_install_win_cmds -eq 0 ]; then
                 if [ -f "${g_win_programs_path}/nerd-fonts.info" ]; then
-                    l_tmp=$(cat "${g_win_programs_path}/nerd-fonts.info" | head -n 1)
+                    l_result=$(cat "${g_win_programs_path}/nerd-fonts.info" | head -n 1)
                 else
                     #Siempre se actualizara la fuentes, por ahora no se puede determinar la version instalada
                     echo "$g_version_none"
@@ -1361,7 +1621,7 @@ function _get_repo_current_pretty_version() {
                 fi
             else
                 if [ -f "${g_programs_path}/nerd-fonts.info" ]; then
-                    l_tmp=$(cat "${g_programs_path}/nerd-fonts.info" | head -n 1)
+                    l_result=$(cat "${g_programs_path}/nerd-fonts.info" | head -n 1)
                 else
                     #Siempre se actualizara la fuentes, por ahora no se puede determinar la version instalada
                     echo "$g_version_none"
@@ -1383,15 +1643,15 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}go.exe version 2> /dev/null)
+                l_result=$(${l_path_file}go.exe version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}go version 2> /dev/null)
+                l_result=$(${l_path_file}go version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1403,13 +1663,13 @@ function _get_repo_current_pretty_version() {
             fi
 
             #Obtener la version
-            l_tmp=$(${l_path_file}cargo --version 2> /dev/null)
+            l_result=$(${l_path_file}cargo --version 2> /dev/null)
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             else
-                l_tmp=""
+                l_result=""
             fi
             ;;
 
@@ -1426,15 +1686,15 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}dotnet.exe --list-sdks version 2> /dev/null)
+                l_result=$(${l_path_file}dotnet.exe --list-sdks version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}dotnet --list-sdks version 2> /dev/null)
+                l_result=$(${l_path_file}dotnet --list-sdks version 2> /dev/null)
                 l_status=$?
             fi
 
-            if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
-                l_tmp=$(echo "$l_tmp" | sort -r | head -n 1)
+            if [ $l_status -eq 0 ] && [ ! -z "$l_result" ]; then
+                l_result=$(echo "$l_result" | sort -r | head -n 1)
             fi
             ;;
 
@@ -1452,42 +1712,42 @@ function _get_repo_current_pretty_version() {
 
             #Si esta instalado SDK, no instalarlo
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}dotnet.exe --list-sdks version 2> /dev/null)
+                l_result=$(${l_path_file}dotnet.exe --list-sdks version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}dotnet --list-sdks version 2> /dev/null)
+                l_result=$(${l_path_file}dotnet --list-sdks version 2> /dev/null)
                 l_status=$?
             fi
 
-            if [ $l_status -ne 0 ] || [ -z "$l_tmp" ]; then
+            if [ $l_status -ne 0 ] || [ -z "$l_result" ]; then
                 return 9
             fi
 
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}dotnet.exe --list-runtimes version 2> /dev/null)
+                l_result=$(${l_path_file}dotnet.exe --list-runtimes version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}dotnet --list-runtimes version 2> /dev/null)
+                l_result=$(${l_path_file}dotnet --list-runtimes version 2> /dev/null)
                 l_status=$?
             fi
 
-            if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+            if [ $l_status -eq 0 ] && [ ! -z "$l_result" ]; then
 
                 if [ "$p_repo_id" = "net-rt-core" ]; then
 
-                    l_tmp=$(echo "$l_tmp" | grep 'Microsoft.NETCore.App' | sort -r | head -n 1)
+                    l_result=$(echo "$l_result" | grep 'Microsoft.NETCore.App' | sort -r | head -n 1)
                     l_status=$?
                     if [ $l_status -ne 0 ]; then
-                        l_tmp=""
+                        l_result=""
                     fi
 
                 else
-                    l_tmp=$(echo "$l_tmp" | grep 'Microsoft.AspNetCore.App' | sort -r | head -n 1)
+                    l_result=$(echo "$l_result" | grep 'Microsoft.AspNetCore.App' | sort -r | head -n 1)
                     l_status=$?
                     if [ $l_status -ne 0 ]; then
-                        l_tmp=""
+                        l_result=""
                     fi
 
                 fi
@@ -1509,13 +1769,13 @@ function _get_repo_current_pretty_version() {
             fi
 
             #Obtener la version
-            l_tmp=$(${l_path_file}clang --version 2> /dev/null)
+            l_result=$(${l_path_file}clang --version 2> /dev/null)
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             else
-                l_tmp=""
+                l_result=""
             fi
             ;;
 
@@ -1538,17 +1798,17 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}clangd.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}clangd.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}clangd --version 2> /dev/null)
+                l_result=$(${l_path_file}clangd --version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             else
-                l_tmp=""
+                l_result=""
             fi
             ;;
 
@@ -1565,15 +1825,15 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}cmake.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}cmake.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}cmake --version 2> /dev/null)
+                l_result=$(${l_path_file}cmake --version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1581,15 +1841,15 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}ninja.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}ninja.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}ninja --version 2> /dev/null)
+                l_result=$(${l_path_file}ninja --version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1606,15 +1866,15 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}pwsh.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}pwsh.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}pwsh --version 2> /dev/null)
+                l_result=$(${l_path_file}pwsh --version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1625,79 +1885,309 @@ function _get_repo_current_pretty_version() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 if [ -f "${g_win_programs_path}/rust-analyzer.info" ]; then
-                    l_tmp=$(cat "${g_win_programs_path}/rust-analyzer.info" | head -n 1)
+                    l_result=$(cat "${g_win_programs_path}/rust-analyzer.info" | head -n 1)
                     l_status=$?
                 else
-                    l_tmp=$(${l_path_file}rust-analyzer.exe --version 2> /dev/null)
+                    l_result=$(${l_path_file}rust-analyzer.exe --version 2> /dev/null)
                     l_status=$?
                 fi
 
             else
 
                 if [ -f "${g_programs_path}/rust-analyzer.info" ]; then
-                    l_tmp=$(cat "${g_programs_path}/rust-analyzer.info" | head -n 1)
+                    l_result=$(cat "${g_programs_path}/rust-analyzer.info" | head -n 1)
                     l_status=$?
                 else
-                    l_tmp=$(${l_path_file}rust-analyzer --version 2> /dev/null)
+                    l_result=$(${l_path_file}rust-analyzer --version 2> /dev/null)
                     l_status=$?
                 fi
 
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             else
-                l_tmp=""
+                l_result=""
             fi
             ;;
 
-        graalvm)
+
+
+        luals)
+
 
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
-                  l_path_file="${g_win_programs_path}/graalvm/bin/"
+                  l_path_file="${g_win_programs_path}/lsp_servers/luals/bin/"
                else
-                  l_path_file="${g_programs_path}/graalvm/bin/"
-               fi
-            fi
-
-            #Obtener la version (no usar la opcion '-version' pues este envia la info al flujo de error estandar)
-            if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}java.exe --version 2> /dev/null)
-                l_status=$?
-            else
-                l_tmp=$(${l_path_file}java --version 2> /dev/null)
-                l_status=$?
-            fi
-
-            if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | grep GraalVM | head -n 1)
-            fi
-            ;;
-
-        jdtls)
-
-            #Calcular la ruta de archivo/comando donde se obtiene la version
-            if [ -z "$p_path_file" ]; then
-               if [ $p_install_win_cmds -eq 0 ]; then
-                  l_path_file="${g_win_programs_path}/lsp_servers/jdtls/"
-               else
-                  l_path_file="${g_programs_path}/lsp_servers/jdtls/"
+                  l_path_file="${g_programs_path}/lsp_servers/luals/bin/"
                fi
             fi
 
             #Obtener la version
-            l_tmp=$(find ${l_path_file}plugins -maxdepth 1 -mindepth 1 -name 'org.eclipse.jdt.ls.core_*.jar' 2> /dev/null)
-            l_status=$?
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_result=$(${l_path_file}lua-language-server.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_result=$(${l_path_file}lua-language-server --version 2> /dev/null)
+                l_status=$?
+            fi
 
-            if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
-                #Eliminar la ruta relativa
-                l_tmp=${l_tmp##*/}
-                #Eliminar la extensión
-                l_tmp=${l_tmp%.jar}
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
             fi
             ;;
+
+
+        graalvm)
+
+            l_status=1
+            l_result=""
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Calcular la ruta de archivo/comando donde se obtiene la version
+                if [ -z "$p_path_file" ]; then
+                    if [ -f "${g_win_programs_path}/graalvm.info" ]; then
+
+                        #El instaaldor no crea el enlace simbolo, asi que debe irse a la carpeta de la ultima version.
+                        l_result=$(cat "${g_win_programs_path}/graalvm.info" | head -n 1)
+                        l_path_file="${g_win_programs_path}/graalvm_${l_result}/bin/"
+                        l_status=0
+                    fi
+                else
+                    l_status=0
+                fi
+
+                if [ $l_status -eq 0 ] && [ -f "${l_path_file}java.exe" ]; then
+                      
+                    l_result=$(${l_path_file}java.exe --version 2> /dev/null)
+                    l_status=$?
+
+                    if [ $l_status -eq 0 ]; then
+                        l_result=$(echo "$l_result" | head -n 1)
+                    else
+                        l_result=""
+                    fi
+
+                fi
+
+            else
+
+                #Calcular la ruta de archivo/comando donde se obtiene la version
+                if [ -z "$p_path_file" ]; then
+                    l_path_file="${g_programs_path}/graalvm/bin/"
+                fi
+
+                if [ -f "${l_path_file}java" ]; then
+
+                    l_result=$(${l_path_file}java --version 2> /dev/null)
+                    l_status=$?
+
+                    if [ $l_status -eq 0 ]; then
+                        l_result=$(echo "$l_result" | head -n 1)
+                    else
+                        l_result=""
+                    fi
+
+                fi
+
+            fi
+            ;;
+
+
+        jdtls)
+
+            #Obtener la version
+            l_result=""
+            l_status=1
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/eclipse_jdtls.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/eclipse_jdtls.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/eclipse_jdtls.info" ]; then
+                    l_result=$(cat "${g_programs_path}/eclipse_jdtls.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
+
+            #Obtener la version
+            #l_result=$(find ${l_path_file}plugins -maxdepth 1 -mindepth 1 -name 'org.eclipse.jdt.ls.core_*.jar' 2> /dev/null)
+            #l_status=$?
+
+            #if [ $l_status -eq 0 ] && [ ! -z "$l_result" ]; then
+            #    #Eliminar la ruta relativa
+            #    l_result=${l_result##*/}
+            #    #Eliminar la extensión
+            #    l_result=${l_result%.jar}
+            #fi
+            ;;
+
+
+        jbang)
+
+            #Obtener la version
+            l_result=""
+            l_status=1
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/jbang.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/jbang.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/jbang.info" ]; then
+                    l_result=$(cat "${g_programs_path}/jbang.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
+            ;;
+
+
+        maven)
+
+            l_status=1
+            l_result=""
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Calcular la ruta de archivo/comando donde se obtiene la version
+                if [ -z "$p_path_file" ]; then
+                    if [ -f "${g_win_programs_path}/maven.info" ]; then
+
+                        #El instaaldor no crea el enlace simbolo, asi que debe irse a la carpeta de la ultima version.
+                        l_result=$(cat "${g_win_programs_path}/maven.info" | head -n 1)
+                        l_path_file="${g_win_programs_path}/maven_${l_result}/bin/"
+                        l_status=0
+                    fi
+                else
+                    l_status=0
+                fi
+
+                if [ $l_status -eq 0 ] && [ -f "${l_path_file}mvn.cmd" ]; then
+                      
+                    l_result=$(${l_path_file}mvn.cmd --version 2> /dev/null)
+                    l_status=$?
+
+                    if [ $l_status -eq 0 ]; then
+                        l_result=$(echo "$l_result" | head -n 1)
+                    else
+                        l_result=""
+                    fi
+
+                fi
+
+            else
+
+                #Calcular la ruta de archivo/comando donde se obtiene la version
+                if [ -z "$p_path_file" ]; then
+                    l_path_file="${g_programs_path}/maven/bin/"
+                fi
+
+                if [ -f "${l_path_file}mvn" ]; then
+
+                    l_result=$(${l_path_file}mvn --version 2> /dev/null)
+                    l_status=$?
+
+                    if [ $l_status -eq 0 ]; then
+                        l_result=$(echo "$l_result" | head -n 1)
+                    else
+                        l_result=""
+                    fi
+
+                fi
+
+            fi
+            ;;
+
+
+
+        vscode-java-debug)
+
+            #Obtener la version
+            l_result=""
+            l_status=1
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/vscode-java-debug.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/vscode-java-debug.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/vscode-java-debug.info" ]; then
+                    l_result=$(cat "${g_programs_path}/vscode-java-debug.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
+            ;;
+
+
+        vscode-java-test)
+
+            #Obtener la version
+            l_result=""
+            l_status=1
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/vscode-java-test.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/vscode-java-test.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/vscode-java-test.info" ]; then
+                    l_result=$(cat "${g_programs_path}/vscode-java-tes.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
+            ;;
+
+
 
         butane)
             
@@ -1706,11 +2196,11 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}butane --version 2> /dev/null)
+            l_result=$(${l_path_file}butane --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1721,11 +2211,11 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}runc --version 2> /dev/null)
+            l_result=$(${l_path_file}runc --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1736,11 +2226,11 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}crun --version 2> /dev/null)
+            l_result=$(${l_path_file}crun --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1752,11 +2242,11 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}fuse-overlayfs --version 2> /dev/null)
+            l_result=$(${l_path_file}fuse-overlayfs --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | grep fuse-overlayfs)
+                l_result=$(echo "$l_result" | grep fuse-overlayfs)
             fi
             ;;
 
@@ -1768,7 +2258,7 @@ function _get_repo_current_pretty_version() {
             fi
 
             if [ -f "${g_programs_path}/cni-plugins.info" ]; then
-                l_tmp=$(cat "${g_programs_path}/cni-plugins.info" | head -n 1)
+                l_result=$(cat "${g_programs_path}/cni-plugins.info" | head -n 1)
             else
 
                 #Calcular la ruta de archivo/comando donde se obtiene la version
@@ -1777,11 +2267,11 @@ function _get_repo_current_pretty_version() {
                 fi
 
                 #CNI vlan plugin v1.2.0
-                l_tmp=$(${l_path_file}vlan --version 2>&1)
+                l_result=$(${l_path_file}vlan --version 2>&1)
                 l_status=$?
             
                 if [ $l_status -eq 0 ]; then
-                    l_tmp=$(echo "$l_tmp" | head -n 1)
+                    l_result=$(echo "$l_result" | head -n 1)
                 fi            
             fi
             ;;
@@ -1794,11 +2284,11 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}slirp4netns --version 2> /dev/null)
+            l_result=$(${l_path_file}slirp4netns --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
                 l_sustitution_regexp="$g_regexp_sust_version5"
             fi
             ;;
@@ -1811,11 +2301,11 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}bypass4netns --version 2> /dev/null)
+            l_result=$(${l_path_file}bypass4netns --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
                 l_sustitution_regexp="$g_regexp_sust_version5"
             fi
             ;;
@@ -1829,11 +2319,11 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}rootlesskit --version 2> /dev/null)
+            l_result=$(${l_path_file}rootlesskit --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1846,11 +2336,11 @@ function _get_repo_current_pretty_version() {
             fi
 
             #containerd github.com/containerd/containerd v1.6.20 2806fc1057397dbaeefbea0e4e17bddfbd388f38
-            l_tmp=$(${l_path_file}containerd --version 2> /dev/null)
+            l_result=$(${l_path_file}containerd --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
                 l_sustitution_regexp='s/.*\sv\([0-9.]\+\).*/\1/'
             fi
             ;;
@@ -1864,11 +2354,11 @@ function _get_repo_current_pretty_version() {
             fi
 
             #nerdctl version 1.3.1
-            l_tmp=$(${l_path_file}nerdctl --version 2> /dev/null)
+            l_result=$(${l_path_file}nerdctl --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1881,11 +2371,11 @@ function _get_repo_current_pretty_version() {
             fi
 
             #buildctl github.com/moby/buildkit v0.11.5 252ae63bcf2a9b62777add4838df5a257b86e991
-            l_tmp=$(${l_path_file}buildkitd --version 2> /dev/null)
+            l_result=$(${l_path_file}buildkitd --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1898,11 +2388,11 @@ function _get_repo_current_pretty_version() {
             fi
 
             #dive 0.10.0
-            l_tmp=$(${l_path_file}dive --version 2> /dev/null)
+            l_result=$(${l_path_file}dive --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1913,11 +2403,11 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}crictl --version 2> /dev/null)
+            l_result=$(${l_path_file}crictl --version 2> /dev/null)
             l_status=$?
             
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -1928,7 +2418,7 @@ function _get_repo_current_pretty_version() {
             fi
 
             if [ -f "${g_win_programs_path}/ctags.info" ]; then
-                l_tmp=$(cat "${g_win_programs_path}/ctags.info" | head -n 1)
+                l_result=$(cat "${g_win_programs_path}/ctags.info" | head -n 1)
             else
                 #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
                 echo "$g_version_none"
@@ -1943,7 +2433,7 @@ function _get_repo_current_pretty_version() {
             fi
 
             if [ -f "${g_programs_path}/ctags.info" ]; then
-                l_tmp=$(cat "${g_programs_path}/ctags.info" | head -n 1)
+                l_result=$(cat "${g_programs_path}/ctags.info" | head -n 1)
             else
                 #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
                 echo "$g_version_none"
@@ -1957,7 +2447,7 @@ function _get_repo_current_pretty_version() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 if [ -f "${g_win_programs_path}/cilium.info" ]; then
-                    l_tmp=$(cat "${g_win_programs_path}/cilium.info" | head -n 1)
+                    l_result=$(cat "${g_win_programs_path}/cilium.info" | head -n 1)
                 else
                     #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
                     echo "$g_version_none"
@@ -1967,7 +2457,7 @@ function _get_repo_current_pretty_version() {
             else
 
                 if [ -f "${g_programs_path}/cilium.info" ]; then
-                    l_tmp=$(cat "${g_programs_path}/cilium.info" | head -n 1)
+                    l_result=$(cat "${g_programs_path}/cilium.info" | head -n 1)
                 else
                     #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
                     echo "$g_version_none"
@@ -1983,7 +2473,7 @@ function _get_repo_current_pretty_version() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 if [ -f "${g_win_programs_path}/marksman.info" ]; then
-                    l_tmp=$(cat "${g_win_programs_path}/marksman.info" | head -n 1)
+                    l_result=$(cat "${g_win_programs_path}/marksman.info" | head -n 1)
                 else
                     #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
                     echo "$g_version_none"
@@ -1993,7 +2483,7 @@ function _get_repo_current_pretty_version() {
             else
 
                 if [ -f "${g_programs_path}/marksman.info" ]; then
-                    l_tmp=$(cat "${g_programs_path}/marksman.info" | head -n 1)
+                    l_result=$(cat "${g_programs_path}/marksman.info" | head -n 1)
                 else
                     #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
                     echo "$g_version_none"
@@ -2012,7 +2502,7 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ -f "${g_programs_path}/tmux-fingers.info" ]; then
-                l_tmp=$(cat "${g_programs_path}/tmux-fingers.info" | head -n 1)
+                l_result=$(cat "${g_programs_path}/tmux-fingers.info" | head -n 1)
             else
                 #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
                 echo "$g_version_none"
@@ -2028,11 +2518,11 @@ function _get_repo_current_pretty_version() {
                 return 9
             fi
 
-            l_tmp=$(${l_path_file}tmux-fingers --version 2> /dev/null)
+            l_result=$(${l_path_file}tmux-fingers --version 2> /dev/null)
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -2042,15 +2532,15 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}sesh.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}sesh.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}sesh --version 2> /dev/null)
+                l_result=$(${l_path_file}sesh --version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -2059,15 +2549,15 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}gum.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}gum.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}gum --version 2> /dev/null)
+                l_result=$(${l_path_file}gum --version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -2085,15 +2575,15 @@ function _get_repo_current_pretty_version() {
 
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}wezterm.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}wezterm.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}wezterm --version 2> /dev/null)
+                l_result=$(${l_path_file}wezterm --version 2> /dev/null)
                 l_status=$?
             fi
 
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | sed -e 's/[^0-9]*\([0-9]\+\).*/\1/')
+                l_result=$(echo "$l_result" | sed -e 's/[^0-9]*\([0-9]\+\).*/\1/')
             fi
             ;;
 
@@ -2102,14 +2592,14 @@ function _get_repo_current_pretty_version() {
 
         uv)
             if [ $p_install_win_cmds -eq 0 ]; then
-                l_tmp=$(${l_path_file}uv.exe --version 2> /dev/null)
+                l_result=$(${l_path_file}uv.exe --version 2> /dev/null)
                 l_status=$?
             else
-                l_tmp=$(${l_path_file}uv --version 2> /dev/null)
+                l_result=$(${l_path_file}uv --version 2> /dev/null)
                 l_status=$?
             fi
             if [ $l_status -eq 0 ]; then
-                l_tmp=$(echo "$l_tmp" | head -n 1)
+                l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
@@ -2126,12 +2616,12 @@ function _get_repo_current_pretty_version() {
     fi
 
     #Si el comando no devolvio resultado valido
-    if [ -z "$l_tmp" ]; then
+    if [ -z "$l_result" ]; then
         return 2
     fi
 
     #Solo obtiene la 1ra cadena que este formado por caracteres 0-9 y .
-    l_repo_current_version=$(echo "$l_tmp" | sed "$l_sustitution_regexp")
+    l_repo_current_version=$(echo "$l_result" | sed "$l_sustitution_regexp")
     echo "$l_repo_current_version"
 
     if [[ ! "$l_repo_current_version" == [0-9]* ]]; then
@@ -2218,8 +2708,8 @@ _compare_version_current_with() {
 
 #Funciones modificables (Nive 2) {{{
 
-
-#Devuelve un arreglo de artefectos, usando los argumentos 3 y 4 como de referencia:
+#Parametros de salida:
+#  Devuelve un arreglo de artefectos, usando los argumentos 3 y 4 como de referencia:
 #  5> Un arrego de bases URL del los artefactos. 
 #     Si el repositorio tiene muchos artefactos pero todos tiene la misma URL base, solo se puede indicar
 #     solo una URL, la misma URL se replicara para los demas se repitira el mismo valor
@@ -2227,7 +2717,7 @@ _compare_version_current_with() {
 #     Un archivo no comprimido
 #       >  0 si es un binario (no empaquetado o comprimido)
 #       >  1 si es un package
-#     Comprimidos no tan pesados (se descomprimen y copian en el lugar deseado)
+#     Comprimidos no tan pesados (se descomprimen en un temporal y luego copian en el lugar deseado)
 #       > 10 si es un .tar.gz
 #       > 11 si es un .zip
 #       > 12 si es un .gz
@@ -2242,7 +2732,15 @@ _compare_version_current_with() {
 #     No definido
 #       > 99 si no se define el artefacto para el prefijo
 #  7> Un arreglo de nombre de los artectos a descargar
-#En el argumento 2 se debe pasar la version pura quitando, sin contener "v" u otras letras iniciales
+#  En el argumento 2 se debe pasar la version pura quitando, sin contener "v" u otras letras iniciales
+#
+#Valor de retorno:
+#  0 - OK. La URL base (parametro 5 o 'pna_artifact_baseurl') no incluye el nombre del artefacto a descargar.
+#          El parametro 6 ('pna_artifact_names') es el nombre del artectado a descargar y el nombre del archivo con la que se descargara en el temporal.
+#  1 - OK. La URL base (parametro 5 o 'pna_artifact_baseurl') incluye el nombre del artefacto a descargar.
+#          El parametro 6 ('pna_artifact_names') NO el nombre del artectado a descargar, pero es el nombre del archivo con la que se descargara en el temporal.
+#  2 - NOOK
+#
 function get_repo_artifacts() {
 
     #1. Argumentos
@@ -2255,8 +2753,8 @@ function get_repo_artifacts() {
     declare -n pna_artifact_types=$7     #Parametro por referencia: Se devuelve un arreglo de los tipos de los artefactos
     local p_arti_subversion_version="$8"
 
-    local p_install_win_cmds=1         #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
-                                       #(1) Los binarios de los comandos se estan instalando en Linux
+    local p_install_win_cmds=1         #(0) Los binarios son para Windows (Linux WSL2)
+                                       #(1) Los binarios son para Linux
     if [ "$9" = "0" ]; then
         p_install_win_cmds=0
     fi
@@ -2270,6 +2768,8 @@ function get_repo_artifacts() {
     #2. Generar el nombre
     local l_artifact_name=""
     local l_artifact_type=99
+    local l_result=0  #(0) si 'pnra_artifact_baseurl' no incluye el nombre del artefacto a descargar
+                      #(1) si 'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
     local l_status
     local l_aux1
     local l_aux2
@@ -2395,7 +2895,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -2745,7 +3245,7 @@ function get_repo_artifacts() {
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -2874,7 +3374,7 @@ function get_repo_artifacts() {
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3004,7 +3504,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3081,7 +3581,7 @@ function get_repo_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -eq 0 ]; then
-                return 1
+                return 2
             else
                 pna_artifact_names=("kubelet")
                 pna_artifact_types=(0)
@@ -3104,7 +3604,7 @@ function get_repo_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
             if [ $p_install_win_cmds -eq 0 ]; then
-                return 1
+                return 2
             else
                 pna_artifact_names=("kubeadm")
                 pna_artifact_types=(0)
@@ -3131,14 +3631,14 @@ function get_repo_artifacts() {
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #No soportado para Linux
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3166,7 +3666,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             if [ "$g_os_architecture_type" = "aarch64" ]; then
@@ -3177,7 +3677,7 @@ function get_repo_artifacts() {
             pna_artifact_types=(0 0)
             ;;
 
-        roslyn)
+        omnisharp-ls)
 
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -3201,6 +3701,141 @@ function get_repo_artifacts() {
                 pna_artifact_types=(10)
             fi
             ;;
+
+
+
+        luals)
+            #TODO incluir 'lua-language-server-3.14.0-submodules.zip'
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_names=("lua-language-server-${p_repo_last_pretty_version}-win32-x64.zip")
+                pna_artifact_types=(21)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("lua-language-server-${p_repo_last_pretty_version}-linux-x64-musl.tar.gz")
+                    else
+                        pna_artifact_names=("lua-language-server-${p_repo_last_pretty_version}-linux-x64-musl.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("lua-language-server-${p_repo_last_pretty_version}-linux-arm64.tar.gz")
+                    else
+                        pna_artifact_names=("lua-language-server-${p_repo_last_pretty_version}-linux-x64.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(20)
+            fi
+            ;;
+
+
+
+        roslyn-ls-lnx)
+
+            #Solo binarios linux
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 2
+            fi
+
+            #Prefijo usadas para Linux:
+            #  alpine-arm64
+            #  alpine-x64
+            #  linux-arm64
+            #  linux-musl-arm64
+            #  linux-musl-x64
+            #  linux-x64
+
+            #Obtener el prefijo
+            l_aux1=''
+            if [ $g_os_type -le 1 ]; then  #Si es Linux
+
+                #Alpine Linux
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ $g_os_architecture_type = "x86_64" ]; then
+                        l_aux1='alpine-x64'
+                    elif [ $g_os_architecture_type = "aarch64" ]; then
+                        l_aux1='alpine-arm64'
+                    fi
+                #Otra distribucion
+                else
+                    if [ $g_os_architecture_type = "x86_64" ]; then
+                        l_aux1='linux-x64'
+                    elif [ $g_os_architecture_type = "aarch64" ]; then
+                        l_aux1='linux-arm64'
+                    fi
+                fi
+
+            fi
+
+            if [ -z "$l_aux1" ]; then
+                #No implementado para la plataforma actual
+                return 2
+            fi
+
+            #URL base fijo     : "https://pkgs.dev.azure.com/azure-public"
+            #  Organization ID : 3ccf6661-f8ce-4e8a-bb2e-eff943ddd3c7
+            #          Feed ID : 3c18fd2c-cc7c-4cef-8ed7-20227ab3275b
+            l_base_url_fixed="https://pkgs.dev.azure.com/azure-public/3ccf6661-f8ce-4e8a-bb2e-eff943ddd3c7/_apis/packaging/feeds/3c18fd2c-cc7c-4cef-8ed7-20227ab3275b/nuget/packages"
+
+
+            #Parametro requeridos:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("${l_base_url_fixed}/Microsoft.CodeAnalysis.LanguageServer.${l_aux1}/versions/${p_repo_last_version}/content?api-version=6.0-preview.1")
+            pna_artifact_names=("${p_repo_id}.zip")  #No se usara la extensión '.nupkg'
+            pna_artifact_types=(11)
+            ;;
+
+
+        roslyn-ls-win)
+
+            #Solo binarios windows
+            if [ $p_install_win_cmds -ne 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 2
+            fi
+
+            #Prefijo usadas por MacOS
+            #  osx-arm64
+            #  osx-x64
+            #Prefijo usadas por Windows
+            #  win-arm64
+            #  win-x64
+            #  win-x86
+
+            #Obtener el prefijo
+            l_aux1=''
+            if [ $g_os_type -eq 1 ]; then  #Si es Linux WSL2
+
+                if [ $g_os_architecture_type = "x86_64" ]; then
+                    l_aux1='win-x64'
+                elif [ $g_os_architecture_type = "aarch64" ]; then
+                    l_aux1='win-arm64'
+                fi
+
+            fi
+
+            if [ -z "$l_aux1" ]; then
+                #No implementado para la plataforma actual
+                return 2
+            fi
+
+            #URL base fijo     : "https://pkgs.dev.azure.com/azure-public"
+            #  Organization ID : 3ccf6661-f8ce-4e8a-bb2e-eff943ddd3c7
+            #          Feed ID : 3c18fd2c-cc7c-4cef-8ed7-20227ab3275b
+            l_base_url_fixed="https://pkgs.dev.azure.com/azure-public/3ccf6661-f8ce-4e8a-bb2e-eff943ddd3c7/_apis/packaging/feeds/3c18fd2c-cc7c-4cef-8ed7-20227ab3275b/nuget/packages"
+
+
+            #Parametro requeridos:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("${l_base_url_fixed}/Microsoft.CodeAnalysis.LanguageServer.${l_aux1}/versions/${p_repo_last_version}/content?api-version=6.0-preview.1")
+            pna_artifact_names=("${p_repo_id}.zip")  #No se usara la extensión '.nupkg'
+            pna_artifact_types=(11)
+            ;;
+
 
         netcoredbg)
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3266,7 +3901,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #URL base fijo     : "https://static.rust-lang.org/dist"
@@ -3306,7 +3941,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3327,7 +3962,7 @@ function get_repo_artifacts() {
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3360,7 +3995,7 @@ function get_repo_artifacts() {
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3393,7 +4028,7 @@ function get_repo_artifacts() {
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3408,11 +4043,11 @@ function get_repo_artifacts() {
                     pna_artifact_types=(1)
                 else
                     #No soportato en esta distribución Linux
-                    return 1
+                    return 2
                 fi
             else
                 #No se instala nada en Windows
-                return 1
+                return 2
             fi
             ;;
 
@@ -3422,53 +4057,111 @@ function get_repo_artifacts() {
                 pna_artifact_names=("rust-analyzer-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(11)
             else
-                if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("rust-analyzer-aarch64-unknown-linux-gnu.gz")
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("rust-analyzer-aarch64-unknown-linux-gnu.gz")
+                    else
+                        pna_artifact_names=("rust-analyzer-x86_64-unknown-linux-musl.gz")
+                    fi
                 else
-                    pna_artifact_names=("rust-analyzer-x86_64-unknown-linux-gnu.gz")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("rust-analyzer-aarch64-unknown-linux-gnu.gz")
+                    else
+                        pna_artifact_names=("rust-analyzer-x86_64-unknown-linux-gnu.gz")
+                    fi
                 fi
                 pna_artifact_types=(12)
             fi
             ;;
 
         graalvm)
-            #Generar los datos de artefactado requeridos para su configuración:
-            #JDK 21, esta diseñando una nueva forma de instalar plugins a GraalVM, dejando de usar 'GraalVM Updater'
 
             #Si no existe subversiones un repositorio
             if [ -z "$p_arti_subversion_version" ]; then
+
+                #URL base fijo     : "https://github.com"
+                #URL base variable : "graalvm/graalvm-ce-builds/releases/download/<tag_name>"
+                l_base_url_variable="${p_repo_name}/releases/download/${p_repo_last_version}"
+
+                #Generar la URL con el artefactado:
+                pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
                 if [ $p_install_win_cmds -eq 0 ]; then
-                    pna_artifact_names=("graalvm-community-jdk-${p_repo_last_pretty_version}_windows-x64_bin.zip")
+
+                    pna_artifact_names=("graalvm-community-${p_repo_last_version}_windows-x64_bin.zip")
+
+                    #No se descomprim
                     pna_artifact_types=(21)
+
                 else
-                    if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("graalvm-community-jdk-${p_repo_last_pretty_version}_linux-aarch64_bin.tar.gz")
+                    #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                    if [ $g_os_subtype_id -eq 1 ]; then
+                        if [ "$g_os_architecture_type" = "aarch64" ]; then
+                            pna_artifact_names=("graalvm-community-${p_repo_last_version}_linux-aarch64_bin.tar.gz")
+                        else
+                            pna_artifact_names=("graalvm-community-${p_repo_last_version}_linux-x64_bin.tar.gz")
+                        fi
                     else
-                        pna_artifact_names=("graalvm-community-jdk-${p_repo_last_pretty_version}_linux-x64_bin.tar.gz")
+                        if [ "$g_os_architecture_type" = "aarch64" ]; then
+                            pna_artifact_names=("graalvm-community-${p_repo_last_version}_linux-aarch64_bin.tar.gz")
+                        else
+                            pna_artifact_names=("graalvm-community-${p_repo_last_version}_linux-x64_bin.tar.gz")
+                        fi
                     fi
+
+                    #No se descomprim
                     pna_artifact_types=(20)
+
                 fi
-            #Si existe subversiones en el repositorio
-            #TODO Corregir las URLs
+
+            #Si existe subversiones en un repositorios
             else
+
+                #URL base fijo     : "https://github.com"
+                #URL base variable : "graalvm/graalvm-ce-builds/releases/<tag_name>"
+                l_base_url_variable="${p_repo_name}/releases/download/${p_arti_subversion_version}"
+
+
+                #Generar la URL con el artefactado:
+                pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
                 if [ $p_install_win_cmds -eq 0 ]; then
-                    pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-windows-amd64-${p_repo_last_pretty_version}.zip")
+
+                    pna_artifact_names=("graalvm-community-${p_arti_subversion_version}_windows-x64_bin.zip")
+
+                    #No se descomprim
                     pna_artifact_types=(21)
+
                 else
-                    if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-linux-aarch64-${p_repo_last_pretty_version}.tar.gz")
+                    #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                    if [ $g_os_subtype_id -eq 1 ]; then
+                        if [ "$g_os_architecture_type" = "aarch64" ]; then
+                            pna_artifact_names=("graalvm-community-${p_arti_subversion_version}_linux-aarch64_bin.tar.gz")
+                        else
+                            pna_artifact_names=("graalvm-community-${p_arti_subversion_version}_linux-x64_bin.tar.gz")
+                        fi
                     else
-                        pna_artifact_names=("graalvm-ce-java${p_arti_subversion_version}-linux-amd64-${p_repo_last_pretty_version}.tar.gz")
+                        if [ "$g_os_architecture_type" = "aarch64" ]; then
+                            pna_artifact_names=("graalvm-community-${p_arti_subversion_version}_linux-aarch64_bin.tar.gz")
+                        else
+                            pna_artifact_names=("graalvm-community-${p_arti_subversion_version}_linux-x64_bin.tar.gz")
+                        fi
                     fi
+
+                    #No se descomprim
                     pna_artifact_types=(20)
+
                 fi
+
+
             fi
             ;;
+
+
         
         jdtls)
             #URL base fijo     : "https://download.eclipse.org"
             #URL base variable :
-            l_base_url_variable="${p_repo_name}/snapshots"
+            l_base_url_variable="jdtls/milestones/${p_repo_last_pretty_version}"
 
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
@@ -3476,11 +4169,89 @@ function get_repo_artifacts() {
             pna_artifact_types=(10)
             ;;
 
+
+        jbang)
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_names=("jbang-${p_repo_last_pretty_version}.zip")
+            pna_artifact_types=(21)
+            ;;
+
+
+        maven)
+            #URL base fijo     : "https://dlcdn.apache.org"
+            #URL base variable :
+            l_base_url_variable="maven/maven-${p_repo_last_pretty_version%%.*}/${p_repo_last_pretty_version}/binaries"
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
+            pna_artifact_names=("apache-maven-${p_repo_last_pretty_version}-bin.tar.gz")
+            pna_artifact_types=(20)
+            ;;
+
+
+        vscode-java-debug)
+
+            #Obtener la URL del artefacto a descargar
+            l_aux=$(curl -s -X POST "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery" \
+                      -H "Content-Type: application/json" \
+                      -H "Accept: application/json;api-version=3.0-preview.1" \
+                      -d '{
+                            "filters": [{
+                              "criteria": [{
+                                "filterType": 7,
+                                "value": "vscjava.vscode-java-debug"
+                              }]
+                            }],
+                            "assetTypes": ["Microsoft.VisualStudio.Services.VSIXPackage"],
+                            "flags": 0x402
+                        }' | jq -r '.results[0].extensions[0].versions[0].files[0].source')
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("$l_aux")
+            pna_artifact_names=("${p_repo_id}.zip") #No se usara la extensión '.vsix'
+            pna_artifact_types=(11)
+            ;;
+
+
+        vscode-java-test)
+
+            #Obtener la URL del artefacto a descargar
+            l_aux=$(curl -s -X POST "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery" \
+                      -H "Content-Type: application/json" \
+                      -H "Accept: application/json;api-version=3.0-preview.1" \
+                      -d '{
+                            "filters": [{
+                              "criteria": [{
+                                "filterType": 7,
+                                "value": "vscjava.vscode-java-test"
+                              }]
+                            }],
+                            "assetTypes": ["Microsoft.VisualStudio.Services.VSIXPackage"],
+                            "flags": 0x402
+                        }' | jq -r '.results[0].extensions[0].versions[0].files[0].source')
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("$l_aux")
+            pna_artifact_names=("${p_repo_id}.zip") #No se usara la extensión '.vsix'
+            pna_artifact_types=(11)
+            ;;
+
+
         butane)
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3496,7 +4267,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3512,7 +4283,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3528,7 +4299,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3544,7 +4315,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3560,7 +4331,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3576,7 +4347,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3592,7 +4363,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3608,7 +4379,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3620,7 +4391,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3637,7 +4408,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3654,7 +4425,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3671,7 +4442,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3689,7 +4460,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3703,7 +4474,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3721,14 +4492,14 @@ function get_repo_artifacts() {
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #No soportado para Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3747,14 +4518,14 @@ function get_repo_artifacts() {
             if [ "$g_os_architecture_type" = "aarch64" ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #No soportado para Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3863,7 +4634,7 @@ function get_repo_artifacts() {
             if [ $p_install_win_cmds -ne 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
-                return 1
+                return 2
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -3906,11 +4677,11 @@ function get_repo_artifacts() {
         *)
            pna_artifact_baseurl=()
            pna_artifact_names=()
-           return 1
+           return 2
            ;;
     esac
 
-    return 0
+    return $l_result
 }
 
 
@@ -5098,6 +5869,9 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
+                #echo "Renombrando \"${p_artifact_filename_woext}.exe\" como \"${g_temp_path}/${l_source_path}/rust-analyzer.exe\" ..."
+                #mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/rust-analyzer.exe"
+
                 copy_binary_on_command "${l_source_path}" "rust-analyzer.exe" 1 1 
                 
                 #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
@@ -5108,6 +5882,9 @@ function _copy_artifact_files() {
             fi
 
             #B. Si es Linux (no WSL)
+
+            echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/rust-analyzer\" ..."
+            mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/rust-analyzer"
 
             #Copiando el binario en una ruta del path
             copy_binary_on_command "${l_source_path}" "rust-analyzer" 0 1 
@@ -5884,7 +6661,7 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Creando el folder si no existe y no limpiarlo si existe
-            create_or_clean_folder_on_program "aws-cli" "" 0 0
+            create_or_clean_folder_on_program 0 "aws-cli" 0 ""
 
             #Instalando 
             if [ $p_flag_install -eq 0 ]; then
@@ -5913,7 +6690,7 @@ function _copy_artifact_files() {
             fi
 
             #Crear el folder de programa si no existe pero NO Limpiar el contenido si existe (el 'install.sh' puede eliminar versiones anteriores)
-            create_or_clean_folder_on_program "rust" "" 0 0
+            create_or_clean_folder_on_program 0 "rust" 0 ""
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
@@ -5999,7 +6776,7 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program "protoc" "" 1 1
+                create_or_clean_folder_on_program 1 "protoc" 1 ""
 
                 #Moviendo el cotenido del folder source al folder de programa
                 move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 1 "protoc" ""
@@ -6011,7 +6788,7 @@ function _copy_artifact_files() {
             #B. Si es Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program "protoc" "" 0 1
+            create_or_clean_folder_on_program 0 "protoc" 1 ""
 
             #Moviendo el cotenido del folder source al folder de programa
             move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 0 "protoc" ""
@@ -6030,7 +6807,7 @@ function _copy_artifact_files() {
             ;;
 
 
-        roslyn)
+        omnisharp-ls)
             
             #Ruta local de los artefactos
             #l_source_path="${p_repo_id}/${p_artifact_index}"
@@ -6039,10 +6816,10 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program "lsp_servers" "omnisharp_roslyn" 1 1
+                create_or_clean_folder_on_program 1 "lsp_servers/omnisharp_ls" 1 ""
 
-                move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 1 "lsp_servers/omnisharp_Roslyn" ""
-                #move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 1 "LSP_Servers/Omnisharp_Roslyn" "-not -name '${p_artifact_filename_woext}.zip'"
+                move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 1 "lsp_servers/omnisharp_ls" ""
+                #move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 1 "LSP_Servers/omnisharp_ls" "-not -name '${p_artifact_filename_woext}.zip'"
                 return 0
 
             fi
@@ -6050,11 +6827,11 @@ function _copy_artifact_files() {
             #B. Si es Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program "lsp_servers" "omnisharp_roslyn" 0 1
+            create_or_clean_folder_on_program 0 "lsp_servers/omnisharp_ls" 1 ""
 
             #Moviendo el contenido del folder source al folder de programa
-            move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 0 "lsp_servers/omnisharp_roslyn" ""
-            #move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 0 "lsp_servers/omnisharp_roslyn" "-not -name '${p_artifact_filename_woext}.tar.gz'"
+            move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 0 "lsp_servers/omnisharp_ls" ""
+            #move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 0 "lsp_servers/omnisharp_ls" "-not -name '${p_artifact_filename_woext}.tar.gz'"
             ;;
 
 
@@ -6067,7 +6844,7 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program "dap_servers" "netcoredbg" 1 1
+                create_or_clean_folder_on_program 1 "dap_servers/netcoredbg" 1 ""
 
                 move_tempfoldercontent_on_program "$l_source_path" 1 "dap_servers/netcoredbg" ""
                 #move_tempfoldercontent_on_program "$l_source_path" 1 "dap_servers/netcoredbg" "-not -name '${p_artifact_filename_woext}.zip'"
@@ -6078,7 +6855,7 @@ function _copy_artifact_files() {
             #B. Si es Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program "dap_servers" "netcoredbg" 0 1
+            create_or_clean_folder_on_program 0 "dap_servers/netcoredbg" 1 ""
 
             #Moviendo el contenido del folder source al folder de programa
             move_tempfoldercontent_on_program "$l_source_path" 0 "dap_servers/netcoredbg" ""
@@ -6097,7 +6874,7 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program "lsp_servers" "clangd" 1 1
+                create_or_clean_folder_on_program 1 "lsp_servers/clangd" 1 ""
 
                 move_tempfoldercontent_on_program "$l_source_path" 1 "lsp_servers/clangd" ""
                 return 0
@@ -6107,7 +6884,7 @@ function _copy_artifact_files() {
             #B. Si es Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program "lsp_servers" "clangd" 0 1
+            create_or_clean_folder_on_program 0 "lsp_servers/clangd" 1 ""
 
             #Moviendo el contenido del folder source al folder de programa
             move_tempfoldercontent_on_program "$l_source_path" 0 "lsp_servers/clangd" ""
@@ -6125,9 +6902,17 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program "lsp_servers" "jdtls" 1 1
+                create_or_clean_folder_on_program 1 "lsp_servers/jdtls" 1 ""
 
                 move_tempfoldercontent_on_program "$l_source_path" 1 "lsp_servers/jdtls" ""
+
+
+                printf 'Descargando el archivo "%s" (para no mostrar errores cuando se usa sus anotaciones) en "%s"\n' "lombok.jar" \
+                       "${g_win_programs_path}/lsp_servers/jdtls"
+                curl -fLo "${g_win_programs_path}/lsp_servers/jdtls/lombok.jar" https://projectlombok.org/downloads/lombok.jar 
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "eclipse_jdtls.info" "$p_repo_last_pretty_version" 1
                 return 0
 
             fi
@@ -6136,17 +6921,335 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program "lsp_servers" "jdtls" 0 1
+            create_or_clean_folder_on_program 0 "lsp_servers/jdtls" 1 ""
 
             #Moviendo el contenido del folder source al folder de programa
             move_tempfoldercontent_on_program "$l_source_path" 0 "lsp_servers/jdtls" ""
+
+            printf 'Descargando el archivo "%s" (para no mostrar errores cuando se usa sus anotaciones) en "%s"\n' "lombok.jar" \
+                   "${g_programs_path}/lsp_servers/jdtls"
+            curl -fLo "${g_programs_path}/lsp_servers/jdtls/lombok.jar" https://projectlombok.org/downloads/lombok.jar 
+           
+            #Fix permisos
+            if [ $g_runner_is_target_user -ne 0 ]; then
+                chown "${g_targethome_owner}:${g_targethome_group}" "${g_programs_path}/lsp_servers/jdtls/lombok.jar" 
+            fi
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "eclipse_jdtls.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+        luals)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Creando el folder si no existe y limpiarlo si existe
+                create_or_clean_folder_on_program 1 "lsp_servers/luals" 2 ""
+
+                #Descomprimir
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "lsp_servers/luals" "" ""
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    return 40
+                fi
+
+                return 0
+            fi
+
+
+            #B. Si son binarios Linux
+            
+            #Creando el folder si no existe y limpiarlo si existe
+            create_or_clean_folder_on_program 0 "lsp_servers/luals" 2 ""
+
+            #Descomprimir
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "lsp_servers/luals" "" ""
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 40
+            fi
+            ;;
+
+
+
+        jbang)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Creando el folder si no existe y limpiarlo si existe
+                create_or_clean_folder_on_program 1 "jbang" 2 ""
+
+                #Descomprimir
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "jbang" "jbang-"
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    return 40
+                fi
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "jbang.info" "$p_repo_last_pretty_version" 1
+                return 0
+            fi
+
+
+            #B. Si son binarios Linux
+            
+            #Creando el folder si no existe y limpiarlo si existe
+            create_or_clean_folder_on_program 0 "jbang" 2 ""
+
+            #Descomprimir
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "jbang" "jbang-"
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 40
+            fi
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "jbang.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+
+        maven)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Determinar el prefijo del folder a renombrar (solo si existe una version ya instalada y hay cambio de version)
+            #Se considera que en el cambio de version, la version sera la ultima estable (no hay upgrade para esta)
+            l_target_path="maven_${p_repo_last_pretty_version%%.*}"
+
+
+            #A. Si son binarios Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "" "$l_target_path" 0 ""
+
+                #Descomprimir
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "$l_target_path" "apache-maven-"
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    return 40
+                fi
+
+                printf '%bValide que existe un enlace simbolo de "%s" a "%s" a en Windows%b.\n' \
+                    "$g_color_yellow1" "./maven/"  "./${l_target_path}/" "$g_color_reset"
+
+                #Debido no es practivo crear un enlace simbolo en Windows desde linux, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "maven.info" "${p_repo_current_pretty_version%%.*}" 1
+
+                return 0
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "" "$l_target_path" 0 ""
+
+            #Descomprimir
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "$l_target_path" "apache-maven-"
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 40
+            fi
+
+            #Crear el enlace simbolico del la ultima version
+            create_folderlink_on_program "$l_target_path" "" "maven" ""
+
+            ;;
+
+
+        vscode-java-test)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "ms_java_test" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_test"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+            
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "ms_java_test" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_test"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+
+        vscode-java-debug)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "ms_java_debug" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_debug"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+            
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "ms_java_debug" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_debug"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+
+        roslyn-ls-lnx)
+
+            #No se soportado para binarios Windows 
+            if [ $p_install_win_cmds -eq 0 ]; then
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                return 40
+            fi
+                
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "lsp_servers" "roslyn_ls" 0 ""
+
+            #Mover la extension en su carpeta
+            l_aux=''
+            if [ $g_os_type -le 1 ]; then  #Si es Linux
+
+                #Alpine Linux
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ $g_os_architecture_type = "x86_64" ]; then
+                        l_aux='alpine-x64'
+                    elif [ $g_os_architecture_type = "aarch64" ]; then
+                        l_aux='alpine-arm64'
+                    fi
+                #Otra distribucion
+                else
+                    if [ $g_os_architecture_type = "x86_64" ]; then
+                        l_aux='linux-x64'
+                    elif [ $g_os_architecture_type = "aarch64" ]; then
+                        l_aux='linux-arm64'
+                    fi
+                fi
+
+            fi
+
+            if [ -z "$l_aux" ]; then
+                #No implementado para la plataforma actual
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" no define binarios para la plataforma actual %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "$g_os_architecture_type" "$g_color_reset" 
+                return 41
+            fi
+
+            move_tempfolder_on_program "${l_source_path}" "content/LanguageServer/${l_aux}" 0 "lsp_servers/roslyn_ls"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "roslyn_ls.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+
+        roslyn-ls-win)
+
+            #No se soportado para binarios Linux 
+            if [ $p_install_win_cmds -ne 0 ]; then
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Windows" "$g_color_reset" 
+                return 40
+            fi
+                
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 1 "lsp_servers" "roslyn_ls" 0 ""
+
+            #Mover la extension en su carpeta
+            l_aux=''
+            if [ $g_os_type -eq 1 ]; then  #Si es Linux WSL2
+
+                if [ $g_os_architecture_type = "x86_64" ]; then
+                    l_aux='win-x64'
+                elif [ $g_os_architecture_type = "aarch64" ]; then
+                    l_aux='win-arm64'
+                fi
+
+            fi
+
+            if [ -z "$l_aux" ]; then
+                #No implementado para la plataforma actual
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" no define binarios para la plataforma actual %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "$g_os_architecture_type" "$g_color_reset" 
+                return 41
+            fi
+
+            move_tempfolder_on_program "${l_source_path}" "content/LanguageServer/${l_aux}" 1 "lsp_servers/roslyn_ls"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "roslyn_ls.info" "$p_repo_last_pretty_version" 1
             ;;
 
 
 
         cni-plugins)
 
-            #No se soportado por Windows 
+            #No se soportado para binarios Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
@@ -6176,7 +7279,7 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program "cni_plugins" "" 0 1
+            create_or_clean_folder_on_program 0 "cni_plugins" 1 ""
 
             #Moviendo el contenido del folder source al folder de programa
             move_tempfoldercontent_on_program "$l_source_path" 0 "cni_plugins" ""
@@ -6220,7 +7323,7 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program "ctags" "bin" 0 1
+            create_or_clean_folder_on_program 0 "ctags/bin" 1 ""
 
             #Copiando los binarios
             copy_binary_on_program "${l_source_path}/bin" "ctags" 0 "ctags/bin" 1 
@@ -6251,7 +7354,7 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program "ctags" "bin" 1 1
+            create_or_clean_folder_on_program 1 "ctags/bin" 1 ""
                     
             #Copiando los binarios
             copy_binary_on_program "${l_source_path}" "ctags.exe" 1 "ctags/bin" 1 
@@ -6277,10 +7380,11 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program "powershell" "" 1 2
+                create_or_clean_folder_on_program 1 "powershell" 2 ""
 
                 #Descomprimir
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "powershell" 0 "" ""
+                #TODO
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "powershell" "" ""
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6293,10 +7397,11 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
             
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program "powershell" "" 0 2
+            create_or_clean_folder_on_program 0 "powershell" 2 ""
 
             #Descomprimir
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "powershell" 0 "" ""
+            #TODO
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "powershell" "" ""
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6318,10 +7423,11 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program "wezterm" "" 1 2
+            create_or_clean_folder_on_program 1 "wezterm" 2 ""
 
             #Descomprimir
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "wezterm" 0 "" ""
+            #TODO
+            uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "wezterm" "" ""
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6339,8 +7445,11 @@ function _copy_artifact_files() {
             #A. Si son binarios Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
 
+                #Limpiando el folder si existe (crear la ruta base si no existe)
+                clean_folder_on_program 1 "" "neovim" 0 ""
+
                 #Descomprimir
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "" 0 "neovim" "$p_artifact_filename_woext"
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "neovim" "$p_artifact_filename_woext"
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6352,8 +7461,11 @@ function _copy_artifact_files() {
 
             #B. Si son binarios Linux
             
+            #Limpiando el folder si existe (crear la ruta base si no existe)
+            clean_folder_on_program 0 "" "neovim" 0 ""
+
             #Descomprimir
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "neovim" "$p_artifact_filename_woext"
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "neovim" "$p_artifact_filename_woext"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6385,8 +7497,11 @@ function _copy_artifact_files() {
                 
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
+            #Limpiando el folder si existe (crear la ruta base si no existe)
+            clean_folder_on_program 0 "" "llvm" 0 ""
+
             #Descomprimir
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "llvm" "clang+llvm"
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "llvm" "clang+llvm"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6413,13 +7528,13 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y no limpiarlo si existe
-                create_or_clean_folder_on_program "dotnet" "" 1 0
+                create_or_clean_folder_on_program 1 "dotnet" 0 ""
 
                 #Si se instala (no existe version anterior instalado del respositorio)
                 if [ $p_flag_install -eq 0  ]; then
 
                     #Descomprimiendo el archivo sin eliminar el contenido existente
-                    uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "dotnet" 1 "" ""
+                    uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "dotnet" "" ""
                     l_status=$?
                     if [ $l_status -ne 0 ]; then
                         return 40
@@ -6443,14 +7558,14 @@ function _copy_artifact_files() {
 
             #B. Si son binarios Linux
 
-            #Creando el folder si no existe y no limpiarlo si existe
-            create_or_clean_folder_on_program "dotnet" "" 0 0
+            #Creando el folder si no existe y NO limpiarlo si existe
+            create_or_clean_folder_on_program 0 "dotnet" 0 ""
 
             #Si se instala (no existe version anterior instalado del respositorio)
             if [ $p_flag_install -eq 0  ]; then
 
                 #Descomprimiendo el archivo
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "dotnet" 1 "" ""
+                uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "dotnet" "" ""
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6497,8 +7612,11 @@ function _copy_artifact_files() {
             #A. Si son binarios Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
 
+                #Limpiando el folder si existe (crear la ruta base si no existe)
+                clean_folder_on_program 1 "" "go" 0 ""
+
                 #Descomprimiendo el archivo
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "" 0 "go" ""
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "" ""
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6514,8 +7632,11 @@ function _copy_artifact_files() {
 
             #B. Si son binarios Linux
 
+            #Limpiando el folder si existe (crear la ruta base si no existe)
+            clean_folder_on_program 0 "" "go" 0 ""
+
             #Descomprimiendo el archivo
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "go" ""
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "" ""
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6571,8 +7692,11 @@ function _copy_artifact_files() {
             #A. Si son binarios Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
 
+                #Limpiando el folder si existe (crear la ruta base si no existe)
+                clean_folder_on_program 1 "" "nodejs" 0 ""
+
                 #Descomprimiendo el archivo
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "" 0 "nodejs" "${p_artifact_filename_woext}"
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "nodejs" "${p_artifact_filename_woext}"
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6585,8 +7709,11 @@ function _copy_artifact_files() {
 
             #B. Si son binarios Linux
 
+            #Limpiando el folder si existe (crear la ruta base si no existe)
+            clean_folder_on_program 0 "" "nodejs" 0 ""
+
             #Descomprimiendo el archivo
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "nodejs" "${p_artifact_filename_woext}"
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "nodejs" "${p_artifact_filename_woext}"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6614,8 +7741,11 @@ function _copy_artifact_files() {
             #A. Si son binarios Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
 
+                #Limpiando el folder si existe (crear la ruta base si no existe)
+                clean_folder_on_program 1 "" "cmake" 0 ""
+
                 #Descomprimiendo el archivo
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "" 0 "cmake" "${p_artifact_filename_woext}"
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "cmake" "${p_artifact_filename_woext}"
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
@@ -6628,8 +7758,11 @@ function _copy_artifact_files() {
 
             #B. Si son binarios Linux
 
+            #Limpiando el folder si existe (crear la ruta base si no existe)
+            clean_folder_on_program 0 "" "cmake" 0 ""
+
             #Descomprimiendo el archivo
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "cmake" "${p_artifact_filename_woext}"
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "cmake" "${p_artifact_filename_woext}"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
@@ -6652,7 +7785,18 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #La version a instalar
+            #Ejemplo del formato de la subversion 'jdk-24.0.1'
+            local l_version="$p_arti_subversion_version"
+            if [ -z "$l_version" ]; then
+                l_version="$p_repo_last_version"
+            fi
             
+            #primer numero de la version a instalar
+            l_aux=$(echo "$l_version" | sed -n 's/^jdk-\([0-9]*\)\..*/\1/p')
+            l_target_path="graalvm_${l_aux}"
+
             #No eso se instalaran los plugins (use 'gu install [tool-name]'):
             # Native Image
             # VisualVM
@@ -6668,16 +7812,23 @@ function _copy_artifact_files() {
             #A. Si son binarios Windows 
             if [ $p_install_win_cmds -eq 0 ]; then
 
-                l_target_path="graalvm"
-                if [ $p_arti_subversion_index -ne 0 ]; then
-                    l_target_path="${l_target_path}_${p_arti_subversion_version}"
-                fi
+                #Limpiando el folder si existe (crear la ruta base si no existe)
+                clean_folder_on_program 1 "" "$l_target_path" 0 ""
 
                 #Descomprimiendo el archivo
-                uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 2 "" 0 "$l_target_path" "graalvm-community-"
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "$l_target_path" "graalvm-community-"
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     return 40
+                fi
+
+                if [ $p_arti_subversion_index -eq 0 ]; then
+
+                    printf '%bValide que existe un enlace simbolo de "%s" a "%s" a en Windows%b.\n' \
+                        "$g_color_yellow1" "./graalvm/"  "./${l_target_path}/" "$g_color_reset"
+
+                    #Debido no es practivo crear un enlace simbolo en Windows desde linux, se almacenara la version github que se esta instalando
+                    save_prettyversion_on_program "" "graalvm.info" "$l_aux" 1
                 fi
 
                 return 0
@@ -6686,31 +7837,38 @@ function _copy_artifact_files() {
 
 
             #B. Si son binarios Linux
-            l_target_path="graalvm"
-            if [ $p_arti_subversion_index -ne 0 ]; then
-                l_target_path="${l_target_path}_${p_arti_subversion_version}"
-            fi
+
+            #Limpiando el folder si existe (crear la ruta base si no existe)
+            clean_folder_on_program 0 "" "$l_target_path" 0 ""
 
             #Descomprimiendo el archivo
-            uncompress_on_folder "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) 1 "" 0 "$l_target_path" "graalvm-community-"
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "$l_target_path" "graalvm-community-"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
             fi
 
-            #Validar si 'GraalVM' esta en el PATH
-            echo "$PATH" | grep "${g_programs_path}/graalvm/bin" &> /dev/null
-            l_status=$?
-            if [ $l_status -ne 0 ]; then
-                printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                    "$g_color_red1" "GraalVM"  "$p_repo_last_pretty_version" "$g_color_reset"
-                printf 'Adicionando a la sesion actual: PATH=%s/graalvm/bin:$PATH\n' "${g_programs_path}"
-                export PATH=${g_programs_path}/graalvm/bin:$PATH
-                GRAALVM_HOME=${g_programs_path}/graalvm
-                JAVA_HOME=${GRAALVM_HOME}
-                export GRAALVM_HOME JAVA_HOME
+            if [ $p_arti_subversion_index -eq 0 ]; then
+
+                #Crear el enlace simbolico del la ultima version
+                create_folderlink_on_program "$l_target_path" "" "graalvm" ""
+
+                #Validar si 'GraalVM' esta en el PATH
+                echo "$PATH" | grep "${g_programs_path}/graalvm/bin" &> /dev/null
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                        "$g_color_yellow1" "GraalVM"  "$p_repo_last_pretty_version" "$g_color_reset"
+                    #printf 'Adicionando a la sesion actual: PATH=%s/graalvm/bin:$PATH\n' "${g_programs_path}"
+                    #export PATH=${g_programs_path}/graalvm/bin:$PATH
+                    #GRAALVM_HOME=${g_programs_path}/graalvm
+                    #JAVA_HOME=${GRAALVM_HOME}
+                    #export GRAALVM_HOME JAVA_HOME
+                fi
+
             fi
             ;;
+
 
         uv)
 

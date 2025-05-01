@@ -7,7 +7,7 @@ if g:is_neovim
     packadd fzf-lua
 
     "Configuraciones de los plugins exclusivas
-    lua require('ui.extended')
+    lua require('ui.ui_extended')
 
 endif
 

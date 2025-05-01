@@ -210,6 +210,8 @@ declare -A gA_repos_type=(
         ['mfussenegger/nvim-dap']=4
         ['theHamsta/nvim-dap-virtual-text']=4
         ['rcarriga/nvim-dap-ui']=4
+        ['seblyng/roslyn.nvim']=4
+        ['mfussenegger/nvim-jdtls']=4
         ['nvim-neotest/nvim-nio']=4
         ['github/copilot.vim']=4
         ['stevearc/dressing.nvim']=4
@@ -253,6 +255,8 @@ declare -A gA_repos_scope=(
         ['theHamsta/nvim-dap-virtual-text']=2
         ['rcarriga/nvim-dap-ui']=2
         ['nvim-neotest/nvim-nio']=2
+        ['seblyng/roslyn.nvim']=2
+        ['mfussenegger/nvim-jdtls']=2
         ['stevearc/dressing.nvim']=2
         ['MunifTanjim/nui.nvim']=2
         ['MeanderingProgrammer/render-markdown.nvim']=2
@@ -679,20 +683,26 @@ function _config_developer_vim() {
     printf 'Los plugins del IDE CoC de %s tiene componentes que requieren su inicialización para su uso.\n' "$l_tag"
     printf 'Inicializando dichas componentes del plugins...\n\n'
 
-    #Instalando los parseadores de lenguaje de 'nvim-treesitter'
+    #Instalando los parseadores de lenguaje de 'nvim-treesitter' (se usara el plugin para la instlacion automatica)
     if [ $p_is_neovim -eq 0  ]; then
 
-        #Requiere un compilador C/C++ y NodeJS: https://tree-sitter.github.io/tree-sitter/creating-parsers#installation
-        local l_version=$(_get_gcc_version)
-        if [ ! -z "$l_version" ]; then
-            printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall html latex css javascript jq json yaml xml toml typescript proto make sql bash%b"\n' \
-                   "$g_color_gray1" "$g_color_reset"
-            nvim --headless -c 'TSInstall html latex css javascript jq json yaml xml toml typescript proto make sql bash' -c 'qa'
+         printf '  Valide que los "language parsers" de TreeSitter estan instalados:\n'
+         printf '    %b:TSInstall html latex css javascript jq json yaml xml toml typescript proto make sql bash%b\n' \
+                "$g_color_yellow1" "$g_color_reset"
+         printf '    %b:TSInstall java kotlin llvm lua rust swift c cpp go c_sharp%b\n' \
+                "$g_color_yellow1" "$g_color_reset"
 
-            printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall java kotlin llvm lua rust swift c cpp go c_sharp%b"\n' \
-                   "$g_color_gray1" "$g_color_reset"
-            nvim --headless -c 'TSInstall java kotlin llvm lua rust swift c cpp go c_sharp' -c 'qa'
-        fi
+    #    #Requiere un compilador C/C++ y NodeJS: https://tree-sitter.github.io/tree-sitter/creating-parsers#installation
+    #    local l_version=$(_get_gcc_version)
+    #    if [ ! -z "$l_version" ]; then
+    #        printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall html latex css javascript jq json yaml xml toml typescript proto make sql bash%b"\n' \
+    #               "$g_color_gray1" "$g_color_reset"
+    #        nvim --headless -c 'TSInstall html latex css javascript jq json yaml xml toml typescript proto make sql bash' -c 'qa'
+
+    #        printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall java kotlin llvm lua rust swift c cpp go c_sharp%b"\n' \
+    #               "$g_color_gray1" "$g_color_reset"
+    #        nvim --headless -c 'TSInstall java kotlin llvm lua rust swift c cpp go c_sharp' -c 'qa'
+    #    fi
     fi
 
     #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
@@ -787,6 +797,7 @@ function _setup_nvim_files() {
     #Creando el folder "~/.config/nvim/runtime_nococ"
     create_folderpath_on_home ".config/nvim" "rte_nativeide"
 
+
     
     #2. Creando los enalces simbolicos
     local l_source_path
@@ -797,6 +808,8 @@ function _setup_nvim_files() {
     #Configurar NeoVIM como IDE (Developer)
     if [ $p_flag_developer -eq 0 ]; then
 
+        #Creando la carpeta base para los metadata de los proyecto usados por el LSP JDTLS
+        create_folderpath_on_home "" ".local/share/eclipse/jdtls"
 
         l_target_path=".config/nvim"
         l_target_link="coc-settings.json"
@@ -1990,6 +2003,8 @@ function _setup_user_profile() {
     create_folderpath_on_home "" ".ssh"
     copy_file_on_home "${g_repo_path}/etc/ssh" "template_linux_withpublickey.conf" ".ssh" "config" 1 "Profile > "
     l_status=$?
+
+
 
     return 0
 

@@ -26,18 +26,18 @@ let g:OmniSharp_translate_cygwin_wsl = 0
 if g:os_type == 0
 
     "Si es Windows
-    let g:OmniSharp_server_path = g:home_path_lsp_server .. '/omnisharp_roslyn/OmniSharp.exe'
+    let g:OmniSharp_server_path = g:programs_base_path .. '/lsp_servers/omnisharp_ls/OmniSharp.exe'
 
 "elseif (g:os_type == 3) && g:using_lsp_server_cs_win
 
     "Si es WSL y es se debe usar el servidor LSP de Windows
 	"let g:OmniSharp_translate_cygwin_wsl = 1
-    "let g:OmniSharp_server_path = g:home_path_lsp_server_win .. '/Omnisharp_Roslyn/OmniSharp.exe'
+    "let g:OmniSharp_server_path = g:programs_base_path .. '/lsp_servers/omnisharp_ls/OmniSharp.exe'
 
 else
 
     "Si es Linux (2) o MacOS (1) o WSL sin reusar su servidor LSP
-    let g:OmniSharp_server_path = g:home_path_lsp_server .. '/omnisharp_roslyn/OmniSharp'
+    let g:OmniSharp_server_path = g:programs_base_path .. '/lsp_servers/omnisharp_ls/OmniSharp'
 
 endif
 
@@ -223,7 +223,7 @@ else
 endif
 
 "Code action: Funciones de utilidad
-function! ide_lsp_cs#codeactions_count() abort
+function! lsp_cs#codeactions_count() abort
   let opts = {
   \ 'CallbackCount': function('s:CBReturnCount', [bufnr(), line('.')]),
   \ 'CallbackCleanup': {-> execute('sign unplace * group=csharp_CodeActions')}

@@ -91,7 +91,7 @@ if g:is_neovim
     packadd nvim-treesitter
 
     "Configuracion de los plugin exclusivos
-    lua require('ide.utils')
+    lua require('ide.ide_utils')
 
 endif
 

@@ -16,7 +16,7 @@ if g:is_neovim && !g:use_coc_in_nvim
     "Package IDE> DAP> Mejora de UI para nVim-DAP
     packadd nvim-dap-virtual-text
 
-    lua require('ide.debugger')
+    lua require('ide.ide_debugger')
 
     "Solo continuar si se usa NeoVim para CoC
     finish

@@ -34,13 +34,17 @@ if g:is_neovim && !g:use_coc_in_nvim
     "Package IDE> Fuente CMP: Snippet tipo LuaSnip
     packadd cmp_luasnip
     
-    "Package IDE> Linting, Code Formatting (Fixing) de servidores No-LSP
-    "packadd null-ls.nvim
-
     "Package IDE> Lightbulb para Code Actions 
     packadd nvim-lightbulb
 
-    lua require('ide.native_lsp')
+    "Package IDE> Adaptador del cliente LSP para 'Roslyn LSP' para C#
+    packadd roslyn.nvim
+
+    "Package IDE> Adaptador del cliente LSP para 'Eclipse JDTLS' para Java SE
+    packadd nvim-jdtls
+
+
+    lua require('ide.ide_basic')
 
 
 endif
@@ -105,7 +109,7 @@ if g:is_neovim && !g:use_coc_in_nvim
 
     endif
 
-    lua require('ide.extended')
+    lua require('ide.ide_extended')
 
     "Solo continuar si se usa NeoVim para CoC
     finish

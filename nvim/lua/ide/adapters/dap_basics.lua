@@ -1,4 +1,5 @@
 local dap = require('dap')
+
 local dap_server_path = ""
 
 --------------------------------------------------------------------------------------------------
@@ -7,10 +8,10 @@ local dap_server_path = ""
 
 if (vim.g.os_type == 0) then
     --Si es Windows
-    dap_server_path = vim.g.home_path_dap_server .. '/NetCoreDbg/netcoredbg.exe'
+    dap_server_path = vim.g.programs_base_path .. '/dap_servers/netcoredbg/netcoredbg.exe'
 else
     --Otros casos
-    dap_server_path = vim.g.home_path_dap_server .. '/netcoredbg/netcoredbg'
+    dap_server_path = vim.g.programs_base_path .. '/dap_servers/netcoredbg/netcoredbg'
 end
 
 dap.adapters.netcoredbg = {
