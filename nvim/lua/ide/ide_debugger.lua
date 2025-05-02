@@ -132,34 +132,41 @@ dap.listeners.before.event_exited["dapui_config"] = function()
    end
 
 --3. Key-Mappings
-local opts = { noremap = true, silent = true }
 
-vim.keymap.set("n", "<F5>", "<cmd>lua require('dap').continue()<CR>", opts)
-vim.keymap.set("n", "<space><F4>", "<cmd>lua require('dap').terminate()<CR>", opts)
+vim.keymap.set("n", "<F5>", 
+    function()
+        --Si el archivo donde se configura el adaptador existe cargar su configuracion
+        if vim.fn.filereadable(".vscode/launch.json") == 1 then
+            require('dap.ext.vscode').load_launchjs()
+        end
+        -- Iniciar o continuar el DAP
+        require("dap").continue()
+    end, { noremap=true, silent=true, desc="DAP Start/Continue" })
 
-vim.keymap.set("n", "<F9>", "<cmd>lua require('dap').toggle_breakpoint()<CR>", opts)
-vim.keymap.set("n", "<space><F9>", "<cmd>lua require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>", opts)
---vim.keymap.set("n", "<space><F9>", "<cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>", opts)
+vim.keymap.set("n", "<space><F4>", "<cmd>lua require('dap').terminate()<CR>", { noremap=true, silent=true, desc="DAP Terminate" })
+--vim.keymap.set("n", nnoremap('<leader>dd', "<cmd>lua require'dap'.disconnect()<cr>", { noremap=true, silent=true, desc="DAP Disconnect" })
 
---vim.keymap.set("n", <leader>br', "<cmd>lua require'dap'.clear_breakpoints()<cr>", "Clear breakpoints")
+vim.keymap.set("n", "<F9>", "<cmd>lua require('dap').toggle_breakpoint()<CR>", { noremap=true, silent=true, desc="DAP Toogle breakpoint" })
+vim.keymap.set("n", "<space><F9>", "<cmd>lua require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>", { noremap=true, silent=true, desc="DAP Set conditional breakpoint" })
+--vim.keymap.set("n", "<space><F9>", "<cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>", { noremap=true, silent=true, desc="DAP Set log point" })
+--vim.keymap.set("n", "<leader>br", "<cmd>lua require'dap'.clear_breakpoints()<cr>", { noremap=true, silent=true, desc="DAP Clear breakpoints"})
 
-vim.keymap.set("n", "<space><F8>", "<cmd>lua require('dap').run_to_cursor()<CR>", opts)
-vim.keymap.set("n", "<space><F10>", "<cmd>lua require('dap').step_over()<CR>", opts)
-vim.keymap.set("n", "<space><F11>", "<cmd>lua require('dap').step_into()<CR>", opts)
-vim.keymap.set("n", "<space><F12>", "<cmd>lua require('dap').step_out()<CR>", opts)
+vim.keymap.set("n", "<space><F8>", "<cmd>lua require('dap').run_to_cursor()<CR>", { noremap=true, silent=true, desc="DAP Run to cursor" })
+vim.keymap.set("n", "<space><F10>", "<cmd>lua require('dap').step_over()<CR>", { noremap=true, silent=true, desc="DAP Step over" })
+vim.keymap.set("n", "<space><F11>", "<cmd>lua require('dap').step_into()<CR>", { noremap=true, silent=true, desc="DAP Step into" } )
+vim.keymap.set("n", "<space><F12>", "<cmd>lua require('dap').step_out()<CR>", { noremap=true, silent=true, desc="DAP Step out" })
 
+-- Re-runs the last debug adapter / configuration that ran using
+--vim.keymap.set("n", noremap("<leader>dl", "<cmd>lua require'dap'.run_last()<cr>", { noremap=true, silent=true, desc="DAP Run last"})
 
---vim.keymap.set("n", nnoremap('<leader>dd', "<cmd>lua require'dap'.disconnect()<cr>", "Disconnect")
---vim.keymap.set("n", nnoremap('<leader>dt', "<cmd>lua require'dap'.terminate()<cr>", "Terminate")
-
---vim.keymap.set("n", "<space>dh", "<cmd>lua require('dapui').eval()<CR>", opts)
+--vim.keymap.set("n", "<space>dh", "<cmd>lua require('dapui').eval()<CR>", { noremap=true, silent=true, desc="DAP Evaluate" })
 
 
 -- Open a REPL / Debug-console.
---vim.keymap.set("n", noremap("<leader>dr", "<cmd>lua require'dap'.repl.toggle()<cr>", "Open REPL")
--- Re-runs the last debug adapter / configuration that ran using
---vim.keymap.set("n", noremap("<leader>dl", "<cmd>lua require'dap'.run_last()<cr>", "Run last")
+--vim.keymap.set("n", noremap("<leader>dr", "<cmd>lua require'dap'.repl.toggle()<cr>", { noremap=true, silent=true, desc="DAP Open REPL" })
 
+-- Listar, ir o eliminar breakpoint (usando fzf-lua)
+--vim.keymap.set("n", "<space>ba", "<cmd>dap_breakpoints<CR>", { noremap=true, silent=true, desc="DAP Step out" })
 
 
 --------------------------------------------------------------------------------------------------

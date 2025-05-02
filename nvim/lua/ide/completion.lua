@@ -7,11 +7,6 @@
 local cmp = require('cmp')
 local snippet = require('luasnip')
 
---Cargar '.lazy_load()' las implementacion de snippet (por ejemplo 'friendly-snippets') que estan 'runtimepath'
---https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#add-snippets
---snippet.loaders.from_vscode.lazy_load()
-require("luasnip.loaders.from_vscode").lazy_load()
-
 --xxx
 local select_opts = {behavior = cmp.SelectBehavior.Select}
 
@@ -180,7 +175,16 @@ cmp.setup({
 })
 
 
---2. Configurar el completado para un tipos de archivo especifico
+
+--2. Cargar la implementacion de snippet
+
+-- Usando el plugin 'friendly-snippets' que estan 'runtimepath'
+-- https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#add-snippets
+require("luasnip.loaders.from_vscode").lazy_load()
+
+
+
+--3. Configurar el completado para un tipos de archivo especifico
 --cmp.setup.filetype({ 'yourfiletype' }, {
 --   -- Options here
 --

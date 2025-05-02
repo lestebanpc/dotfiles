@@ -4,14 +4,13 @@
 --  > Desde la NeoVim < 0.11, se dejo de usar funciones: require('lspconfig').<adapter>.setup({}).
 --  > Se recomienda usar el API nativo de NeoVim >= 0.11: vim.lsp.config(<adapter>, {}).
 --
-local lsp_cfg = require('lspconfig')
 local lsp_server_path = ""
 
 --------------------------------------------------------------------------------------------------
 -- Valores por defecto de los LSP Client
 --------------------------------------------------------------------------------------------------
 --
--- Adicionando valores por defecto a todos los LSP clientes
+-- Adicionando valores a las capadades por defecto del LSP, las capadades adicionales de autocompletado
 --
 local lsp_capabilities = require('cmp_nvim_lsp').default_capabilities()
 vim.lsp.config('*', {

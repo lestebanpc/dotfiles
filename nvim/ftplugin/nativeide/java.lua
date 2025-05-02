@@ -77,6 +77,7 @@ end
 --vim.notify('jdtls> lsp_server_config_path: ' .. lsp_server_config_path)
 
 
+
 -- 06. Obtiener la ruta de jar plugins para el JDTLS 
 
 -- Adicionar la ruta de plugins de VSCode Java Debugger
@@ -89,9 +90,72 @@ vim.list_extend(bundles, vim.split(vim.fn.glob(vim.g.programs_base_path .. '/vsc
 --vim.notify('jdtls> lsp_server_config_path: \n' .. vim.inspect(bundles))
 
 
--- 08. Starts a new client & server LSP, or attaches to an existing client & server
-local jdtls_cfg = require('jdtls')
+-- 07. Fuciones de ayuda
 
+-- Helper function for creating keymaps
+--function map(rhs, lhs, bufopts, desc)
+--    bufopts.desc = desc
+--    vim.keymap.set("n", rhs, lhs, bufopts)
+--end
+
+
+-- 08. Logica del autocomando 'LspAttach' que se ejecuta cuando el buffer se vincula al LSP server. 
+--     Este autocomando se ejecuta adicional al definido en: vim.api.nvim_create_autocmd('LspAttach', {})
+local jdtls_cfg = require('jdtls')
+local on_attach = function(client, bufnr)
+
+    --Obtener la informacion del CodeLens ¿del workspace?
+    vim.lsp.codelens.refresh()
+
+    --Permitr que la depuracion permitas cambios en caliente.
+    jdtls_cfg.setup_dap({ hotcodereplace = "auto" })
+
+    -- Descubrir el 'main clase' para la depuracion usando el DAP cliente (Equivalente a ':JdtUpdateDebugConfigs')
+    -- No se recomienda invocarlo en este funcion. Debe ser invocado cuando 'eclipse.jdt.ls' esta completamente cargado
+    --require("jdtls.dap").setup_dap_main_class_configs()
+
+    --¿?
+    --require("jdtls.setup").add_commands()
+
+    -- Register keymappings
+    vim.keymap.set("n", "<space>ljo", jdtls_cfg.organize_imports, { noremap=true, silent=true, buffer=bufnr, desc="Organize Imports" })
+    vim.keymap.set("n", "<space>ljv", jdtls_cfg.extract_variable, { noremap=true, silent=true, buffer=bufnr, desc="Extract Variable" })
+    vim.keymap.set("n", "<space>ljc", jdtls_cfg.extract_constant, { noremap=true, silent=true, buffer=bufnr, desc="Extract Constant" })
+    vim.keymap.set("n", "<space>ljt", jdtls_cfg.test_nearest_method, { noremap=true, silent=true, buffer=bufnr, desc="Test Nearest Method" })
+    vim.keymap.set("n", "<space>ljT", jdtls_cfg.test_class, { noremap=true, silent=true, buffer=bufnr, desc="Test Class" })
+    vim.keymap.set("n", "<space>lju", "<cmd>JdtUpdateConfig<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Update Config" })
+    vim.keymap.set("v", "<space>ljv", "<esc><cmd>lua require('jdtls').extract_variable(true)<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Extract Variable" })
+    vim.keymap.set("v", "<space>ljc", "<esc><cmd>lua require('jdtls').extract_constant(true)<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Extract Constant" })
+    vim.keymap.set("v", "<space>ljm", "<esc><Cmd>lua require('jdtls').extract_method(true)<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Extract Method" })
+
+    -- Autocomando (evento) que se ejecuta cuando se guarda el buffer
+    -- Refrescar el CodeLens ¿del workspace?
+    vim.api.nvim_create_autocmd("BufWritePost", {
+        pattern = { "*.java" },
+        callback = function()
+            local _, _ = pcall(vim.lsp.codelens.refresh)
+        end,
+    })
+end
+
+
+-- 09. Capacidades adicionales al por defecto enviados por el LSP server
+
+-- Adicionando valores a las capadades por defecto del LSP, las capadades adicionales de autocompletado
+local lsp_capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+-- Modificando algunas capacidades por defecto
+--lsp_capabilities.textDocument.completion.completionItem.snippetSupport = true
+--lps_capabilities.textDocument.foldingRange = {
+--    dynamicRegistration = false,
+--    lineFoldingOnly = true,
+--  }
+
+local lsp_extendedClientCapabilities = jdtls_cfg.extendedClientCapabilities
+lsp_extendedClientCapabilities.resolveAdditionalTextEditsSupport = true
+
+
+-- 10. Starts a new client & server LSP, or attaches to an existing client & server
 jdtls_cfg.start_or_attach({
 
       flags = {
@@ -99,18 +163,21 @@ jdtls_cfg.start_or_attach({
       }, 
 
       -- We pass our on_attach keybindings to the configuration map 
-      --on_attach = on_attach,
+      on_attach = on_attach,
      
-      -- Language server `initializationOptions`
-      -- Plugins usados para JDTLS
-      -- See: https://github.com/mfussenegger/nvim-jdtls#java-debug-installation
-      --init_options = {
-      --  bundles = bundles
-      --},
-
+      -- Modificar las capacidades ofrecidas por defecto por el servidor LSP
+      capabilities = lsp_capabilities,
       
       -- Set the root directory to our found root_marker
       root_dir = root_path,
+
+      -- Language server `initializationOptions`
+      -- Plugins usados para JDTLS
+      -- See: https://github.com/mfussenegger/nvim-jdtls#java-debug-installation
+      init_options = {
+        bundles = bundles,
+        extendedClientCapabilities = lsp_extendedClientCapabilities,
+      },
 
       -- Configure 'eclipse.jdt.ls' specific settings.
       -- See https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
@@ -120,16 +187,8 @@ jdtls_cfg.start_or_attach({
         -- General setting for Java
         java = {
 
-          --format = {
-          --  settings = {
-          --    -- Use Google Java style guidelines for formatting
-          --    -- To use, make sure to download the file from https://github.com/google/styleguide/blob/gh-pages/eclipse-java-google-style.xml
-          --    -- and place it in the ~/.local/share/eclipse directory
-          --    url = "/.local/share/eclipse/eclipse-java-google-style.xml",
-          --    profile = "GoogleStyle",
-          --  },
-          --},
 
+          autobuild = { enabled = false },
           signatureHelp = { enabled = true },
 
           -- Use fernflower to decompile library code
@@ -155,6 +214,11 @@ jdtls_cfg.start_or_attach({
             },
           },
 
+
+          saveActions = {
+            organizeImports = true,
+          },
+
           -- Specify any options for organizing imports
           sources = {
             organizeImports = {
@@ -174,12 +238,17 @@ jdtls_cfg.start_or_attach({
             useBlocks = true,
           },
 
+          eclipse = {
+            downloadSources = true,
+          },
+
           -- If you are developing in projects with different Java versions, you need
           -- to tell eclipse.jdt.ls to use the location of the JDK for your Java version
           -- See https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
           -- And search for `interface RuntimeOption`
           -- The `name` is NOT arbitrary, but must match one of the elements from `enum ExecutionEnvironment` in the link above
-          --configuration = {
+          configuration = {
+              updateBuildConfiguration = "interactive",
           --  runtimes = {
           --    {
           --      name = "JavaSE-17",
@@ -194,7 +263,46 @@ jdtls_cfg.start_or_attach({
           --      path = home .. "/.asdf/installs/java/corretto-8.352.08.1"
           --    },
           --  }
-          --}
+          },
+
+          maven = {
+            downloadSources = true,
+          },
+
+          implementationsCodeLens = {
+            enabled = true,
+          },
+
+          referencesCodeLens = {
+            enabled = true,
+          },
+
+          references = {
+            includeDecompiledSources = true,
+          },
+
+          inlayHints = {
+            parameterNames = {
+              enabled = "all", -- literals, all, none
+            },
+          },
+
+
+          format = {
+            enabled = false,
+          },
+          -- NOTE: We can set the formatter to use different styles
+          --format = {
+          --  enabled = true,
+          --  settings = {
+          --    -- Use Google Java style guidelines for formatting
+          --    -- To use, make sure to download the file from https://github.com/google/styleguide/blob/gh-pages/eclipse-java-google-style.xml
+          --    -- and place it in the ~/.local/share/eclipse directory
+          --    url = vim.fn.stdpath "config" .. "/lang-servers/intellij-java-google-style.xml",
+          --    profile = "GoogleStyle",
+          --  },
+          --},
+
 
         }
       },

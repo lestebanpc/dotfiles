@@ -1,7 +1,26 @@
 --Configurar plugins generales
 
 
+--------------------------------------------------------------------------------------------------
+-- IDE UI> OutLine
+--------------------------------------------------------------------------------------------------
+--
+-- URL: https://github.com/hedyhli/outline.nvim
+--
+
+-- 01. Configuracion
+--require("outline").setup({
+--})
+
+-- 02. Keymappings
+--vim.keymap.set("n", "<leader>o", "<cmd>Outline<CR>", { desc = "Toggle Outline" })
+
+--------------------------------------------------------------------------------------------------
+-- IA> Plugins de IA para Software Development
+--------------------------------------------------------------------------------------------------
+--
 --Configurar los plugins usados solo para la AI
+--
 if vim.g.use_ai_plugins == 1 then
     
     ------------------------------------------------------------------------------------------------

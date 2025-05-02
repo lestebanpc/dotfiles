@@ -60,19 +60,18 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
         --local buffer = args.buf
         --local client = vim.lsp.get_client_by_id(args.data.client_id)
-        local opts = { buffer = true, noremap = true }
 
         -- ---------------------------------------------------------------------------------------------
         -- Keymapping : Mostar informacion en un Popup
         -- ---------------------------------------------------------------------------------------------
         
         -- Muestra información sobre símbolo debajo/arriba del prompt actual
-        vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', opts)
+        vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', { buffer = true, noremap = true, desc = 'LSP Hover info' })
 
         -- Mostrar el popup de 'Signature Help' (se usara el key-mapping de 'ray-x/lsp_signature.nvim')
         -- esta opcion solo usa mapeo en modo edición y popup
-        --vim.keymap.set('n', '<C-\\>', '<cmd>lua vim.lsp.buf.signature_help()<cr>', opts)
-        --vim.keymap.set('i', '<C-\\>', '<cmd>lua vim.lsp.buf.signature_help()<cr>', opts)
+        --vim.keymap.set('n', '<C-\\>', '<cmd>lua vim.lsp.buf.signature_help()<cr>', { buffer = true, noremap = true, desc = '' })
+        --vim.keymap.set('i', '<C-\\>', '<cmd>lua vim.lsp.buf.signature_help()<cr>', { buffer = true, noremap = true, desc = '' })
 
         -- ---------------------------------------------------------------------------------------------
         -- Keymapping : "Navigation" a un "Location" especifico
@@ -84,37 +83,37 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- 2. "Location" basado en el simbolo actual 
 
         -- > Ir a una definición
-        vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', opts)
+        vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', { buffer = true, noremap = true, desc = 'LSP Go to definition' })
 
         -- > Ir a declaración
-        vim.keymap.set('n', 'gc', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
+        vim.keymap.set('n', 'gc', '<cmd>lua vim.lsp.buf.declaration()<cr>', { buffer = true, noremap = true, desc = 'LSP Go to declaration' })
 
         -- > Ir a la implementacion
-        vim.keymap.set('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
+        vim.keymap.set('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', { buffer = true, noremap = true, desc = 'LSP Go to implementation' })
 
         -- > Ir a definición de tipo
-        vim.keymap.set('n', 'gy', '<cmd>lua vim.lsp.buf.type_definition()<cr>', opts)
+        vim.keymap.set('n', 'gy', '<cmd>lua vim.lsp.buf.type_definition()<cr>', { buffer = true, noremap = true, desc = 'LSP Go to type definition' })
 
         -- > Listar referencias (incluyendo el declaraciones del simbolo)
-        vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', opts)
+        vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', { buffer = true, noremap = true, desc = 'LSP List references' })
 
 
         -- 3. Listar, Seleccionar e Ir 
 
         -- > Listar, Seleccionar e Ir a un 'symbol' en el buffer.
-        vim.keymap.set('n', '<space>ls', '<cmd>lua vim.lsp.buf.document_symbol()<cr>', opts)
+        vim.keymap.set('n', '<space>ls', '<cmd>lua vim.lsp.buf.document_symbol()<cr>', { buffer = true, noremap = true, desc = 'LSP Search symbol' })
 
-        -- > Diagnostico: Listar, Seleccionar e Ir un diagnóstico (error y/o warning) del workspace (Telescope)
-        vim.keymap.set('n', '<space>ld', '<cmd>Telescope diagnostics<CR>', opts)
+        -- > Diagnostico: Listar, Seleccionar e Ir un diagnóstico (error y/o warning) del workspace (fzf-lua)
+        vim.keymap.set('n', '<space>ld', '<cmd>diagnostics_workspace<CR>', { buffer = true, noremap = true, desc = 'LSP Search diagnostic' })
 
         -- > Diagnostico: Listar, Seleccionar e Ir a un diagnósticos de la línea actual
-        vim.keymap.set('n', '<space>dl', '<cmd>lua vim.diagnostic.open_float()<cr>', opts)
+        vim.keymap.set('n', '<space>dl', '<cmd>lua vim.diagnostic.open_float()<cr>', { buffer = true, noremap = true, desc = 'LSP Search current line diagnostic' })
 
         -- > Diagnostico: Ir al siguiente diagnostico desde la posicion actual y dentro del buffer
-        vim.keymap.set('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<cr>', opts)
+        vim.keymap.set('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<cr>', { buffer = true, noremap = true, desc = 'LSP Go Previous diagnostic' })
 
         -- > Diagnostico: Ir a la anterior diagnostico desde la posicion actual y dentro del buffer
-        vim.keymap.set('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<cr>', opts)
+        vim.keymap.set('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<cr>', { buffer = true, noremap = true, desc = 'LSP Go Next diagnostic' })
 
 
         -- ---------------------------------------------------------------------------------------------
@@ -122,14 +121,14 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- ---------------------------------------------------------------------------------------------
         
         -- Formateo del codigo
-        vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.formatting()<cr>', opts)
+        vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.formatting()<cr>', { buffer = true, noremap = true, desc = 'LSP Format buffer code' })
         --Neovim 0.7 - timeout 2 segundos
-        --vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.formatting_sync(nil, 2000)<cr>', opts)
+        --vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.formatting_sync(nil, 2000)<cr>', { buffer = true, noremap = true, desc = '' })
         --Neovim 0.8 - timeout 2 segundos
-        --vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.format({ timeout_ms = 2000 })<cr>', opts)
+        --vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.format({ timeout_ms = 2000 })<cr>', { buffer = true, noremap = true, desc = '' })
 
         -- Formateo del codigo de rango seleccionado
-        vim.keymap.set('x', '<space>cf', '<cmd>lua vim.lsp.buf.range_formatting()<CR>', opts)
+        vim.keymap.set('x', '<space>cf', '<cmd>lua vim.lsp.buf.range_formatting()<CR>', { buffer = true, noremap = true, desc = 'LSP Format selected range' })
 
 
         -- ---------------------------------------------------------------------------------------------
@@ -137,8 +136,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- ---------------------------------------------------------------------------------------------
         
         -- Acciones relacionados al 'Workspace' (proyecto)
-        vim.keymap.set('n', '<space>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
-        vim.keymap.set('n', '<space>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
+        vim.keymap.set('n', '<space>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', { buffer = true, noremap = true, desc = 'LSP Add folder to workspace' })
+        vim.keymap.set('n', '<space>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', { buffer = true, noremap = true, desc = 'LSP Remove folder to workspace' })
         
 
         -- ---------------------------------------------------------------------------------------------
@@ -146,12 +145,12 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- ---------------------------------------------------------------------------------------------
         
         -- 'Code Actions' > Listar, Selecionar e Ir a 'Code Actions' disponibles en la posición del cursor
-        vim.keymap.set('n', '<space>al', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
-        --vim.keymap.set('x', '<space>ar', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', opts)
-        --vim.keymap.set('n', '<space>ar', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', opts)
+        vim.keymap.set('n', '<space>al', '<cmd>lua vim.lsp.buf.code_action()<cr>', { buffer = true, noremap = true, desc = 'LSP Search Code actions' })
+        --vim.keymap.set('x', '<space>ar', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', { buffer = true, noremap = true, desc = 'LSP Search Code actions' })
+        --vim.keymap.set('n', '<space>ar', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', { buffer = true, noremap = true, desc = 'LSP Search Code actions' })
 
         -- Renombrar símbolo
-        vim.keymap.set('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
+        vim.keymap.set('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<cr>', { buffer = true, noremap = true, desc = 'LSP Remame symbol' })
 
         
         -- ---------------------------------------------------------------------------------------------
@@ -220,3 +219,5 @@ vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(
     vim.lsp.handlers.signature_help,
     { border = 'rounded' }
 )
+
+
