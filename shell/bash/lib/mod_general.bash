@@ -203,7 +203,7 @@ start_nerdctl() {
     fi
 
     return 0
-        
+
 }
 
 
@@ -309,11 +309,5 @@ stop_nerdctl() {
 
 
     return 0
-        
+
 }
-
-
-
-
-
-

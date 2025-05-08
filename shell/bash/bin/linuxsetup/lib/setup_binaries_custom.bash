@@ -15,7 +15,7 @@
 
 #ID de los repositorios y sus rutas bases
 #Menu dinamico: Listado de repositorios que son instalados por las opcion de menu dinamicas
-#  - Cada repositorio tiene un ID interno del un repositorios y un identifificador realizar: 
+#  - Cada repositorio tiene un ID interno del un repositorios y un identifificador realizar:
 #    ['internal-id']='external-id'
 #  - Por ejemplo para el repositorio GitHub 'stedolan/jq', el item se tendria:
 #    ['jq']='stedolan/jq'
@@ -56,7 +56,11 @@ gA_packages=(
         ['ninja']='ninja-build/ninja'
         ['llvm']='llvm/llvm-project'
         ['clangd']='clangd/clangd'
+        ['codelldb']='vadimcn/codelldb'
+        ['vscode-cpptools']='microsoft/vscode-cpptools'
         ['rust-analyzer']='rust-lang/rust-analyzer'
+        ['vscode-go']='golang/vscode-go'
+        ['vscode-js-debug']='microsoft/vscode-js-debug'
         ['graalvm']='graalvm/graalvm-ce-builds'
         ['nodejs']="$g_empty_str"
         ['jdtls']='jdtls'
@@ -124,21 +128,20 @@ ga_menu_options_title=(
     "Binarios para un nodo K8S de 'KubeAdm'"
     ".NET  ${g_color_reset}>${g_color_green1} SDK, LSP y DAP server"
     "Java  ${g_color_reset}>${g_color_green1} RTE/SDK 'GraalVM CE', LSP/DAP server, otros"
-    "C/C++ ${g_color_reset}>${g_color_green1} Compiler LLVM/CLang: 'clang', 'clang++', 'lld', 'lldb', 'clangd'"
-    "C/C++ ${g_color_reset}>${g_color_green1} Developments tools"
+    "C/C++ ${g_color_reset}>${g_color_green1} Tools"
     "NodeJS${g_color_reset}>${g_color_green1} RTE"
     "Rust  ${g_color_reset}>${g_color_green1} Compiler, LSP server"
     "Go    ${g_color_reset}>${g_color_green1} RTE"
     "Python${g_color_reset}>${g_color_green1} Tools"
-    "AWS CLI v2"
+    "LSP otros: Markdown LS, Lua LS"
     "CTags (indexador de archivos lenguajes de programacion)"
-    "LSP otros: Markdown, LUA"
+    "AWS CLI v2"
     )
 
 #WARNING: Un cambio en el orden implica modificar los indices de los eventos:
 #         'install_initialize_menu_option', 'install_finalize_menu_option', 'uninstall_initialize_menu_option' y 'uninstall_finalize_menu_option'
 #Menu dinamico: Repositorios de programas asociados asociados a una opciones del menu.
-#  - Cada entrada define un opcion de menú. 
+#  - Cada entrada define un opcion de menú.
 #  - Su valor es un cadena con ID de repositorios separados por comas.
 #Notas:
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
@@ -159,18 +162,17 @@ ga_menu_options_packages=(
     "cni-plugins,kubectl,kubelet,kubeadm"
     "net-sdk,omnisharp-ls,roslyn-ls-lnx,roslyn-ls-win,netcoredbg"
     "graalvm,maven,jbang,jdtls,vscode-java-debug,vscode-java-test"
-    "llvm"
-    "clangd,cmake,ninja"
+    "clangd,codelldb,cmake,ninja"
     "nodejs"
     "rust,rust-analyzer"
     "go"
     "uv"
-    "awscli"
-    "ctags-win,ctags-nowin"
     "marksman", "luals"
+    "ctags-win,ctags-nowin"
+    "awscli"
     )
 
-#Tipos de SO donde se puede configurar los repositorio 
+#Tipos de SO donde se puede configurar los repositorio
 # > Por defecto los repositorios son instalados en todo los tipos SO habilitados: Linux, Windows (valor por defecto es 15)
 # > Las opciones puede ser uno o la suma de los siguientes valores:
 #   1 (00001) Windows vinculado al Linux WSL2.
@@ -180,6 +182,7 @@ ga_menu_options_packages=(
 #
 declare -A gA_repo_config_os_type=(
         ['less']=1
+        ['llvm']=1
         ['wezterm']=1
         ['k0s']=4
         ['fzf']=7
@@ -214,7 +217,7 @@ declare -A gA_repo_config_os_type=(
     )
 
 
-#Tipos de  donde se puede configurar los repositorio 
+#Tipos de  donde se puede configurar los repositorio
 # > Por defecto los repositorios son instalados en todo los tipos SO habilitados: x86_64 y arm64 (valor por defecto es 3)
 # > Las opciones puede ser uno o la suma de los siguientes valores:
 #   1 (00001) x86_64
@@ -284,7 +287,7 @@ function get_repo_last_version() {
     #1. Argumentos
     local p_repo_id="$1"
     local p_repo_name="$2"
-    
+
     #2. Obtener la version
     local l_base_url_fixed="${gA_repo_base_url[${p_repo_id}]:-https://github.com}"
     local l_repo_last_version=""
@@ -349,7 +352,7 @@ function get_repo_last_version() {
                 l_repo_last_version="$l_aux1"
             fi
             ;;
-        
+
 
         jdtls)
 
@@ -447,7 +450,7 @@ function get_repo_last_version() {
             if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
                 return 1
             fi
-            
+
             #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
             l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_bin_cmdpath}/jq -r '.tag_name')
             l_status=$?
@@ -466,7 +469,7 @@ function get_repo_last_version() {
             if [ $g_os_subtype_id -eq 1 ]; then
                 l_base_url_fixed='https://unofficial-builds.nodejs.org/download/release'
             fi
-            
+
             #Usando JSON para obtener la ultima version
             l_aux0=$(curl -Ls "${l_base_url_fixed}/index.json" | ${g_bin_cmdpath}/jq -r 'first(.[] | select(.lts != false)) | "\(.version)"' 2> /dev/null)
             l_status=$?
@@ -489,12 +492,12 @@ function get_repo_last_version() {
             if [ $l_status -ne 0 ]; then
                 return 2
             fi
-            ;;        
+            ;;
 
 
 
         rust)
-            
+
             l_repo_last_version=$(curl -Ls "${l_base_url_fixed}/channel-rust-stable.toml" | grep -A 2 '\[pkg.rust\]' | \
                                   grep "^version =" | sed -e "$g_regexp_sust_version1")
             l_status=$?
@@ -679,7 +682,7 @@ function get_repo_last_version() {
     if [ -z "$l_repo_last_version" ]; then
         return 3
     fi
-    
+
     echo "$l_repo_last_version"
     return 0
 }
@@ -756,8 +759,8 @@ function get_repo_last_pretty_version() {
         ctags-win)
 
             #Ejemplo de versiones:
-            #  v6.1.0         
-            #  v6.0.0         
+            #  v6.1.0
+            #  v6.0.0
             #  p6.1.20240707.0
             #  p6.1.20240630.0
             #  p6.1.20240623.0
@@ -770,7 +773,7 @@ function get_repo_last_pretty_version() {
 
             l_version="$l_aux"
             ;;
-    
+
 
         ctags-nowin)
 
@@ -839,7 +842,7 @@ function get_repo_last_pretty_version() {
 #   3 - Version del respositorio a obtener las subversiones.
 #   4 - Version amigable del respositorio a obtener las subversiones.
 #Parametros salida> STDOUT
-#   > Una cadena con las subversiones separadas por espacios. Las subversion puede ser una version amigable (solo numeros comprables o texto), 
+#   > Una cadena con las subversiones separadas por espacios. Las subversion puede ser una version amigable (solo numeros comprables o texto),
 #     o no amigable, ello dependera como se usan en las funciones 'is_installed_repo_subversion', 'get_repo_artifacts' y '_copy_artifact_files'
 #Parametros salida> Valor de retorno:
 #   0 - Tiene subversiones.
@@ -868,7 +871,7 @@ function get_repo_last_subversions() {
 
                 #printf 'RepoID: "%s", RepoName: "%s", LastVersion: "%s"\n' "$p_repo_id" "$p_repo_name" "$l_repo_last_pretty_version"
 
-                #Obtener las subversiones: estara formado por la ultima version y 2 versiones inferiores 
+                #Obtener las subversiones: estara formado por la ultima version y 2 versiones inferiores
                 #Devulve la version ingresada y 2 versiones menores a la ingresada separados por ' '
                 l_arti_subversions=$(_dotnet_get_subversions "$p_repo_name" "$l_repo_last_pretty_version")
 
@@ -881,7 +884,7 @@ function get_repo_last_subversions() {
 
             fi
             ;;
-        
+
 
 
         graalvm)
@@ -960,7 +963,7 @@ function is_installed_repo_subversion()
                 l_is_instelled=0
             fi
             ;;
-    
+
 
         graalvm)
 
@@ -1023,7 +1026,7 @@ function _get_repo_current_pretty_version() {
                                         #es usado para programas que deben ser descargados para recien obtener la ultima versión.
 
     #Calcular la ruta de archivo/comando donde se obtiene la version (esta ruta termina en "/")
-    local l_path_file="" 
+    local l_path_file=""
     if [ -z "$p_path_file" ]; then
         if [ $p_install_win_cmds -eq 0 ]; then
             l_path_file="${g_win_bin_path}/"
@@ -1220,7 +1223,7 @@ function _get_repo_current_pretty_version() {
                 l_sustitution_regexp="$g_regexp_sust_version3"
             fi
             ;;
-           
+
         jwt)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_result=$(${l_path_file}jwt.exe --version 2> /dev/null)
@@ -1230,7 +1233,7 @@ function _get_repo_current_pretty_version() {
                 l_status=$?
             fi
             ;;
-           
+
         biome)
             if [ $p_install_win_cmds -eq 0 ]; then
                 l_result=$(${l_path_file}biome.exe --version 2> /dev/null)
@@ -1539,7 +1542,7 @@ function _get_repo_current_pretty_version() {
 
 
         netcoredbg)
-            
+
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
@@ -1565,7 +1568,7 @@ function _get_repo_current_pretty_version() {
             ;;
 
         neovim)
-           
+
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
@@ -1590,7 +1593,7 @@ function _get_repo_current_pretty_version() {
             ;;
 
         nodejs)
-           
+
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
@@ -1854,7 +1857,7 @@ function _get_repo_current_pretty_version() {
             ;;
 
         powershell)
-            
+
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
@@ -1963,7 +1966,7 @@ function _get_repo_current_pretty_version() {
                 fi
 
                 if [ $l_status -eq 0 ] && [ -f "${l_path_file}java.exe" ]; then
-                      
+
                     l_result=$(${l_path_file}java.exe --version 2> /dev/null)
                     l_status=$?
 
@@ -2091,7 +2094,7 @@ function _get_repo_current_pretty_version() {
                 fi
 
                 if [ $l_status -eq 0 ] && [ -f "${l_path_file}mvn.cmd" ]; then
-                      
+
                     l_result=$(${l_path_file}mvn.cmd --version 2> /dev/null)
                     l_status=$?
 
@@ -2188,9 +2191,131 @@ function _get_repo_current_pretty_version() {
             ;;
 
 
+        codelldb)
+
+            #Obtener la version
+            l_result=""
+            l_status=1
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
+            ;;
+
+
+        vscode-cpptools)
+
+            #Obtener la version
+            l_result=""
+            l_status=1
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
+            ;;
+
+
+
+        vscode-go)
+
+            #Obtener la version
+            l_result=""
+            l_status=1
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
+            ;;
+
+
+
+        vscode-js-debug)
+
+            #Obtener la version
+            l_result=""
+            l_status=1
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
+            ;;
+
+
 
         butane)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2198,14 +2323,14 @@ function _get_repo_current_pretty_version() {
 
             l_result=$(${l_path_file}butane --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
         runc)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2213,14 +2338,14 @@ function _get_repo_current_pretty_version() {
 
             l_result=$(${l_path_file}runc --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
         crun)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2228,7 +2353,7 @@ function _get_repo_current_pretty_version() {
 
             l_result=$(${l_path_file}crun --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | head -n 1)
             fi
@@ -2236,7 +2361,7 @@ function _get_repo_current_pretty_version() {
 
 
         fuse-overlayfs)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2244,7 +2369,7 @@ function _get_repo_current_pretty_version() {
 
             l_result=$(${l_path_file}fuse-overlayfs --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | grep fuse-overlayfs)
             fi
@@ -2252,7 +2377,7 @@ function _get_repo_current_pretty_version() {
 
 
         cni-plugins)
-            
+
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
             fi
@@ -2269,16 +2394,16 @@ function _get_repo_current_pretty_version() {
                 #CNI vlan plugin v1.2.0
                 l_result=$(${l_path_file}vlan --version 2>&1)
                 l_status=$?
-            
+
                 if [ $l_status -eq 0 ]; then
                     l_result=$(echo "$l_result" | head -n 1)
-                fi            
+                fi
             fi
             ;;
 
 
         slirp4netns)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2286,7 +2411,7 @@ function _get_repo_current_pretty_version() {
 
             l_result=$(${l_path_file}slirp4netns --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | head -n 1)
                 l_sustitution_regexp="$g_regexp_sust_version5"
@@ -2295,7 +2420,7 @@ function _get_repo_current_pretty_version() {
 
 
         bypass4netns)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2303,7 +2428,7 @@ function _get_repo_current_pretty_version() {
 
             l_result=$(${l_path_file}bypass4netns --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | head -n 1)
                 l_sustitution_regexp="$g_regexp_sust_version5"
@@ -2313,7 +2438,7 @@ function _get_repo_current_pretty_version() {
 
 
         rootlesskit)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2321,7 +2446,7 @@ function _get_repo_current_pretty_version() {
 
             l_result=$(${l_path_file}rootlesskit --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | head -n 1)
             fi
@@ -2329,7 +2454,7 @@ function _get_repo_current_pretty_version() {
 
 
         containerd)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2338,7 +2463,7 @@ function _get_repo_current_pretty_version() {
             #containerd github.com/containerd/containerd v1.6.20 2806fc1057397dbaeefbea0e4e17bddfbd388f38
             l_result=$(${l_path_file}containerd --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | head -n 1)
                 l_sustitution_regexp='s/.*\sv\([0-9.]\+\).*/\1/'
@@ -2347,7 +2472,7 @@ function _get_repo_current_pretty_version() {
 
 
         nerdctl)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2356,7 +2481,7 @@ function _get_repo_current_pretty_version() {
             #nerdctl version 1.3.1
             l_result=$(${l_path_file}nerdctl --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | head -n 1)
             fi
@@ -2364,7 +2489,7 @@ function _get_repo_current_pretty_version() {
 
 
         buildkit)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2373,7 +2498,7 @@ function _get_repo_current_pretty_version() {
             #buildctl github.com/moby/buildkit v0.11.5 252ae63bcf2a9b62777add4838df5a257b86e991
             l_result=$(${l_path_file}buildkitd --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | head -n 1)
             fi
@@ -2381,7 +2506,7 @@ function _get_repo_current_pretty_version() {
 
 
         dive)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2390,14 +2515,14 @@ function _get_repo_current_pretty_version() {
             #dive 0.10.0
             l_result=$(${l_path_file}dive --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | head -n 1)
             fi
             ;;
 
         crictl)
-            
+
             #Obtener la version
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 9
@@ -2405,7 +2530,7 @@ function _get_repo_current_pretty_version() {
 
             l_result=$(${l_path_file}crictl --version 2> /dev/null)
             l_status=$?
-            
+
             if [ $l_status -eq 0 ]; then
                 l_result=$(echo "$l_result" | head -n 1)
             fi
@@ -2563,7 +2688,7 @@ function _get_repo_current_pretty_version() {
 
 
         wezterm)
-            
+
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
@@ -2710,7 +2835,7 @@ _compare_version_current_with() {
 
 #Parametros de salida:
 #  Devuelve un arreglo de artefectos, usando los argumentos 3 y 4 como de referencia:
-#  5> Un arrego de bases URL del los artefactos. 
+#  5> Un arrego de bases URL del los artefactos.
 #     Si el repositorio tiene muchos artefactos pero todos tiene la misma URL base, solo se puede indicar
 #     solo una URL, la misma URL se replicara para los demas se repitira el mismo valor
 #  6> Un arreglo de tipo de artefacto donde cada item puede ser:
@@ -2758,7 +2883,7 @@ function get_repo_artifacts() {
     if [ "$9" = "0" ]; then
         p_install_win_cmds=0
     fi
-    
+
     #Si se estan instalando (la primera vez) es '0', caso contrario es otro valor (se actualiza o se desconoce el estado)
     local p_flag_install=1
     if [ "${10}" = "0" ]; then
@@ -2890,8 +3015,8 @@ function get_repo_artifacts() {
 
 
         crictl)
-            
-            #No soportado para Windows 
+
+            #No soportado para Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
@@ -3500,7 +3625,7 @@ function get_repo_artifacts() {
             #URL base fijo     : "https://awscli.amazonaws.com"
             #URL base variable : <none>
 
-            #No soportado para Windows 
+            #No soportado para Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 pna_artifact_baseurl=()
                 pna_artifact_names=()
@@ -3704,7 +3829,98 @@ function get_repo_artifacts() {
 
 
 
+        codelldb)
+
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_names=("codelldb.zip")
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/codelldb-win32-x64.vsix")
+                pna_artifact_types=(11)
+
+            else
+
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/codelldb-linux-arm64.vsix")
+                else
+                    pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/codelldb-linux-x64.vsix")
+                fi
+                pna_artifact_types=(11)
+
+            fi
+            ;;
+
+
+
+
+        vscode-cpptools)
+
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_names=("vscode_cpptools.zip")
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/cpptools-windows-arm64.vsix")
+                else
+                    pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/cpptools-windows-x64.vsix")
+                fi
+                pna_artifact_types=(11)
+
+            else
+
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/cpptools-alpine-arm64.vsix")
+                    else
+                        pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/cpptools-alpine-x64.vsix")
+                    fi
+
+                else
+
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/cpptools-linux-arm64.vsix")
+                    else
+                        pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/cpptools-linux-x64.vsix")
+                    fi
+
+                fi
+                pna_artifact_types=(11)
+
+            fi
+            ;;
+
+
+
+        vscode-go)
+
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_names=("vscode_go.zip")
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/go-0.46.1.vsix")
+            pna_artifact_types=(11)
+            ;;
+
+
+
+
+        vscode-js-debug)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_names=("js-debug-dap-v${p_repo_last_pretty_version}.tar.gz")
+            pna_artifact_types=(20)
+            ;;
+
+
+
         luals)
+
             #TODO incluir 'lua-language-server-3.14.0-submodules.zip'
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -4157,7 +4373,7 @@ function get_repo_artifacts() {
             ;;
 
 
-        
+
         jdtls)
             #URL base fijo     : "https://download.eclipse.org"
             #URL base variable :
@@ -4785,7 +5001,7 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
-            
+
             if [ $p_install_win_cmds -ne 0 ]; then
 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
@@ -4805,9 +5021,9 @@ function _copy_artifact_files() {
                     chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/rg.bash
                     chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/powershell/login/autocomplete/rg.ps1
                 fi
-                
+
             else
-                  
+
                 #Copiar el comando
                 copy_binary_on_command "${l_source_path}" "rg.exe" 1 1
 
@@ -4818,7 +5034,7 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
+
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $p_install_win_cmds -ne 0 ]; then
 
@@ -4838,7 +5054,7 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
+
             #Si es WSL Linux
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -4868,7 +5084,7 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
-            
+
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $p_install_win_cmds -ne 0 ]; then
 
@@ -4889,14 +5105,14 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -ne 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Windows" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Windows" "$g_color_reset"
                 return 40
-            fi            
+            fi
 
             #Ruta local de los artefactos
             #l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
+
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             copy_binary_on_command "${l_source_path}" "less.exe" 1 1
             copy_binary_on_command "${l_source_path}" "lesskey.exe" 1 1
@@ -4908,13 +5124,13 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
-            fi            
+            fi
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
+
             echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/butane\" ..."
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/butane"
 
@@ -4938,14 +5154,14 @@ function _copy_artifact_files() {
             fi
 
             #B. Si es Linux que no sea WSL
-            
+
             #Copiar el comando
             if [ $p_artifact_index -eq 0 ]; then
 
                 #Copiar el comando fzf y dar permiso de ejecucion a todos los usuarios
                 copy_binary_on_command "${l_source_path}" "fzf" 0 1
 
-            #Descargar archivos opcionales del comando fzf desde la ultima version de la rama master de su repositorio 'junegunn/fzf' 
+            #Descargar archivos opcionales del comando fzf desde la ultima version de la rama master de su repositorio 'junegunn/fzf'
             elif [ $p_artifact_index -eq 1 ]; then
 
                 l_source_path="${l_source_path}/fzf-${p_repo_last_pretty_version}"
@@ -4953,29 +5169,29 @@ function _copy_artifact_files() {
 
                 #Copiar los archivos de ayuda man para comando fzf y el script fzf-tmux
                 copy_man_files "${g_temp_path}/${l_source_path}/man/man1" 1
-            
+
                 #Copiar los script de completado
                 echo "Copiando el script \"./shell/completion.bash\" como \"~/.files/shell/bash/login/autocomplete/fzf.bash\" ..."
                 cp "${g_temp_path}/${l_source_path}/shell/completion.bash" "${g_repo_path}/shell/bash/login/autocomplete/fzf.bash"
-            
+
                 echo "Copiando el script \"./shell/completion.zsh\" como \"~/.files/shell/zsh/login/autocomplete/fzf.zsh\" ..."
                 cp "${g_temp_path}/${l_source_path}/shell/completion.zsh" "${g_repo_path}/shell/zsh/login/autocomplete/fzf.zsh"
 
                 #Copiar los script de keybindings
                 echo "Copiando el script \"./shell/key-bindings.bash\" como \"~/.files/shell/bash/login/keybindings/fzf.bash\" ..."
                 cp "${g_temp_path}/${l_source_path}/shell/key-bindings.bash" "${g_repo_path}/shell/bash/login/keybindings/fzf.bash"
-            
+
                 echo "Copiando el script \"./shell/key-bindings.fish\" como \"~/.files/shell/fish/login/keybindings/fzf.fish\" ..."
                 cp "${g_temp_path}/${l_source_path}/shell/key-bindings.fish" "${g_repo_path}/shell/fish/login/keybindings/fzf.fish"
-            
+
                 echo "Copiando el script \"./shell/key-bindings.zsh\" como \"~/.files/shell/zsh/login/keybindings/fzf.zsh\" ..."
                 cp "${g_temp_path}/${l_source_path}/shell/key-bindings.zsh" "${g_repo_path}/shell/zsh/login/keybindings/fzf.zsh"
-           
+
                 echo "Copiando \"./bin/fzf-preview.sh\" como \"~/.files/shell/bash/bin/cmds/fzf-preview.bash\"..."
                 cp "${g_temp_path}/${l_source_path}/bin/fzf-preview.sh" "${g_repo_path}/shell/bash/bin/cmds/fzf-preview.bash"
 
                 if [ $g_runner_is_target_user -ne 0 ]; then
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/autocomplete/fzf.bash 
+                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/autocomplete/fzf.bash
                     chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/autocomplete/fzf.zsh
                     chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/keybindings/fzf.bash
                     chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/keybindings/fzf.fish
@@ -5011,7 +5227,7 @@ function _copy_artifact_files() {
 
             fi
             ;;
-            
+
 
         yq)
             #Ruta local de los artefactos
@@ -5027,7 +5243,7 @@ function _copy_artifact_files() {
                     echo "Renombrando \"yq_linux_amd64\" como \"${g_temp_path}/${l_source_path}/yq\" ..."
                     mv "${g_temp_path}/${l_source_path}/yq_linux_amd64" "${g_temp_path}/${l_source_path}/yq"
                 fi
-                
+
                 #Copiar el comando
                 copy_binary_on_command "${l_source_path}" "yq" 0 1
 
@@ -5050,7 +5266,7 @@ function _copy_artifact_files() {
 
             #Renombrar el binario antes de copiarlo
             if [ $p_install_win_cmds -ne 0 ]; then
-                
+
                 #Copiar el comando
                 copy_binary_on_command "${l_source_path}" "rclone" 0 1
 
@@ -5064,9 +5280,9 @@ function _copy_artifact_files() {
             fi
             ;;
 
-        
+
         oh-my-posh)
-            
+
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
@@ -5078,7 +5294,7 @@ function _copy_artifact_files() {
 
                     echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/oh-my-posh\" ..."
                     mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/oh-my-posh"
-                
+
                     #Copiar el comando y dar permiso de ejecucion a todos los usuarios
                     copy_binary_on_command "${l_source_path}" "oh-my-posh" 0 1
 
@@ -5142,7 +5358,7 @@ function _copy_artifact_files() {
 
             echo "Copiando \"./completions/zoxide.fish\" a \"~/.files/shell/fish/login/autocomplete/\" ..."
             cp "${g_temp_path}/${l_source_path}/completions/zoxide.fish" ${g_repo_path}/shell/fish/login/autocomplete/zoxide.fish
-            
+
             echo "Copiando \"./completions/_zoxide\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
             cp "${g_temp_path}/${l_source_path}/completions/_zoxide" ${g_repo_path}/shell/zsh/login/autocomplete/zoxide.zsh
 
@@ -5230,7 +5446,7 @@ function _copy_artifact_files() {
 
             fi
             ;;
-        
+
 
 
         tmux-fingers)
@@ -5239,7 +5455,7 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
@@ -5259,7 +5475,7 @@ function _copy_artifact_files() {
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
             save_prettyversion_on_program "" "tmux-fingers.info" "$p_repo_last_pretty_version" 0
             ;;
-            
+
 
 
         tmux-thumbs)
@@ -5268,7 +5484,7 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
@@ -5282,7 +5498,7 @@ function _copy_artifact_files() {
             copy_binary_on_command "${l_source_path}" "tmux-thumbs" 0 1
             copy_binary_on_command "${l_source_path}" "thumbs" 0 1
             ;;
-            
+
 
 
         yazi)
@@ -5445,7 +5661,7 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
+
 
             #A. Si es WSL de Windows y se copia binarios de windows
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -5460,7 +5676,7 @@ function _copy_artifact_files() {
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             copy_binary_on_command "${l_source_path}" "jwt" 0 1
             ;;
-            
+
         grpcurl)
 
             #Ruta local de los artefactos
@@ -5475,17 +5691,17 @@ function _copy_artifact_files() {
             fi
 
             #B. Si es Linux (no WSL)
-            
+
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             copy_binary_on_command "${l_source_path}" "grpcurl" 0 1
             ;;
 
-            
+
         evans)
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
+
 
             #A. Si es WSL de Windows y se copia binarios de windows
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -5496,24 +5712,24 @@ function _copy_artifact_files() {
             fi
 
             #B. Si es Linux (no WSL)
-            
+
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             copy_binary_on_command "${l_source_path}" "evans" 0 1
             ;;
 
-            
+
         dive)
 
-            #A. No se soportado por Windows 
+            #A. No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
             #B. Si es Linux (no WSL)
-            
+
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
@@ -5529,7 +5745,7 @@ function _copy_artifact_files() {
 
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
 
             fi
@@ -5547,8 +5763,8 @@ function _copy_artifact_files() {
             fi
             ;;
 
-            
-            
+
+
         marksman)
 
             #Ruta local de los artefactos
@@ -5575,13 +5791,13 @@ function _copy_artifact_files() {
 
             fi
             ;;
-            
-            
+
+
         cilium)
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
+
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $p_install_win_cmds -ne 0 ]; then
 
@@ -5602,14 +5818,14 @@ function _copy_artifact_files() {
             fi
             ;;
 
-            
+
         kubelet)
 
             #A. Si es WSL de Windows y se copia binarios de windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
@@ -5638,14 +5854,14 @@ function _copy_artifact_files() {
             fi
             ;;
 
-            
+
         kubeadm)
 
             #A. Si es WSL de Windows y se copia binarios de windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
@@ -5673,7 +5889,7 @@ function _copy_artifact_files() {
 
             ;;
 
-            
+
         kubectl)
 
             #Ruta local de los artefactos
@@ -5689,11 +5905,11 @@ function _copy_artifact_files() {
             fi
 
             #B. Si es Linux (no WSL)
-            
+
             #Copiando el binario en una ruta del path
             copy_binary_on_command "${l_source_path}" "kubectl" 0 1
             ;;
-        
+
         oc)
 
             #Ruta local de los artefactos
@@ -5726,7 +5942,7 @@ function _copy_artifact_files() {
                 mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/kubectl-pgo.exe"
 
                 copy_binary_on_command "${l_source_path}" "kubectl-pgo.exe" 1 1
-                
+
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
                 save_prettyversion_on_program "" "pgo.info" "$p_repo_last_pretty_version" 1
                 return 0
@@ -5740,11 +5956,11 @@ function _copy_artifact_files() {
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/kubectl-pgo"
 
             copy_binary_on_command "${l_source_path}" "kubectl-pgo" 0 1
-            
+
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
             save_prettyversion_on_program "" "pgo.info" "$p_repo_last_pretty_version" 0
             ;;
-            
+
         helm)
 
             #Ruta local de los artefactos
@@ -5774,13 +5990,13 @@ function _copy_artifact_files() {
 
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
 
             fi
 
             #B. Si es Linux (no WSL)
-            
+
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
@@ -5810,7 +6026,7 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}/step_${p_repo_last_pretty_version}"
-            
+
 
             #A. Si es WSL de Windows
             if [ $p_install_win_cmds -eq 0 ]; then
@@ -5872,8 +6088,8 @@ function _copy_artifact_files() {
                 #echo "Renombrando \"${p_artifact_filename_woext}.exe\" como \"${g_temp_path}/${l_source_path}/rust-analyzer.exe\" ..."
                 #mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/rust-analyzer.exe"
 
-                copy_binary_on_command "${l_source_path}" "rust-analyzer.exe" 1 1 
-                
+                copy_binary_on_command "${l_source_path}" "rust-analyzer.exe" 1 1
+
                 #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
                 save_prettyversion_on_program "" "rust-analyzer.info" "$p_repo_last_pretty_version" 1
 
@@ -5887,8 +6103,8 @@ function _copy_artifact_files() {
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/rust-analyzer"
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_command "${l_source_path}" "rust-analyzer" 0 1 
-            
+            copy_binary_on_command "${l_source_path}" "rust-analyzer" 0 1
+
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
             save_prettyversion_on_program "" "rust-analyzer.info" "$p_repo_last_pretty_version" 0
             ;;
@@ -5957,11 +6173,11 @@ function _copy_artifact_files() {
 
         hadolint)
 
-            #No se soportado por Windows 
+            #No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Windows" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Windows" "$g_color_reset"
                 return 40
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" NO esta habilitado para Windows"
                 return 40
@@ -5973,7 +6189,7 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            #Renombrando 
+            #Renombrando
             echo "Renombrando \"${p_artifact_filename_woext}\" a \"${g_temp_path}/${l_source_path}/hadolint\" ..."
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/hadolint"
 
@@ -5985,11 +6201,11 @@ function _copy_artifact_files() {
 
         trivy)
 
-            #No se soportado por Windows 
+            #No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
@@ -6013,14 +6229,14 @@ function _copy_artifact_files() {
 
         runc)
 
-            #No se soportado por Windows 
+            #No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
-                
+
 
             #B. Si es Linux (no WSL)
 
@@ -6062,9 +6278,9 @@ function _copy_artifact_files() {
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
                 if [ $g_runner_sudo_support -ne 0 ] && [ $g_runner_sudo_support -ne 1 ]; then
-                    systemctl start containerd.service 
+                    systemctl start containerd.service
                 else
-                    sudo systemctl start containerd.service 
+                    sudo systemctl start containerd.service
                 fi
             fi
             ;;
@@ -6073,14 +6289,14 @@ function _copy_artifact_files() {
 
         crun)
 
-            #A. No se soportado por Windows 
+            #A. No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
-                
+
             #B. Si es Linux (no WSL)
 
             #1. Ruta local de los artefactos
@@ -6111,13 +6327,13 @@ function _copy_artifact_files() {
 
             #4. Desacargar el archivo de configuracion requerido por podman, el cual algunas instalaciones de podman no se encuentra ...
             mkdir -p ${g_repo_path}/etc/podman
-            
+
             #/etc/containers/storage.conf (default: overlayfs)
             printf 'Descargando el archivo de configuracion requerido para "%s" con soporte a "Overlay" en "~/%s"\n' "/etc/containers/storage.conf" \
                    ".files/etc/podman/storage_overlay_default.toml"
             curl -fLo ${g_repo_path}/etc/podman/storage_overlay_default.toml \
                  https://raw.githubusercontent.com/containers/podman/main/vendor/github.com/containers/storage/storage.conf
-           
+
             #/etc/containers/storage.conf (btrfs)
             # cambiando 'driver = "overlay"' por 'driver = "btrfs"'
 
@@ -6136,9 +6352,9 @@ function _copy_artifact_files() {
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'podman.service'
                 if [ $g_runner_id -eq 0 ]; then
-                    systemctl start podman.service 
+                    systemctl start podman.service
                 else
-                    sudo systemctl start podman.service 
+                    sudo systemctl start podman.service
                 fi
             fi
             ;;
@@ -6146,14 +6362,14 @@ function _copy_artifact_files() {
 
         slirp4netns)
 
-            #No se soportado por Windows 
+            #No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
-                
+
             #1. Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
@@ -6192,9 +6408,9 @@ function _copy_artifact_files() {
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
                 if [ $g_runner_id -eq 0 ]; then
-                    systemctl start containerd.service 
+                    systemctl start containerd.service
                 else
-                    sudo systemctl start containerd.service 
+                    sudo systemctl start containerd.service
                 fi
             fi
             ;;
@@ -6202,14 +6418,14 @@ function _copy_artifact_files() {
 
         fuse-overlayfs)
 
-            #No se soportado por Windows 
+            #No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
-                
+
             #1. Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
@@ -6248,9 +6464,9 @@ function _copy_artifact_files() {
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
                 if [ $g_runner_id -eq 0 ]; then
-                    systemctl start containerd.service 
+                    systemctl start containerd.service
                 else
-                    sudo systemctl start containerd.service 
+                    sudo systemctl start containerd.service
                 fi
             fi
             ;;
@@ -6258,14 +6474,14 @@ function _copy_artifact_files() {
 
         rootlesskit)
 
-            #No se soportado por Windows 
+            #No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
-                
+
             #1. Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
@@ -6304,9 +6520,9 @@ function _copy_artifact_files() {
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
                 if [ $g_runner_id -eq 0 ]; then
-                    systemctl start containerd.service 
+                    systemctl start containerd.service
                 else
-                    sudo systemctl start containerd.service 
+                    sudo systemctl start containerd.service
                 fi
             fi
             ;;
@@ -6314,14 +6530,14 @@ function _copy_artifact_files() {
 
         containerd)
 
-            #No se soportado por Windows 
+            #No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
-                
+
             #1. Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}/bin"
 
@@ -6353,7 +6569,7 @@ function _copy_artifact_files() {
 
             #Descargar archivo de configuracion como servicio a nivel system:
             mkdir -p ${g_repo_path}/etc/containerd/systemd_root
-            
+
             printf 'Descargando el archivo de configuracion de "%s" a nivel system en "%s"\n' "containerd.service" "~/.files/etc/containerd/systemd_root/"
             curl -fLo ${g_repo_path}/etc/containerd/systemd_root/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
             #Descargar archivo de configuracion como servicio a nivel usuario: no se requiere.
@@ -6371,9 +6587,9 @@ function _copy_artifact_files() {
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
                 if [ $g_runner_id -eq 0 ]; then
-                    systemctl start containerd.service 
+                    systemctl start containerd.service
                 else
-                    sudo systemctl start containerd.service 
+                    sudo systemctl start containerd.service
                 fi
             fi
 
@@ -6401,7 +6617,7 @@ function _copy_artifact_files() {
                        "containerd.service" "$g_color_yellow1" "$g_color_reset"
                 printf '%b   sudo cp ~/.files/etc/containerd/systemd_root/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_yellow1" "$g_color_reset"
-                printf '%b   sudo systemctl start containerd%b\n' "$g_color_yellow1" "$g_color_reset"                 
+                printf '%b   sudo systemctl start containerd%b\n' "$g_color_yellow1" "$g_color_reset"
 
             fi
             ;;
@@ -6409,11 +6625,11 @@ function _copy_artifact_files() {
 
         buildkit)
 
-            #No se soportado por Windows 
+            #No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
@@ -6438,7 +6654,7 @@ function _copy_artifact_files() {
             #Descargar archivo de configuracion como servicio a nivel system:
             mkdir -p ${g_repo_path}/etc/buildkit/systemd_root
             mkdir -p ${g_repo_path}/etc/buildkit/systemd_user
-            
+
             printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.service" "~/.files/etc/buildkit/systemd_user/"
             #curl -fLo ${g_repo_path}/.files/etc/buildkit/systemd_user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.service
             curl -fLo ${g_repo_path}/etc/buildkit/systemd_user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit.service
@@ -6457,7 +6673,7 @@ function _copy_artifact_files() {
             fi
 
 
-            #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:            
+            #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
             if [ $l_status -eq 0 ]; then
 
                 printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' \
@@ -6477,7 +6693,7 @@ function _copy_artifact_files() {
                 printf '%b   sudo cp ~/.files/etc/buildkit/systemd_root/buildkit.socket /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   sudo cp ~/.files/etc/buildkit/systemd_root/buildkit.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_yellow1" "$g_color_reset"
-                printf '%b   sudo systemctl start buildkit.service%b\n' "$g_color_yellow1" "$g_color_reset"                 
+                printf '%b   sudo systemctl start buildkit.service%b\n' "$g_color_yellow1" "$g_color_reset"
 
             fi
             ;;
@@ -6485,18 +6701,18 @@ function _copy_artifact_files() {
 
         nerdctl)
 
-            #No se soportado por Windows 
+            #No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
             #1. Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
             local l_status_stop=-1
-          
+
 
             #2. Configuración: Instalación de binario basico
             if [ $p_artifact_index -eq 0 ]; then
@@ -6526,7 +6742,7 @@ function _copy_artifact_files() {
             #3. Configuración: Instalación de binarios de complementos que su reposotrio no ofrece el compilado (solo la fuente). Para ello se usa el full
             else
 
-                #3.1. Rutas de los artectos 
+                #3.1. Rutas de los artectos
                 l_source_path="${p_repo_id}/${p_artifact_index}/bin"
 
                 #3.2. Configurar 'rootless-containers/bypass4netns' usado para accelar 'Slirp4netns' (NAT o port-forwading de llamadas del exterior al contenedor)
@@ -6583,9 +6799,9 @@ function _copy_artifact_files() {
                     #Iniciar a nivel system
                     printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
                     if [ $g_runner_id -eq 0 ]; then
-                        systemctl start containerd.service 
+                        systemctl start containerd.service
                     else
-                        sudo systemctl start containerd.service 
+                        sudo systemctl start containerd.service
                     fi
                 fi
 
@@ -6599,7 +6815,7 @@ function _copy_artifact_files() {
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
@@ -6635,13 +6851,13 @@ function _copy_artifact_files() {
             ;;
 
 
-            
+
         awscli)
 
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
@@ -6663,7 +6879,7 @@ function _copy_artifact_files() {
             #Creando el folder si no existe y no limpiarlo si existe
             create_or_clean_folder_on_program 0 "aws-cli" 0 ""
 
-            #Instalando 
+            #Instalando
             if [ $p_flag_install -eq 0 ]; then
 
                 #Ejecutando los script de instalación
@@ -6681,11 +6897,11 @@ function _copy_artifact_files() {
 
         rust)
 
-            #No habilitado para Windows 
+            #No habilitado para Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
@@ -6714,7 +6930,7 @@ function _copy_artifact_files() {
 
             #Las componente por defecto de 'rust-src'
             else
-            
+
                 #Ejecutando los script de instalación
                 exec_setupscript_to_program "${l_source_path}" "install.sh" "rust" "--prefix=" "--disable-ldconfig"
 
@@ -6736,10 +6952,10 @@ function _copy_artifact_files() {
 
 
         nerd-fonts)
-            
+
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
+
             #A. Si es WSL de Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
@@ -6764,11 +6980,11 @@ function _copy_artifact_files() {
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
             save_prettyversion_on_program "" "nerd-fonts.info" "$p_repo_last_pretty_version" 0
             ;;
-        
+
 
 
         protoc)
-            
+
             #Ruta local de los artefactos
             #l_source_path="${p_repo_id}/${p_artifact_index}"
 
@@ -6808,7 +7024,7 @@ function _copy_artifact_files() {
 
 
         omnisharp-ls)
-            
+
             #Ruta local de los artefactos
             #l_source_path="${p_repo_id}/${p_artifact_index}"
 
@@ -6836,7 +7052,7 @@ function _copy_artifact_files() {
 
 
         netcoredbg)
-            
+
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}/netcoredbg"
 
@@ -6896,9 +7112,9 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
 
-            #A. Si son binarios Windows 
+
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
@@ -6909,7 +7125,7 @@ function _copy_artifact_files() {
 
                 printf 'Descargando el archivo "%s" (para no mostrar errores cuando se usa sus anotaciones) en "%s"\n' "lombok.jar" \
                        "${g_win_programs_path}/lsp_servers/jdtls"
-                curl -fLo "${g_win_programs_path}/lsp_servers/jdtls/lombok.jar" https://projectlombok.org/downloads/lombok.jar 
+                curl -fLo "${g_win_programs_path}/lsp_servers/jdtls/lombok.jar" https://projectlombok.org/downloads/lombok.jar
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
                 save_prettyversion_on_program "" "eclipse_jdtls.info" "$p_repo_last_pretty_version" 1
@@ -6928,11 +7144,11 @@ function _copy_artifact_files() {
 
             printf 'Descargando el archivo "%s" (para no mostrar errores cuando se usa sus anotaciones) en "%s"\n' "lombok.jar" \
                    "${g_programs_path}/lsp_servers/jdtls"
-            curl -fLo "${g_programs_path}/lsp_servers/jdtls/lombok.jar" https://projectlombok.org/downloads/lombok.jar 
-           
+            curl -fLo "${g_programs_path}/lsp_servers/jdtls/lombok.jar" https://projectlombok.org/downloads/lombok.jar
+
             #Fix permisos
             if [ $g_runner_is_target_user -ne 0 ]; then
-                chown "${g_targethome_owner}:${g_targethome_group}" "${g_programs_path}/lsp_servers/jdtls/lombok.jar" 
+                chown "${g_targethome_owner}:${g_targethome_group}" "${g_programs_path}/lsp_servers/jdtls/lombok.jar"
             fi
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
@@ -6946,7 +7162,7 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            #A. Si son binarios Windows 
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
@@ -6964,7 +7180,7 @@ function _copy_artifact_files() {
 
 
             #B. Si son binarios Linux
-            
+
             #Creando el folder si no existe y limpiarlo si existe
             create_or_clean_folder_on_program 0 "lsp_servers/luals" 2 ""
 
@@ -6983,7 +7199,7 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            #A. Si son binarios Windows 
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
@@ -7003,7 +7219,7 @@ function _copy_artifact_files() {
 
 
             #B. Si son binarios Linux
-            
+
             #Creando el folder si no existe y limpiarlo si existe
             create_or_clean_folder_on_program 0 "jbang" 2 ""
 
@@ -7031,7 +7247,7 @@ function _copy_artifact_files() {
             l_target_path="maven_${p_repo_last_pretty_version%%.*}"
 
 
-            #A. Si son binarios Windows 
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
@@ -7077,7 +7293,7 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            #A. Si son binarios Windows 
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
@@ -7095,7 +7311,7 @@ function _copy_artifact_files() {
 
 
             #B. Si son binarios Linux
-            
+
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
             clean_folder_on_program 0 "vsc_extensions" "ms_java_test" 0 ""
 
@@ -7114,7 +7330,7 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            #A. Si son binarios Windows 
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
@@ -7132,7 +7348,7 @@ function _copy_artifact_files() {
 
 
             #B. Si son binarios Linux
-            
+
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
             clean_folder_on_program 0 "vsc_extensions" "ms_java_debug" 0 ""
 
@@ -7145,21 +7361,164 @@ function _copy_artifact_files() {
 
 
 
+        codelldb)
 
-        roslyn-ls-lnx)
-
-            #No se soportado para binarios Windows 
-            if [ $p_install_win_cmds -eq 0 ]; then
-                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
-                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
-                return 40
-            fi
-                
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            
+            #A. Si son binarios Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "codelldb" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/codelldb"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "codelldb" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/codelldb"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+        vscode-cpptools)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "ms_cpptools" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/ms_cpptools"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "ms_cpptools" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/ms_cpptools"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+        vscode-go)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "go_tools" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/go_tools"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "go_tools" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/go_tools"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+        vscode-js-debug)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "ms_js_debug" 0 ""
+
+                #Descomprimir
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "vsc_extensions" "ms_js_debug" "js-debug"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "ms_js_debug" 0 ""
+
+            #Descomprimir
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "vsc_extensions" "ms_js_debug" "js-debug"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+        roslyn-ls-lnx)
+
+            #No se soportado para binarios Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
+                return 40
+            fi
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
             clean_folder_on_program 0 "lsp_servers" "roslyn_ls" 0 ""
 
@@ -7189,7 +7548,7 @@ function _copy_artifact_files() {
                 #No implementado para la plataforma actual
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" no define binarios para la plataforma actual %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "$g_os_architecture_type" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "$g_os_architecture_type" "$g_color_reset"
                 return 41
             fi
 
@@ -7204,18 +7563,18 @@ function _copy_artifact_files() {
 
         roslyn-ls-win)
 
-            #No se soportado para binarios Linux 
+            #No se soportado para binarios Linux
             if [ $p_install_win_cmds -ne 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Windows" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Windows" "$g_color_reset"
                 return 40
             fi
-                
+
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            
+
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
             clean_folder_on_program 1 "lsp_servers" "roslyn_ls" 0 ""
 
@@ -7235,7 +7594,7 @@ function _copy_artifact_files() {
                 #No implementado para la plataforma actual
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" no define binarios para la plataforma actual %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "$g_os_architecture_type" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "$g_os_architecture_type" "$g_color_reset"
                 return 41
             fi
 
@@ -7249,14 +7608,14 @@ function _copy_artifact_files() {
 
         cni-plugins)
 
-            #No se soportado para binarios Windows 
+            #No se soportado para binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
-                
+
 
             #1. Si la unidad servicio 'containerd' esta iniciado, solicitar su detención
             is_package_installed 'containerd' $g_os_subtype_id
@@ -7299,9 +7658,9 @@ function _copy_artifact_files() {
                 #Iniciar a nivel system
                 printf 'Iniciando la unidad "%s" a nivel sistema ...\n' 'containerd.service'
                 if [ $g_runner_id -eq 0 ]; then
-                    systemctl start containerd.service 
+                    systemctl start containerd.service
                 else
-                    sudo systemctl start containerd.service 
+                    sudo systemctl start containerd.service
                 fi
             fi
             ;;
@@ -7310,11 +7669,11 @@ function _copy_artifact_files() {
 
         ctags-nowin)
 
-            #No se soportado por Windows 
+            #No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
 
@@ -7326,9 +7685,9 @@ function _copy_artifact_files() {
             create_or_clean_folder_on_program 0 "ctags/bin" 1 ""
 
             #Copiando los binarios
-            copy_binary_on_program "${l_source_path}/bin" "ctags" 0 "ctags/bin" 1 
-            copy_binary_on_program "${l_source_path}/bin" "optscript" 0 "ctags/bin" 1 
-            copy_binary_on_program "${l_source_path}/bin" "readtags" 0 "ctags/bin" 1 
+            copy_binary_on_program "${l_source_path}/bin" "ctags" 0 "ctags/bin" 1
+            copy_binary_on_program "${l_source_path}/bin" "optscript" 0 "ctags/bin" 1
+            copy_binary_on_program "${l_source_path}/bin" "readtags" 0 "ctags/bin" 1
 
             #Adicionar los archivos ayudas a la carpeta de ayuda del sistema
             copy_man_files "${g_temp_path}/${l_source_path}/man/man1" 1
@@ -7342,11 +7701,11 @@ function _copy_artifact_files() {
 
         ctags-win)
 
-            #No se soportado por Windows 
+            #No se soportado por Windows
             if [ $p_install_win_cmds -ne 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Windows" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Windows" "$g_color_reset"
                 return 40
             fi
 
@@ -7355,10 +7714,10 @@ function _copy_artifact_files() {
 
             #Creando el folder si no existe y limpiarlo si existe
             create_or_clean_folder_on_program 1 "ctags/bin" 1 ""
-                    
+
             #Copiando los binarios
-            copy_binary_on_program "${l_source_path}" "ctags.exe" 1 "ctags/bin" 1 
-            copy_binary_on_program "${l_source_path}" "readtags.exe" 1 "ctags/bin" 1 
+            copy_binary_on_program "${l_source_path}" "ctags.exe" 1 "ctags/bin" 1
+            copy_binary_on_program "${l_source_path}" "readtags.exe" 1 "ctags/bin" 1
 
             #Mover folderes a la carpeta del programa
             move_tempfolder_on_program "${l_source_path}" "man" 1 "ctags"
@@ -7376,7 +7735,7 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            #A. Si son binarios Windows 
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
@@ -7395,7 +7754,7 @@ function _copy_artifact_files() {
 
 
             #B. Si son binarios Linux
-            
+
             #Creando el folder si no existe y limpiarlo si existe
             create_or_clean_folder_on_program 0 "powershell" 2 ""
 
@@ -7413,7 +7772,7 @@ function _copy_artifact_files() {
 
 
         wezterm)
-            
+
             #A. Si son binarios Linux
             if [ $p_install_win_cmds -eq 0 ]; then
                 return 0
@@ -7437,12 +7796,12 @@ function _copy_artifact_files() {
 
 
         neovim)
-            
+
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
 
-            #A. Si son binarios Windows 
+
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Limpiando el folder si existe (crear la ruta base si no existe)
@@ -7460,7 +7819,7 @@ function _copy_artifact_files() {
 
 
             #B. Si son binarios Linux
-            
+
             #Limpiando el folder si existe (crear la ruta base si no existe)
             clean_folder_on_program 0 "" "neovim" 0 ""
 
@@ -7470,7 +7829,7 @@ function _copy_artifact_files() {
             if [ $l_status -ne 0 ]; then
                 return 40
             fi
-            
+
             #Validar si 'nvim' esta en el PATH
             echo "$PATH" | grep "${g_programs_path}/neovim/bin" &> /dev/null
             l_status=$?
@@ -7486,15 +7845,15 @@ function _copy_artifact_files() {
 
 
         llvm)
-           
-            #No se soportado por Windows 
+
+            #No se soportado por Windows
             if [ $p_install_win_cmds -eq 0 ]; then
                 printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
                        "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset" 
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
                 return 40
             fi
-                
+
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Limpiando el folder si existe (crear la ruta base si no existe)
@@ -7524,7 +7883,7 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            #A. Si son binarios Windows 
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Creando el folder si no existe y no limpiarlo si existe
@@ -7593,7 +7952,7 @@ function _copy_artifact_files() {
                 printf 'Adicionando a la sesion actual: PATH=%s/dotnet:$PATH\n' "${g_programs_path}"
 
                 export DOTNET_ROOT=${g_programs_path}/dotnet
-                PATH=${g_programs_path}/dotnet:$PATH                    
+                PATH=${g_programs_path}/dotnet:$PATH
                 if [ "$p_repo_id" = "net-sdk" ]; then
                     PATH=${g_programs_path}/dotnet/tools:$PATH
                 fi
@@ -7607,9 +7966,9 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
 
-            #A. Si son binarios Windows 
+
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Limpiando el folder si existe (crear la ruta base si no existe)
@@ -7626,7 +7985,7 @@ function _copy_artifact_files() {
                        'go install golang.org/x/tools/gopls@latest' "$g_color_reset"
                 printf 'Instalé/actualizé el modulo go %s ejecutando:  %b%s%b\n' 'DAP "delve"' "$g_color_yellow1" \
                        'go install github.com/go-delve/delve/cmd/dlv@latest' "$g_color_reset"
-                
+
                 return 0
             fi
 
@@ -7663,7 +8022,7 @@ function _copy_artifact_files() {
                 printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'LSP "gopls"' "$g_color_gray1" "$g_color_reset"
                 go install golang.org/x/tools/gopls@latest
                 l_aux=$(gopls version | grep 'gopls v' | sed "$g_regexp_sust_version1" 2> /dev/null)
-                printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'LSP "gopls"' "$g_color_gray1" "$l_aux" "$g_color_reset" 
+                printf 'Modulo go %s con la version "%b%s%b" esta instalado.\n' 'LSP "gopls"' "$g_color_gray1" "$l_aux" "$g_color_reset"
 
                 #Instalar o actualizar el modulo go: DAP 'delve'
                 printf 'Instalando/actualizando el modulo go %s %b(en "~/go/bin")%b...\n' 'DAP "delve"' "$g_color_gray1" "$g_color_reset"
@@ -7687,9 +8046,9 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
 
-            #A. Si son binarios Windows 
+
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Limpiando el folder si existe (crear la ruta base si no existe)
@@ -7736,9 +8095,9 @@ function _copy_artifact_files() {
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
-            
 
-            #A. Si son binarios Windows 
+
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Limpiando el folder si existe (crear la ruta base si no existe)
@@ -7792,7 +8151,7 @@ function _copy_artifact_files() {
             if [ -z "$l_version" ]; then
                 l_version="$p_repo_last_version"
             fi
-            
+
             #primer numero de la version a instalar
             l_aux=$(echo "$l_version" | sed -n 's/^jdk-\([0-9]*\)\..*/\1/p')
             l_target_path="graalvm_${l_aux}"
@@ -7809,7 +8168,7 @@ function _copy_artifact_files() {
             # WebAssembly (Wasm)
             # Java on Truffle (Espresso)
 
-            #A. Si son binarios Windows 
+            #A. Si son binarios Windows
             if [ $p_install_win_cmds -eq 0 ]; then
 
                 #Limpiando el folder si existe (crear la ruta base si no existe)
@@ -7895,10 +8254,10 @@ function _copy_artifact_files() {
         *)
            printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" no tiene un logica definida para su setup%b.\n' \
                   "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
-                  "$g_color_gray1" "$p_repo_id" "$g_color_red1" "$g_color_reset" 
+                  "$g_color_gray1" "$p_repo_id" "$g_color_red1" "$g_color_reset"
            return 50
            ;;
-            
+
     esac
 
     return 0
@@ -7951,7 +8310,7 @@ install_initialize_menu_option() {
         7)
             #Los valores son solo para logs, pero se calcular manualmente
             l_repo_id='containerd'
-            
+
             #1. Determinar si el paquete 'containerd.io' esta instalado en el sistema operativo
             is_package_installed 'containerd' $g_os_subtype_id
             l_status=$?
@@ -7976,7 +8335,7 @@ install_initialize_menu_option() {
 
                 #Parametros:
                 # 1> Tipo de ejecución: 2/4 (ejecución sin menu, para instalar/actualizar un grupo paquetes)
-                # 2> Paquetes a instalar 
+                # 2> Paquetes a instalar
                 # 3> El estado de la credencial almacenada para el sudo
                 # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
                 if [ $l_is_noninteractive -eq 1 ]; then
@@ -7996,10 +8355,10 @@ install_initialize_menu_option() {
                 fi
 
             fi
-            
+
             #OK
             return 0
-            ;;        
+            ;;
 
         *)
             return 0
@@ -8074,10 +8433,10 @@ uninstall_initialize_menu_option() {
     if [ $gp_type_calling -eq 3 ] || [ $gp_type_calling -eq 4 ]; then
         l_is_noninteractive=0
     fi
-    
+
     #3. Preguntar antes de eliminar los archivos
     printf 'Se va ha iniciar con la desinstalación de los siguientes repositorios: '
-    
+
     #Obtener los repositorios a configurar
     local l_aux="${ga_menu_options_packages[$l_i]}"
     local IFS=','
@@ -8096,7 +8455,7 @@ uninstall_initialize_menu_option() {
         fi
 
         if [ $l_j -eq 0 ]; then
-            l_repo_names="'${g_color_gray1}${l_aux}${g_color_reset}'" 
+            l_repo_names="'${g_color_gray1}${l_aux}${g_color_reset}'"
         else
             l_repo_names="${l_repo_names}, '${g_color_gray1}${l_aux}${g_color_reset}'"
         fi
@@ -8112,7 +8471,7 @@ uninstall_initialize_menu_option() {
             return 1
         fi
     fi
-    
+
 
     #4. Realizar validaciones segun la opcion de menu escogida
     case "$p_option_relative_idx" in
@@ -8121,7 +8480,7 @@ uninstall_initialize_menu_option() {
         7)
             #Los valores son solo para logs
             l_repo_id='containerd'
-            
+
             #1. Determinar si el paquete 'containerd.io' esta instalado en el sistema operativo
             is_package_installed 'containerd' $g_os_subtype_id
             l_status=$?
@@ -8141,11 +8500,11 @@ uninstall_initialize_menu_option() {
             if [ $l_status -eq 2 ]; then
                 return 1
             fi
-        
+
             #"Tools para cualquier Container Runtime": BuildKit
             #Los valores son solo para logs
             l_repo_id='buildkit'
-            
+
             #1. Determinar si el paquete 'containerd.io' esta instalado en el sistema operativo
             is_package_installed 'buildkit' $g_os_subtype_id
             l_status=$?
@@ -8224,7 +8583,7 @@ _uninstall_repository2() {
     if [ "$l_repo_name" = "$g_empty_str" ]; then
         l_repo_name=''
     fi
-    
+
     #Tag usuado para imprimir un identificador del artefacto en un log
     local l_tag="${p_repo_id}[${p_repo_current_pretty_version}]"
 
@@ -8296,7 +8655,7 @@ _uninstall_repository() {
                 return 40
             fi
 
-            #2. Eliminando los archivos 
+            #2. Eliminando los archivos
             echo "Eliminando \"slirp4netns\" de \"${l_target_path}\" ..."
             if [ $g_runner_sudo_support -ne 0 ] && [ $g_runner_sudo_support -ne 1 ]; then
                 if [ -f "${l_target_path}/slirp4netns" ]; then
@@ -8318,7 +8677,7 @@ _uninstall_repository() {
                 return 40
             fi
 
-            #2. Eliminando los archivos 
+            #2. Eliminando los archivos
             if [ $g_runner_sudo_support -ne 0 ] && [ $g_runner_sudo_support -ne 1 ]; then
 
                 if [ -f "${l_target_path}/rootlesskit-docker-proxy" ]; then
@@ -8382,7 +8741,7 @@ _uninstall_repository() {
             fi
 
             #3. Eliminado el archivo para determinar la version actual
-            rm "${g_programs_path}/cni-plugins.info" 
+            rm "${g_programs_path}/cni-plugins.info"
             ;;
 
 
@@ -8395,7 +8754,7 @@ _uninstall_repository() {
             fi
 
 
-            #2. Eliminando archivos 
+            #2. Eliminando archivos
             if [ $g_runner_sudo_support -ne 0 ] && [ $g_runner_sudo_support -ne 1 ]; then
 
                 if [ -f "${l_target_path}/containerd-shim" ]; then
@@ -8467,7 +8826,7 @@ _uninstall_repository() {
             #Buscar si esta instalado a nive usuario
             local l_is_user=0
             exist_systemd_unit "containerd.service" $l_is_user
-            l_status=$?   #  0 > La unidad no esta instalada (no tiene archivo de configuracion): 
+            l_status=$?   #  0 > La unidad no esta instalada (no tiene archivo de configuracion):
                           #  1 > La unidad instalada pero aun no esta en cache (no ha sido ejecutada desde el inicio del SO)
                           #  2 > La unidad instalada, en cache, pero marcada para no iniciarse ('unmask', 'inactive').
                           #  3 > La unidad instalada, en cache, pero no iniciado ('loaded', 'inactive').
@@ -8476,15 +8835,15 @@ _uninstall_repository() {
                           #  6 > La unidad instalada, en cache, iniciado y terminado ('loaded', 'active'/'exited' or 'dead').
                           #  7 > La unidad instalada, en cache, iniciado pero se desconoce su subestado.
                           # 99 > La unidad instalada, en cache, pero no se puede leer su información.
-        
+
             if [ $l_status -eq 0 ]; then
-        
+
                 #Averiguar si esta instalado a nivel system
                 l_is_user=1
                 exist_systemd_unit "containerd.service" $l_is_user
                 l_status=$?
-       
-               #Si no esta instalado en nivel user ni system 
+
+               #Si no esta instalado en nivel user ni system
                 if [ $l_status -eq 0 ]; then
                     return 0
                 fi
@@ -8557,7 +8916,7 @@ _uninstall_repository() {
                 return 40
             fi
 
-            #2. Eliminando archivos 
+            #2. Eliminando archivos
             if [ $g_runner_sudo_support -ne 0 ] && [ $g_runner_sudo_support -ne 1 ]; then
 
                 if [ -f "${l_target_path}/buildkit-runc" ]; then
@@ -8617,15 +8976,15 @@ _uninstall_repository() {
                           #  6 > La unidad instalada, en cache, iniciado y terminado ('loaded', 'active'/'exited' or 'dead').
                           #  7 > La unidad instalada, en cache, iniciado pero se desconoce su subestado.
                           # 99 > La unidad instalada, en cache, pero no se puede leer su información.
-        
+
             if [ $l_status -eq 0 ]; then
-        
+
                 #Averiguar si esta instalado a nivel system
                 l_is_user=1
                 exist_systemd_unit "buildkit.service" $l_is_user
                 l_status=$?
-        
-               #Si no esta instalado en nivel user ni system 
+
+               #Si no esta instalado en nivel user ni system
                 if [ $l_status -eq 0 ]; then
                     return 0
                 fi
@@ -8792,12 +9151,3 @@ _uninstall_repository() {
 
 
 #}}}
-
-
-
-
-
-
-
-
-

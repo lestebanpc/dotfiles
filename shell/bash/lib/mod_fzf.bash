@@ -15,7 +15,7 @@ fi
 #Ruta del script para ejecutar funciones en acciones FZF
 _g_script_path=~/${g_repo_name}/shell/bash/bin/fzf
 
-#Carpetas de archivos temporales ¿porque usar la memoria y no usar "/var/tmp/"? 
+#Carpetas de archivos temporales ¿porque usar la memoria y no usar "/var/tmp/"?
 _g_tmp_data_path="/tmp/.files"
 if [ ! -d "$_g_tmp_data_path" ]; then
     mkdir -p $_g_tmp_data_path
@@ -54,12 +54,12 @@ ge_ls() {
     [ ! -z "$1" ] && _g_fzf_fd="${_g_fzf_fd} . '$1'"
 
     #echo "$_g_fzf_fd"
-    
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
+
     #3. Usar FZF
     FZF_DEFAULT_COMMAND="$_g_fzf_fd" \
     fzf $l_fzf_size --prompt 'All> ' \
@@ -75,12 +75,12 @@ ge_files() {
     local l_cmd_ls="fd -H -t f -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
     [ ! -z "$1" ] && l_cmd_ls="${l_cmd_ls} . '$1'"
 
-    
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
+
     FZF_DEFAULT_COMMAND="$l_cmd_ls" \
     fzf $l_fzf_size --preview "$_g_fzf_bat --style=numbers {}" \
         --prompt '📄 File> ' -m \
@@ -92,18 +92,18 @@ ge_files() {
 
 # Listar los procesos del SO
 ge_ps() {
-    
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
+
     (echo "Date: $(date '+%F %T') (Use CTRL-r to reload screen)"; ps -ef) |
     fzf $l_fzf_size --bind=$'ctrl-r:reload(echo "Date: $(date \'+%F %T\') (Use CTRL-r to reload screen)"; ps -ef)' \
         --prompt '🔧 Process> ' --header-lines=2 \
         --preview='echo {}' --preview-window=down,3,wrap \
         --layout=reverse --height=80% | awk '{print $2}'
-}        
+}
 
 _g_fzf_rg_cmd=''
 _g_fzf_rg_initial_query=""
@@ -125,7 +125,7 @@ ge_rg() {
         return 1
     fi
 
-    #Anteponer el caracter de escape "\" a los caracteres especial de una cadena 
+    #Anteponer el caracter de escape "\" a los caracteres especial de una cadena
     _g_fzf_rg_initial_query=$(printf %q "$l_initial_query")
 
     if [ ! -z "$l_path" ]; then
@@ -133,12 +133,12 @@ ge_rg() {
     else
         _g_fzf_rg_cmd='rg --column --line-number --no-heading --color=always --smart-case -e'
     fi
-    
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
+
 
     FZF_DEFAULT_COMMAND="${_g_fzf_rg_cmd} ${_g_fzf_rg_initial_query}" \
     fzf $l_fzf_size --ansi \
@@ -175,7 +175,7 @@ t () {
 
     #Obtener el folder donde se analizara las carpetas
     local l_path=''
-    if [ ! -z "$1" ]; then 
+    if [ ! -z "$1" ]; then
 
         if [ ! -d "$1" ]; then
             printf 'La ruta ingresada "%b%s%b" no existe o no se tiene permisos.\n' "$g_color_gray1" "$1" "$g_color_reset"
@@ -185,7 +185,7 @@ t () {
         l_path="$1"
 
     fi
-    
+
     if [ -z "$l_path" ]; then
         if [ -d "$HOME/code" ]; then
             l_path="$HOME/code"
@@ -204,12 +204,12 @@ t () {
            "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$l_path" "$g_color_reset" "$g_color_cian1" "$g_color_reset"\
            "$g_color_cian1" "$g_color_reset"
 
-    
+
     local l_fzf_size='--height 60%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,99%,60%'
     fi
-   
+
 
     local l_session_or_path=$(sesh list --icons | fzf $l_fzf_size \
 		--no-sort --ansi --prompt '⚡Session + Zoxide> ' \
@@ -231,11 +231,11 @@ t () {
     #echo "$l_session_or_path"
 
     #Ir a la sesion o crear la sesion basandose en la ruta
-    # > Si la sesion existe: 
-    #   - Si el cliente ya esta conectado a uno, lo desvincuala del cliente actual y luego los vuncual a la sesion existente. 
+    # > Si la sesion existe:
+    #   - Si el cliente ya esta conectado a uno, lo desvincuala del cliente actual y luego los vuncual a la sesion existente.
     #   - Si el cliente no esta conectado, vincula el cliente a la sesion existente.
-    # > Si la sesion no existe, lo crea 
-    #   - Si el cliente ya esta conectado a uno, lo desvincuala del cliente actual y luego los vuncual a la sesion creada. 
+    # > Si la sesion no existe, lo crea
+    #   - Si el cliente ya esta conectado a uno, lo desvincuala del cliente actual y luego los vuncual a la sesion creada.
     #   - Si el cliente no esta conectado, vincula el cliente a la sesion creada.
     sesh connect "$l_session_or_path"
     return 0
@@ -246,21 +246,21 @@ t () {
 # FZF> GIt Functions
 ################################################################################################
 
-# Obtenido y modificado de https://github.com/junegunn/fzf-git.sh 
+# Obtenido y modificado de https://github.com/junegunn/fzf-git.sh
 
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 # Utilidades generales
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
 # Redefine this function to change the options
 _fzf_git_fzf() {
-    
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
+
     fzf $l_fzf_size \
         --layout=reverse --multi --min-height=20 --border \
         --color='header:italic:underline' \
@@ -276,9 +276,9 @@ _fzf_git_check() {
 }
 
 
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
-# Funciones 
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+# Funciones
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 # > Argumentos:
 #   > Tipo de objeto GIT:
@@ -376,8 +376,8 @@ gi_hashes() {
 #        --preview "$_g_fzf_glog_view" \
 #        --bind "shift-up:preview-page-up,shift-down:preview-page-down" --bind "ctrl-z:execute:$_g_fzf_glog_view" \
 #        --header $'CTRL-z (Show in full-screen), SHIFT-↑/↓ (Navigate preview\'s pages)\n' \
-#        | grep -o '[a-f0-9]\{7\}' 
-#        #--print-query 
+#        | grep -o '[a-f0-9]\{7\}'
+#        #--print-query
 #}
 
 
@@ -470,9 +470,9 @@ gi_eachref() {
 #    storageclasses             = sc
 
 
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 # Utilidades generales
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 #Argumentos:
 #  1 > Si es 0, se muestra el default Namespace
@@ -483,7 +483,7 @@ _fzf_kc_get_context_info() {
     local l_tmp="${l_data//// }"
     local l_items=($l_tmp)
     local l_n=${#l_items[@]}
-    
+
     local l_color_1="\x1b[91m"
     local l_color_2="\x1b[33m"
     local l_color_3="\x1b[92m"
@@ -491,7 +491,7 @@ _fzf_kc_get_context_info() {
     local l_color_reset="\x1b[0m"
 
     if [ $l_n -lt 3 ]; then
-        printf "Context: '%b%s%b'" "$l_color_1" "${l_data}" "$l_color_reset" 
+        printf "Context: '%b%s%b'" "$l_color_1" "${l_data}" "$l_color_reset"
     else
         if [ "$1" = "0" ]; then
             printf "User: '%b%s%b', Server: '%b%s%b', Default Namespace: '%b%s%b'" "$l_color_1" "${l_items[2]}" "$l_color_reset" "$l_color_2" "${l_items[1]}" "$l_color_reset" "$l_color_3" "${l_items[2]}" "$l_color_reset"
@@ -510,9 +510,9 @@ _g_fzf_kc_options=""
 _g_fzf_kc_data_file=""
 
 
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 # Funciones
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 kc_resources() {
 
@@ -530,7 +530,7 @@ kc_resources() {
     elif [ "$1" = "--help" ]; then
         echo "Usar: "
         echo "     kc_resources RESOURCE-KIND NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_resources --help" 
+        echo "     kc_resources --help"
         echo "> Use '.' si desea no ingresar valor para el argumento."
         echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
         echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
@@ -539,8 +539,8 @@ kc_resources() {
         echo "> Argumento 'FILTER-FIELDS': Coloque el listado de los campos deseado (igual al valor de '--field-selector' de kubectl)."
         echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
         return 0
-    fi 
-    
+    fi
+
     #Resource KIND o Name
     local l_cmd="kubectl get $1"
 
@@ -556,7 +556,7 @@ kc_resources() {
             _g_fzf_kc_options="${l_resource_name}/{1} -n=$2"
         fi
     fi
-    
+
     #Labels
     if [ ! -z "$3" ] &&  [ "$3" != "." ]; then
         l_cmd="${l_cmd} -l $3"
@@ -569,12 +569,12 @@ kc_resources() {
 
     #echo "$_g_fzf_oc_pod_path"
     #echo "$l_awk_template"
-    
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
+
 
     #3. Generar el reporte deseado con la data ingresada
     FZF_DEFAULT_COMMAND="$l_cmd" \
@@ -597,12 +597,12 @@ oc_projects() {
     _g_fzf_kc_data_file="${_g_tmp_data_path}/projects_${_g_uid}.json"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-    
+
     #Ayuda
     if [ "$1" = "--help" ]; then
         echo "Usar: "
         echo "     oc_projects FILTER-LABELS FILTER-FIELDS"
-        echo "     oc_projects --help" 
+        echo "     oc_projects --help"
         echo "> Use '.' si desea no ingresar valor para el argumento."
         echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
         echo "  Ejemplo 'label1=value1,label2=value2'"
@@ -610,7 +610,7 @@ oc_projects() {
         echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
         return 0
     fi
-    
+
     #Labels
     if [ ! -z "$1" ] &&  [ "$1" != "." ]; then
         l_cmd_options="${l_cmd_options} -l $1"
@@ -643,13 +643,13 @@ oc_projects() {
         echo "No data found"
         return 3
     fi
-    
-    
+
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
+
     #5. Mostrar el reporte
     echo "$l_data" |
     fzf $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
@@ -679,12 +679,12 @@ kc_ns() {
     _g_fzf_kc_data_file="${_g_tmp_data_path}/namespaces_${_g_uid}.json"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-    
+
     #Ayuda
     if [ "$1" = "--help" ]; then
         echo "Usar: "
         echo "     kc_namespaces FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_namespaces --help" 
+        echo "     kc_namespaces --help"
         echo "> Use '.' si desea no ingresar valor para el argumento."
         echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
         echo "  Ejemplo 'label1=value1,label2=value2'"
@@ -692,7 +692,7 @@ kc_ns() {
         echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
         return 0
     fi
-    
+
     #Labels
     if [ ! -z "$1" ] &&  [ "$1" != "." ]; then
         l_cmd_options="${l_cmd_options} -l $1"
@@ -725,13 +725,13 @@ kc_ns() {
         echo "No data found"
         return 3
     fi
-    
-    
+
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
+
     #5. Mostrar el reporte
     echo "$l_data" |
     fzf $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
@@ -760,12 +760,12 @@ kc_po() {
     _g_fzf_kc_data_file="${_g_tmp_data_path}/pods_${_g_uid}.json"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-    
+
     #Ayuda
     if [ "$1" = "--help" ]; then
         echo "Usar: "
         echo "     kc_pods NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_pods --help" 
+        echo "     kc_pods --help"
         echo "> Use '.' si desea no ingresar valor para el argumento."
         echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
         echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
@@ -775,7 +775,7 @@ kc_po() {
         echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
         return 0
     fi
-    
+
     #Namespace
     if [ ! -z "$1" ] && [ "$1" != "." ]; then
         if [ "$1" = "--all" ]; then
@@ -784,7 +784,7 @@ kc_po() {
             l_cmd_options="${l_cmd_options} -n $1"
         fi
     fi
-    
+
     #Labels
     if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
         l_cmd_options="${l_cmd_options} -l $2"
@@ -817,13 +817,13 @@ kc_po() {
         echo "No data found"
         return 3
     fi
-    
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
-    
+
+
     #5. Mostrar el reporte
     echo "$l_data" |
     fzf $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
@@ -856,12 +856,12 @@ kc_containers() {
     _g_fzf_kc_data_file="${_g_tmp_data_path}/containers_${_g_uid}.json"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-    
+
     #Ayuda
     if [ "$1" = "--help" ]; then
         echo "Usar: "
         echo "     kc_containers NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_containers --help" 
+        echo "     kc_containers --help"
         echo "> Use '.' si desea no ingresar valor para el argumento."
         echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
         echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
@@ -871,7 +871,7 @@ kc_containers() {
         echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
         return 0
     fi
-    
+
     #Namespace
     if [ ! -z "$1" ] && [ "$1" != "." ]; then
         if [ "$1" = "--all" ]; then
@@ -880,7 +880,7 @@ kc_containers() {
             l_cmd_options="${l_cmd_options} -n $1"
         fi
     fi
-    
+
     #Labels
     if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
         l_cmd_options="${l_cmd_options} -l $2"
@@ -913,13 +913,13 @@ kc_containers() {
         echo "No data found"
         return 3
     fi
-    
-    
+
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
+
     #5. Mostrar el reporte
     echo "$l_data" |
     fzf $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
@@ -955,12 +955,12 @@ kc_deploy() {
     _g_fzf_kc_data_file="${_g_tmp_data_path}/deployments_${_g_uid}.json"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-    
+
     #Ayuda
     if [ "$1" = "--help" ]; then
         echo "Usar: "
         echo "     kc_deployments NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_deployments --help" 
+        echo "     kc_deployments --help"
         echo "> Use '.' si desea no ingresar valor para el argumento."
         echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
         echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
@@ -970,7 +970,7 @@ kc_deploy() {
         echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
         return 0
     fi
-    
+
     #Namespace
     if [ ! -z "$1" ] && [ "$1" != "." ]; then
         if [ "$1" = "--all" ]; then
@@ -980,7 +980,7 @@ kc_deploy() {
         fi
     fi
 
-    
+
     #Labels
     if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
         l_cmd_options="${l_cmd_options} -l $2"
@@ -994,7 +994,7 @@ kc_deploy() {
     #echo "$l_cmd_options"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    kubectl $l_cmd_options > $_g_fzf_kc_data_file 
+    kubectl $l_cmd_options > $_g_fzf_kc_data_file
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
@@ -1013,13 +1013,13 @@ kc_deploy() {
         echo "No data found"
         return 3
     fi
-    
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
-    
+
+
     #5. Mostrar el reporte
     echo "$l_data" |
     fzf $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
@@ -1051,12 +1051,12 @@ kc_rs() {
     _g_fzf_kc_data_file="${_g_tmp_data_path}/replicaset_${_g_uid}.json"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-    
+
     #Ayuda
     if [ "$1" = "--help" ]; then
         echo "Usar: "
         echo "     kc_replicasets NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_replicasets --help" 
+        echo "     kc_replicasets --help"
         echo "> Use '.' si desea no ingresar valor para el argumento."
         echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
         echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
@@ -1066,7 +1066,7 @@ kc_rs() {
         echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
         return 0
     fi
-    
+
     #Namespace
     if [ ! -z "$1" ] && [ "$1" != "." ]; then
         if [ "$1" = "--all" ]; then
@@ -1076,7 +1076,7 @@ kc_rs() {
         fi
     fi
 
-    
+
     #Labels
     if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
         l_cmd_options="${l_cmd_options} -l $2"
@@ -1090,7 +1090,7 @@ kc_rs() {
     #echo "$l_cmd_options"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    kubectl $l_cmd_options > $_g_fzf_kc_data_file 
+    kubectl $l_cmd_options > $_g_fzf_kc_data_file
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
@@ -1109,13 +1109,13 @@ kc_rs() {
         echo "No data found"
         return 3
     fi
-    
+
     local l_fzf_size='--height 80%'
     if [ ! -z "$TMUX" ]; then
         l_fzf_size='--tmux center,100%,80%'
     fi
-    
-    
+
+
     #5. Mostrar el reporte
     echo "$l_data" |
     fzf --tmux $l_fzf_size --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
@@ -1134,11 +1134,3 @@ kc_rs() {
     rm -f ${_g_fzf_kc_data_file}
 
 }
-
-
-
-
-
-
-
-

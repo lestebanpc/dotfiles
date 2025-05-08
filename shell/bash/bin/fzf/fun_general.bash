@@ -72,7 +72,7 @@ show_sesh_preview() {
     # '.': './files', '../files', '../../files'
     # '/': '/etc/alsa'
     local l_sesh_prefix="${p_sesh_item:2:1}"
-    
+
     if [ "$l_sesh_prefix" = '~' ] || [ "$l_sesh_prefix" = '.' ] || [ "$l_sesh_prefix" = '/' ]; then
 
         local l_sesh_subfix="${p_sesh_item:2}"
@@ -89,4 +89,3 @@ show_sesh_preview() {
 
 #Los parametros debe ser la funcion y los parametros
 "$@"
-

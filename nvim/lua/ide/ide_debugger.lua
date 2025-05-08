@@ -1,10 +1,4 @@
 
---Si se usa COC
-if (vim.g.use_coc_in_nvim == 1) then
-    return
-end
-
-
 --------------------------------------------------------------------------------------------------
 --DAP Client> Configuracion del DAP Client nVim.DAP
 --------------------------------------------------------------------------------------------------
@@ -25,6 +19,8 @@ vim.fn.sign_define('DapBreakpointCondition', { text='ﳁ', texthl='DapBreakpoint
 vim.fn.sign_define('DapBreakpointRejected', { text='', texthl='DapBreakpoint', linehl='', numhl= '' })
 vim.fn.sign_define('DapLogPoint', { text='', texthl='DapLogPoint', linehl='', numhl= '' })
 vim.fn.sign_define('DapStopped', { text='', texthl='DapStopped', linehl='', numhl= '' })
+
+
 
 --------------------------------------------------------------------------------------------------
 --DAP Client> Mejoras del UI asociado a nVim.DAP
@@ -133,15 +129,17 @@ dap.listeners.before.event_exited["dapui_config"] = function()
 
 --3. Key-Mappings
 
-vim.keymap.set("n", "<F5>", 
-    function()
-        --Si el archivo donde se configura el adaptador existe cargar su configuracion
-        if vim.fn.filereadable(".vscode/launch.json") == 1 then
-            require('dap.ext.vscode').load_launchjs()
-        end
-        -- Iniciar o continuar el DAP
-        require("dap").continue()
-    end, { noremap=true, silent=true, desc="DAP Start/Continue" })
+vim.keymap.set("n", "<space><F5>", "<cmd>lua require('dap').continue()<CR>", { noremap=true, silent=true, desc="DAP Start/Continue" })
+--vim.keymap.set("n", "<F5>",
+--    function()
+--        --Si el archivo donde se configura el adaptador existe cargar su configuracion
+--        if vim.fn.filereadable(".vscode/launch.json") == 1 then
+--            require('dap.ext.vscode').load_launchjs()
+--        --elseif vim.fn.filereadable(".launch.json") == 1 then
+--        end
+--        -- Iniciar o continuar el DAP
+--        require("dap").continue()
+--    end, { noremap=true, silent=true, desc="DAP Start/Continue" })
 
 vim.keymap.set("n", "<space><F4>", "<cmd>lua require('dap').terminate()<CR>", { noremap=true, silent=true, desc="DAP Terminate" })
 --vim.keymap.set("n", nnoremap('<leader>dd', "<cmd>lua require'dap'.disconnect()<cr>", { noremap=true, silent=true, desc="DAP Disconnect" })
@@ -189,7 +187,6 @@ dap_virtual_text.setup ({
 require('ide.adapters.dap_basics')
 
 -- Configuraciones del un adaptador de un cliente DAP
---   > DAP cliente complejos de configurar o 
+--   > DAP cliente complejos de configurar o
 --   > DAP cliente que requieren adapatadores que lo conviertan el DAP server estandar
 require('ide.adapters.dap_plugins')
-

@@ -3,12 +3,14 @@
 --------------------------------------------------------------------------------------------------
 --
 -- URL        : https://github.com/mfussenegger/nvim-jdtls
--- Referencia : https://github.com/neovim/nvim-lspconfig/blob/master/lsp/jdtls.lua
+-- Referencia :
+--    https://github.com/neovim/nvim-lspconfig/blob/master/lsp/jdtls.lua
+--    https://github.com/mfussenegger/dotfiles/blob/master/vim/dot-config/nvim/ftplugin/java.lua
 --
 
 -- 01. Validar si ya se esta cargando o se cargo
 if vim.b.ftplg_java_loaded then
-  -- Si ya lo cargamos o esta en proceso de carge en este búfer, salimos
+  -- Si ya lo cargamos o esta en proceso de carge en este buffer, salimos
   return
 end
 
@@ -16,12 +18,19 @@ end
 vim.b.ftplg_java_loaded = true
 
 
+-- Si no esta habilitado el usar el LSP cliente
+local use_adapter = vim.g.use_lsp_adapters['java']
+if use_adapter == nil or use_adapter ~= true then
+    return
+end
+
+
 -- 02. Obtener la ruta del workspace (ruta del proyecto principal)
 --     En version Neovim < 0.10, use 'jdtls_cfg.setup.find_root({...})'
 local root_path = vim.fs.root(0, {
     -- Multi-module projects
-    '.git', 
-    'mvnw', 
+    '.git',
+    'mvnw',
     'gradlew',
     'build.gradle',
     'build.gradle.kts',
@@ -33,14 +42,15 @@ local root_path = vim.fs.root(0, {
 })
 
 if root_path == nil or root_path == "" then
-    root_path = vim.fn.getcwd()
+    --root_path = vim.fn.getcwd()
+    return
 end
 --vim.notify('jdtls> root_path: ' .. root_path)
 
 
 -- 03. Obtener la ruta donde se almacena la metadata de proyectos usado 'eclipse.jdt.ls' (cache).
---     If you are working with multiple different projects, each project must use a dedicated 
---     data directory. 
+--     If you are working with multiple different projects, each project must use a dedicated
+--     data directory.
 local metadata_path = ""
 
 
@@ -78,14 +88,14 @@ end
 
 
 
--- 06. Obtiener la ruta de jar plugins para el JDTLS 
+-- 06. Obtiener la ruta de jar plugins para el JDTLS
 
 -- Adicionar la ruta de plugins de VSCode Java Debugger
 local bundles = {
     vim.fn.glob( vim.g.programs_base_path .. '/vsc_extensions/ms_java_debug/server/com.microsoft.java.debug.plugin-*.jar'),
 }
 
--- Adicionar la ruta plugin para VSCode Java Test 
+-- Adicionar la ruta plugin para VSCode Java Test
 vim.list_extend(bundles, vim.split(vim.fn.glob(vim.g.programs_base_path .. '/vsc_extensions/ms_java_test/server/*.jar', 1), "\n"))
 --vim.notify('jdtls> lsp_server_config_path: \n' .. vim.inspect(bundles))
 
@@ -99,7 +109,7 @@ vim.list_extend(bundles, vim.split(vim.fn.glob(vim.g.programs_base_path .. '/vsc
 --end
 
 
--- 08. Logica del autocomando 'LspAttach' que se ejecuta cuando el buffer se vincula al LSP server. 
+-- 08. Logica del autocomando 'LspAttach' que se ejecuta cuando el buffer se vincula al LSP server.
 --     Este autocomando se ejecuta adicional al definido en: vim.api.nvim_create_autocmd('LspAttach', {})
 local jdtls_cfg = require('jdtls')
 local on_attach = function(client, bufnr)
@@ -118,15 +128,20 @@ local on_attach = function(client, bufnr)
     --require("jdtls.setup").add_commands()
 
     -- Register keymappings
-    vim.keymap.set("n", "<space>ljo", jdtls_cfg.organize_imports, { noremap=true, silent=true, buffer=bufnr, desc="Organize Imports" })
-    vim.keymap.set("n", "<space>ljv", jdtls_cfg.extract_variable, { noremap=true, silent=true, buffer=bufnr, desc="Extract Variable" })
-    vim.keymap.set("n", "<space>ljc", jdtls_cfg.extract_constant, { noremap=true, silent=true, buffer=bufnr, desc="Extract Constant" })
-    vim.keymap.set("n", "<space>ljt", jdtls_cfg.test_nearest_method, { noremap=true, silent=true, buffer=bufnr, desc="Test Nearest Method" })
-    vim.keymap.set("n", "<space>ljT", jdtls_cfg.test_class, { noremap=true, silent=true, buffer=bufnr, desc="Test Class" })
-    vim.keymap.set("n", "<space>lju", "<cmd>JdtUpdateConfig<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Update Config" })
-    vim.keymap.set("v", "<space>ljv", "<esc><cmd>lua require('jdtls').extract_variable(true)<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Extract Variable" })
-    vim.keymap.set("v", "<space>ljc", "<esc><cmd>lua require('jdtls').extract_constant(true)<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Extract Constant" })
-    vim.keymap.set("v", "<space>ljm", "<esc><Cmd>lua require('jdtls').extract_method(true)<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Extract Method" })
+    vim.keymap.set("n", "<space>oi", jdtls_cfg.organize_imports, { noremap=true, silent=true, buffer=bufnr, desc="Organize Imports" })
+
+    vim.keymap.set("n", "<space>ev", jdtls_cfg.extract_variable, { noremap=true, silent=true, buffer=bufnr, desc="Extract Variable" })
+    vim.keymap.set("v", "<space>ev", "<esc><cmd>lua require('jdtls').extract_variable(true)<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Extract Variable" })
+
+    vim.keymap.set("n", "<space>ec", jdtls_cfg.extract_constant, { noremap=true, silent=true, buffer=bufnr, desc="Extract Constant" })
+    vim.keymap.set("v", "<space>ec", "<esc><cmd>lua require('jdtls').extract_constant(true)<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Extract Constant" })
+
+    vim.keymap.set("n", "<space>em", jdtls_cfg.extract_method, { noremap=true, silent=true, buffer=bufnr, desc="Extract Method" })
+    vim.keymap.set("v", "<space>em", "<esc><Cmd>lua require('jdtls').extract_method(true)<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Extract Method" })
+
+    vim.keymap.set("n", "<space>tm", jdtls_cfg.test_nearest_method, { noremap=true, silent=true, buffer=bufnr, desc="Test Nearest Method" })
+    vim.keymap.set("n", "<space>tc", jdtls_cfg.test_class, { noremap=true, silent=true, buffer=bufnr, desc="Test Class" })
+    --vim.keymap.set("n", "<space>ju", "<cmd>JdtUpdateConfig<cr>", { noremap=true, silent=true, buffer=bufnr, desc="Update Config" })
 
     -- Autocomando (evento) que se ejecuta cuando se guarda el buffer
     -- Refrescar el CodeLens ¿del workspace?
@@ -153,21 +168,21 @@ local lsp_capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 local lsp_extendedClientCapabilities = jdtls_cfg.extendedClientCapabilities
 lsp_extendedClientCapabilities.resolveAdditionalTextEditsSupport = true
-
+lsp_extendedClientCapabilities.onCompletionItemSelectedCommand = "editor.action.triggerParameterHints"
 
 -- 10. Starts a new client & server LSP, or attaches to an existing client & server
 jdtls_cfg.start_or_attach({
 
       flags = {
         debounce_text_changes = 80,
-      }, 
+      },
 
-      -- We pass our on_attach keybindings to the configuration map 
+      -- We pass our on_attach keybindings to the configuration map
       on_attach = on_attach,
-     
+
       -- Modificar las capacidades ofrecidas por defecto por el servidor LSP
       capabilities = lsp_capabilities,
-      
+
       -- Set the root directory to our found root_marker
       root_dir = root_path,
 
@@ -209,7 +224,7 @@ jdtls_cfg.start_or_attach({
               "com.sun.*",
               "io.micrometer.shaded.*",
               "java.awt.*",
-              "jdk.*", 
+              "jdk.*",
               "sun.*",
             },
           },
@@ -325,18 +340,16 @@ jdtls_cfg.start_or_attach({
         '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
         -- If you use lombok, download the lombok jar and place it in
         '-javaagent:' .. vim.g.programs_base_path .. '/lsp_servers/jdtls/lombok.jar',
-    
+
         -- The jar file is located where jdtls was installed. This will need to be updated
         -- to the location where you installed jdtls
         '-jar', lsp_server_path,
-    
+
         -- The configuration for jdtls is also placed where jdtls was installed. This will
         -- need to be updated depending on your environment
         '-configuration', lsp_server_config_path,
-    
+
         -- Use the workspace_folder defined above to store data for this project
         '-data', metadata_path,
       },
    })
-
-

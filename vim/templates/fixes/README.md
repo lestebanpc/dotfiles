@@ -7,7 +7,7 @@ Source: `https://github.com/junegunn/fzf.vim/issues/1212`
     `$env:FZF_DEFAULT_COMMAND = 'fd --type file'`
 
 2. Archivo `..\fzf.vim\autoload\fzf\vim.vim`
-	Ruta Fix    : `~\.config\fzf\fix\fzf.vim\autoload\fzf\vim.vim`
+	Ruta Fix    : `~\.files\templates\fixes\fzf.vim\autoload\fzf\vim.vim`
 	Ruta Vim    : `~\vimfiles\plugged\fzf.vim\autoload\fzf\vim.vim`
 	Ruta Neovim : `$env:LOCALAPPDATA\nvim-data\plugged\fzf.vim\autoload\fzf\vim.vim`
 
@@ -29,15 +29,14 @@ Pautas para homologar versiones (solo es obligatorio en Windows):
 
 
 1. Comparando los arreglado con el FZF de VIM
-	`vim -d ~\.config\fzf\fix\fzf.vim\autoload\fzf\vim.vim $env:LOCALAPPDATA\nvim-data\plugged\fzf.vim\autoload\fzf\vim.vim`
-	`vim -d ~\.config\fzf\fix\fzf\plugin\fzf.vim $env:LOCALAPPDATA\nvim-data\plugged\fzf\plugin\fzf.vim`
+	`vim -d ~\.files\templates\fixes\fzf.vim\autoload\fzf\vim.vim $env:LOCALAPPDATA\nvim-data\plugged\fzf.vim\autoload\fzf\vim.vim`
+	`vim -d ~\.files\templates\fixes\fzf\plugin\fzf.vim $env:LOCALAPPDATA\nvim-data\plugged\fzf\plugin\fzf.vim`
 
 2. Comparando FZF de VIM con el FZF de NeoVim
 	`vim -d ~\vimfiles\plugged\fzf.vim\autoload\fzf\vim.vim $env:LOCALAPPDATA\nvim-data\plugged\fzf.vim\autoload\fzf\vim.vim`
 	`vim -d ~\vimfiles\plugged\fzf\plugin\fzf.vim $env:LOCALAPPDATA\nvim-data\plugged\fzf\plugin\fzf.vim`
 
 3. Copiar el script en 'preview.ps1'
-	Ruta Fix    : `~\.config\fzf\fix\fzf.vim\bin\`
+	Ruta Fix    : `~\.files\templates\fixes\fzf.vim\bin\`
 	Ruta Vim    : `~\vimfiles\plugged\fzf.vim\bin\`
 	Ruta Neovim : `$env:LOCALAPPDATA\nvim-data\plugged\fzf.vim\bin\`
-

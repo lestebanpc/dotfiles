@@ -10,9 +10,15 @@
 -- Vease ./ftplugin/java.lua
 --
 
--- Descubrir el 'main clase' para la depuracion usando el DAP cliente (Equivalente a ':JdtUpdateDebugConfigs')
--- No se recomienda invocarlo en este funcion. Debe ser invocado cuando 'eclipse.jdt.ls' esta completamente cargado
+-- TODO Se requiere descubrir el 'main class' antes de iniciar la depuracion usando el DAP cliente.
+-- 
+-- Se debe usar el comando ':JdtUpdateDebugConfigs' (o invvar la funcion 'setup_dap_main_class_configs') cuando
+-- el LSP server esta ready.
+-- No se recomienda invocarlo en evento 'on_attach' de 'start_or_attach()' puede debe ser invocado cuando 'eclipse.jdt.ls' esta
+-- completamente cargado. ¿sobrescribir el keymappings F5 a nivel buffer?
+--
 --require("jdtls.dap").setup_dap_main_class_configs()
-
--- https://github.com/mfussenegger/nvim-jdtls/discussions/592
+--
+-- Vease: https://github.com/mfussenegger/nvim-jdtls/discussions/592
 --require('jdtls.dap').setup_dap_main_class_configs({ on_ready = function() require("dap").continue() end })
+--

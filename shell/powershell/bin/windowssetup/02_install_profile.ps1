@@ -130,13 +130,13 @@ $g_is_nodejs_installed= $true
 
 function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, $p_tag, $p_override_target_link) {
 
-    
+
     $l_target_base = Split-Path -Parent $p_target_link
 	$l_tmp= $null
 	if(! (Test-Path "${l_target_base}")) {
 		$l_tmp= New-Item -ItemType Directory -Force -Path "${l_target_base}"
     }
-	
+
 	#if(! (Test-Path "${p_source_path}")) {
     #    mkdir "$p_source_path"
     #}
@@ -148,9 +148,9 @@ function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, 
 		Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
 		return
 	}
-	
+
 	$l_info= Get-Item "$p_target_link" | Select-Object LinkType, LinkTarget
-	
+
     if ( $l_info.LinkType -eq "SymbolicLink" ) {
 		if(! (Test-Path $l_info.LinkTarget)) {
 			rm "$p_target_link"
@@ -165,9 +165,9 @@ function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, 
 				Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha re-creado " -NoNewline
 				Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
 			}
-			else {				
+			else {
 				Write-Host "${p_tag}El enlace simbolico '${p_target_link}' ya existe " -NoNewline
-				Write-Host "(ruta real '$($l_info.LinkTarget)')" -ForegroundColor DarkGray				
+				Write-Host "(ruta real '$($l_info.LinkTarget)')" -ForegroundColor DarkGray
 			}
 		}
 	}
@@ -184,14 +184,14 @@ function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, 
 
 function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_override_target_link) {
 
-    
+
     $l_target_base = Split-Path -Parent $p_source_path
 	$l_tmp= $null
-    if(! (Test-Path "${l_target_base}")) {    
+    if(! (Test-Path "${l_target_base}")) {
         $l_tmp= New-Item -ItemType Directory -Force -Path "${l_target_base}"
     }
-	
-	if(! (Test-Path "${p_target_link}")) {        
+
+	if(! (Test-Path "${p_target_link}")) {
 		cmd /c mklink /d "$p_target_link" "$p_source_path"
         Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha creado " -NoNewline
 		Write-Host "(ruta real '${p_source_path}')" -ForegroundColor DarkGray
@@ -199,7 +199,7 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
     }
 
     $l_info= Get-Item "$p_target_link" | Select-Object LinkType, LinkTarget
-	
+
 	if ( $l_info.LinkType -eq "SymbolicLink" ) {
 		if(! (Test-Path $l_info.LinkTarget)) {
 			rmdir "$p_target_link"
@@ -214,9 +214,9 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
 				Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha re-creado " -NoNewline
 				Write-Host "(ruta real '${p_source_path}')" -ForegroundColor DarkGray
 			}
-			else {				
+			else {
 				Write-Host "${p_tag}El enlace simbolico '${p_target_link}' ya existe " -NoNewline
-				Write-Host "(ruta real '$($l_info.LinkTarget)')" -ForegroundColor DarkGray				
+				Write-Host "(ruta real '$($l_info.LinkTarget)')" -ForegroundColor DarkGray
 			}
 		}
 	}
@@ -232,7 +232,7 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
 
 
 function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
-	#1. Argumentos    
+	#1. Argumentos
 
     #2. Ruta base donde se instala el plugins/paquete
     $l_tag="VIM"
@@ -260,8 +260,8 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
         $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\ide\start"
         $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\ide\opt"
     }
-   
-    
+
+
     #4. Instalar el plugins que se instalan manualmente
     $l_base_path= ""
     $l_repo_name= ""
@@ -271,10 +271,10 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
     $l_repo_depth= 1
     $l_repo_scope= ""
     $l_aux= ""
-	
+
     $la_doc_paths= New-Object System.Collections.Generic.List[System.String]
     $la_doc_repos= New-Object System.Collections.Generic.List[System.String]
-	
+
 	$l_repo_path= ""
 	$l_repo_name= ""
 
@@ -286,9 +286,9 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 		if(!$l_repo_scope) {
 			$l_repo_scope= 3
 		}
-		
+
 		$l_repo_name = Split-Path "$l_repo_git" -Leaf
-		
+
 		#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}'"
 
         #Si el repositorio no esta habilitido para su scope, continuar con el siguiente
@@ -313,7 +313,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
                 $l_base_path="${l_base_plugins}\ide\opt"
             }
             default {
-                                
+
                 Write-Host "Paquete ${l_tag} (${l_repo_type}) `"${l_repo_git}`": No tiene tipo valido."
                 continue
             }
@@ -325,10 +325,10 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 				#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
 				continue
 			}
-        }	
-		
+        }
+
 		#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
-		
+
         #4.3 Validar si el paquete ya esta instalando
 		if(Test-Path "${l_base_path}\${l_repo_name}\.git") {
              Write-Host "Paquete ${l_tag} (${l_repo_type}) `"${l_repo_git}`": Ya esta instalando"
@@ -343,7 +343,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
             Write-Host "NeoVIM> Plugin (${l_repo_type}) `"${l_repo_git}`": Se esta instalando"
         }
 		else {
-			Write-Host "   VIM> Plugin (${l_repo_type}) `"${l_repo_git}`": Se esta instalando"            
+			Write-Host "   VIM> Plugin (${l_repo_type}) `"${l_repo_git}`": Se esta instalando"
         }
 	    Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 
@@ -362,21 +362,21 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
                 $l_aux="${l_aux} --depth ${l_repo_depth}"
             }
         }
-		
-		#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Repo-Branch: '${l_repo_branch}', Repo-Depth: '${l_repo_depth}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"		
+
+		#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Repo-Branch: '${l_repo_branch}', Repo-Depth: '${l_repo_depth}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
 
         if (${l_aux}) {
             Write-Host "Ejecutando `"git clone ${l_aux} https://github.com/${l_repo_git}.git`""
             Invoke-Expression "git clone ${l_aux} https://github.com/${l_repo_git}.git"
         }
-		else {            
+		else {
 			Write-Host "Ejecutando `"git clone https://github.com/${l_repo_git}.git`""
             git clone https://github.com/${l_repo_git}.git
 		}
 
         #Almacenando las ruta de documentacion a indexar
 		if(Test-Path "${l_base_path}\${l_repo_name}\doc") {
-        
+
             #Indexar la documentacion de plugins
             $la_doc_paths.Add("${l_base_path}\${l_repo_name}\doc")
             $la_doc_repos.Add("${l_repo_name}")
@@ -386,8 +386,8 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
         Write-Host ""
 
 	}
-	
-	
+
+
     #4. Actualizar la documentación de VIM (Los plugins VIM que no tiene documentación, no requieren indexar)
 	$l_n= $la_doc_paths.Count
 	if( $l_n -gt 0 )
@@ -395,7 +395,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 		Write-Host ""
 	    Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 		if(${p_is_neovim})
-		{		
+		{
 			Write-Host "- NeoVIM> Indexando la documentación de los plugin"
 		}
 		else
@@ -403,14 +403,14 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 			Write-Host "-    VIM> Indexando la documentación de los plugin"
 		}
 	    Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
-		
+
 		$l_j= 0
 		for ($i=0; $i -lt $l_n; $i++) {
-			
+
 			$l_repo_path= $la_doc_paths[$i]
 			$l_repo_name= $la_doc_repos[$i]
 			$l_j= $i + 1
-			
+
 			Write-Host "(${l_j}/${l_n}) Indexando la documentación del plugin `"${l_repo_name}`" en `"${l_tag}`": `"helptags ${l_repo_path}`"\n"
 			if(${p_is_neovim}) {
                 nvim --headless -c "helptags ${l_repo_path}" -c qa
@@ -419,10 +419,10 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
                 vim -u NONE -esc "helptags ${l_repo_path}" -c qa
 			}
 
-			
+
 		}
 	}
-	
+
 
     #6. Inicializar los paquetes/plugin de VIM/NeoVIM que lo requieren.
     if (!$p_flag_developer) {
@@ -444,8 +444,8 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
         return 0
 
 	}
-        
-    Write-Host "Los plugins del IDE CoC de ${l_tag} tiene componentes que requieren inicialización para su uso. Inicializando dichas componentes del plugins..."	
+
+    Write-Host "Los plugins del IDE CoC de ${l_tag} tiene componentes que requieren inicialización para su uso. Inicializando dichas componentes del plugins..."
 
     #Instalando los parseadores de lenguaje de 'nvim-treesitter'
     if ($p_is_neovim) {
@@ -464,7 +464,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 
     #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
     Write-Host "  Instalando extensiones de CoC (Adaptador de LSP server basicos) `":CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh`""
-    if ($p_is_neovim) {       
+    if ($p_is_neovim) {
 		${env:USE_COC}=1
 		nvim --headless -c "CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh" -c "qa"
 	}
@@ -474,7 +474,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 
     #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
     Write-Host "  Instalando extensiones de CoC (Motor de snippets `"UtilSnips`") `":CocInstall coc-ultisnips`" (no se esta usando el nativo de CoC)"
-    if ($p_is_neovim) {        
+    if ($p_is_neovim) {
 		nvim --headless -c "CocInstall coc-ultisnips" -c "qa"
 	}
     else {
@@ -487,7 +487,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
         nvim --headless -c "CocUpdate" -c "qa"
 		${env:USE_COC}=0
 	}
-    else {        
+    else {
 		vim -esc "CocUpdate" -c "qa"
     }
 
@@ -496,7 +496,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
         Write-Host "  Actualizando los gadgets de `"VimSpector`", ejecutando el comando `":VimspectorUpdate`""
         vim -esc "VimspectorUpdate" -c "qa"
     }
-	
+
 	Write-Host ""
     Write-Host "Recomendaciones:"
     if (!$p_is_neovim) {
@@ -531,8 +531,8 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 #  1> Flag configurar como Developer (si es '0')
 function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
 
-    #1. Argumentos    
-    
+    #1. Argumentos
+
 
     #2. Crear el subtitulo
     $l_title= ">> Configurando NeoVIM ("
@@ -549,14 +549,14 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
     else {
         $l_title= "${l_title}, Solo crando enlaces simbolicos si no existen)"
     }
-    
+
     Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
     Write-Host "$l_title" -ForegroundColor Blue
     Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
 
-    #Creando el directorio hijos si no existen	
-	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:LOCALAPPDATA}\nvim"	
-    
+    #Creando el directorio hijos si no existen
+	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:LOCALAPPDATA}\nvim"
+
     #2. Creando los enalces simbolicos
     $l_target_link= ""
     $l_source_path= ""
@@ -584,7 +584,7 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
         $l_source_path="${env:USERPROFILE}\.files\nvim\lua"
         m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
-        
+
         #El codigo open\close asociado a los 'file types'
         $l_target_link="${env:LOCALAPPDATA}\nvim\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\nvim\ftplugin\commonide"
@@ -607,9 +607,9 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
     	if(! (Test-Path "${env:APPDATA}\eclipse\jdtls")) {
 	    	New-Item -ItemType Directory -Force -Path "${env:APPDATA}\eclipse\jdtls"
         }
-	
 
-		
+
+
 	}
     #Configurar NeoVIM como Editor
     else {
@@ -623,7 +623,7 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
         $l_source_path="${env:USERPROFILE}\.files\vim\setting"
         m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
-        
+
         $l_target_link="${env:LOCALAPPDATA}\nvim\lua"
         $l_source_path="${env:USERPROFILE}\.files\nvim\lua"
         m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
@@ -649,8 +649,8 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
 #  2> Sobrescribir los enlaces simbolicos
 function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
 
-    #1. Argumentos    
-    
+    #1. Argumentos
+
 
     #2. Crear el subtitulo
     $l_title= ">> Configurando VIM ("
@@ -667,13 +667,13 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
     else {
         $l_title= "${l_title}, Solo crando enlaces simbolicos si no existen)"
     }
-    
+
     Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
     Write-Host "$l_title" -ForegroundColor Blue
     Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
 
-    #Creando el directorio hijos si no existen	
-	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\vimfiles"	
+    #Creando el directorio hijos si no existen
+	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\vimfiles"
 
     #3. Crear los enlaces simbolicos de VIM
     $l_target_link= ""
@@ -689,7 +689,7 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
         $l_source_path="${env:USERPROFILE}\.files\vim"
         $l_source_filename="vimrc_ide.vim"
         m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
-		
+
         $l_target_link="${env:USERPROFILE}\vimfiles\coc-settings.json"
         $l_source_path="${env:USERPROFILE}\.files\vim"
         $l_source_filename="coc-settings_windows.json"
@@ -699,7 +699,7 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
         $l_source_path="${env:USERPROFILE}\.files\vim\setting"
         m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
 
-        
+
         $l_target_link="${env:USERPROFILE}\vimfiles\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\vim\ftplugin\cocide"
         m_create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
@@ -735,14 +735,14 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
 # Parametros:
 # > Opcion ingresada por el usuario.
 function m_setup_profile($l_overwrite_ln_flag) {
-	
-    #1. Argumentos
-    
-    #Esta habilitado la creacion de enlaces simbolicos del perfil?    
-    #Se puede recrear los enlaces simbolicos en caso existir?
-    
 
-    #2. Mostrar el titulo 
+    #1. Argumentos
+
+    #Esta habilitado la creacion de enlaces simbolicos del perfil?
+    #Se puede recrear los enlaces simbolicos en caso existir?
+
+
+    #2. Mostrar el titulo
     Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
 	$l_title=""
     if ($l_overwrite_ln_flag) {
@@ -754,7 +754,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
 	Write-Host "$l_title" -ForegroundColor Blue
     Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
 
-    
+
 
     #3. Creando enlaces simbolico dependientes del tipo de distribución Linux
 
@@ -779,13 +779,13 @@ function m_setup_profile($l_overwrite_ln_flag) {
 	if(! (Test-Path "${env:USERPROFILE}\.config\git")) {
 		New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\.config\git"
     }
-	
+
     if(! (Test-Path "${env:USERPROFILE}\.config\git\main.toml" )) {
 		Write-Host "            > Creando el archivo '~\.config\git\main.toml' ..."
         Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\template_main_gitconfig_windows.toml" -Destination "${env:USERPROFILE}\.config\git\main.toml"
         Write-Host "            > Creando el archivo '~\.config\git\work_mywork.toml' ..."
         Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\template_work_gitconfig_windows.toml" -Destination "${env:USERPROFILE}\.config\git\work_mywork.toml"
-        
+
         Write-Host "            > Edite '~\.config\git\main.toml' y '~\.config\git\work_mywork.toml' si desea crear modificar las opciones de '~/.gitignore'."
 	}
     else {
@@ -795,13 +795,13 @@ function m_setup_profile($l_overwrite_ln_flag) {
     #Archivo de configuracion de SSH
     $l_target_link="${env:USERPROFILE}\.ssh\config"
     $l_source_path="${env:USERPROFILE}\.files\etc\ssh\template_windows_withpublickey.conf"
-	
+
 	if(! (Test-Path "${env:USERPROFILE}\.ssh")) {
 		New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\.ssh"
     }
 
 	$l_info= Get-Item "$l_target_link" | Select-Object LinkType, LinkTarget 2> $null
-    
+
     if(! (Test-Path "$l_target_link")) {
 		if ( $l_info -and ($l_info.LinkType -eq "SymbolicLink") ) {
             Write-Host "General     > Remplazado el enlace simbolico '~\.ssh\config' por un archivo ..."
@@ -831,7 +831,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
     $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
 	$l_source_filename='windows_x64.ps1'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
-	
+
 
 	$l_target_link="${document_path}\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
     $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
@@ -846,15 +846,15 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
     #TODO this variable is null
     #$g_win_base_path='C:\cli'
-	
+
 	#if(! (Test-Path "${g_win_base_path}\prgs\wezterm\wezterm_modules")) {
 	#	New-Item -ItemType Directory -Force -Path "${g_win_base_path}\prgs\wezterm\wezterm_modules"
     #}
-	
+
     if(! (Test-Path "${env:USERPROFILE}\.files\etc\default_settings.json" )) {
 		Write-Host "            > Creando el archivo '${env:USERPROFILE}\.files\etc\default_settings.json' ..."
         Copy-Item -Path "${env:USERPROFILE}\.files\etc\lepc-montys-cyan1.json" "${env:USERPROFILE}\.files\etc\default_settings.json"
-        
+
         Write-Host "            > Edite '${env:USERPROFILE}\.files\etc\default_settings.json' si desea modificar las opciones Wezterm."
 	}
     else {
@@ -866,7 +866,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
     if(! (Test-Path "${env:USERPROFILE}\.config\wezterm\config.lua" )) {
 		Write-Host "            > Creando el archivo '${env:USERPROFILE}\.config\wezterm\config.lua' ..."
         Copy-Item -Path "${env:USERPROFILE}\.files\wezterm\windows_config_template.lua" -Destination "${env:USERPROFILE}\.config\wezterm\config.lua"
-        
+
         Write-Host "            > Edite '${env:USERPROFILE}\.config\wezterm\config.lua' si desea modificar las opciones Wezterm."
 	}
     else {
@@ -877,7 +877,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
     #Creando el profile del interprete shell
     #$l_target_link="${HOME}\.bashrc"
     #$l_source_path="${HOME}\.files\shell\bash\profile"
-	#$l_source_filename='debian_aarch64_local.bash'    
+	#$l_source_filename='debian_aarch64_local.bash'
     #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 
@@ -997,24 +997,24 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
 
 function m_setup($p_input_options) {
-	
+
 	$l_overwrite_ln_flag= $p_input_options
-	
+
 	#Instalar VIM como Developer
-	m_config_vim $true $l_overwrite_ln_flag	
+	m_config_vim $true $l_overwrite_ln_flag
 	Write-Host ""
-	
+
 	#Instalar NeoVIM como Developer
 	m_config_nvim $true $l_overwrite_ln_flag
 	Write-Host ""
-	
+
 	#Configurar el profile
-	m_setup_profile $l_overwrite_ln_flag	
-	
+	m_setup_profile $l_overwrite_ln_flag
+
 }
 
 function m_show_menu_core() {
-	
+
 	Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 	Write-Host "                                                      Menu de Opciones" -ForegroundColor Green
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
@@ -1027,7 +1027,7 @@ function m_show_menu_core() {
 function show_menu() {
 	Write-Host ""
 	m_show_menu_core
-	
+
 	$l_continue= $true
 	$l_read_option= ""
 	while($l_continue)
@@ -1043,32 +1043,32 @@ function show_menu() {
 					Write-Host ""
 					m_setup $false
 				}
-				
+
 				'b' {
 					$l_continue= $false
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 					m_setup $true
 				}
-				
-				
+
+
 				'q' {
 					$l_continue= $false
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 				}
-				
+
 				default {
 					$l_continue= $true
 					Write-Host "opción incorrecta"
 	                Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 				}
-				
-			}	
-		
+
+			}
+
 	}
-	
-	
+
+
 }
 
 
@@ -1134,4 +1134,3 @@ if((-not ${g_temp_path}) -and (Test-Path "$g_temp_path")) {
 
 
 show_menu
-

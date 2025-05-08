@@ -29,7 +29,7 @@ local fzf_lua= require("fzf-lua")
 local actions= require("fzf-lua").actions
 
 fzf_lua.setup({
-    winopts = { 
+    winopts = {
         width  = 0.99,
         height = 0.80,
         preview = {
@@ -39,7 +39,7 @@ fzf_lua.setup({
     },
     fzf_opts= {
         ["--ansi"]           = true,
-        ["--border"]         = "none",
+        ["--border"]         = "rounded",
         ["--no-separator"]   = "",
         ["--info"]           = "inline-right",
         ["--layout"]         = "reverse",
@@ -107,5 +107,3 @@ vim.keymap.set('n', '<leader>tb', ':lua require("fzf-lua").btags()<CR>', { norem
 
 --Remplazar el "vim.ui.select" por defecto de NeoVIM
 fzf_lua.register_ui_select()
-
-

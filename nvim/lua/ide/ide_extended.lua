@@ -1,50 +1,35 @@
 --Configurar plugins generales
 
-
---------------------------------------------------------------------------------------------------
--- IDE UI> OutLine
---------------------------------------------------------------------------------------------------
---
--- URL: https://github.com/hedyhli/outline.nvim
---
-
--- 01. Configuracion
---require("outline").setup({
---})
-
--- 02. Keymappings
---vim.keymap.set("n", "<leader>o", "<cmd>Outline<CR>", { desc = "Toggle Outline" })
-
 --------------------------------------------------------------------------------------------------
 -- IA> Plugins de IA para Software Development
 --------------------------------------------------------------------------------------------------
 --
 --Configurar los plugins usados solo para la AI
 --
-if vim.g.use_ai_plugins == 1 then
-    
+if vim.g.use_ai_plugins == true then
+
     ------------------------------------------------------------------------------------------------
-    -- UI NeoVim> Dressing 
+    -- UI NeoVim> Dressing
     ------------------------------------------------------------------------------------------------
-    
-    
+
+
     ------------------------------------------------------------------------------------------------
-    -- UI NeoVim> NUI 
+    -- UI NeoVim> NUI
     ------------------------------------------------------------------------------------------------
-    
-    
+
+
     ------------------------------------------------------------------------------------------------
     -- UI> render-markdown
     ------------------------------------------------------------------------------------------------
-    
+
     require('render-markdown').setup({
         file_types = { 'markdown', 'Avante' },
     })
-    
+
     ------------------------------------------------------------------------------------------------
-    -- UI> img-clip 
+    -- UI> img-clip
     ------------------------------------------------------------------------------------------------
-    
+
     require("img-clip").setup({
         -- recommended settings
         default = {
@@ -57,14 +42,20 @@ if vim.g.use_ai_plugins == 1 then
             use_absolute_path = true,
         },
     })
-    
+
     ------------------------------------------------------------------------------------------------
-    -- AI Chat/Agent> Avante 
+    -- AI Chat/Agent> Avante
     ------------------------------------------------------------------------------------------------
-    
+
     require("avante").setup({
         provider = "copilot",
         auto_suggestions_provider = 'copilot',
+
+        -- Desabilitar el 'inlay hints' (por defecto esta activado)
+        -- > Deja de mostrar 'virtual text' cuando seleciona un texto, indicando los acciones posibles.
+        hints = { enabled = false },
+
+
         behaviour = {
             auto_suggestions = false, -- Experimental stage
             auto_set_highlight_group = true,
@@ -75,6 +66,8 @@ if vim.g.use_ai_plugins == 1 then
             enable_token_counting = true, -- Whether to enable token counting. Default to true.
             enable_cursor_planning_mode = false, -- Whether to enable Cursor Planning Mode. Default to false.
         },
+
+
         copilot = {
             endpoint = 'https://api.githubcopilot.com/',
             model = 'claude-3.5-sonnet',
@@ -85,18 +78,16 @@ if vim.g.use_ai_plugins == 1 then
             max_tokens = 8192,
         },
     })
-    
+
     -- Toggle el AI chat
     --vim.keymap.set('n', '<leader>cr', ':AvanteClear<CR>', { noremap = true, silent = true })
-    
+
     ------------------------------------------------------------------------------------------------
-    -- AI Chat/Agent> CopilotChat 
+    -- AI Chat/Agent> CopilotChat
     ------------------------------------------------------------------------------------------------
-    
+
     --require("CopilotChat").setup ({
     --
     --    })
 
 end
-
-

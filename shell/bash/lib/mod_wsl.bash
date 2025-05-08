@@ -36,7 +36,7 @@ connect_win_sshagent() {
     #2.1 Validar que sea WSL
     local l_aux=$(uname -s)
     local l_kernel
-    
+
     case "$l_aux" in
         Linux*)
             l_kernel=$(uname -r)
@@ -87,7 +87,7 @@ connect_win_sshagent() {
             printf 'Se define la variable de entorno "%b%s%b" con el valor "%b%s%b".\n' \
                    "$g_color_gray1" "SSH_AUTH_SOCK" "$g_color_reset" "$g_color_gray1" "$l_socket_path" "$g_color_reset"
             export SSH_AUTH_SOCK="$l_socket_path"
-        
+
         elif [ "$SSH_AUTH_SOCK" = "$l_source_path" ]; then
             export SSH_AUTH_SOCK
         else
@@ -105,7 +105,7 @@ connect_win_sshagent() {
 
     #3. Iniciar un socket IPC que se conecta al SSH agente de Windows
     printf 'Iniciando el socket IPC "%b%s%b" que se conecte al agente SSH de Windows...\n' "$g_color_gray1" "$SSH_AUTH_SOCK" "$g_color_reset"
-    
+
     #Si existe el archivo de socket eliminarlo
     if [ -e "$l_socket_path" ]; then
         rm -f "$l_socket_path"
@@ -116,7 +116,7 @@ connect_win_sshagent() {
         printf 'Se define la variable de entorno "%b%s%b" con el valor "%b%s%b".\n' \
                "$g_color_gray1" "SSH_AUTH_SOCK" "$g_color_reset" "$g_color_gray1" "$l_socket_path" "$g_color_reset"
         export SSH_AUTH_SOCK="$l_socket_path"
-    
+
     elif [ "$SSH_AUTH_SOCK" = "$l_source_path" ]; then
         export SSH_AUTH_SOCK
     else
@@ -128,14 +128,9 @@ connect_win_sshagent() {
 
     fi
     export SSH_AUTH_SOCK="$l_socket_path"
-    
+
     printf "Ejecutando '"'%b(setsid socat UNIX-LISTEN:%s,fork EXEC:"%s/cmds/bin/npiperelay.exe -ei -s //./pipe/openssh-ssh-agent",nofork &)%b'"'...\n" \
            "$g_color_gray1" "$l_socket_path" "$g_win_base_path" "$g_color_reset"
     (setsid socat UNIX-LISTEN:$SSH_AUTH_SOCK,fork EXEC:"$g_win_base_path/cmds/bin/npiperelay.exe -ei -s //./pipe/openssh-ssh-agent",nofork &)
 
 }
-
-
-
-
-

@@ -8,27 +8,28 @@ if g:is_neovim
 
     "Plugin UI> Tema 'Tokyo Night'
     "packadd tokyonight.nvim
-
-    "Esquema de color del tema
-    "colorscheme tokyonight-night
     "let g:main_theme = 'tokyonight'
+
+    "Esquema de color del tema: Se define dentro de 'ui_basic.lua'
+    "colorscheme tokyonight-night
 
 
 
     "Plugin UI> Tema 'Catppuccin'
     packadd nvim
-
-    "Esquema de color del tema
-    colorscheme catppuccin-macchiato
     let g:main_theme = 'catppuccin'
+
+    "Esquema de color del tema: Se define dentro de 'ui_basic.lua'
+    "colorscheme catppuccin-macchiato
+    "colorscheme catppuccin-mocha
 
 
 else
-   
+
 
     "Plugin UI> Tema Gruvbox
     "packadd gruvbox
-    
+
     "Esquema de color del tema
     "colorscheme gruvbox
     "set background=dark
@@ -46,22 +47,12 @@ else
     " - 'cterm'   : is the color code used in 256-color mode
     " - 'cterm16' : is the color code used in 16-color mode
     let g:onedark_color_overrides = {
-    \ "background": {"gui": "#181818", "cterm": "233", "cterm16": "0" }
+    \ "background": {"gui": "#0f0f0f", "cterm": "233", "cterm16": "0" }
     \}
 
     "Esquema de color del tema
     colorscheme onedark
     let g:main_theme = 'onedark'
-
-
-
-    "Plugin UI> Tema Molakai
-    "packadd molokai
-
-    "Esquema de color del tema
-    "colorscheme molokai
-    "let g:main_theme = 'powerlineish'
-    "let g:main_theme = 'molokai'
 
 
 
@@ -74,18 +65,15 @@ endif
 
 if g:is_neovim
 
-    "Plugin UI> Iconos    
+    "Plugin UI> Iconos
     packadd nvim-web-devicons
 
     "Plugin UI> Barra de estado o 'SatusLine'
     packadd lualine.nvim
 
-    if g:use_tabline
-    
-        "Plugin UI> Barra de buffers/tabs (TabLine)
-        packadd bufferline.nvim
-    
-    endif
+    "Plugin UI> Barra de buffers/tabs (TabLine)
+    packadd bufferline.nvim
+
 
     "Plug UI> Explorador de archivos
     packadd nvim-tree.lua
@@ -103,7 +91,7 @@ endif
 " UI> StatusLine y TabLine
 "###################################################################################
 
-    
+
 "Plugin UI> Barra de estado AirLine (incluye 'SatusLine' y 'TabLine')
 "Segun la documentación oficial, se deben cargarse antes de 'Vim-DevIcons'.
 packadd vim-airline
@@ -120,9 +108,7 @@ let g:airline#extensions#branch#enabled = 1
 let g:airline#extensions#ale#enabled = 1
 
 "Mostrar el Tabline (buffer y tabs)
-if g:use_tabline
-    let g:airline#extensions#tabline#enabled = 1
-endif
+let g:airline#extensions#tabline#enabled = 1
 
 let g:airline#extensions#virtualenv#enabled = 1
 let g:airline#extensions#tagbar#enabled = 1
@@ -177,7 +163,7 @@ let g:WebDevIconsUnicodeDecorateFolderNodes = 1
 let g:DevIconsEnableFoldersOpenClose = 1
 let g:DevIconsDefaultFolderOpenSymbol=''
 "Symbol for closed folder (f07b)
-let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol='' 
+let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol=''
 
 "Adding to vim-airline's tabline
 let g:webdevicons_enable_airline_tabline = 1
@@ -214,5 +200,3 @@ let g:NERDTreeWinSize = 50
 
 "nnoremap <leader><C-f> :NERDTreeFind<CR>
 nnoremap <leader>ee :NERDTreeToggle<CR>
-
-

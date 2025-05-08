@@ -16,7 +16,7 @@ set cpoptions&vim
 "--------------------------------------------------------------------------------
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-"2.1. Acciones asociados 'Custom Popup Windows' 
+"2.1. Acciones asociados 'Custom Popup Windows'
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 "
 "Popup de Documentación (Documentation Popup)
@@ -69,10 +69,10 @@ nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)
 nmap <silent> <buffer> gi <Plug>(omnisharp_find_implementations)
 
 " > Ir a la referencias o uso del simbolo actual (donde esta el prompt)
-nmap <silent> <buffer> gu <Plug>(omnisharp_find_usages)
+nmap <silent> <buffer> gr <Plug>(omnisharp_find_usages)
 
 " > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el proyecto
-nmap <silent> <buffer> <space>ls <Plug>(omnisharp_find_symbol)
+nmap <silent> <buffer> <space>sw <Plug>(omnisharp_find_symbol)
 
 " > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'type' en el proyecto
 nmap <silent> <buffer> <space>lt <Plug>(omnisharp_find_type)
@@ -80,9 +80,9 @@ nmap <silent> <buffer> <space>lt <Plug>(omnisharp_find_type)
 " > Listar, Selecionar (en este caso tambien buscar) e Ir a un 'members' de las clases asociados al buffer actual
 nmap <silent> <buffer> <space>lm <Plug>(omnisharp_find_members)
 
-" > Listar, Selecionar e Ir a un error y/o warning en el proyecto ('Diagnostic')
+" > Listar, Selecionar e Ir a un error y/o warning en el proyecto/workspace ('Diagnostic')
 "   Muestra un panel vim 'QuickFix' la cual se puede cerrar usando ':close'
-nmap <silent> <buffer> <space>ld <Plug>(omnisharp_global_code_check)
+nmap <silent> <buffer> <space>dw <Plug>(omnisharp_global_code_check)
 
 
 " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -119,7 +119,7 @@ xmap <silent> <buffer> <space>a. <Plug>(omnisharp_code_action_repeat)
 
 "3. Code Actions > Ejecutar un 'Code Fix'
 "   > Acción de reparación:  Organización y/o reparar las refencias de importaciones usadas por el archivo
-nmap <silent> <buffer> <space>fi <Plug>(omnisharp_fix_usings)
+nmap <silent> <buffer> <space>oi <Plug>(omnisharp_fix_usings)
 
 
 
@@ -157,7 +157,7 @@ nmap <silent> <buffer> <space>rrf <Plug>(omnisharp_run_tests_in_file_no_build)
 "--------------------------------------------------------------------------------
 
 "Fuente de diagnostico para C# (OmniSharp se convierte en un Linter para C#)
-let b:ale_linters = {'cs': ['OmniSharp']}
+"let b:ale_linters = {'cs': ['OmniSharp']}
 
 "--------------------------------------------------------------------------------
 "4. Soporte a 'Code Actions'
@@ -182,4 +182,3 @@ endif
 "4. Finalización
 let &cpoptions = s:save_cpo
 unlet s:save_cpo
-

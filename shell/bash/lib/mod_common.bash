@@ -162,7 +162,7 @@ function get_linux_type_info() {
     #    return 1
     #fi
 
-    #Determinar la version de un distribucion Linux 
+    #Determinar la version de un distribucion Linux
     # 01> Alpine:
     #     VERSION_ID=3.19.1
     # 10> Fedora:
@@ -315,7 +315,7 @@ function compare_version() {
     #1. Argumentos
     #local p_operating_1="$1"
     #local p_operating_2="$2"
-    
+
     #Reamplazando '-' por '.'
     local p_operating_1="${1//-/.}"
     local p_operating_2="${2//-/.}"
@@ -337,17 +337,17 @@ function compare_version() {
     local IFS=.
     local la_version_1=($p_operating_1)
     local la_version_2=($p_operating_2)
-    
+
     #4. Si el array de la version 1 es de menor tamaño que la version 2, adicionar elemento con 0
     local i=0
     for ((i=${#la_version_1[@]}; i<${#la_version_2[@]}; i++)); do
         la_version_1[i]=0
     done
-    
+
     #5. Comparar cada elemento de la version 1, comparar valores
     for ((i=0; i<${#la_version_1[@]}; i++)); do
 
-        #Si elemento en version 2 no existe o esta vacio, su valor es 0 
+        #Si elemento en version 2 no existe o esta vacio, su valor es 0
         if [[ -z ${la_version_2[i]} ]]; then
             la_version_2[i]=0
         fi
@@ -376,9 +376,9 @@ function url_encode() {
 
         l_c=${l_string:$l_pos:1}
         case "$l_c" in
-            [-_.~a-zA-Z0-9]) 
+            [-_.~a-zA-Z0-9])
                 l_o="${l_c}" ;;
-            *)  
+            *)
                 printf -v l_o '%%%02x' "'$l_c";
         esac
         l_encoded+="${l_o}"
@@ -485,7 +485,7 @@ print_line() {
     printf '%b' "$3"
     #Usar -- para no se interprete como linea de comandos y puede crearse lienas con - (usado en opcion de un comando)
     printf -- "${1}%.0s" $(seq $2)
-    printf '%b\n' "$g_color_reset" 
+    printf '%b\n' "$g_color_reset"
 
 }
 
@@ -531,7 +531,7 @@ print_text_in_center2() {
 #  1 > Nombre completo de la unidad (por ejemplo: 'containerd.service')
 #  2 > Flag '0' para usar el nivel 'User', caso contrario usara el nivel 'System'
 #Parametros de salida - Valor de retorno:
-#  0 > La unidad no esta instalada (no tiene archivo de configuracion): 
+#  0 > La unidad no esta instalada (no tiene archivo de configuracion):
 #      'systemctl list-unit-files' no lo ubica o esta en cache pero como 'not-found'
 #  1 > La unidad instalada pero aun no esta en cache (no ha sido ejecutada desde el inicio del SO)
 #  2 > La unidad instalada, en cache, pero marcada para no iniciarse ('unmask', 'inactive').
@@ -620,13 +620,13 @@ exist_systemd_unit() {
 
 #Parametros de entrada - Agumentos y opciones:
 #  1 > Nombre del paquete. Si es Linux de la familia Fedora, se debe especificar el tipo de arquitectura: '.noarch', '.x86_64', etc.
-#  2 > El tipo de distribucion Linux (variable global 'g_os_subtype_id' generado por la funcion 'get_linux_type_info') 
+#  2 > El tipo de distribucion Linux (variable global 'g_os_subtype_id' generado por la funcion 'get_linux_type_info')
 #  3 > Use '1' si es una busqueda exacta de nombre del paquete. Por defecto, su valor es '0', se busca el(los) paquete(s)
 #      que contiene la cadena ingresada en el parametro 1.
 #Parametros de salida - Valor de retorno:
 #  0 > El paquete esta instalado
 #  1 > El paquete no esta instalado
-#  9 > No se puede determinar 
+#  9 > No se puede determinar
 is_package_installed() {
 
     #1. Parametros
@@ -654,7 +654,7 @@ is_package_installed() {
 
     #Si es un distribucion de la familia Debian
     if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
-        
+
         #Si es Ubuntu
         #
         #dpkg -l | grep python3-pip
@@ -664,14 +664,14 @@ is_package_installed() {
         printf 'Buscando OS packages: %bdpkg -l | grep "%s" 2> /dev/null%b\n' "$g_color_gray1" "$p_package_name_part" "$g_color_reset"
         l_aux=$(dpkg -l | grep "$p_package_name_part" 2> /dev/null)
         l_status=$?
-        
+
         if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
             return 1
         fi
 
     #Si es un distribucion de la familia Fedora
     elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
-        
+
         #Si es Fedora, usaremos 'dnf list intalled | grep package' y no 'rpm -qa | grep package'
         #
         #En fodora, el nombre del paquete incluye el tipo de arquitectura. Por ejemplo el paquete 'python3-pip':
@@ -680,7 +680,7 @@ is_package_installed() {
         #python3-pip-wheel.noarch               21.3.1-2.amzn2023.0.5              @System
         #containerd.io.x86_64                   1.6.20-3.1.fc36                    @docker-ce-stable
         #
-        
+
         printf 'Buscando OS packages: %bdnf list installed | grep "%s" 2> /dev/null%b\n' "$g_color_gray1" "$p_package_name_part" "$g_color_reset"
         l_aux=$(dnf list installed | grep "$p_package_name_part" 2> /dev/null)
         l_status=$?
@@ -709,7 +709,7 @@ is_package_installed() {
         #python3-tkinter-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
         #python3-tkinter-pyc-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
         #python3-tkinter-tests-3.11.6-r0 x86_64 {python3-tkinter} (PSF-2.0)
-       
+
         #Opcion '-q' se requiere para que se muestren los mensajes 'WARNING: ....'
         printf 'Buscando OS packages: %bapk list -q --installed | grep "%s" 2> /dev/null%b\n' "$g_color_gray1" "$p_package_name_part" "$g_color_reset"
         l_aux=$(apk list -q --installed | grep "$p_package_name_part" 2> /dev/null)
@@ -723,7 +723,7 @@ is_package_installed() {
         return 9
     fi
 
-    return 0 
+    return 0
 
 }
 
@@ -731,7 +731,7 @@ is_package_installed() {
 
 #Actualizar los paquete del SO
 #Parametros de entrada - Agumentos y opciones:
-#  1 > El tipo de distribucion Linux (variable global 'g_os_subtype_id' generado por la funcion 'get_linux_type_info') 
+#  1 > El tipo de distribucion Linux (variable global 'g_os_subtype_id' generado por la funcion 'get_linux_type_info')
 #  2 > Flag es 0, si es modo no-interactivo (asume 'yes' siempre que se instanta preguntar en forma interactiva)
 #Parametros de salida :
 #  Valor de retorno :
@@ -754,7 +754,7 @@ upgrade_os_packages() {
 
     fi
 
-    #Si no se calculo, Calcularlo 
+    #Si no se calculo, Calcularlo
     if [ -z "$g_runner_id" ]; then
         get_runner_options
     fi
@@ -807,15 +807,15 @@ upgrade_os_packages() {
         return 1
     fi
 
-    return 0 
+    return 0
 
 }
 
 
 #Instalacion de un paquete del SO
 #Parametros de entrada - Agumentos y opciones:
-#  1 > Nombre del paquete o un listado de paquetes separados por espacios 
-#  2 > El tipo de distribucion Linux (valor de retorno devuelto por get_linux_type_id) 
+#  1 > Nombre del paquete o un listado de paquetes separados por espacios
+#  2 > El tipo de distribucion Linux (valor de retorno devuelto por get_linux_type_id)
 #      00 : Distribución de Linux desconocido
 #      01 : Ubuntu
 #      02 : Fedora
@@ -843,7 +843,7 @@ install_os_package() {
 
     local l_status=0
 
-    #Si no se calculo, Calcularlo 
+    #Si no se calculo, Calcularlo
     if [ -z "$g_runner_id" ]; then
         get_runner_options
     fi
@@ -898,7 +898,7 @@ install_os_package() {
         return 1
     fi
 
-    return 0 
+    return 0
 
 }
 
@@ -906,8 +906,8 @@ install_os_package() {
 
 #Desinstalacion de un paquete del SO
 #Parametros de entrada - Agumentos y opciones:
-#  1 > Nombre del paquete 
-#  2 > El tipo de distribucion Linux (valor de retorno devuelto por get_linux_type_id) 
+#  1 > Nombre del paquete
+#  2 > El tipo de distribucion Linux (valor de retorno devuelto por get_linux_type_id)
 #      00 : Distribución de Linux desconocido
 #      01 : Ubuntu
 #      02 : Fedora
@@ -934,7 +934,7 @@ uninstall_os_package() {
 
     fi
 
-    #Si no se calculo, Calcularlo 
+    #Si no se calculo, Calcularlo
     if [ -z "$g_runner_id" ]; then
         get_runner_options
     fi
@@ -991,14 +991,14 @@ uninstall_os_package() {
         return 1
     fi
 
-    return 0 
+    return 0
 
 }
 
 
 #Limpiar el cache
 #Parametros de entrada - Agumentos y opciones:
-#  1 > El tipo de distribucion Linux (variable global 'g_os_subtype_id' generado por la funcion 'get_linux_type_info') 
+#  1 > El tipo de distribucion Linux (variable global 'g_os_subtype_id' generado por la funcion 'get_linux_type_info')
 #  2 > Flag es 0, si es modo no-interactivo (asume 'yes' siempre que se instanta preguntar en forma interactiva)
 #Parametros de salida :
 #  Valor de retorno :
@@ -1023,7 +1023,7 @@ clean_os_cache() {
 
     local l_status=0
 
-    #Si no se calculo, Calcularlo 
+    #Si no se calculo, Calcularlo
     if [ -z "$g_runner_id" ]; then
         get_runner_options
     fi
@@ -1078,4 +1078,3 @@ clean_os_cache() {
     return 0
 
 }
-

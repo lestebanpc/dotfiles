@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug",
+      "env": {
+        "APP_FOO": "bar",
+        "NODE_ENV": "test"
+      },
+      "program": "${workspaceFolder}/src/index.js",
+      "outputCapture": "std"
+    }
+  ]
+}

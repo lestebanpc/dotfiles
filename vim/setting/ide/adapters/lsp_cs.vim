@@ -1,15 +1,19 @@
-"Para Neovim usar la configuracion con LSP nativo con Omnisharp Server
-if g:is_neovim && !g:use_coc_in_nvim
-    finish
-endif
+"
+" Plugin IDE> Cliente LSP para server 'Omnisharp LS' para C#
+"
+" - Microsoft dejo de usar este LSP para su software y creo su LSP licenciado llamado 'Roslyn LS'.
+" - Ambos servidores LSP se basan en el especificacion Roslyn para compiladores para .NET de Microsoft.
+" - Este plugin implementa :
+"   - Cliente LSP para el servidor 'Omnisharp LS'.
+"   - Completion que se usara para filetypes asociado a csharp.
+"   - Se implementa un Lightbulb cuando existe acciones en la linea actual.
+" - El keymapings se realzia a nivel buffer para filetypes csharp.
+"
+packadd omnisharp-vim
 
 "###################################################################################
-" IDE > Package: Omnisharp-Vim (Pluing del Client LSP para Roslyn)
-"###################################################################################
-
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 " OmniSharp-Vim> Configuración del servidor LSP
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"###################################################################################
 "
 "Roslyn Server (LSP Server para C#)
 " - (1) 'Stdio Version' (default, es la versión recomendada).
@@ -45,9 +49,9 @@ endif
 "Roslyn Server (LSP Server para C#) - Si se usa la version desarollado en .NET 6 (anteriormente se usaba Mono)
 let g:OmniSharp_server_use_net6 = 1
 
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"###################################################################################
 " OmniSharp-Vim> Popup 'Preview', 'Documentation' y 'Signature-Help' 
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"###################################################################################
 "
 "
 "let g:OmniSharp_popup = 1
@@ -97,9 +101,9 @@ let g:OmniSharp_popup_mappings = {
 \ 'pageUp': ['<C-b>', '<PageUp>']
 \}
 
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"###################################################################################
 " OmniSharp-Vim> Diagnostico y Highlighting
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"###################################################################################
 "
 "When using ALE for displaying diagnostics, OmniSharp-vim can listen for diagnostics sent 
 "asynchronously by the OmniSharp-roslyn server, and continue to update ALE as these are received.
@@ -138,9 +142,9 @@ let g:OmniSharp_highlight_groups = {
 \ 'ExcludedCode': 'NonText'
 \}
 
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"###################################################################################
 " OmniSharp-Vim> Integración con otras componenetes externas
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"###################################################################################
 "
 "Por defecto para selección y/o busqueda se usa el panel vim llamado 'QuickFix' (no es un popup, 
 "como por ejemplo un popup basado en fzf). El panel vim se puede cerrar selecionado el panel y
@@ -176,9 +180,9 @@ let g:OmniSharp_coc_snippet = 0
 "esto esta habilitado.
 let g:OmniSharp_completion_without_overloads = 1
 
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"###################################################################################
 " OmniSharp-Vim> Otros 
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"###################################################################################
 "
 "Normalizar el path de los archivos enviados por LSP server, para usar la convención de vim
 "(vease 'filename-modifiers').
@@ -199,9 +203,9 @@ let g:OmniSharp_lookup_metadata = 1
 "determinado (un tipo o metodo).
 "let g:omnicomplete_fetch_full_documentation = 1
 
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"###################################################################################
 " OmniSharp-Vim> Soporte a Code-actions
-"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+"###################################################################################
 "Code actions: A flag is displayed in the sign column to indicate that one or more code actions are available.
 
 "Flag para habilitar esta opcion (0 es 'disable')

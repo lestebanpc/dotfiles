@@ -3,14 +3,41 @@
 -- Diagnostic> Simbolos e Iconos
 --------------------------------------------------------------------------------------------------
 
---1. Signos (iconos/simbolos) usuados para el diagnostivo
-vim.fn.sign_define('DiagnosticSignError', { text = '✘', texthl = 'DiagnosticSignError', numhl = '' })
-vim.fn.sign_define('DiagnosticSignWarn',  { text = '▲', texthl = 'DiagnosticSignWarn', numhl = '' })
+
+--01. Signos (iconos/simbolos) usuados para el diagnostivo
+--    En NeoVim <= 0.9.5, se usa 'vim.fn.sign_define()'
+--    En NeoVim >= 0.10, se usa 'vim.diagnostic.config()'
+--
+--vim.fn.sign_define('DiagnosticSignError', { text = '✘', texthl = 'DiagnosticSignError', numhl = '' })
+--vim.fn.sign_define('DiagnosticSignWarn',  { text = '▲', texthl = 'DiagnosticSignWarn', numhl = '' })
 --vim.fn.sign_define('DiagnosticSignHint',  { text = '⚑', texthl = 'DiagnosticSignHint', numhl = '' })
-vim.fn.sign_define('DiagnosticSignHint',  { text = '', texthl = 'DiagnosticSignHint', numhl = '' })
-vim.fn.sign_define('DiagnosticSignInfo',  { text = '', texthl = 'DiagnosticSignInfo', numhl = '' })
+--vim.fn.sign_define('DiagnosticSignInfo',  { text = '', texthl = 'DiagnosticSignInfo', numhl = '' })
 --vim.fn.sign_define('DiagnosticSignInfo',  { text = '', texthl = 'DiagnosticSignInfo', numhl = '' })
---vim.fn.sign_define('DiagnosticSignInfo',  { text = 'כֿ', texthl = 'DiagnosticSignInfo', numhl = '' })
+
+vim.diagnostic.config({
+    signs = {
+        text = {
+            [vim.diagnostic.severity.ERROR] = '✘',
+            [vim.diagnostic.severity.WARN] = '▲',
+            [vim.diagnostic.severity.HINT] = '⚑',
+            [vim.diagnostic.severity.INFO] = '»',
+        },
+    },
+})
+
+--02. Autocomando (evento) cuando se ingresa al modo insert y se sale del modo insert)
+--    Desabilitar el diganostico en el modo inserción
+vim.api.nvim_create_autocmd('ModeChanged', {
+    pattern = {'n:i', 'v:s'},
+    desc = 'Disable diagnostics in insert and select mode',
+    callback = function(e) vim.diagnostic.disable(e.buf) end,
+})
+
+vim.api.nvim_create_autocmd('ModeChanged', {
+    pattern = 'i:n',
+    desc = 'Enable diagnostics when leaving insert mode',
+    callback = function(e) vim.diagnostic.enable(e.buf) end,
+})
 
 --------------------------------------------------------------------------------------------------
 -- Diagnostic> 
