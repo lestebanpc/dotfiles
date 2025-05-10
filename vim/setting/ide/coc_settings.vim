@@ -17,7 +17,7 @@ packadd coc-fzf
 
 
 let g:coc_fzf_preview = 'down:50%'
-let g:coc_fzf_opts = ['--layout=default']
+let g:coc_fzf_opts = ['--layout=reverse']
 
 
 "###################################################################################
@@ -129,29 +129,29 @@ nnoremap <silent> K :call ShowDocumentation()<CR>
 "2. 'Location' (dentro de todo el 'workspace') basado en el simbolo actual:
 "
 "a> Ir a la definición del simbolo actual (donde esta el prompt)
-nmap <silent> gd <Plug>(coc-definition)
+nnoremap <silent> gd <Plug>(coc-definition)
 
 "b> Ir al tipo de definición del simbolo actual (donde esta el prompt)
-nmap <silent> gy <Plug>(coc-type-definition)
+nnoremap <silent> gy <Plug>(coc-type-definition)
 
 "c> Ir a la implementación del simbolo actual (donde esta el prompt)
-nmap <silent> gc <Plug>(coc-declaration)
+nnoremap <silent> gc <Plug>(coc-declaration)
 
 "d> Ir a la implementación del simbolo actual (donde esta el prompt)
-nmap <silent> gi <Plug>(coc-implementation)
+nnoremap <silent> gi <Plug>(coc-implementation)
 
 "f> Ir a la referencias/usos del simbolo actual (donde esta el prompt)
 "   Excluyendo los declaraciones del simbolo.
-nmap <silent> gr <Plug>(coc-references)
+nnoremap <silent> gr <Plug>(coc-references)
 
 "g> Ir a la referencias o uso del simbolo actual (donde esta el prompt)
 "   Excluyendo los declaraciones del simbolo.
-nmap <silent> gu <Plug>(coc-references-used)
+nnoremap <silent> gu <Plug>(coc-references-used)
 
 
 "h> Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el buffer
-nnoremap <silent><nowait> <space>ss :<C-u>CocFzfList outline<cr>
-"nnoremap <silent><nowait> <space>ls :<C-u>CocList outline<cr>
+nnoremap <silent> <space>ss :CocFzfList outline<cr>
+"nnoremap <silent><nowait> <space>ss :<C-u>CocList outline<cr>
 
 "i> Listar, Selecionar (en este caso tambien buscar) e Ir a un 'symbol' en el workspace
 nnoremap <silent><nowait> <space>sw  :<C-u>CocList -I symbols<cr>
@@ -161,13 +161,13 @@ nnoremap <silent><nowait> <space>sw  :<C-u>CocList -I symbols<cr>
 "
 "a> Listar, Selecionar e Ir a un error y/o warning del workspace.
 "   En CoC, se inica su popup 'Fuzzy' (no es un panel vim), la cual se cierra usando '[ESC]'.
-nnoremap <silent><nowait> <space>dw  :<C-u>CocFzfList diagnostics<cr>
+nnoremap <silent> <space>dw  :<C-u>CocFzfList diagnostics<cr>
 "nnoremap <silent><nowait> <space>dw  :<C-u>CocList diagnostics<cr>
 
 "b> Navegar en por el los diagnostico del workspace
 "   Usar solos los de definidos en ALE?
-"nmap <silent> [d <Plug>(coc-diagnostic-prev)
-"nmap <silent> ]d <Plug>(coc-diagnostic-next)
+"nnoremap <silent> [d <Plug>(coc-diagnostic-prev)
+"nnoremap <silent> ]d <Plug>(coc-diagnostic-next)
 
 
 "###################################################################################
@@ -180,33 +180,33 @@ nnoremap <silent><nowait> <space>dw  :<C-u>CocFzfList diagnostics<cr>
 "1. Selección de una funcion
 "
 "a> Selección la parte interior del metodo.
-xmap im <Plug>(coc-funcobj-i)
-omap im <Plug>(coc-funcobj-i)
+xnoremap im <Plug>(coc-funcobj-i)
+onoremap im <Plug>(coc-funcobj-i)
 
 "b> Selección de todo el metodo.
-xmap am <Plug>(coc-funcobj-a)
-omap am <Plug>(coc-funcobj-a)
+xnoremap am <Plug>(coc-funcobj-a)
+onoremap am <Plug>(coc-funcobj-a)
 
 "2. Selección de una funcion
 "
 "a> Selección la parte interior del clase.
-xmap ic <Plug>(coc-classobj-i)
-omap ic <Plug>(coc-classobj-i)
+xnoremap ic <Plug>(coc-classobj-i)
+onoremap ic <Plug>(coc-classobj-i)
 
 "b> Selección de todo el clase.
-xmap ac <Plug>(coc-classobj-a)
-omap ac <Plug>(coc-classobj-a)
+xnoremap ac <Plug>(coc-classobj-a)
+onoremap ac <Plug>(coc-classobj-a)
 
 "3. Selection inteligente ('Selection Range' o 'Smart Selecction')
 "   NOTE : Requires 'textDocument/selectionRange' support of language server.
 
 "Select range forward (Expand Selection)
-nmap <silent> <space>se <Plug>(coc-range-select)
-xmap <silent> <space>se <Plug>(coc-range-select)
+nnoremap <silent> <space>se <Plug>(coc-range-select)
+xnoremap <silent> <space>se <Plug>(coc-range-select)
 
 "Select range backward (Shrink Selection)
-nmap <silent> <space>ss <Plug>(coc-range-select)
-xmap <silent> <space>ss <Plug>(coc-range-select)
+nnoremap <silent> <space>sh <Plug>(coc-range-select)
+xnoremap <silent> <space>sh <Plug>(coc-range-select)
 
 
 "###################################################################################
@@ -214,8 +214,8 @@ xmap <silent> <space>ss <Plug>(coc-range-select)
 "###################################################################################
 
 "1. Formateo de una selección/buffer (Acciones personalizadas VIM)
-xmap <space>cf  <Plug>(coc-format-selected)
-nmap <space>cf  <Plug>(coc-format-selected)
+xnoremap <space>cf  <Plug>(coc-format-selected)
+nnoremap <space>cf  <Plug>(coc-format-selected)
 
 
 "2. Formateo del buffer ':Format' (Comando personalizado de VIM)
@@ -230,30 +230,30 @@ command! -nargs=0 Format :call CocActionAsync('format')
 "1. Code Actions > All (Listar, seleccionar y ejecutar)
 
 "a>  Listar, seleccionar y ejecutar un 'Code Actions' existentes en del buffer actual.
-nmap <space>ca  <Plug>(coc-codeaction)
+nnoremap <space>ca  <Plug>(coc-codeaction)
 
 "b> Listar, seleccionar y ejecutar un 'Code Actions' existentes en la linea actual.
-nmap <space>al  <Plug>(coc-codeaction-line)
+nnoremap <space>al  <Plug>(coc-codeaction-line)
 
 "c> Listar, seleccionar y ejecutar un 'Code Actions' existente en el prompt actual.
-nmap <space>ap  <Plug>(coc-codeaction-cursor)
+nnoremap <space>ap  <Plug>(coc-codeaction-cursor)
 
 "d> Listar, seleccionar y ejecutar un 'Code Actions' existente que pueden aplicar a todo una region/selección actual.
-xmap <space>ar  <Plug>(coc-codeaction-selected)
-nmap <space>ar  <Plug>(coc-codeaction-selected)
+xnoremap <space>ar  <Plug>(coc-codeaction-selected)
+nnoremap <space>ar  <Plug>(coc-codeaction-selected)
 
 
 "2. Code Actions > Refactoring (Listar, seleccionar y ejecutar)
 
 "a> Listar, seleccionar y ejecutar un 'Refactoring' de existente en el prompt actual.
-nmap <space>rp  <Plug>(coc-codeaction-refactor)
+nnoremap <space>rp  <Plug>(coc-codeaction-refactor)
 
 "b> Listar, seleccionar y ejecutar un 'Refactoring' existente que puede aplicar a todo un rango selecionado.
-xmap <space>rr  <Plug>(coc-codeaction-refactor-selected)
-nmap <space>rr  <Plug>(coc-codeaction-refactor-selected)
+xnoremap <space>rr  <Plug>(coc-codeaction-refactor-selected)
+nnoremap <space>rr  <Plug>(coc-codeaction-refactor-selected)
 
 "c> Listar,  seleccionar y ejecutar un 'Refactoring' de todo el archivo (buffer).
-nmap <space>rb  <Plug>(coc-codeaction-source)
+nnoremap <space>rb  <Plug>(coc-codeaction-source)
 
 
 "3. Code Actions > Ejecutar un 'Code Fix'
@@ -262,7 +262,7 @@ nmap <space>rb  <Plug>(coc-codeaction-source)
 nnoremap <silent> <space>oi :call CocAction('organizeImport')<CR>
 
 "b> Acción de reparación: Acción de repación rapida
-nmap <space>fx  <Plug>(coc-fix-current)
+nnoremap <space>fx  <Plug>(coc-fix-current)
 
 
 "Do default action for next item.
@@ -277,7 +277,7 @@ nmap <space>fx  <Plug>(coc-fix-current)
 "###################################################################################
 
 "1. Renombrar un simbolo.
-nmap <space>rn <Plug>(coc-rename)
+nnoremap <space>rn <Plug>(coc-rename)
 
 
 
@@ -293,10 +293,10 @@ command! -nargs=? Fold   :call CocAction('fold', <f-args>)
 command! -nargs=0 OR     :call CocActionAsync('runCommand', 'editor.action.organizeImport')
 
 "2. Open link under cursor
-nmap <space>ol <Plug>(coc-openlink)
+nnoremap <space>ol <Plug>(coc-openlink)
 
 "3. CodeLens: Listas, Selecionar y Ejecutar acciones personalizadas asociadas a una linea:
-nmap <space>cl <Plug>(coc-codelens-action)
+nnoremap <space>cl <Plug>(coc-codelens-action)
 
 "###################################################################################
 " CoC> IDE>  Integración con barra de estado (Status Line)
@@ -312,10 +312,10 @@ set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 
 "Mappings for CoCList
 "Manage extensions.
-nnoremap <silent><nowait> <space>ee  :<C-u>CocList extensions<cr>
+nnoremap <silent> <space>ee  :<C-u>CocList extensions<cr>
 
 "Show commands.
-nnoremap <silent><nowait> <space>cc  :<C-u>CocFzfList commands<cr>
+nnoremap <silent> <space>cc  :<C-u>CocFzfList commands<cr>
 "nnoremap <silent><nowait> <space>cc  :<C-u>CocList commands<cr>
 
 "Resume latest coc list.
@@ -341,3 +341,62 @@ augroup mygroup
     autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
 
 augroup end
+
+
+"###################################################################################
+" CoC > Extension 'coc-setting' (Framework para snippets)
+"###################################################################################
+"
+" URL : https://github.com/neoclide/coc.nvim/wiki/Using-snippets#configure-snippets-workflow
+"       https://github.com/neoclide/coc-snippets
+" Requiere instalar la extensión: ':CocInstall
+" coc-snippets'<Plug>(coc-snippets-expand)<Plug>(coc-snippets-expand)<Plug>(coc-snippets-expand)
+"
+"Los snippet son usuados en el modo edición
+"
+
+if g:has_python3
+
+    " > El snippet siempre se muestra como parte de 'completion' (manual o automatico).
+    "   Cuando se acepta el item vinculado al snippet este se expande y se inicia la navegación al
+    "   1er nodo del snippet.
+    " > Un snippet esta formado por 1 o mas nodos. Un nodo del snippet es un placeholder/fragmento
+    "   que se permite una modificación
+
+    "1. Expandir el snippet (desde el modo insert):
+    " > Cuando se tiene un texto, al apreta <C-s>, se busca el primer snippets que coincide,
+    "   si se encuentra, se expande.
+    inoremap <C-l> <Plug>(coc-snippets-expand)
+
+
+    "Both expand and jump (make expand higher priority.)
+    inoremap <C-s> <Plug>(coc-snippets-expand-jump)
+
+    "Mostrar un archivo para crear un snippet cuyo nombre es el mismo que el texto seleccionado.
+    xnoremap <space>x  <Plug>(coc-convert-snippet)
+
+    "2. Navegar por cada nodo del snippet (placeholder/fragmento modificable del snippet):
+    " > La navegación usualmente se inicia en modo visual, aunque puede iniciar del modo visual.
+    " > Cada vez que se va a un nodo pasan desde el modo 'Insert' al modo 'Select' y cualquier escritura
+    "   sobrescribe su valor.
+
+    " Permite ir al siguiente nodo del snippets ('f' de 'follow').
+    let g:coc_snippet_next="<C-f>"
+
+    " En modo visual y si el texto seleccionado es un nodo snippet, este vuelve a iniciar la navegación
+    " desde el nodo ubicado (se borrar el texto selecionado e ingresa en el modo editar).
+    vnoremap <C-f> <Plug>(coc-snippets-select)
+
+    " Permite ir al anterior nodo del snippets ('b' de 'before').
+    let g:coc_snippet_pre="<C-b>"
+
+
+    "3. Listar los snippets existentes para el 'filetype'.
+    nnoremap <silent> <space>sn  :<C-u>CocFzfList snippets<cr>
+
+
+    "Plugin IDE> UltiSnips: Implementacion de Snippet para diferentes lenguajes de programacion
+    packadd vim-snippets
+
+
+endif

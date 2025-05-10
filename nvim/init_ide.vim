@@ -300,10 +300,10 @@ endif
 " Estableciendo el valor por defecto si no se define antes.
 if !exists("g:use_dap_adapters") || empty(g:use_dap_adapters)
     let g:use_dap_adapters = {
-    "\   'cpp_lldb_dap'  : v:true,
+    \   'cpp_lldb_dap'  : v:true,
     "\   'cpp_lldb_code' : v:true,
     "\   'cpp_gdb'       : v:true,
-    \   'cpp_vscode'    : v:true,
+    "\   'cpp_vscode'    : v:true,
     \   'go_vscode'     : v:true,
     "\   'go_native'     : v:true,
     \   'csharp'        : v:true,

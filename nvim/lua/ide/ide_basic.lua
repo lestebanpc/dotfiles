@@ -127,7 +127,7 @@ require("aerial").setup({
 -- 02. Keymappings globales
 
 -- Mostrar/cerrar el 'Code Outline' (esquema de codigo) del buffer actual.
-vim.keymap.set("n", "<space>co", "<cmd>AerialToggle!<CR>", { desc = "Toggle Code Outline" })
+vim.keymap.set("n", "<space>co", "<cmd>AerialToggle!<CR>", { noremap=true, silent=true, desc = "Toggle Code Outline" })
 
 -- Navegacion en los  simbolo del buffer actual e ir a este.
-vim.keymap.set("n", "<space>s2", "<cmd>AerialNavToggle<CR>", { desc = "Toggle Code Navigator" })
+vim.keymap.set("n", "<space>s2", "<cmd>AerialNavToggle<CR>", { noremap=true, silent=true, desc = "Toggle Code Navigator" })

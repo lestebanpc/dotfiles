@@ -17,7 +17,7 @@ require("nvim-tree").setup({
     --end
 })
 
-vim.keymap.set('n', '<leader>ee', '<cmd>NvimTreeToggle<cr>', { noremap = true })
+vim.keymap.set('n', '<leader>ee', '<cmd>NvimTreeToggle<cr>', { noremap=true, silent=true, desc = 'UI Toggle Tree Explorer' })
 
 
 ------------------------------------------------------------------------------------------------
@@ -97,10 +97,10 @@ vim.keymap.set('n', '<leader>ff', ':lua require("fzf-lua").grep_project()<CR>', 
 --   y carpetas de exclusiion.
 
 --Listar todos los tags del proyecto. (Si no se encuenta el archivo tags, lo genera usando 'ctags -R')
-vim.keymap.set('n', '<leader>tt', ':lua require("fzf-lua").tags()<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>tw', ':lua require("fzf-lua").tags()<CR>', { noremap = true, silent = true })
 
 --Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
-vim.keymap.set('n', '<leader>tb', ':lua require("fzf-lua").btags()<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>tt', ':lua require("fzf-lua").btags()<CR>', { noremap = true, silent = true })
 
 
 

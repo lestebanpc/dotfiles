@@ -211,14 +211,14 @@ endif
 "   los diganosticos exlclusivos de sus linters.
 "
 " > Ir al siguiente diagnostico desde la posicion actual y dentro del buffer
-nmap <silent> ]d <Plug>(ale_next)
+nnoremap <silent> ]d <Plug>(ale_next)
 
 " > Ir a la anterior diagnostico desde la posicion actual y dentro del buffer
-nmap <silent> [d <Plug>(ale_previous)
+nnoremap <silent> [d <Plug>(ale_previous)
 
 
 "Habilitar o desabilitar el diagnostico del buffer
-"nmap <silent> <space>dd <Plug>(ale_toggle_buffer)
+"nnoremap <silent> <space>dd <Plug>(ale_toggle_buffer)
 
 
 
@@ -227,41 +227,41 @@ nmap <silent> [d <Plug>(ale_previous)
 "###################################################################################
 "
 "Los snippet son usuados en el modo edición
-if g:has_python3 && g:use_coc
-
-    "Plugin IDE> UltiSnips: Motor/Framework de Snippets
-    packadd ultisnips
-
-    "Expandir el snippet manualmente :
-    " > La mayoria de los 'Completion', cuando se acepta un item de tipo snippet, automaticamente
-    "   el snippet se expande.
-    " > Cuando se tiene un texto, al apreta <C-s>, se busca el primer snippets que coincide,
-    "   si se encuentra, se expande.
-    let g:UltiSnipsExpandTrigger="<C-s>"
-
-    "Navegar por cada fragmento del snippet expandido.
-    " > Algunos fragmentos pasan desde el modo 'Insert' al modo 'Select' selecionando el fragmento
-    "   (similar al modo visual, pero la seleccion es remplazada automaticamente cuando se escribre).
-    " > Algunos fragmentos se mantiene en el modo 'Insert'.
-    "
-    "Ir al siguiente fragmento del Snippets ('f' de 'follow').
-    let g:UltiSnipsJumpForwardTrigger="<C-f>"
-    "
-    "Ir al siguiente fragmento del Snippets ('b' de 'before').
-    let g:UltiSnipsJumpBackwardTrigger="<C-b>"
-
-    "Tipo de split para navegar al editar los snippets :UltiSnipsEdit
-    let g:UltiSnipsEditSplit="vertical"
-
-    "Listar los snippets existentes para el 'filetype'.
-    let g:UltiSnipsListSnippets="<C-;>"
-
-
-
-    "Plugin IDE> UltiSnips: Implementacion de Snippet para diferentes lenguajes de programacion
-    packadd vim-snippets
-
-endif
+"if g:has_python3 && g:use_coc
+"
+"    "Plugin IDE> UltiSnips: Motor/Framework de Snippets
+"    packadd ultisnips
+"
+"    "Expandir el snippet manualmente (siempre en modo insert):
+"    " > La mayoria de los 'Completion', cuando se acepta un item de tipo snippet, automaticamente
+"    "   el snippet se expande.
+"    " > Cuando se tiene un texto, al apreta <C-s>, se busca el primer snippets que coincide,
+"    "   si se encuentra, se expande.
+"    let g:UltiSnipsExpandTrigger="<C-s>"
+"
+"    "Navegar por cada fragmento del snippet expandido (en el modo insert y/o select):
+"    " > Algunos fragmentos pasan desde el modo 'Insert' al modo 'Select' selecionando el fragmento
+"    "   (similar al modo visual, pero la seleccion es remplazada automaticamente cuando se escribre).
+"    " > Algunos fragmentos se mantiene en el modo 'Insert'.
+"    "
+"    "Ir al siguiente fragmento del Snippets ('f' de 'follow'). En el modo insert.
+"    let g:UltiSnipsJumpForwardTrigger="<C-f>"
+"    "
+"    "Ir al siguiente fragmento del Snippets ('b' de 'before'). En el modo insert.
+"    let g:UltiSnipsJumpBackwardTrigger="<C-b>"
+"
+"    "Tipo de split para navegar al editar los snippets :UltiSnipsEdit
+"    let g:UltiSnipsEditSplit="vertical"
+"
+"    "Listar los snippets existentes para el 'filetype'.
+"    let g:UltiSnipsListSnippets="<space>sn"
+"
+"
+"
+"    "Plugin IDE> UltiSnips: Implementacion de Snippet para diferentes lenguajes de programacion
+"    packadd vim-snippets
+"
+"endif
 
 
 

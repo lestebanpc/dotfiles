@@ -38,7 +38,7 @@ set_first_dns_server() {
 
 
 ################################################################################################
-# Inicializar/Finalizar la musica de la NAS 
+# Inicializar/Finalizar la musica de la NAS
 ################################################################################################
 
 start_music() {
@@ -69,8 +69,8 @@ start_music() {
 
     if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
         printf 'La tarjeta de sonido con ID "%b%s%b" no esta instalado o no es reconocido por el kernel (revise "%b%s%b").\n' \
-               "$g_color_gray1" "$p_card_id" "$g_color_reset" "$g_color_gray1" "cat /proc/asound/cards" "$g_color_reset" 
-        return 1 
+               "$g_color_gray1" "$p_card_id" "$g_color_reset" "$g_color_gray1" "cat /proc/asound/cards" "$g_color_reset"
+        return 1
     fi
 
     #echo "$l_aux"
@@ -94,10 +94,10 @@ start_music() {
                "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_card_index" "$g_color_reset"
         return 2
     fi
-    
+
     printf 'La tarjeta de sonido "%b%s%b", con ID "%b%s%b" e Index "%b%s%b", ha sido detectado por el kernel de Linux.\n' \
            "$g_color_cian1" "$l_card_description" "$g_color_reset" "$g_color_cian1" "$p_card_id" "$g_color_reset" \
-           "$g_color_cian1" "$l_card_index" "$g_color_reset" 
+           "$g_color_cian1" "$l_card_index" "$g_color_reset"
 
     #3. Identificar si el device existe (fue reconocida por el kernel)
     l_aux=$(aplay -l | grep '^card '"$l_card_index"':.*\sdevice\s'"$p_device_index")
@@ -105,8 +105,8 @@ start_music() {
     if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
         printf 'El device "%b%s%b" de la tarjeta de sonido "%b%s%b" no es reconocido por el kernel (revise "%b%s%b").\n' \
                "$g_color_gray1" "$p_device_index" "$g_color_reset" "$g_color_gray1" "$l_card_description" "$g_color_reset" \
-               "$g_color_gray1" "aplay -l" "$g_color_reset" 
-        return 3 
+               "$g_color_gray1" "aplay -l" "$g_color_reset"
+        return 3
     fi
 
 
@@ -138,7 +138,7 @@ start_music() {
         printf "#    mixer_index         \"0\"         # optional\n"
         printf "}%b\n" "$g_color_reset"
 
-        return 4 
+        return 4
     fi
 
     #Obtener la linea donde se encontro el nombre del output
@@ -204,10 +204,10 @@ start_music() {
                "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_device_value" "$g_color_reset" "$g_color_cian1" "$l_device_new_value" "$g_color_reset" \
                "$g_color_gray1" "audio_output" "$g_color_reset" "$g_color_gray1" "ALSA Hi-Fi DAC" "$g_color_reset" \
                "$g_color_gray1" "/etc/mpd.conf" "$g_color_reset"
-        
+
         sudo sed -i "${l_line_nbr},$((l_line_nbr + 10))"' s/^\s*device\s\+"\(.*\)".*/    device              "'"$l_device_new_value"'"/' /etc/mpd.conf
 
-    else 
+    else
         printf 'El valor del campo %bdevice%b "%b%s%b" es el correcto (seccion %b%s%b con nombre "%b%s%b" del archivo "%b%s%b").\n' \
                "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$l_device_value" "$g_color_reset" "$g_color_gray1" "audio_output" "$g_color_reset" \
                "$g_color_gray1" "ALSA Hi-Fi DAC" "$g_color_reset" "$g_color_gray1" "/etc/mpd.conf" "$g_color_reset"
@@ -219,8 +219,8 @@ start_music() {
 
     if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
         printf 'No esta registrado el punto de montaje "%b%s%b" en "%b%s%b".\n' "$g_color_gray1" "/nas/music/2.0" "$g_color_reset" \
-               "$g_color_gray1" "/etc/fstab" "$g_color_reset" 
-        return 1 
+               "$g_color_gray1" "/etc/fstab" "$g_color_reset"
+        return 1
     fi
 
     l_aux=$(grep '/nas/music/5.1' /etc/fstab 2> /dev/null)
@@ -228,8 +228,8 @@ start_music() {
 
     if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
         printf 'No esta registrado el punto de montaje "%b%s%b" en "%b%s%b".\n' "$g_color_gray1" "/nas/music/5.1" "$g_color_reset" \
-               "$g_color_gray1" "/etc/fstab" "$g_color_reset" 
-        return 2 
+               "$g_color_gray1" "/etc/fstab" "$g_color_reset"
+        return 2
     fi
 
     #6. Montar los punto de montaje de musica
@@ -425,7 +425,7 @@ _g_sync_vault () {
     fi
 
     #6.Obteniendo los parametros de rclone
-    local l_parameters 
+    local l_parameters
 
     if [ $p_operation_type -eq 0 ]; then
 
@@ -735,13 +735,13 @@ sync_vault () {
     fi
 
 
-    #7. Establecer los valores por defecto de las opciones que dependen del tipo de operacion: 
+    #7. Establecer los valores por defecto de las opciones que dependen del tipo de operacion:
     if [ $l_operation_type -eq 0 ]; then
 
         #Sincronización bidireccional
         if [ $l_flag_dry_run -eq 0 ]; then
             if [ ! -z "$l_flag_force" ]; then
-                printf "Option '%b-f%b' is going to be ingnored in bidirectional synchronization with test mode.\n" "$g_color_gray1" "$g_color_reset" 
+                printf "Option '%b-f%b' is going to be ingnored in bidirectional synchronization with test mode.\n" "$g_color_gray1" "$g_color_reset"
                 l_flag_force=''
             fi
         else
@@ -751,7 +751,7 @@ sync_vault () {
         fi
 
         if [ ! -z "$l_homologation_mode" ]; then
-            printf "Option '%b-m %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_homologation_mode" "$g_color_reset" 
+            printf "Option '%b-m %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_homologation_mode" "$g_color_reset"
             l_homologation_mode=''
         fi
 
@@ -769,7 +769,7 @@ sync_vault () {
 
         #Homologación
         if [ ! -z "$l_flag_force" ]; then
-            printf "Option '%b-f%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$g_color_reset" 
+            printf "Option '%b-f%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$g_color_reset"
             l_flag_force=''
         fi
 
@@ -778,12 +778,12 @@ sync_vault () {
         fi
 
         if [ ! -z "$l_conflict_winner" ]; then
-            printf "Option '%b-w %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_conflict_winner" "$g_color_reset" 
+            printf "Option '%b-w %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_conflict_winner" "$g_color_reset"
             l_conflict_winner=''
         fi
 
         if [ ! -z "$l_losser_action" ]; then
-            printf "Option '%b-l %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_losser_action" "$g_color_reset" 
+            printf "Option '%b-l %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_losser_action" "$g_color_reset"
             l_losser_action=''
         fi
 
@@ -794,22 +794,22 @@ sync_vault () {
 
         #Sincronización unidireccional
         if [ ! -z "$l_flag_force" ]; then
-            printf "Option '%b-f%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$g_color_reset" 
+            printf "Option '%b-f%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$g_color_reset"
             l_flag_force=''
         fi
 
         if [ ! -z "$l_homologation_mode" ]; then
-            printf "Option '%b-m %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_homologation_mode" "$g_color_reset" 
+            printf "Option '%b-m %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_homologation_mode" "$g_color_reset"
             l_homologation_mode=''
         fi
 
         if [ ! -z "$l_conflict_winner" ]; then
-            printf "Option '%b-w %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_conflict_winner" "$g_color_reset" 
+            printf "Option '%b-w %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_conflict_winner" "$g_color_reset"
             l_conflict_winner=''
         fi
 
         if [ ! -z "$l_losser_action" ]; then
-            printf "Option '%b-l %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_losser_action" "$g_color_reset" 
+            printf "Option '%b-l %s%b' is going to be ingnored in unidirectional synchronization.\n" "$g_color_gray1" "$l_losser_action" "$g_color_reset"
             l_losser_action=''
         fi
 
@@ -817,9 +817,5 @@ sync_vault () {
 
 
     fi
-    
+
 }
-
-
-
-

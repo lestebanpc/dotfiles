@@ -56,7 +56,7 @@ fi
 #------------------------------------------------------------------------------------------------------------------
 #> Funciones usadas durante Instalación/Actualización {{{
 #------------------------------------------------------------------------------------------------------------------
-# 
+#
 # Incluye las variable globales usadas como parametro de entrada y salida de la funcion que no sea resuda por otras
 # funciones, cuyo nombre inicia con '_g_'.
 #
@@ -88,7 +88,7 @@ _get_remote_url() {
 
     #2. Obtener el alias del repositorio remoto
     local l_remote
-    
+
     case "$p_object_type" in
         1)
             #Usando el codigo hash ingresado
@@ -102,17 +102,17 @@ _get_remote_url() {
             #Usando el alias de repositorio remoto
             l_remote=$p_object_name
             ;;
-        4) 
+        4)
             l_remote=$(git config branch."${l_current_branch}".remote || echo 'origin')
             ;;
-        5) 
+        5)
             l_remote=$(git config branch."${l_current_branch}".remote || echo 'origin')
             ;;
         *)
             return 1
             ;;
     esac
-   
+
     #3. Obtener la URL asociado al alias del repositorio remoto y el tipo de repositorio
     local l_remote_url
     l_remote_url=$(git remote get-url "$l_remote" 2> /dev/null)
@@ -130,7 +130,7 @@ _get_remote_url() {
     #4. Obtener la ruta relativa  del objeto
     local l_path=""
     local l_tmp
-   
+
     case "$p_object_type" in
         1)
             #Usando el codigo hash ingresado
@@ -174,7 +174,7 @@ _get_remote_url() {
             fi
             ;;
 
-        4) 
+        4)
             l_tmp="$l_current_branch/$(git rev-parse --show-prefix)$p_object_name"
 
             #Si es GitLab
@@ -187,8 +187,8 @@ _get_remote_url() {
             fi
             ;;
 
-        5) 
-            l_tmp="$p_object_name" 
+        5)
+            l_tmp="$p_object_name"
 
             #Si es GitLab
             if [ $l_type_git -eq 1 ]; then
@@ -249,7 +249,7 @@ git_open_url() {
     else
         xdg-open "$l_path"
     fi
-        
+
 }
 
 _branches() {
@@ -296,4 +296,3 @@ list_objects() {
 
 #Los parametros debe ser la funcion y los parametros
 "$@"
-

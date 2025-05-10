@@ -46,11 +46,11 @@ local detached = true
 
 if (vim.g.os_type == 0) then
     --Si es Windows
-    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7.exe'
+    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7.cmd'
     detached = false
 else
     --Otros casos
-    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions//ms_cpptools/debugAdapters/bin/OpenDebugAD7'
+    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7'
 end
 
 local use_adapter = vim.g.use_dap_adapters['cpp_vscode']

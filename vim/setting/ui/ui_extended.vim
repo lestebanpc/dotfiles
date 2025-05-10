@@ -2,7 +2,19 @@
 " UI> Configuraciones exclusivas de NeoVim
 "###################################################################################
 if g:is_neovim
-    
+
+    " Solo para soporte a algunos plugin VIM de coc-fzf.
+    " No se usa directamente este plugin.
+    if g:use_coc
+
+        "Plug-In UI> FZF ("FuZzy Finder") - Funciones shell basicas de utilidad para fzf
+        packadd fzf
+
+        "Plug-In UI> FZF ("FuZzy Finder") - Comandos VIM para usar mejor FzF
+        packadd fzf.vim
+
+    endif
+
     "Plug-In UI> FZF ("FuZzy Finder")
     packadd fzf-lua
 
@@ -26,9 +38,9 @@ if !g:is_neovim
 
 
     "Sobreescribir las opciones por defecto de FZF (VIM define muchas opciones usando
-    "variables globales). 
+    "variables globales).
     let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
-    
+
     "El comando por defecto de FZF sera 'fd' y no 'find' debido a que:
     "  - 'fd' excluye de la busqueda folderes y archivos, y lo indicado por '.gitignore'.
     "  - La opcion '--walker-skip' aun no permite excluir archivos solo carpetas.
@@ -36,12 +48,12 @@ if !g:is_neovim
     "  > Solo incluir archivos '-t f' o '--type f'
     "  > Incluir los archivos ocultos '-H' o '--hidden'
     "  > Excluir de la busqueda '-E' o '--exclue'
-    "    > La carpetas de git                        : '.git' 
+    "    > La carpetas de git                        : '.git'
     "    > Paquetes ('binario' del Node.JS) locales  : 'node_modules'
     "    > Archivo de Swap o temporales de VIM       : '.swp'
     "    > Archivo de 'persistence undo' de VIM      : '.un~'
     let $FZF_DEFAULT_COMMAND="fd -H -t f -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
-    
+
     "Layout de FZF, define el tamaño y posicion del popup, usando la variable global 'g:fzf_layout'
     if g:use_tmux
     	"Si se usa TMUX, usar el 'tmux popup', definiendo el valor de la opcion '--tmux'
@@ -58,17 +70,17 @@ if !g:is_neovim
         " - 'relative' : boolean (default v:false)
         " - 'border'   : Border style (default is 'rounded')
         "                Values : rounded, sharp, horizontal, vertical, top, bottom, left, right
-        " - 'highlight': Comment, Identifier 
+        " - 'highlight': Comment, Identifier
         let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.99, 'height': 0.8 } }
         "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
         "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.99, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'border': 'rounded' } }
-    
+
     endif
-    
+
     "Soporte a color 24 bits (RGB)
     "Permite traducir color 'ANSI 256 color' (muchos de los temas de VIM usa este tipo de color) a su equivalente a 24 bits (RGB)
     let g:fzf_force_24_bit_colors = 1
-    
+
     "Color de FZF, usando la variable global 'g:fzf_colors'.
     "La variable global define la opcion '--color' de FZF.
     "Los campos a definir se usaran:
@@ -103,7 +115,7 @@ if !g:is_neovim
       \ 'marker':     ['fg', 'Keyword'],
       \ 'spinner':    ['fg', 'Label'],
       \ 'header':     ['fg', 'Comment'] }
-   
+
 
     "let g:fzf_vim.tags_command = 'ctags -R'
 
@@ -123,7 +135,7 @@ if !g:is_neovim
 
     "Listar, Selexionar/Examinar e Ir al buffer
     nnoremap <silent> <leader>bb :Buffers<CR>
-    
+
     "Busqueda de archivos del proyecto usando busqueda difuso 'ripgrep'.
     nnoremap <silent> <leader>ff :Rg<CR>
 
@@ -134,12 +146,12 @@ if !g:is_neovim
     "   y carpetas de exclusiion.
 
     "Listar todos los tags del proyecto. (Si no se encuenta el archivo tags, lo genera usando 'ctags -R')
-    nnoremap <silent> <leader>tt :Tags<CR>
+    nnoremap <silent> <leader>tw :Tags<CR>
 
     "Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
-    nnoremap <silent> <leader>tb :BTags<CR>
-    
-    
+    nnoremap <silent> <leader>tt :BTags<CR>
+
+
 endif
 
 
@@ -151,25 +163,25 @@ endif
 if (g:os_type != 0)
 
     if g:use_tmux
-    
+
         "Package UI> Crear paneles TMUX desde VIM
         packadd vimux
-    
+
         "The percent of the screen the split pane Vimux will spawn should take up.
         "let g:VimuxHeight = "20"
-        
+
         "The default orientation of the split tmux pane. This tells tmux to make the pane either vertically or
         "horizontally, which is backward from how Vim handles creating splits.
         "   'v': vertical
         "   'h': horizontal
         "let g:VimuxOrientation = "h"
-        
+
         "Abrir el panel tmux (por defecto es horizontal).
         nnoremap <Leader>to :VimuxOpenRunner<CR>
-        
+
         "Cerrar el panel tmux (por defecto es horizontal).
         nnoremap <Leader>tq :VimuxCloseRunner<CR>
-        
+
         "Ir al panel tmux, ingresar al modo copia del panel tmux.
         " > Inicie la selección usando 'v' o [SPACE]
         " > Despues de la selección, copie el texto al buffer de tmux y el portapeles (del SO de la terminal) usando
@@ -178,13 +190,13 @@ if (g:os_type != 0)
         "   los atajos del sistema operativo donde ejecuta el terminal.
         " > Para pegar/mostrar en el flujo de salida estandar, usando el comando 'tmux show-buffer'.
         nnoremap <Leader>t[ :VimuxInspectRunner<CR>
-        
+
         "Ir al panel tmux, maximizando el panel (para restaurar/maximizar nuevamente el panel use 'CTRL + B, z')
         nnoremap <Leader>tz :VimuxZoomRunner<CR>
-        
+
         "Ejecutar comando un comando (sin ir/salir de panel de VIM):
         nnoremap <Leader>tp :VimuxPromptCommand<CR>
-        
+
         "Ejecutar comando espaciales (sin ir/salir de panel de VIM):
         " > Ejecutar el ultimo comando.
         nnoremap <Leader>tl :VimuxRunLastCommand<CR>
@@ -194,7 +206,7 @@ if (g:os_type != 0)
         "
         " > Limpiar la terminal (clear).
         nnoremap <Leader>tc :VimuxClearTerminalScreen<CR>
-        
+
     endif
 
     "Paquete UI> Permite navegar entre split VIM y hacia paneles TMUX.
@@ -204,8 +216,8 @@ if (g:os_type != 0)
     "teclas en VIM.
     "
     "Los default keybinding se mantiene:
-    "  > En VIM  'CTRL + w, ...' 
-    "  > En TMUX 'CTRL + b, ...' 
+    "  > En VIM  'CTRL + w, ...'
+    "  > En TMUX 'CTRL + b, ...'
     "
     "Los keybinding defenidos por este mantiene:
     "  > <CTRL-h> => Left
@@ -217,5 +229,3 @@ if (g:os_type != 0)
     packadd vim-tmux-navigator
 
 endif
-
-
