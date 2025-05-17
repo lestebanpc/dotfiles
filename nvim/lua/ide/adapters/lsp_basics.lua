@@ -86,15 +86,14 @@ end
 -- URL         : https://github.com/rust-lang/rust-analyzer
 -- Docs        : https://rust-analyzer.github.io/book/configuration.html
 -- Install     : Descargar el binario
+-- Validate    : cargo --version
+--               cargo clippy --version
 --
 use_adapter = vim.g.use_lsp_adapters['rust']
 adapter_name = 'rust_analyzer'
 
 if use_adapter ~= nil and use_adapter == true then
 
-    -- TODO: Incluir
-    -- Formateador: rustfmt
-    -- Linter: Clippy
     vim.lsp.config(adapter_name, {
 
         settings = {
@@ -105,19 +104,27 @@ if use_adapter ~= nil and use_adapter == true then
                     runBuildScripts = true,
                 },
 
+                -- Habilitar codelens
+                lens = {
+                    enable = true,
+                },
+
+                -- Adicionar el Linting de clippy al guardar.
+                checkOnSave = true,
+
                 diagnostics = {
-                    enable = false;
+                    enable = true,
                 },
 
                 -- Habilita macros de procedimiento.
-                procMacro = {
-                    enable = true,
-                    ignored = {
-                        ["async-trait"] = { "async_trait" },
-                        ["napi-derive"] = { "napi" },
-                        ["async-recursion"] = { "async_recursion" },
-                    },
-                },
+                --procMacro = {
+                --    enable = true,
+                --    ignored = {
+                --        ["async-trait"] = { "async_trait" },
+                --        ["napi-derive"] = { "napi" },
+                --        ["async-recursion"] = { "async_recursion" },
+                --    },
+                --},
             },
         },
 
@@ -164,26 +171,32 @@ if use_adapter ~= nil and use_adapter == true then
                     --useany = true,
                 },
                 staticcheck = true,
-                --gofumpt = true,
-                --usePlaceholders = true,
-                --completeUnimported = true,
-                --codelenses = {
-                --    generate = true,
-                --    gc_details = true,
-                --    test = true,
-                --    tidy = true,
-                --    upgrade_dependency = true,
-                --    vendor = true,
-                --},
-                --hints = {
-                --    assignVariableTypes = true,
-                --    compositeLiteralFields = true,
-                --    compositeLiteralTypes = true,
-                --    constantValues = true,
-                --    functionTypeParameters = true,
-                --    parameterNames = true,
-                --    rangeVariableTypes = true,
-                --},
+                gofumpt = true,
+                usePlaceholders = true,
+                completeUnimported = true,
+                codelenses = {
+                    -- permite el CodeLens para `go generate`
+                    generate = true,
+                    -- muestra detalles de GC en el CodeLens
+                    gc_details = true,
+                    -- CodeLens para correr tests
+                    test = true,
+                    -- CodeLens para `go mod tidy`
+                    tidy = true,
+                    -- para `go get -u`
+                    upgrade_dependency = true,
+                    -- `go mod vendor`
+                    vendor = true,
+                },
+                hints = {
+                    assignVariableTypes = true,
+                    compositeLiteralFields = true,
+                    compositeLiteralTypes = true,
+                    constantValues = true,
+                    functionTypeParameters = true,
+                    parameterNames = true,
+                    rangeVariableTypes = true,
+                },
             },
         },
     })

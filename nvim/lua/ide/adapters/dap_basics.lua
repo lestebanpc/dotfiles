@@ -33,7 +33,7 @@ local dap_server_path = ""
 
 --
 -- DAP Server : El adapador DAP 'cppdbg' de Microsoft para VSCode
---              El Linux, el adapador funciona con GDB y LLDB.
+--              El Linux, el adapador funciona con GDB y LLDB (prioridad GBD).
 --              En MacOS, el adapador funciona con LLDB.
 --              El Windows, el adapador funciona con los debugger LLDB y MSVC (require licencia).
 -- URL        : https://github.com/Microsoft/vscode-cpptools

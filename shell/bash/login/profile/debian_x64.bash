@@ -72,7 +72,7 @@ fi
 
 
 #-----------------------------------------------------------------------------------
-# Variables globales obtenidos del archivo de configuración '~/_config.bash' 
+# Variables globales obtenidos del archivo de configuración '~/_config.bash'
 #-----------------------------------------------------------------------------------
 
 # Obtener los parametros del archivos de configuración
@@ -98,8 +98,10 @@ if [ -z "$g_prompt_theme" ] || [ ! -f "$g_prompt_theme" ]; then
     g_prompt_theme=~/${g_repo_name}/etc/oh-my-posh/default_settings.json
 fi
 
-#Usado por mi archivo de configuración de Tmux
+#Usado por archivo de configuración de programas como TMUX, VIM, NeoVIM y CoC.
 export MY_REPO_PATH="$HOME/$g_repo_name"
+export MY_PRGS_PATH="$g_programs_path"
+
 
 #-----------------------------------------------------------------------------------
 # Variable de entorno> PATH y de otros programas
@@ -166,7 +168,7 @@ fi
 # CTags
 [ -d "${g_programs_path}/ctags" ] && PATH="${g_programs_path}/ctags/bin:$PATH"
 
-# Lua LS 
+# Lua LS
 [ -d "${g_programs_path}/lsp_servers/luals/bin" ] && PATH="${g_programs_path}/lsp_servers/luals/bin:$PATH"
 
 # CNI Plugin> Ruta por defecto de los binarios de CNI plugin (no se usara, se usara su archivo de configuración nerdctl.tom)
@@ -187,7 +189,7 @@ export FZF_COMPLETION_DIR_OPTS="--walker=dir,hidden,follow"
 export FZF_DEFAULT_OPTS="--height=80% --tmux=center,100%,80%
     --layout=reverse --walker-skip=.git,node_modules
     --info=inline --border
-    --color=bg+:#293739,bg:#1B1D1E,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"
+    --color=bg+:#293739,bg:#0F0F0F,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"
 #export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --walker-skip=.git,node_modules --info=inline --border --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"
 
 export FZF_CTRL_R_OPTS="--prompt 'History> '
@@ -230,7 +232,7 @@ export EDITOR=vim
 export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {2} | head -n 300' --preview-window=down,70%"
 eval "$(zoxide init bash)"
 
-# MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC 
+# MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC
 export MPD_HOST=/run/mpd/socket
 
 # Editor por defecto para "systemctl edit"
@@ -252,5 +254,3 @@ alias step-jwt='step crypto jwt'
 
 # Funciones basicas
 source ~/${g_repo_name}/shell/bash/login/profile/custom_profile_modules.bash
-
-

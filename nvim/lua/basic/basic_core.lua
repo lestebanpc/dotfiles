@@ -35,7 +35,7 @@ if vim.g.main_theme == 'catppuccin' then
             cmp = true,
             dap = true,
             dap_ui = true,
-            --coc_nvim = true,
+            coc_nvim = vim.g.use_coc,
         },
     })
 

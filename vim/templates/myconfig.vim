@@ -105,7 +105,10 @@
 
 
 " Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.
-" Su valor por defecto es : '/var/opt/tools'
+" Su valor se calculara, segun prioridad, usando:
+"  > Valor definido en la variable de entorno 'MY_PRGS_PATH' (siempre que defina un valor).
+"  > Si no define un valor, se usara la ruta indicada en esta variable global vim 'g:programs_base_path'.
+"  > Si no se define una variable o es vacia, se usara el valor por defecto es : '/var/opt/tools'.
 " Dentro de esta ruta se debe encontrar (entre otros) los subfolderes:
 "   > Ruta base donde estan los LSP Server            : './lsp_servers/'
 "   > Ruta base donde estan los DAP Server            : './dap_servers/'
@@ -117,12 +120,14 @@
 
 
 " Adaptadores LSP en modo IDE Vim/NeoVim cuando se usa CoC :
-"  > csharp      : Para C#. Usa el servidor 'Omnisharp LS'.
-"  >             : Los demas adaptadores son gestionados por CoC (como extension o en su
-"                  archivo de configuración)
+"  > omnisharp_vim : Para C#. Usa el servidor 'Omnisharp LS' pero usando el plugin 'omnisharp_vim'.
+"                    El plugin de omnisharp-vim requiere de un motor de autocompletado y uno de los
+"                    motor de completado compatible es CoC.
+"  >               : Los demas adaptadores son gestionados por CoC (como extension o en su
+"                    archivo de configuración)
 " Comente/descomente, establezca el valor de las lineas deseadas.
 "let g:use_lsp_adapters = {
-"\   'csharp'     : v:true,
+"\   'omnisharp_vim'     : v:true,
 "\}
 
 

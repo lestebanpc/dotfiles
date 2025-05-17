@@ -62,9 +62,6 @@ if g:is_neovim
     "Plugin IDE> Librerias basicas
     packadd plenary.nvim
 
-    "Plugin IDE> Resaltador de sintexis o semantica
-    packadd nvim-treesitter
-
     "Configuracion de los plugin exclusivos
     lua require('ide.ide_utils')
 

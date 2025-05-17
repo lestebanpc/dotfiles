@@ -7,6 +7,13 @@ let s:use_adapter = v:false
 
 if g:is_neovim && !g:use_coc
 
+    "Plugin IDE> Implementacion del arbol sinstanctico de TreeSitter para NeoVim
+    packadd nvim-treesitter
+
+    "Plugin IDE> Modulos a usar del plugin 'nvim-treeSitter'
+    packadd nvim-treesitter-context
+    packadd nvim-treesitter-textobjects
+
     "Package IDE> LSP Client (nativo de NeoVim)
     packadd nvim-lspconfig
 
@@ -36,43 +43,36 @@ if g:is_neovim && !g:use_coc
     "Package IDE> Fuente CMP: Snippet tipo LuaSnip
     packadd cmp_luasnip
 
-    "Package IDE> Code Outline
-    packadd aerial.nvim
-
     "Package IDE> Lightbulb para Code Actions
     packadd nvim-lightbulb
 
+    "Package IDE> Adaptador del cliente LSP para 'Roslyn LSP' para C#
     let s:use_adapter = get(g:use_lsp_adapters, "csharp", v:false)
     if s:use_adapter == v:true
 
-        "Package IDE> Adaptador del cliente LSP para 'Roslyn LSP' para C#
         packadd roslyn.nvim
 
     endif
 
+    "Package IDE> Adaptador del cliente LSP para 'Eclipse JDTLS' para Java SE
     let s:use_adapter = get(g:use_lsp_adapters, "java", v:false)
     if s:use_adapter == v:true
 
-        "Package IDE> Adaptador del cliente LSP para 'Eclipse JDTLS' para Java SE
         packadd nvim-jdtls
 
     endif
 
-    let s:use_adapter = get(g:use_lsp_adapters, "ansible", v:false)
-    if s:use_adapter == v:true
 
-        " Package IDE> FileTypes y Syntax highlighting para Ansible
-        "packadd ansible-vim
+endif
 
-        augroup my_ft_yaml_ansible
-            autocmd!
-            autocmd BufNewFile,BufRead */playbooks/*.yml set filetype=yaml.ansible
-        augroup END
 
-    endif
+if g:is_neovim
 
-    lua require('ide.ide_basic')
+    "Package IDE> Code Outline
+    packadd aerial.nvim
 
+    "Configuración de NeoVim para development
+    lua require('ide.ide_development')
 
 endif
 
@@ -221,50 +221,6 @@ nnoremap <silent> [d <Plug>(ale_previous)
 "nnoremap <silent> <space>dd <Plug>(ale_toggle_buffer)
 
 
-
-"###################################################################################
-" IDE > UltiSnippets (Framework para snippets)
-"###################################################################################
-"
-"Los snippet son usuados en el modo edición
-"if g:has_python3 && g:use_coc
-"
-"    "Plugin IDE> UltiSnips: Motor/Framework de Snippets
-"    packadd ultisnips
-"
-"    "Expandir el snippet manualmente (siempre en modo insert):
-"    " > La mayoria de los 'Completion', cuando se acepta un item de tipo snippet, automaticamente
-"    "   el snippet se expande.
-"    " > Cuando se tiene un texto, al apreta <C-s>, se busca el primer snippets que coincide,
-"    "   si se encuentra, se expande.
-"    let g:UltiSnipsExpandTrigger="<C-s>"
-"
-"    "Navegar por cada fragmento del snippet expandido (en el modo insert y/o select):
-"    " > Algunos fragmentos pasan desde el modo 'Insert' al modo 'Select' selecionando el fragmento
-"    "   (similar al modo visual, pero la seleccion es remplazada automaticamente cuando se escribre).
-"    " > Algunos fragmentos se mantiene en el modo 'Insert'.
-"    "
-"    "Ir al siguiente fragmento del Snippets ('f' de 'follow'). En el modo insert.
-"    let g:UltiSnipsJumpForwardTrigger="<C-f>"
-"    "
-"    "Ir al siguiente fragmento del Snippets ('b' de 'before'). En el modo insert.
-"    let g:UltiSnipsJumpBackwardTrigger="<C-b>"
-"
-"    "Tipo de split para navegar al editar los snippets :UltiSnipsEdit
-"    let g:UltiSnipsEditSplit="vertical"
-"
-"    "Listar los snippets existentes para el 'filetype'.
-"    let g:UltiSnipsListSnippets="<space>sn"
-"
-"
-"
-"    "Plugin IDE> UltiSnips: Implementacion de Snippet para diferentes lenguajes de programacion
-"    packadd vim-snippets
-"
-"endif
-
-
-
 "###################################################################################
 " IDE > CoC (Conquer Of Completion)
 "###################################################################################
@@ -290,7 +246,8 @@ endif
 " URL : https://github.com/liuchengxu/vista.vim
 "
 
-if g:use_coc
+"if g:use_coc
+if !g:is_neovim
 
     packadd vista.vim
 
@@ -321,23 +278,84 @@ if g:use_coc
 
 endif
 
+
 "###################################################################################
 " IDE> C#>  Cliente LSP de Roslyn para C#
 "###################################################################################
 "
 
-"Adaptadores de Lenguajes personalizados: C# (OmniSharp)
-"Implementa :
+" Adaptadores de Lenguajes personalizados: C# (OmniSharp)
+" Implementa :
 "   - LSO cliente para LSP server Roslyn
 "   - Source para ALE linting (Linter para C#)
 "   - Source de autocompletado para Coc (y otros motores de autocompletado
 "   - Source para UltiSnippets
+let s:use_adapter = v:false
+
 if g:use_coc
 
-    let s:use_adapter = get(g:use_lsp_adapters, "csharp", v:false)
+    let s:use_adapter = get(g:use_lsp_adapters, "omnisharp_vim", v:false)
     if s:use_adapter == v:true
+
+        " IDE > UltiSnippets (Framework para snippets)
+        if g:has_python3
+
+            "Plugin IDE> UltiSnips: Motor/Framework de Snippets
+            packadd ultisnips
+
+            "1. Los keymapping se definiran solo para el buffer asociado a c#.
+
+            " > Muestra el completado con solo snippet asociado al prompt actual. Si solo existe un snippet,
+            "   expande este automaticamente.
+            let g:UltiSnipsExpandTrigger="<Nop>"
+            "let g:UltiSnipsExpandTrigger="<C-s>"
+
+            "2. Navegar por cada nodo del snippet (placeholder modificable del snippet):
+
+            " > Permite ir al siguiente nodo del snippets ('f' de 'follow').
+            " > Reinicar la navegación de un snippet desde un nodo seleccionado.
+            let g:UltiSnipsJumpForwardTrigger="<Nop>"
+            "let g:UltiSnipsJumpForwardTrigger="<C-f>"
+
+            " > Permite ir al anterior nodo del snippets ('b' de 'before').
+            let g:UltiSnipsJumpBackwardTrigger="<Nop>"
+            "let g:UltiSnipsJumpBackwardTrigger="<C-b>"
+
+            "3. Tipo de split para navegar al editar los snippets :UltiSnipsEdit
+            let g:UltiSnipsEditSplit="vertical"
+            "let g:UltiSnipsEditSplit="vertical"
+
+            "4. Listar los snippets existentes para el 'filetype'.
+            let g:UltiSnipsListSnippets="<Nop>"
+            "let g:UltiSnipsListSnippets="<space>sn"
+
+
+        endif
+
+        " Iniciar la configuracion del plugin
         runtime setting/ide/adapters/lsp_cs.vim
+
     endif
+
+endif
+
+
+"###################################################################################
+" IDE> Snippet usados por framework de snippets
+"###################################################################################
+"
+" > Solo es usado por los frameworks (ambos framework requieren python para funcionar):
+"   > coc-snippets (si usa CoC, use o no VIM/NeoVim) y
+"   > UtilSnips (si usa CoC y el plugin 'omnisharp-vim', use o no VIM/NeoVim).
+"     El plugin de omnisharp-vim requiere de un motor de autocompletado y uno de los compatables es CoC.
+" > No es usado por el framework LuaSnip en NeoVim sin CoC (este usa 'friendly-snippets').
+"
+
+" Habilitar los snippets para ser usuados por lo framework snippet de VIM ()
+if g:has_python3 && g:use_coc
+
+    "Plugin IDE> UltiSnips: Implementacion de Snippet para diferentes lenguajes de programacion
+    packadd vim-snippets
 
 endif
 
@@ -347,15 +365,8 @@ endif
 "###################################################################################
 "
 
-if g:use_coc
-
-    " Package IDE> FileTypes y Syntax highlighting para Ansible
-    "packadd ansible-vim
-
-    augroup my_ft_yaml_ansible
-        autocmd!
-        autocmd BufNewFile,BufRead */playbooks/*.yml set filetype=yaml.ansible
-    augroup END
-
-
-endif
+" Configurar el FileTypes y Syntax highlighting para Ansible
+augroup my_ft_yaml_ansible
+    autocmd!
+    autocmd BufNewFile,BufRead */playbooks/*.yml set filetype=yaml.ansible
+augroup END

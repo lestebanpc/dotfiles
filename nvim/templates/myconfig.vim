@@ -106,7 +106,10 @@
 
 
 " Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.
-" Su valor por defecto es : '/var/opt/tools'
+" Su valor se calculara, segun prioridad, usando:
+"  > Valor definido en la variable de entorno 'MY_PRGS_PATH' (siempre que defina un valor).
+"  > Si no define un valor, se usara la ruta indicada en esta variable global vim 'g:programs_base_path'.
+"  > Si no se define una variable o es vacia, se usara el valor por defecto es : '/var/opt/tools'.
 " Dentro de esta ruta se debe encontrar (entre otros) los subfolderes:
 "   > Ruta base donde estan los LSP Server            : './lsp_servers/'
 "   > Ruta base donde estan los DAP Server            : './dap_servers/'
@@ -118,46 +121,49 @@
 
 
 " Adaptadores LSP en modo IDE Vim/NeoVim cuando se usa CoC :
-"  > csharp      : Para C#. Usa el servidor 'Omnisharp LS'.
-"  >             : Los demas adaptadores son gestionados por CoC (como extension o en su
-"                  archivo de configuración)
+"  > omnisharp_vim : Para C#. Usa el servidor 'Omnisharp LS' pero usando el plugin 'omnisharp_vim'.
+"                    El plugin de omnisharp-vim requiere de un motor de autocompletado y uno de los
+"                    motor de completado compatible es CoC.
+"  >               : Los demas adaptadores son gestionados por CoC (como extension o en su
+"                    archivo de configuración)
 " Adaptadores LSP en modo IDE NeoVim cuando se usa el cliente LSP nativo :
-"  > cpp         : Para C++. Usa el servidor 'Clangd'.
-"  > rust        : Para Rust. Usa el servidor 'Rust Analyzer'.
-"  > golang      : Para GoLang. Usa el servidor 'GoPls'.
-"  > csharp      : Para C#. Usa el servidor 'Roslyn LS'. Tiene mayor prioridad que 'omnisharp'.
-"  > omnisharp   : Para C#. Usa el servidor 'Omnisharp LS'.
-"  > java        : Para Java. Usa el servidor 'Eclipse JDT LS'.
-"                  El mismo servidor tambien es un servidor DAP.
-"  > swift       : Para Swift.
-"  > kotlin      : Para Kotlin.
-"  > python      : Para Python. Usa el servidor 'BasedPyRight'. Tiene mas prioridad que 'PyRight'.
-"  > pyright     : Para Python. Usa el servidor 'PyRight'.
-"  > typescript  : Para Javascript/Typescript. Usa 'Typescript LS' un adapador de 'TsServer'
-"  > lua         : Para Lua. Usa el LSP 'Lua LS'.
-"  > viml        : Para VimScript. Usa el LSP 'Vim LS'.
-"  > bash        : Para Bash. Usa de 'Bash LS '.
-"  > ansible     : Para Ansible. Usa de 'Ansible LS' (requiere Python, Ansible y Ansible-Lint).
-"  > markdown    : Para archivo Markdown.
+"  > cpp           : Para C++. Usa el servidor 'Clangd'.
+"  > rust          : Para Rust. Usa el servidor 'Rust Analyzer'.
+"  > golang        : Para GoLang. Usa el servidor 'GoPls'.
+"  > csharp        : Para C#. Usa el servidor 'Roslyn LS'. Tiene mayor prioridad que 'omnisharp'.
+"  > omnisharp     : Para C#. Usa el servidor 'Omnisharp LS'. Tiene mayor prioridad que 'omnisharp_vim'.
+"  > java          : Para Java. Usa el servidor 'Eclipse JDT LS'.
+"                    El mismo servidor tambien es un servidor DAP.
+"  > swift         : Para Swift.
+"  > kotlin        : Para Kotlin.
+"  > python        : Para Python. Usa el servidor 'BasedPyRight'. Tiene mas prioridad que 'PyRight'.
+"  > pyright       : Para Python. Usa el servidor 'PyRight'.
+"  > typescript    : Para Javascript/Typescript. Usa 'Typescript LS' un adapador de 'TsServer'
+"  > lua           : Para Lua. Usa el LSP 'Lua LS'.
+"  > viml          : Para VimScript. Usa el LSP 'Vim LS'.
+"  > bash          : Para Bash. Usa de 'Bash LS'
+"  > ansible       : Para Ansible. Usa de 'Ansible LS' (requiere Python, Ansible y Ansible-Lint).
+"  > markdown      : Para archivo Markdown.
 " Solo aplica si NO usa CoC. CoC estas configuracion se realiza usualmente por extensiones.
 " Comente/descomente, establezca el valor de las lineas deseadas.
 "let g:use_lsp_adapters = {
-"\   'cpp'        : v:true,
-"\   'rust'       : v:true,
-"\   'golang'     : v:true,
-"\   'csharp'     : v:true,
-"\   'omnisharp'  : v:true,
-"\   'java'       : v:true,
-"\   'swift'      : v:true,
-"\   'kotlin'     : v:true,
-"\   'python'     : v:true,
-"\   'pyright'    : v:true,
-"\   'typescript' : v:true,
-"\   'lua'        : v:true,
-"\   'viml'       : v:true,
-"\   'bash'       : v:true,
-"\   'ansible'    : v:true,
-"\   'markdown'   : v:true,
+"\   'cpp'           : v:true,
+"\   'rust'          : v:true,
+"\   'golang'        : v:true,
+"\   'csharp'        : v:true,
+"\   'omnisharp'     : v:true,
+"\   'omnisharp_vim' : v:true,
+"\   'java'          : v:true,
+"\   'swift'         : v:true,
+"\   'kotlin'        : v:true,
+"\   'python'        : v:true,
+"\   'pyright'       : v:true,
+"\   'typescript'    : v:true,
+"\   'lua'           : v:true,
+"\   'viml'          : v:true,
+"\   'bash'          : v:true,
+"\   'ansible'       : v:true,
+"\   'markdown'      : v:true,
 "\}
 
 

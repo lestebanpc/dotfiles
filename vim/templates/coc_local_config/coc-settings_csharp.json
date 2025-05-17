@@ -1,0 +1,16 @@
+{
+  "languageserver": {
+    "omnisharp": {
+      "command": "${env:MY_PRGS_PATH}/lsp_servers/omnisharp_ls/OmniSharp",
+      "args": [
+        "-z",
+        "DotNet:enablePackageRestore=false",
+        "--encoding",
+        "utf-8",
+        "--languageserver"
+      ],
+      "filetypes": ["cs"],
+      "rootPatterns": ["*.csproj", "*.sln"]
+    }
+  }
+}

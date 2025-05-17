@@ -4961,6 +4961,7 @@ function _copy_artifact_files() {
     #3. Copiar loa archivos del artefactos segun el prefijo
     local l_status=0
     local l_aux=''
+    local l_runner_is_program_owner=1
 
     case "$p_repo_id" in
 
@@ -7426,6 +7427,21 @@ function _copy_artifact_files() {
 
             #Mover la extension en su carpeta
             move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/ms_cpptools"
+
+            #Estableciendo el permiso de ejecución del dap adapter
+            printf 'Se establecera permiso de ejecucion del archivo "%b%s%b" de la carpeta "%b%s%b" ...\n' "$g_color_gray1" "OpenDebugAD7"  \
+                   "$g_color_reset" "$g_color_gray1" "${g_programs_path}/vsc_extensions/ms_cpptools/debugAdapters/bin" "$g_color_reset"
+
+            l_runner_is_program_owner=1
+            if [ $(( g_prg_path_options & 1 )) -eq 1 ]; then
+                l_runner_is_program_owner=0
+            fi
+
+            if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
+                chmod +x "${g_programs_path}/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7"
+            else
+                sudo chmod +x "${g_programs_path}/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7"
+            fi
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
             save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0

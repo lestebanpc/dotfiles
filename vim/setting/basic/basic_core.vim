@@ -79,7 +79,7 @@ if g:is_neovim
     packadd nvim-tree.lua
 
     "Inicializar los plugins UI
-    lua require('ui.ui_basic')
+    lua require('basic.basic_core')
 
     "No continuar
     finish

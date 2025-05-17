@@ -227,24 +227,34 @@ let g:use_ai_plugins = get(g:, 'use_ai_plugins', v:false)
 
 
 " Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.
+" Su valor se calculara, segun prioridad, usando:
+"  > Valor definido en la variable de entorno 'MY_PRGS_PATH' (siempre que defina un valor).
+"  > Si no define un valor, se usara la ruta indicada en esta variable global vim 'g:programs_base_path'.
+"  > Si no se define una variable o es vacia, se usara el valor por defecto es : '/var/opt/tools'
 " Su valor por defecto es : '/var/opt/tools'
 " Dentro de esta ruta se debe encontrar (entre otros) los subfolderes:
 "   > Ruta base donde estan los LSP Server            : './lsp_servers/'
 "   > Ruta base donde estan los DAP Server            : './dap_servers/'
 "   > Ruta base donde estan las extensiones de vscode : './vsc_extensions/'
 " Estableciendo el valor por defecto si no se define antes.
-let g:programs_base_path = get(g:, 'programs_base_path', '/var/opt/tools')
+if $MY_PRGS_PATH != ''
+    let g:programs_base_path = $MY_PRGS_PATH
+elseif !exists("g:programs_base_path")
+    let g:programs_base_path = "/var/opt/tools"
+endif
 
 
 " Adaptadores LSP en modo IDE Vim/NeoVim cuando se usa CoC :
-"  > csharp      : Para C#. Usa el servidor 'Omnisharp LS'.
-"  >             : Los demas adaptadores son gestionados por CoC (como extension o en su
-"                  archivo de configuración)
+"  > omnisharp_vim : Para C#. Usa el servidor 'Omnisharp LS' pero usando el plugin 'omnisharp_vim'.
+"                    El plugin de omnisharp-vim requiere de un motor de autocompletado y uno de los
+"                    motor de completado compatible es CoC.
+"  >               : Los demas adaptadores son gestionados por CoC (como extension o en su
+"                    archivo de configuración)
 " CoC configura sus cliente LSP usuando por extensiones o su archivo de configuración.
 " Estableciendo el valor por defecto si no se define antes.
 if !exists("g:use_lsp_adapters") || empty(g:use_lsp_adapters)
     let g:use_lsp_adapters = {
-    \   'csharp'     : v:true,
+    \   'omnisharp_vim'     : v:false,
     \}
 endif
 
@@ -259,7 +269,7 @@ let g:use_dap_adapters = {}
 "#########################################################################################################
 
 " Establecer opciones VIM, variables de uso interno, keymapping basicos (clipboard, etc).
-runtime setting/setting_basic.vim
+runtime setting/setting_core.vim
 
 
 "#########################################################################################################
@@ -267,10 +277,10 @@ runtime setting/setting_basic.vim
 "#########################################################################################################
 
 " StatusLine, TabLine, TMUX, ...
-runtime setting/ui/ui_basic.vim
+runtime setting/basic/basic_core.vim
 
 " Utilitarios basicos: FZF, NERDTree, ...
-runtime setting/ui/ui_extended.vim
+runtime setting/basic/basic_extended.vim
 
 
 "#########################################################################################################
@@ -281,23 +291,54 @@ if !g:use_ide
     finish
 endif
 
-" Setting Typing del IDE:
+" Librerias utiles del IDE:
+" > Librerias para ejecuciones asincronas.
+" > Plugin para mejorar el typing code.
 runtime setting/ide/ide_utils.vim
 
-" Setting IDE Core (Diagnostic, LSP client, Completition, ...)
-" En VIM se define:
-"   - Cliente LSP y Adaptadores de estos, Completition, Otros: CoC.nvim
+" Setting IDE Core (LSP client, Completition, Diagnostic, etc.)
+" > Solo en VIM, se define:
+"   - Code Outline (esquema de codigo del buffer): 'vista.vim'.
+"     Se integra con LSP cliente de CoC y con CTags.
+" > En VIM o NeoVIM con CoC, se define:
+"   - Cliente LSP, Completition, Otros: CoC.nvim
+"   - Los servidores LSP y/o adaptadores LSP usualmente se realiza instalando una extension CoC.
 "   - Diagnostico (Linting, Fixing) y Formatting code: ALE
-"   - Snippets: UltiSnippets
-"   - Plugins con Clientes LSP personalizados
+"   - Snippets: La extension 'coc-Snippets' y la fuente de snippets 'vim-snippets'.
+"   - Plugins con Clientes LSP personalizados.
 "     Por ejemplo: adaptador LSP para C# (OmniSharp)
-runtime setting/ide/ide_basic.vim
+" > En NeoVIM sin CoC, se define:
+"   - Cliente LSP : Se usara el API nativo 'vim.lsp' y 'nvim-lspconfig' para facilitar su configuración.
+"   - Los servidores LSP y/o adaptadores LSP se desacargarn manualmente (usando un script bash).
+"   - Completition : se usara 'nvim-cmp' y plugins para sus diversas fuentes de autocompletado.
+"   - Diagnostico (Linting, Fixing) y Formatting code: ALE (el cual usa el API de diagnostico nativo).
+"   - Snippets: 'LuaSnippet' y la fuente de snippets 'friendly-snippets'.
+"   - Plugins que configuran clientes LSP y/o su adapador y ofrecen mas capacidades:
+"     Por ejemplo: nvim-jdtls para Java.
+" > En NeoVIM (use o no use CoC), se define:
+"   - Code Outline (esquema de codigo del buffer): 'aerial.nvim'.
+"     Aunque no se podra integrar al cliente LSP creado por CoC, se integrara al arbol AST creado por treesitter.
+"   - Treesitter como un analizador del arbol sinstanctico de codigo (AST) el cual permite:
+"     - Resaltado de sintaxis de codigo (highlighting)
+"     - Navegar y selecionar objetos del arbol AST.
+"     - Indentación automática mejorada.
+"     - Incremental selection (seleccionar nodos de sintaxis con combinaciones de teclas).
+"     - Folding basado en estructura sintáctica.
+"     - Text objects basados en sintaxis real.
+runtime setting/ide/ide_development.vim
 
-" Capacidades de debugging code del IDE
-" En VIM se define Vimspector, el cual incluye:
+" Capacidades de testing (incluyendo debugging) del IDE
+" > Para Debugging en VIM, se usan 'vimspector', el cual incluye:
 "   - Cliente DAP y adaptadores de varios debugger con soporte parcial a DAP.
 "   - UI para debugging
-runtime setting/ide/ide_debugger.vim
+" > Para Debugging en NeoVIM, se usara 'nvim-dap' y 'nvim-dapui'
+" > Para 'Unit testing' en VIM se usara 'vim-test' (facilita la ejecucion desde vim)
+" > Para 'Unit testing' en NeoVIM se usara 'nvim-neotest' el cual permite:
+"   - Facilita la ejecucion desde NeoVIM.
+"   - Muestra reportes de la ejecucion e indicadores del estado en buffer de las pruebas ejecutadas.
+runtime setting/ide/ide_testing.vim
 
-" Capacidades adicionales de IDE (IA Chat, AI Agent, etc.)
+" Capacidades adicionales de IDE
+" > IA Chat
+" > AI Agent
 runtime setting/ide/ide_extended.vim

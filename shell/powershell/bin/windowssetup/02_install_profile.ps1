@@ -6,10 +6,11 @@ $g_max_length_line= 130
 
 # Repositorios GIT donde estan los plugins VIM
 # Valores:
-#   (1) Perfil Basic - Tema
-#   (2) Perfil Basic - UI
-#   (3) Perfil Developer - Typing
-#   (4) Perfil Developer - IDE
+#   (1) Perfil Editor - Tema
+#   (2) Perfil Editor - StatusLine, TabLine, FZF, TMUX utilities, Files Tree, etc.
+#   (3) Perfil IDE    - Utilities (Libreries, Typing utilities)
+#   (4) Perfil IDE    - Development
+#   (4) Perfil IDE    - Testing (Unit Testing y Debugging)
 $gd_repos_type= @{
         'morhetz/gruvbox'= 1
         'joshdick/onedark.vim'= 1
@@ -27,10 +28,11 @@ $gd_repos_type= @{
         'mattn/emmet-vim'= 3
         'dense-analysis/ale'= 4
         'neoclide/coc.nvim'= 4
+        'antoinemadec/coc-fzf'= 4
+        'liuchengxu/vista.vim'= 4
+        'SirVer/ultisnips' = 4
         'OmniSharp/omnisharp-vim'= 4
-        'SirVer/ultisnips'= 4
         'honza/vim-snippets'= 4
-        'ludovicchabant/vim-gutentags'=4
         'puremourning/vimspector'= 4
         'folke/tokyonight.nvim'= 1
         'catppuccin/nvim'= 1
@@ -41,7 +43,8 @@ $gd_repos_type= @{
         'nvim-telescope/telescope.nvim'= 2
         'nvim-tree/nvim-tree.lua'= 2
         'nvim-treesitter/nvim-treesitter'= 4
-        'jose-elias-alvarez/null-ls.nvim'= 4
+        'nvim-treesitter/nvim-treesitter-textobjects'= 4
+        'nvim-treesitter/nvim-treesitter-context'= 4
         'neovim/nvim-lspconfig'= 4
         'hrsh7th/nvim-cmp'= 4
         'ray-x/lsp_signature.nvim'= 4
@@ -51,13 +54,15 @@ $gd_repos_type= @{
         'L3MON4D3/LuaSnip'= 4
         'rafamadriz/friendly-snippets'= 4
         'saadparwaiz1/cmp_luasnip'= 4
+        'stevearc/aerial.nvim'= 4
         'kosayoda/nvim-lightbulb'= 4
         'mfussenegger/nvim-dap'= 4
-        'nvim-neotest/nvim-nio'=4
+        'nvim-neotest/nvim-nio'= 4
         'theHamsta/nvim-dap-virtual-text'= 4
         'rcarriga/nvim-dap-ui'= 4
-        'seblyng/roslyn.nvim'=4
-        'mfussenegger/nvim-jdtls'=4
+        'seblyng/roslyn.nvim'= 4
+        'mfussenegger/nvim-jdtls'= 4
+        'vim-test/vim-test'= 4
         'github/copilot.vim'= 4
         'stevearc/dressing.nvim'= 4
         'MunifTanjim/nui.nvim'= 4
@@ -76,6 +81,7 @@ $gd_repos_scope= @{
         'vim-airline/vim-airline-themes'= 1
         'ryanoasis/vim-devicons'= 1
         'preservim/nerdtree'= 1
+        'liuchengxu/vista.vim'=1
         'folke/tokyonight.nvim'= 2
         'kyazdani42/nvim-web-devicons'= 2
         'nvim-lualine/lualine.nvim'= 2
@@ -83,9 +89,11 @@ $gd_repos_scope= @{
         'nvim-lua/plenary.nvim'= 2
         'nvim-telescope/telescope.nvim'= 2
         'nvim-tree/nvim-tree.lua'= 2
+        'stevearc/aerial.nvim'= 2
         'nvim-treesitter/nvim-treesitter'= 2
+        'nvim-treesitter/nvim-treesitter-textobjects'= 2
+        'nvim-treesitter/nvim-treesitter-context'= 2
         'ibhagwan/fzf-lua'= 2
-        'jose-elias-alvarez/null-ls.nvim'= 2
         'neovim/nvim-lspconfig'= 2
         'hrsh7th/nvim-cmp'= 2
         'ray-x/lsp_signature.nvim'= 2

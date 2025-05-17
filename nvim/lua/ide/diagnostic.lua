@@ -23,6 +23,10 @@ vim.diagnostic.config({
             [vim.diagnostic.severity.INFO] = '»',
         },
     },
+
+    -- Soporte a los virtual lines (NeoVim >= 0.11)
+    -- https://gpanders.com/blog/whats-new-in-neovim-0-11/#virtual-lines
+    virtual_lines = true,
 })
 
 --02. Autocomando (evento) cuando se ingresa al modo insert y se sale del modo insert)
@@ -40,7 +44,7 @@ vim.api.nvim_create_autocmd('ModeChanged', {
 })
 
 --------------------------------------------------------------------------------------------------
--- Diagnostic> 
+-- Diagnostic>
 --------------------------------------------------------------------------------------------------
 
 local codes = {
@@ -134,7 +138,7 @@ vim.diagnostic.config({
 
     --Mostrar un "signo" en la línea donde hay un diagnóstico presente.
     signs = true,
-    
+
     --Subrayar la localización de un diagnóstico.
     underline = true,
 
@@ -152,7 +156,7 @@ vim.diagnostic.config({
         --prefix = '',
         --format = function(diagnostic)
         --    local code = diagnostic.user_data.lsp.code
-        --    
+        --
         --    if not diagnostic.source or not code then
         --        return string.format('%s', diagnostic.message)
         --    end
@@ -239,9 +243,7 @@ require('nvim-lightbulb').setup({
     }
 })
 
---2. Mostrar el Lightbulb cuando ocurre el evento (autocomando): el prompt esta en la palabra 
+--2. Mostrar el Lightbulb cuando ocurre el evento (autocomando): el prompt esta en la palabra
 --   cuando existe un 'Code Action'
 --TODO se configura para todos los 'file type', se puede especificar solo para algunos lenguajes?
 vim.cmd [[autocmd CursorHold,CursorHoldI * lua require('nvim-lightbulb').update_lightbulb()]]
-
-

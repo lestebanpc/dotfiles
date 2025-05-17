@@ -17,7 +17,7 @@ packadd omnisharp-vim
 "
 "Roslyn Server (LSP Server para C#)
 " - (1) 'Stdio Version' (default, es la versión recomendada).
-" - ( ) 'HTTP Version'  (versión antigua)  
+" - ( ) 'HTTP Version'  (versión antigua)
 "let g:OmniSharp_server_stdio = 1
 
 " > 'OmniSharp_translate_cygwin_wsl' se usa en WSL. Si es '1' implica :
@@ -50,7 +50,7 @@ endif
 let g:OmniSharp_server_use_net6 = 1
 
 "###################################################################################
-" OmniSharp-Vim> Popup 'Preview', 'Documentation' y 'Signature-Help' 
+" OmniSharp-Vim> Popup 'Preview', 'Documentation' y 'Signature-Help'
 "###################################################################################
 "
 "
@@ -82,7 +82,7 @@ endif
 
 "Personalizar los key mappings en modo 'popup' (las  que se usaran cuando aparezca un popup). Las teclas
 "usadas en este modo son diferentes a los definidos en el modo edición/.. por lo que puede usarlos sin
-"afectar a las teclas definidas en este modo. 
+"afectar a las teclas definidas en este modo.
 "Los identificadores y los valores por defecto son:
 "  > 'close'        : 'gq'
 "  > 'pageDown'     : '<C-f>'
@@ -105,7 +105,7 @@ let g:OmniSharp_popup_mappings = {
 " OmniSharp-Vim> Diagnostico y Highlighting
 "###################################################################################
 "
-"When using ALE for displaying diagnostics, OmniSharp-vim can listen for diagnostics sent 
+"When using ALE for displaying diagnostics, OmniSharp-vim can listen for diagnostics sent
 "asynchronously by the OmniSharp-roslyn server, and continue to update ALE as these are received.
 "  0> Do not listen for diagnostics.
 "  1> Listen to the first diagnostic received for each buffer.
@@ -146,7 +146,7 @@ let g:OmniSharp_highlight_groups = {
 " OmniSharp-Vim> Integración con otras componenetes externas
 "###################################################################################
 "
-"Por defecto para selección y/o busqueda se usa el panel vim llamado 'QuickFix' (no es un popup, 
+"Por defecto para selección y/o busqueda se usa el panel vim llamado 'QuickFix' (no es un popup,
 "como por ejemplo un popup basado en fzf). El panel vim se puede cerrar selecionado el panel y
 "usando el comando ':close'.
 "A diferencia de popup, ese va al lugar y no cierra el panel automaticamente, por lo cual puede
@@ -154,7 +154,7 @@ let g:OmniSharp_highlight_groups = {
 "let g:OmniSharp_open_quickfix = 1
 
 "Especificar la herramienta que se usara como selector alternativo a 'QuickFix'.
-"Si 'fzf', se mostrará dentro de un popup, por lo que tiene key-mappings independiente de los 
+"Si 'fzf', se mostrará dentro de un popup, por lo que tiene key-mappings independiente de los
 "otros modos y para salir puede usar '<ESC>'.
 let g:OmniSharp_selector_ui = 'fzf'
 
@@ -181,7 +181,7 @@ let g:OmniSharp_coc_snippet = 0
 let g:OmniSharp_completion_without_overloads = 1
 
 "###################################################################################
-" OmniSharp-Vim> Otros 
+" OmniSharp-Vim> Otros
 "###################################################################################
 "
 "Normalizar el path de los archivos enviados por LSP server, para usar la convención de vim
@@ -198,7 +198,7 @@ let g:OmniSharp_lookup_metadata = 1
 "Si desde mostrar en un popup preview establesca en 1
 "let g:OmniSharp_typeLookupInPreview = 0
 
-"Obtener y mostrar la documentación completa del servidor LSP cuando se lista los item del completado. 
+"Obtener y mostrar la documentación completa del servidor LSP cuando se lista los item del completado.
 "Por temas de performance, solo se pide la documentación completa cuando se seleciona un simbolo
 "determinado (un tipo o metodo).
 "let g:omnicomplete_fetch_full_documentation = 1
@@ -244,5 +244,3 @@ function! s:CBReturnCount(bufnr, line, count) abort
     \ 'file=' . bufname(a:bufnr)
   endif
 endfunction
-
-

@@ -16,7 +16,7 @@ if g:is_neovim
     "Package IDE> DAP> Mejora de UI para nVim-DAP
     packadd nvim-dap-virtual-text
 
-    lua require('ide.ide_debugger')
+    lua require('ide.ide_testing')
 
     "Solo continuar si se usa Vim
     finish

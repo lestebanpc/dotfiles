@@ -163,10 +163,11 @@ declare -r g_version_none='0.0.0'
 
 # Repositorios GIT donde estan los plugins VIM
 # Valores:
-#   (1) Perfil Basic - Tema
-#   (2) Perfil Basic - UI y otros
-#   (3) Perfil Developer - Typing
-#   (4) Perfil Developer - IDE
+#   (1) Perfil Editor - Tema
+#   (2) Perfil Editor - StatusLine, TabLine, FZF, TMUX utilities, Files Tree, etc.
+#   (3) Perfil IDE    - Utilities (Libreries, Typing utilities)
+#   (4) Perfil IDE    - Development
+#   (4) Perfil IDE    - Testing (Unit Testing y Debugging)
 declare -A gA_repos_type=(
         ['morhetz/gruvbox']=1
         ['joshdick/onedark.vim']=1
@@ -186,8 +187,8 @@ declare -A gA_repos_type=(
         ['neoclide/coc.nvim']=4
         ['antoinemadec/coc-fzf']=4
         ['liuchengxu/vista.vim']=4
+        ['SirVer/ultisnips']=4
         ['OmniSharp/omnisharp-vim']=4
-        #['SirVer/ultisnips']=4
         ['honza/vim-snippets']=4
         ['puremourning/vimspector']=4
         ['folke/tokyonight.nvim']=1
@@ -198,7 +199,8 @@ declare -A gA_repos_type=(
         ['nvim-lua/plenary.nvim']=2
         ['nvim-tree/nvim-tree.lua']=2
         ['nvim-treesitter/nvim-treesitter']=4
-        ['jose-elias-alvarez/null-ls.nvim']=4
+        ['nvim-treesitter/nvim-treesitter-textobjects']=4
+        ['nvim-treesitter/nvim-treesitter-context']=4
         ['neovim/nvim-lspconfig']=4
         ['hrsh7th/nvim-cmp']=4
         ['ray-x/lsp_signature.nvim']=4
@@ -215,6 +217,7 @@ declare -A gA_repos_type=(
         ['rcarriga/nvim-dap-ui']=4
         ['seblyng/roslyn.nvim']=4
         ['mfussenegger/nvim-jdtls']=4
+        ['vim-test/vim-test']=4
         ['nvim-neotest/nvim-nio']=4
         ['github/copilot.vim']=4
         ['stevearc/dressing.nvim']=4
@@ -234,6 +237,7 @@ declare -A gA_repos_scope=(
         ['vim-airline/vim-airline-themes']=1
         ['ryanoasis/vim-devicons']=1
         ['preservim/nerdtree']=1
+        ['liuchengxu/vista.vim']=1
         ['folke/tokyonight.nvim']=2
         ['catppuccin/nvim']=2
         ['kyazdani42/nvim-web-devicons']=2
@@ -242,8 +246,10 @@ declare -A gA_repos_scope=(
         ['akinsho/bufferline.nvim']=2
         ['nvim-lua/plenary.nvim']=2
         ['nvim-tree/nvim-tree.lua']=2
+        ['stevearc/aerial.nvim']=2
         ['nvim-treesitter/nvim-treesitter']=2
-        ['jose-elias-alvarez/null-ls.nvim']=2
+        ['nvim-treesitter/nvim-treesitter-textobjects']=2
+        ['nvim-treesitter/nvim-treesitter-context']=2
         ['neovim/nvim-lspconfig']=2
         ['hrsh7th/nvim-cmp']=2
         ['ray-x/lsp_signature.nvim']=2
@@ -253,7 +259,6 @@ declare -A gA_repos_scope=(
         ['L3MON4D3/LuaSnip']=2
         ['rafamadriz/friendly-snippets']=2
         ['saadparwaiz1/cmp_luasnip']=2
-        ['stevearc/aerial.nvim']=2
         ['kosayoda/nvim-lightbulb']=2
         ['mfussenegger/nvim-dap']=2
         ['theHamsta/nvim-dap-virtual-text']=2
@@ -696,36 +701,8 @@ function _config_developer_vim() {
          printf '    %b:TSInstall java kotlin llvm lua rust swift c cpp go c_sharp%b\n' \
                 "$g_color_yellow1" "$g_color_reset"
 
-    #    #Requiere un compilador C/C++ y NodeJS: https://tree-sitter.github.io/tree-sitter/creating-parsers#installation
-    #    local l_version=$(_get_gcc_version)
-    #    if [ ! -z "$l_version" ]; then
-    #        printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall html latex css javascript jq json yaml xml toml typescript proto make sql bash%b"\n' \
-    #               "$g_color_gray1" "$g_color_reset"
-    #        nvim --headless -c 'TSInstall html latex css javascript jq json yaml xml toml typescript proto make sql bash' -c 'qa'
-
-    #        printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall java kotlin llvm lua rust swift c cpp go c_sharp%b"\n' \
-    #               "$g_color_gray1" "$g_color_reset"
-    #        nvim --headless -c 'TSInstall java kotlin llvm lua rust swift c cpp go c_sharp' -c 'qa'
-    #    fi
     fi
 
-    #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
-    printf '  Instalando extensiones de CoC (Adaptador de LSP server basicos) "%b:CocInstall coc-tsserver coc-json coc-html coc-css coc-pyright coc-sh%b"\n' \
-           "$g_color_gray1" "$g_color_reset"
-    if [ $p_is_neovim -ne 0  ]; then
-        vim -esc 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyright coc-sh' -c 'qa'
-    else
-        USE_COC=1 nvim --headless -c 'CocInstall coc-tsserver coc-json coc-html coc-css coc-pyright coc-sh' -c 'qa'
-    fi
-
-    #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
-    printf '  Instalando extensiones de CoC (Motor de snippets "UtilSnips") "%b:CocInstall coc-ultisnips%b" (%bno se esta usando el nativo de CoC%b)\n' \
-           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    if [ $p_is_neovim -ne 0  ]; then
-        vim -esc 'CocInstall coc-ultisnips' -c 'qa'
-    else
-        USE_COC=1 nvim --headless -c 'CocInstall coc-ultisnips' -c 'qa'
-    fi
 
     #Actualizar las extensiones de CoC
     printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_gray1" "$g_color_reset"

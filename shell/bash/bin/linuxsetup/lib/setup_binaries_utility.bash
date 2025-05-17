@@ -7,7 +7,7 @@
 g_usage() {
 
     printf 'Usage:\n'
-    printf '  > %bDesintalar repositorios mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset" 
+    printf '  > %bDesintalar repositorios mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash uninstall\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash uninstall TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
@@ -78,7 +78,7 @@ g_usage() {
 #       > 4 si es un .tar.xz
 #Parametros de salida
 #   > Valor de retorno: 0 si es exitoso
-#   > STDOUT          : Nombre del archivo sin extension  
+#   > STDOUT          : Nombre del archivo sin extension
 function get_filename_withoutextension() {
 
     local p_compressed_filename="$1"
@@ -164,7 +164,7 @@ function _dotnet_get_subversions()
             l_versions="${l_aux} ${l_versions}"
         fi
 
-    done 
+    done
 
     if [ -z "$l_versions" ]; then
         return 1
@@ -304,7 +304,7 @@ function create_folderpath_on_program() {
     if [ -z "$p_folderpath_maynot_exist" ]; then
         return 0
     fi
-        
+
     #4. Creando los folderes del ruta que no puede existir
     local IFS='/'
     la_foldernames=($p_folderpath_maynot_exist)
@@ -335,7 +335,7 @@ function create_folderpath_on_program() {
         fi
 
         #Si no existe crearlo con los permisos deseados:
-        l_folder_created=$((l_folder_created + 1)) 
+        l_folder_created=$((l_folder_created + 1))
         printf 'Creando la carpeta "%b%s%b"...\n' "$g_color_gray1" "${l_folder_path}" \
                "$g_color_reset"
 
@@ -348,7 +348,7 @@ function create_folderpath_on_program() {
 
                 mkdir -pm 755 "$l_folder_path"
 
-                #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+                #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
                 if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
                     chown "${g_targethome_owner}:${g_targethome_group}" "${l_folder_path}"
                 fi
@@ -385,7 +385,7 @@ function create_folderpath_on_program() {
 #     1 - Eliminar todos los archivos existentes antes del copiado
 #     2 - Eliminar todo el subfolder y crearlo nuevamente antes del copiado
 #     3 - Renombrar la carpeta con el nombre indicado en el paremetro 5
-#  4> Solo si el parametro 4 es 3. Sufijo adicionar a la nombre del subfolder existenten 
+#  4> Solo si el parametro 4 es 3. Sufijo adicionar a la nombre del subfolder existenten
 #Parametros de salida > Valor de retorno:
 #  0 - OK
 #  1 - No OK
@@ -429,9 +429,9 @@ function create_or_clean_folder_on_program()
     if [ ! -d "$l_target_path" ]; then
         create_folderpath_on_program $p_is_lnx_prgs "" "$p_program_subfolder"
         l_status=$?
-        
+
         if [ l_status -ne 0 ]; then
-            printf 'Error: %bno se ha podido crear con exito la ruta retativa "%b%s%b" del folder del programa%b.\n' "$g_color_red1" \ 
+            printf 'Error: %bno se ha podido crear con exito la ruta retativa "%b%s%b" del folder del programa%b.\n' "$g_color_red1" \
                    "$g_color_gray1" "$p_program_subfolder" "$g_color_red1" "$g_color_reset"
             return 1
         fi
@@ -464,8 +464,8 @@ function create_or_clean_folder_on_program()
                 printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
                        "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
                        "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
-               
-                #return 1 
+
+                #return 1
 
                 printf 'Eliminado todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
                 rm -rf ${l_target_path}/
@@ -520,8 +520,8 @@ function create_or_clean_folder_on_program()
                 printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
                        "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
                        "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
-               
-                #return 1 
+
+                #return 1
 
                 printf 'Eliminado todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
                 rm -rf ${l_target_path}/
@@ -541,7 +541,7 @@ function create_or_clean_folder_on_program()
         fi
 
         return 0
-    
+
     fi
 
     #3.3 Si el usuario runner solo puede realizar la instalación usando sudo para root.
@@ -567,8 +567,8 @@ function create_or_clean_folder_on_program()
             printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
                    "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
                    "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
-           
-            #return 1 
+
+            #return 1
 
             printf 'Eliminado todo el folder "%b%s%b" y crearlo nuevamente y vacio...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
             sudo rm -rf ${l_target_path}/
@@ -674,8 +674,8 @@ function clean_folder_on_program()
                 printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
                        "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
                        "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
-               
-                #return 1 
+
+                #return 1
 
                 printf 'Eliminado todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
                 rm -rf ${l_target_path}/
@@ -718,8 +718,8 @@ function clean_folder_on_program()
                 printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
                        "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
                        "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
-               
-                #return 1 
+
+                #return 1
 
                 printf 'Eliminado todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
                 rm -rf ${l_target_path}/
@@ -733,7 +733,7 @@ function clean_folder_on_program()
         fi
 
         return 0
-    
+
     fi
 
     #3.3 Si el usuario runner solo puede realizar la instalación usando sudo para root.
@@ -754,8 +754,8 @@ function clean_folder_on_program()
             printf 'Error: %bse intenta renombrar el folder %b"%b%s%b"%b pero el folder %b"%b%s%b"%b ya existe%b.\n' "$g_color_red1" "$g_color_reset" \
                    "$g_color_gray1" "$l_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
                    "$g_color_gray1" "${l_target_path}${p_sufix_subfolder}" "$g_color_reset" "$g_color_red1" "$g_color_reset"
-           
-            #return 1 
+
+            #return 1
 
             printf 'Eliminado todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
             sudo rm -rf ${l_target_path}/
@@ -778,7 +778,7 @@ function clean_folder_on_program()
 #Copia un binario en la ruta de un programa.
 #Parametros de entrada> Argumentos:
 #  01> Source path, relativo al folder temporal, donde esta el archivo a copiar.
-#  02> Source filename: 
+#  02> Source filename:
 #      - Si parametro '05' es '1', representa el nombre del archivo binario a copiar.
 #      - Si parametro '05' es '0', representa el parte inical del los archivo binario a copiar.
 #  03> Tipo de ruta target donde se movera el contenido:
@@ -854,7 +854,7 @@ function copy_binary_on_program()
             chmod +x "${p_target_path}/${p_source_filename}"
         fi
 
-        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
             if [ $p_use_pattern -eq 0 ]; then
                 chown "${g_targethome_owner}:${g_targethome_group}" ${p_target_path}/${p_source_filename}*
@@ -864,13 +864,13 @@ function copy_binary_on_program()
         fi
 
         return 0
-    
+
     fi
 
     #B. Si el usuario runner solo puede realizar la instalación usando sudo para root.
     #   - Este escenario solo puede ser: el runner es el usuario objetivo y el owner del folder de los programas es root.
 
-    
+
     #Copiar los archivos
     printf 'Copiando el archivo "%b%s%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "${p_source_path}/${p_source_filename}" \
            "$g_color_reset" "$g_color_gray1" "${p_target_path}/" "$g_color_reset"
@@ -890,7 +890,8 @@ function copy_binary_on_program()
 
 
 
-#Copia un binario en la ruta de un programa.
+
+#Copia archivos de ayuda desde la ruta de un programa.
 #Parametros de entrada> Argumentos:
 #  01> Source path donde esta el archivo de ayuda a copiar.
 #  02> Tipo de ayuda a copiar
@@ -928,7 +929,7 @@ function copy_man_files()
             printf 'Creando el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
             mkdir -pm 755 "${l_target_path}"
 
-            #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+            #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
             if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_command_owner -eq 0 ]; then
                 chown "${g_targethome_owner}:${g_targethome_group}" "${l_target_path}"
             fi
@@ -941,14 +942,14 @@ function copy_man_files()
                "${l_target_path}/" "$g_color_reset"
                find "$p_source_path" \( -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" \) -exec cp {} "$l_target_path/" \;
 
-        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_command_owner -eq 0 ]; then
             find "$p_target_path" \( -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" \) ! -user "$g_targethome_owner" \
                  -exec chown "${g_targethome_owner}:${g_targethome_group}" {} \:
         fi
 
         return 0
-    
+
     fi
 
     #4. Si el usuario runner solo puede realizar la instalación usando sudo para root.
@@ -963,7 +964,7 @@ function copy_man_files()
 
     fi
 
-    
+
     #Copiar los archivos
     printf 'Copiando los archivos "%b%s/*.%s%b" y/o "%b%s/*.%s.gz%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "$p_source_path" \
            "$p_man_type" "$g_color_reset" "$g_color_gray1" "$p_source_path" "$p_man_type" "$g_color_reset" "$g_color_gray1" \
@@ -1051,7 +1052,7 @@ function copy_font_files()
             printf 'Creando el folder "%b%s%b" para las fuentes...\n' "$g_color_gray1" "$p_target_path" "$g_color_reset"
             mkdir -pm 755 "${p_target_path}"
 
-            #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+            #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
             if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_command_owner -eq 0 ]; then
                 chown "${g_targethome_owner}:${g_targethome_group}" "${p_target_path}"
             fi
@@ -1068,7 +1069,7 @@ function copy_font_files()
         chmod g+r,o+r ${p_target_path}/*
 
 
-        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_command_owner -eq 0 ]; then
             chown "${g_targethome_owner}:${g_targethome_group}" "${p_target_path}"
         fi
@@ -1080,7 +1081,7 @@ function copy_font_files()
         fi
 
         return 0
-    
+
     fi
 
     #3.2. Si el usuario runner solo puede realizar la instalación usando sudo para root.
@@ -1120,7 +1121,7 @@ function copy_font_files()
 #Copia un binario en la ruta de un comando linux.
 #Parametros de entrada> Argumentos:
 #  01> Source path, relativo al folder temporal, donde esta el archivo a copiar.
-#  02> Source filename: 
+#  02> Source filename:
 #      - Si parametro '04' es '1', representa el nombre del archivo binario a copiar.
 #      - Si parametro '04' es '0', representa el parte inical del los archivo binario a copiar.
 #  03> Tipo de ruta target donde se movera el contenido (comandos):
@@ -1182,7 +1183,7 @@ function copy_binary_on_command()
     #     - Si el runner es el owner de la carpeta de comandos (el cual a su vez, es usuario objetivo).
     if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_command_owner -eq 0 ]; then
 
-        
+
         #Copiar los archivos
         printf 'Copiando el archivo "%b%s%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "${p_source_path}/${p_source_filename}" \
                "$g_color_reset" "$g_color_gray1" "${l_target_path}/" "$g_color_reset"
@@ -1195,7 +1196,7 @@ function copy_binary_on_command()
             chmod +x "${g_bin_cmdpath}/${p_source_filename}"
         fi
 
-        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ]; then
             if [ $p_use_pattern -eq 0 ]; then
                 chown "${g_targethome_owner}:${g_targethome_group}" ${l_target_path}/${p_source_filename}*
@@ -1286,7 +1287,7 @@ function create_binarylink_to_command()
                "$g_color_reset" "$g_color_gray1" "${l_target_path}/${p_target_filename}" "$g_color_reset"
         ln -snf "${p_source_path}/${p_source_filename}" "${l_target_path}/${p_target_filename}"
 
-        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ]; then
             chown -h "${g_targethome_owner}:${g_targethome_group}" "${l_target_path}/${p_target_filename}"
         fi
@@ -1312,7 +1313,7 @@ function create_binarylink_to_command()
            "$g_color_reset" "$g_color_gray1" "${l_target_path}/${p_target_filename}" "$g_color_reset"
     sudo ln -snf "${p_source_path}/${p_source_filename}" "${l_target_path}/${p_target_filename}"
 
-    #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+    #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
     if [ $g_runner_is_target_user -ne 0 ]; then
         sudo chown -h "${g_targethome_owner}:${g_targethome_group}" "${l_target_path}/${p_target_filename}"
     fi
@@ -1387,7 +1388,7 @@ function create_folderlink_on_program() {
 
                 ln -snf "${p_source_path}/" "$l_target_fulllink"
 
-                #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+                #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
                 if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
                     chown -h "${g_trgethome_owner}:${g_targethome_group}" "${l_target_fulllink}"
                 fi
@@ -1416,7 +1417,7 @@ function create_folderlink_on_program() {
 
             ln -snf "${p_source_path}/" "$l_target_fulllink"
 
-            #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+            #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
             if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
                 chown -h "${g_targethome_owner}:${g_targethome_group}" "${l_target_fulllink}"
             fi
@@ -1481,7 +1482,7 @@ function save_prettyversion_on_program()
         #Almacenando la info del programa/comando
         printf 'Almacenando la version "%b%s%b" instalada/actualizada en el archivo "%b%s%b" ...\n' "$g_color_gray1" "${p_pretty_version}" \
                "$g_color_reset" "$g_color_gray1" "${p_target_path}/${p_target_filename}" "$g_color_reset"
-        
+
         echo "${p_pretty_version}" > "${p_target_path}/${p_target_filename}"
         #chmod +r "${p_target_path}/${p_target_filename}"
 
@@ -1504,11 +1505,11 @@ function save_prettyversion_on_program()
         #Almacenando la info del programa/comando
         printf 'Almacenando la version "%b%s%b" instalada/actualizada en el archivo "%b%s%b" ...\n' "$g_color_gray1" "${p_pretty_version}" \
                "$g_color_reset" "$g_color_gray1" "${p_target_path}/${p_target_filename}" "$g_color_reset"
-        
+
         echo "${p_pretty_version}" > "${p_target_path}/${p_target_filename}"
         chmod +r "${p_target_path}/${p_target_filename}"
 
-        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
             chown "${g_targethome_owner}:${g_targethome_group}" "${p_target_path}/${p_target_filename}"
         fi
@@ -1522,7 +1523,7 @@ function save_prettyversion_on_program()
     #Almacenando la info del programa/comando
     printf 'Almacenando la version "%b%s%b" instalada/actualizada en el archivo "%b%s%b" ...\n' "$g_color_gray1" "${p_pretty_version}" \
            "$g_color_reset" "$g_color_gray1" "${p_target_path}/${p_target_filename}" "$g_color_reset"
-    
+
     sudo sh -c "echo ${p_pretty_version} > ${p_target_path}/${p_target_filename}"
     sudo chmod +r "${p_target_path}/${p_target_filename}"
 
@@ -1586,14 +1587,14 @@ function move_tempfoldercontent_on_program()
     #   - Si el runner es root en modo de suplantacion del usuario objetivo.
     #   - Si el runner es el owner de la carpeta de programas (el cual a su vez, es usuario objetivo).
     if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
-            
+
         #Mover todos objetos del cotenido del primer nivel
         printf 'Moviendo el contenido del source folder "%b%s%b" al target folder "%b%s%b" ...\n' "$g_color_gray1" "${p_source_path}" \
                "$g_color_reset" "$g_color_gray1" "${p_target_path}" "$g_color_reset"
 
         find "${p_source_path}" -maxdepth 1 -mindepth 1 $p_find_options -exec mv '{}' ${p_target_path} \;
 
-        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
              chown -R "${g_targethome_owner}:${g_targethome_group}" "${p_target_path}"
         fi
@@ -1602,11 +1603,11 @@ function move_tempfoldercontent_on_program()
 
     fi
 
- 
+
     #4. Si el usuario runner solo puede realizar la instalación usando sudo para root.
     #   - Este escenario solo puede ser: el runner es el usuario objetivo y el owner del folder de los programas es root.
 
-        
+
     #Mover todos objetos del cotenido del primer nivel
     printf 'Moviendo el contenido del source folder "%b%s%b" al target folder "%b%s%b" ...\n' "$g_color_gray1" "${p_source_path}" \
            "$g_color_reset" "$g_color_gray1" "${p_target_path}" "$g_color_reset"
@@ -1671,14 +1672,14 @@ function move_tempfolder_on_program()
     #   - Si el runner es root en modo de suplantacion del usuario objetivo.
     #   - Si el runner es el owner de la carpeta de programas (el cual a su vez, es usuario objetivo).
     if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
-            
+
         #Mover el folder
         printf 'Moviendo el source folder "%b%s%b", ubicado en "%b%s%b", al target folder "%b%s%b" ...\n' "$g_color_gray1" "${p_source_foldername}" \
                "$g_color_reset" "$g_color_gray1" "${p_source_path}" "$g_color_reset" "$g_color_gray1" "${p_target_path}" "$g_color_reset"
         mv ${p_source_path}/${p_source_foldername}/ ${p_target_path}/
 
 
-        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
              chown -R "${g_targethome_owner}:${g_targethome_group}" "${p_target_path}/${p_source_foldername}"
         fi
@@ -1687,11 +1688,11 @@ function move_tempfolder_on_program()
 
     fi
 
- 
+
     #4. Si el usuario runner solo puede realizar la instalación usando sudo para root.
     #   - Este escenario solo puede ser: el runner es el usuario objetivo y el owner del folder de los programas es root.
 
-        
+
     #Mover el folder
     printf 'Moviendo el source folder "%b%s%b", ubicado en "%b%s%b", al target folder "%b%s%b" ...\n' "$g_color_gray1" "${p_source_foldername}" \
            "$g_color_reset" "$g_color_gray1" "${p_source_path}" "$g_color_reset" "$g_color_gray1" "${p_target_path}" "$g_color_reset"
@@ -1728,7 +1729,7 @@ download_artifact_on_temp() {
     printf '\nArtefacto "%b" a descargar - Name    : %s\n' "$p_artifact_tag" "${p_target_filename}"
     printf 'Artefacto "%b" a descargar - URL     : %s\n' "$p_artifact_tag" "${p_artifact_url}"
 
-    
+
     #Descargar la artefacto
     mkdir -p "$p_target_path"
 
@@ -1757,7 +1758,7 @@ download_artifact_on_temp() {
 #       > 3 si es un .tgz
 #       > 4 si es un .tar.xz
 # 4> Target path (ruta donde se desea descomprimir el archivo)
-# 5> Flag '0' si se usa sudo. Por defecto es 1 (no se usa sudo) 
+# 5> Flag '0' si se usa sudo. Por defecto es 1 (no se usa sudo)
 #Parametros de salida:
 #   > Valor de retorno: 0 si es exitoso
 _uncompress_file() {
@@ -1893,8 +1894,8 @@ _uncompress_file() {
 #  7> Prefijo (parte inicial) del nombre de subfolder autogenerado por la descomprención y la cual se desea renombrar.
 #     Solo es necesario cuando el comprimido genera un subfolder y se desea renombrarlo con este nombre.
 #Parametros de salida
-#   > Valor de retorno: 
-#      0 si es exitoso, 
+#   > Valor de retorno:
+#      0 si es exitoso,
 #      1 si hubo un erorr.
 uncompress_on_folder() {
 
@@ -1940,7 +1941,7 @@ uncompress_on_folder() {
 
         printf 'Error: %bLa carpeta %b"%b%s%b"%b donde se descomprimira %b"%b%s%b"%b no existe%b.\n' \
                "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$p_target_path" "$g_color_reset" "$g_color_red1" "$g_color_reset" \
-               "$g_color_gray1" "$p_source_filename" "$g_color_reset" "$g_color_red1" "$g_color_reset" 
+               "$g_color_gray1" "$p_source_filename" "$g_color_reset" "$g_color_red1" "$g_color_reset"
         return 1
     fi
 
@@ -2005,7 +2006,7 @@ uncompress_on_folder() {
     fi
 
 
-    #3. Si el destino es el programa de Linux 
+    #3. Si el destino es el programa de Linux
     local l_runner_is_program_owner=1
     if [ $(( g_prg_path_options & 1 )) -eq 1 ]; then
         l_runner_is_program_owner=0
@@ -2016,7 +2017,7 @@ uncompress_on_folder() {
     #   - Si el runner es root en modo de suplantacion del usuario objetivo.
     #   - Si el runner es el owner de la carpeta de programas (el cual a su vez, es usuario objetivo).
     if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
-        
+
 
         #A. Descomprimir
         _uncompress_file "$p_source_path" "$p_source_filename" $p_source_filetype "$p_target_path" 1
@@ -2024,7 +2025,7 @@ uncompress_on_folder() {
         #B. Si no requiere renombrar uns subfolder generado
         if [ -z "$p_foldername" ]; then
 
-            #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+            #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
             if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
                 chown -R "${g_targethome_owner}:${g_targethome_group}" "${p_target_path}"
             fi
@@ -2074,7 +2075,7 @@ uncompress_on_folder() {
 
         fi
 
-        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
             chown -R "${g_targethome_owner}:${g_targethome_group}" "${p_target_path}/${p_foldername}"
         fi
@@ -2083,7 +2084,7 @@ uncompress_on_folder() {
 
     fi
 
- 
+
     #4. Si el usuario runner solo puede realizar la instalación usando sudo para root.
     #   - Este escenario solo puede ser: el runner es el usuario objetivo y el owner del folder de los programas es root.
 
@@ -2170,12 +2171,12 @@ syncronize_folders() {
     #Requiere que 'rsync' este instalado
     if ! rsync --version 2> /dev/null 1>&2; then
         printf 'El %bcomando "%brsync%b" no esta instalado%b. Este comando es requerido para la actualización instalación del repositorio.\n' \
-               "$g_color_red1" "$g_color_reset" "$g_color_red1" "$g_color_reset" 
+               "$g_color_red1" "$g_color_reset" "$g_color_red1" "$g_color_reset"
         return 1
     fi
 
     printf 'Sincronizar el source "%b%s%b" con el target "%b%s%b"...\n' \
-           "$g_color_gray1" "$p_source_path" "$g_color_reset" "$g_color_gray1" "$p_target_path" "$g_color_reset" 
+           "$g_color_gray1" "$p_source_path" "$g_color_reset" "$g_color_gray1" "$p_target_path" "$g_color_reset"
 
     #2. Si el destino es una caepeta del temporal o de programa de Windows (no verificar los permisos)
     local l_aux=''
@@ -2192,7 +2193,7 @@ syncronize_folders() {
     fi
 
 
-    #3. Si el destino es el programa de Linux 
+    #3. Si el destino es el programa de Linux
     local l_runner_is_program_owner=1
     if [ $(( g_prg_path_options & 1 )) -eq 1 ]; then
         l_runner_is_program_owner=0
@@ -2203,13 +2204,13 @@ syncronize_folders() {
     #   - Si el runner es root en modo de suplantacion del usuario objetivo.
     #   - Si el runner es el owner de la carpeta de programas (el cual a su vez, es usuario objetivo).
     if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
-            
+
         printf 'Ejecutando "%brsync -a --stats %s/ %s%b"...\n' "$g_color_gray1" "$p_source_path" "$p_target_path" "$g_color_reset"
         printf '%b' "$g_color_gray1"
         rsync -a --stats "${p_source_path}/" "${p_target_path}"
         printf '%b' "$g_color_reset"
-                                         
-        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
              chown -R "${g_targethome_owner}:${g_targethome_group}" "${p_target_path}"
         fi
@@ -2218,15 +2219,15 @@ syncronize_folders() {
 
     fi
 
- 
+
     #4. Si el usuario runner solo puede realizar la instalación usando sudo para root.
     #   - Este escenario solo puede ser: el runner es el usuario objetivo y el owner del folder de los programas es root.
-            
+
     printf 'Ejecutando "%bsudo rsync -a --stats %s/ %s%b"...\n' "$g_color_gray1" "$p_source_path" "$p_target_path" "$g_color_reset"
     printf '%b' "$g_color_gray1"
     sudo rsync -a --stats "${p_source_path}/" "${p_target_path}"
     printf '%b' "$g_color_reset"
-                                         
+
     return 0
 
 }
@@ -2237,7 +2238,7 @@ syncronize_folders() {
 #  1> Ruta source, relativa respecto a la temporal, donde esta el archivo comprimido.
 #  2> Nombre del script de instalacion/actualización (ubicado dentro del folder del parametro 1)
 #  3> Ruta target, relativa al folder del programa, donde se descomprime el archivo. No puede ser vacio.
-#  4> Nombre de la opcion que indica la ruta relativa con el '-' o '--'  al inicio y el '=' o ' ' al final. 
+#  4> Nombre de la opcion que indica la ruta relativa con el '-' o '--'  al inicio y el '=' o ' ' al final.
 #     Si la ruta relativa se envia como argumento y no incluye una opcion, colocar vacio.
 #     Ejemplo: '--path ', '--path=', ''
 #  5> Argumentos y opciones adicionales del script
@@ -2254,7 +2255,7 @@ exec_setupscript_to_program() {
     local p_script_targetoption="$4"
     local p_script_otheroptions="$5"
 
-    #3. Inicialización 
+    #3. Inicialización
     local l_runner_is_program_owner=1
     if [ $(( g_prg_path_options & 1 )) -eq 1 ]; then
         l_runner_is_program_owner=0
@@ -2266,7 +2267,7 @@ exec_setupscript_to_program() {
     #   - Si el runner es el owner de la carpeta de programas (el cual a su vez, es usuario objetivo).
     local l_status=0
     if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
-    
+
         if [ ! -f "${p_script_path}/${p_script_name}" ]; then
             printf 'Error en la configuración. %bNo existe el script "%s%s%b" de setup para el programa.%b\n' \
                    "$g_color_red1" "$g_color_gray1" "${p_script_path}/${p_script_name}" "$g_color_red1" "$g_color_reset"
@@ -2276,12 +2277,12 @@ exec_setupscript_to_program() {
 
         #Ejecutando el setup script
         printf 'Ejecutando el script '"'"'%b%s%b/%s %b%s"%s" %s%b'"'"'...\n' "$g_color_gray1" "$p_script_path" "$g_color_reset" "$p_script_name" \
-               "$g_color_gray1" "$p_script_targetoption" "$p_target_path" "$p_script_otheroptions" "$g_color_reset" 
+               "$g_color_gray1" "$p_script_targetoption" "$p_target_path" "$p_script_otheroptions" "$g_color_reset"
         chmod u+x "${p_script_path}/${p_script_name}"
         ${p_script_path}/${p_script_name} $p_script_targetoption"$p_target_path" $p_script_otheroptions
         l_status=$?
 
-        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo. 
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_program_owner -eq 0 ]; then
              chown -R "${g_targethome_owner}:${g_targethome_group}" "${p_target_path}"
         fi
@@ -2293,10 +2294,10 @@ exec_setupscript_to_program() {
 
     fi
 
- 
+
     #4. Si el usuario runner solo puede realizar la instalación usando sudo para root.
     #   - Este escenario solo puede ser: el runner es el usuario objetivo y el owner del folder de los programas es root.
-            
+
     if [ ! -f "${p_script_path}/${p_script_name}" ]; then
         printf 'Error en la configuración. %bNo existe el script "%s%s%b" de setup para el programa.%b\n' \
                "$g_color_red1" "$g_color_gray1" "${p_script_path}/${p_script_name}" "$g_color_red1" "$g_color_reset"
@@ -2306,11 +2307,11 @@ exec_setupscript_to_program() {
 
     #Ejecutando el setup script
     printf 'Ejecutando el script '"'"'sudo bash %b%s%b/%s %b%s"%s" %s%b'"'"'...\n' "$g_color_gray1" "$p_script_path" "$g_color_reset" "$p_script_name" \
-           "$g_color_gray1" "$p_script_targetoption" "$p_target_path" "$p_script_otheroptions" "$g_color_reset" 
+           "$g_color_gray1" "$p_script_targetoption" "$p_target_path" "$p_script_otheroptions" "$g_color_reset"
     chmod u+x "${p_script_path}/${p_script_name}"
     sudo bash ${p_script_path}/${p_script_name} $p_script_targetoption"$p_target_path" $p_script_otheroptions
     l_status=$?
-                                         
+
     if [ $l_status -ne 0 ]; then
         return 1
     fi
@@ -2321,7 +2322,7 @@ exec_setupscript_to_program() {
 
 
 #Registrara la libreria de un programa a nivel sistema si este tiene permiso y los programas estan fuera
-#del home del usuario objetivo. Caso contrario, solo mostrara una advertencia registre la ruta usando la 
+#del home del usuario objetivo. Caso contrario, solo mostrara una advertencia registre la ruta usando la
 #variable de entorno 'LD_LIBRARY_PATH'
 #Parametros de entrada> Argumentos:
 #  01> Ruta, relativa a los programas de Linux, donde esta librerias dinamicas que se desea registrar.
@@ -2343,7 +2344,7 @@ function register_dynamiclibrary_to_system()
     if [ ! -d "$p_library_path" ]; then
 
         printf '%bNo existe folder "%b%s%b" de librerias dinamica a registar.%b\n' "$g_color_red1" "$g_color_gray1" "$p_library_path" \
-               "$g_color_red1" "$g_color_reset" 
+               "$g_color_red1" "$g_color_reset"
         return 2
 
     fi
@@ -2367,19 +2368,19 @@ function register_dynamiclibrary_to_system()
     # - El sistema operativo soporta sudo y el usario ejecutor no es root y no tiene permiso para sudo.
     if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_id -ne 0 -a  $g_runner_sudo_support -eq 2 ]; then
         printf '%bNo se tiene permisos para registrar sus liberias dinamicas "%b%s%b" a nivel sistema.%b\n' "$g_color_red1" "$g_color_gray1" \
-               "$p_library_path" "$g_color_red1" "$g_color_reset" 
+               "$p_library_path" "$g_color_red1" "$g_color_reset"
         return 2
     fi
 
     if [ ! -d "/etc/ld.so.conf.d/" ]; then
         printf '%bNo se encuentra el folder "%b%s%b" requerido para registrar sus librerias a nivel sistema.%b\n' "$g_color_red1" "$g_color_gray1" \
-               "/etc/ld.so.conf.d/" "$g_color_red1" "$g_color_reset" 
+               "/etc/ld.so.conf.d/" "$g_color_red1" "$g_color_reset"
         return 2
 
     fi
 
     #Registrar la ruta de librerias en forma permanente
-    if [ $g_runner_id -eq 0 ]; then 
+    if [ $g_runner_id -eq 0 ]; then
 
         printf 'Registrar sus librerias dinamicas en forma permanente: "%becho "%s" > /etc/ld.so.conf.d/%s.conf%b" ...\n' \
                "$g_color_gray1" "${p_library_path}" "$p_config_filename" "$g_color_reset"
@@ -2394,7 +2395,7 @@ function register_dynamiclibrary_to_system()
     fi
 
     #Actualizar el cache de librerias
-    if [ $g_runner_id -eq 0 ]; then 
+    if [ $g_runner_id -eq 0 ]; then
         printf 'Actualizar el cache de las librerias: "%bldconfig%b" ...\n' "$g_color_gray1" "$g_color_reset"
         ldconfig
     else
@@ -2432,7 +2433,7 @@ function request_stop_k0s_node() {
     if [[ "$3" =~ ^[0-9]+$ ]]; then
         p_option_relative_idx=$3
     fi
-    
+
     #2. Determinar el estado actual del demonio k0s
     local l_option
     local l_status
@@ -2521,5 +2522,3 @@ function request_stop_k0s_node() {
     fi
     return 2
 }
-
-

@@ -62,6 +62,12 @@ fzf_lua.setup({
     helptags = { previewer = "help_native" },
     tags = { previewer = "bat_async" },
     btags = { previewer = "bat_async" },
+
+    lsp = {
+        code_actions = {
+            previewer = "codeaction_native",
+        },
+    },
 })
 
 

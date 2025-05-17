@@ -4,15 +4,11 @@
   "python.pythonPath": "python3",
   "rust-analyzer.server.path": "rust-analyzer",
   "powershell.integratedConsole.showOnStartup": false,
-  "languageserver": {
-    "golang": {
-      "command": "gopls",
-      "rootPatterns": ["go.work", "go.mod", ".vim/", ".git/", ".hg/"],
-      "filetypes": ["go"],
-      "initializationOptions": {
-        "usePlaceholders": true
-      }
-    }
+  "lightbulb.enableVirtualText": false,
+  "lightbulb.enableSign": true,
+  "lightbulb.text": {
+    "default": "󰌵",
+    "quickfix": "󰁨"
   },
   "suggest.completionItemKindLabels": {
     "method": " 󰆧 ",

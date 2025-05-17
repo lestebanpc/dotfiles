@@ -19,7 +19,7 @@ if g:is_neovim
     packadd fzf-lua
 
     "Configuraciones de los plugins exclusivas
-    lua require('ui.ui_extended')
+    lua require('basic.basic_extended')
 
 endif
 
@@ -168,13 +168,13 @@ if (g:os_type != 0)
         packadd vimux
 
         "The percent of the screen the split pane Vimux will spawn should take up.
-        "let g:VimuxHeight = "20"
+        "let g:VimuxHeight = '20'
 
         "The default orientation of the split tmux pane. This tells tmux to make the pane either vertically or
         "horizontally, which is backward from how Vim handles creating splits.
         "   'v': vertical
         "   'h': horizontal
-        "let g:VimuxOrientation = "h"
+        "let g:VimuxOrientation = 'h'
 
         "Abrir el panel tmux (por defecto es horizontal).
         nnoremap <Leader>to :VimuxOpenRunner<CR>
@@ -209,17 +209,17 @@ if (g:os_type != 0)
 
     endif
 
-    "Paquete UI> Permite navegar entre split VIM y hacia paneles TMUX.
+    " Paquete UI> Permite navegar entre split VIM y hacia paneles TMUX.
+    " URI : https://github.com/christoomey/vim-tmux-navigator
+    " > Pemite ir de un split VIM a un panel tmux (identifica si existe un panel TMUX, y genera comando tmux
+    "   para ir panel), pero, para ir de panel TMUX a un split VIM, requiere configurar estos keybinding en
+    "   el 'tmux.config', para reenviar las teclas en VIM.
     "
-    "Pemite ir de un split VIM a un panel tmux (identifica si existe un panel TMUX, y genera comando tmux para ir panel)
-    "Pero, para ir de panel TMUX a un split VIM, requiere configurar estos keybinding en el tmux.config, para reenviar las
-    "teclas en VIM.
-    "
-    "Los default keybinding se mantiene:
+    " Los default keybinding se mantiene:
     "  > En VIM  'CTRL + w, ...'
     "  > En TMUX 'CTRL + b, ...'
     "
-    "Los keybinding defenidos por este mantiene:
+    " Los keybinding defenidos, estan el modo normal y terminal, por este mantiene:
     "  > <CTRL-h> => Left
     "  > <CTRL-j> => Down
     "  > <CTRL-k> => Up

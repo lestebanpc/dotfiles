@@ -53,7 +53,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
         local buffer = args.buf
 
         -- ---------------------------------------------------------------------------------------------
-        -- Keymapping : Mostar informacion en un Popup
+        -- Keymapping > Mostrar informacion en un Popup
         -- ---------------------------------------------------------------------------------------------
 
         -- Muestra información sobre símbolo debajo/arriba del prompt actual
@@ -65,13 +65,12 @@ vim.api.nvim_create_autocmd('LspAttach', {
         --vim.keymap.set('i', '<C-\\>', '<cmd>lua vim.lsp.buf.signature_help()<cr>', { noremap = true, buffer = buffer, desc = '' })
 
         -- ---------------------------------------------------------------------------------------------
-        -- Keymapping : "Navigation" a un "Location" especifico
+        -- Keymapping > Code Navigation > Go to 'Location'
         -- ---------------------------------------------------------------------------------------------
-
-        -- 1. "Location" dentor del buffer
-
-
-        -- 2. "Location" basado en el simbolo actual (si existe mas de uno, muestra una lista para que selecciones uno de ellos)
+        --
+        -- Permite ir a una determinada ubicacion basado en el contexto actual (usualmente el word actual).
+        -- Si encuentra mas de una opcion, muestra una lista para que puedes seleccionarlo.
+        --
 
         -- > Ir a una definición
         vim.keymap.set('n', 'gd', '<cmd>lua require("fzf-lua").lsp_definitions()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Go to definition' })
@@ -89,12 +88,17 @@ vim.api.nvim_create_autocmd('LspAttach', {
         vim.keymap.set('n', 'gy', '<cmd>lua require("fzf-lua").lsp_typedefs()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Go to type definition' })
         --vim.keymap.set('n', 'gy', '<cmd>lua vim.lsp.buf.type_definition()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Go to type definition' })
 
-        -- > Listar referencias (incluyendo el declaraciones del simbolo)
+        -- > Ir a las referencias (incluyendo el declaraciones del simbolo)
         vim.keymap.set('n', 'gr', '<cmd>lua require("fzf-lua").lsp_references()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Go to references' })
         --vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Go to references' })
 
 
-        -- 3. Listar, Seleccionar e Ir
+        -- ---------------------------------------------------------------------------------------------
+        -- Keymapping > Code Navigation > General
+        -- ---------------------------------------------------------------------------------------------
+        --
+        -- Busca un objeto del buffer o workspace, permite listarlo y su selección para ir a su ubicacion.
+        --
 
         -- > Listar, Seleccionar e Ir a un 'symbol' en el buffer.
         vim.keymap.set('n', '<space>ss', '<cmd>lua require("fzf-lua").lsp_document_symbols()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Search buffer symbol' })
@@ -103,63 +107,100 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- > Listar, Seleccionar e Ir a un 'symbol' en el workspace.
         vim.keymap.set('n', '<space>sw', '<cmd>lua require("fzf-lua").lsp_workspace_symbols()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Search workspace symbol' })
 
-        -- > Diagnostico: Listar, Seleccionar e Ir un diagnóstico (error y/o warning) del buffer
+        -- ---------------------------------------------------------------------------------------------
+        -- Keymapping > Code Diagnostic
+        -- ---------------------------------------------------------------------------------------------
+        --
+        -- TODO: ¿Todo el diganostico de LSP nativo se envia a ALE?. ¿no es necesario estos Keymapping para listar los LSP?
+        --
+
+        -- > Listar, Seleccionar e Ir un diagnóstico (error y/o warning) del buffer
         vim.keymap.set('n', '<space>dd', '<cmd>lua require("fzf-lua").lsp_document_diagnostics()<CR>', { noremap = true, buffer = buffer, desc = 'LSP Search buffer diagnostic' })
 
-        -- > Diagnostico: Listar, Seleccionar e Ir un diagnóstico (error y/o warning) del workspace
+        -- > Listar, Seleccionar e Ir un diagnóstico (error y/o warning) del workspace
         vim.keymap.set('n', '<space>dw', '<cmd>lua require("fzf-lua").lsp_workspace_diagnostics()<CR>', { noremap = true, buffer = buffer, desc = 'LSP Search workspace diagnostic' })
         --vim.keymap.set('n', '<space>dw', '<cmd>diagnostics_workspace<CR>', { noremap = true, buffer = buffer, desc = 'LSP Search workspace diagnostic' })
 
-        -- > Diagnostico: Listar, Seleccionar e Ir a un diagnósticos de la línea actual
+        -- > Listar, Seleccionar e Ir a un diagnósticos de la línea actual
         --vim.keymap.set('n', '<space>ds', '<cmd>lua vim.diagnostic.open_float()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Search current line diagnostic' })
 
 
-        -- TODO: ¿Todo el diganostico de LSP nativo se envia a ALE?. Si es asi, no es necesario estos Keymapping:
-        --
-        -- > Diagnostico: Ir al siguiente diagnostico desde la posicion actual y dentro del buffer
-        vim.keymap.set('n', '[l', '<cmd>lua vim.diagnostic.goto_prev()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Go Previous diagnostic' })
+        -- > Ir al siguiente diagnostico desde la posicion actual y dentro del buffer
+        vim.keymap.set('n', '[2', '<cmd>lua vim.diagnostic.goto_prev()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Go Previous diagnostic' })
 
-        -- > Diagnostico: Ir a la anterior diagnostico desde la posicion actual y dentro del buffer
-        vim.keymap.set('n', ']l', '<cmd>lua vim.diagnostic.goto_next()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Go Next diagnostic' })
+        -- > Ir a la anterior diagnostico desde la posicion actual y dentro del buffer
+        vim.keymap.set('n', ']2', '<cmd>lua vim.diagnostic.goto_next()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Go Next diagnostic' })
 
 
         -- ---------------------------------------------------------------------------------------------
-        -- Keymapping : Formateo
+        -- Keymapping > Code Formatting
         -- ---------------------------------------------------------------------------------------------
 
-        -- Formateo del codigo
+        -- > Formateo del codigo
         vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.formatting()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Format buffer code' })
         --Neovim 0.7 - timeout 2 segundos
         --vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.formatting_sync(nil, 2000)<cr>', { noremap = true, buffer = buffer, desc = '' })
         --Neovim 0.8 - timeout 2 segundos
         --vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.format({ timeout_ms = 2000 })<cr>', { noremap = true, buffer = buffer, desc = '' })
 
-        -- Formateo del codigo de rango seleccionado
+        -- > Formateo del codigo de rango seleccionado
         vim.keymap.set('x', '<space>cf', '<cmd>lua vim.lsp.buf.range_formatting()<CR>', { noremap = true, buffer = buffer, desc = 'LSP Format selected range' })
 
 
         -- ---------------------------------------------------------------------------------------------
-        -- Keymapping : Workspace
+        -- Keymapping > Code Actions
         -- ---------------------------------------------------------------------------------------------
+        --
+        -- Los 'Code Actions' puede ser
+        -- > 'Code Action' asociado a objeto de codigo del documento (buffer).
+        --   > Estas puede ser :
+        --     > Refactor
+        --       Acciones de organizacion de codigo, producto de un analisis del arbol sinstanctico, que usualmente
+        --       requiere parametros ingresados por el usuario.
+        --       Ejemplos comunes:
+        --       > refactor.extract
+        --         Extraer código (por ejemplo, a una función o variable)
+        --       > refactor.inline
+        --         Reemplazar el uso de una variable o función con su contenido.
+        --       > refactor.rewrite
+        --         Reescrituras más profundas del código (como cambiar la estructura de control).
+        --     > Quick Fix
+        --       Acciones simples generados por un diagnostico de codigo que lo corrigen y no requiere parametros
+        --       ingresadas por el usuario para su ejecucion.
+        --   > El cliente LSP envía al servidor LSP el rango y este devuelve todos las acciones sobre los diferentes objetos
+        --     que están en ese rango del documento.
+        --     El rango del documento es:
+        --     > En el modo visual, es el rango visual (La acciones son sobre los diferentes objetos que estan en la
+        --       selección actual).
+        --     > En el normal, es la posición del cursor (La acciones son sobre la objeto donde esta el cursor actual).
+        -- > 'Source' que son acciones de codigo asociados a todos el documento (buffer).
+        --    Ejemplos comunes:
+        --    > source.organizeImports
+        --      Reordenar, eliminar o añadir imports automáticamente.
+        --    > source.removeUnused
+        --      Eliminar código no utilizado (variables, imports, etc.).
+        --    > source.addMissingImports
+        --      Añadir imports faltantes automáticamente.
+        --    > source.sortImports
+        --      Ordenar imports (alfabéticamente o según estilo de proyecto).
+        --
 
-        -- Acciones relacionados al 'Workspace' (proyecto)
-        vim.keymap.set('n', '<space>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', { noremap = true, buffer = buffer, desc = 'LSP Add folder to workspace' })
-        vim.keymap.set('n', '<space>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', { noremap = true, buffer = buffer, desc = 'LSP Remove folder to workspace' })
+        -- > Listar, Selecionar e Ir a 'Code Actions' disponibles en la linea actual
+        vim.keymap.set('n', '<space>aa', '<cmd>lua require("fzf-lua").lsp_code_actions()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Search Code actions' })
+        --vim.keymap.set({ 'n', 'v' }, '<space>aa', '<cmd>lua require("fzf-lua").lsp_code_actions()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Search Code actions' })
+        --vim.keymap.set('x', '<space>aa', vim.lsp.buf.code_action, { noremap = true, buffer = buffer, desc = 'LSP Search Code actions' })
 
-
-        -- ---------------------------------------------------------------------------------------------
-        -- Keymapping : Otros
-        -- ---------------------------------------------------------------------------------------------
-
-        -- 'Code Actions' > Listar, Selecionar e Ir a 'Code Actions' disponibles en la posición del cursor
-        vim.keymap.set('n', '<space>ca', '<cmd>lua require("fzf-lua").lsp_code_actions()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Search Code actions' })
-        --vim.keymap.set('n', '<space>ca', '<cmd>lua vim.lsp.buf.code_action()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Search Code actions' })
-        --vim.keymap.set('x', '<space>ar', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Search Code actions' })
-        --vim.keymap.set('n', '<space>ar', '<cmd>lua vim.lsp.buf.range_code_action()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Search Code actions' })
-
-        -- Renombrar símbolo
+        -- > Refactoring > Renombrar símbolo
         vim.keymap.set('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Remame symbol' })
 
+
+        -- ---------------------------------------------------------------------------------------------
+        -- Keymapping > Utilties > Workspace
+        -- ---------------------------------------------------------------------------------------------
+
+        -- > Acciones relacionados al 'Workspace' (proyecto)
+        vim.keymap.set('n', '<space>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', { noremap = true, buffer = buffer, desc = 'LSP Add folder to workspace' })
+        vim.keymap.set('n', '<space>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', { noremap = true, buffer = buffer, desc = 'LSP Remove folder to workspace' })
 
         -- ---------------------------------------------------------------------------------------------
         -- Otros
@@ -210,6 +251,27 @@ vim.api.nvim_create_autocmd('LspAttach', {
                 vim.lsp.inlay_hint.enable(true, {bufnr = buffer})
 
             end
+
+            --
+            -- CodeLens
+            --
+            if client.server_capabilities.codeLensProvider then
+
+                -- Refrescar CodeLens automáticamente en eventos relevantes
+                vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave", "BufWritePost" }, {
+                    buffer = buffer,
+                    callback = vim.lsp.codelens.refresh,
+                })
+
+                -- ---------------------------------------------------------------------------------------------
+                -- Keymapping > Code Lens
+                -- ---------------------------------------------------------------------------------------------
+                --
+
+                vim.keymap.set('n', '<space>cl', '<cmd>lua vim.lsp.codelens.run()<CR>', { noremap = true, buffer = buffer, desc = 'LSP CodeLens run' })
+
+            end
+
 
             --
             -- Mostrar el popup de diagnostics de la linea actual cuando el prompt

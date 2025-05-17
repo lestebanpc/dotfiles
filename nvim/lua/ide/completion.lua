@@ -1,50 +1,183 @@
+--------------------------------------------------------------------------------------------------
+-- Snippets> LuaSnip
+--------------------------------------------------------------------------------------------------
+--
+-- URL : https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
+--       https://github.com/L3MON4D3/LuaSnip/wiki/Nice-Configs
+--
+-- > El snippet siempre se muestra como parte de 'completion' (manual o automatico).
+--   Cuando se acepta el item vinculado al snippet este se expande y se inicia la navegación al
+--   1er nodo del snippet.
+-- > Un snippet esta formado por 1 o mas nodos. Un nodo del snippet es un placeholder/fragmento
+--   que se permite una modificación
+--
+
+local luasnip = require('luasnip')
+local types = require("luasnip.util.types")
+
+luasnip.config.setup({
+
+    history = true,
+
+    update_events = { "TextChanged", "TextChangedI" },
+
+    --region_check_events = "CursorHold",
+
+    --enable_autosnippets = true,
+
+    -- Establecer un indicar del tipo de nodo de un snippet
+    -- > Ver el 'Highlight Group' disponibles usando ':highlight'
+    -- > Los highlight groups usados y definidos por tema 'Catppuccin' son:
+    --   https://github.com/catppuccin/catppuccin/blob/main/docs/style-guide.md
+	ext_opts = {
+		[types.choiceNode] = {
+			active = {
+				virt_text = { { "●", "Error" } },
+			}
+		},
+		[types.insertNode] = {
+			active = {
+				virt_text = { { "●", "Title" } },
+			}
+		}
+	},
+})
+
+
+--1. Cargar la implementacion de snippet
+--   Debera incluir los snippet en las carpetas reservadas
+--   Usando el plugin 'friendly-snippets' que estan 'runtimepath'
+--   https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#add-snippets
+require("luasnip.loaders.from_vscode").lazy_load()
+
+
+--2. Saltar entre los nodos de un snippet expandido
+
+-- Ir al nodo siguiente
+vim.keymap.set({"i", "s"}, "<C-f>", function()
+    if luasnip.expand_or_jumpable() then
+    --if luasnip.expand_or_locally_jumpable() then
+        --luasnip.jump(1)
+        luasnip.expand_or_jump()
+    else
+        return '<C-f>'
+    end
+end , { silent = true, noremap = true, expr = true, })
+
+-- Ir al nodo anterior
+vim.keymap.set({"i", "s"}, "<C-b>", function()
+    if luasnip.jumpable(-1) then
+        luasnip.jump(-1)
+    else
+        return '<C-f>'
+    end
+end, { silent = true, noremap = true, expr = true, })
+
+
+
+--3. Navegar entre valores/opciones de un mismo nodo
+vim.keymap.set({"i", "s"}, "<C-E>", function()
+	if luasnip.choice_active() then
+		luasnip.change_choice(1)
+    else
+        return '<C-E>'
+	end
+end, { silent = true, noremap = true, expr = true, })
+
+--------------------------------------------------------------------------------------------------
+-- Completition> Configuración del Completado y sus fuentes
+--------------------------------------------------------------------------------------------------
 --
 -- TODO Modificar para usar directamente el API de NeoVim 0.11
 --
-
---------------------------------------------------------------------------------------------------
---Completition> Configuración del Completado (Source: LSP, Snippets, Buffer, ...)
---------------------------------------------------------------------------------------------------
+-- File          = "󰈙",
+-- Module        = "",
+-- Namespace     = "󰦮",
+-- Package       = "",
+-- Class         = "󰆧",
+-- Method        = "󰊕",
+-- Property      = "",
+-- Field         = "",
+-- Constructor   = "",
+-- Enum          = "",
+-- Interface     = "",
+-- Function      = "󰊕",
+-- Variable      = "󰀫",
+-- Constant      = "󰏿",
+-- String        = "",
+-- Number        = "󰎠",
+-- Boolean       = "󰨙",
+-- Array         = "󱡠",
+-- Object        = "",
+-- Key           = "󰌋",
+-- Null          = "󰟢",
+-- EnumMember    = "",
+-- Struct        = "󰆼",
+-- Event         = "",
+-- Operator      = "󰆕",
+-- TypeParameter = "󰗴",
+--
 
 --1. Configurar el completado para todos los tipos de archivos
 local cmp = require('cmp')
-local snippet = require('luasnip')
 
---xxx
-local select_opts = {behavior = cmp.SelectBehavior.Select}
+-- Valores usados durante la definicion del completado.
+-- Opcion de la seleccion de un item del completado.
+local select_opts = { behavior = cmp.SelectBehavior.Select }
+
+-- Puntero a la funcion usado para validar si el cursor está al principio de la línea o si el
+-- carácter anterior es un espacio en blanco.
+local check_backspace = function()
+    -- Obtiene la posicion del caracter anterior al cursor actual.
+    local col = vim.fn.col "." - 1
+
+    -- Obtiene el caracter y valida que sea un espacio en blanco (espacio, tabulacion, etc)
+    return col == 0 or vim.fn.getline("."):sub(col, col):match "%s"
+end
+
 
 cmp.setup({
 
     --preselect = cmp.PreselectMode.None,
 
-    --Configuracion de los Snippets
+    -- Funciones invocados por el completado cuando el elemento es un snippet.
     snippet = {
-        --Expansion de un snippets
+
+        -- Expansion del snippet cuando el elemento es aceptado y es un snippet.
         expand = function(args)
-                --Usar los snippets registros por LuaSnip para expnadirlos
-                snippet.lsp_expand(args.body)
+            luasnip.lsp_expand(args.body)
         end,
     },
 
-    --Fuentes de completado: Se colocan los nombres con que registro la fuente en CMP
-    --  'prioirity': orden en que aparecen las sugerencias en las lista de autocompletado
-    --  'keyword_length': cantidad de caracteres necesarios realizar la busqueda en la fuente y mostrar el popup
-    --  'trigger_characters': si esta antes de un caracter espcial, el lenght(keyword) = 0, pero  mostrar el popup
+    -- Fuentes de completado: Se colocan los nombres con que registro la fuente en CMP
+    -- > prioirity : orden en que aparecen las sugerencias en las lista de autocompletado
+    -- > keyword_length : cantidad de caracteres necesarios realizar la busqueda en la fuente y mostrar el popup
+    -- > trigger_characters : si esta antes de un caracter espcial, el lenght(keyword) = 0, pero  mostrar el popup
     sources = {
-        { name = 'path' },
-        { name = 'nvim_lsp', keyword_length = 1 },
-        --{ name = 'nvim_lsp', keyword_length = 3, trigger_characters = { '.', '[' } },
-        --{ name = 'nvim_lsp', keyword_length = 3 },
-        { name = 'buffer', keyword_length = 3 },
-        { name = 'luasnip', keyword_length = 2 },
+        { name = 'path', priority = 4, },
+        { name = 'nvim_lsp', keyword_length = 1, priority = 8, },
+        --{ name = 'nvim_lsp', keyword_length = 2, trigger_characters = { '.', '[' } },
+        { name = 'buffer', keyword_length = 3, priority = 7, },
+        { name = 'luasnip', priority = 5, },
     },
 
-    --Controla la apariencia de la ventana donde se muestra la documentación: usar bordes
+    --sorting = {
+    --    priority_weight = 1.0,
+    --    comparators = {
+    --        cmp.config.compare.locality,
+    --        cmp.config.compare.recently_used,
+    --        cmp.config.compare.score,
+    --        cmp.config.compare.offset,
+    --        cmp.config.compare.order,
+    --    },
+    --},
+
+    -- Controla la apariencia de la ventana donde se muestra la documentación: usar bordes
     window = {
         documentation = cmp.config.window.bordered()
     },
 
-    --Formateo de cada elemento del popup de completado
+    -- Formateo de cada elemento del popup de completado
     formatting = {
         --Controla el orden en el que aparecen los elementos de un item.
         fields = {'menu', 'abbr', 'kind'},
@@ -97,13 +230,14 @@ cmp.setup({
         end,
     },
 
-    --Reglas de busqueda con la que se encuentra un item del popup de completado
+    -- Reglas de busqueda con la que se encuentra un item del popup de completado
     --matching = {
     --    --Por defecto la busqueda es difusa y no una busqueda exacta.
     --    disallow_fuzzy_matching = false,
     --},
 
-    --Atajos de teclado usado en el popup de completado
+    -- Atajos de teclado usado en el popup de completado
+    -- Ejemplo de configuracion: https://github.com/hrsh7th/nvim-cmp/wiki/Example-mappings
     mapping = {
 
         -- ----------------------------------------------------------------------------------
@@ -124,66 +258,71 @@ cmp.setup({
         --Cancelar el completado (Cerrar el popup de completado)
         ['<C-e>'] = cmp.mapping.abort(),
 
-        --Aceptar el completado
-        ['<CR>'] = cmp.mapping.confirm({select = true}),
-        ['<C-y>'] = cmp.mapping.confirm({select = false}),
+        -- Aceptar el completado
+        -- > Confirma el item actualmente seleccionado en la lista de completado.
+        -- > Si no hay ninguno seleccionado pero 'select = true', el primer item será automáticamente elegido y confirmado.
+
+        --['<CR>'] = cmp.mapping.confirm({select = true}),
+        ['<CR>'] = cmp.mapping(function(fallback)
+                if cmp.visible() then
+
+                    -- Confimar el item (si contiene snippet, cmp llamará a 'snippet.expand()')
+                    cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
+
+                else
+                    -- Inserta la tecla (salto de línea) y no ejecuta accion alguna.
+                    fallback()
+                end
+            end),
+
+        -- Si no hay elemento selecionado se comporta como <C-e> (solo cierra el popup de completado)
+        ['<C-y>'] = cmp.mapping.confirm({ select = false, }),
 
 
         --Si se muestra el popup de completado (si la esta en un espacio, no se realiza el completado y escribe 'Tab')
         ['<Tab>'] = cmp.mapping(function(fallback)
-                local col = vim.fn.col('.') - 1
 
+                -- Si el popup de completado esta visible
                 if cmp.visible() then
                     cmp.select_next_item(select_opts)
-                elseif col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') then
+
+                --Si caracter anterior son vacios o es inicio de linea
+                elseif check_backspace() then
+
+                    -- Inserta la tecla (<Tab>) y no ejecuta accion alguna.
                     fallback()
+
                 else
+                    -- Abre manualmente el menú de completado
                     cmp.complete()
                 end
+
             end, {'i', 's'}),
 
         --Si se muestra el popup de completado, navega al item anterior
         ['<S-Tab>'] = cmp.mapping(function(fallback)
+
+                -- Si el popup de completado esta visible
                 if cmp.visible() then
                     cmp.select_prev_item(select_opts)
-                else
-                    fallback()
-                end
-            end, {'i', 's'}),
 
-        -- ----------------------------------------------------------------------------------
-        -- Snippets
-        -- ----------------------------------------------------------------------------------
+                --Si caracter anterior son vacios o es inicio de linea
+                elseif check_backspace() then
 
-        --Salta al siguente fragmento de snippet expnadido
-        ['<C-f>'] = cmp.mapping(function(fallback)
-                if snippet.jumpable(1) then
-                    snippet.jump(1)
-                else
+                    -- Inserta la tecla (<Tab>) y no ejecuta accion alguna.
                     fallback()
-                end
-            end, {'i', 's'}),
 
-        --Salta al anterior fragmento de snippet expnadido
-        ['<C-b>'] = cmp.mapping(function(fallback)
-                if snippet.jumpable(-1) then
-                    snippet.jump(-1)
                 else
-                    fallback()
+                    -- Abre manualmente el menú de completado
+                    cmp.complete()
                 end
+
             end, {'i', 's'}),
 
 
     },
 })
 
-
-
---2. Cargar la implementacion de snippet
-
--- Usando el plugin 'friendly-snippets' que estan 'runtimepath'
--- https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#add-snippets
-require("luasnip.loaders.from_vscode").lazy_load()
 
 
 

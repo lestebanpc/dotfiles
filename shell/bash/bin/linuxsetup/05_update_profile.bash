@@ -8,7 +8,7 @@
 #  110  - Argumentos invalidos.
 #  111  - No se cumple los requisitos para ejecutar la logica principal del script.
 #  120  - Se require permisos de root y se nego almacenar las credenciales de SUDO.
-#  otro - Error en el procesamiento de la logica del script 
+#  otro - Error en el procesamiento de la logica del script
 
 
 
@@ -166,7 +166,7 @@ declare -r g_version_none='0.0.0'
 #------------------------------------------------------------------------------------------------------------------
 #> Funciones usadas durante la Actualización {{{
 #------------------------------------------------------------------------------------------------------------------
-# 
+#
 # Incluye las variable globales usadas como parametro de entrada y salida de la funcion que no sea resuda por otras
 # funciones, cuyo nombre inicia con '_g_'.
 #
@@ -218,9 +218,9 @@ function _update_repository() {
     #2. Mostando el titulo
 
     printf '\n'
-    print_line '.' $g_max_length_line "$g_color_gray1" 
+    print_line '.' $g_max_length_line "$g_color_gray1"
     printf '%s > Git repository "%b%s%b" %b(%s)%b\n' "$l_tag" "$g_color_cian1" "$p_repo_name" "$g_color_reset" "$g_color_gray1" "$p_repo_path" "$g_color_gray1"
-    print_line '.' $g_max_length_line "$g_color_gray1" 
+    print_line '.' $g_max_length_line "$g_color_gray1"
 
     #1. Validar si existe directorio
     if [ ! -d $p_repo_path ]; then
@@ -230,12 +230,12 @@ function _update_repository() {
 
     cd $p_repo_path
 
-    #2. Validar si el directorio .git del repositorio es valido     
+    #2. Validar si el directorio .git del repositorio es valido
     if ! git rev-parse --git-dir > /dev/null 2>&1; then
         printf '%bInvalid git repository%b\n' "$g_color_red1" "$g_color_reset"
         return 9
     fi
-    
+
     local l_local_branch=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
     if [ "$l_local_branch" = "HEAD" ]; then
         printf '%bInvalid current branch of  repository%b\n' "$g_color_red1" "$g_color_reset"
@@ -256,7 +256,7 @@ function _update_repository() {
         printf '%bError (%s) on Fetching%b from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_red1" "$l_status" "$g_color_reset" \
                "$g_color_gray1" "$l_remote" "$g_color_reset" "$g_color_gray1" "$l_remote_branch" "$g_color_reset"
         return 3
-    fi 
+    fi
 
     #4. Si la rama local es igual a la rama remota
     printf 'Updating local branch "%b%s%b" form remote branch "%b%s%b"...\n' "$g_color_gray1" "$l_local_branch"  "$g_color_reset" "$g_color_gray1" \
@@ -351,7 +351,7 @@ function _update_vim_package() {
         l_base_plugins_path="${HOME}/.local/share/nvim/site/pack"
         l_tag="NeoVIM"
     fi
-    
+
     #Validar si existe directorio
     if [ ! -d "$l_base_plugins_path" ]; then
         printf 'Folder "%s" not exists\n' "$l_base_plugins_path"
@@ -381,7 +381,7 @@ function _update_vim_package() {
         _update_repository $p_is_neovim "$l_folder" "$l_repo_name" "$l_repo_type"
         l_status=$?
 
-        #Si se llego a actualizar con existo... 
+        #Si se llego a actualizar con existo...
         if [ $l_status -eq 1 ] || [ $l_status -eq 2 ]; then
 
             #Si tiene documentación, indexar la ruta de documentación...
@@ -403,12 +403,12 @@ function _update_vim_package() {
     if [ $l_n -gt 0 ]; then
 
         printf '\n'
-        print_line '.' $g_max_length_line "$g_color_gray1" 
+        print_line '.' $g_max_length_line "$g_color_gray1"
         printf '%s > %bIndexando las documentación%b de los plugins\n' "$l_tag" "$g_color_cian1" "$g_color_reset"
-        print_line '.' $g_max_length_line "$g_color_gray1" 
+        print_line '.' $g_max_length_line "$g_color_gray1"
 
         for ((l_i=0; l_i< ${l_n}; l_i++)); do
-            
+
             l_doc_path="${la_doc_paths[${l_i}]}"
             l_repo_name="${la_doc_repos[${l_i}]}"
             printf '(%s/%s) Indexando la documentación del plugin %b%s%b en %s: "%bhelptags %s%b"\n' "$((l_i + 1))" "$l_n" "$g_color_gray1" "$l_repo_name" \
@@ -440,14 +440,6 @@ function _update_vim_package() {
         #Requiere un compilador C/C++ y NodeJS: https://tree-sitter.github.io/tree-sitter/creating-parsers#installation
         local l_version=$(_get_gcc_version)
         if [ ! -z "$l_version" ]; then
-
-            #printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall html latex css javascript jq json yaml xml toml typescript proto make sql bash%b"\n' \
-            #       "$g_color_gray1" "$g_color_reset"
-            #nvim --headless -c 'TSInstall html latex css javascript jq json yaml xml toml typescript proto make sql bash' -c 'qa'
-
-            #printf '  Instalando "language parsers" de TreeSitter "%b:TSInstall java kotlin llvm lua rust swift c cpp go c_sharp%b"\n' \
-            #       "$g_color_gray1" "$g_color_reset"
-            #nvim --headless -c 'TSInstall java kotlin llvm lua rust swift c cpp go c_sharp' -c 'qa'
 
             printf '  Actualizando los "language parsers" de TreeSitter "%b:TSUpdate all%b"\n' \
                    "$g_color_gray1" "$g_color_reset"
@@ -516,7 +508,7 @@ function _update_vim() {
     if [ $p_is_neovim -eq 0  ]; then
         l_tag="NeoVIM"
     fi
-    
+
 
     #2. Actualizar los plugins
     local l_flag_setup=0
@@ -543,7 +535,7 @@ function _update_vim() {
 
 #
 # Argumentos:
-#  1> Las opciones de menu elejidas. 
+#  1> Las opciones de menu elejidas.
 function _update_all() {
 
     #1. Argumentos
@@ -551,8 +543,8 @@ function _update_all() {
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_opciones=$1
     fi
-    
-    #2. Inicialización 
+
+    #2. Inicialización
     g_status_crendential_storage=-1
     local l_status
     local l_flag
@@ -727,15 +719,15 @@ function _show_menu_core() {
     printf "     (%b%${l_max_digits}d%b) Actualizar los plugin de VIM    existentes e inicializarlos\n" "$g_color_green1" "1" "$g_color_reset"
     printf "     (%b%${l_max_digits}d%b) Actualizar los plugin de NeoVIM existentes e inicializarlos\n" "$g_color_green1" "2" "$g_color_reset"
 
-    print_line '-' $g_max_length_line "$g_color_gray1" 
+    print_line '-' $g_max_length_line "$g_color_gray1"
 
 }
 
 function g_main() {
 
-  
-    #Mostar el menu principal 
-    print_line '─' $g_max_length_line "$g_color_green1" 
+
+    #Mostar el menu principal
+    print_line '─' $g_max_length_line "$g_color_green1"
     _show_menu_core
 
     local l_flag_continue=0
@@ -748,7 +740,7 @@ function g_main() {
         case "$l_options" in
             a)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_green1" 
+                print_line '─' $g_max_length_line "$g_color_green1"
 
                 #1 + 2
                 _update_all 3
@@ -756,28 +748,28 @@ function g_main() {
 
             q)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_green1" 
+                print_line '─' $g_max_length_line "$g_color_green1"
                 ;;
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '─' $g_max_length_line "$g_color_green1" 
+                    print_line '─' $g_max_length_line "$g_color_green1"
                     _update_all $l_options
                 else
                     l_flag_continue=0
                     printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
-                    print_line '-' $g_max_length_line "$g_color_gray1" 
+                    print_line '-' $g_max_length_line "$g_color_gray1"
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
                 printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_gray1" 
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 ;;
         esac
-        
+
     done
 
 }
@@ -897,10 +889,10 @@ g_targethome_group=''
 #Ruta base del respositorio git del usuario donde se instalar el profile del usuario. Su valor es calculado por 'get_targethome_info'.
 g_repo_path=''
 
-#Flag que determina si el usuario runner (el usuario que ejecuta este script de instalación) es el usuario objetivo o no. 
+#Flag que determina si el usuario runner (el usuario que ejecuta este script de instalación) es el usuario objetivo o no.
 #Su valor es calculado por 'get_targethome_info'.
 # - Si es '0', el runner es el usuario objetivo (onwer del "target home").
-# - Si no es '0', el runner es NO es usario objetivo, SOLO puede ser el usuario root. 
+# - Si no es '0', el runner es NO es usario objetivo, SOLO puede ser el usuario root.
 #   Este caso, el root realizará la configuracion requerida para el usuario objetivo (usando sudo), nunca realizara configuración para el propio usuario root.
 g_runner_is_target_user=0
 
@@ -960,7 +952,7 @@ if [ $gp_type_calling -eq 0 ]; then
     fi
 
     #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
-    #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
+    #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info')
     #  2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
     #  3 > Flag '0' si se requere curl
     #  4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
@@ -1043,7 +1035,7 @@ else
 
 
     #Validar los requisitos
-    # 1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
+    # 1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info')
     # 2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
     # 3 > Flag '0' si se requere curl
     # 4 > Flag '0' si requerir permisos de root para la instalación/configuración (sudo o ser root)
@@ -1076,10 +1068,3 @@ exit $_g_result
 
 
 #}}}
-
-
-
-
-
-
-
