@@ -210,8 +210,10 @@ declare -A gA_repos_type=(
         ['L3MON4D3/LuaSnip']=4
         ['rafamadriz/friendly-snippets']=4
         ['saadparwaiz1/cmp_luasnip']=4
+        ['b0o/SchemaStore.nvim']=4
         ['stevearc/aerial.nvim']=4
         ['kosayoda/nvim-lightbulb']=4
+        ['doxnit/cmp-luasnip-choice']=4
         ['mfussenegger/nvim-dap']=4
         ['theHamsta/nvim-dap-virtual-text']=4
         ['rcarriga/nvim-dap-ui']=4
@@ -259,6 +261,8 @@ declare -A gA_repos_scope=(
         ['L3MON4D3/LuaSnip']=2
         ['rafamadriz/friendly-snippets']=2
         ['saadparwaiz1/cmp_luasnip']=2
+        ['doxnit/cmp-luasnip-choice']=2
+        ['b0o/SchemaStore.nvim']=2
         ['kosayoda/nvim-lightbulb']=2
         ['mfussenegger/nvim-dap']=2
         ['theHamsta/nvim-dap-virtual-text']=2
@@ -1171,6 +1175,28 @@ _install_global_pckg_nodejs() {
         l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
         echo "NodeJS > Paquete 'tree-sitter-cli' de NodeJS para soporte a TreeSitter, ya esta instalando: versión \"${l_version}\""
     fi
+
+    #4. Paquete yarm (gestor de paquetes alternativo de RTE Node.JS)
+
+    #Obtener la version
+    #if [ -z "$l_temp" ]; then
+    #    l_version=""
+    #else
+    #    l_version=$(echo "$l_temp" | grep yarn)
+    #fi
+
+    #if [ -z "$l_version" ]; then
+
+    #    print_line '.' $g_max_length_line "$g_color_gray1"
+    #    echo "NodeJS > Instalando el paquete 'yarn' de NodeJS (un gestor de paquetes del RTE)"
+
+    #    npm install -g yarn
+
+    #else
+    #    l_version=$(echo "$l_version" | head -n 1 )
+    #    l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+    #    echo "NodeJS > Paquete 'yarn' de NodeJS (gestor de paquetes), ya esta instalando: versión \"${l_version}\""
+    #fi
 
     return 0
 

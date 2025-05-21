@@ -244,6 +244,69 @@ elseif !exists("g:programs_base_path")
 endif
 
 
+" Establecer los Linters por defecto que se usaran.
+"  > Use las capacidades de linting y fixing del servidor LSP.
+"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
+"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
+"    > Para LSP asociados a archivos, como 'DockerFile' (Docker LS), use linting.
+"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
+"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
+"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
+"    ese caso, desactve el linter/fixer de ALE para esos archivos.
+"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
+"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
+"    como CoC.
+if !exists("g:ale_linters") || empty(g:ale_linters)
+
+    "Establecer valores por defecto
+    let g:ale_linters = {
+    "\   'cpp': ['clangtidy'],
+    "\   'c':   ['clangtidy'],
+    "\   'rust': ['clippy'],
+    "\   'go': ['golangci-lint'],
+    "\   'python': ['pylint', 'flake8'],
+    \   'dockerfile': ['hadolint'],
+    \   'javascript': ['biome'],
+    \   'typescript': ['biome'],
+    \}
+
+endif
+"echom 'Linters: ' .. string(g:ale_linters)
+
+
+" Establecer los Fixers por defecto que se usaran.
+"  > Use las capacidades de linting y fixing del servidor LSP.
+"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
+"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
+"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
+"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
+"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
+"    ese caso, desactve el linter/fixer de ALE para esos archivos.
+"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
+"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
+"    como CoC.
+if !exists("g:ale_fixers") || empty(g:ale_fixers)
+
+    "Establecer valores por defecto
+    let g:ale_fixers = {
+    \   '*': ['remove_trailing_lines', 'trim_whitespace'],
+    "\   'cpp': ['clang-format', 'clangtidy'],
+    "\   'c':   ['clang-format', 'clangtidy'],
+    "\   'rust': ['rustfmt'],
+    "\   'go': ['gofmt', 'goimports'],
+    "\   'python': ['black', 'isort'],
+    \   'javascript': ['biome'],
+    \   'typescript': ['biome'],
+    \   'yaml': ['prettier'],
+    \   'json': ['prettier'],
+    \   'html': ['prettier'],
+    \   'css':  ['prettier'],
+    \}
+
+endif
+"echom 'Fixers: ' .. string(g:ale_fixers)
+
+
 " Adaptadores LSP en modo IDE Vim/NeoVim cuando se usa CoC :
 "  > omnisharp_vim : Para C#. Usa el servidor 'Omnisharp LS' pero usando el plugin 'omnisharp_vim'.
 "                    El plugin de omnisharp-vim requiere de un motor de autocompletado y uno de los

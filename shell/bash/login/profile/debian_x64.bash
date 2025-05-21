@@ -152,7 +152,7 @@ fi
 # Ruta del compilador de ProtoBuffer de gRPC
 [ -d "${g_programs_path}/protoc/bin" ] && PATH="${g_programs_path}/protoc/bin:$PATH"
 
-# Node.Js (RTE)
+# Paquetes globales de tipo comando de Node.Js (RTE) usando gestor de paquetes 'npm'
 [ -d "${g_programs_path}/nodejs/bin" ] && PATH="${g_programs_path}/nodejs/bin:$PATH"
 
 # DotNet

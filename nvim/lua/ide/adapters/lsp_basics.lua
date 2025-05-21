@@ -94,8 +94,16 @@ adapter_name = 'rust_analyzer'
 
 if use_adapter ~= nil and use_adapter == true then
 
+    if (vim.g.os_type == 0) then
+        --Si es Windows
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/rust_ls/rust-analyzer.exe'
+    else
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/rust_ls/rust-analyzer'
+    end
+
     vim.lsp.config(adapter_name, {
 
+        cmd = { lsp_server_path },
         settings = {
             ["rust-analyzer"] = {
                 cargo = {
@@ -335,6 +343,8 @@ adapter_name = 'kotlin_language_server'
 --
 -- LSP Server : typescript es un adapador que convierte el 'tsserver' en LSP server
 -- URL        : https://github.com/typescript-language-server/typescript-language-server
+--              https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#ts_ls
+-- Install    : npm install -g typescript typescript-language-server
 --
 use_adapter = vim.g.use_lsp_adapters['typescript']
 adapter_name = 'ts_ls'
@@ -565,6 +575,323 @@ if use_adapter ~= nil and use_adapter == true then
 
 end
 
+-- Plugin de repositorio de esquemas json
+-- yaml
+--
+--
+--
+
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Para archivos yaml
+--------------------------------------------------------------------------------------------------
+
+--
+-- LSP Server : yaml-language-server
+-- URL        : https://github.com/redhat-developer/yaml-language-server
+-- Requiere   : https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#yamlls
+-- Linter     :
+-- Install    : npm install -g yaml-language-server
+--              La instalcion instala depenciasl como 'eemeli/yaml' y otros
+--
+-- Validate   :
+--
+use_adapter = vim.g.use_lsp_adapters['yaml']
+adapter_name = 'yamlls'
+
+if use_adapter ~= nil and use_adapter == true then
+
+
+    vim.lsp.config(adapter_name, {
+        cmd = { 'yaml-language-server', '--stdio' },
+        filetypes = { 'yaml', 'yaml.docker-compose', 'yaml.gitlab' },
+        settings = {
+            redhat = {
+                telemetry = {
+                    enabled = false,
+                },
+            },
+            yaml = {
+                schemaStore = {
+                    enable = true,
+                },
+                schemas = {
+                    ['https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.33.1-standalone-strict/all.json'] = "/*.k8s.yaml",
+                    --kubernetes = "/*.k8s.yaml",
+                    kubernetes = "",
+                },
+            },
+        }
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+end
+
+
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Para archivos json
+--------------------------------------------------------------------------------------------------
+
+--
+-- LSP Server : vscode-json-language-server
+--              Paquete built-in incluido dentro de VSCode. El binario ofrecido en el repositorio nmp usualmente
+--              esta mas desactrulizado que el incluido dentro del (nodejs built-in de) VSCode.
+-- URL        : https://github.com/microsoft/vscode/blob/main/extensions/json-language-features/server/README.md
+--              https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#jsonls
+-- Requiere   : El paquete oficial incluido en el repositorio npm no estan muy actualizada. 3ros ofrecen paquete
+--              obtenidos del codigo fuente y compiladas (https://github.com/hrsh7th/vscode-langservers-extracted)
+-- Linter     :
+-- Install    : npm install -g vscode-langservers-extracted
+--              Los binarios es distrubidos por 3ros. Este paquete incluye los siguientes servidores LSP:
+--              > vscode-html-language-server
+--              > vscode-css-language-server
+--              > vscode-json-language-server
+--              > vscode-eslint-language-server
+--              > vscode-markdown-language-server (aun no incluido)
+--              > vscode-anycode-language-server (aun no incluido)
+-- Validate   :
+--
+use_adapter = vim.g.use_lsp_adapters['json']
+adapter_name = 'jsonls'
+
+if use_adapter ~= nil and use_adapter == true then
+
+    -- Obtener las reglas defnidias en los 'JSON SchemaStore'
+    local schema_filters = require('schemastore').json.schemas()
+
+    -- Configurar el cliente LSP
+    vim.lsp.config(adapter_name, {
+
+        cmd = { 'vscode-json-language-server', '--stdio' },
+        filetypes = { 'json', 'jsonc' },
+        settings = {
+            json = {
+                schemas = schema_filters,
+                validate = {
+                    enable = true,
+                },
+            },
+        },
+
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+end
+
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Para archivos toml
+--------------------------------------------------------------------------------------------------
+
+--
+-- LSP Server : Taplo
+-- URL        : https://taplo.tamasfe.dev/cli/usage/language-server.html
+--              https://github.com/tamasfe/taplo
+--              https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#taplo
+-- Requiere   :
+-- Linter     :
+-- Install    : Descargar de https://github.com/tamasfe/taplo/releases
+-- Validate   : taplo-cli --version
+--
+--
+use_adapter = vim.g.use_lsp_adapters['toml']
+adapter_name = 'taplo'
+
+if use_adapter ~= nil and use_adapter == true then
+
+    if (vim.g.os_type == 0) then
+        --Si es Windows
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/toml_ls/taplo.exe'
+    else
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/toml_ls/taplo'
+    end
+
+    vim.lsp.config(adapter_name, {
+
+        cmd = { lsp_server_path, 'lsp', 'stdio' },
+        filetypes = { 'toml' },
+
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+end
+
+
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Para archivos html
+--------------------------------------------------------------------------------------------------
+
+--
+-- LSP Server : vscode-json-language-server
+--              Paquete built-in incluido dentro de VSCode. El binario ofrecido en el repositorio nmp usualmente
+--              esta mas desactrulizado que el incluido dentro del (nodejs built-in de) VSCode.
+-- URL        : https://github.com/microsoft/vscode/blob/main/extensions/html-language-features/README.md
+--              https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#html
+-- Requiere   : El paquete oficial incluido en el repositorio npm no estan muy actualizada. 3ros ofrecen paquete
+--              obtenidos del codigo fuente y compiladas (https://github.com/hrsh7th/vscode-langservers-extracted)
+-- Linter     :
+-- Install    : npm install -g vscode-langservers-extracted
+--              Los binarios es distrubidos por 3ros. Este paquete incluye los siguientes servidores LSP:
+--              > vscode-html-language-server
+--              > vscode-css-language-server
+--              > vscode-json-language-server
+--              > vscode-eslint-language-server
+--              > vscode-markdown-language-server (aun no incluido)
+--              > vscode-anycode-language-server (aun no incluido)
+-- Validate   :
+--
+use_adapter = vim.g.use_lsp_adapters['html']
+adapter_name = 'html'
+
+if use_adapter ~= nil and use_adapter == true then
+
+    -- Enable (broadcasting) snippet capability for completion
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities.textDocument.completion.completionItem.snippetSupport = true
+
+    vim.lsp.config(adapter_name, {
+
+        capabilities = capabilities,
+        cmd = { "vscode-html-language-server", "--stdio" },
+        filetypes = { "html", "templ" },
+
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+end
+
+
+
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Para archivos css
+--------------------------------------------------------------------------------------------------
+
+--
+-- LSP Server : vscode-json-language-server
+--              Paquete built-in incluido dentro de VSCode. El binario ofrecido en el repositorio nmp usualmente
+--              esta mas desactrulizado que el incluido dentro del (nodejs built-in de) VSCode.
+-- URL        : https://github.com/microsoft/vscode/blob/main/extensions/css-language-features/README.md
+--              https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#cssls
+-- Requiere   : El paquete oficial incluido en el repositorio npm no estan muy actualizada. 3ros ofrecen paquete
+--              obtenidos del codigo fuente y compiladas (https://github.com/hrsh7th/vscode-langservers-extracted)
+-- Linter     :
+-- Install    : npm install -g vscode-langservers-extracted
+--              Los binarios es distrubidos por 3ros. Este paquete incluye los siguientes servidores LSP:
+--              > vscode-html-language-server
+--              > vscode-css-language-server
+--              > vscode-json-language-server
+--              > vscode-eslint-language-server
+--              > vscode-markdown-language-server (aun no incluido)
+--              > vscode-anycode-language-server (aun no incluido)
+-- Validate   :
+--
+use_adapter = vim.g.use_lsp_adapters['css']
+adapter_name = 'cssls'
+
+if use_adapter ~= nil and use_adapter == true then
+
+    -- Enable (broadcasting) snippet capability for completion
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities.textDocument.completion.completionItem.snippetSupport = true
+
+    vim.lsp.config(adapter_name, {
+
+        capabilities = capabilities,
+        cmd = { "vscode-css-language-server", "--stdio" },
+        filetypes = { "css", "scss", "less" },
+
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+end
+
+--
+-- tailwindcss
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#tailwindcss
+-- https://github.com/tailwindlabs/tailwindcss-intellisense
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Para archivos Tailwind CSS files
+--------------------------------------------------------------------------------------------------
+
+--
+-- LSP Server : Tailwind CSS Server
+-- URL        : https://github.com/tailwindlabs/tailwindcss-intellisense
+--              Incluido como parte del repositorio. Solo esta el codigo fuente.
+--              https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#tailwindcss
+-- Requiere   :
+-- Linter     :
+-- Install    : npm install -g @tailwindcss/language-server
+--
+--
+use_adapter = vim.g.use_lsp_adapters['tailwindcss']
+adapter_name = 'tailwindcss'
+
+if use_adapter ~= nil and use_adapter == true then
+
+
+    vim.lsp.config(adapter_name, {
+
+        cmd = { "tailwindcss-language-server", "--stdio" },
+
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+end
+
+
+
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Para archivos xml
+--------------------------------------------------------------------------------------------------
+
+--
+-- LSP Server : XML Language Server (LemMinX)
+--              Escrito en Java, pero actualmente puede ser compilado en nativo para no depender de java.
+-- Docs       : https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#lemminx
+-- URL        : https://github.com/eclipse-lemminx/lemminx
+--              Solo esta el codigo fuente. El binario complilado se encuentra en:
+--              https://github.com/redhat-developer/vscode-xml/releases
+-- Requiere   : Descargar el binario de la pagina anterior
+-- Linter     :
+-- Install    :
+--
+--
+use_adapter = vim.g.use_lsp_adapters['xml']
+adapter_name = 'lemminx'
+
+if use_adapter ~= nil and use_adapter == true then
+
+
+    if (vim.g.os_type == 0) then
+        --Si es Windows
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/xml_ls/lemminx.exe'
+    else
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/xml_ls/lemminx'
+    end
+
+    vim.lsp.config(adapter_name, {
+
+        cmd = { lsp_server_path },
+        filetypes = { 'xml', 'xsd', 'xsl', 'xslt', 'svg' },
+
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+end
+
+
 
 --------------------------------------------------------------------------------------------------
 --LSP Client> Para archivos Markdown
@@ -582,9 +909,16 @@ adapter_name = 'marksman'
 if use_adapter ~= nil and use_adapter == true then
 
 
+    if (vim.g.os_type == 0) then
+        --Si es Windows
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/markdown_ls/marksman.exe'
+    else
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/markdown_ls/marksman'
+    end
+
     vim.lsp.config(adapter_name, {
 
-        cmd = { "marksman", "server" },
+        cmd = { lsp_server_path, "server" },
         filetypes = { "markdown", "markdown.mdx" },
         root_markers = { ".marksman.toml", ".git" }
 
@@ -594,6 +928,84 @@ if use_adapter ~= nil and use_adapter == true then
 
 end
 
+
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Para archivos Gradle
+--------------------------------------------------------------------------------------------------
+
+--
+-- LSP Server : Gradle LS
+-- URL        : https://github.com/microsoft/vscode-gradle (solo source code)
+--              https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#gradle_ls
+-- Install    : Descargar el paquete del marketplace de VSCode
+-- Validate   :
+--
+use_adapter = vim.g.use_lsp_adapters['gradle']
+adapter_name = 'gradle_ls'
+
+if use_adapter ~= nil and use_adapter == true then
+
+    if (vim.g.os_type == 0) then
+        --Si es Windows
+        lsp_server_path = vim.g.programs_base_path .. '/vsc_extensions/ms_java_gradle/lib/gradle-server.cmd'
+    else
+        lsp_server_path = vim.g.programs_base_path .. '/vsc_extensions/ms_java_gradle/lib/gradle-server'
+    end
+
+    vim.lsp.config(adapter_name, {
+
+        cmd = { lsp_server_path },
+        filetypes = { "groovy" },
+
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+end
+
+
+--------------------------------------------------------------------------------------------------
+--LSP Client> Para archivos DockerFile
+--------------------------------------------------------------------------------------------------
+
+--
+-- LSP Server : DockerFile LS
+-- URL        : https://github.com/rcjsuen/dockerfile-language-server
+--              https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#dockerls
+-- Install    : npm install -g dockerfile-language-server-nodejs
+-- Validate   :
+--
+use_adapter = vim.g.use_lsp_adapters['dockerfile']
+adapter_name = 'dockerls'
+
+if use_adapter ~= nil and use_adapter == true then
+
+
+    vim.lsp.config(adapter_name, {
+
+        cmd = { "docker-langserver", "--stdio" },
+        filetypes = { "dockerfile" },
+        settings = {
+            docker = {
+	            languageserver = {
+	                formatter = {
+		                ignoreMultilineInstructions = true,
+		            },
+	            },
+	        },
+        },
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+end
+
+
+
+-- https://github.com/sqls-server/sqls
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#sqls
+-- https://github.com/sqls-server/sqls/releases
 
 
 --------------------------------------------------------------------------------------------------

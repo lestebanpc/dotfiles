@@ -5,7 +5,7 @@
 
 let s:use_adapter = v:false
 
-if g:is_neovim && !g:use_coc
+if g:is_neovim
 
     "Plugin IDE> Implementacion del arbol sinstanctico de TreeSitter para NeoVim
     packadd nvim-treesitter
@@ -13,6 +13,12 @@ if g:is_neovim && !g:use_coc
     "Plugin IDE> Modulos a usar del plugin 'nvim-treeSitter'
     packadd nvim-treesitter-context
     packadd nvim-treesitter-textobjects
+
+endif
+
+
+if g:is_neovim && !g:use_coc
+
 
     "Package IDE> LSP Client (nativo de NeoVim)
     packadd nvim-lspconfig
@@ -43,6 +49,9 @@ if g:is_neovim && !g:use_coc
     "Package IDE> Fuente CMP: Snippet tipo LuaSnip
     packadd cmp_luasnip
 
+    "Package IDE> Fuente CMP: Lista los valores de un 'Choice Nodos' de un snippets
+    packadd cmp-luasnip-choice
+
     "Package IDE> Lightbulb para Code Actions
     packadd nvim-lightbulb
 
@@ -62,6 +71,14 @@ if g:is_neovim && !g:use_coc
 
     endif
 
+    "Package IDE> Plugin para establer las reglas de filtro de 'JSON Schema Store' para JSON/YAML
+    "             Solo se usara para el LSP de archivos JSON.
+    let s:use_adapter = get(g:use_lsp_adapters, "json", v:false)
+    if s:use_adapter == v:true
+
+        packadd SchemaStore.nvim
+
+    endif
 
 endif
 
@@ -82,8 +99,14 @@ endif
 " IDE> ALE (Diagnostic: Linting y Fixing)
 "###################################################################################
 "
-"https://github.com/dense-analysis/ale/blob/master/doc/ale.txt
+" URL : https://github.com/dense-analysis/ale/blob/master/doc/ale.txt
+" > Por motivos de facilitar la configuracion de linters, no se usara las variable de buffer ('b:ale_linters').
+" > Por motivos de realizar una facil configuracion de los fixers, no se usara las variable de buffer ('b:ale_fixers').
+" > Despues de cargar el plugin (packadd ale), si no se define estas variables antes, se define con valor '{}'.
 "
+
+"echom 'Fixers: ' .. string(g:ale_fixers)
+"echom 'Linters: ' .. string(g:ale_linters)
 
 " Desabilitar cliente LSP de ALE
 " Se usara cliente LSP de CoC o el nativo de NeoVim
@@ -96,12 +119,19 @@ let g:ale_completion_enabled = 0
 " Plugin IDE> Linting (analisis y diagnostico sin compilar)
 packadd ale
 
+
+"echom 'Fixers: ' .. string(g:ale_fixers)
+"echom 'Linters: ' .. string(g:ale_linters)
+
 " Signos que se mostraran cuando se realizo el diagnostico:
 let g:ale_sign_error = '✘'
 let g:ale_sign_warning = '▲'
 let g:ale_sign_info = ''
 let g:ale_sign_style_error = ''
 let g:ale_sign_style_warning = '•'
+
+"highlight ALEErrorSign ctermbg        =NONE ctermfg=red
+"highlight ALEWarningSign ctermbg      =NONE ctermfg=yellow
 
 "let g:ale_sign_error = '•'
 "let g:ale_sign_warning = '•'
@@ -115,51 +145,6 @@ let g:ale_sign_style_warning = '•'
 "No se cargaran todos los linter existes por lenguajes (se cargar segun lo que se requiera).
 let g:ale_linters_explicit = 1
 
-
-" Establecer los Linters que se usaran
-" > Por motivos de facilitar la configuracion, no se usara las variable de buffer ('b:ale_linters')
-" > Despues de cargar el plugin, si no se define la variable antes, se define con valor '{}'
-if !exists("g:ale_linters") || empty(g:ale_linters)
-
-    "Establecer valores por defecto
-    let g:ale_linters = {
-    "\   'cpp': ['clangtidy'],
-    "\   'c':   ['clangtidy'],
-    "\   'rust': ['clippy'],
-    "\   'go': ['golangci-lint'],
-    "\   'python': ['pylint', 'flake8'],
-    \   'dockerfile': ['hadolint'],
-    \   'javascript': ['eslint'],
-    \   'typescript': ['eslint'],
-    \}
-
-endif
-"echom 'Linters: ' .. string(g:ale_linters)
-
-
-" Establecer los Linters que se usaran
-" > Por motivos de realizar una facil configuracion, no se usara las variable de buffer ('b:ale_fixers')
-" > Despues de cargar el plugin, si no se define la variable antes, se define con valor '{}'
-if !exists("g:ale_fixers") || empty(g:ale_fixers)
-
-    "Establecer valores por defecto
-    let g:ale_fixers = {
-    \   '*': ['remove_trailing_lines', 'trim_whitespace'],
-    "\   'cpp': ['clang-format', 'clangtidy'],
-    "\   'c':   ['clang-format', 'clangtidy'],
-    "\   'rust': ['rustfmt'],
-    "\   'go': ['gofmt', 'goimports'],
-    "\   'python': ['black', 'isort'],
-    \   'javascript': ['prettier', 'eslint'],
-    \   'typescript': ['prettier', 'eslint'],
-    \   'yaml': ['prettier'],
-    \   'json': ['prettier'],
-    \   'html': ['prettier'],
-    \   'css':  ['prettier'],
-    \}
-
-endif
-"echom 'Fixers: ' .. string(g:ale_fixers)
 
 " Ejecutar el fixers (si este esta configurado para el filetype actual) cuando se guarda el documento.
 " > Si el fixer no tiene un regla configurada o no puede arreglar un error/warning, no lo hace.

@@ -1,13 +1,7 @@
 {
   "adapters": {
     "gbl_delve": {
-      "command": [
-        "dlv",
-        "dap",
-        "--listen",
-        "${listenOn}:${port}",
-        "*${dlvFlags}"
-      ],
+      "command": ["dlv", "dap", "--listen", "${listenOn}:${port}", "*${dlvFlags}"],
       "port": "${port}",
       "tty": true,
       "variables": {
@@ -15,6 +9,6 @@
         "listenOn": "127.0.0.1",
         "port": "${unusedLocalPort}"
       }
-    }    
+    }
   }
 }

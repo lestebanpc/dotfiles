@@ -118,7 +118,16 @@ end, { silent = true, noremap = true, expr = true, })
 -- TypeParameter = "󰗴",
 --
 
---1. Configurar el completado para todos los tipos de archivos
+--1. Fuente de completado: Valores de 'choice nodes'
+require('cmp_luasnip_choice').setup({
+    -- Automatically open nvim-cmp on choice node (default: true)
+    auto_open = true,
+});
+
+--2. Fuentes de completado: Otros
+--   Se usara los valores pore defecto.
+
+--2. Configurar el completado para todos los tipos de archivos
 local cmp = require('cmp')
 
 -- Valores usados durante la definicion del completado.
@@ -159,6 +168,7 @@ cmp.setup({
         --{ name = 'nvim_lsp', keyword_length = 2, trigger_characters = { '.', '[' } },
         { name = 'buffer', keyword_length = 3, priority = 7, },
         { name = 'luasnip', priority = 5, },
+        { name = 'luasnip_choice', },
     },
 
     --sorting = {

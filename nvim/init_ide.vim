@@ -244,13 +244,76 @@ elseif !exists("g:programs_base_path")
 endif
 
 
+" Establecer los Linters por defecto que se usaran.
+"  > Use las capacidades de linting y fixing del servidor LSP.
+"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
+"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
+"    > Para LSP asociados a archivos, como 'DockerFile' (Docker LS), use linting.
+"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
+"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
+"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
+"    ese caso, desactve el linter/fixer de ALE para esos archivos.
+"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
+"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
+"    como CoC.
+if !exists("g:ale_linters") || empty(g:ale_linters)
+
+    "Establecer valores por defecto
+    let g:ale_linters = {
+    "\   'cpp': ['clangtidy'],
+    "\   'c':   ['clangtidy'],
+    "\   'rust': ['clippy'],
+    "\   'go': ['golangci-lint'],
+    "\   'python': ['pylint', 'flake8'],
+    \   'dockerfile': ['hadolint'],
+    \   'javascript': ['biome'],
+    \   'typescript': ['biome'],
+    \}
+
+endif
+"echom 'Linters: ' .. string(g:ale_linters)
+
+
+" Establecer los Fixers por defecto que se usaran.
+"  > Use las capacidades de linting y fixing del servidor LSP.
+"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
+"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
+"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
+"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
+"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
+"    ese caso, desactve el linter/fixer de ALE para esos archivos.
+"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
+"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
+"    como CoC.
+if !exists("g:ale_fixers") || empty(g:ale_fixers)
+
+    "Establecer valores por defecto
+    let g:ale_fixers = {
+    \   '*': ['remove_trailing_lines', 'trim_whitespace'],
+    "\   'cpp': ['clang-format', 'clangtidy'],
+    "\   'c':   ['clang-format', 'clangtidy'],
+    "\   'rust': ['rustfmt'],
+    "\   'go': ['gofmt', 'goimports'],
+    "\   'python': ['black', 'isort'],
+    \   'javascript': ['biome'],
+    \   'typescript': ['biome'],
+    \   'yaml': ['prettier'],
+    \   'json': ['prettier'],
+    \   'html': ['prettier'],
+    \   'css':  ['prettier'],
+    \}
+
+endif
+"echom 'Fixers: ' .. string(g:ale_fixers)
+
+
 " Adaptadores LSP en modo IDE Vim/NeoVim cuando se usa CoC :
 "  > omnisharp_vim : Para C#. Usa el servidor 'Omnisharp LS' pero usando el plugin 'omnisharp_vim'.
 "                    El plugin de omnisharp-vim requiere de un motor de autocompletado y uno de los
 "                    motor de completado compatible es CoC.
 "  >               : Los demas adaptadores son gestionados por CoC (como extension o configurando un
 "                    servicio de tipo cliente LSP en el archivo de configuración).
-" Adaptadores LSP en modo IDE NeoVim cuando se usa el cliente LSP nativo :
+" Adaptadores LSP (asociado a lenguajes de programación) en modo IDE NeoVim usando el cliente LSP nativo :
 "  > cpp           : Para C++. Usa el servidor 'Clangd'.
 "  > rust          : Para Rust. Usa el servidor 'Rust Analyzer'.
 "  > golang        : Para GoLang. Usa el servidor 'GoPls'.
@@ -262,12 +325,25 @@ endif
 "  > kotlin        : Para Kotlin.
 "  > python        : Para Python. Usa el servidor 'BasedPyRight'. Tiene mas prioridad que 'PyRight'.
 "  > pyright       : Para Python. Usa el servidor 'PyRight'.
-"  > typescript    : Para Javascript/Typescript. Usa 'Typescript LS' un adapador de 'TsServer'
+"  > typescript    : Para Javascript/Typescript. Usa 'Typescript LS' un adapador de 'TsServer'.
+"                    Use linter como 'eslint' y 'biome' para mejorar el linting.
 "  > lua           : Para Lua. Usa el LSP 'Lua LS'.
 "  > viml          : Para VimScript. Usa el LSP 'Vim LS'.
 "  > bash          : Para Bash. Usa de 'Bash LS'
 "  > ansible       : Para Ansible. Usa de 'Ansible LS' (requiere Python, Ansible y Ansible-Lint).
 "  > markdown      : Para archivo Markdown.
+" Adaptadores LSP (asociado a ciertos archivos) en modo IDE NeoVim usando el cliente LSP nativo :
+"  > ansible       : Para Ansible. Usa de 'Ansible LS' (requiere Python, Ansible y Ansible-Lint).
+"  > gradle        : Para archivo de configuración de gradle.
+"  > dockerfile    : Para archivo dockerfile. Use linter 'hadolint' para mejorar el linting.
+"  > json          : Para archivo JSON.
+"  > yaml          : Para archivo YAML.
+"  > toml          : Para archivo TOML.
+"  > xml           : Para archivo XML.
+"  > markdown      : Para archivo Markdown.
+"  > html          : Para archivo html.
+"  > css           : Para archivo css.
+"  > tailwindcss   : Para uso de tailwindcss asociado a css.
 " Solo aplica si NO usa CoC. CoC estas configuracion se realiza usualmente por extensiones.
 " Estableciendo el valor por defecto si no se define antes.
 if !exists("g:use_lsp_adapters") || empty(g:use_lsp_adapters)
@@ -276,10 +352,10 @@ if !exists("g:use_lsp_adapters") || empty(g:use_lsp_adapters)
     "\   'cpp'           : v:true,
     "\   'rust'          : v:true,
     "\   'golang'        : v:true,
-    \   'csharp'        : v:true,
+    "\   'csharp'        : v:true,
     "\   'omnisharp'     : v:true,
     "\   'omnisharp_vim' : v:true,
-    \   'java'          : v:true,
+    "\   'java'          : v:true,
     "\   'swift'         : v:true,
     "\   'kotlin'        : v:true,
     "\   'python'        : v:true,
@@ -289,7 +365,16 @@ if !exists("g:use_lsp_adapters") || empty(g:use_lsp_adapters)
     \   'viml'          : v:true,
     \   'bash'          : v:true,
     "\   'ansible'       : v:true,
+    "\   'gradle'        : v:true,
+    \   'dockerfile'    : v:true,
+    "\   'json'          : v:true,
+    \   'yaml'          : v:true,
+    \   'toml'          : v:true,
+    \   'xml'           : v:true,
     "\   'markdown'      : v:true,
+    \   'html'          : v:true,
+    \   'css'           : v:true,
+    "\   'tailwindcss'   : v:true,
     \}
 
 endif

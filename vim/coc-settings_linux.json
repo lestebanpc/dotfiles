@@ -2,7 +2,10 @@
   "diagnostic.displayByAle": true,
   "codeLens.enable": true,
   "python.pythonPath": "python3",
-  "rust-analyzer.server.path": "rust-analyzer",
+  "rust-analyzer.server.path": "${env:MY_PRGS_PATH}/lsp_servers/rust_ls/rust-analyzer",
+  "yaml.schemas": {
+    "kubernetes": "/*.k8s.yaml"
+  },
   "powershell.integratedConsole.showOnStartup": false,
   "lightbulb.enableVirtualText": false,
   "lightbulb.enableSign": true,

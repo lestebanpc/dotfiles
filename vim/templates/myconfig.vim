@@ -137,7 +137,18 @@
 "#########################################################################################
 "
 " Activar los linter a usar
-" > Si establece 'v:null' o '{}', se activara los linter definido por defecto..
+"  > Si establece 'v:null' o '{}', se activara los linter definido por defecto..
+"  > Use las capacidades de linting y fixing del servidor LSP.
+"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
+"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
+"    > Para LSP asociados a archivos, como 'DockerFile' (Docker LS), use linting.
+"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
+"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
+"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
+"    ese caso, desactve el linter/fixer de ALE para esos archivos.
+"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
+"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
+"    como CoC.
 
 "let g:ale_linters = {
 "\   'cpp': ['clangtidy'],
@@ -149,6 +160,8 @@
 "\   'dockerfile': ['hadolint'],
 "\   'javascript': ['eslint'],
 "\   'typescript': ['eslint'],
+"\   'javascript': ['biome'],
+"\   'typescript': ['biome'],
 "\}
 
 "let g:ale_linters = v:null
@@ -156,7 +169,18 @@
 
 
 " Activar los fixer a usar
-" > Si establece 'v:null' o '{}', se activara los linter definido por defecto.
+"  > Si establece 'v:null' o '{}', se activara los linter definido por defecto.
+"  > Use las capacidades de linting y fixing del servidor LSP.
+"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
+"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
+"    > Para LSP asociados a archivos, como 'DockerFile' (Docker LS), use linting.
+"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
+"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
+"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
+"    ese caso, desactve el linter/fixer de ALE para esos archivos.
+"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
+"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
+"    como CoC.
 
 "let g:ale_fixers = {
 "\   '*': ['remove_trailing_lines', 'trim_whitespace'],
@@ -167,6 +191,8 @@
 "\   'python': ['black', 'isort'],
 "\   'javascript': ['prettier', 'eslint'],
 "\   'typescript': ['prettier', 'eslint'],
+"\   'javascript': ['biome'],
+"\   'typescript': ['biome'],
 "\   'yaml': ['prettier'],
 "\   'json': ['prettier'],
 "\   'html': ['prettier'],

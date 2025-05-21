@@ -126,7 +126,7 @@
 "                    motor de completado compatible es CoC.
 "  >               : Los demas adaptadores son gestionados por CoC (como extension o en su
 "                    archivo de configuración)
-" Adaptadores LSP en modo IDE NeoVim cuando se usa el cliente LSP nativo :
+" Adaptadores LSP (asociado a lenguajes de programación) en modo IDE NeoVim usando el cliente LSP nativo :
 "  > cpp           : Para C++. Usa el servidor 'Clangd'.
 "  > rust          : Para Rust. Usa el servidor 'Rust Analyzer'.
 "  > golang        : Para GoLang. Usa el servidor 'GoPls'.
@@ -139,11 +139,22 @@
 "  > python        : Para Python. Usa el servidor 'BasedPyRight'. Tiene mas prioridad que 'PyRight'.
 "  > pyright       : Para Python. Usa el servidor 'PyRight'.
 "  > typescript    : Para Javascript/Typescript. Usa 'Typescript LS' un adapador de 'TsServer'
+"                    Use linter como 'eslint' y 'biome' para mejorar el linting.
 "  > lua           : Para Lua. Usa el LSP 'Lua LS'.
 "  > viml          : Para VimScript. Usa el LSP 'Vim LS'.
 "  > bash          : Para Bash. Usa de 'Bash LS'
+" Adaptadores LSP (asociado a ciertos archivos) en modo IDE NeoVim usando el cliente LSP nativo :
 "  > ansible       : Para Ansible. Usa de 'Ansible LS' (requiere Python, Ansible y Ansible-Lint).
+"  > gradle        : Para archivo de configuración de gradle.
+"  > dockerfile    : Para archivo dockerfile. Use linter 'hadolint' para mejorar el linting.
+"  > json          : Para archivo JSON.
+"  > yaml          : Para archivo YAML.
+"  > toml          : Para archivo TOML.
+"  > xml           : Para archivo XML.
 "  > markdown      : Para archivo Markdown.
+"  > html          : Para archivo html.
+"  > css           : Para archivo css.
+"  > tailwindcss   : Para uso de tailwindcss asociado a css.
 " Solo aplica si NO usa CoC. CoC estas configuracion se realiza usualmente por extensiones.
 " Comente/descomente, establezca el valor de las lineas deseadas.
 "let g:use_lsp_adapters = {
@@ -163,7 +174,16 @@
 "\   'viml'          : v:true,
 "\   'bash'          : v:true,
 "\   'ansible'       : v:true,
+"\   'gradle'        : v:true,
+"\   'dockerfile'    : v:true,
+"\   'json'          : v:true,
+"\   'yaml'          : v:true,
+"\   'toml'          : v:true,
+"\   'xml'           : v:true,
 "\   'markdown'      : v:true,
+"\   'html'          : v:true,
+"\   'css'           : v:true,
+"\   'tailwindcss'   : v:true,
 "\}
 
 
@@ -230,7 +250,18 @@
 "#########################################################################################
 "
 " Activar los linter a usar
-" > Si establece 'v:null' o '{}', se activara los linter definido por defecto..
+"  > Si establece 'v:null' o '{}', se activara los linter definido por defecto..
+"  > Use las capacidades de linting y fixing del servidor LSP.
+"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
+"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
+"    > Para LSP asociados a archivos, como 'DockerFile' (Docker LS), use linting.
+"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
+"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
+"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
+"    ese caso, desactve el linter/fixer de ALE para esos archivos.
+"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
+"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
+"    como CoC.
 
 "let g:ale_linters = {
 "\   'cpp': ['clangtidy'],
@@ -242,6 +273,8 @@
 "\   'dockerfile': ['hadolint'],
 "\   'javascript': ['eslint'],
 "\   'typescript': ['eslint'],
+"\   'javascript': ['biome'],
+"\   'typescript': ['biome'],
 "\}
 
 "let g:ale_linters = v:null
@@ -249,7 +282,18 @@
 
 
 " Activar los fixer a usar
-" > Si establece 'v:null' o '{}', se activara los linter definido por defecto.
+"  > Si establece 'v:null' o '{}', se activara los linter definido por defecto.
+"  > Use las capacidades de linting y fixing del servidor LSP.
+"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
+"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
+"    > Para LSP asociados a archivos, como 'DockerFile' (Docker LS), use linting.
+"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
+"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
+"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
+"    ese caso, desactve el linter/fixer de ALE para esos archivos.
+"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
+"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
+"    como CoC.
 
 "let g:ale_fixers = {
 "\   '*': ['remove_trailing_lines', 'trim_whitespace'],
@@ -260,6 +304,8 @@
 "\   'python': ['black', 'isort'],
 "\   'javascript': ['prettier', 'eslint'],
 "\   'typescript': ['prettier', 'eslint'],
+"\   'javascript': ['biome'],
+"\   'typescript': ['biome'],
 "\   'yaml': ['prettier'],
 "\   'json': ['prettier'],
 "\   'html': ['prettier'],

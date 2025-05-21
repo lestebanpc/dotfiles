@@ -94,16 +94,19 @@ gA_packages=(
         ['wezterm']='wez/wezterm'
         ['cilium']='cilium/cilium-cli'
         ['rclone']="$g_empty_str"
-        ['marksman']='artempyanykh/marksman'
         ['biome']='biomejs/biome'
         ['uv']='astral-sh/uv'
         ['jbang']='jbangdev/jbang'
         ['maven']="$g_empty_str"
         ['vscode-java-test']="$g_empty_str"
         ['vscode-java-debug']="$g_empty_str"
-        ['luals']='LuaLS/lua-language-server'
+        ['vscode-gradle']="$g_empty_str"
         ['roslyn-ls-lnx']="$g_empty_str"
         ['roslyn-ls-win']="$g_empty_str"
+        ['luals']='LuaLS/lua-language-server'
+        ['marksman']='artempyanykh/marksman'
+        ['taplo']='tamasfe/taplo'
+        ['lemminx']='redhat-developer/vscode-xml'
 
     )
 
@@ -161,13 +164,13 @@ ga_menu_options_packages=(
     "k0s"
     "cni-plugins,kubectl,kubelet,kubeadm"
     "net-sdk,omnisharp-ls,roslyn-ls-lnx,roslyn-ls-win,netcoredbg"
-    "graalvm,maven,jbang,jdtls,vscode-java-debug,vscode-java-test"
+    "graalvm,maven,jbang,jdtls,vscode-java-debug,vscode-java-test,vscode-gradle"
     "clangd,codelldb,cmake,ninja"
     "nodejs"
     "rust,rust-analyzer"
     "go"
     "uv"
-    "marksman", "luals"
+    "marksman,luals,taplo,lemminx"
     "ctags-win,ctags-nowin"
     "awscli"
     )
@@ -253,6 +256,7 @@ declare -A gA_repo_base_url=(
         ['maven']='https://dlcdn.apache.org'
         ['vscode-java-test']='https://marketplace.visualstudio.com'
         ['vscode-java-debug']='https://marketplace.visualstudio.com'
+        ['vscode-gradle']='https://marketplace.visualstudio.com'
     )
 
 #Si el repositorio es un paquete del SO (esto no se puede instalar si no es root o se tiene acceso a sudo)
@@ -270,6 +274,54 @@ declare -A gA_repo_is_os_package=(
 
 #Funciones modificables de nivel 1 {{{
 
+
+# Obtener informacion de un paquete del marketplace de VSCode
+# > Parametro de retorno
+#   > Valor de reotorna
+#     0 - Se ejecuto de manera exitosa.
+#     1 - No existe comando jq requerido para obtener la información.
+#     2 - Error al ejecutar el comando de obtener la información.
+function get_extension_info_vscode() {
+
+    #Parametros
+    local p_package_id="$1"
+
+    local l_filter='.results[0].extensions[0].versions[0].version'        #Obtener la ultima version del paquete.
+    if [ "$2" = "2" ]; then
+        l_filter='.results[0].extensions[0].versions[0].files[0].source'  #Obtener la URL de la ultima version del paquete.
+    fi
+
+    #Si no esta instalado 'jq' no continuar
+    if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+        return 1
+    fi
+
+    #Usando el API resumido del repositorio de GitHub
+    local l_result
+    local l_status
+    l_result=$(curl -s -X POST "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery" \
+       -H "Content-Type: application/json" \
+       -H "Accept: application/json;api-version=3.0-preview.1" \
+       -d "{
+             \"filters\": [{
+               \"criteria\": [{
+                 \"filterType\": 7,
+                 \"value\": \"${p_package_id}\"
+               }]
+             }],
+             \"assetTypes\": [\"Microsoft.VisualStudio.Services.VSIXPackage\"],
+             \"flags\": 0x402
+           }" | ${g_bin_cmdpath}/jq -r "$l_filter")
+
+    l_status=$?
+    if [ $l_status -ne 0 ]; then
+        return 2
+    fi
+
+    echo "$l_result"
+    return 0
+
+}
 
 
 #Obtiene la ultima version de realease obtenido en un repositorio
@@ -509,58 +561,39 @@ function get_repo_last_version() {
 
         vscode-java-test)
 
-            #Si no esta instalado 'jq' no continuar
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
-                return 1
-            fi
-
-            #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -s -X POST "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery" \
-               -H "Content-Type: application/json" \
-               -H "Accept: application/json;api-version=3.0-preview.1" \
-               -d '{
-                 "filters": [{
-                   "criteria": [{
-                     "filterType": 7,
-                     "value": "vscjava.vscode-java-test"
-                   }]
-                 }],
-                 "assetTypes": ["Microsoft.VisualStudio.Services.VSIXPackage"],
-                 "flags": 0x402
-               }' | ${g_bin_cmdpath}/jq -r '.results[0].extensions[0].versions[0].version')
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'vscjava.vscode-java-test' 1)
 
             l_status=$?
             if [ $l_status -ne 0 ]; then
-                return 2
+                l_repo_last_version=''
+                return $l_status
             fi
             ;;
 
 
         vscode-java-debug)
 
-            #Si no esta instalado 'jq' no continuar
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
-                return 1
-            fi
-
-            #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -s -X POST "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery" \
-               -H "Content-Type: application/json" \
-               -H "Accept: application/json;api-version=3.0-preview.1" \
-               -d '{
-                 "filters": [{
-                   "criteria": [{
-                     "filterType": 7,
-                     "value": "vscjava.vscode-java-debug"
-                   }]
-                 }],
-                 "assetTypes": ["Microsoft.VisualStudio.Services.VSIXPackage"],
-                 "flags": 0x402
-               }' | ${g_bin_cmdpath}/jq -r '.results[0].extensions[0].versions[0].version')
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'vscjava.vscode-java-debug' 1)
 
             l_status=$?
             if [ $l_status -ne 0 ]; then
-                return 2
+                l_repo_last_version=''
+                return $l_status
+            fi
+            ;;
+
+
+        vscode-gradle)
+
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'vscjava.vscode-gradle' 1)
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                l_repo_last_version=''
+                return $l_status
             fi
             ;;
 
@@ -1918,7 +1951,6 @@ function _get_repo_current_pretty_version() {
 
         luals)
 
-
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ -z "$p_path_file" ]; then
                if [ $p_install_win_cmds -eq 0 ]; then
@@ -1943,6 +1975,36 @@ function _get_repo_current_pretty_version() {
                 l_result=""
             fi
             ;;
+
+
+
+        taplo)
+
+            #Calcular la ruta de archivo/comando donde se obtiene la version
+            if [ -z "$p_path_file" ]; then
+               if [ $p_install_win_cmds -eq 0 ]; then
+                  l_path_file="${g_win_programs_path}/lsp_servers/toml_ls/"
+               else
+                  l_path_file="${g_programs_path}/lsp_servers/toml_ls/"
+               fi
+            fi
+
+            #Obtener la version
+            if [ $p_install_win_cmds -eq 0 ]; then
+                l_result=$(${l_path_file}taplo.exe --version 2> /dev/null)
+                l_status=$?
+            else
+                l_result=$(${l_path_file}taplo --version 2> /dev/null)
+                l_status=$?
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
+            ;;
+
 
 
         graalvm)
@@ -2191,6 +2253,36 @@ function _get_repo_current_pretty_version() {
             ;;
 
 
+        vscode-gradle)
+
+            #Obtener la version
+            l_result=""
+            l_status=1
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/vscode-gradle.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/vscode-gradle.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/vscode-gradle.info" ]; then
+                    l_result=$(cat "${g_programs_path}/vscode-gradle.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
+            ;;
+
+
         codelldb)
 
             #Obtener la version
@@ -2284,6 +2376,36 @@ function _get_repo_current_pretty_version() {
 
 
         vscode-js-debug)
+
+            #Obtener la version
+            l_result=""
+            l_status=1
+
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                if [ -f "${g_win_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            else
+
+                if [ -f "${g_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
+                fi
+
+            fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
+            ;;
+
+
+        lemminx)
 
             #Obtener la version
             l_result=""
@@ -2567,56 +2689,67 @@ function _get_repo_current_pretty_version() {
             ;;
 
 
+
         cilium)
+
+            #Obtener la version
+            l_result=""
+            l_status=1
 
             if [ $p_install_win_cmds -eq 0 ]; then
 
-                if [ -f "${g_win_programs_path}/cilium.info" ]; then
-                    l_result=$(cat "${g_win_programs_path}/cilium.info" | head -n 1)
-                else
-                    #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
-                    echo "$g_version_none"
-                    return 3
+                if [ -f "${g_win_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
                 fi
 
             else
 
-                if [ -f "${g_programs_path}/cilium.info" ]; then
-                    l_result=$(cat "${g_programs_path}/cilium.info" | head -n 1)
-                else
-                    #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
-                    echo "$g_version_none"
-                    return 3
+                if [ -f "${g_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
                 fi
 
             fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
             ;;
+
 
 
         marksman)
 
+            #Obtener la version
+            l_result=""
+            l_status=1
+
             if [ $p_install_win_cmds -eq 0 ]; then
 
-                if [ -f "${g_win_programs_path}/marksman.info" ]; then
-                    l_result=$(cat "${g_win_programs_path}/marksman.info" | head -n 1)
-                else
-                    #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
-                    echo "$g_version_none"
-                    return 3
+                if [ -f "${g_win_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_win_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
                 fi
 
             else
 
-                if [ -f "${g_programs_path}/marksman.info" ]; then
-                    l_result=$(cat "${g_programs_path}/marksman.info" | head -n 1)
-                else
-                    #Siempre se actualizara el binario, por ahora no se puede determinar la version instalada
-                    echo "$g_version_none"
-                    return 3
+                if [ -f "${g_programs_path}/${p_repo_id}.info" ]; then
+                    l_result=$(cat "${g_programs_path}/${p_repo_id}.info" | head -n 1)
+                    l_status=$?
                 fi
 
             fi
+
+            if [ $l_status -eq 0 ]; then
+                l_result=$(echo "$l_result" | head -n 1)
+            else
+                l_result=""
+            fi
             ;;
+
 
 
         tmux-fingers)
@@ -3947,6 +4080,60 @@ function get_repo_artifacts() {
 
 
 
+        taplo)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_names=("taplo-windows-x86_64.zip")
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("taplo-full-linux-aarch64.gz")
+                    else
+                        pna_artifact_names=("taplo-full-linux-x86_64.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("taplo-full-linux-aarch64.gz")
+                    else
+                        pna_artifact_names=("taplo-full-linux-x86_64.gz")
+                    fi
+                fi
+                pna_artifact_types=(12)
+            fi
+            ;;
+
+
+
+        lemminx)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_install_win_cmds -eq 0 ]; then
+                pna_artifact_names=("lemminx-win32.zip")
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("lemminx-linux.zip")
+                    else
+                        pna_artifact_names=("lemminx-linux.zip")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("lemminx-linux.zip")
+                    else
+                        pna_artifact_names=("lemminx-linux.zip")
+                    fi
+                fi
+                pna_artifact_types=(11)
+            fi
+            ;;
+
+
+
         roslyn-ls-lnx)
 
             #Solo binarios linux
@@ -4408,19 +4595,7 @@ function get_repo_artifacts() {
         vscode-java-debug)
 
             #Obtener la URL del artefacto a descargar
-            l_aux=$(curl -s -X POST "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery" \
-                      -H "Content-Type: application/json" \
-                      -H "Accept: application/json;api-version=3.0-preview.1" \
-                      -d '{
-                            "filters": [{
-                              "criteria": [{
-                                "filterType": 7,
-                                "value": "vscjava.vscode-java-debug"
-                              }]
-                            }],
-                            "assetTypes": ["Microsoft.VisualStudio.Services.VSIXPackage"],
-                            "flags": 0x402
-                        }' | jq -r '.results[0].extensions[0].versions[0].files[0].source')
+            l_aux=$(get_extension_info_vscode 'vscjava.vscode-java-debug' 2)
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 2
@@ -4437,19 +4612,24 @@ function get_repo_artifacts() {
         vscode-java-test)
 
             #Obtener la URL del artefacto a descargar
-            l_aux=$(curl -s -X POST "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery" \
-                      -H "Content-Type: application/json" \
-                      -H "Accept: application/json;api-version=3.0-preview.1" \
-                      -d '{
-                            "filters": [{
-                              "criteria": [{
-                                "filterType": 7,
-                                "value": "vscjava.vscode-java-test"
-                              }]
-                            }],
-                            "assetTypes": ["Microsoft.VisualStudio.Services.VSIXPackage"],
-                            "flags": 0x402
-                        }' | jq -r '.results[0].extensions[0].versions[0].files[0].source')
+            l_aux=$(get_extension_info_vscode 'vscjava.vscode-java-test' 2)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("$l_aux")
+            pna_artifact_names=("${p_repo_id}.zip") #No se usara la extensión '.vsix'
+            pna_artifact_types=(11)
+            ;;
+
+
+        vscode-gradle)
+
+            #Obtener la URL del artefacto a descargar
+            l_aux=$(get_extension_info_vscode 'vscjava.vscode-gradle' 2)
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 2
@@ -5771,26 +5951,100 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            if [ $p_install_win_cmds -ne 0 ]; then
+            #A. Si son binarios Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
 
-                echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/marksman\" ..."
-                mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/marksman"
-
-                #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-                copy_binary_on_command "${l_source_path}" "marksman" 0 1
-
-                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "marksman.info" "$p_repo_last_pretty_version" 0
-
-            else
+                #Creando el folder si no existe y limpiarlo si existe
+                create_or_clean_folder_on_program 1 "lsp_servers/markdown_ls" 2 ""
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "marksman.exe" 1 1
+                copy_binary_on_program "${l_source_path}" "marksman.exe" 1 "lsp_servers/markdown_ls" 1
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
                 save_prettyversion_on_program "" "marksman.info" "$p_repo_last_pretty_version" 1
 
             fi
+
+            #Creando el folder si no existe y limpiarlo si existe
+            create_or_clean_folder_on_program 0 "lsp_servers/markdown_ls" 2 ""
+
+
+            echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/marksman\" ..."
+            mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/marksman"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            copy_binary_on_program "${l_source_path}" "marksman" 0 "lsp_servers/markdown_ls" 1
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "marksman.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+        taplo)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Creando el folder si no existe y limpiarlo si existe
+                create_or_clean_folder_on_program 1 "lsp_servers/toml_ls" 2 ""
+
+                #Copiar el comando
+                copy_binary_on_program "${l_source_path}" "taplo.exe" 1 "lsp_servers/toml_ls" 1
+
+
+            fi
+
+            #Creando el folder si no existe y limpiarlo si existe
+            create_or_clean_folder_on_program 0 "lsp_servers/toml_ls" 2 ""
+
+
+            echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/taplo\" ..."
+            mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/taplo"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            copy_binary_on_program "${l_source_path}" "taplo" 0 "lsp_servers/toml_ls" 1
+            ;;
+
+
+
+        lemminx)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Creando el folder si no existe y limpiarlo si existe
+                create_or_clean_folder_on_program 1 "lsp_servers/xml_ls" 2 ""
+
+                echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/lemminx\" ..."
+                mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/lemminx"
+
+                #Copiar el comando
+                copy_binary_on_program "${l_source_path}" "lemminx.exe" 1 "lsp_servers/xml_ls" 1
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "lemminx.info" "$p_repo_last_pretty_version" 1
+
+            fi
+
+            #Creando el folder si no existe y limpiarlo si existe
+            create_or_clean_folder_on_program 0 "lsp_servers/xml_ls" 2 ""
+
+
+            echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/lemminx\" ..."
+            mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/lemminx"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            copy_binary_on_program "${l_source_path}" "lemminx" 0 "lsp_servers/xml_ls" 1
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "lemminx.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -6083,13 +6337,17 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            #A. Si es WSL de Windows
+            #A. Si es un binario Windows
             if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Creando el folder si no existe y limpiarlo si existe
+                create_or_clean_folder_on_program 1 "lsp_servers/rust_ls" 2 ""
 
                 #echo "Renombrando \"${p_artifact_filename_woext}.exe\" como \"${g_temp_path}/${l_source_path}/rust-analyzer.exe\" ..."
                 #mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/rust-analyzer.exe"
 
-                copy_binary_on_command "${l_source_path}" "rust-analyzer.exe" 1 1
+                #Copiando el binario en una ruta del path
+                copy_binary_on_program "${l_source_path}" "rust-analyzer.exe" 1 "lsp_servers/rust_ls" 1
 
                 #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
                 save_prettyversion_on_program "" "rust-analyzer.info" "$p_repo_last_pretty_version" 1
@@ -6098,13 +6356,16 @@ function _copy_artifact_files() {
 
             fi
 
-            #B. Si es Linux (no WSL)
+            #B. Si es binario Linux
+
+            #Creando el folder si no existe y limpiarlo si existe
+            create_or_clean_folder_on_program 0 "lsp_servers/rust_ls" 2 ""
 
             echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/rust-analyzer\" ..."
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/rust-analyzer"
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_command "${l_source_path}" "rust-analyzer" 0 1
+            copy_binary_on_program "${l_source_path}" "rust-analyzer" 0 "lsp_servers/rust_ls" 1
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
             save_prettyversion_on_program "" "rust-analyzer.info" "$p_repo_last_pretty_version" 0
@@ -7289,6 +7550,7 @@ function _copy_artifact_files() {
             ;;
 
 
+
         vscode-java-test)
 
             #Ruta local de los artefactos
@@ -7359,6 +7621,43 @@ function _copy_artifact_files() {
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
             save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
+
+
+
+        vscode-gradle)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_install_win_cmds -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "ms_java_gradle" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_gradle"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "ms_java_gradle" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_gradle"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
 
 
 
