@@ -190,17 +190,14 @@ function _get_gcc_version() {
     return 0
 }
 
-
-#Actualizar el repositorios
+#Realiza una actualización superficial del repositorios
 #Parametros de salida (valores de retorno):
 #   0 > El repositorio ya esta actualizado
-#   1 > El repositorio se actualizo con existo (merge)
-#   2 > El repositorio se actualizo con existo (rebase)
+#   1 > El repositorio se actualizo con exito
 #   3 > Error en la actualización: No se puede realizar el 'fetching' (actualizar la rama remota del repositorio local)
-#   4 > Error en la actualización: No se puede realizar el 'merging'  (actualizar la rama local usando la rama remota )
-#   5 > Error en la actualización: No se puede realizar el 'rebasing' (actualizar la rama local usando la rama remota )
+#   8 > Error en la actualización: No se puede obtener información del repositorio local
 #   9 > Error en la actualización: El folder del repositorio es invalido o no existe
-function _update_repository() {
+function _update_repository2() {
 
     #1. Argumentos
     local l_tag="VIM"
@@ -236,20 +233,119 @@ function _update_repository() {
         return 9
     fi
 
+    # Ejemplo : 'main'
     local l_local_branch=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
     if [ "$l_local_branch" = "HEAD" ]; then
         printf '%bInvalid current branch of  repository%b\n' "$g_color_red1" "$g_color_reset"
         return 8
     fi
 
+    # Ejemplo : 'origin'
     local l_remote=$(git config branch.${l_local_branch}.remote)
+    # Ejemplo : 'origin/main'
     local l_remote_branch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u})
     local l_status
 
     #3. Actualizando la rama remota del repositorio local desde el repositorio remoto
-    printf 'Fetching from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_gray1" "$l_remote"  "$g_color_reset" "$g_color_gray1" \
-           "$l_remote_branch" "$g_color_reset"
-    git fetch ${l_remote}
+    printf 'Fetching from remote repository "%b%s%b" to remote branch "%b%s%b" (%bgit fetch --depth=1 %s %s%b)...\n' "$g_color_gray1" "$l_remote"  "$g_color_reset" "$g_color_gray1" \
+           "$l_remote_branch" "$g_color_reset" "$g_color_green1" "$l_remote" "$l_local_branch" "$g_color_reset"
+    git fetch --depth=1 ${l_remote} ${l_local_branch}
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        printf '%bError (%s) on Fetching%b from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_red1" "$l_status" "$g_color_reset" \
+               "$g_color_gray1" "$l_remote" "$g_color_reset" "$g_color_gray1" "$l_remote_branch" "$g_color_reset"
+        return 3
+    fi
+
+    #4. Verificar si esta actualizado las ramas local y la de sigimiento
+    local l_hash_head=$(git rev-parse HEAD)
+    local l_hash_remote=$(git rev-parse FETCH_HEAD)
+
+    if [ "$l_hash_head" = "$l_hash_remote" ]; then
+        echo 'Already up-to-date'
+        return 0
+    fi
+
+    #5. Si la rama local es diferente al rama remota
+
+    #4. Realizando una actualizacion destructiva y para quedar solo con el ultimo nodo de la rama remota
+    printf 'Updating local branch "%b%s%b" form remote branch "%b%s%b" (%bgit reset --hard %s/HEAD%b)...\n' "$g_color_gray1" "$l_local_branch" \
+           "$g_color_reset" "$g_color_gray1" "$l_remote_branch" "$g_color_reset" "$g_color_green1" "$l_remote" "$g_color_reset"
+    if git reset --hard ${l_remote}/HEAD; then
+        echo 'Repository was updated'
+        return 1
+    fi
+
+    return 2
+
+}
+
+
+
+#Actualizar el repositorios
+#Parametros de salida (valores de retorno):
+#   0 > El repositorio ya esta actualizado
+#   1 > El repositorio se actualizo con exito (merge)
+#   2 > El repositorio se actualizo con exito (rebase)
+#   3 > Error en la actualización: No se puede realizar el 'fetching' (actualizar la rama remota del repositorio local)
+#   4 > Error en la actualización: No se puede realizar el 'merging'  (actualizar la rama local usando la rama remota )
+#   5 > Error en la actualización: No se puede realizar el 'rebasing' (actualizar la rama local usando la rama remota )
+#   8 > Error en la actualización: No se puede obtener información del repositorio local
+#   9 > Error en la actualización: El folder del repositorio es invalido o no existe
+function _update_repository1() {
+
+    #1. Argumentos
+    local l_tag="VIM"
+    local p_is_neovim=1
+    if [ "$1" = "0" ]; then
+        p_is_neovim=0
+        l_tag="NeoVIM"
+    fi
+
+    local p_repo_path="$2"
+    local p_repo_name="$3"
+    local p_repo_type="$4"
+
+
+    #2. Mostando el titulo
+
+    printf '\n'
+    print_line '.' $g_max_length_line "$g_color_gray1"
+    printf '%s > Git repository "%b%s%b" %b(%s)%b\n' "$l_tag" "$g_color_cian1" "$p_repo_name" "$g_color_reset" "$g_color_gray1" "$p_repo_path" "$g_color_gray1"
+    print_line '.' $g_max_length_line "$g_color_gray1"
+
+    #1. Validar si existe directorio
+    if [ ! -d $p_repo_path ]; then
+        echo "Folder \"${p_repo_path}\" not exists"
+        return 9
+    fi
+
+    cd $p_repo_path
+
+    #2. Validar si el directorio .git del repositorio es valido
+    if ! git rev-parse --git-dir > /dev/null 2>&1; then
+        printf '%bInvalid git repository%b\n' "$g_color_red1" "$g_color_reset"
+        return 9
+    fi
+
+    # Ejemplo : 'main'
+    local l_local_branch=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
+    if [ "$l_local_branch" = "HEAD" ]; then
+        printf '%bInvalid current branch of  repository%b\n' "$g_color_red1" "$g_color_reset"
+        return 8
+    fi
+
+    # Ejemplo : 'origin'
+    local l_remote=$(git config branch.${l_local_branch}.remote)
+    # Ejemplo : 'origin/main'
+    local l_remote_branch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u})
+    local l_status
+
+    #3. Actualizando la rama remota del repositorio local desde el repositorio remoto
+    printf 'Fetching from remote repository "%b%s%b" to remote branch "%b%s%b" (%bgit fetch %s %s%b)...\n' "$g_color_gray1" "$l_remote"  "$g_color_reset" "$g_color_gray1" \
+           "$l_remote_branch" "$g_color_reset" "$g_color_gray1" "$l_remote" "$l_local_branch" "$g_color_reset"
+    git fetch ${l_remote} ${l_local_branch}
     l_status=$?
 
     if [ $l_status -ne 0 ]; then
@@ -268,10 +364,11 @@ function _update_repository() {
 
     #5. Si la rama local es diferente al rama remota
 
-    #¿Es posible realizar 'merging'?
+    # Si la rama main es una subrama de la subrama de la rama local de seguimiento remoto
+    # Es posible realizar 'merge' de tipo 'Fast-forward'
     if git merge-base --is-ancestor HEAD ${l_remote_branch}; then
 
-        echo 'Fast-forward possible. Merging...'
+        echo 'Fast-forward Merging ...'
         git merge --ff-only --stat ${l_remote_branch}
 
         l_status=$?
@@ -284,9 +381,9 @@ function _update_repository() {
         return 1
     fi
 
-    #Realizanfo 'rebasing'
-    echo 'Fast-forward not possible. Rebasing...'
-    git rebase --preserve-merges --stat ${l_remote_branch}
+    # Si no es una subrama, intentar de mover la solo la subrama
+    echo 'Fast-forward merging not possible. Rebasing...'
+    git rebase --rebase-merges --stat ${l_remote_branch}
 
     l_status=$?
     if [ $l_status -ne 0 ]; then
@@ -378,7 +475,8 @@ function _update_vim_package() {
 
         l_folder="${l_base_plugins_path}/${l_folder}"
 
-        _update_repository $p_is_neovim "$l_folder" "$l_repo_name" "$l_repo_type"
+        _update_repository2 $p_is_neovim "$l_folder" "$l_repo_name" "$l_repo_type"
+        #_update_repository1 $p_is_neovim "$l_folder" "$l_repo_name" "$l_repo_type"
         l_status=$?
 
         #Si se llego a actualizar con existo...
@@ -466,14 +564,14 @@ function _update_vim_package() {
     printf '\nRecomendaciones:\n'
     if [ $p_is_neovim -ne 0  ]; then
 
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 vim%b"\n' "$g_color_cian1" "$g_color_reset"
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bONLY_BASIC=1 vim%b"\n' "$g_color_cian1" "$g_color_reset"
         printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
 
     else
 
         printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
         printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_cian1" "$g_color_reset"
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bUSE_EDITOR=1 nvim%b"\n' "$g_color_cian1" "$g_color_reset"
+        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bONLY_BASIC=1 nvim%b"\n' "$g_color_cian1" "$g_color_reset"
 
         printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
 

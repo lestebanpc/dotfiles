@@ -7,12 +7,8 @@ let s:use_adapter = v:false
 
 if g:is_neovim
 
-    "Plugin IDE> Implementacion del arbol sinstanctico de TreeSitter para NeoVim
-    packadd nvim-treesitter
-
     "Plugin IDE> Modulos a usar del plugin 'nvim-treeSitter'
     packadd nvim-treesitter-context
-    packadd nvim-treesitter-textobjects
 
 endif
 
@@ -23,21 +19,12 @@ if g:is_neovim && !g:use_coc
     "Package IDE> LSP Client (nativo de NeoVim)
     packadd nvim-lspconfig
 
-    "Package IDE> CMP (Framework de autocompletado)
-    packadd nvim-cmp
-
     "Package IDE> Mejor soporte a popup 'signature-help' en el completado de un metodo
     "packadd cmp-nvim-lsp-signature-help
     packadd lsp_signature.nvim
 
-    "Package IDE> Core> Fuente CMP: Cliente LSP
+    "Package IDE> Fuente CMP: Cliente LSP
     packadd cmp-nvim-lsp
-
-    "Package IDE> Fuente CMP: Buffer (Sugiere palabras que se encuentra en el archivo actual)
-    packadd cmp-buffer
-
-    "Package UI> Core> Fuente CMP: FileSystem Path
-    packadd cmp-path
 
     "Package IDE> Motor/Frameework de Snippet
     "             Muestra los snippets cargados. Si elegimos un snippet lo expande.
@@ -80,6 +67,11 @@ if g:is_neovim && !g:use_coc
 
     endif
 
+    "Package IDE> Fuente de completado de 'nvim-cmp'
+    if g:use_ai_plugins == v:true
+        packadd copilot-cmp
+    endif
+
 endif
 
 
@@ -112,8 +104,8 @@ endif
 " Se usara cliente LSP de CoC o el nativo de NeoVim
 let g:ale_disable_lsp = 1
 
-" Desabilitar 'Completition'
-" Se usara el Completition de CoC o nvim-comp de NeoVim.
+" Desabilitar 'Completion'
+" Se usara el Completion de CoC o nvim-comp de NeoVim.
 let g:ale_completion_enabled = 0
 
 " Plugin IDE> Linting (analisis y diagnostico sin compilar)
@@ -179,6 +171,8 @@ let g:ale_virtualtext_delay = 10
 
 " Si es NeoVim, enviar los errores y warning al API de Diagnostico y que ALE mueste el diagnostico
 " usadno el API de NeoVim.
+" Vease :
+"    https://github.com/dense-analysis/ale/pull/4345
 if g:is_neovim
     let g:ale_use_neovim_diagnostics_api = 1
 endif
@@ -212,7 +206,7 @@ nnoremap <silent> [d <Plug>(ale_previous)
 "
 
 " Implementa :
-"   - Completition,
+"   - Completion,
 "   - Un cliente LSP,
 "   - Adaptadores para cliente LSP para servidores LSP usando extensiones,
 "   - Extensiones diversas.

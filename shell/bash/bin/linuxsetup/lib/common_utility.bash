@@ -2274,9 +2274,9 @@ function check_vim_plugins() {
 
 
     #2. ¿Es IDE? (SOLO se analiza uno de los plugins descargados)
-    local l_plugin_path="${HOME}/.vim/pack/ide/opt/coc.nvim"
+    local l_plugin_path="${HOME}/.vim/pack/ide_dev_coc/opt/coc.nvim"
     if [ $p_is_neovim -eq 0  ]; then
-        l_plugin_path="${HOME}/.local/share/nvim/site/pack/ide/opt/nvim-cmp"
+        l_plugin_path="${HOME}/.local/share/nvim/site/pack/ide_dev_native/opt/nvim-lspconfig"
     fi
 
     if [ -d "$l_plugin_path" ]; then
@@ -2284,9 +2284,9 @@ function check_vim_plugins() {
     fi
 
     #3. ¿Es Editor? (SOLO se analiza uno de los plugins descargados)
-    l_plugin_path="${HOME}/.vim/pack/ui/opt/fzf"
+    l_plugin_path="${HOME}/.vim/pack/basic_core/opt/fzf"
     if [ $p_is_neovim -eq 0  ]; then
-        l_plugin_path="${HOME}/.local/share/nvim/site/pack/ui/opt/fzf"
+        l_plugin_path="${HOME}/.local/share/nvim/site/pack/basic_core/opt/fzf-lua"
     fi
 
     if [ -d "$l_plugin_path" ]; then

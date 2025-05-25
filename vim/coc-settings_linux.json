@@ -1,5 +1,12 @@
 {
   "diagnostic.displayByAle": true,
+  "suggest.labelMaxLength": 40,
+  "coc.source.file.disableSyntaxes": ["comment"],
+  "coc.source.around.disableSyntaxes": ["comment"],
+  "coc.source.snippets.disableSyntaxes": ["comment"],
+  "coc.source.snippets-source.disableSyntaxes": ["comment"],
+  "coc.source.buffer.disableSyntaxes": ["comment"],
+  "coc.source.copilot.disableSyntaxes": ["comment"],
   "codeLens.enable": true,
   "python.pythonPath": "python3",
   "rust-analyzer.server.path": "${env:MY_PRGS_PATH}/lsp_servers/rust_ls/rust-analyzer",
@@ -13,6 +20,7 @@
     "default": "󰌵",
     "quickfix": "󰁨"
   },
+  "copilot.kindLabel": "  ",
   "suggest.completionItemKindLabels": {
     "method": " 󰆧 ",
     "function": "  ",

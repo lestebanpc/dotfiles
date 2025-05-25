@@ -18,8 +18,8 @@
 "   > VIM como IDE usa como cliente LSP a CoC.
 "   > NeoVIM como IDE usa el cliente LSP nativo (por defecto), pero pero puede usar CoC: USE_COC=1 nvim
 "   > Tanto VIM/NeoVIM configurado en modo IDE puede omitir la cargar los plugins del IDE usando:
-"     USE_EDITOR=1 vim
-"     USE_EDITOR=1 nvim
+"     ONLY_BASIC=1 vim
+"     ONLY_BASIC=1 nvim
 "   > La limitacion del ultimo caso es que los no plugins filetypes de modo editor no se cargaran
 "
 " Para Vim/NeoVIM, el script de instalacion crea link de archivos/carpetas en su runtimepath por defecto:
@@ -166,22 +166,22 @@ endif
 "  > La deshabilitación automatica de las capacidades de modo IDE se realiza si no cumple requisitos
 "    minimos de un IDE.
 " El valor real, se obtendra segun orden de prioridad:
-"  > El valor definido por la variable de entorno 'USE_EDITOR'
+"  > El valor definido por la variable de entorno 'ONLY_BASIC'
 "    > 0 ('true' ), si se desactiva las capacidades IDE.
-"      Ejemplo : 'USE_EDITOR=0 vim'
+"      Ejemplo : 'ONLY_BASIC=0 vim'
 "    > 1 ('false'), si se preserva las capacidades IDE.
-"      Ejemplo : 'USE_EDITOR=1 vim'
+"      Ejemplo : 'ONLY_BASIC=1 vim'
 "    > Cualquiere otro valor se considera no definido.
 "  > El valor definido por esta variable VIM
 "    > v:true (o diferente a '0') si es 'true'
 "    > v:false (o '0') si es false.
 "    > Si no se especifica, se considera no definido
 " Si no se define, su valor por defecto es 'v:true' (valor diferente a 0).
-if $USE_EDITOR != ''
+if $ONLY_BASIC != ''
 
-    if $USE_EDITOR == 0
+    if $ONLY_BASIC == 0
         let g:use_ide = v:false
-    elseif $USE_EDITOR == 1
+    elseif $ONLY_BASIC == 1
         let g:use_ide = v:true
     else
         let g:use_ide = v:true
@@ -209,7 +209,7 @@ endif
 "  > 'visual_multi'
 "     > Plugin de typing 'vim-visual-multi', el cual es usado para realizar seleccion multiple
 "       de texto.
-" Definir los valores por defecto si no non han sido definidos.
+" Definir los valores por defecto si no han sido definidos.
 if !exists("g:use_typing_plugins") || empty(g:use_typing_plugins)
     let g:use_typing_plugins = {
     \   'surround'     : v:false,
@@ -220,10 +220,67 @@ endif
 "echom 'Typing plugins: ' .. string(g:use_typing_plugins)
 
 
-" Habilitar el plugin de AI. Valor por defecto es 1 ('true').
-" Valor '0' es considerado 'false', otro valor es considerado 'true'.
-" Si cambia este valor, recargar/cerrar VIM para volver a cargar los plugin.
-let g:use_ai_plugins = get(g:, 'use_ai_plugins', v:false)
+" Habilitar el plugin de AI.
+" > Para 'AI Autocompletion' se usara la capacidade de autocompletado de 'GitHub Copilot' y estara por
+"   defecto desabilitado.
+"   > Para habilitarlo use ':Copilot enable'
+"   > Para CoC (VIM/NeoVIM), se usara 'github/copilot.vim' y el plugin de CoC '@hexuhua/coc-copilot'.
+"   > Para NeoVIM y no usas CoC, se usara 'zbirenbaum/copilot.lua'.
+" > Para 'AI Agent' se usara Avente, usando la API ofrecido por 'GitHub Copilot'.
+"   > Puede usar avante con el 'AI Autocompletion' desactivado.
+" El valor real, se obtendra segun orden de prioridad:
+"  > El valor definido por la variable de entorno 'USE_AI=0'
+"    > 0 si es 'true'
+"    > 1 si es false.
+"    > Cualquiere otro valor se considera no definido.
+"  > El valor definido por esta variable VIM.
+"    > v:true (o diferente a '0 ') si es 'true'
+"    > v:false (o '0') si es false.
+"    > Si no se especifica, se considera no definido
+" Si no se define, su valor por defecto es 'v:false' (valor 0).
+if $USE_AI != ''
+
+    if $USE_AI == 0
+        let g:use_ai_plugins = v:true
+    elseif $USE_AI == 1
+        let g:use_ai_plugins = v:false
+    else
+        let g:use_ai_plugins = v:false
+    endif
+
+elseif exists("g:use_ai_plugins")
+
+    if empty(g:use_ai_plugins)
+        let g:use_ai_plugins = v:false
+    else
+        let g:use_ai_plugins = v:true
+    endif
+
+else
+    let g:use_ai_plugins = v:false
+endif
+
+
+" Si esta habilitado el 'AI Autocompletion', a que archivos se habiltara el autocompletado por AI,
+" Definir los valores por defecto si no han sido definidos.
+if !exists("g:completion_filetypes") || empty(g:completion_filetypes)
+    let g:completion_filetypes = {
+    \   '*'           : v:false,
+    \   'c'           : v:true,
+    \   'cpp'         : v:true,
+    \   'go'          : v:true,
+    \   'rust'        : v:true,
+    \   'java'        : v:true,
+    \   'cs'          : v:true,
+    \   'python'      : v:true,
+    \   'sh'          : v:false,
+    \   'lua'         : v:false,
+    \   'vim'         : v:false,
+    \   'javascript'  : v:true,
+    \   'typescript'  : v:true,
+    \}
+endif
+"echom 'Completion Filetypes: ' .. string(g:completion_filetypes)
 
 
 " Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.
@@ -260,14 +317,14 @@ if !exists("g:ale_linters") || empty(g:ale_linters)
 
     "Establecer valores por defecto
     let g:ale_linters = {
-    "\   'cpp': ['clangtidy'],
-    "\   'c':   ['clangtidy'],
-    "\   'rust': ['clippy'],
-    "\   'go': ['golangci-lint'],
-    "\   'python': ['pylint', 'flake8'],
-    \   'dockerfile': ['hadolint'],
-    \   'javascript': ['biome'],
-    \   'typescript': ['biome'],
+    "\   'cpp'        : ['clangtidy'],
+    "\   'c'          :   ['clangtidy'],
+    "\   'rust'       : ['clippy'],
+    "\   'go'         : ['golangci-lint'],
+    "\   'python'     : ['pylint', 'flake8'],
+    \   'dockerfile' : ['hadolint'],
+    \   'javascript' : ['biome'],
+    \   'typescript' : ['biome'],
     \}
 
 endif
@@ -289,18 +346,18 @@ if !exists("g:ale_fixers") || empty(g:ale_fixers)
 
     "Establecer valores por defecto
     let g:ale_fixers = {
-    \   '*': ['remove_trailing_lines', 'trim_whitespace'],
-    "\   'cpp': ['clang-format', 'clangtidy'],
-    "\   'c':   ['clang-format', 'clangtidy'],
-    "\   'rust': ['rustfmt'],
-    "\   'go': ['gofmt', 'goimports'],
-    "\   'python': ['black', 'isort'],
-    \   'javascript': ['biome'],
-    \   'typescript': ['biome'],
-    \   'yaml': ['prettier'],
-    \   'json': ['prettier'],
-    \   'html': ['prettier'],
-    \   'css':  ['prettier'],
+    \   '*'          : ['remove_trailing_lines', 'trim_whitespace'],
+    "\   'cpp'        : ['clang-format', 'clangtidy'],
+    "\   'c'          : ['clang-format', 'clangtidy'],
+    "\   'rust'       : ['rustfmt'],
+    "\   'go'         : ['gofmt', 'goimports'],
+    "\   'python'     : ['black', 'isort'],
+    \   'javascript' : ['biome'],
+    \   'typescript' : ['biome'],
+    \   'yaml'       : ['prettier'],
+    \   'json'       : ['prettier'],
+    \   'html'       : ['prettier'],
+    \   'css'        : ['prettier'],
     \}
 
 endif
@@ -352,7 +409,7 @@ if !exists("g:use_lsp_adapters") || empty(g:use_lsp_adapters)
     "\   'cpp'           : v:true,
     "\   'rust'          : v:true,
     "\   'golang'        : v:true,
-    "\   'csharp'        : v:true,
+    \   'csharp'        : v:true,
     "\   'omnisharp'     : v:true,
     "\   'omnisharp_vim' : v:true,
     "\   'java'          : v:true,
@@ -463,10 +520,11 @@ runtime setting/setting_core.vim
 " Setup plugins basicos
 "#########################################################################################################
 
-" StatusLine, TabLine, TMUX, ...
+" StatusLine, TabLine, TMUX, FZF, NERDTree.
 runtime setting/basic/basic_core.vim
 
-" Utilitarios basicos: FZF, NERDTree, ...
+" Autocpmpletado de la linea de comandos, Highlighting Sintax (resaltado de sintaxis) nativo y el ofrecido
+" por Treesitter.
 runtime setting/basic/basic_extended.vim
 
 
@@ -483,12 +541,12 @@ endif
 " > Plugin para mejorar el typing code.
 runtime setting/ide/ide_utils.vim
 
-" Setting IDE Core (LSP client, Completition, Diagnostic, etc.)
+" Setting IDE Core (LSP client, Completion, Diagnostic, etc.)
 " > Solo en VIM, se define:
 "   - Code Outline (esquema de codigo del buffer): 'vista.vim'.
 "     Se integra con LSP cliente de CoC y con CTags.
 " > En VIM o NeoVIM con CoC, se define:
-"   - Cliente LSP, Completition, Otros: CoC.nvim
+"   - Cliente LSP, Completion, Otros: CoC.nvim
 "   - Los servidores LSP y/o adaptadores LSP usualmente se realiza instalando una extension CoC.
 "   - Diagnostico (Linting, Fixing) y Formatting code: ALE
 "   - Snippets: La extension 'coc-Snippets' y la fuente de snippets 'vim-snippets'.
@@ -497,7 +555,7 @@ runtime setting/ide/ide_utils.vim
 " > En NeoVIM sin CoC, se define:
 "   - Cliente LSP : Se usara el API nativo 'vim.lsp' y 'nvim-lspconfig' para facilitar su configuración.
 "   - Los servidores LSP y/o adaptadores LSP se desacargarn manualmente (usando un script bash).
-"   - Completition : se usara 'nvim-cmp' y plugins para sus diversas fuentes de autocompletado.
+"   - Completion : se usara 'nvim-cmp' y plugins para sus diversas fuentes de autocompletado.
 "   - Diagnostico (Linting, Fixing) y Formatting code: ALE (el cual usa el API de diagnostico nativo).
 "   - Snippets: 'LuaSnippet' y la fuente de snippets 'friendly-snippets'.
 "   - Plugins que configuran clientes LSP y/o su adapador y ofrecen mas capacidades:
@@ -522,8 +580,7 @@ runtime setting/ide/ide_development.vim
 " > Para 'Unit testing' en VIM se usara 'vim-test' (facilita la ejecucion desde vim)
 " > Para 'Unit testing' en NeoVIM se usara 'nvim-neotest' el cual permite:
 "   - Facilita la ejecucion desde NeoVIM.
-"   - Muestra reportes de la ejecucion e indicadores del estado en buffer de las pruebas ejecutadas.
-runtime setting/ide/ide_testing.vim
+"   - Muestra reportes de la ejecucion e indicadores del estado en buffer de las pruebas ejecutadas.  runtime setting/ide/ide_testing.vim
 
 " Capacidades adicionales de IDE
 " > IA Chat

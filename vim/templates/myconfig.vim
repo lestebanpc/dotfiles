@@ -58,11 +58,11 @@
 "  > La deshabilitación automatica de las capacidades de modo IDE se realiza si no cumple requisitos
 "    minimos de un IDE.
 " El valor real, se obtendra segun orden de prioridad:
-"  > El valor definido por la variable de entorno 'USE_EDITOR'
+"  > El valor definido por la variable de entorno 'ONLY_BASIC'
 "    > 0 ('true' ), si se desactiva las capacidades IDE.
-"      Ejemplo : 'USE_EDITOR=0 vim'
+"      Ejemplo : 'ONLY_BASIC=0 vim'
 "    > 1 ('false'), si se preserva las capacidades IDE.
-"      Ejemplo : 'USE_EDITOR=1 vim'
+"      Ejemplo : 'ONLY_BASIC=1 vim'
 "    > Cualquiere otro valor se considera no definido.
 "  > El valor definido por esta variable VIM
 "    > v:true (o diferente a '0') si es 'true'
@@ -90,7 +90,14 @@
 "\}
 
 
-" Habilitar los plugin de AI.
+" Habilitar el plugin de AI.
+" > Para 'AI Autocompletion' se usara la capacidade de autocompletado de 'GitHub Copilot' y estara por
+"   defecto desabilitado.
+"   > Para habilitarlo use ':Copilot enable'
+"   > Para CoC (VIM/NeoVIM), se usara 'github/copilot.vim' y el plugin de CoC '@hexuhua/coc-copilot'.
+"   > Para NeoVIM y no usas CoC, se usara 'zbirenbaum/copilot.lua'.
+" > Para 'AI Agent' se usara Avente, usando la API ofrecido por 'GitHub Copilot'.
+"   > Puede usar avante con el 'AI Autocompletion' desactivado.
 " El valor real, se obtendra segun orden de prioridad:
 "  > El valor definido por la variable de entorno 'USE_AI=0'
 "    > 0 si es 'true'
@@ -102,6 +109,25 @@
 "    > Si no se especifica, se considera no definido
 " Si no se define, su valor por defecto es 'v:false' (valor 0).
 "let g:use_ai_plugins = v:false
+
+
+" Si esta habilitado el 'AI Autocompletion', a que archivos se habiltara el autocompletado por AI,
+" Definir los valores por defecto si no han sido definidos.
+let g:completion_filetypes = {
+\   '*'           : v:false,
+\   'c'           : v:true,
+\   'cpp'         : v:true,
+\   'go'          : v:true,
+\   'rust'        : v:true,
+\   'java'        : v:true,
+\   'cs'          : v:true,
+\   'python'      : v:true,
+\   'sh'          : v:false,
+\   'lua'         : v:false,
+\   'vim'         : v:false,
+\   'javascript'  : v:true,
+\   'typescript'  : v:true,
+\}
 
 
 " Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.
@@ -126,9 +152,9 @@
 "  >               : Los demas adaptadores son gestionados por CoC (como extension o en su
 "                    archivo de configuración)
 " Comente/descomente, establezca el valor de las lineas deseadas.
-"let g:use_lsp_adapters = {
-"\   'omnisharp_vim'     : v:true,
-"\}
+let g:use_lsp_adapters = {
+\   'omnisharp_vim'     : v:false,
+\}
 
 
 
@@ -136,6 +162,7 @@
 " IDE> Variables para configurar el Linter/Fixer de ALE (VIM/NeoVim)
 "#########################################################################################
 "
+
 " Activar los linter a usar
 "  > Si establece 'v:null' o '{}', se activara los linter definido por defecto..
 "  > Use las capacidades de linting y fixing del servidor LSP.
@@ -150,19 +177,19 @@
 "    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
 "    como CoC.
 
-"let g:ale_linters = {
-"\   'cpp': ['clangtidy'],
-"\   'c':   ['clangtidy'],
-"\   'rust': ['clippy'],
-"\   'go': ['golangci-lint'],
-"\   'cs': ['OmniSharp'],
-"\   'python': ['pylint', 'flake8'],
-"\   'dockerfile': ['hadolint'],
-"\   'javascript': ['eslint'],
-"\   'typescript': ['eslint'],
-"\   'javascript': ['biome'],
-"\   'typescript': ['biome'],
-"\}
+let g:ale_linters = {
+"\   'cpp'         : ['clangtidy'],
+"\   'c'           : ['clangtidy'],
+"\   'rust'        : ['clippy'],
+"\   'go'          : ['golangci-lint'],
+"\   'cs'          : ['OmniSharp'],
+"\   'python'      : ['pylint', 'flake8'],
+\   'dockerfile'  : ['hadolint'],
+"\   'javascript'  : ['eslint'],
+"\   'typescript'  : ['eslint'],
+\   'javascript'  : ['biome'],
+\   'typescript'  : ['biome'],
+\}
 
 "let g:ale_linters = v:null
 "let g:ale_linters = {}
@@ -182,22 +209,22 @@
 "    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
 "    como CoC.
 
-"let g:ale_fixers = {
-"\   '*': ['remove_trailing_lines', 'trim_whitespace'],
-"\   'cpp': ['clang-format', 'clangtidy'],
-"\   'c':   ['clang-format', 'clangtidy'],
-"\   'rust': ['rustfmt'],
-"\   'go': ['gofmt', 'goimports'],
-"\   'python': ['black', 'isort'],
-"\   'javascript': ['prettier', 'eslint'],
-"\   'typescript': ['prettier', 'eslint'],
-"\   'javascript': ['biome'],
-"\   'typescript': ['biome'],
-"\   'yaml': ['prettier'],
-"\   'json': ['prettier'],
-"\   'html': ['prettier'],
-"\   'css':  ['prettier'],
-"\}
+let g:ale_fixers = {
+\   '*'          : ['remove_trailing_lines', 'trim_whitespace'],
+"\   'cpp'        : ['clang-format', 'clangtidy'],
+"\   'c'          : ['clang-format', 'clangtidy'],
+"\   'rust'       : ['rustfmt'],
+"\   'go'         : ['gofmt', 'goimports'],
+"\   'python'     : ['black', 'isort'],
+"\   'javascript' : ['prettier', 'eslint'],
+"\   'typescript' : ['prettier', 'eslint'],
+\   'javascript' : ['biome'],
+\   'typescript' : ['biome'],
+\   'yaml'       : ['prettier'],
+\   'json'       : ['prettier'],
+\   'html'       : ['prettier'],
+\   'css'        : ['prettier'],
+\}
 
 "let g:ale_fixers = v:null
 "let g:ale_fixers = {}

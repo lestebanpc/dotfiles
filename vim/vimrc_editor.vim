@@ -18,8 +18,8 @@
 "   > VIM como IDE usa como cliente LSP a CoC.
 "   > NeoVIM como IDE usa el cliente LSP nativo (por defecto), pero pero puede usar CoC: USE_COC=1 nvim
 "   > Tanto VIM/NeoVIM configurado en modo IDE puede omitir la cargar los plugins del IDE usando:
-"     USE_EDITOR=1 vim
-"     USE_EDITOR=1 nvim
+"     ONLY_BASIC=1 vim
+"     ONLY_BASIC=1 nvim
 "   > La limitacion del ultimo caso es que los no plugins filetypes de modo editor no se cargaran
 "
 " Para Vim/NeoVIM, el script de instalacion crea link de archivos/carpetas en su runtimepath por defecto:

@@ -5,7 +5,7 @@
 -- URL        : https://github.com/mfussenegger/nvim-jdtls
 -- Referencia :
 --    https://github.com/neovim/nvim-lspconfig/blob/master/lsp/jdtls.lua
---    https://github.com/mfussenegger/dotfiles/blob/master/vim/dot-config/nvim/ftplugin/java.lua
+--    https://codeberg.org/mfussenegger/dotfiles/src/branch/master/vim/dot-config/nvim/ftplugin/java.lua
 --
 
 -- 01. Validar si ya se esta cargando o se cargo

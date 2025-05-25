@@ -1,5 +1,6 @@
-"
-"----------------------------- Calcular de Variables  ------------------------------
+"-----------------------------------------------------------------------------------
+" Calcular de Variables
+"-----------------------------------------------------------------------------------
 "
 "Tipos de sistemas operativos
 "  0 - Windows
@@ -95,8 +96,10 @@ if g:use_ide
 endif
 
 
-"
-"----------------------------- Clipboard de SO         -----------------------------
+
+"-----------------------------------------------------------------------------------
+" Clipboard de SO
+"-----------------------------------------------------------------------------------
 "
 "Uso de 'ctrl+C' para enviar texto al portapapeles y 'ctrl+V' para obtener texto del portapapeles:
 " > Cuando (el panel actual de) la terminal no está ejecutando un comando, las terminales procesan estas
@@ -341,14 +344,19 @@ if !g:is_neovim && ($TERM_PROGRAM == 'foot' || $TERM_PROGRAM == 'WezTerm')
 endif
 
 
-"
-"----------------------------- Validar los requisitos ------------------------------
+
+"-----------------------------------------------------------------------------------
+" Validar los requisitos
+"-----------------------------------------------------------------------------------
 "
 "Si es VIM y no tiene tiene instalado python3, no soporta Snippets
 "Si es VIM y no tiene instalado nodejs, no soporta CoC
 
-"
-"------------------------------- Opciones basicas        ----------------------------
+
+
+"-----------------------------------------------------------------------------------
+" Opciones basicas
+"-----------------------------------------------------------------------------------
 "
 "1. Mostrar siempre la barra de pesatañas (tabLine):
 "   (0) Ocultar,
@@ -431,8 +439,10 @@ endif
 set backspace=indent,eol,start
 
 
-"
-"----------------------------- Opciones adicionales     -----------------------------
+
+"-----------------------------------------------------------------------------------
+" Opciones adicionales
+"-----------------------------------------------------------------------------------
 "
 
 "1. Opciones de busqueda
@@ -510,6 +520,7 @@ set modelines=10
 
 
 "6. Menu de opciones de autocompletado de linea de comandos
+"   Actualmente no se usan, se usara el plugin de autocompletado 'girishji/vimsuggest' y 'nvim-cmp'.
 
 " - Mejora la forma de mostrar las opciones de autocompletado de la linea de comandos.
 "   Si se activa muestra una lista más visible y navegable.
@@ -519,6 +530,7 @@ set wildmenu
 "   Si sigues presionando Tab, se muestren todas las opciones disponibles en una lista.
 set wildmode=longest:full,full
 
+"set wildoptions=pum
 
 
 "7. Otros
@@ -544,10 +556,10 @@ set cursorline
 
 
 
+"-----------------------------------------------------------------------------------
+" Apariencia : Color
+"-----------------------------------------------------------------------------------
 "
-"----------------------------- Apariencia : Color     ------------------------------
-"
-syntax on
 
 set background=dark
 
@@ -616,7 +628,10 @@ endif
 "highlight Terminal guibg=#040404 guifg=#EBEBEB
 
 
-"----------------------------- Defualt Shell           -----------------------------
+
+"-----------------------------------------------------------------------------------
+" Defualt Shell
+"-----------------------------------------------------------------------------------
 "Usado para ejecutar 'system('cmd')' o usando ':!cmd'. No usado para terminales
 "Windows
 if g:os_type == 0
@@ -654,7 +669,11 @@ if s:is_gui_vim
 endif
 
 
-"----------------------------- Completado               ----------------------------
+
+"-----------------------------------------------------------------------------------
+" Complete en insert mode
+"-----------------------------------------------------------------------------------
+"
 "El completado de VIM se realiza usando diferentes fuentes de completado:
 "    - Palabras existentes en el buffer actual
 "    - Palabras enviados por un servidor de lenguajes LSP
@@ -684,8 +703,11 @@ else
     endif
 endif
 
-"
-"----------------------------- Configuraciones de CoC   ----------------------------
+
+
+"-----------------------------------------------------------------------------------
+" Configuraciones de CoC
+"-----------------------------------------------------------------------------------
 "
 if g:use_ide && (!g:is_neovim || g:use_coc)
 
@@ -701,8 +723,10 @@ if g:use_ide && (!g:is_neovim || g:use_coc)
 endif
 
 
-"
-"----------------------------- Mappings - General      -----------------------------
+
+"-----------------------------------------------------------------------------------
+" Mappings - General
+"-----------------------------------------------------------------------------------
 "
 "Usando como Key Leader
 let mapleader=','
@@ -716,8 +740,10 @@ nnoremap n nzzzv
 nnoremap N Nzzzv
 
 
-"
-"----------------------------- Mappings - Apariencia   -----------------------------
+
+"-----------------------------------------------------------------------------------
+" Mappings - Apariencia
+"-----------------------------------------------------------------------------------
 "
 "Habilitar/Desabiliar la linea de resaltado ('Highlight Line') Horizonal
 nnoremap <Leader>hh :set cursorline!<CR>
@@ -725,7 +751,11 @@ nnoremap <Leader>hh :set cursorline!<CR>
 "Habilitar/Desabiliar la linea de resaltado ('Highlight Line') Vertical
 nnoremap <Leader>vv :set cursorcolumn!<CR>
 
-"----------------------------- Mappings - Clipboards   -----------------------------
+
+
+"-----------------------------------------------------------------------------------
+" Mappings - Clipboards
+"-----------------------------------------------------------------------------------
 "
 "NeoVIM no interactua directamente con el clipboard del SO (no usa API del SO) y tiene una Integracion
 "nativa con:
@@ -841,8 +871,10 @@ elseif g:clipboard_mode != 9
 endif
 
 
-"
-"----------------------------- Mappings - Splits       -----------------------------
+
+"-----------------------------------------------------------------------------------
+" Mappings - Splits
+"-----------------------------------------------------------------------------------
 "
 "Navegación stre splits (no es necesario especificar, lo define el Plug-In 'vim-tmux-navigator').
 "noremap <C-j> <C-w>j
@@ -869,13 +901,20 @@ endif
 "Terminal : Salir de modo 'Terminal-Job' e ingresar en modo lectura ('Terminal-Normal')
 "noremap <C-N> <C-\><C-n>
 
+
+
+"-----------------------------------------------------------------------------------
+" Mappings - Tabs
+"-----------------------------------------------------------------------------------
 "
-"----------------------------- Mappings - Tabs         -----------------------------
 "nnoremap <silent> <S-t> :tabnew<CR>
 "
 
-"
-"----------------------------- Mappings - Otros        -----------------------------
+
+
+"-----------------------------------------------------------------------------------
+" Mappings - Otros
+"-----------------------------------------------------------------------------------
 "
 "Set working directory
 "nnoremap <leader>. :lcd %:p:h<CR>

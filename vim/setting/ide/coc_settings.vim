@@ -33,7 +33,7 @@ endif
 "endif
 
 "###################################################################################
-" CoC> Completition Popup (modo inserción)
+" CoC> Completion Popup (modo inserción)
 "###################################################################################
 "
 " > Cancelar el popup y permanecar el modo inserción: '[CTRL] + e', '←', '→', '↑', '↓', 'BACKSPACE'
@@ -51,7 +51,7 @@ function! CheckBackspace() abort
 endfunction
 
 "Abrir el popup automaticamente: En modo edicion escribir por lo menos un caracter visible
-"Abrir el popup manualmente: '[CRTL] + [SPACE]'
+"Abrir el popup manualmente si no se muestra. Si se muestra, actualizar el contenido ('CRTL + SPACE')
 if g:is_neovim
     inoremap <silent><expr> <c-space> coc#refresh()
 else

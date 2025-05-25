@@ -84,50 +84,45 @@ vim.keymap.set({"i", "s"}, "<C-E>", function()
 	end
 end, { silent = true, noremap = true, expr = true, })
 
+
 --------------------------------------------------------------------------------------------------
--- Completition> Configuración del Completado y sus fuentes
+-- Completion> Source completion for insert mode
 --------------------------------------------------------------------------------------------------
 --
--- TODO Modificar para usar directamente el API de NeoVim 0.11
---
--- File          = "󰈙",
--- Module        = "",
--- Namespace     = "󰦮",
--- Package       = "",
--- Class         = "󰆧",
--- Method        = "󰊕",
--- Property      = "",
--- Field         = "",
--- Constructor   = "",
--- Enum          = "",
--- Interface     = "",
--- Function      = "󰊕",
--- Variable      = "󰀫",
--- Constant      = "󰏿",
--- String        = "",
--- Number        = "󰎠",
--- Boolean       = "󰨙",
--- Array         = "󱡠",
--- Object        = "",
--- Key           = "󰌋",
--- Null          = "󰟢",
--- EnumMember    = "",
--- Struct        = "󰆼",
--- Event         = "",
--- Operator      = "󰆕",
--- TypeParameter = "󰗴",
+-- Configuración de la fuentes de completado
 --
 
---1. Fuente de completado: Valores de 'choice nodes'
+-- Fuente de completado: Valores de 'choice nodes'
 require('cmp_luasnip_choice').setup({
     -- Automatically open nvim-cmp on choice node (default: true)
     auto_open = true,
 });
 
---2. Fuentes de completado: Otros
---   Se usara los valores pore defecto.
+-- Fuente de completado para Copilot
+if vim.g.use_ai_plugins == true then
+    require("copilot_cmp").setup()
+end
 
---2. Configurar el completado para todos los tipos de archivos
+-- Fuentes de completado: Otros
+-- Se usara los valores pore defecto.
+
+
+--------------------------------------------------------------------------------------------------
+-- Completion> Completion in insert mode
+--------------------------------------------------------------------------------------------------
+--
+-- > URLs
+--   > nvim-cmp
+--     https://github.com/hrsh7th/nvim-cmp
+--     https://github.com/hrsh7th/nvim-cmp/blob/main/doc/cmp.txt
+--     https://github.com/hrsh7th/nvim-cmp/wiki
+--     https://github.com/hrsh7th/nvim-cmp/wiki/Advanced-techniques
+--     https://github.com/hrsh7th/nvim-cmp/blob/main/lua/cmp/config/context.lua
+--     https://github.com/hrsh7th/nvim-cmp/blob/main/lua/cmp/utils/api.lua
+-- TODO Para LSP, modificar para usar directamente el API de NeoVim 0.11
+--
+
+--1. Variables usados para el autocompletado
 local cmp = require('cmp')
 
 -- Valores usados durante la definicion del completado.
@@ -144,10 +139,90 @@ local check_backspace = function()
     return col == 0 or vim.fn.getline("."):sub(col, col):match "%s"
 end
 
+-- Lista de funciones comparadores por defecto de 'nvim-cmp'
+local comparators_list = {
 
+    cmp.config.compare.offset,
+    -- cmp.config.compare.scopes, --this is commented in nvim-cmp too
+    cmp.config.compare.exact,
+    cmp.config.compare.score,
+    cmp.config.compare.recently_used,
+    cmp.config.compare.locality,
+    cmp.config.compare.kind,
+    cmp.config.compare.sort_text,
+    cmp.config.compare.length,
+    cmp.config.compare.order,
+
+}
+
+if vim.g.use_ai_plugins == true then
+
+    comparators_list = {
+
+        require("copilot_cmp.comparators").prioritize,
+
+        -- Lista de funciones comparadores por defecto de 'nvim-cmp'
+        cmp.config.compare.offset,
+        -- cmp.config.compare.scopes, --this is commented in nvim-cmp too
+        cmp.config.compare.exact,
+        cmp.config.compare.score,
+        cmp.config.compare.recently_used,
+        cmp.config.compare.locality,
+        cmp.config.compare.kind,
+        cmp.config.compare.sort_text,
+        cmp.config.compare.length,
+        cmp.config.compare.order,
+
+    }
+
+end
+
+-- Lista de source del modo insert
+-- > keyword_length     : cantidad de caracteres necesarios realizar la busqueda en la fuente y mostrar el popup.
+-- > trigger_characters : si no se tiene la cantidad de caracteres necesarios, es decir lenght(keyword) = 0,
+--   pero esta antes de un caracter especial de la lista, se muestra el popup de completado
+-- > group_index        : 'nvim-cmp' solo muestra los elementos de un 'group_index', el grupo source con menor
+--   valor y que tenga elementos. Si el grupo no general elementos, se va con el siguiente grupo.
+--   Por defecto su valor es 1.
+-- > prioirity          : orden que asigna un peso mayor para aparecer en la lista de autocompletado dentro de
+--   un mismo grupo 'group_index'. Valor entero que inicia desde 1, cuanto mayor es valor, mayor peso se tendra.
+local insert_sources = {
+    { name = 'nvim_lsp'       , group_index = 1, priority = 30, keyword_length = 1, trigger_characters = { '.', '[' }, },
+    { name = 'luasnip'        , group_index = 1, priority = 29, },
+    { name = 'luasnip_choice' , group_index = 1, priority = 28, },
+    { name = 'path'           , group_index = 2, priority = 21, },
+    { name = 'buffer'         , group_index = 2, priority = 20, keyword_length = 3, },
+}
+
+
+if vim.g.use_ai_plugins == true then
+
+    insert_sources = {
+        { name = "copilot"        , group_index = 1, priority = 40, },
+        { name = 'nvim_lsp'       , group_index = 1, priority = 30, keyword_length = 1, trigger_characters = { '.', '[' }, },
+        { name = 'luasnip'        , group_index = 1, priority = 29, },
+        { name = 'luasnip_choice' , group_index = 1, priority = 28, },
+        { name = 'path'           , group_index = 1, priority = 21, },
+        { name = 'buffer'         , group_index = 1, priority = 20, keyword_length = 3, },
+    }
+
+end
+
+--2. Configuración de autocompletado del modo insert
 cmp.setup({
 
     --preselect = cmp.PreselectMode.None,
+
+    -- Opciones del completado y autocompletado
+    completion = {
+        -- Eventos donde se realiza evalua iniciar el autocompletado.
+        -- Si es 'false', se desactiva el autocompletado (solo esta el completado manual).
+        -- Valores por defecto : https://github.com/hrsh7th/nvim-cmp/blob/main/lua/cmp/types/cmp.lua
+        autocomplete = {
+            'InsertEnter',
+            'TextChanged',
+        },
+    },
 
     -- Funciones invocados por el completado cuando el elemento es un snippet.
     snippet = {
@@ -159,41 +234,36 @@ cmp.setup({
     },
 
     -- Fuentes de completado: Se colocan los nombres con que registro la fuente en CMP
-    -- > prioirity : orden en que aparecen las sugerencias en las lista de autocompletado
-    -- > keyword_length : cantidad de caracteres necesarios realizar la busqueda en la fuente y mostrar el popup
-    -- > trigger_characters : si esta antes de un caracter espcial, el lenght(keyword) = 0, pero  mostrar el popup
-    sources = {
-        { name = 'path', priority = 4, },
-        { name = 'nvim_lsp', keyword_length = 1, priority = 8, },
-        --{ name = 'nvim_lsp', keyword_length = 2, trigger_characters = { '.', '[' } },
-        { name = 'buffer', keyword_length = 3, priority = 7, },
-        { name = 'luasnip', priority = 5, },
-        { name = 'luasnip_choice', },
-    },
+    sources = insert_sources,
 
     --sorting = {
-    --    priority_weight = 1.0,
-    --    comparators = {
-    --        cmp.config.compare.locality,
-    --        cmp.config.compare.recently_used,
-    --        cmp.config.compare.score,
-    --        cmp.config.compare.offset,
-    --        cmp.config.compare.order,
-    --    },
+    --    -- Valor usado para calcular la prioridad que tenga los source que no se han especificado este valor.
+    --    -- Su valor se calcula : score = score + ((#sources - (source_index - 1)) * sorting.priority_weight)
+    --    -- Donde :
+    --    --  > '#sources' es el número total de fuentes.
+    --    --  > 'source_index' es la posición de la fuente en la lista.
+    --    priority_weight = 2,
+
+    --    -- Lista de funciones usadas para la comparacion y determinar el orden de los elementos de completado.
+    --    -- Se aplican segun el orden en la que se define
+    --    comparators = comparators_list,
     --},
 
     -- Controla la apariencia de la ventana donde se muestra la documentación: usar bordes
     window = {
-        documentation = cmp.config.window.bordered()
+        documentation = cmp.config.window.bordered(),
+        -- completion = cmp.config.window.bordered(),
     },
 
     -- Formateo de cada elemento del popup de completado
     formatting = {
+
         --Controla el orden en el que aparecen los elementos de un item.
         fields = {'menu', 'abbr', 'kind'},
+
         --Determina el formado del item
         format = function(entry, item)
-                --Iconos de tipo de item
+                -- Iconos de referencia obtenidos de https://github.com/onsails/lspkind.nvim/blob/master/lua/lspkind/init.lua
                 local kind_icons = {
                      Text = " ",
                      Method = "󰆧 ",
@@ -220,6 +290,7 @@ cmp.setup({
                      Event = " ",
                      Operator = "󰆕 ",
                      TypeParameter = "󰅲 ",
+                     Copilot = "",
                }
 
                 --Mostrar tipo de elemento con su icono antepuesto (concetenadolo)
@@ -232,6 +303,7 @@ cmp.setup({
                     buffer = '',
                     path = '',
                     nvim_lsp_signature_help = '⋗',
+                    copilot = "",
                 }
 
                 --Mostrar solo el icono (no se concatena el icono con el nombre)
@@ -245,6 +317,7 @@ cmp.setup({
     --    --Por defecto la busqueda es difusa y no una busqueda exacta.
     --    disallow_fuzzy_matching = false,
     --},
+
 
     -- Atajos de teclado usado en el popup de completado
     -- Ejemplo de configuracion: https://github.com/hrsh7th/nvim-cmp/wiki/Example-mappings
@@ -331,9 +404,32 @@ cmp.setup({
 
 
     },
+
+    -- Habilitar o desabilitar el completado, incluyendo el completado automatico.
+    enabled = function()
+
+        local disabled = false
+
+        -- Desabilita si estas dentro de un terminal embebida de Vim/NeoVim
+        -- Revisa el valor de la opcion vim 'buftype' asociado a buffer actual (0)
+        disabled = disabled or (vim.api.nvim_get_option_value('buftype', { buf = 0 }) == 'prompt')
+
+        -- Desabilita el completado (incluyendo el autocompletado), si el cursor actual es un commentario para treesitter.
+        -- Vease : https://github.com/hrsh7th/nvim-cmp/blob/main/lua/cmp/config/context.lua
+        --         https://github.com/hrsh7th/nvim-cmp/wiki/Advanced-techniques#disabling-completion-in-certain-contexts-such-as-comments
+        disabled = disabled or require('cmp.config.context').in_treesitter_capture('comment')
+
+        -- Desabilita el completado, si empiezas a grabar una macro
+        disabled = disabled or (vim.fn.reg_recording() ~= '')
+
+        -- Desabilita el completado, si estas ejecutanado una macro
+        disabled = disabled or (vim.fn.reg_executing() ~= '')
+
+        return not disabled
+
+    end,
+
 })
-
-
 
 
 --3. Configurar el completado para un tipos de archivo especifico
@@ -344,7 +440,7 @@ cmp.setup({
 
 
 --------------------------------------------------------------------------------------------------
---Completition> Configuración del Popup de 'Signature Help'
+-- Popup> Configuración del Popup de 'Signature Help'
 --------------------------------------------------------------------------------------------------
 
 local cfg = {

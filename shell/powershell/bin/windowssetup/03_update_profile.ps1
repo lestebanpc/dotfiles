@@ -264,7 +264,7 @@ function m_update_vim_repository($p_is_neovim, $p_is_coc_installed)
     if (!$g_is_nodejs_installed)  {
 
         Write-Host "Recomendaciones:"
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 vim`""
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"ONLY_BASIC=1 vim`""
         if ($p_is_neovim -eq 0) {
             Write-Host "    > NeoVIM como developer por defecto usa el adaptador LSP y autocompletado nativo. No esta habilitado el uso de CoC"
         }
@@ -331,14 +331,14 @@ function m_update_vim_repository($p_is_neovim, $p_is_coc_installed)
     Write-Host "Recomendaciones:"
     if (!$p_is_neovim) {
 
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:USE_EDITOR}=1`" y luego `"vim`""
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:ONLY_BASIC}=1`" y luego `"vim`""
         Write-Host "    > Se recomienda que configure su IDE CoC segun su necesidad:"
 	}
     else {
 
         Write-Host "  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM."
         Write-Host "    > Si desea usar CoC, use: `"`${env:USE_COC}=1`" y luego `"nvim`""
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:USE_EDITOR}=1`" y luego `"nvim`""
+        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:ONLY_BASIC}=1`" y luego `"nvim`""
 
         Write-Host "  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:"
 

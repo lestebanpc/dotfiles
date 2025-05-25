@@ -161,72 +161,81 @@ declare -r g_version_none='0.0.0'
 
 
 
-# Repositorios GIT donde estan los plugins VIM
-# Valores:
-#   (1) Perfil Editor - Tema
-#   (2) Perfil Editor - StatusLine, TabLine, FZF, TMUX utilities, Files Tree, etc.
-#   (3) Perfil IDE    - Utilities (Libreries, Typing utilities)
-#   (4) Perfil IDE    - Development
-#   (4) Perfil IDE    - Testing (Unit Testing y Debugging)
+# Grupo de plugins de VIM/NeoVIM :
+# (00) Grupo Basic > Themes             - Temas
+# (01) Grupo Basic > Core               - StatusLine, TabLine, FZF, TMUX utilities, Files Tree
+# (02) Grupo Basic > Extended           - Highlighting Sintax, Autocompletion para linea de comandos.
+# (03) Grupo IDE > Utils                - Libreries, Typing utilities.
+# (04) Grupo IDE > Development > Common - Plugin comunes para development de la implementacion nativa o CoC.
+# (05) Grupo IDE > Development > Native - LSP, Snippets, ... usando la implementacion nativa.
+# (06) Grupo IDE > Development > CoC    - LSP, Snippets, ... usando CoC.
+# (07) Grupo IDE > Testing              - Unit Testing y Debugging.
+# (08) Grupo IDE > Extended > Common    - Plugin comunes para AI usando la implementacion nativa o CoC.
+# (09) Grupo IDE > Extended > Native    - AI Completin/Chatbot, AIAgent for Development usando CoC.
+# (10) Grupo IDE > Extended > CoC       - AI Completin/Chatbot, AIAgent for Development usando implementacion nativa.
 declare -A gA_repos_type=(
-        ['morhetz/gruvbox']=1
-        ['joshdick/onedark.vim']=1
-        ['vim-airline/vim-airline']=2
-        ['vim-airline/vim-airline-themes']=2
-        ['preservim/nerdtree']=2
-        ['ryanoasis/vim-devicons']=2
-        ['preservim/vimux']=2
-        ['christoomey/vim-tmux-navigator']=2
-        ['junegunn/fzf']=2
-        ['junegunn/fzf.vim']=2
-        ['ibhagwan/fzf-lua']=2
+        ['morhetz/gruvbox']=0
+        ['joshdick/onedark.vim']=0
+        ['vim-airline/vim-airline']=1
+        ['vim-airline/vim-airline-themes']=1
+        ['preservim/nerdtree']=1
+        ['ryanoasis/vim-devicons']=1
+        ['preservim/vimux']=1
+        ['christoomey/vim-tmux-navigator']=1
+        ['junegunn/fzf']=1
+        ['junegunn/fzf.vim']=1
+        ['ibhagwan/fzf-lua']=1
+        ['girishji/vimsuggest']=2
         ['tpope/vim-surround']=3
         ['mg979/vim-visual-multi']=3
         ['mattn/emmet-vim']=3
         ['dense-analysis/ale']=4
-        ['neoclide/coc.nvim']=4
-        ['antoinemadec/coc-fzf']=4
         ['liuchengxu/vista.vim']=4
-        ['SirVer/ultisnips']=4
-        ['OmniSharp/omnisharp-vim']=4
-        ['honza/vim-snippets']=4
-        ['puremourning/vimspector']=4
-        ['folke/tokyonight.nvim']=1
-        ['catppuccin/nvim']=1
-        ['kyazdani42/nvim-web-devicons']=2
-        ['nvim-lualine/lualine.nvim']=2
-        ['akinsho/bufferline.nvim']=2
-        ['nvim-lua/plenary.nvim']=2
-        ['nvim-tree/nvim-tree.lua']=2
-        ['nvim-treesitter/nvim-treesitter']=4
-        ['nvim-treesitter/nvim-treesitter-textobjects']=4
+        ['neoclide/coc.nvim']=6
+        ['antoinemadec/coc-fzf']=6
+        ['SirVer/ultisnips']=6
+        ['OmniSharp/omnisharp-vim']=6
+        ['honza/vim-snippets']=6
+        ['puremourning/vimspector']=7
+        ['folke/tokyonight.nvim']=0
+        ['catppuccin/nvim']=0
+        ['kyazdani42/nvim-web-devicons']=1
+        ['nvim-lualine/lualine.nvim']=1
+        ['akinsho/bufferline.nvim']=1
+        ['nvim-tree/nvim-tree.lua']=1
+        ['nvim-treesitter/nvim-treesitter']=2
+        ['nvim-treesitter/nvim-treesitter-textobjects']=2
+        ['hrsh7th/nvim-cmp']=2
+        ['hrsh7th/cmp-buffer']=2
+        ['hrsh7th/cmp-path']=2
+        ['hrsh7th/cmp-cmdline']=2
+        ['nvim-lua/plenary.nvim']=3
         ['nvim-treesitter/nvim-treesitter-context']=4
-        ['neovim/nvim-lspconfig']=4
-        ['hrsh7th/nvim-cmp']=4
-        ['ray-x/lsp_signature.nvim']=4
-        ['hrsh7th/cmp-nvim-lsp']=4
-        ['hrsh7th/cmp-buffer']=4
-        ['hrsh7th/cmp-path']=4
-        ['L3MON4D3/LuaSnip']=4
-        ['rafamadriz/friendly-snippets']=4
-        ['saadparwaiz1/cmp_luasnip']=4
-        ['b0o/SchemaStore.nvim']=4
         ['stevearc/aerial.nvim']=4
-        ['kosayoda/nvim-lightbulb']=4
-        ['doxnit/cmp-luasnip-choice']=4
-        ['mfussenegger/nvim-dap']=4
-        ['theHamsta/nvim-dap-virtual-text']=4
-        ['rcarriga/nvim-dap-ui']=4
-        ['seblyng/roslyn.nvim']=4
-        ['mfussenegger/nvim-jdtls']=4
-        ['vim-test/vim-test']=4
-        ['nvim-neotest/nvim-nio']=4
-        ['github/copilot.vim']=4
-        ['stevearc/dressing.nvim']=4
-        ['MunifTanjim/nui.nvim']=4
-        ['MeanderingProgrammer/render-markdown.nvim']=4
-        ['HakonHarnes/img-clip.nvim']=4
-        ['yetone/avante.nvim']=4
+        ['neovim/nvim-lspconfig']=5
+        ['ray-x/lsp_signature.nvim']=5
+        ['hrsh7th/cmp-nvim-lsp']=5
+        ['L3MON4D3/LuaSnip']=5
+        ['rafamadriz/friendly-snippets']=5
+        ['saadparwaiz1/cmp_luasnip']=5
+        ['b0o/SchemaStore.nvim']=5
+        ['kosayoda/nvim-lightbulb']=5
+        ['doxnit/cmp-luasnip-choice']=5
+        ['seblyng/roslyn.nvim']=5
+        ['mfussenegger/nvim-jdtls']=5
+        ['mfussenegger/nvim-dap']=7
+        ['rcarriga/nvim-dap-ui']=7
+        ['theHamsta/nvim-dap-virtual-text']=7
+        ['nvim-neotest/nvim-nio']=7
+        ['vim-test/vim-test']=7
+        ['github/copilot.vim']=10
+        ['zbirenbaum/copilot.lua']=9
+        ['zbirenbaum/copilot-cmp']=9
+        ['stevearc/dressing.nvim']=9
+        ['MunifTanjim/nui.nvim']=9
+        ['MeanderingProgrammer/render-markdown.nvim']=9
+        ['HakonHarnes/img-clip.nvim']=9
+        ['yetone/avante.nvim']=9
     )
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
@@ -239,7 +248,9 @@ declare -A gA_repos_scope=(
         ['vim-airline/vim-airline-themes']=1
         ['ryanoasis/vim-devicons']=1
         ['preservim/nerdtree']=1
+        ['girishji/vimsuggest']=1
         ['liuchengxu/vista.vim']=1
+        ['puremourning/vimspector']=1
         ['folke/tokyonight.nvim']=2
         ['catppuccin/nvim']=2
         ['kyazdani42/nvim-web-devicons']=2
@@ -254,10 +265,11 @@ declare -A gA_repos_scope=(
         ['nvim-treesitter/nvim-treesitter-context']=2
         ['neovim/nvim-lspconfig']=2
         ['hrsh7th/nvim-cmp']=2
-        ['ray-x/lsp_signature.nvim']=2
         ['hrsh7th/cmp-nvim-lsp']=2
         ['hrsh7th/cmp-buffer']=2
         ['hrsh7th/cmp-path']=2
+        ['hrsh7th/cmp-cmdline']=2
+        ['ray-x/lsp_signature.nvim']=2
         ['L3MON4D3/LuaSnip']=2
         ['rafamadriz/friendly-snippets']=2
         ['saadparwaiz1/cmp_luasnip']=2
@@ -270,6 +282,8 @@ declare -A gA_repos_scope=(
         ['nvim-neotest/nvim-nio']=2
         ['seblyng/roslyn.nvim']=2
         ['mfussenegger/nvim-jdtls']=2
+        ['zbirenbaum/copilot.lua']=2
+        ['zbirenbaum/copilot-cmp']=2
         ['stevearc/dressing.nvim']=2
         ['MunifTanjim/nui.nvim']=2
         ['MeanderingProgrammer/render-markdown.nvim']=2
@@ -277,16 +291,33 @@ declare -A gA_repos_scope=(
         ['yetone/avante.nvim']=2
     )
 
+
 # Repositorios Git - Branch donde esta el plugin no es el por defecto
 declare -A gA_repos_branch=(
         ['neoclide/coc.nvim']='release'
     )
 
+
 # Repositorios Git - Deep de la clonacion del repositorio que no es el por defecto
-declare -A gA_repos_depth=(
-        ['neoclide/coc.nvim']=1
-        ['junegunn/fzf']=1
-        ['dense-analysis/ale']=1
+#declare -A gA_repos_depth=(
+#        ['neoclide/coc.nvim']=1
+#        ['junegunn/fzf']=1
+#        ['dense-analysis/ale']=1
+#    )
+
+
+declare -a ga_group_plugin_folder=(
+    "basic_themes"
+    "basic_core"
+    "basic_extended"
+    "ide_utils"
+    "ide_dev_common"
+    "ide_dev_native"
+    "ide_dev_coc"
+    "ide_testing"
+    "ide_ext_common"
+    "ide_ext_native"
+    "ide_ext_coc"
     )
 
 
@@ -456,17 +487,26 @@ function _download_vim_packages() {
 
     #Creando los folderes requeridos del home si estos no existe
     create_folderpath_on_home "" "${l_folder_packages}"
-    create_folderpath_on_home "${l_folder_packages}" "themes/start"
-    create_folderpath_on_home "${l_folder_packages}/themes" "opt"
-    create_folderpath_on_home "${l_folder_packages}" "ui/start"
-    create_folderpath_on_home "${l_folder_packages}/ui" "opt"
 
-    if [ $p_flag_developer -eq 0 ]; then
-        create_folderpath_on_home "${l_folder_packages}" "typing/start"
-        create_folderpath_on_home "${l_folder_packages}/typing" "opt"
-        create_folderpath_on_home "${l_folder_packages}" "ide/start"
-        create_folderpath_on_home "${l_folder_packages}/ide" "opt"
-    fi
+    local l_foldername=''
+    local l_i=0
+    for (( l_i = 0; l_i < ${#ga_group_plugin_folder[@]}; l_i++ )); do
+
+        l_foldername="${ga_group_plugin_folder[${l_i}]}"
+
+        if [ -z "$l_foldername" ]; then
+            continue
+        fi
+
+        # Si esta en modo basico/editor y estan en el indice para folder de IDE
+        if [ $p_flag_developer -ne 0 ] && [ $l_i -ge 3 ]; then
+            break
+        fi
+
+        create_folderpath_on_home "${l_folder_packages}" "${l_foldername}/opt"
+        create_folderpath_on_home "${l_folder_packages}/${l_foldername}" "start"
+
+    done
 
 
     #4. Instalar el plugins que se instalan manualmente
@@ -496,29 +536,17 @@ function _download_vim_packages() {
         fi
 
         #4.2 Obtener la ruta base donde se clonara el paquete (todos los paquetes son opcionale, se inicia bajo configuración)
-        l_path_base=""
-        case "$l_repo_type" in
-            1)
-                l_path_base=${l_base_plugins}/themes/opt
-                ;;
-            2)
-                l_path_base=${l_base_plugins}/ui/opt
-                ;;
-            3)
-                l_path_base=${l_base_plugins}/typing/opt
-                ;;
-            4)
-                l_path_base=${l_base_plugins}/ide/opt
-                ;;
-            *)
+        l_foldername="${ga_group_plugin_folder[${l_repo_type}]}"
 
-                printf '%s > Paquete (%s) "%s": No tiene tipo valido\n' "$l_tag" "${l_repo_type}" "${l_repo_git}"
-                continue
-                ;;
-        esac
+        if [ -z "$l_foldername" ]; then
+            printf '%s > Paquete (%s) "%s": No tiene tipo valido\n' "$l_tag" "${l_repo_type}" "${l_repo_git}"
+            continue
+        fi
+
+        l_path_base="${l_base_plugins}/${l_foldername}/opt"
 
         #Si es un repositorio para developer no debe instalarse en el perfil basico
-        if [ $p_flag_developer -eq 1 ] && [ $l_repo_type -eq 3 -o $l_repo_type -eq 4 ]; then
+        if [ $p_flag_developer -ne 0 ] && [ $l_repo_type -ge 3 ]; then
             continue
         fi
 
@@ -540,6 +568,7 @@ function _download_vim_packages() {
         #print_line '- ' $((g_max_length_line/2)) "$g_color_gray1"
         print_line '.' $g_max_length_line  "$g_color_gray1"
 
+        printf 'Ruta a usar es "%b%s%b"\n' "$g_color_gray1" "${l_path_base}/${l_repo_name}" "$g_color_reset"
         l_aux=""
 
         l_repo_branch=${gA_repos_branch[$l_repo_git]}
@@ -547,20 +576,27 @@ function _download_vim_packages() {
             l_aux="--branch ${l_repo_branch}"
         fi
 
-        l_repo_depth=${gA_repos_depth[$l_repo_git]}
-        if [ ! -z "$l_repo_depth" ]; then
-            if [ -z "$l_aux" ]; then
-                l_aux="--depth ${l_repo_depth}"
-            else
-                l_aux="${l_aux} --depth ${l_repo_depth}"
-            fi
+        #l_repo_depth=${gA_repos_depth[$l_repo_git]}
+        #if [ ! -z "$l_repo_depth" ]; then
+        #    if [ -z "$l_aux" ]; then
+        #        l_aux="--depth ${l_repo_depth}"
+        #    else
+        #        l_aux="${l_aux} --depth ${l_repo_depth}"
+        #    fi
+        #fi
+
+        #Siempre realizar una clonacion superficial (obtener solo el ultimo commit)
+        if [ -z "$l_aux" ]; then
+            l_aux="--depth 1"
+        else
+            l_aux="${l_aux} --depth 1"
         fi
 
         if [ -z "$l_aux" ]; then
-            printf 'Ejecutando "git clone https://github.com/%s.git"\n' "$l_repo_git"
+            printf 'Ejecutando "%bgit clone https://github.com/%s.git%b"\n' "$g_color_gray1" "$l_repo_git" "$g_color_reset"
             git clone https://github.com/${l_repo_git}.git
         else
-            printf 'Ejecutando "git clone %s https://github.com/%s.git"\n' "$l_aux" "$l_repo_git"
+            printf 'Ejecutando "%bgit clone %s https://github.com/%s.git%b"\n' "$g_color_gray1" "$l_aux" "$l_repo_git" "$g_color_reset"
             git clone ${l_aux} https://github.com/${l_repo_git}.git
         fi
 

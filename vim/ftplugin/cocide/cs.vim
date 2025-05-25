@@ -189,27 +189,34 @@ nnoremap <silent> <buffer> <space>so <Plug>(omnisharp_stop_server)
 
 
 "--------------------------------------------------------------------------------
-" Omnisharp > Keymapping > Unit Test
+" Omnisharp > Keymapping > Unit Test (ejecuta en terminal o background process)
 "--------------------------------------------------------------------------------
 "
+" Test nearest method (ejecuta el unit test asociado al metodo cercano al cursor actual).
+nnoremap <silent> <buffer> <space>tm <Plug>(omnisharp_run_test_no_build)
 
-" Unit test : Build en Debug, Run en Debug hasta el prompt actual.
-nnoremap <silent> <buffer> <space>dbp <Plug>(omnisharp_debug_test)
+" Test nearest method (ejecuta el unit test asociado al metodo cercano al cursor actual) realizando el building antes.
+"nnoremap <silent> <buffer> <space>tmb <Plug>(omnisharp_run_test)
 
-" Unit test : Run en Debug el hasta el prompt actual.
-nnoremap <silent> <buffer> <space>drp <Plug>(omnisharp_debug_test_no_build)
+" Test (todo los metodos de) un archivo actual.
+nnoremap <silent> <buffer> <space>tf <Plug>(omnisharp_run_tests_in_file_no_build)
 
-" Unit test : Build en Release, Run en Release hasta el prompt actual.
-nnoremap <silent> <buffer> <space>rbp <Plug>(omnisharp_run_test)
+" Test (todo los metodos de) un archivo actual, realizando un building antes
+"nnoremap <silent> <buffer> <space>tfb <Plug>(omnisharp_run_tests_in_file)
 
-" Unit test : Run en Release hasta el prompt actual.
-nnoremap <silent> <buffer> <space>rrp <Plug>(omnisharp_run_test_no_build)
 
-" Unit test : Build en Release, Run en Release del File actual.
-nnoremap <silent> <buffer> <space>rbf <Plug>(omnisharp_run_tests_in_file)
 
-" Unit test : Run en Release del File actual.
-nnoremap <silent> <buffer> <space>rrf <Plug>(omnisharp_run_tests_in_file_no_build)
+"--------------------------------------------------------------------------------
+" Omnisharp > Keymapping > Unit Test ejecutado sobre Debugger UI
+"--------------------------------------------------------------------------------
+"
+" Depende de Vimspector
+"
+" Similar a 'Run to cursor' de Vimspector pero asociado a Unit Test.
+nnoremap <silent> <buffer> <space>td <Plug>(omnisharp_debug_test_no_build)
+
+" Similar a 'Run to cursor' de Vimspector, pero asociado a Unit Test y realiza un build antes.
+"nnoremap <silent> <buffer> <space>tdb <Plug>(omnisharp_debug_test)
 
 
 
