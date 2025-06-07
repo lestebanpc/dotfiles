@@ -184,6 +184,7 @@ let g:ale_linters = {
 "\   'go'          : ['golangci-lint'],
 "\   'cs'          : ['OmniSharp'],
 "\   'python'      : ['pylint', 'flake8'],
+"\   'xml'        : ['xmllint'],
 \   'dockerfile'  : ['hadolint'],
 "\   'javascript'  : ['eslint'],
 "\   'typescript'  : ['eslint'],

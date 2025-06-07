@@ -158,8 +158,23 @@ declare -r g_version_none='0.0.0'
 #Funciones de utilidad generalees para los instaladores:
 . ${g_shell_path}/bash/bin/linuxsetup/lib/common_utility.bash
 
+#Funciones de utilidad usados cuando se configura el profile:
+. ${g_shell_path}/bash/bin/linuxsetup/lib/setup_profile_utility.bash
+
 
 #}}}
+
+
+
+# Repositorios Git que tiene submodulos y requieren obtener/actualizar en conjunto al modulo principal
+# > Por defecto no se tiene submodulos (valor 0)
+# > Valores :
+#   (0) El repositorio solo tiene un modulo principal y no tiene submodulos.
+#   (1) El repositorio tiene un modulo principal y submodulos de 1er nivel.
+#   (2) El repositorio tiene un modulo principal y submodulos de varios niveles.
+declare -A gA_repos_with_submmodules=(
+        ['kulala.nvim']=1
+    )
 
 
 
@@ -245,12 +260,16 @@ function _update_repository2() {
     # Ejemplo : 'origin/main'
     local l_remote_branch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u})
     local l_status
+    local l_submodules_types=${gA_repos_with_submmodules[${p_repo_name}]:-0}
 
     #3. Actualizando la rama remota del repositorio local desde el repositorio remoto
     printf 'Fetching from remote repository "%b%s%b" to remote branch "%b%s%b" (%bgit fetch --depth=1 %s %s%b)...\n' "$g_color_gray1" "$l_remote"  "$g_color_reset" "$g_color_gray1" \
            "$l_remote_branch" "$g_color_reset" "$g_color_green1" "$l_remote" "$l_local_branch" "$g_color_reset"
+
+    printf '%b' "$g_color_gray1"
     git fetch --depth=1 ${l_remote} ${l_local_branch}
     l_status=$?
+    printf '%b' "$g_color_reset"
 
     if [ $l_status -ne 0 ]; then
         printf '%bError (%s) on Fetching%b from remote repository "%b%s%b" to remote branch "%b%s%b"...\n' "$g_color_red1" "$l_status" "$g_color_reset" \
@@ -258,12 +277,44 @@ function _update_repository2() {
         return 3
     fi
 
+
     #4. Verificar si esta actualizado las ramas local y la de sigimiento
     local l_hash_head=$(git rev-parse HEAD)
     local l_hash_remote=$(git rev-parse FETCH_HEAD)
 
     if [ "$l_hash_head" = "$l_hash_remote" ]; then
-        echo 'Already up-to-date'
+
+        # Actualiza los submoduos
+        if [ $l_submodules_types -eq 1 ] || [ $l_submodules_types -eq 2 ]; then
+
+            printf '%bMain module is already up-to-date%b.\n' "$g_color_green1" "$g_color_reset"
+
+            # Actualizar los submodulos definidos en '.gitmodules' y lo hace de manera superficial
+            printf 'Updating submodule of repository "%b%s%b" (%bgit submodule update --remote --recursive --depth 1 --force%b)...\n' "$g_color_gray1" "$p_repo_name" \
+                   "$g_color_reset" "$g_color_green1" "$g_color_reset"
+
+            printf '%b' "$g_color_gray1"
+            if [ $l_submodules_types -eq 1 ]; then
+                git submodule update --remote --depth 1 --force
+                l_status=$?
+            else
+                git submodule update --remote --recursive --depth 1 --force
+                l_status=$?
+            fi
+            printf '%b' "$g_color_reset"
+
+            if [ $l_status -ne 0 ]; then
+                printf '%bError (%s) on updating submodules%b from repository "%b%s%b"...\n' "$g_color_red1" "$l_status" "$g_color_reset" \
+                       "$g_color_gray1" "$p_repo_name" "$g_color_reset"
+                return 3
+            fi
+
+            printf '%bSubmodules was uptodated%b.\n' "$g_color_green1" "$g_color_reset"
+
+        else
+            printf '%bAlready up-to-date%b.\n' "$g_color_green1" "$g_color_reset"
+        fi
+
         return 0
     fi
 
@@ -272,14 +323,55 @@ function _update_repository2() {
     #4. Realizando una actualizacion destructiva y para quedar solo con el ultimo nodo de la rama remota
     printf 'Updating local branch "%b%s%b" form remote branch "%b%s%b" (%bgit reset --hard %s/HEAD%b)...\n' "$g_color_gray1" "$l_local_branch" \
            "$g_color_reset" "$g_color_gray1" "$l_remote_branch" "$g_color_reset" "$g_color_green1" "$l_remote" "$g_color_reset"
-    if git reset --hard ${l_remote}/HEAD; then
-        echo 'Repository was updated'
-        return 1
+
+    printf '%b' "$g_color_gray1"
+    git reset --hard ${l_remote}/HEAD
+    l_status=$?
+    printf '%b' "$g_color_reset"
+
+    if [ $l_status -ne 0 ]; then
+
+        printf '%bError (%s) on Updating%b from remote branch "%b%s%b"...\n' "$g_color_red1" "$l_status" "$g_color_reset" \
+               "$g_color_gray1" "$l_remote_branch" "$g_color_reset"
+        return 3
+
     fi
 
-    return 2
+    # Actualiza los submoduos
+    if [ $l_submodules_types -eq 1 ] || [ $l_submodules_types -eq 2 ]; then
+
+        printf '%bMain module is already up-to-date%b.\n' "$g_color_green1" "$g_color_reset"
+
+        # Actualizar los submodulos definidos en '.gitmodules' y lo hace de manera superficial
+        printf 'Updating submodule of repository "%b%s%b" (%bgit submodule update --remote --recursive --depth 1 --force%b)...\n' "$g_color_gray1" "$p_repo_name" \
+               "$g_color_reset" "$g_color_green1" "$g_color_reset"
+
+        printf '%b' "$g_color_gray1"
+        if [ $l_submodules_types -eq 1 ]; then
+            git submodule update --remote --depth 1 --force
+            l_status=$?
+        else
+            git submodule update --remote --recursive --depth 1 --force
+            l_status=$?
+        fi
+        printf '%b' "$g_color_reset"
+
+        if [ $l_status -ne 0 ]; then
+            printf '%bError (%s) on updating submodules%b from repository "%b%s%b"...\n' "$g_color_red1" "$l_status" "$g_color_reset" \
+                   "$g_color_gray1" "$p_repo_name" "$g_color_reset"
+            return 3
+        fi
+
+        printf '%bSubmodules was updated%b.\n' "$g_color_green1" "$g_color_reset"
+
+    else
+        printf '%bRepository was updated%b.\n' "$g_color_green1" "$g_color_reset"
+    fi
+
+    return 0
 
 }
+
 
 
 
@@ -341,6 +433,7 @@ function _update_repository1() {
     # Ejemplo : 'origin/main'
     local l_remote_branch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u})
     local l_status
+
 
     #3. Actualizando la rama remota del repositorio local desde el repositorio remoto
     printf 'Fetching from remote repository "%b%s%b" to remote branch "%b%s%b" (%bgit fetch %s %s%b)...\n' "$g_color_gray1" "$l_remote"  "$g_color_reset" "$g_color_gray1" \
@@ -436,10 +529,6 @@ function _update_vim_package() {
         p_is_neovim=0
     fi
 
-    local p_is_coc_installed=1
-    if [ "$2" = "0" ]; then
-        p_is_coc_installed=0
-    fi
 
     #2. Ruta base donde se instala el plugins/paquete
     local l_tag="VIM"
@@ -523,67 +612,6 @@ function _update_vim_package() {
 
     fi
 
-    #5. Actualizar los modulos de los  paquetes/plugin de VIM/NeoVIM que lo requieren.
-    if [ $p_is_coc_installed -ne 0 ]; then
-        printf 'Se ha actualizado los plugin/paquetes de %b%s%b.\n' "$g_color_cian1" "$l_tag" "$g_color_reset"
-        return 0
-    fi
-
-    printf 'Se ha actualizado los plugin/paquetes de %b%s%b como %b%s%b.\n' "$g_color_cian1" "$l_tag" "$g_color_reset" "$g_color_cian1" "Developer" "$g_color_reset"
-    printf 'Los plugins del IDE CoC de %s tiene componentes que requieren actualizarlo. Actualizando dichas componentes del plugins...\n' "$l_tag"
-
-    #Actualizando los parseadores de lenguaje de 'nvim-treesitter'
-    if [ $p_is_neovim -eq 0  ]; then
-
-        #Requiere un compilador C/C++ y NodeJS: https://tree-sitter.github.io/tree-sitter/creating-parsers#installation
-        local l_version=$(_get_gcc_version)
-        if [ ! -z "$l_version" ]; then
-
-            printf '  Actualizando los "language parsers" de TreeSitter "%b:TSUpdate all%b"\n' \
-                   "$g_color_gray1" "$g_color_reset"
-            nvim --headless -c 'TSUpdate all' -c 'qa'
-            printf '\n'
-        fi
-    fi
-
-    #Actualizar las extensiones de CoC
-    printf '  Actualizando los extensiones existentes de CoC, ejecutando el comando "%b:CocUpdate%b"\n' "$g_color_gray1" "$g_color_reset"
-    if [ $p_is_neovim -ne 0  ]; then
-        vim -esc 'CocUpdate' -c 'qa'
-    else
-        USE_COC=1 nvim --headless -c 'CocUpdate' -c 'qa'
-    fi
-
-    #Actualizando los gadgets de 'VimSpector'
-    if [ $p_is_neovim -ne 0  ]; then
-        printf '  Actualizando los gadgets de "VimSpector", ejecutando el comando "%b:VimspectorUpdate%b"\n' "$g_color_gray1" "$g_color_reset"
-        vim -esc 'VimspectorUpdate' -c 'qa'
-    fi
-
-
-    printf '\nRecomendaciones:\n'
-    if [ $p_is_neovim -ne 0  ]; then
-
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bONLY_BASIC=1 vim%b"\n' "$g_color_cian1" "$g_color_reset"
-        printf '    > Se recomienda que configure su IDE CoC segun su necesidad:\n'
-
-    else
-
-        printf '  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM.\n'
-        printf '    > Si desea usar CoC, use: "%bUSE_COC=1 nvim%b"\n' "$g_color_cian1" "$g_color_reset"
-        printf '    > Si desea usar como editor (no cargar plugins de IDE), use: "%bONLY_BASIC=1 nvim%b"\n' "$g_color_cian1" "$g_color_reset"
-
-        printf '  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:\n'
-
-    fi
-
-    echo "        1> Instalar extensiones de COC segun su necesidad (Listar existentes \":CocList extensions\")"
-    echo "        2> Revisar la Configuracion de COC \":CocConfig\":"
-    echo "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-    echo "               { \"diagnostic.displayByAle\": true }"
-    echo "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-    echo "               Si esta instalado esta extension, desintalarlo."
-
 
     return 0
 
@@ -592,14 +620,10 @@ function _update_vim_package() {
 function _update_vim() {
 
     #1. Argumentos
+    local p_opciones=$1
     local p_is_neovim=1
-    if [ "$1" = "0" ]; then
-        p_is_neovim=0
-    fi
-
-    local p_is_coc_installed=1
     if [ "$2" = "0" ]; then
-        p_is_coc_installed=0
+        p_is_neovim=0
     fi
 
     local l_tag="VIM"
@@ -608,26 +632,76 @@ function _update_vim() {
     fi
 
 
-    #2. Actualizar los plugins
-    local l_flag_setup=0
+    #2. Validar si se debe actualizar VIM/NeoVIM
+    local l_flag_setup=1
+    local l_option=1
+    if [ $p_is_vim -ne 0 ]; then
+        l_option=2
+    fi
 
-    #Se requiere tener Git instalado
+    if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
+        l_flag_install=0
+    fi
+
+    # Si no se debe actualizar
+    if [ $l_flag_setup -ne 0 ]; then
+        return 1
+    fi
+
+    # Se requiere tener Git instalado
     if ! git --version 1> /dev/null 2>&1; then
 
         #No esta instalado Git, No configurarlo
-        l_flag_setup=1
         printf '%s > Se requiere que Git este instalado para actualizar los plugins de %s.\n' "$l_tag" "$l_tag"
+        return 1
 
     fi
 
-    if [ $l_flag_setup -eq 0 ]; then
+    # Validar si VIM/NeoVIM esta instalado
+    local l_status
+    local l_version=''
 
-        _update_vim_package $p_is_neovim $p_is_coc_installed
+    if [ $p_is_neovim -eq 0 ]; then
+
+        l_version=$(get_neovim_version "")
+        l_status=$?    #Retorna 3 si no esta instalado
+
+    else
+
+        l_version=$(get_vim_version)
+        l_status=$?    #Retorna 3 si no esta instalado
 
     fi
 
-    #Si es desarrallador: Actualizar los modulos Python
-    #Si es desarrollador: Actualizar los paquetes globales Node.JS istalados
+    if [ -z "$l_version" ]; then
+        printf '%s > %s %bNO esta instalado%b.\n' "$l_tag" "$l_tag" "$g_color_gray1" "$g_color_reset"
+        return 1
+    fi
+
+
+    # No permitir, si root esta instalando el profile de otro usuario (debe ejecutar el script con el usuario owner del home)
+    if [ $g_runner_is_target_user -ne 0 ]; then
+
+        printf '%s > La actualización de paquetes de %s solo lo puede ejecutar el usuario "%b%s%b" owner\n' \
+               "$l_tag" "$l_tag" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset"
+        return 1
+    fi
+
+    #3. Actualizar los plugins de VIM/NeoVIM
+
+    print_line '-' $g_max_length_line  "$g_color_gray1"
+    #print_line '─' $g_max_length_line  "$g_color_blue1"
+    printf "%s > Actualizar los plugins de %b%s%b %b(%s)%b\n" "$l_tag" "$g_color_cian1" "$l_tag" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
+    print_line '-' $g_max_length_line "$g_color_gray1"
+    #print_line '─' $g_max_length_line  "$g_color_blue1"
+
+    _update_vim_package $p_is_neovim
+
+    #4. Mostrar informacion y recomendaciones de la configuracion de VIM/NeoVIM
+    show_vim_config_report $p_is_neovim -1
+    l_status=$?
+
+    return 0
 
 }
 
@@ -644,158 +718,38 @@ function _update_all() {
 
     #2. Inicialización
     g_status_crendential_storage=-1
-    local l_status
-    local l_flag
     local l_is_noninteractive=1
     if [ $gp_type_calling -eq 2 ]; then
         l_is_noninteractive=0
     fi
 
 
-    #Version de NodeJS instalado
-    local l_nodejs_version=$(get_nodejs_version)
+    #3. Actualizar plugins de VIM
+    local l_status
 
-    #3. Actualizar paquetes VIM instalados
-    local l_version
-    local l_aux=""
-    local l_is_coc_installed=1
-
-    local l_opcion=1
-    l_flag=$(( $p_opciones & $l_opcion ))
-
-    if [ $l_flag -eq $l_opcion ]; then
-
-        #Obtener la version actual de VIM
-        l_version=$(vim --version 2> /dev/null)
-        l_status=$?
-        if [ $l_status -eq 0 ]; then
-            l_version=$(echo "$l_version" | head -n 1)
-            l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-        else
-            l_version=""
-        fi
-
-        #Solo actualizar si esta instalado
-        if [ ! -z "$l_version" ]; then
-
-            #Mostrar el titulo
-            printf -v l_aux "%bVIM%b %b(%s)%b" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
-
-            printf '\n'
-            print_line '-' $g_max_length_line  "$g_color_gray1"
-            #print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "VIM > Actualizar los plugins de %b\n" "$l_aux"
-            print_line '-' $g_max_length_line "$g_color_gray1"
-            #print_line '─' $g_max_length_line  "$g_color_blue1"
-
-
-            #Si root esta instalando el profile de otro usuario, no permitir (debe ejecutar el script con el usuario owner del home)
-            if [ $g_runner_is_target_user -ne 0 ]; then
-
-                printf '%b  > Warning: La actualización de paquetes de VIM solo lo puede ejecutar el usuario "%b%s%b" owner\n' \
-                       "$g_color_yellow1" "$g_color_gray1" "$g_targethome_owner" "$g_color_yellow1"
-                printf '             Luego de esta configuracion, realize nuevamente la configuracion usando el usuario "%b%s%b"%b\n' \
-                       "$g_color_gray1" "$g_targethome_owner" "$g_color_yellow1" "$g_color_reset"
-                l_status=0
-
-            #Si el usuario instala su propio profile
-            else
-
-                #Determinar si esta instalado en modo developer
-                l_is_coc_installed=1
-                check_vim_profile 1
-                l_status=$?
-                if [ $l_status -eq 1 ]; then
-                    if [ -z "$l_nodejs_version" ]; then
-                        printf 'Se actualizará los paquetes/plugins de VIM %s %b(Modo developer, %bNodeJS no intalado%b)%b ...\n' "${l_version}" "$g_color_gray1" \
-                               "$g_color_red1" "$g_color_gray1" "$g_color_reset"
-                    else
-                        printf 'Se actualizará los paquetes/plugins de VIM %s %b(Modo developer, NodeJS "%s")%b ...\n' "${l_version}" "$g_color_gray1" \
-                               "$l_nodejs_version" "$g_color_reset"
-                        l_is_coc_installed=0
-                    fi
-                else
-                    printf 'Se actualizará los paquetes/plugins de VIM %s ...\n' "${l_version}"
-                fi
-
-                #Actualizar los plugins
-                _update_vim 1 $l_is_coc_installed
-
-            fi
-        fi
-
+    _update_vim $p_opciones 1
+    l_status=$?
+    if [ $l_status -eq 111 ]; then
+        #No se cumplen las precondiciones obligatorios
+        return 111
+    elif [ $l_status -eq 120 ]; then
+        #No se acepto almacenar las credenciales para usar sudo.
+        return 120
     fi
 
-    #4. Actualizar paquetes NeoVIM instalados
-    l_opcion=2
-    l_flag=$(( $p_opciones & $l_opcion ))
-
-    if [ $l_flag -eq $l_opcion ]; then
-
-        #Obtener la version actual de VIM
-        l_version=$(nvim --version 2> /dev/null)
-        l_status=$?
-        if [ $l_status -eq 0 ]; then
-            l_version=$(echo "$l_version" | head -n 1)
-            l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-        else
-            l_version=""
-        fi
-
-        #Solo actualizar si esta instalado
-        if [ ! -z "$l_version" ]; then
-
-            #Mostrar el titulo
-            printf -v l_aux "%bNeoVIM%b %b(%s)%b" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
-
-            printf '\n'
-            print_line '-' $g_max_length_line  "$g_color_gray1"
-            #print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "NeoVIM > Actualizar los paquetes de %b\n" "$l_aux"
-            #print_line '─' $g_max_length_line "$g_color_blue1"
-            print_line '-' $g_max_length_line  "$g_color_gray1"
-
-
-            #Si root esta instalando el profile de otro usuario, no permitir (debe ejecutar el script con el usuario owner del home)
-            if [ $g_runner_is_target_user -ne 0 ]; then
-
-                printf '%b  > Warning: La actualización de paquetes de NeoVIM solo lo puede ejecutar el usuario "%b%s%b" owner\n' \
-                       "$g_color_yellow1" "$g_color_gray1" "$g_targethome_owner" "$g_color_yellow1"
-                printf '             Luego de esta configuracion, realize nuevamente la configuracion usando el usuario "%b%s%b"%b\n' \
-                       "$g_color_gray1" "$g_targethome_owner" "$g_color_yellow1" "$g_color_reset"
-                l_status=0
-
-            #Si el usuario instala su propio profile
-            else
-
-                #Determinar si esta instalado en modo developer
-                l_is_coc_installed=1
-                check_vim_profile 0
-                l_status=$?
-                if [ $l_status -eq 1 ]; then
-                    if [ -z "$l_nodejs_version" ]; then
-                        printf 'Se actualizará los paquetes/plugins de NeoVIM %s %b(Modo developer, %bNodeJS no intalado%b)%b ...\n' "${l_version}" "$g_color_gray1" \
-                               "$g_color_red1" "$g_color_gray1" "$g_color_reset"
-                    else
-                        printf 'Se actualizará los paquetes/plugins de NeoVIM %s %b(Modo developer, NodeJS "%s")%b ...\n' "${l_version}" "$g_color_gray1" \
-                               "$l_nodejs_version" "$g_color_reset"
-                        l_is_coc_installed=0
-                    fi
-                else
-                    printf 'Se actualizará los paquetes/plugins de NeoVIM %s ...\n' "${l_version}"
-                fi
-
-                #Actualizar los plugins
-                _update_vim 0 $l_is_coc_installed
-
-            fi
-
-        fi
-
+    #4. Actualizar plugins de NeoVIM
+    _update_vim $p_opciones 0
+    l_status=$?
+    if [ $l_status -eq 111 ]; then
+        #No se cumplen las precondiciones obligatorios
+        return 111
+    elif [ $l_status -eq 120 ]; then
+        #No se acepto almacenar las credenciales para usar sudo.
+        return 120
     fi
 
 
-    #6. Caducar las credecinales de root almacenadas temporalmente
+    #5. Caducar las credecinales de root almacenadas temporalmente
     if [ $g_status_crendential_storage -eq 0 ]; then
         clean_sudo_credencial
     fi

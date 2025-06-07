@@ -9,7 +9,7 @@
 #  110  - Argumentos invalidos.
 #  111  - No se cumple los requisitos para ejecutar la logica principal del script.
 #  120  - Se require permisos de root y se nego almacenar las credenciales de SUDO.
-#  otro - Error en el procesamiento de la logica del script 
+#  otro - Error en el procesamiento de la logica del script
 
 
 
@@ -135,7 +135,7 @@ declare -r g_max_length_line=130
 #------------------------------------------------------------------------------------------------------------------
 #> Funciones usadas durante configuración del profile {{{
 #------------------------------------------------------------------------------------------------------------------
-# 
+#
 # Incluye las variable globales usadas como parametro de entrada y salida de la funcion que no sea resuda por otras
 # funciones, cuyo nombre inicia con '_g_'.
 #
@@ -183,7 +183,7 @@ xvfb_start() {
         #Con '-ac', se elimina la autorizacion por host/usuario del servidor
         l_cmd_options="${l_cmd_options} -listen tcp -ac"
         l_display_value="localhost:${p_display_number}"
-    fi 
+    fi
 
     if [ -e /tmp/.X11-unix/X${p_display_number} ]; then
         printf 'Existe un servidor x11 iniciado en display number %s %b(vea: /tmp/.X11-unix/X%s)%b\n' "$p_display_number" "$g_color_gray1" "$p_display_number" "$g_color_reset"
@@ -214,7 +214,7 @@ xvfb_start() {
             fi
         fi
     fi
-    
+
 
     #5. Iniciar el servidor X11
     local l_log_file="${_g_tmp_data_path}/xvfb_${UID}.log"
@@ -229,7 +229,7 @@ xvfb_start() {
     printf 'Para ejecutar un cliente en este servidor de visualizacion, defina antes: %bexport DISPLAY=%s%b\n' "$g_color_gray1" "$l_display_value" "$g_color_reset"
     printf 'Para detener el servidor de visualizacion, use: %bkill %s%b\n' "$g_color_gray1" "$l_pid" "$g_color_reset"
     return 0
-        
+
 }
 
 
@@ -249,7 +249,7 @@ function _sutup_support_x11_clipboard() {
     if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
         l_flag_ssh_srv=0
     fi
-    
+
     l_option=2
     local l_flag_ssh_clt_without_xsrv=1
     if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
@@ -266,7 +266,7 @@ function _sutup_support_x11_clipboard() {
     if [ $l_flag_ssh_srv -ne 0 ] && [ $l_flag_ssh_clt_with_xsrv -ne 0 ] && [ $l_flag_ssh_clt_without_xsrv -ne 0 ]; then
         return 99
     fi
-   
+
     #3. Mostrar el titulo de instalacion
 
     #Obtener a quien aplica la configuración
@@ -334,7 +334,7 @@ function _sutup_support_x11_clipboard() {
         return 1
     fi
 
-    #3. Instalar los programas requeridos 
+    #3. Instalar los programas requeridos
     local l_version
     local l_status
     local l_is_noninteractive=1
@@ -347,7 +347,7 @@ function _sutup_support_x11_clipboard() {
 
     #Parametros:
     # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
-    # 2> Repositorios a instalar/acutalizar: 
+    # 2> Repositorios a instalar/acutalizar:
     # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     # 4> El estado de la credencial almacenada para el sudo
     if [ $l_is_noninteractive -eq 1 ]; then
@@ -393,7 +393,7 @@ function _sutup_support_x11_clipboard() {
             return 1
         fi
 
-    
+
         if ! echo "$l_ssh_config_data"  | grep '^X11Forwarding\s\+yes\s*$' &> /dev/null; then
 
             printf 'X forwarding> Modificando el archivo "%b%s%b": editanto el campo "%b%s%b" con el valor "%b%s%b".\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
@@ -444,12 +444,12 @@ function _uninstall_support_x11_clipboard() {
     local l_option=8
     local l_flag=$(( $p_opciones & $l_option ))
     if [ $l_flag -eq $l_option ]; then l_flag_ssh_srv=0; fi
-    
+
     #Si no se solicitar instalar VIM o NeoVIM no instalar ningun comando
     if [ $l_flag_ssh_srv -ne 0 ]; then
         return 99
     fi
-   
+
     #3. Mostrar el titulo de instalacion
     local l_title
 
@@ -494,7 +494,7 @@ function _uninstall_support_x11_clipboard() {
             return 1
         fi
 
-    
+
         if ! echo "$l_ssh_config_data"  | grep '^X11Forwarding\s\+no\s*$' &> /dev/null; then
 
             printf 'X forwarding> Modificando el archivo "%b%s%b": editanto el campo "%b%s%b" con el valor "%b%s%b".\n' "$g_color_gray1" "/etc/ssh/sshd_config" "$g_color_reset" \
@@ -542,8 +542,8 @@ function _setup() {
     fi
 
     local l_status
-    
-   
+
+
     #04. Eliminar el gestor 'VIM-Plug' y Packer
     #_remove_vim_plugin_manager $p_opciones
     #l_status=$?
@@ -554,7 +554,7 @@ function _setup() {
     #elif [ $l_status -eq 120 ]; then
     #    return 120
     #fi
-    
+
     #05. Configurar para tener el soporte a 'X11 forwarding for SSH Server'
     _sutup_support_x11_clipboard $p_opciones
     l_status=$?
@@ -609,11 +609,11 @@ function _show_menu_core() {
 function g_main() {
 
     #1. Pre-requisitos
-    
+
     #2. Mostrar el Menu
-    print_line '─' $g_max_length_line "$g_color_green1" 
+    print_line '─' $g_max_length_line "$g_color_green1"
     _show_menu_core
-    
+
     local l_flag_continue=0
     local l_options=""
     while [ $l_flag_continue -eq 0 ]; do
@@ -625,28 +625,28 @@ function g_main() {
 
             q)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_green1" 
+                print_line '─' $g_max_length_line "$g_color_green1"
                 ;;
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '─' $g_max_length_line "$g_color_green1" 
+                    print_line '─' $g_max_length_line "$g_color_green1"
                     _setup $l_options
                 else
                     l_flag_continue=0
                     printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
-                    print_line '-' $g_max_length_line "$g_color_gray1" 
+                    print_line '-' $g_max_length_line "$g_color_gray1"
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
                 printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_gray1" 
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 ;;
         esac
-        
+
     done
 
 }
@@ -700,7 +700,7 @@ if [ ! -d "$_g_tmp_data_path" ]; then
     mkdir -p $_g_tmp_data_path
 fi
 
-#4. LOGICA: Configuración del profile 
+#4. LOGICA: Configuración del profile
 _g_result=0
 #_g_status=0
 
@@ -710,5 +710,3 @@ exit $_g_result
 
 
 #}}}
-
-

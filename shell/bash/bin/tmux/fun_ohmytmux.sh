@@ -1,8 +1,8 @@
-#!/bin/sh 
+#!/bin/sh
 
-# Source: 'oh-my-tmux', creado por Gregory Pakosz (@gpakosz). 
-# URL   : https://github.com/gpakosz/.tmux 
-# Se modifica para tener shell en otro archivos y no dentro de los archivos de configuracion. 
+# Source: 'oh-my-tmux', creado por Gregory Pakosz (@gpakosz).
+# URL   : https://github.com/gpakosz/.tmux
+# Se modifica para tener shell en otro archivos y no dentro de los archivos de configuracion.
 
 #TMUX_SHELL_OHMYTMUX="$TMUX_SHELL_PATH/fun_ohmytmux.sh"
 #TMUX_SHELL_CUSTOM_STATUSBAR="$TMUX_SHELL_PATH/fun_custom_statusbar.sh"
@@ -1403,4 +1403,3 @@ _apply_configuration() {
 
 
 "$@"
-

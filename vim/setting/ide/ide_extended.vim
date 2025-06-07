@@ -34,7 +34,7 @@ if g:use_coc
     "Por defecto se desabilita la sugerencias (autocompletado)  AI, cuando VIM termino de cargarse.
 
     "Para habilitarlo cuando se use ':Copilot enable'
-    "autocmd VimEnter * Copilot disable
+    autocmd VimEnter * Copilot disable
 
     " En la documentación oficial no existe esta variable, pero en el codigo es usado.
     " > URL : https://github.com/orgs/community/discussions/57887

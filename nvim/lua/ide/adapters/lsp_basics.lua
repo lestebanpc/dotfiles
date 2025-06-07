@@ -43,10 +43,18 @@ local adapter_name = 'clangd'
 
 if use_adapter ~= nil and use_adapter == true then
 
+   if (vim.g.os_type == 0) then
+       --Si es Windows
+       lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/clangd/bin/clangd.exe'
+   else
+       --Si es Linux
+       lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/clangd/bin/clangd'
+   end
+
     vim.lsp.config(adapter_name, {
 
         cmd = {
-            "clangd",
+            lsp_server_path,
             "--background-index",
             "--clang-tidy",
             "--header-insertion=iwyu",
@@ -405,7 +413,7 @@ end
 -- LSP Server : PyRight (usado como base para varios LSP server)
 -- URL        : https://github.com/microsoft/pyright
 -- Docs       : https://microsoft.github.io/pyright/#/
--- Install    : pip install pyright
+-- Install    : pip install --user pyright
 --
 use_adapter = vim.g.use_lsp_adapters['pyright']
 adapter_name = 'pyright'
@@ -498,6 +506,13 @@ adapter_name = 'luals'
 
 if use_adapter ~= nil and use_adapter == true then
 
+   if (vim.g.os_type == 0) then
+       --Si es Windows
+       lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/luals/bin/lua-language-server.exe'
+   else
+       --Si es Linux
+       lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/luals/bin/lua-language-server'
+   end
 
     vim.lsp.config(adapter_name, {
 
@@ -533,7 +548,7 @@ if use_adapter ~= nil and use_adapter == true then
         --settings = {
         --    Lua = {}
         --},
-        cmd = { "lua-language-server" },
+        cmd = { lsp_server_path },
         filetypes = { "lua" },
 
     })
@@ -592,7 +607,7 @@ end
 -- Requiere   : https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#yamlls
 -- Linter     :
 -- Install    : npm install -g yaml-language-server
---              La instalcion instala depenciasl como 'eemeli/yaml' y otros
+--              La instalcion instala depencias como 'eemeli/yaml' y otros
 --
 -- Validate   :
 --

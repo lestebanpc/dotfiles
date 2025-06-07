@@ -16,21 +16,26 @@
 
 vim.diagnostic.config({
     signs = {
+
+        -- Signo que se muestra segun la severidad del diagnostivo
         text = {
             [vim.diagnostic.severity.ERROR] = '✘',
             [vim.diagnostic.severity.WARN] = '',
             [vim.diagnostic.severity.HINT] = '⚑',
             [vim.diagnostic.severity.INFO] = '»',
         },
+
+        -- Hihgligth group asociado a la linea de texto donde ocurre la severidad
+        linehl = {
+            [vim.diagnostic.severity.ERROR] = "ErrorMsg",
+        },
+
+        -- Hihgligth group asociado al la linea de la columna de numero donde ocurre la severidad
+        numhl = {
+            [vim.diagnostic.severity.WARN] = "WarningMsg",
+        },
     },
 
-    linehl = {
-      [vim.diagnostic.severity.ERROR] = "ErrorMsg",
-    },
-
-    numhl = {
-      [vim.diagnostic.severity.WARN] = "WarningMsg",
-    },
 
     -- Soporte a los virtual lines (NeoVim >= 0.11)
     -- https://gpanders.com/blog/whats-new-in-neovim-0-11/#virtual-lines

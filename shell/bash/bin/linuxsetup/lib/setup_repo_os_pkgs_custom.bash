@@ -6,7 +6,7 @@
 
 #ID de los paquetes y sus rutas bases
 #Menu dinamico: Listado de repositorios que son instalados por las opcion de menu dinamicas
-#  - Cada repositorio tiene un ID interno del un repositorios y un identifificador realizar: 
+#  - Cada repositorio tiene un ID interno del un repositorios y un identifificador realizar:
 #    ['internal-id']='external-id'
 #  - Por ejemplo para el repositorio GitHub 'stedolan/jq', el item se tendria:
 #    ['jq']='stedolan/jq'
@@ -24,6 +24,7 @@ gA_packages=(
         ['nvim']='neovim'
         ['python']='python3'
         ['python-pip']='python3-pip'
+        ['python-pipx']='pipx'
         ['skopeo']='skopeo'
         ['xauth']='xorg-x11-xauth'
         ['xvfb']='xorg-x11-server-Xvfb'
@@ -50,7 +51,7 @@ ga_menu_options_title=(
 #WARNING: Un cambio en el orden implica modificar los indices de los eventos:
 #         'install_initialize_menu_option', 'install_finalize_menu_option', 'uninstall_initialize_menu_option' y 'uninstall_finalize_menu_option'
 #Menu dinamico: Repositorios de programas asociados asociados a una opciones del menu.
-#  - Cada entrada define un opcion de menú. 
+#  - Cada entrada define un opcion de menú.
 #  - Su valor es un cadena con ID de repositorios separados por comas.
 #Notas:
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
@@ -99,14 +100,14 @@ get_main_binary_of_package() {
         python)
             l_program_name="python3"
             ;;
-        
+
         python-pip)
             l_program_name="pip3"
             ;;
 
     esac
 
-    echo "$l_program_name" 
+    echo "$l_program_name"
 
 }
 
@@ -114,7 +115,7 @@ get_main_binary_of_package() {
 #Parametros de entrada - Agumentos y opciones:
 #  1 > ID de paquete
 #  2 > Nombre por defecto del paquete
-#  3 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info') 
+#  3 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info')
 #Parametros de salida :
 #  > STDOUT           : El nombre real del paquete (segun el sistema operativo indicado)
 #  > Valor de retorno : Tipo de busqueda del paquete
@@ -154,7 +155,7 @@ get_package_name() {
             elif [ $p_os_subtype_id -eq 1 ]; then
                 l_package_name_custom="vim"
                 l_search_type=1
-            fi 
+            fi
             ;;
 
         python-pip)
@@ -167,7 +168,7 @@ get_package_name() {
             elif [ $p_os_subtype_id -eq 19 ]; then
                 l_package_name_custom="python3-pip"
                 l_search_type=1
-            fi 
+            fi
             ;;
 
         xvfb)
@@ -177,7 +178,7 @@ get_package_name() {
                 #Si es Ubuntu
                 l_package_name_custom="xvfb"
                 l_search_type=1
-            fi 
+            fi
             ;;
 
         xauth)
@@ -187,7 +188,7 @@ get_package_name() {
                 #Si es Ubuntu
                 l_package_name_custom="xauth"
                 l_search_type=1
-            fi 
+            fi
             ;;
 
     esac
@@ -228,7 +229,7 @@ install_initialize_menu_option() {
 
     #    6)
     #        ;;
-    #    
+    #
 
     #    *)
     #        return 0
@@ -252,7 +253,7 @@ install_dotnet_lib() {
     #Validar si algunos paquees necesarios estan instalados
     #https://learn.microsoft.com/en-us/dotnet/core/install/linux-fedora#dependencies
     #https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu#dependencies
-    
+
     #1. Obtener los paquetes que requeridos
     local la_packages_needed=()
 
@@ -266,7 +267,7 @@ install_dotnet_lib() {
     elif [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
 
         #Existe diferentes paquetes para Debian y para Ubuntu que depende de la version
-        
+
         #libc6
         #libgssapi-krb5-2
         #libstdc++6
@@ -433,7 +434,7 @@ install_dotnet_lib() {
                 #Solicitar credenciales de administrador y almacenarlas temporalmente
                 storage_sudo_credencial
                 g_status_crendential_storage=$?
-                #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+                #Se requiere almacenar las credenciales para realizar cambio con sudo.
                 #  Si es 0 o 1: la instalación/configuración es completar
                 #  Si es 2    : el usuario no acepto la instalación/configuración
                 #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
@@ -451,12 +452,12 @@ install_dotnet_lib() {
 }
 
 #Parametro de entrada:
-# 1> ID del repositorio 
+# 1> ID del repositorio
 #Parametros de salida:
 #  > Valores de retorno
 #      0 > Se inicio la instalación y termino existosamente
 #      1 > Se inicio la instalación y termino con errores
-#      2 > No se inicio la instalación: El paquete ya esta instalado 
+#      2 > No se inicio la instalación: El paquete ya esta instalado
 #      5 > No se inicio la instalación: Se envio otros parametros invalidos
 #    120 > No se inicio la instalación: No se permitio almacenar las credenciales para sudo
 install_custom_packages() {
@@ -467,14 +468,14 @@ install_custom_packages() {
     case "$p_package_id" in
 
         dotnetlib)
-            
+
             #Solo si tiene acceso a root
             if [ $g_runner_sudo_support -ne 2 ] && [ $g_runner_sudo_support -ne 3 ]; then
                 install_dotnet_lib
                 l_status=$?
             fi
             ;;
-        
+
     esac
 
 
@@ -554,10 +555,10 @@ uninstall_initialize_menu_option() {
     #local l_artifact_index
     #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
-    
+
     #3. Preguntar antes de eliminar los archivos
     printf 'Se va ha iniciar con la desinstalación de los siguientes packages: '
-    
+
     #Obtener los repositorios a configurar
     local l_aux="${ga_menu_options_packages[$l_i]}"
     local IFS=','
@@ -576,7 +577,7 @@ uninstall_initialize_menu_option() {
         fi
 
         if [ $l_j -eq 0 ]; then
-            l_repo_names="'${g_color_gray1}${l_aux}${g_color_reset}'" 
+            l_repo_names="'${g_color_gray1}${l_aux}${g_color_reset}'"
         else
             l_repo_names="${l_repo_names}, '${g_color_gray1}${l_aux}${g_color_reset}'"
         fi
@@ -599,7 +600,7 @@ uninstall_initialize_menu_option() {
     #    6)
     #        #Container Runtime 'ContainerD'
     #        l_repo_id='containerd'
-    #        
+    #
 
     #        #Si esta iniciado pero no acepta detenerlo
     #        if [ $l_status -eq 2 ]; then
@@ -646,4 +647,3 @@ uninstall_finalize_menu_option() {
 
 
 #}}}
-

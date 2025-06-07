@@ -1,6 +1,4 @@
-# ~/.bashrc: executed by bash(1) for non-login shells.
-# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
-# for examples
+# ~/.bashrc: executed by bash for interactive non-login shells.
 
 # If not running interactively, don't do anything
 case $- in
@@ -8,24 +6,6 @@ case $- in
       *) return;;
 esac
 
-# don't put duplicate lines or lines starting with space in the history.
-# See bash(1) for more options
-HISTCONTROL=ignoreboth
-
-# append to the history file, don't overwrite it
-shopt -s histappend
-
-# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTSIZE=1000
-HISTFILESIZE=2000
-
-# check the window size after each command and, if necessary,
-# update the values of LINES and COLUMNS.
-shopt -s checkwinsize
-
-# If set, the pattern "**" used in a pathname expansion context will
-# match all files and zero or more directories and subdirectories.
-#shopt -s globstar
 
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
@@ -50,28 +30,53 @@ alias l='ls -CF'
 # Add an "alert" alias for long running commands.  Use like so:  sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
+
 # Alias definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_aliases, instead of adding them here directly.
-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+#if [ -f ~/.bash_aliases ]; then
+#    . ~/.bash_aliases
+#fi
 
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
-
-# Enable programmable completion features (you don't need to enable
-# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-# sources /etc/bash.bashrc).
-if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
-fi
+# Enable programmable completion features
+#if ! shopt -oq posix; then
+#  if [ -f /usr/share/bash-completion/bash_completion ]; then
+#    . /usr/share/bash-completion/bash_completion
+#  elif [ -f /etc/bash_completion ]; then
+#    . /etc/bash_completion
+#  fi
+#fi
 
 
-#-----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------
+# Command history
+#-------------------------------------------------------------------------------------
+
+# Tamaño maximo de comandos en memoria por shell interactivo
+export HISTSIZE=10000
+
+# Tamaño maximo del historial de comandos
+export HISTFILESIZE=20000
+
+# No almacenar comandos conscutivos repetidas y que inician con espacio.
+export HISTCONTROL=ignoredups:erasedups
+
+# Por defecto, la ultima instancia del shell interactivo, trunca el archivo y sobre-escribe el historial
+# con su historia de comandos contenido en memoria.
+# Activar la opcion 'histappend', no trunca el archivo, lo adiciona.
+shopt -s histappend
+
+
+#-------------------------------------------------------------------------------------
+# Shell Options (Others)
+#-------------------------------------------------------------------------------------
+
+# check the window size after each command and, if necessary,update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# If set, the pattern "**" used in a pathname expansion context will match all files and zero or more
+# directories and subdirectories.
+#shopt -s globstar
+
+#-------------------------------------------------------------------------------------
 # Variables globales obtenidos del archivo de configuración '~/_config.bash'
 #-----------------------------------------------------------------------------------
 
@@ -101,6 +106,7 @@ fi
 #Usado por archivo de configuración de programas como TMUX, VIM, NeoVIM y CoC.
 export MY_REPO_PATH="$HOME/$g_repo_name"
 export MY_PRGS_PATH="$g_programs_path"
+unset g_programs_path
 
 
 #-----------------------------------------------------------------------------------
@@ -111,71 +117,73 @@ export MY_PRGS_PATH="$g_programs_path"
 if [ "$g_bin_cmdpath" != "/usr/local/bin" ] && [ "$g_bin_cmdpath" != "$HOME/.local/bin" ]; then
     PATH="${g_bin_cmdpath}:${PATH}"
 fi
+unset g_bin_cmdpath
 
-# GraalVM - RTE y Herramientas de desarrollo para Java y otros
-if [ -d "${g_programs_path}/graalvm" ]; then
-    GRAALVM_HOME="${g_programs_path}/graalvm"
+# Java - GraalVM (RTE y Herramientas de desarrollo para Java y otros)
+if [ -d "${MY_PRGS_PATH}/graalvm" ]; then
+    GRAALVM_HOME="${MY_PRGS_PATH}/graalvm"
     export GRAALVM_HOME
 
-    # No adicionar por defecto para no perjudicar a los programas que corren usando el OpenJDK
+    #No adicionar para no perjudicar los programas del SO que corren usando el OpenJDK del SO
     #JAVA_HOME="${GRAALVM_HOME}"
     #export GRAALVM_HOME JAVA_HOME
     #PATH="$PATH:${JAVA_HOME}/bin"
 fi
 
-# Rutas por defecto: Adicionando rutas de programas especificos
-[ -d "${g_programs_path}/neovim/bin" ] && PATH="$PATH:${g_programs_path}/neovim/bin"
+# Java - Jbang (scripting para java)
+[ -d "${MY_PRGS_PATH}/jbang/bin" ] && PATH="$PATH:${MY_PRGS_PATH}/jbang/bin"
+
+# Java - CLI tools creados por Java usando Jbang
+[ -d ~/.jbang/bin ] && PATH="$PATH:${HOME}/.jbang/bin"
+
+# Java - Apache Maven (Builder para Java)
+[ -d "${MY_PRGS_PATH}/maven/bin" ] && PATH="${MY_PRGS_PATH}/maven/bin:$PATH"
+
+# Neovim path
+[ -d "${MY_PRGS_PATH}/neovim/bin" ] && PATH="$PATH:${MY_PRGS_PATH}/neovim/bin"
 
 # CMake - Sistema de contrucción para C/C++ y otros
-[ -d "${g_programs_path}/cmake" ] && PATH="$PATH:${g_programs_path}/cmake/bin"
+[ -d "${MY_PRGS_PATH}/cmake" ] && PATH="$PATH:${MY_PRGS_PATH}/cmake/bin"
 
 # Go - Tools estandar para desarrollo
-[ -d "${g_programs_path}/go/bin" ] && PATH="$PATH:${g_programs_path}/go/bin"
+[ -d "${MY_PRGS_PATH}/go/bin" ] && PATH="$PATH:${MY_PRGS_PATH}/go/bin"
 
-# Go - Tools adicionales
+# Go - CLI tools creados en Go
 [ -d ~/go/bin ] && PATH="$PATH:${HOME}/go/bin"
 
 # Rust - Tools para desarrollo
-[ -d "${g_programs_path}/rust/bin" ] && PATH="$PATH:${g_programs_path}/rust/bin"
-#[ -d ~/.cargo/bin ] && PATH="$PATH:${HOME}/.cargo/bin"
+[ -d "${MY_PRGS_PATH}/rust/bin" ] && PATH="$PATH:${MY_PRGS_PATH}/rust/bin"
 
-# LLVM/Clang/Clangd
-if [ -d "${g_programs_path}/llvm/bin" ]; then
-    PATH="${g_programs_path}/llvm/bin:$PATH"
-elif [ -d "${g_programs_path}/lsp_servers/clangd/bin" ]; then
-    PATH="${g_programs_path}/lsp_servers/clangd/bin:$PATH"
-fi
+# Go - CLI tools creados en Rust
+[ -d ~/.cargo/bin ] && PATH="$PATH:${HOME}/.cargo/bin"
 
-# Ruta del builder Apache Maven
-[ -d "${g_programs_path}/maven/bin" ] && PATH="${g_programs_path}/maven/bin:$PATH"
-
-# Ruta del compilador de ProtoBuffer de gRPC
-[ -d "${g_programs_path}/protoc/bin" ] && PATH="${g_programs_path}/protoc/bin:$PATH"
-
-# Paquetes globales de tipo comando de Node.Js (RTE) usando gestor de paquetes 'npm'
-[ -d "${g_programs_path}/nodejs/bin" ] && PATH="${g_programs_path}/nodejs/bin:$PATH"
+# NodeJS - CLI tools creados en NodeJS y usando gestor de paquetes 'npm'
+[ -d "${MY_PRGS_PATH}/nodejs/bin" ] && PATH="${MY_PRGS_PATH}/nodejs/bin:$PATH"
 
 # DotNet
-if [ -d "${g_programs_path}/dotnet" ]; then
-    export DOTNET_ROOT="${g_programs_path}/dotnet"
+if [ -d "${MY_PRGS_PATH}/dotnet" ]; then
+
+    # Dotnet Path
+    export DOTNET_ROOT="${MY_PRGS_PATH}/dotnet"
     PATH="${DOTNET_ROOT}:$PATH"
+
+    # Dotnet - CLI tools creados en .NET (Global .NET tools)
     [ -d "$DOTNET_ROOT/tools" ] && PATH="${DOTNET_ROOT}/tools:$PATH"
+
 fi
 
+# gRPC - Ruta del compilador de ProtoBuffer de gRPC
+[ -d "${MY_PRGS_PATH}/protoc/bin" ] && PATH="${MY_PRGS_PATH}/protoc/bin:$PATH"
+
 # AWS CLI v2
-[ -d "${g_programs_path}/aws-cli/v2/current/bin" ] && PATH="${g_programs_path}/aws-cli/v2/current/bin:$PATH"
+[ -d "${MY_PRGS_PATH}/aws-cli/v2/current/bin" ] && PATH="${MY_PRGS_PATH}/aws-cli/v2/current/bin:$PATH"
 
 # CTags
-[ -d "${g_programs_path}/ctags" ] && PATH="${g_programs_path}/ctags/bin:$PATH"
-
-# Lua LS
-[ -d "${g_programs_path}/lsp_servers/luals/bin" ] && PATH="${g_programs_path}/lsp_servers/luals/bin:$PATH"
-
-# CNI Plugin> Ruta por defecto de los binarios de CNI plugin (no se usara, se usara su archivo de configuración nerdctl.tom)
-#[ -d "${g_programs_path}/cni_plugins" ] && export CNI_PATH=${g_programs_path}/cni_plugins
+[ -d "${MY_PRGS_PATH}/ctags" ] && PATH="${MY_PRGS_PATH}/ctags/bin:$PATH"
 
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
+
 
 
 #-----------------------------------------------------------------------------------
@@ -224,6 +232,7 @@ eval "$(fzf --bash)"
 
 # Oh-my-posh> Ejecutar el script de inicializacion segun el tema escogido
 eval "$(oh-my-posh --init --shell bash --config ${g_prompt_theme})"
+unset g_prompt_theme
 
 # Oh-my-tmux> Opciones
 export EDITOR=vim
@@ -244,6 +253,7 @@ export SYSTEMD_EDITOR=vim
 #-----------------------------------------------------------------------------------
 
 # Alias
+alias j!=jbang
 alias kc='kubectl'
 alias step-jwt='step crypto jwt'
 

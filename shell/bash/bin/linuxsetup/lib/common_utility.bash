@@ -48,7 +48,7 @@ declare -r g_empty_str='EMPTY'
 
 
 #Menu dinamico: Listado de repositorios que son instalados por las opcion de menu dinamicas
-#  - Cada repositorio tiene un ID interno del un repositorios y un identifificador realizar: 
+#  - Cada repositorio tiene un ID interno del un repositorios y un identifificador realizar:
 #    ['internal-id']='external-id'
 #  - Por ejemplo para el repositorio GitHub 'stedolan/jq', el item se tendria:
 #    ['jq']='stedolan/jq'
@@ -61,7 +61,7 @@ declare -a ga_menu_options_title=(
     )
 
 #Menu dinamico: Repositorios de programas asociados asociados a una opciones del menu.
-#  - Cada entrada define un opcion de menú. 
+#  - Cada entrada define un opcion de menú.
 #  - Su valor es un cadena con ID de repositorios separados por comas.
 declare -a ga_menu_options_packages=(
     )
@@ -75,7 +75,7 @@ declare -a ga_menu_options_packages=(
 #------------------------------------------------------------------------------------------------------------------
 #> Funciones Generales {{{
 #------------------------------------------------------------------------------------------------------------------
-# 
+#
 # Incluye las variable globales usadas como parametro de entrada y salida de la funcion que no sea resuda por otras
 # funciones, cuyo nombre inicia con '_g_'.
 #
@@ -126,11 +126,11 @@ function get_owner_of_folder() {
 }
 
 #Obtener la informacion del target home (home del usuario OBJETIVO, donde se encuentan el repositorio con los archivos de configuración usados para configurar
-#su profile, comandos y/o programas). Adicionalmente, validar si el usuario runner (responsable de configurar el home del setup) pueda ser uno de las 
+#su profile, comandos y/o programas). Adicionalmente, validar si el usuario runner (responsable de configurar el home del setup) pueda ser uno de las
 #siguientes opciones:
 # - El onwer del home del setup.
 # - Si no es onwer del home del setup, solo puede ser el usuario root (root realizará la configuracion para el owner del home del setup, nunca para root).
-#Parametros de entrada: 
+#Parametros de entrada:
 #  1> Nombre del repositorio
 #  2> Ruta del home del usuario donde se configura el profile y donde esta el repositorio git.
 #Parametros de salida:
@@ -157,7 +157,7 @@ function get_targethome_info() {
     else
         g_targethome_path="$2"
     fi
-    
+
     #Ruta base del respositorio git del usuario donde se instalar el profile del usuario.
     g_repo_path="${g_targethome_path}/${p_repo_name}"
 
@@ -223,8 +223,8 @@ function get_targethome_info() {
 }
 
 #Validar si la la carpeta base del programas y tiene los permisos correctos, y si no tiene, se intenta arreglarlo/repararlo.
-#  > El owner del la carpeta define el usuario que DEBE instalar/actualizar los programas. 
-#  > El runner (usuario objetivo o usuario root en modo de suplantacion del usuario objetivo) solo puede instalar programas en folderes cuyo owner sea el usuario 
+#  > El owner del la carpeta define el usuario que DEBE instalar/actualizar los programas.
+#  > El runner (usuario objetivo o usuario root en modo de suplantacion del usuario objetivo) solo puede instalar programas en folderes cuyo owner sea el usuario
 #    objetivo o root.
 #    - Si el folder del programa tiene un owner diferente a estos, en el script de instalacion, se debera cambiar el usuario objetivo al owner de esta carpeta para
 #      que pueda realizar la instalacion.
@@ -239,7 +239,7 @@ function get_targethome_info() {
 #    - Si la carpeta esta dentro del home del usuario objetivo, los programas solo puede ser usados por el usuario objetivo.
 #      - La carpeta estandar es '~/tools'.
 #      - Solo se consideran como carpetas validas aquellas tenga como owner al usuario de su home.
-#    - Si la carpeta esta fuera del home del usuario objetivo, los programas puede ser usados todos los usuarios (pero solo el usuario objetivo puede 
+#    - Si la carpeta esta fuera del home del usuario objetivo, los programas puede ser usados todos los usuarios (pero solo el usuario objetivo puede
 #      instalar/actualizar los programas)
 #      - La carpeta estandar PODRIA ser: '/var/opt/tools' o '/opt/tools'.
 #    - Todo los nuevos archivos/carpetas creados durante la instalacion tendran como owner al usuario objetivo.
@@ -251,18 +251,18 @@ function get_targethome_info() {
 #    - No se crearan los subfolderes adicionales 'FOLDER_BASE/sharedkeys', 'FOLDER_BASE/sharedkeys/tls' y 'FOLDER_BASE/sharedkeys/ssh'.
 #  > Si la carpeta enviada NO EXISTE:
 #    - Si la carpeta padre existe, se intentara crear la carpeta y si se logra ello, sera considera como una carpeta valida para almacenar programas.
-#    - Si el folder esta dentro de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea el usuario objetivo. 
-#    - Si el folder esta fuera de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea root. 
+#    - Si el folder esta dentro de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea el usuario objetivo.
+#    - Si el folder esta fuera de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea root.
 #    - Se crearan los subfolderes adicionales 'FOLDER_BASE/sharedkeys', 'FOLDER_BASE/sharedkeys/tls' y 'FOLDER_BASE/sharedkeys/ssh'.
 #Parametro de entrada> Argumentos de entrada:
 #  01 > La ruta base de programas a normalizar.
 #Parametros de entrada > Variables globales:
 #  > 'g_targethome_path'
-#Parametro de salida> Variables globales 
+#Parametro de salida> Variables globales
 #  > '_g_prg_path_options' que define caracteristicas del folder ingresado. Su valor puede ser 0 o la suma binario
 #    de los siguientes flags:
-#       > 00001 (1) - La carpeta de programas tiene como owner al usuario OBJETIVO. 
-#       > 00010 (2) - La carpeta de programas tiene como owner a root. 
+#       > 00001 (1) - La carpeta de programas tiene como owner al usuario OBJETIVO.
+#       > 00010 (2) - La carpeta de programas tiene como owner a root.
 #       > 00100 (4) - La carpeta de programas esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de programas NO es una ruta estandar  (ruta personalizada ingresada por el usuario)
 #   > '_g_programs_owner' owner del folder de programas ingresado.
@@ -271,7 +271,7 @@ function get_targethome_info() {
 #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de programas para el usuario objetivo):
 #    00 > La carpeta existe y tiene los permisos necesarios.
 #    01 > La carpeta existe y se modifico los permisos necesarios.
-#    02 > Se creo la carpeta con los permisos necesario para que el usuario 
+#    02 > Se creo la carpeta con los permisos necesario para que el usuario
 #  > NO OK (No se ha podido establecer o crear la carpeta con los permisos correctos para la instalación de programas para el usuario objetivo):
 #    03 > La carpeta existe pero tiene como owner a un usuario diferente del usuario OBJETIVO o del usuario root.
 #    04 > La carpeta existe pero no se puede establer los permisos necesarios.
@@ -281,23 +281,23 @@ function get_targethome_info() {
 #    99 > Parametro invalidos.
 function _try_fix_program_basepath() {
 
-    #1. Argumentos 
+    #1. Argumentos
     local p_programs_path="$1"
     if [ -z "$p_programs_path" ]; then
         return 99
     fi
 
-    #2. Calcular algunas de las opciones del folder ingresado   
+    #2. Calcular algunas de las opciones del folder ingresado
     _g_prg_path_options=0
     _g_programs_owner=''
     _g_programs_group=''
-    
+
     #¿La carpeta esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas)?
     local l_folder_is_targethome=1
     if [[ "$p_programs_path" == ${g_targethome_path}/* ]]; then
         _g_prg_path_options=4
         l_folder_is_targethome=0
-    fi    
+    fi
 
     #¿La carpeta es ruta estandar o una ruta personalizado (ingresada por el usuario)?
     if [ "$p_programs_path" != "/var/opt/tools" ] || [ "$p_programs_path" != "/opt/tools" ] || [ "$p_programs_path" != "${g_targethome_path}/tools" ]; then
@@ -305,7 +305,7 @@ function _try_fix_program_basepath() {
     fi
 
 
-    #3. Si la carpeta existe: intentar arreglar los permisos 
+    #3. Si la carpeta existe: intentar arreglar los permisos
     #   Solo intentara reparar los permisos cuando el usuario tenga los permisos y lo permita. Caso contrario, no intentara reparar la carpeta y lo rechazara.
     #   Es decir, evitara usar sudo para reparar errores de configuracion de la carpeta enviada.
     local l_aux=''
@@ -338,7 +338,7 @@ function _try_fix_program_basepath() {
 
             #B.1. Si el owner de la carpeta NO es root
             if [ "$_g_programs_owner" != "root" ]; then
-                
+
                 #Solo intentar reparar, cuando el folder esta dentro de home y el runner es root el modo de suplantacion (del usario objetivo).
                 if [ $g_runner_is_target_user -ne 0 ] && [ $l_folder_is_targethome -eq 0 ]; then
 
@@ -359,7 +359,7 @@ function _try_fix_program_basepath() {
                 return 4
 
             fi
-                         
+
             #B.2. Si el owner de la carpeta es root
 
             #Se rechazar el folder ingresado, si el usuario runner no tiene permisos para ejecutar como root
@@ -368,7 +368,7 @@ function _try_fix_program_basepath() {
             if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_id -ne 0 -a  $g_runner_sudo_support -eq 2 ]; then
             #if [ $g_runner_sudo_support -eq 3 ] || [[ $g_runner_id -ne 0  &&  $g_runner_sudo_support -eq 2 ]]; then
             #if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
-            
+
                 return 4
 
             fi
@@ -417,7 +417,7 @@ function _try_fix_program_basepath() {
         #C.2. Si el runner es root en modo de suplantacion del usuario objetivo
 
         #No arreglar permisos existente, dejar como esta.
-        #chmod 755 "$p_programs_path" 
+        #chmod 755 "$p_programs_path"
         #return 1
 
         #Creando subfolderes adicionales, si no existen
@@ -444,13 +444,13 @@ function _try_fix_program_basepath() {
 
 
     #4. Si la carpeta no existe, intentar crearlo
-    #   Si la carpeta enviada no existe, pero se tiene los permisos par crear la carpeta y la carpet padre existe, se intentara crear la carpeta y si se logra 
+    #   Si la carpeta enviada no existe, pero se tiene los permisos par crear la carpeta y la carpet padre existe, se intentara crear la carpeta y si se logra
     #   esta sera considera como una carpeta valida para almacenar programas.
-    #    - Si el folder esta dentro de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea el usuario objetivo. 
-    #    - Si el folder esta fuera de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea root. 
+    #    - Si el folder esta dentro de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea el usuario objetivo.
+    #    - Si el folder esta fuera de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea root.
 
 
-    #El owner del folder a crear dependera de la ubicacion de este    
+    #El owner del folder a crear dependera de la ubicacion de este
     if [ $l_folder_is_targethome -eq 0 ]; then
 
         #El owner es el usuaro efectivo
@@ -478,7 +478,7 @@ function _try_fix_program_basepath() {
     if [ ! -z "$l_aux" ] && [ ! -d "$l_aux" ]; then
         return 5
     fi
-    
+
     #A. Si la carpeta a crear esta dentro del home del usuario objetivo
     if [ $l_folder_is_targethome -eq 0 ]; then
 
@@ -492,7 +492,7 @@ function _try_fix_program_basepath() {
         mkdir -pm 755 "$p_programs_path/sharedkeys/tls"
         mkdir -pm 755 "$p_programs_path/sharedkeys/ssh"
 
-        #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo 
+        #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo
         if [ $g_runner_is_target_user -ne 0 ]; then
             chown -R "${g_targethome_owner}:${g_targethome_group}" "$p_programs_path"
         fi
@@ -501,7 +501,7 @@ function _try_fix_program_basepath() {
         return 2
 
     fi
-    
+
 
     #B. Si la carpeta a crear esta fuera del home del usuario objetivo (el owner sera root)
 
@@ -563,25 +563,25 @@ function _try_fix_program_basepath() {
 
 
 #Validar si el foler base de los comandos (y archivos como ayuda y fuente) tiene los permisos correctos, y si no tiene, se intenta arreglarlo/repararlo.
-#  > El owner del la carpeta define el usuario que DEBE instalar/actualizar los programas. 
-#  > El runner (usuario objetivo o usuario root en modo de suplantacion del usuario objetivo) solo puede instalar comandos (y archivos afines como ayuda y las 
+#  > El owner del la carpeta define el usuario que DEBE instalar/actualizar los programas.
+#  > El runner (usuario objetivo o usuario root en modo de suplantacion del usuario objetivo) solo puede instalar comandos (y archivos afines como ayuda y las
 #    fuentes) en folderes cuyo owner sea el usuario objetivo o root.
-#    - Si el folder base de los programa tiene un owner diferente a estos, en el script de instalacion, se debera cambiar el usuario objetivo al owner de esta 
+#    - Si el folder base de los programa tiene un owner diferente a estos, en el script de instalacion, se debera cambiar el usuario objetivo al owner de esta
 #      carpeta para que pueda realizar la instalacion.
 #    - Si el runner requiere permisos de escritura en el folder base de los comandos.
 #  > Esta carpeta puede ser de 2 tipos:
 #    > La carpeta reservada del sistema
 #      - No tiene folder base pero el owner siempre es considerado como root.
-#      - Los subfolderes de comandos (, ayuda y fuentes) NO estan dentro de un mismo folder padre, y son rutas reservadas por el SO: 
-#        - '/usr/local/bin' para comandos, 
-#        - '/usr/local/man/man1' para archivos de ayuda man1 y 
+#      - Los subfolderes de comandos (, ayuda y fuentes) NO estan dentro de un mismo folder padre, y son rutas reservadas por el SO:
+#        - '/usr/local/bin' para comandos,
+#        - '/usr/local/man/man1' para archivos de ayuda man1 y
 #        - '/usr/share/fonts' para las fuentes.
 #      - El runner debe ser root o un usuario con acceso a sudo con root.
 #      - Los comandos (, ayuda y fuentes) se instalan para todos los usuarios.
 #    > La carpeta que NO son reservada del sistema
-#      - Los subfolderes de comandos (, ayuda y fuentes) estan dentro de un mismo folder padre: 
-#        - 'FOLDER_BASE/bin' para comandos, 
-#        - 'FOLDER_BASE/man/man1' para archivos de ayuda man1 y 
+#      - Los subfolderes de comandos (, ayuda y fuentes) estan dentro de un mismo folder padre:
+#        - 'FOLDER_BASE/bin' para comandos,
+#        - 'FOLDER_BASE/man/man1' para archivos de ayuda man1 y
 #        - 'FOLDER_BASE/share/fonts' para las fuentes.
 #      - El owner de la carpeta puede ser usuario objetivo o el usuario root. El runner puede ser el usuario objetivo o el usuario root de suplantacion.
 #      - La carpeta puede estar dentro del home del usuario objetivo o fuera de este.
@@ -595,7 +595,7 @@ function _try_fix_program_basepath() {
 #    - Si la carpeta esta dentro del home del usuario objetivo, los comandos solo puede ser usados por el usuario objetivo.
 #      - Un caso especial: carpeta reservada para el usuario: '~/.local'
 #      - Solo se consideran como carpetas validas aquellas tenga como owner al usuario de su home.
-#    - Si la carpeta esta fuera del home del usuario objetivo, los comandos puede ser usados todos los usuarios (pero solo el usuario objetivo puede 
+#    - Si la carpeta esta fuera del home del usuario objetivo, los comandos puede ser usados todos los usuarios (pero solo el usuario objetivo puede
 #      instalar/actualizar los programas)
 #    - Todo los nuevos archivos/carpetas creados durante la instalacion tendran como owner al usuario objetivo.
 #    - Si el usuario runner es root en modo de suplantacion (del usuario objetivo), debera cambiar el owner de los folderes/archivos creados durante la instalacion.
@@ -606,18 +606,18 @@ function _try_fix_program_basepath() {
 #    - Si los subfolderes existe pero no tienen los permisos correctos, solo se repara si el runner lo permite sin usar sudo. Caso contrario se rechaza todo el folder.
 #  > Si la carpeta enviada NO EXISTE:
 #    - Si la carpeta padre existe, se intentara crear la carpeta y si se logra ello, sera considera como una carpeta valida para almacenar comandos.
-#    - Si el folder esta dentro de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea el usuario objetivo. 
-#    - Si el folder esta fuera de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea root. 
+#    - Si el folder esta dentro de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea el usuario objetivo.
+#    - Si el folder esta fuera de home del usuario objetivo, se intenta crear el folder con permisos 755 y cuyo owner sea root.
 #    - Siempre se creara los subfolderes 'FOLDER_BASE/bin', 'FOLDER_BASE/man' y 'FOLDER_BASE/share/fonts' si no existen y se tiene permisos.
 #Parametro de entrada> Argumentos de entrada:
 #  01 > La ruta base de programas a normalizar. Si se desea validar las rutas predeterminado del sistema, envie un valor vacio.
 #Parametros de entrada > Variables globales:
 #  > 'g_targethome_path'
-#Parametro de salida> Variables globales 
+#Parametro de salida> Variables globales
 #  > '_g_cmd_path_options' que define caracteristicas del folder ingresado. Su valor puede ser 0 o la suma binario
 #    de los siguientes flags:
-#       > 00001 (1) - La carpeta de comandos tiene como owner al usuario OBJETIVO. 
-#       > 00010 (2) - La carpeta de comandos tiene como owner a root. 
+#       > 00001 (1) - La carpeta de comandos tiene como owner al usuario OBJETIVO.
+#       > 00010 (2) - La carpeta de comandos tiene como owner a root.
 #       > 00100 (4) - La carpeta de comandos esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de comandos NO es del sistema ni '~/.local'.
 #   > '_g_cmd_base_owner' owner del folder base de los comandos ingresado.
@@ -626,7 +626,7 @@ function _try_fix_program_basepath() {
 #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
 #    00 > La carpeta existe y tiene los permisos necesarios.
 #    01 > La carpeta existe y se modifico los permisos necesarios.
-#    02 > Se creo la carpeta con los permisos necesario para que el usuario 
+#    02 > Se creo la carpeta con los permisos necesario para que el usuario
 #  > NO OK (No se ha podido establecer o crear la carpeta con los permisos correctos para la instalación de comandos para el usuario objetivo):
 #    03 > La carpeta existe pero tiene como owner a un usuario diferente del usuario OBJETIVO o del usuario root.
 #    04 > La carpeta existe pero no se puede establer los permisos necesarios.
@@ -636,27 +636,27 @@ function _try_fix_program_basepath() {
 #    99 > Parametro invalidos.
 function _try_fix_command_basepath() {
 
-    #1. Argumentos 
+    #1. Argumentos
     local p_cmd_base_path="$1"
 
-    #2. Calcular algunas de las opciones del folder ingresado   
+    #2. Calcular algunas de las opciones del folder ingresado
     _g_cmd_path_options=0
     _g_cmd_base_owner=''
     _g_cmd_base_group=''
 
     local l_folder_is_targethome=1
-    
+
     #¿La carpeta esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas)?
     if [ ! -z "$p_cmd_base_path" ] && [[ "$p_cmd_base_path" == ${g_targethome_path}/* ]]; then
         _g_cmd_path_options=4
         l_folder_is_targethome=0
-    fi    
+    fi
 
     if [ ! -z "$p_cmd_base_path" ] && [ "$p_cmd_base_path" != "${g_targethome_path}/.local" ]; then
         _g_cmd_path_options=$(( _g_cmd_path_options + 8 ))
-    fi    
+    fi
 
-    #3. Si la carpeta reservada por el sistema.    
+    #3. Si la carpeta reservada por el sistema.
     local l_flag=1
     if [ -z "$p_cmd_base_path" ]; then
 
@@ -668,7 +668,7 @@ function _try_fix_command_basepath() {
             _g_cmd_path_options=$(( _g_cmd_path_options + 1 ))
         fi
 
-        #B. Si el runner es root 
+        #B. Si el runner es root
         if [ $g_runner_id -eq 0 ]; then
 
             #Crear los subfolderes si no existen
@@ -696,7 +696,7 @@ function _try_fix_command_basepath() {
         #Si no tiene permisos de root (ser root o poder ejecutar SUDO), rechazar la carpeta
         if  [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_id -ne 0 -a $g_runner_sudo_support -eq 2 ]; then
         #if  [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
-            
+
             #Se rechazar los casos:
             # - El sistema operativo no soporte sudo y el usuario ejecutor no es root.
             # - El sistema operativo soporta sudo y el usario ejecutor no es root y no tiene permiso para sudo.
@@ -793,7 +793,7 @@ function _try_fix_command_basepath() {
 
             #B.1. Si el owner de la carpeta NO es root
             if [ "$_g_cmd_base_owner" != "root" ]; then
-                
+
                 #Solo intentar reparar, cuando el folder esta dentro de home y el runner es root el modo de suplantacion (del usario objetivo).
                 if [ $g_runner_is_target_user -ne 0 ] && [ $l_folder_is_targethome -eq 0 ]; then
 
@@ -831,7 +831,7 @@ function _try_fix_command_basepath() {
                 return 4
 
             fi
-                         
+
             #B.2. Si el owner de la carpeta es root
             if [ "$g_targethome_owner" = "root" ]; then
                 _g_cmd_path_options=$(( _g_cmd_path_options + 1 ))
@@ -842,7 +842,7 @@ function _try_fix_command_basepath() {
             # - El sistema operativo soporta sudo y el usario ejecutor no es root y no tiene permiso para sudo.
             if [ $g_runner_sudo_support -eq 3 ] || [ $g_runner_id -ne 0 -a $g_runner_sudo_support -eq 2 ]; then
             #if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
-            
+
                 return 4
 
             fi
@@ -869,7 +869,7 @@ function _try_fix_command_basepath() {
                 mkdir -pm 755 "${p_cmd_base_path}/share/fonts"
                 chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/share/fonts"
             fi
-            
+
             #Aceptar la carpeta
             return 0
 
@@ -908,7 +908,7 @@ function _try_fix_command_basepath() {
         #C.2. Si el runner es root en modo de suplantacion del usuario objetivo
 
         #No arreglar permisos existente, dejar como esta.
-        #chmod 755 "$p_cmd_base_path" 
+        #chmod 755 "$p_cmd_base_path"
         #return 1
 
         #Creando los subfolderes si no existen
@@ -941,7 +941,7 @@ function _try_fix_command_basepath() {
 
     #3.2. Si no existe la carpeta no reservada del sistema, intentar crearlo ...
 
-    #El owner del folder a crear dependera de la ubicacion de este    
+    #El owner del folder a crear dependera de la ubicacion de este
     if [ $l_folder_is_targethome -eq 0 ]; then
 
         #El owner es el usuario efectivo
@@ -969,7 +969,7 @@ function _try_fix_command_basepath() {
     if [ ! -z "$l_aux" ] && [ ! -d "$l_aux" ]; then
         return 5
     fi
-    
+
     #A. Si la carpeta a crear esta dentro del home del usuario usuario objetivo
     if [ $l_folder_is_targethome -eq 0 ]; then
 
@@ -981,25 +981,25 @@ function _try_fix_command_basepath() {
         #Creando los subfolderes si no existen
         if [ ! -d "${p_cmd_base_path}/bin" ]; then
             mkdir -pm 755 "${p_cmd_base_path}/bin"
-            #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo 
+            #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo
             chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/bin"
         fi
 
         if [ ! -d "${p_cmd_base_path}/man" ]; then
             mkdir -pm 755 "${p_cmd_base_path}/man"
-            #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo 
+            #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo
             chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/man"
         fi
 
         if [ ! -d "${p_cmd_base_path}/share" ]; then
             mkdir -pm 755 "${p_cmd_base_path}/share"
-            #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo 
+            #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo
             chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/share"
         fi
 
         if [ ! -d "${p_cmd_base_path}/share/fonts" ]; then
             mkdir -pm 755 "${p_cmd_base_path}/share/fonts"
-            #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo 
+            #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo
             chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/share/fonts"
         fi
 
@@ -1007,7 +1007,7 @@ function _try_fix_command_basepath() {
         return 2
 
     fi
-    
+
 
     #B. Si la carpeta a crear estar fuera del home del usuario objetivo (el owner sera root)
 
@@ -1091,8 +1091,8 @@ function _try_fix_command_basepath() {
 # > 'g_programs_path': la ruta del folder establecido
 # > 'g_prg_path_options' que define caracteristicas del folder obtenido. Su valor puede ser 0 o la suma binario
 #    de los siguientes flags:
-#       > 00001 (1) - La carpeta de programas tiene como owner al usuario OBJETIVO. 
-#       > 00010 (2) - La carpeta de programas tiene como owner a root. 
+#       > 00001 (1) - La carpeta de programas tiene como owner al usuario OBJETIVO.
+#       > 00010 (2) - La carpeta de programas tiene como owner a root.
 #       > 00100 (4) - La carpeta de programas esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de programas NO es una ruta estandar  (ruta personalizada ingresada por el usuario)
 # > 'g_programs_owner' owner del folder de programas ingresado.
@@ -1131,12 +1131,12 @@ function get_program_path() {
     #3. Realizar el 1er intento
     local l_status=0
     _g_prg_path_options=0
-        
+
     #Parametro de salida> Valor de retorno:
     #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
     #    00 > La carpeta existe y tiene los permisos necesarios.
     #    01 > La carpeta existe y se modifico los permisos necesarios.
-    #    02 > Se creo la carpeta con los permisos necesario para que el usuario 
+    #    02 > Se creo la carpeta con los permisos necesario para que el usuario
     #  > NO OK (No se ha podido establecer o crear la carpeta con los permisos correctos para la instalación de comandos para el usuario objetivo):
     #    03 > La carpeta existe pero tiene como owner a un usuario diferente del usuario OBJETIVO o del usuario root.
     #    04 > La carpeta existe pero no se puede establer los permisos necesarios.
@@ -1154,7 +1154,7 @@ function get_program_path() {
         g_programs_group="$_g_programs_group"
         return 0
     fi
-    
+
     local l_aux=''
     #Obtener el identificador del intento, si aun no se ha obtenida (el argumento enviado por el usuario, tambien puede ser una carpeta por defecto)
     if  [ -z "$l_atttemp_id" ]; then
@@ -1223,7 +1223,7 @@ function get_program_path() {
         #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
         #    00 > La carpeta existe y tiene los permisos necesarios.
         #    01 > La carpeta existe y se modifico los permisos necesarios.
-        #    02 > Se creo la carpeta con los permisos necesario para que el usuario 
+        #    02 > Se creo la carpeta con los permisos necesario para que el usuario
         #  > NO OK (No se ha podido establecer o crear la carpeta con los permisos correctos para la instalación de comandos para el usuario objetivo):
         #    03 > La carpeta existe pero tiene como owner a un usuario diferente del usuario OBJETIVO o del usuario root.
         #    04 > La carpeta existe pero no se puede establer los permisos necesarios.
@@ -1348,7 +1348,7 @@ function get_program_path() {
         #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
         #    00 > La carpeta existe y tiene los permisos necesarios.
         #    01 > La carpeta existe y se modifico los permisos necesarios.
-        #    02 > Se creo la carpeta con los permisos necesario para que el usuario 
+        #    02 > Se creo la carpeta con los permisos necesario para que el usuario
         #  > NO OK (No se ha podido establecer o crear la carpeta con los permisos correctos para la instalación de comandos para el usuario objetivo):
         #    03 > La carpeta existe pero tiene como owner a un usuario diferente del usuario OBJETIVO o del usuario root.
         #    04 > La carpeta existe pero no se puede establer los permisos necesarios.
@@ -1377,26 +1377,26 @@ function get_program_path() {
         # - Si la carpeta existe pero no se podido establecer los permisos.
         if [ $l_status -eq 4 ]; then
             printf 'La carpeta "%b%s%b" existe pero no tiene los permisos para que se instale programa del usuario objetivo "%b%s%b".\n' \
-                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset" 
+                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset"
         fi
 
         # - La carpeta no existe pero no se puede crear porque la carpeta padre no existe.
         if [ $l_status -eq 5 ]; then
             l_aux="${la_additional_attemps[$l_atttemp_id]}"
             printf 'La carpeta "%b%s%b" no existe pero no puede crear porque la carpeta "%b%s%b" padre no existe.\n' \
-                   "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "${l_aux%/*}" "$g_color_reset" 
+                   "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "${l_aux%/*}" "$g_color_reset"
         fi
 
         # - La carpeta no existe y pero no se tiene los permisos correctos para crearlo.
         if [ $l_status -eq 6 ]; then
             printf 'La carpeta "%b%s%b" no existe pero no tiene los permisos para crearlo con los permisos para instalar programas del usuario objetivo "%b%s%b".\n' \
-                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset" 
+                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset"
         fi
 
         # - La carpeta no existe y pero ocurrio un error al crearlo.
         if [ $l_status -ge 7 ]; then
             printf 'Ocurrio un error al crear la carpeta "%b%s%b" con los permisos para instalar programas del usuario objetivo "%b%s%b".\n' \
-                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset" 
+                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset"
         fi
 
 
@@ -1404,7 +1404,7 @@ function get_program_path() {
         #((l_atttemp_id= l_atttemp_id - 1))
 
     fi
-    
+
 
     #Si no hay mas intentos
     return 1
@@ -1416,7 +1416,7 @@ function get_program_path() {
 #Establece la ruta de los comandos del binario/man/fuente, es decir 'g_bin_cmdpath'/'g_man_cmdpath'/'g_fonts_cmdpath'/'g_cmd_base_path', donde se instalará.
 #Orden de prioridad:
 #  > La carpeta ingresada como parametro 3, siempre que existe,
-#  > La carpeta predeterminado del sistema ('/usr/local/bin', '/usr/local/man' y '/usr/share/fonts'), si existe tenga permisos como 
+#  > La carpeta predeterminado del sistema ('/usr/local/bin', '/usr/local/man' y '/usr/share/fonts'), si existe tenga permisos como
 #    root o sudo para root.
 #  > La carpeta predeterminado para el usuario ubicada en '~/.local', si en las carpeta anterior no tiene permisos de root o sudo para root.
 #  > Si la carpeta esta en el home de usuario, el usuario debera tener permisos de escritura.
@@ -1433,11 +1433,11 @@ function get_program_path() {
 #  > 'g_targethome_path'
 #Parametros de salida > Variables globales:
 #  > 'g_cmd_base_path' siempre es vacio cuando se usa la ruta predeterminado del sistema (para todos los usuario)
-#  > 'g_bin_cmdpath', 'g_man_cmdpath', 'g_fonts_cmdpath' 
+#  > 'g_bin_cmdpath', 'g_man_cmdpath', 'g_fonts_cmdpath'
 #  > 'g_cmd_path_options' que define caracteristicas del folder obtenido. Su valor puede ser 0 o la suma binario
 #    de los siguientes flags:
-#       > 00001 (1) - La carpeta de comandos tiene como owner al usuario OBJETIVO. 
-#       > 00010 (2) - La carpeta de comandos tiene como owner a root. 
+#       > 00001 (1) - La carpeta de comandos tiene como owner al usuario OBJETIVO.
+#       > 00010 (2) - La carpeta de comandos tiene como owner a root.
 #       > 00100 (4) - La carpeta de comandos esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de comandos NO es del sistema ni '~/.local'.
 #    Solo se debe usar cuando se pudo generar una ruta de folder para los programas (valor de retorno 0).
@@ -1466,12 +1466,12 @@ function get_command_path() {
     #3. Realizar el 1er intento
     local l_status=0
     _g_cmd_path_options=0
-        
+
     #Parametro de salida> Valor de retorno:
     #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
     #    00 > La carpeta existe y tiene los permisos necesarios.
     #    01 > La carpeta existe y se modifico los permisos necesarios.
-    #    02 > Se creo la carpeta con los permisos necesario para que el usuario 
+    #    02 > Se creo la carpeta con los permisos necesario para que el usuario
     #  > NO OK (No se ha podido establecer o crear la carpeta con los permisos correctos para la instalación de comandos para el usuario objetivo):
     #    03 > La carpeta existe pero tiene como owner a un usuario diferente del usuario OBJETIVO o del usuario root.
     #    04 > La carpeta existe pero no se puede establer los permisos necesarios.
@@ -1564,7 +1564,7 @@ function get_command_path() {
        #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
        #    00 > La carpeta existe y tiene los permisos necesarios.
        #    01 > La carpeta existe y se modifico los permisos necesarios.
-       #    02 > Se creo la carpeta con los permisos necesario para que el usuario 
+       #    02 > Se creo la carpeta con los permisos necesario para que el usuario
        #  > NO OK (No se ha podido establecer o crear la carpeta con los permisos correctos para la instalación de comandos para el usuario objetivo):
        #    03 > La carpeta existe pero tiene como owner a un usuario diferente del usuario OBJETIVO o del usuario root.
        #    04 > La carpeta existe pero no se puede establer los permisos necesarios.
@@ -1627,7 +1627,7 @@ function get_command_path() {
         ((l_atttemp_id= l_atttemp_id - 1))
 
     fi
-    
+
 
     #5. Realizar el intento del folder '~/tools' (ID=0)
     if [ $l_atttemp_id -eq 0 ]; then
@@ -1636,7 +1636,7 @@ function get_command_path() {
        #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
        #    00 > La carpeta existe y tiene los permisos necesarios.
        #    01 > La carpeta existe y se modifico los permisos necesarios.
-       #    02 > Se creo la carpeta con los permisos necesario para que el usuario 
+       #    02 > Se creo la carpeta con los permisos necesario para que el usuario
        #  > NO OK (No se ha podido establecer o crear la carpeta con los permisos correctos para la instalación de comandos para el usuario objetivo):
        #    03 > La carpeta existe pero tiene como owner a un usuario diferente del usuario OBJETIVO o del usuario root.
        #    04 > La carpeta existe pero no se puede establer los permisos necesarios.
@@ -1668,33 +1668,33 @@ function get_command_path() {
         # - Si la carpeta existe pero no se podido establecer los permisos.
         if [ $l_status -eq 4 ]; then
             printf 'La carpeta "%b%s%b" existe pero no tiene los permisos para que se instale comandos del usuario objetivo "%b%s%b".\n' \
-                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset" 
+                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset"
         fi
 
         # - La carpeta no existe pero no se puede crear porque la carpeta padre no existe.
         if [ $l_status -eq 5 ]; then
             l_aux="${la_additional_attemps[$l_atttemp_id]}"
             printf 'La carpeta "%b%s%b" no existe pero no puede crear porque la carpeta "%b%s%b" padre no existe.\n' \
-                   "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "${l_aux%/*}" "$g_color_reset" 
+                   "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "${l_aux%/*}" "$g_color_reset"
         fi
 
         # - La carpeta no existe y pero no se tiene los permisos correctos para crearlo.
         if [ $l_status -eq 6 ]; then
             printf 'La carpeta "%b%s%b" no existe pero no tiene los permisos para crearlo con los permisos para instalar comandos del usuario objetivo "%b%s%b".\n' \
-                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset" 
+                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset"
         fi
 
         # - La carpeta no existe y pero ocurrio un error al crearlo.
         if [ $l_status -ge 7 ]; then
             printf 'Ocurrio un error al crear la carpeta "%b%s%b" con los permisos para instalar comandos del usuario objetivo "%b%s%b".\n' \
-                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset" 
+                   "$g_color_gray1" "${la_additional_attemps[$l_atttemp_id]}" "$g_color_reset" "$g_color_gray1" "$g_targethome_owner" "$g_color_reset"
         fi
 
         #Decrementar el intento realizado
         #((l_atttemp_id= l_atttemp_id - 1))
 
     fi
-    
+
 
     #Si no hay mas intentos
     return 1
@@ -1733,292 +1733,13 @@ function get_temp_path() {
         g_temp_path="/var/tmp"
         return 1
     fi
-    
+
     #3. Usar la carpeta predeterminado '/tmp'.
     g_temp_path="/tmp"
     return 2
 
 }
 
-
-#
-#Parametros de entrada
-# 1> Path por del programa.
-#Parametros de salida
-#  > SDTOUT: Version de NodeJS instalado
-#  > Valores de retorno:
-#     0 > Se obtuvo la version (esta instalado)
-#     1 > No se obtuvo la version (no esta instalado)
-function get_nodejs_version() {
-
-    #Parametros
-    local p_path=''
-    if [ ! -z "$1" ]; then
-        p_path="${1}/"
-    fi
-
-    #Obtener la version instalada
-    local l_version
-    l_version=$(${path}node --version 2> /dev/null)
-    local l_status=$?
-    if [ $l_status -ne 0 ]; then
-        return 1
-    fi
-
-    l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-    echo "$l_version"
-    return 0
-}
-
-#
-#Parametros de entrada
-# 1> Path por defecto donde estan todos los programas instalados por el instalador.
-# 2> Flag es '0' si se muestra información cuando esta instalado excepto cuando se registra en el path.
-# 3> Flag es '0' si se muestra información cuando se registra en el path.
-#Parametros de salida
-#  > Valores de retorno:
-#     0 > Esta instalado (usando este instalador) y registrado en el PATH
-#     1 > Esta instalado (usando este instalador) pero NO estaba registrado en el PATH
-#     2 > Esta instalado pero fue instalado usando el gestor de paquetes (no requiere registro) 
-#     3 > No esta instalado
-#  > SDTOUT: Informacion si el parametro 2 es '0'
-function check_nodejs() {
-
-    #Parametros
-    local p_programs_path="$1"
-
-    local p_show_installed_info=1
-    if [ "$2" = "0" ]; then
-        p_show_installed_info=0
-    fi
-
-    local p_show_register_info=1
-    if [ "$3" = "0" ]; then
-        p_show_register_info=0
-    fi
-
-    #Obtener la version instalada
-    local l_version
-    local l_status
-
-    #1. Si no se envio una ruta valida de programas del instalador o no fue instalado por el instalador
-    if [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/nodejs/bin/node" ]; then
-
-        l_version=$(node --version 2> /dev/null)
-        l_status=$?
-        if [ $l_status -ne 0 ]; then
-            l_version=''
-        fi
-
-        if [ -z "$l_version" ]; then
-            return 3
-        fi
-
-        if [ $p_show_installed_info -eq 0 ]; then
-            l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-            printf 'NodeJS > NodeJS "%b%s%b" esta instalado.\n' "$g_color_gray1" "$l_version" "$g_color_reset"
-        fi
-        return 2
-
-    fi
-
-    #2. Si fue instalado por este instalador
-    l_version=$(${p_programs_path}/nodejs/bin/node --version 2> /dev/null)
-    l_status=$?
-    if [ $l_status -ne 0 ]; then
-        l_version=''
-    fi
-
-    #Si fue instalado incorrectamente
-    if [ -z "$l_version" ]; then
-        return 3
-    fi
-
-    #Si fue instalado correctamente, validar si esta registrado en el PATH
-    echo "$PATH" | grep "${p_programs_path}/nodejs/bin" &> /dev/null
-    l_status=$?
-
-    #Si no esta instalado
-    if [ $l_status -ne 0 ]; then
-
-        if [ $p_show_register_info -eq 0 ]; then
-            l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-            printf 'NodeJS > %bNodeJS "%b%s%b" esta instalado pero no esta en el $PATH del usuario%b.\n' \
-                   "$g_color_red1" "$g_color_gray1" "$l_version" "$g_color_red1" "$g_color_reset"
-            printf '         Se recomienda que adicione al PATH de su sesion actual de forma permanente, usando: %bPATH=%s/nodejs/bin:$PATH%b\n' \
-                   "$g_color_gray1" "${p_programs_path}" "$g_color_reset"
-        fi
-
-        export PATH=${p_programs_path}/nodejs/bin:$PATH
-        return 1
-
-    fi
-
-    #Si esta instalado
-    if [ $p_show_installed_info -eq 0 ]; then
-        l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
-        printf 'NodeJS > NodeJS "%b%s%b" esta instalado.\n' "$g_color_gray1" "$l_version" "$g_color_reset"
-    fi
-    return 0
-
-}
-
-#
-#Parametros de salida
-#  > SDTOUT: Version de NodeJS instalado
-#  > Valores de retorno:
-#     0 > Se obtuvo la version (esta instalado)
-#     1 > No se obtuvo la version (no esta instalado)
-#
-function get_vim_version() {
-
-    #Obtener la version instalada
-    local l_version
-    l_version=$(vim --version 2> /dev/null)
-    local l_status=$?
-    if [ $l_status -ne 0 ]; then
-        return 1
-    fi
-
-    l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-    echo "$l_version"
-    return 0
-}
-
-
-#
-#Parametros de entrada
-# 1> Path por del programa.
-#Parametros de salida
-#  > SDTOUT: Version de NodeJS instalado
-#  > Valores de retorno:
-#     0 > Se obtuvo la version (esta instalado)
-#     1 > No se obtuvo la version (no esta instalado)
-#
-function get_neovim_version() {
-
-    #Parametros
-    local p_path=''
-    if [ ! -z "$1" ]; then
-        p_path="${1}/"
-    fi
-
-    #Obtener la version instalada
-    local l_version
-    l_version=$(${path}nvim --version 2> /dev/null)
-    local l_status=$?
-    if [ $l_status -ne 0 ]; then
-        return 1
-    fi
-
-    l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-    echo "$l_version"
-    return 0
-}
-
-
-#
-#Parametros de entrada
-# 1> Path por defecto de todos los programas instalados por el instalador.
-# 2> Flag es '0' si se muestra información cuando esta instalado excepto cuando se registra en el path.
-# 3> Flag es '0' si se muestra información cuando se registra en el path.
-#Parametros de salida
-#  > Valores de retorno:
-#     0 > Esta instalado (usando este instalador) y registrado en el PATH
-#     1 > Esta instalado (usando este instalador) pero NO estaba registrado en el PATH
-#     2 > Esta instalado pero fue instalado usando el gestor de paquetes (no requiere registro) 
-#     3 > No esta instalado
-#  > SDTOUT: Informacion si el parametro 2 es '0'
-function check_neovim() {
-
-    #Parametros
-    local p_programs_path="$1"
-
-    local p_show_installed_info=1
-    if [ "$2" = "0" ]; then
-        p_show_installed_info=0
-    fi
-
-    local p_show_register_info=1
-    if [ "$3" = "0" ]; then
-        p_show_register_info=0
-    fi
-
-
-
-    #Obtener la version instalada
-    local l_version
-    local l_status
-
-    #1. Si no se envio una ruta valida de programas del instalador o no fue instalado por el instalador
-    if  [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/neovim/bin/nvim" ]; then
-
-        l_version=$(nvim --version 2> /dev/null)
-        l_status=$?
-        if [ $l_status -ne 0 ]; then
-            l_version=''
-        fi
-
-        if [ -z "$l_version" ]; then
-            return 3
-        fi
-
-        if [ $p_show_installed_info -eq 0 ]; then
-            l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-            printf 'NeoVIM > NeoVIM "%b%s%b" esta instalado.\n' "$g_color_gray1" "$l_version" "$g_color_reset"
-        fi
-        return 2
-
-    fi
-
-    #Actualmente en arm64 y alpine, solo se instala usaando el gestor de paquetes (el repositorios del SO)
-    if [ "$g_os_architecture_type" = "aarch64" ] || [ $g_os_subtype_id -eq 1 ]; then
-
-        #Si no se obtuvo la version antes, no esta instalado
-        return 3
-
-    fi
-
-    #2. Si fue instalado por este instalador
-    l_version=$(${p_programs_path}/neovim/bin/nvim --version 2> /dev/null)
-    l_status=$?
-    if [ $l_status -ne 0 ]; then
-        l_version=''
-    fi
-
-    #Si fue instalado incorrectamente
-    if [ -z "$l_version" ]; then
-        return 3
-    fi
-
-    #Si fue instalado correctamente, validar si esta registrado en el PATH
-    echo "$PATH" | grep "${p_programs_path}/neovim/bin" &> /dev/null
-    l_status=$?
-
-    #Si no esta instalado
-    if [ $l_status -ne 0 ]; then
-
-        if [ $p_show_register_info -eq 0 ]; then
-            l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-            printf 'NeoVIM > %bNeoVIM "%b%s%b" esta instalado pero no esta en el $PATH del usuario%b.\n' \
-                   "$g_color_red1" "$g_color_gray1" "$l_version" "$g_color_red1" "$g_color_reset"
-            printf '         Se recomienda que adicione al PATH de su sesion actual de forma permanente, usando: %bPATH=%s/neovim/bin:$PATH%b\n' \
-                   "$g_color_gray1" "${p_programs_path}" "$g_color_reset"
-        fi
-
-        export PATH=${p_programs_path}/neovim/bin:$PATH
-        return 1
-
-    fi
-
-    #Si esta instalado
-    if [ $p_show_installed_info -eq 0 ]; then
-        l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-        printf 'NeoVIM > NeoVIM "%b%s%b" esta instalado.\n' "$g_color_gray1" "$l_version" "$g_color_reset"
-    fi
-    return 0
-
-}
 
 
 #Parametros de entrada - Agumentos y opciones:
@@ -2034,7 +1755,7 @@ function fulfill_preconditions() {
     local p_show_additional_info=1
     if [ "$1" = "0" ]; then
         p_show_additional_info=0
-    fi 
+    fi
 
     local p_require_curl=1
     if [ "$2" = "0" ]; then
@@ -2257,99 +1978,6 @@ function clean_sudo_credencial() {
 }
 
 
-#Revisa los plugins de VIM/NeoVIM existe en modo Editor/IDE
-#Parametro de entrada:
-#  0 > Flag '0' si es NeoVIM
-#Parametros de salida (valores de retorno):
-#  0 > Si es esta configurado en modo Editor
-#  1 > Si es esta configurado en modo IDE
-#  2 > Si NO esta configurado
-function check_vim_plugins() {
-
-    #1. Argumentos
-    local p_is_neovim=1
-    if [ "$1" = "0" ]; then
-        p_is_neovim=0
-    fi
-
-
-    #2. ¿Es IDE? (SOLO se analiza uno de los plugins descargados)
-    local l_plugin_path="${HOME}/.vim/pack/ide_dev_coc/opt/coc.nvim"
-    if [ $p_is_neovim -eq 0  ]; then
-        l_plugin_path="${HOME}/.local/share/nvim/site/pack/ide_dev_native/opt/nvim-lspconfig"
-    fi
-
-    if [ -d "$l_plugin_path" ]; then
-        return 1
-    fi
-
-    #3. ¿Es Editor? (SOLO se analiza uno de los plugins descargados)
-    l_plugin_path="${HOME}/.vim/pack/basic_core/opt/fzf"
-    if [ $p_is_neovim -eq 0  ]; then
-        l_plugin_path="${HOME}/.local/share/nvim/site/pack/basic_core/opt/fzf-lua"
-    fi
-
-    if [ -d "$l_plugin_path" ]; then
-        return 0
-    fi
-
-    #4. No es IDE ni Editor
-    return 2
-
-}
-
-
-#Revisa el profile de VIM/NeoVIM y segun ello determina si VIM/NeoVIM esta configurado en modo Editor/IDE
-#Parametro de entrada:
-#  0 > Flag '0' si es NeoVIM
-#Parametros de salida (valores de retorno):
-#  0 > Si es esta configurado en modo Editor
-#  1 > Si es esta configurado en modo IDE
-#  2 > Si NO esta configurado
-function check_vim_profile() {
-
-    #1. Argumentos
-    local p_is_neovim=1
-    if [ "$1" = "0" ]; then
-        p_is_neovim=0
-    fi
-
-
-    #2. Ruta base donde se instala el plugins/paquete
-    local l_real_path
-    local l_profile_path="${HOME}/.vimrc"
-    if [ $p_is_neovim -eq 0  ]; then
-        l_profile_path="${HOME}/.config/nvim/init.vim"
-    fi
-
-    #vimrc_ide.vim
-    #vimrc_editor.vim
-    #init_ide.vim
-    #init_editor.vim
-    l_real_path=$(readlink "$l_profile_path" 2> /dev/null)
-    local l_status=$?
-    if [ $l_status -ne 0 ]; then
-        return 2
-    fi
-
-    l_real_path="${l_real_path##*/}"
-
-    #Si es NeoVIM
-    if [ $p_is_neovim -eq 0  ]; then
-        if [[ "$l_real_path" == init_ide* ]]; then
-            return 1 
-        fi
-        return 0
-    fi
-
-    #Si es VIM
-    if [[ "$l_real_path" =~ vimrc_ide* ]]; then
-        return 1 
-    fi
-    return 0
-
-}
-
 
 #Si la unidad servicio 'containerd' esta iniciado, solicitar su detención y deternerlo
 #Parametros de entrada (argumentos y opciones):
@@ -2386,7 +2014,7 @@ function request_stop_systemd_unit() {
     if [[ "$5" =~ ^[0-9]+$ ]]; then
         p_option_relative_idx=$5
     fi
-    
+
     #2. Averigur el estado actual de la unidad systemd
     local l_option
     local l_status
@@ -2502,7 +2130,7 @@ function request_stop_systemd_unit() {
 #Parametros:
 # 1 > Offset del indice donde inicia el menu dinamico (usualmente, el menu dinamico no inicia desde la primera opcion del dinamico menú).
 get_length_menu_option() {
-    
+
     local p_offset_option_index=$1
 
     local l_nbr_options=${#ga_menu_options_packages[@]}
@@ -2516,14 +2144,14 @@ get_length_menu_option() {
 #El menu dinamico muestra una opción de menú que es:
 #   ([Correlativo]) [Etiquete del opción de menu] [Titulo de la opción de menu]: [Listado de los repositorio que se configurará]
 #Parametros de entrada:
-#  1> Etiqueta de la opción de menú. 
+#  1> Etiqueta de la opción de menú.
 #     Texto que aparece al costado del opción ('Instalar o actualizar' o 'Desintalar')
 #  2> Offset del indice donde inicia el menu dinamico (usualmente, el menu dinamico no inicia desde la primera opcion del dinamico menú).
 #  3> Numero maximo de digitos de una opción del menu personalizado.
 #Variables de entrada
 #  ga_menu_options_title > Listado titulos de una opción de menú.
 #  ga_menu_options_packages > Listado de ID de repositorios configurados por una opción de menú.
-#  gA_packages       > Diccionario de identificadores de repositorios configurados por una opción de menú.  
+#  gA_packages       > Diccionario de identificadores de repositorios configurados por una opción de menú.
 show_dynamic_menu() {
 
     #Argumentos
@@ -2583,7 +2211,7 @@ show_dynamic_menu() {
             fi
 
             if [ $l_j -eq 0 ]; then
-                l_repo_names="'${g_color_gray1}${l_aux}${g_color_reset}'" 
+                l_repo_names="'${g_color_gray1}${l_aux}${g_color_reset}'"
             else
                 if [ $l_j -eq 6 ]; then
                     l_repo_names="${l_repo_names},\n${l_empty_space}'${g_color_gray1}${l_aux}${g_color_reset}'"
@@ -2636,7 +2264,7 @@ function create_folderpath_on_home() {
     if [ -z "$p_folderpath_maynot_exist" ]; then
         return 0
     fi
-        
+
     #4. Creando los folderes del ruta que no puede existir
     local IFS='/'
     la_foldernames=($p_folderpath_maynot_exist)
@@ -2927,6 +2555,825 @@ function copy_file_on_home() {
 
 
 
+#------------------------------------------------------------------------------------------------------------------
+#> Funciones generales para la configuracion de Development enviromnent {{{
+#------------------------------------------------------------------------------------------------------------------
+#
+
+
+# Parametros de salida
+#  > Valores de retorno:
+#     0 > OK.
+#     1 > El se encuentra la ubicacion del binario 'node' (no instalado o no registrado en el PATH)
+#     2 > Ocurrio un error al obtener el owner del folder
+#  > SDTOUT: El usuario onwer de la carpeta de binarios de NodeJS
+function get_owner_of_nodejs() {
+
+    # Obtener la ruta donde esta los binarios de nodojs
+    local l_nodejs_bin_path=$(which node)
+
+    if [ -z "$l_nodejs_bin_path" ]; then
+        return 1
+    fi
+
+    l_nodejs_bin_path=${l_nodejs_bin_path%/node}
+
+    # Obtener el owner del folder
+    local l_aux=''
+    l_aux=$(get_owner_of_folder "$l_nodejs_bin_path")
+    local l_status=$?
+
+    if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
+        return 2
+    fi
+
+    local -a la_owners=(${l_aux})
+    echo "${la_owners[0]}"
+    return 0
+
+}
+
+
+# Parametros de entrada
+#  1> Path por defecto donde estan todos los programas instalados por el instalador.
+# Parametros de salida
+#  > Valores de retorno:
+#     0 > Esta instalado (usando este instalador) y registrado en el PATH
+#     1 > Esta instalado (usando este instalador) pero NO estaba registrado en el PATH
+#     2 > Esta instalado pero fue instalado usando el gestor de paquetes (no requiere registro)
+#     3 > No esta instalado
+#  > SDTOUT: La version de NodeJS instalada
+function get_nodejs_version() {
+
+    #Parametros
+    local p_programs_path="$1"
+
+    #Obtener la version instalada
+    local l_version
+    local l_status
+
+    #1. Si no se envio una ruta valida de programas del instalador o no fue instalado por el instalador
+    if [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/nodejs/bin/node" ]; then
+
+        l_version=$(node --version 2> /dev/null)
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+            l_version=''
+        fi
+
+        if [ -z "$l_version" ]; then
+            return 3
+        fi
+
+        l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+        echo "$l_version"
+        return 2
+
+    fi
+
+    #2. Si fue instalado por este instalador
+    l_version=$(${p_programs_path}/nodejs/bin/node --version 2> /dev/null)
+    l_status=$?
+    if [ $l_status -ne 0 ]; then
+        l_version=''
+    fi
+
+    #Si fue instalado incorrectamente
+    if [ -z "$l_version" ]; then
+        return 3
+    fi
+
+    # Si fue instaaldo correctamente
+    l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+    echo "$l_version"
+
+    #Si fue instalado correctamente, validar si esta registrado en el PATH
+    echo "$PATH" | grep "${p_programs_path}/nodejs/bin" &> /dev/null
+    l_status=$?
+
+    #Si no esta registrado en el PATH
+    if [ $l_status -ne 0 ]; then
+
+        export PATH="${p_programs_path}/nodejs/bin:$PATH"
+        return 1
+
+    fi
+
+    #Si esta registrado en el PATH
+    return 0
+
+}
+
+
+# Parametros de salida
+#  > SDTOUT: La version de Python, Pip y PipX separado por espaciones
+#            Si no esta instalado python (y por dende, ninguna sus componenbtes), devolvera vacio.
+#            Si no se tiene la version de una de las componentes su valor sera 'NONE'.
+#  > Valores de retorno:
+#     X > Donde X es la suma de binaria de los siguientes valores:
+#         1 > Si esta instalado python.
+#         2 > Si esta instalado pip.
+#         4 > Si esta instalado pipx.
+#    Los cuales puede ser:
+#     0 > No esta instalado python.
+#     1 > Instalado ptyhon sin los gestor de paquetes pip y pipx
+#     3 > Instalado ptyhon y solo el gestor de paquetes pip
+#     5 > Instalado ptyhon y solo el gestor de paquetes pipx
+#     7 > Instalado ptyhon y los gestor de paquetes pip y pipx
+function get_python_versions() {
+
+    # TODO Considerar cuando no es ptyhon del sistema y cuando es un venv
+    #      ¿que vim/neovim siempre usen el pyhton/nodejs del sistema?
+
+    # Validar si esta instalado python
+    local l_version
+    l_version=$(python3 --version 2> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ]; then
+        return 0
+    fi
+
+    local l_result=1
+    l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+    local l_versions="$l_version"
+
+    # Validar si esta instalado pip
+    l_version=$(pip3 --version 2> /dev/null)
+    l_status=$?
+    if [ $l_status -ne 0 ]; then
+        l_version=''
+        l_versions="${l_versions} NONE"
+    else
+        ((l_result = l_result + 2))
+        l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+        l_versions="${l_versions} ${l_version}"
+    fi
+
+    # Validar si esta instalado pipx
+    l_version=$(pipx --version 2> /dev/null)
+    l_status=$?
+    if [ $l_status -ne 0 ]; then
+        l_version=''
+        l_versions="${l_versions} NONE"
+    else
+        ((l_result = l_result + 4))
+        l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+        l_versions="${l_versions} ${l_version}"
+    fi
+
+    echo "$l_versions"
+    return $l_result
+
+}
 
 
 
+#Parametros de salida
+#  > SDTOUT: Version de NodeJS instalado
+#  > Valores de retorno:
+#     0 > Se obtuvo la version (esta instalado)
+#     1 > No se obtuvo la version (no esta instalado)
+function get_vim_version() {
+
+    #Obtener la version instalada
+    local l_version
+    l_version=$(vim --version 2> /dev/null)
+    local l_status=$?
+    if [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+    echo "$l_version"
+    return 0
+}
+
+
+
+#Parametros de entrada
+# 1> Path por defecto de todos los programas instalados por el instalador.
+#Parametros de salida
+#  > Valores de retorno:
+#     0 > Esta instalado (usando este instalador) y registrado en el PATH
+#     1 > Esta instalado (usando este instalador) pero NO estaba registrado en el PATH
+#     2 > Esta instalado pero fue instalado usando el gestor de paquetes (no requiere registro)
+#     3 > No esta instalado
+#  > SDTOUT: La version de Neovim
+function get_neovim_version() {
+
+    #Parametros
+    local p_programs_path="$1"
+
+    #Obtener la version instalada
+    local l_version
+    local l_status
+
+    #1. Si no se envio una ruta valida de programas del instalador o no fue instalado por el instalador
+    if  [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/neovim/bin/nvim" ]; then
+
+        l_version=$(nvim --version 2> /dev/null)
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+            l_version=''
+        fi
+
+        if [ -z "$l_version" ]; then
+            return 3
+        fi
+
+        l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+        echo "$l_version"
+        return 2
+
+    fi
+
+    #Actualmente en arm64 y alpine, solo se instala usaando el gestor de paquetes (el repositorios del SO)
+    if [ "$g_os_architecture_type" = "aarch64" ] || [ $g_os_subtype_id -eq 1 ]; then
+
+        #Si no se obtuvo la version antes, no esta instalado
+        return 3
+
+    fi
+
+    #2. Si fue instalado por este instalador
+    l_version=$(${p_programs_path}/neovim/bin/nvim --version 2> /dev/null)
+    l_status=$?
+    if [ $l_status -ne 0 ]; then
+        l_version=''
+    fi
+
+    #Si fue instalado incorrectamente
+    if [ -z "$l_version" ]; then
+        return 3
+    fi
+
+    #Si fue instalado correctamente
+    l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
+    echo "$l_version"
+
+    #Si fue instalado correctamente, validar si esta registrado en el PATH
+    echo "$PATH" | grep "${p_programs_path}/neovim/bin" &> /dev/null
+    l_status=$?
+
+    #Si no esta en el PATH
+    if [ $l_status -ne 0 ]; then
+
+        export PATH="${p_programs_path}/neovim/bin:$PATH"
+        return 1
+
+    fi
+
+    #Si esta en el PATH
+    return 0
+
+}
+
+
+
+# Instalar RTE Node.JS
+# > Si se usa NeoVIM en modo 'Developer', se instalara paquetes adicionales.
+# Parametro de salida:
+# > Valor de retorno:
+#      00> Si NodeJS esta instalado o si se instaló correctamente.
+#      01> Si NodeJS no se logro instalarse.
+#     120> Si no se acepto almacenar la credencial para su instalación
+install_nodejs() {
+
+    #0. Argumentos
+    local p_show_title=1
+    if [ "$1" = "0" ]; then
+        p_show_title=0
+    fi
+
+    #1. Validar si 'nodejs' esta instado (puede no estar en el PATH)
+    local l_version=''
+    local l_status
+
+    l_version=$(get_nodejs_version)
+    l_status=$?
+
+    #echo "l_version=${l_version}, l_status=${l_status}"
+
+    if [ ! -z "$l_version" ]; then
+        printf 'NodeJS > NodeJS %b%s%b ya esta instalado.\n' "$g_color_gray1" "$l_version" "$g_color_reset"
+        return 0
+    fi
+
+    #2. Mostrar el titulo principal
+    if [ $p_show_title -eq 0 ]; then
+        print_line '-' $g_max_length_line  "$g_color_gray1"
+    fi
+
+    printf 'NodeJS > %bInstalando NodeJS%b\n' "$g_color_cian1" "$g_color_reset"
+
+    if [ $p_show_title -eq 0 ]; then
+        print_line '-' $g_max_length_line  "$g_color_gray1"
+    fi
+
+
+    #3. Instalar NodeJS
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_is_noninteractive=0
+    fi
+
+    printf 'Se instalara NodeJS usando el script de instalación "%b%s%b" ...\n' "$g_color_gray1" "01_setup_binaries.bash" "$g_color_reset"
+
+    printf 'Warning: %bLa ruta personalizada de instalación de programas solo puede ser ingresado por archivo "%b%s%b" de configuración%b.\n' \
+           "$g_color_yellow1" "$g_color_gray1" "config.bash" "$g_color_yellow1" "$g_color_reset"
+    printf '         No soporta rutas personalizada por argumentos del script de instalación. Las rutas predeterminado a usar pueden ser "%b/var/opt/tools%b" o "%b~/tools%b".\n' \
+           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+
+    #Parametros del script usados hasta el momento:
+    # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
+    # 2> Listado de ID del repositorios a instalar separados por coma.
+    # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
+    # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+    # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
+    #    "/var/opt/tools" o "~/tools".
+    # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+    # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    # 8> El estado de la credencial almacenada para el sudo.
+    # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+    #10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1'
+    #11> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
+    if [ $l_is_noninteractive -eq 1 ]; then
+        ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 2 "nodejs" "$g_targethome_path" "$g_repo_name" "" "" "" \
+            $g_status_crendential_storage 1 1 0
+        l_status=$?
+    else
+        ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 4 "nodejs" "$g_targethome_path" "$g_repo_name" "" "" "" \
+            $g_status_crendential_storage 1 1 0
+        l_status=$?
+    fi
+
+    #No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
+    #Si no se acepto almacenar credenciales
+    elif [ $l_status -eq 120 ]; then
+        return 120
+    #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+       g_status_crendential_storage=0
+    fi
+
+    #Validar si 'node' esta en el PATH
+    local l_programs_path=$(cat /tmp/prgpath.txt | head -n 1)
+    if [ -z "$l_programs_path" ] || [ -d "$l_programs_path/nodejs/bin" ]; then
+        printf 'La ruta de de instalación de programa es "%b%s%b".\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
+        echo "$PATH" | grep "${l_programs_path}/nodejs/bin" &> /dev/null
+        l_status=$?
+        if [ $l_status -ne 0 ]; then
+            printf 'Registrando, de manera temporal, la ruta "%b%s/nodejs/bin%b" de NodeJS en la variable de entorno "%bPATH%b".\n' "$g_color_gray1" \
+                   "$l_programs_path" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+            export PATH="${l_programs_path}/nodejs/bin:$PATH"
+        fi
+    else
+        printf 'La ruta de instalación de programa "%b%s%b" obtenida es invalida.\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
+    fi
+
+    #4. Volver a validar si las componentes fueron instalados
+    l_version=$(get_nodejs_version)
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    return 0
+
+}
+
+
+
+# Instalar RTE Python3
+# Parametro de salida:
+# > Valor de retorno:
+#      00> Si Python, Pip y Pipx estan instalado o si se instaló correctamente.
+#      01> Si Python esta instalado, pero no se puede instalar pip o pipx.
+#      02> Si Python, Pip y Pipx no estan instalados.
+#     111> No se cumplio con requesitos obligatorios (Detener todo el proceso.
+#     120> No se almaceno el password para sudo (solo cuando se requiere).
+install_python() {
+
+    #0. Argumentos
+    local p_show_title=1
+    if [ "$1" = "0" ]; then
+        p_show_title=0
+    fi
+
+    #1. Validar si 'python', 'pip' y 'pipx' estan instalados
+    local l_aux
+    l_aux=$(get_python_versions)
+    local l_status=$?
+    local la_versions=(${l_aux})
+
+    #echo "l_status=${l_status}, l_aux=${l_aux}"
+
+    # Determinar la componentes instalados
+    local l_flag_setup_python=0
+    local l_flag_setup_pip=0
+    local l_flag_setup_pipx=0
+
+    if [ $l_status -ne 0 ]; then
+
+        l_flag_setup_python=1
+
+        # ¿Instalar python y sus gestores de paquetes?
+        local l_option=2
+        if [ $(( $l_status & $l_option )) -eq $l_option ]; then
+            l_flag_setup_pip=1
+        fi
+
+        l_option=4
+        if [ $(( $l_status & $l_option )) -eq $l_option ]; then
+            l_flag_setup_pipx=1
+        fi
+
+    fi
+
+    # Si tanto python como pip y pipx esta instalado
+    if [ $l_flag_setup_python -ne 0 ] && [ $l_flag_setup_pip -ne 0 ] && [ $l_flag_setup_pipx -ne 0 ]; then
+        printf 'Python > Python %b%s%b ya esta instalado.\n' "$g_color_gray1" "${la_versions[0]}" "$g_color_reset"
+        printf '       > El gestor de paquetes pip %b%s%b ya esta instalado.\n' "$g_color_gray1" "${la_versions[1]}" "$g_color_reset"
+        printf '       > El gestor de paquetes pipx %b%s%b ya esta instalado.\n' "$g_color_gray1" "${la_versions[2]}" "$g_color_reset"
+        return 0
+    fi
+
+    # No instalar si no tiene acceso a sudo
+    if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+        printf 'Python > %bPython NO puede ser instalado debido a que carece de accesos a root%b.\n' "$g_color_red1" "$g_color_reset"
+        return 1
+    fi
+
+
+    #2. Inicializacion y el titulo
+
+    # Listado de paquetes instalar
+    local l_packages_to_install=''
+    l_aux=''
+
+    if [ $l_flag_setup_python -eq 0 ]; then
+
+        l_packages_to_install='python'
+        printf -v l_aux '"%bPython%b"' "$g_color_cian1" "$g_color_reset"
+
+    fi
+
+    if [ $l_flag_setup_pip -eq 0 ]; then
+
+        if [ -z "$l_packages_to_install" ]; then
+            l_packages_to_install='python-pip'
+            printf -v l_aux '"%bPip%b"' "$g_color_cian1" "$g_color_reset"
+        else
+            l_packages_to_install="${l_packages_to_install},python-pip"
+            printf -v l_aux '%b, "%bPip%b"' "$l_aux" "$g_color_cian1" "$g_color_reset"
+        fi
+
+    fi
+
+    if [ $l_flag_setup_pipx -eq 0 ]; then
+
+        if [ -z "$l_packages_to_install" ]; then
+            l_packages_to_install='python-pipx'
+            printf -v l_aux '"%bPipx%b"' "$g_color_cian1" "$g_color_reset"
+        else
+            l_packages_to_install="${l_packages_to_install},python-pipx"
+            printf -v l_aux '%b, "%bPipx%b"' "$l_aux" "$g_color_cian1" "$g_color_reset"
+        fi
+
+    fi
+
+    # Mostrar el titulo
+    printf '\n'
+
+    if [ $p_show_title -eq 0 ]; then
+        print_line '-' $g_max_length_line  "$g_color_gray1"
+    fi
+
+    printf 'Python > %Instalando%b %b\n' "$g_color_cian1" "$g_color_reset" "$l_aux"
+
+    if [ $p_show_title -eq 0 ]; then
+        print_line '-' $g_max_length_line  "$g_color_gray1"
+    fi
+
+    # Mostrar lo instalado
+    if [ $l_flag_setup_python -ne 0 ]; then
+        printf 'Python > Python %b%s%b ya esta instalado.\n' "$g_color_gray1" "${la_versions[0]}" "$g_color_reset"
+    fi
+
+    if [ $l_flag_setup_pip -ne 0 ]; then
+        printf '       > El gestor de paquetes pip %b%s%b ya esta instalado.\n' "$g_color_gray1" "${la_versions[1]}" "$g_color_reset"
+    fi
+
+    if [ $l_flag_setup_pipx -ne 0 ]; then
+        printf '       > El gestor de paquetes pipx %b%s%b ya esta instalado.\n' "$g_color_gray1" "${la_versions[2]}" "$g_color_reset"
+    fi
+
+
+    #3. Instalación o python o 'pip' o 'pipx'
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_is_noninteractive=0
+    fi
+
+    # Parametros:
+    # 1> Tipo de ejecución: 1 (ejecución no-interactiva para instalar/actualizar un grupo paquetes)
+    # 2> Repositorios a instalar/acutalizar: 16 (RTE Python y Pip. Tiene Offset=1)
+    # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+    # 4> El estado de la credencial almacenada para el sudo
+    if [ $l_is_noninteractive -eq 1 ]; then
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 2 "$l_packages_to_install" $g_status_crendential_storage
+        l_status=$?
+    else
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 4 "$l_packages_to_install" $g_status_crendential_storage
+        l_status=$?
+    fi
+
+    #No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
+    #Si no se acepto almacenar credenciales
+    elif [ $l_status -eq 120 ]; then
+        return 120
+    #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+       g_status_crendential_storage=0
+    fi
+
+
+    #4. Volver a validar si las componentes fueron instalados
+    l_aux=$(get_python_versions)
+    l_status=$?
+
+    # Si NO estan instalados python, pip y pipx
+    if [ $l_status -eq 0 ]; then
+        return 2
+    fi
+
+    # Si estan instalados python, pip y pipx
+    if [ $l_status -eq 7 ]; then
+        return 0
+    fi
+
+    # Si falta instalar o pip o pipx
+    return 1
+
+}
+
+
+# Instalar VIM
+# Parametros de salida:
+# > Valor de retorno:
+#      00> Si VIM esta instalado o si se instaló correctamente.
+#      01> Si VIM no se logro instalarse.
+#      99> Si no se solicito instalar VIM
+#     120> Si no se acepto almacenar la credencial para su instalación
+install_vim() {
+
+    #0. Argumentos
+    local p_show_title=1
+    if [ "$1" = "0" ]; then
+        p_show_title=0
+    fi
+
+
+    #1. Validar si 'vim' esta instado
+    local l_version=''
+    local l_status
+
+    l_version=$(get_vim_version)
+    l_status=$?
+
+    if [ ! -z "$l_version" ]; then
+
+        printf 'VIM > VIM %b%s%b ya esta instalado.\n' "$g_color_gray1" "$l_version" "$g_color_reset"
+        return 0
+    fi
+
+    # No instalar si no tiene acceso a sudo
+    if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+        printf 'VIM > %bVIM puede ser instalado debido a que carece de accesos a root. Se recomienda su instalación%b.\n' "$g_color_red1" "$g_color_reset"
+        return 1
+    fi
+
+
+    #2. Mostrar el titulo principal
+    if [ $p_show_title -eq 0 ]; then
+        print_line '-' $g_max_length_line  "$g_color_gray1"
+    fi
+
+    printf 'VIM > %bInstalando VIM%b\n' "$g_color_cian1" "$g_color_reset"
+
+    if [ $p_show_title -eq 0 ]; then
+        print_line '-' $g_max_length_line  "$g_color_gray1"
+    fi
+
+
+    #3. Instalar VIM
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_is_noninteractive=0
+    fi
+
+    # Parametros:
+    # 1> Tipo de ejecución: 2 (ejecución no-interactiva para instalar/actualizar un respositorio especifico)
+    # 2> Packete a instalar/acutalizar.
+    # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+    # 4> El estado de la credencial almacenada para el sudo
+    if [ $l_is_noninteractive -eq 1 ]; then
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 2 'vim' $g_status_crendential_storage
+        l_status=$?
+    else
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 4 'vim' $g_status_crendential_storage
+        l_status=$?
+    fi
+
+    # No se cumplen las precondiciones obligatorios
+    if [ $l_status -eq 111 ]; then
+        return 111
+    # Si no se acepto almacenar credenciales
+    elif [ $l_status -eq 120 ]; then
+        return 120
+    # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+       g_status_crendential_storage=0
+    fi
+
+    #4. Volver a validar si las componentes fueron instalados
+    l_version=$(get_vim_version)
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    return 0
+
+}
+
+
+# Instalar NoeVIM
+# Parametros de salida:
+# > Valor de retorno:
+#      00> Si VIM esta instalado o si se instaló correctamente.
+#      01> Si VIM no se logro instalarse.
+#      99> Si no se solicito instalar VIM
+#     120> Si no se acepto almacenar la credencial para su instalación
+install_neovim() {
+
+    #0. Argumentos
+    local p_show_title=1
+    if [ "$1" = "0" ]; then
+        p_show_title=0
+    fi
+
+    #1. Validar si 'nvim' esta instado (puede no estar en el PATH)
+    local l_version=''
+    local l_status
+
+    l_version=$(get_neovim_version)
+    l_status=$?
+
+    if [ ! -z "$l_version" ]; then
+        printf 'NeoVIM > NeoVIM %b%s%b ya esta instalado.\n' "$g_color_gray1" "$l_version" "$g_color_reset"
+        return 0
+    fi
+
+    #2. Determinar el metodo de instalacion (descargar o instalar como paquete del SO
+    local l_setup_os_package=1
+
+    # Actualmente (2023), el repositorio no tiene binarios para arm64 y alpine, se debera usar los repositorios de los SO
+    #if [ "$g_os_architecture_type" = "aarch64" ] || [ $g_os_subtype_id -eq 1 ]; then
+    if [ $g_os_subtype_id -eq 1 ]; then
+
+        # No instalar si no tiene acceso a sudo
+        if [ $g_runner_sudo_support -eq 3 ] || { [ $g_runner_id -ne 0 ] && [ $g_runner_sudo_support -eq 2 ]; }; then
+            printf 'NeoVIM > %bNeoVIM puede ser instalado debido a que carece de accesos a root. Se recomienda su instalación%b.\n' "$g_color_red1" "$g_color_reset"
+            return 1
+        fi
+
+        l_setup_os_package=0
+
+    fi
+
+
+    #3. Mostrar el titulo principal
+    if [ $p_show_title -eq 0 ]; then
+        print_line '-' $g_max_length_line  "$g_color_gray1"
+    fi
+
+    printf 'NeoVIM > %bInstalando NeoVIM%b\n' "$g_color_cian1" "$g_color_reset"
+
+    if [ $p_show_title -eq 0 ]; then
+        print_line '-' $g_max_length_line  "$g_color_gray1"
+    fi
+
+
+    #4. Instalar NeoVIM
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_is_noninteractive=0
+    fi
+
+    if [ $l_setup_os_package -eq 0 ]; then
+
+        # Parametros:
+        # 1> Tipo de ejecución: 2/4 (ejecución sin menu no-interactiva/interactiva para instalar/actualizar paquetes)
+        # 2> Paquete a instalar/acutalizar.
+        # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+        # 4> El estado de la credencial almacenada para el sudo
+        if [ $l_is_noninteractive -eq 1 ]; then
+            ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 2 "nvim" $g_status_crendential_storage
+            l_status=$?
+        else
+            ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 4 "nvim" $g_status_crendential_storage
+            l_status=$?
+        fi
+
+        #Si no se acepto almacenar credenciales
+        if [ $l_status -eq 120 ]; then
+            return 120
+        #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+        elif [ $l_status -eq 119 ]; then
+           g_status_crendential_storage=0
+        fi
+
+    else
+
+        printf 'Se instalara NeoVIM usando el script de instalación "%b%s%b" ...\n' "$g_color_gray1" "01_setup_binaries.bash" "$g_color_reset"
+
+        printf 'Warning: %bLa ruta personalizada de instalación de programas solo puede ser ingresado por archivo "%b%s%b" de configuración%b.\n' \
+               "$g_color_yellow1" "$g_color_gray1" "config.bash" "$g_color_yellow1" "$g_color_reset"
+        printf '         No soporta rutas personalizada por argumentos del script de instalación. Las rutas predeterminado a usar pueden ser "%b/var/opt/tools%b" o "%b~/tools%b".\n' \
+               "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+
+        # Parametros del script usados hasta el momento:
+        # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
+        # 2> Listado de ID del repositorios a instalar separados por coma.
+        # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
+        # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+        # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
+        #    "/var/opt/tools" o "~/tools".
+        # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+        # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+        # 8> El estado de la credencial almacenada para el sudo.
+        # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+        #10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1'
+        #11> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
+        if [ $l_is_noninteractive -eq 1 ]; then
+
+            ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 2 "neovim" "$g_targethome_path" "$g_repo_name" "" "" "" \
+                $g_status_crendential_storage 1 1 0
+            l_status=$?
+        else
+            ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 4 "neovim" "$g_targethome_path" "$g_repo_name" "" "" "" \
+                $g_status_crendential_storage 1 1 0
+            l_status=$?
+        fi
+
+        #No se cumplen las precondiciones obligatorios
+        if [ $l_status -eq 111 ]; then
+            return 111
+        #Si no se acepto almacenar credenciales
+        elif [ $l_status -eq 120 ]; then
+            return 120
+        #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+        elif [ $l_status -eq 119 ]; then
+           g_status_crendential_storage=0
+        fi
+
+        #Validar si 'nvim' esta en el PATH
+        local l_programs_path=$(cat /tmp/prgpath.txt | head -n 1)
+        if [ -z "$l_programs_path" ] || [ -d "$l_programs_path/neovim/bin" ]; then
+            printf 'La ruta de de instalación de programa es "%b%s%b".\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
+            echo "$PATH" | grep "${l_programs_path}/neovim/bin" &> /dev/null
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                printf 'Registrando, de manera temporal, la ruta "%b%s/neovim/bin%b" de NeoVIM en la variable de entorno "%bPATH%b".\n' "$g_color_gray1" \
+                       "$l_programs_path" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+                export PATH=${l_programs_path}/neovim/bin:$PATH
+            fi
+        else
+            printf 'La ruta de instalación de programa "%b%s%b" obtenida es invalida.\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
+        fi
+
+    fi
+
+    #5. Volver a validar si las componentes fueron instalados
+    l_version=$(get_neovim_version)
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        return 1
+    fi
+
+    return 0
+
+
+}
+
+
+
+#}}}

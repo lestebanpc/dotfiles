@@ -574,10 +574,10 @@ set termguicolors
 
 "You might have to force true color when using regular vim inside tmux as the colorscheme can appear to be grayscale
 "with 'termguicolors' option enabled.
-if !g:is_neovim && !s:is_gui_vim
-    let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
-    let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
-endif
+"if !g:is_neovim && !s:is_gui_vim
+"    let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+"    let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+"endif
 
 "Color de la terminal 'ANSI 256 Colors' (16 bits). Descomentar en Linux que se ven mal su terminal, en Windows >= 11
 "siempre debe estar comentado.

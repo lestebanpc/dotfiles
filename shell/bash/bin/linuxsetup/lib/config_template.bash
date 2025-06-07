@@ -2,7 +2,7 @@
 
 #Consideraciones:
 #
-# 1. El script "04_setup_packages" no requiere el uso de este archivo de configuración y permite realizar instalaciones de paquetes del SO 
+# 1. El script "04_setup_packages" no requiere el uso de este archivo de configuración y permite realizar instalaciones de paquetes del SO
 #    para todos los usuarios.
 #
 # 2. Los demas script permiten instalar/actualizar: el profile del usuario y los comandos/programas (para un usuario o para todos los usuarios).
@@ -10,12 +10,12 @@
 #    > Los archivos de configuración requeridos para configurar un profile, comandos/programas se almacena en el "Target Home" del usuario OBJETIVO.
 #    > El configuración del profile, los comandos y programas siempre DEPENDE del usuario OBJETIVO (aun cuando se configure los comandos/programas
 #      para todos los usuarios), estos debido a que estos escript REQUIEREN de los archivos de configuración almacena en el "Target Home" del usuario
-#      OBJETIVO (por ejemplo, para un adecuado funcionamiento de 'ssh', 'delta', ...). 
+#      OBJETIVO (por ejemplo, para un adecuado funcionamiento de 'ssh', 'delta', ...).
 #
 # 3. El archivo de configuración, consideran 4 zonas/rutas diferenciadas:
 #    > Folder "${g_targethome_path}" que representa al "Target Home" (o home del usuario OBJETIVO)
 #      - Siempre tiene un subdirectorio "${g_repo_name}" que representa el directorio git.
-#      - Para la configuración de comandos/programas representa el lugar donde se obtendran las configuracion para estos comandos/programas 
+#      - Para la configuración de comandos/programas representa el lugar donde se obtendran las configuracion para estos comandos/programas
 #        (independiente si el comando/programa es un usado solo por el usuario OBJETIVO o por todos los usuarios del SO).
 #    > Folder "${g_shell_path}" que representado a la ruta donde estan los script de instalación.
 #      - Usualmente se se usa los script existentes en el repositorio del home del usuario OBJETIVO ('${g_shell_path}/${g_repo_name}/shell'),
@@ -52,7 +52,7 @@
 #      - Si este folder esta dentro del "Target Home", los programas SOLO pueden ser usuados por el usuario OBJETIVO.
 #      - Si este folder esta fuera  del "Target Home", los programas pueden ser usuados por todos los usuarios del SO pero SOLO el usuario que es
 #        onwer de ese folder podra realizar las configuraciones respectivas.
-#    
+#
 # 4. Si no se especifica estos directorio, se usara la estructura de folder por defecto:
 #       ~/               <- ${g_targethome_path}
 #          .files        <- ${g_targethome_path}/${g_repo_name} o ${g_repo_path}
@@ -88,7 +88,7 @@
 #                  ........................
 # 5. El usuario runner (el usuario que ejecuta este script de instalación) solo puede ser:
 #    - Es el usuario objetivo (onwer del "target home").
-#    - El usuario root en modo suplantacion del usurio objetivo. 
+#    - El usuario root en modo suplantacion del usurio objetivo.
 #      Este caso, el root realizará la configuración requerida para el usuario objetivo (usando sudo), nunca realizara configuración para el propio usuario root.
 # 6. Solo el owner de los folderes del programas y comandos (incluyendo los archivos ayuda y los archivos de fuentes) puede realizar configuracioes (instalacion o
 #    actualización de programas/comandos). Todos los archivos creados durante esta configuracion se crearan con este owner.
@@ -122,7 +122,7 @@
 #g_repo_name='.files'
 
 # Folder base donde se almacena los subfolderes de los programas.
-# - Solo el owner del folder puede realizar instalacion/actualizacion de programas. 
+# - Solo el owner del folder puede realizar instalacion/actualizacion de programas.
 #     > Si el el folder esta dentro del home de un usuario, los programas instalados solo podran ser usuados por el usario.
 #     > Si estan fuera del home de los usuarios, los programas instalados pueden ser usuados por todos los usuarios.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
@@ -147,7 +147,7 @@
 ##############################################################################################
 
 # Folder base donde se almacena el comando y sus archivos afines.
-# - Solo el owner del folder puede realizar instalacion/actualizacion de comandos. 
+# - Solo el owner del folder puede realizar instalacion/actualizacion de comandos.
 #     > Si el el folder esta dentro del home de un usuario, los comandos instalados solo podran ser usuados por el usario.
 #     > Si estan fuera del home de los usuarios, los comandos instalados pueden ser usuados por todos los usuarios.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura), dentro
@@ -202,5 +202,3 @@
 # Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
 # Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
 #g_setup_only_last_version=0
-
-

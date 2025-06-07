@@ -2,16 +2,90 @@
 -- UI> Color Schema
 --------------------------------------------------------------------------------------------------
 --
+-- > Tokionight
+--   https://github.com/folke/tokyonight.nvim
+--
 
-if vim.g.main_theme == 'catppuccin' then
+local use_cs_tokyonight = true
+if vim.g.colorschema_main == 'catppuccin' then
+    use_cs_tokyonight = false
+end
+
+if use_cs_tokyonight then
+
+    require("tokyonight").setup({
+
+        -- The theme comes in three styles, `storm`, a darker variant `night` and `day`
+        style = "night",
+
+        -- Enable this to disable setting the background color
+        transparent = false,
+
+        -- Modificar la paleta de colores
+        -- https://github.com/folke/tokyonight.nvim/blob/main/extras/lua/tokyonight_storm.lua
+        -- https://github.com/folke/tokyonight.nvim/blob/main/extras/lua/tokyonight_night.lua
+        -- https://github.com/folke/tokyonight.nvim/blob/main/extras/lua/tokyonight_moon.lua
+        -- https://github.com/folke/tokyonight.nvim/blob/main/extras/lua/tokyonight_day.lua
+        --on_colors = function(colors)
+        --    colors.bg = "#0f0f0f"
+        --end,
+
+        -- Override specific highlights to use other groups or a hex color
+        on_highlights = function(highlights, colors)
+
+            -- Color de fondo del split actual
+            highlights.Normal = { bg = "#0f0f0f" }
+
+            -- Color de fondo del split 'no-current'
+            highlights.NormalNC = { bg = "#171717" }
+
+            -- Color del comentario
+            --highlights.Comment = { fg = "#737a88", style = { "italic" }, }
+
+        end,
+
+    })
+
+    -- Establecer el colorschema a usar
+    vim.cmd("colorscheme tokyonight")
+
+else
+
+    -- Colores principales de 'highligh group' que se usaran para el tema oscuro
+    local dark_hi_colors =  {
+        -- Color de fondo del split actual
+        Normal = { bg = "#0f0f0f" },
+
+        -- Color de fondo del split 'no-current'
+        NormalNC = { bg = "#171717" },
+
+        -- Color de fondo del split actual
+        --NormalFloat = { bg = "#171717" },
+
+        -- Color de la columna de numero de linea
+        --LineNr = { fg = "#000000" },
+        --LineNrAbove  = { fg = "#737a88" },
+        --LineNrBelow = { fg = "#737a88" },
+
+        -- Color del fondo de la columna de sign al costado izquierdo del numero de linea
+        --SignColumn = { bg = "#0f0f0f" },
+
+        -- Color del comentario
+        Comment = { fg = "#737a88", style = { "italic" }, },
+        --Comment = { fg = "#7a7a7a", style = { "italic" }, },
+        --Comment = { fg = "#5c6370", style = { "italic" }, },
+    }
+
 
     require("catppuccin").setup({
 
         -- latte, frappe, macchiato, mocha
         flavour = "mocha",
+        --flavour = "macchiato",
+        --flavour = "frappe",
 
         -- Force no italic
-        no_italic = true,
+        --no_italic = true,
 
         -- Sets terminal colors (e.g. `g:terminal_color_0`)
         --term_colors = true,
@@ -19,13 +93,29 @@ if vim.g.main_theme == 'catppuccin' then
         -- Disables setting the background color.
         transparent_background = false,
 
-        color_overrides = {
-            mocha = {
-       	        base = "#0f0f0f",
-                --mantle = "#000000",
-                --crust = "#000000",
-            },
+        --color_overrides = {
+        --    mocha = {
+       	--        base = "#0f0f0f",
+        --        --mantle = "#000000",
+        --        --crust = "#000000",
+        --    },
+        --},
+
+        highlight_overrides = {
+            mocha = function(mocha)
+                return dark_hi_colors
+            end,
+            macchiato = function(macchiato)
+                return dark_hi_colors
+            end,
+            frappe = function(frappe)
+                return dark_hi_colors
+            end,
+            latte = function(latte)
+                return dark_hi_colors
+            end,
         },
+
 
         integrations = {
             nvimtree = true,
@@ -39,8 +129,8 @@ if vim.g.main_theme == 'catppuccin' then
         },
     })
 
-    -- The setup() must be called before loading
-    vim.cmd.colorscheme "catppuccin"
+    -- Establecer el colorschema a usar
+    vim.cmd("colorscheme catppuccin")
 
 end
 
@@ -85,7 +175,7 @@ local sec_item_diagnostic = {
 require('lualine').setup({
     options = {
         icons_enabled = true,
-        theme = vim.g.main_theme,
+        theme = vim.g.colorschema_main,
         component_separators = { left = '', right = ''},
         section_separators = { left = '', right = ''},
         disabled_filetypes = {
@@ -132,12 +222,24 @@ require('lualine').setup({
 -- URL: https://github.com/akinsho/bufferline.nvim/blob/main/doc/bufferline.txt
 --
 
-local mocha = require("catppuccin.palettes").get_palette("mocha")
+-- Opciones de configuracion para el plugin 'bufferline'
+local bufferline_cfg = {
 
-require("bufferline").setup({
+    -- Opciones del tema:
+    options = {
 
-    -- Modificar los colores segun el tema elegido (no existe integration nativa como 'catppuccin')
-    highlights = require("catppuccin.groups.integrations.bufferline").get({
+        mode = "buffers",
+        --separator_style = "slant",
+
+    },
+
+}
+
+-- Modificar los colores segun el tema elegido (integracion con el tema de 'catppuccin')
+if not use_cs_tokyonight then
+
+    local mocha = require("catppuccin.palettes").get_palette("mocha")
+    bufferline_cfg.highlights = require("catppuccin.groups.integrations.bufferline").get({
         styles = { "italic", "bold" },
         custom = {
             all = {
@@ -151,17 +253,11 @@ require("bufferline").setup({
                 background = { fg = "#000000" },
             },
         },
-    }),
+    })
 
-    -- Opciones del tema:
-    options = {
+end
 
-        mode = "buffers",
-        --separator_style = "slant",
-
-    }
-
-})
+require("bufferline").setup(bufferline_cfg)
 
 
 ------------------------------------------------------------------------------------------------
@@ -214,7 +310,7 @@ fzf_lua.setup({
     fzf_colors= {
         true,
         --["bg"]      = { "bg", "Normal" },
-        --["fg"]      = { "fg", "Normal" },
+        ["fg"]      = { "fg", "Normal" },
         --["border"]  = { "fg", "Normal" },
     },
     files = {
@@ -260,6 +356,8 @@ vim.keymap.set('n', '<leader>bb', ':lua require("fzf-lua").buffers()<CR>', { nor
 
 --Busqueda de archivos del proyecto usando busqueda difuso 'ripgrep'.
 vim.keymap.set('n', '<leader>ff', ':lua require("fzf-lua").grep_project()<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fw', ':lua require("fzf-lua").grep_cword()<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fW', ':lua require("fzf-lua").grep_cWORD()<CR>', { noremap = true, silent = true })
 
 --Recomendaciones del uso de tags:
 -- - Regenerar los tags cuando realiza cambios ejecutando 'ctags -R' en el folder root del proyecto.

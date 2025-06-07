@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------------
--- My functions 
+-- My functions
 ------------------------------------------------------------------------------------
 
 -- Obtener el tipo de SO
@@ -58,14 +58,14 @@ local l_os_type = l_get_os_type(wezterm.target_triple)
 --2. Obtener las variables a usar al ejecutar el modulo/script de mis configuraciones
 --local l_myconfig
 local l_ok, l_myconfig = pcall(require, 'config')
---local l_ok = true  
+--local l_ok = true
 if not l_ok then
 
     -- Establecer valores por defecto a las variables
     l_myconfig = {
 
         -- Usar Wayland y solo si es Linux.
-        -- Debido a que la version de Wayland esta en rescontruccion por lo se optara por usar X11. 
+        -- Debido a que la version de Wayland esta en rescontruccion por lo se optara por usar X11.
         -- Limitaciones al 2024.07.07:
         --  > No funciona correctamente el sopotte a OSC 52 para manejo del clipboard.
         --  > El estilo de ventanas funciona peor que el de X11.
@@ -86,9 +86,9 @@ if not l_ok then
         ssh_domains = nil,
         launch_menu = nil,
         windows_style = 0,
-        
+
     }
-	
+
 	print("Module 'config' no load due to not exist ot have a error")
 
 end
@@ -107,7 +107,7 @@ if l_os_type == 0 then
     config.enable_wayland = l_myconfig.enable_wayland
 end
 
--- What to set the TERM environment variable to. The default is xterm-256color, which should provide a good level of feature 
+-- What to set the TERM environment variable to. The default is xterm-256color, which should provide a good level of feature
 -- support without requiring the installation of additional terminfo data.
 -- If you want to get the most application support out of wezterm, then you may wish to install a copy of the wezterm TERM definition:
 --   $ #Descargar el terminfo
@@ -184,12 +184,12 @@ config.check_for_updates = false
 -- Specifying an ordered list of fonts.
 -- when resolving text into glyphs the first font in the list is consulted, and if the glyph isn't present in that font, WezTerm proceeds to the next font in the fallback list.
 config.font = wezterm.font_with_fallback({
-    { 
-      family= "JetBrainsMono Nerd Font Mono", 
-      weight= "Light", -- "Thin", "ExtraLigth", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold"
-      stretch= "Normal",
-      italic = false,
-      harfbuzz_features= {"calt=1", "clig=1", "liga=1"},
+    {
+        family= "JetBrainsMono Nerd Font Mono",
+        weight= "Light", -- "Thin", "ExtraLigth", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold"
+        stretch= "Normal",
+        --italic = false,
+        harfbuzz_features= {"calt=1", "clig=1", "liga=1"},
     },
     "Incosolata LGC Nerd Font Mono",
   })
@@ -202,7 +202,7 @@ config.font_size = l_myconfig.font_size
 --config.bold_brightens_ansi_colors = true
 config.warn_about_missing_glyphs = true
 
--- Controls whether the Input Method Editor (IME) will be used to process keyboard input. 
+-- Controls whether the Input Method Editor (IME) will be used to process keyboard input.
 -- The IME is useful for inputting kanji or other text that is not natively supported by the attached keyboard hardware.
 config.use_ime = false
 
@@ -219,7 +219,7 @@ config.use_ime = false
 --  1 > Se usa el estilo 'TITLE|RESIZE'
 --  2 > Se usa el estilo 'INTEGRATED_BUTTONS|RESIZE'
 if l_myconfig.windows_style == 0 then
-    
+
     if l_os_type == 0 then
         if l_myconfig.enable_wayland then
             l_myconfig.windows_style = 1
@@ -230,15 +230,15 @@ if l_myconfig.windows_style == 0 then
     else
         l_myconfig.windows_style = 2
     end
-    
+
 end
 
 --print(l_myconfig.windows_style)
 
 
 -- Configures whether the window has a title bar and/or resizable border.
--- > "NONE" 
---   Disables titlebar and border (borderless mode), but causes problems with resizing and minimizing the window, so you probably want to use RESIZE 
+-- > "NONE"
+--   Disables titlebar and border (borderless mode), but causes problems with resizing and minimizing the window, so you probably want to use RESIZE
 --   instead of NONE if you just want to remove the title bar.
 -- > "TITLE"
 --   Disable the resizable border and enable only the title bar.
@@ -283,20 +283,20 @@ config.integrated_title_button_alignment = "Right"
 -- > "red"  - Use a custom color
 config.integrated_title_button_color = "auto"
 
--- If it's 'AlwaysPrompt' display a confirmation prompt when the window is closed by the windowing environment, 
+-- If it's 'AlwaysPrompt' display a confirmation prompt when the window is closed by the windowing environment,
 -- either because the user closed it with the window decorations, or instructed their window manager to close it.
 -- Set this to "NeverPrompt" if you don't like confirming closing windows every time.
 --config.window_close_confirmation = "NeverPrompt"
 
--- Control whether changing the font size adjusts the dimensions of the window (true) or adjusts the number of terminal rows/columns (false). 
+-- Control whether changing the font size adjusts the dimensions of the window (true) or adjusts the number of terminal rows/columns (false).
 -- If you use a tiling window manager then you may wish to set this to false.
--- The default value is now nil which causes wezterm to match the name of the connected window environment (which you can see if you open the debug overlay) 
--- against the list of known tiling environments configured by tiling_desktop_environments. 
+-- The default value is now nil which causes wezterm to match the name of the connected window environment (which you can see if you open the debug overlay)
+-- against the list of known tiling environments configured by tiling_desktop_environments.
 -- If the environment is known to be tiling then the effective value of adjust_window_size_when_changing_font_size is false, and true otherwise.
 config.adjust_window_size_when_changing_font_size = true
 
 -- Controls the amount of padding between the window border and the terminal cells. Padding is measured in pixels.
--- If enable_scroll_bar is true, then the value you set for right will control the width of the scrollbar. 
+-- If enable_scroll_bar is true, then the value you set for right will control the width of the scrollbar.
 -- If you have enabled the scrollbar and have set right to 0 then the right padding (and thus the scrollbar width) will instead match the width of a cell.
 if l_myconfig.enable_scrollbar then
     config.window_padding = {
@@ -330,7 +330,7 @@ config.exit_behavior = "Close"
 -- Setting> Windows> Cursor
 ------------------------------------------------------------------------------------
 
--- Specifies the default cursor style for prompt. Various escape sequences can override the default style in different situations 
+-- Specifies the default cursor style for prompt. Various escape sequences can override the default style in different situations
 -- (eg: an editor can change it depending on the mode), but this value controls how the cursor appears when it is reset to default.
 -- Acceptable values are SteadyBlock, BlinkingBlock, SteadyUnderline, BlinkingUnderline, SteadyBar, and BlinkingBar.
 -- The default is SteadyBlock.
@@ -381,16 +381,16 @@ end
 -- Retro  TabBar Style: https://wezfurlong.org/wezterm/config/appearance.html#retro-tab-bar-appearance
 -- Native TabBar Style (Fancy TabBar Style): https://wezfurlong.org/wezterm/config/appearance.html#tab-bar-appearance-colors
 -- Futuras mejoras: https://github.com/wez/wezterm/issues/1180#issuecomment-1493128725
-config.use_fancy_tab_bar = true 
+config.use_fancy_tab_bar = true
 
 -- Estilo de borde de la ventana el cual incluye:
 --  > Estilo por defecto del TabBar autogenerado por Wezterm.
---  > Estilo del borde de la ventana. 
---    En Linux, X11 no permite cambiar el borde de la ventana en Wayland si 
+--  > Estilo del borde de la ventana.
+--    En Linux, X11 no permite cambiar el borde de la ventana en Wayland si
 -- No incluye la barra de titulo por defecto generado por el gestor de ventana o escritorio.
 -- Url: https://wezfurlong.org/wezterm/config/lua/config/window_frame.html?h=window_frame
 config.window_frame = {
-    --'Roboto' es una fuente no-mono (proporcional) integrada/built-in dentro del binario de wezterm 
+    --'Roboto' es una fuente no-mono (proporcional) integrada/built-in dentro del binario de wezterm
     font = wezterm.font 'Roboto',
     font_size = 10,
 }
@@ -399,16 +399,16 @@ config.window_frame = {
 -- Defaults to 16 glyphs in width.
 --config.tab_max_width = 32
 
--- When set to true (the default), tab titles show their tab number (tab index) with a prefix such as "1:". 
+-- When set to true (the default), tab titles show their tab number (tab index) with a prefix such as "1:".
 -- When false, no numeric prefix is shown.
 -- The tab_and_split_indices_are_zero_based setting controls whether numbering starts with 0 or 1.
 --config.show_tab_index_in_tab_bar = false
 
--- When set to true (the default), the tab bar will display the new-tab button, which can be left-clicked to create a new tab, 
+-- When set to true (the default), the tab bar will display the new-tab button, which can be left-clicked to create a new tab,
 -- or right-clicked to display the Launcher Menu. When set to false, the new-tab button will not be drawn into the tab bar.
 --config.show_new_tab_button_in_tab_bar = true
 
--- If set to true, when the active tab is closed, the previously activated tab will be activated. 
+-- If set to true, when the active tab is closed, the previously activated tab will be activated.
 -- Otherwise, the tab to the left of the active tab will be activated. Default is false.
 --config.switch_to_last_active_tab_when_closing_tab = true
 
@@ -417,8 +417,8 @@ config.window_frame = {
 -- Esto complementa el estilo usado para el tab 'https://wezfurlong.org/wezterm/config/appearance.html#retro-tab-bar-appearance'.
 -- Url: 'https://wezfurlong.org/wezterm/config/lua/window-events/format-tab-title.html'
 
----- Callback that change returns the suggested title for a tab. 
----- It prefers the title that was set via `tab:set_title()` or `wezterm cli set-tab-title`, 
+---- Callback that change returns the suggested title for a tab.
+---- It prefers the title that was set via `tab:set_title()` or `wezterm cli set-tab-title`,
 ---- but falls back to the title of the active pane in that tab.
 --function tab_title(tab_info)
 --  local title = tab_info.tab_title
@@ -431,7 +431,7 @@ config.window_frame = {
 --  return tab_info.active_pane.title
 --end
 --
----- Event controller that change returns the suggested title and style for a tab. 
+---- Event controller that change returns the suggested title and style for a tab.
 --local SOLID_LEFT_ARROW = wezterm.nerdfonts.pl_right_hard_divider  -- The filled in variant of the < symbol
 --local SOLID_RIGHT_ARROW = wezterm.nerdfonts.pl_left_hard_divider  -- The filled in variant of the > symbol
 --
@@ -480,7 +480,7 @@ config.window_frame = {
 config.enable_scroll_bar = l_myconfig.enable_scrollbar
 
 -- Lines of scrollback you want to retain (in memory) per tab (default is 3500)
-config.scrollback_lines = 5000 
+config.scrollback_lines = 5000
 
 
 ------------------------------------------------------------------------------------
@@ -492,9 +492,9 @@ config.scrollback_lines = 5000
 -- > regex
 --   the regular expression to match (see supported Regex syntax)
 -- > format
---   Controls which parts of the regex match will be used to form the link. Must have a prefix: signaling the protocol type (e.g., https:/mailto:), 
---   which can either come from the regex match or needs to be explicitly added. The format string can use placeholders like $0, $1, $2 etc. 
---   that will be replaced with that numbered capture group. So, $0 will take the entire region of text matched by the whole regex, 
+--   Controls which parts of the regex match will be used to form the link. Must have a prefix: signaling the protocol type (e.g., https:/mailto:),
+--   which can either come from the regex match or needs to be explicitly added. The format string can use placeholders like $0, $1, $2 etc.
+--   that will be replaced with that numbered capture group. So, $0 will take the entire region of text matched by the whole regex,
 --   while $1 matches out the first capture group. In the example below, mailto:$0 is used to prefix a protocol to the text to make it into an URL.
 -- The default value for hyperlink_rules can be retrieved using wezterm.default_hyperlink_rules():
 -- > Matches: a URL in parens: (URL)
@@ -519,10 +519,10 @@ config.scrollback_lines = 5000
 -- Los 'keybord shorcut' capturados por la ventana wezterm, no es enviado a los paneles. Por tal motivo desabilitelo, si desea
 -- que estos no sean procesados por la ventana y sean procesados por el panel actual.
 -- La lista inicial se obtuvo de 'wezterm show-keys --lua' y luego se depurando para nuestro layout de teclado en ingles.
--- TODO: Adecuar para MacOS ¿por ejemplo cambiar SUPER con ..? 
+-- TODO: Adecuar para MacOS ¿por ejemplo cambiar SUPER con ..?
 
 
--- If you don't want the default assignments to be registered, you can disable all of them with this configuration; 
+-- If you don't want the default assignments to be registered, you can disable all of them with this configuration;
 -- Default key binding: https://wezfurlong.org/wezterm/config/default-keys.html
 -- Wezterm ofrece un default keybinding que soporta diferentes layout de teclado, por lo que genera muchos mapeos adicionales.
 -- Por tal motivo no usaremos el por defecto.
@@ -534,7 +534,7 @@ config.disable_default_key_bindings = true
 config.key_map_preference = "Mapped"
 
 
--- Leader key (called 'LEADER') stays active until a keypress is registered (whether it matches a key binding or not), 
+-- Leader key (called 'LEADER') stays active until a keypress is registered (whether it matches a key binding or not),
 -- or until it has been active for the duration specified by timeout_milliseconds, at which point it will automatically cancel itself.
 config.leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
@@ -604,7 +604,7 @@ config.keys = {
     --{ key = '|', mods = 'LEADER|SHIFT', action = l_action.SplitHorizontal{ domain =  'CurrentPaneDomain' } },
 
     { key = 'z', mods = 'LEADER', action = l_action.TogglePaneZoomState },
-    
+
     { key = 'a', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'activate_pane', one_shot = false, } },
     { key = 's', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'resize_pane', one_shot = false, } },
     --{ key = 'a', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'activate_pane', timeout_milliseconds = 1000, } },
@@ -669,7 +669,7 @@ config.key_tables = {
       { key = 'v', mods = 'SHIFT', action = l_action.CopyMode{ SetSelectionMode =  'Line' } },
       { key = 'v', mods = 'CTRL', action = l_action.CopyMode{ SetSelectionMode =  'Block' } },
 
-      -- Modificar la selección actual horizontalmente (usado frecuentemente en ua selección rectangular) 
+      -- Modificar la selección actual horizontalmente (usado frecuentemente en ua selección rectangular)
       { key = 'o', mods = 'NONE', action = l_action.CopyMode 'MoveToSelectionOtherEnd' },
       { key = 'o', mods = 'SHIFT', action = l_action.CopyMode 'MoveToSelectionOtherEndHoriz' },
 
@@ -710,8 +710,8 @@ config.key_tables = {
       { key = 'Tab', mods = 'SHIFT', action = l_action.CopyMode 'MoveBackwardWord' },
 
       { key = 'e', mods = 'NONE', action = l_action.CopyMode 'MoveForwardWordEnd' },
-      
-      -- Moverse verticalmente dentro buffer del scrollback 
+
+      -- Moverse verticalmente dentro buffer del scrollback
       { key = 'g', mods = 'NONE', action = l_action.CopyMode 'MoveToScrollbackBottom' },
       { key = 'g', mods = 'SHIFT', action = l_action.CopyMode 'MoveToScrollbackBottom' },
 
@@ -722,7 +722,7 @@ config.key_tables = {
       { key = 'PageDown', mods = 'NONE', action = l_action.CopyMode 'PageDown' },
       { key = 'd', mods = 'CTRL', action = l_action.CopyMode{ MoveByPage = (0.5) } },
 
-      -- Mover el viewport dentro buffer del scrollback 
+      -- Mover el viewport dentro buffer del scrollback
       { key = 'h', mods = 'SHIFT', action = l_action.CopyMode 'MoveToViewportTop' },
       { key = 'l', mods = 'SHIFT', action = l_action.CopyMode 'MoveToViewportBottom' },
       { key = 'm', mods = 'SHIFT', action = l_action.CopyMode 'MoveToViewportMiddle' },
@@ -737,7 +737,7 @@ config.key_tables = {
 
 
     },
-    
+
     --------------------------------------------------------------------------
     -- Modo de busqueda
     --------------------------------------------------------------------------
@@ -815,7 +815,7 @@ config.mux_enable_ssh_agent = false
 -- Setting> Non-Local Multiplexing Damains
 ------------------------------------------------------------------------------------
 
--- A multiplexing domain is area where the program to be executed/multiplexed is located. By default the GUI (including keyboard actions and events) runs locally, 
+-- A multiplexing domain is area where the program to be executed/multiplexed is located. By default the GUI (including keyboard actions and events) runs locally,
 -- but the program that runs the wezterm terminal (usually a shell interpreter) can run in another zone or domain.
 -- The multiplexing domains can be:
 --   > "local"
@@ -851,11 +851,11 @@ if l_myconfig.default_prog ~= nil then
 	--print(config.default_prog)
 end
 
--- The launcher menu is accessed from the new tab button in the tab bar UI; the + button to the right of the tabs. Left clicking on the button will spawn a new tab, 
+-- The launcher menu is accessed from the new tab button in the tab bar UI; the + button to the right of the tabs. Left clicking on the button will spawn a new tab,
 -- but right clicking on it will open the launcher menu. You may also bind a key to the ShowLauncher or ShowLauncherArgs action to trigger the menu.
 -- The launcher menu by default lists the various non-lolcal multiplexer domains and offers the option of connecting and spawning tabs/windows in those domains.
 if l_myconfig.launch_menu ~= nil then
-    config.launch_menu = l_myconfig.launch_menu 
+    config.launch_menu = l_myconfig.launch_menu
 end
 
 

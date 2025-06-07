@@ -1,27 +1,26 @@
 "###################################################################################
 " UI> Temas y sus schema colors
 "###################################################################################
-
-let g:main_theme = ''
+"
+" > 256-color : https://www.ditig.com/256-colors-cheat-sheet
+" > 16-color  : https://github.com/jonasjacek/colors
+"
+let g:colorschema_main = ''
 
 if g:is_neovim
 
     "Plugin UI> Tema 'Tokyo Night'
     "packadd tokyonight.nvim
-    "let g:main_theme = 'tokyonight'
 
-    "Esquema de color del tema
-    "colorscheme tokyonight-night
-
+    "Esquema de color se define dentro de 'ui_basic.lua'.
+    "let g:colorschema_main = 'tokyonight'
 
 
     "Plugin UI> Tema 'Catppuccin'
     packadd nvim
-    let g:main_theme = 'catppuccin'
 
-    "Esquema de color del tema: NO usar. Se define dentro de 'ui_basic.lua'.
-    "colorscheme catppuccin-macchiato
-    "colorscheme catppuccin-mocha
+    "Esquema de color se define dentro de 'ui_basic.lua'.
+    let g:colorschema_main = 'catppuccin'
 
 
 else
@@ -30,16 +29,26 @@ else
     "Plugin UI> Tema Gruvbox
     "packadd gruvbox
 
+    "Elige el contraste (soft, medium, hard)
+    "let g:gruvbox_contrast_dark = 'medium'
+
     "Esquema de color del tema
     "colorscheme gruvbox
-    "set background=dark
-    "let g:main_theme = 'gruvbox'
+    "let g:colorschema_main = 'gruvbox'
+
+    "Personalizacion (No funciona)
+    "highlight Normal guibg=#0f0f0f ctermbg=233
+    "highlight NormalNC guibg=#171717 ctermbg=234
+    "highlight Comment guifg=#737a88 ctermfg=245 gui=italic
 
 
 
 
     "Plugin UI> Tema Onedark
     packadd onedark.vim
+
+    "Soporte a letras cursivas
+    let g:onedark_terminal_italics = 1
 
     "Personalizar el schema
     "Donde por tipo de color se tiene los siguientes campos:
@@ -50,10 +59,19 @@ else
     \ "background": {"gui": "#0f0f0f", "cterm": "233", "cterm16": "0" }
     \}
 
+    "Personalizacion (No funciona)
+    "augroup colorset
+    "    autocmd!
+    "    autocmd ColorScheme * call onedark#set_highlight("NormalNC", { "bg": {"gui": "#171717", "cterm": "234", "cterm16": "0" } })
+    "augroup END
+
     "Esquema de color del tema
     colorscheme onedark
-    let g:main_theme = 'onedark'
+    let g:colorschema_main = 'onedark'
 
+    "Personalizacion (No funciona)
+    "highlight NormalNC guibg=#171717 ctermbg=234
+    "highlight Comment guifg=#737a88 ctermfg=245 gui=italic
 
 
 endif
@@ -191,7 +209,7 @@ packadd vim-airline
 packadd vim-airline-themes
 
 "Tema a usar por AirLine
-let g:airline_theme = g:main_theme
+let g:airline_theme = g:colorschema_main
 "let g:airline_theme = 'powerlineish'
 
 "Mostrar la rama GIT
@@ -406,6 +424,8 @@ nnoremap <silent> <leader>bb :Buffers<CR>
 
 "Busqueda de archivos del proyecto usando busqueda difuso 'ripgrep'.
 nnoremap <silent> <leader>ff :Rg<CR>
+nnoremap <silent> <leader>fw :Rg <C-r><C-w><CR>
+"nnoremap <silent> <leader>fW :call fzf#vim#grep('rg --vimgrep --no-heading --smart-case ' . shellescape(expand('<cWORD>')), 1, fzf#vim#with_preview(), 0)
 
 "Recomendaciones del uso de tags:
 " - Regenerar los tags cuando realiza cambios ejecutando 'ctags -R' en el folder root del proyecto.

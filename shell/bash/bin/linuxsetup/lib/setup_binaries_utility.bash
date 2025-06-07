@@ -184,15 +184,15 @@ function _dotnet_exist_version()
 {
     local p_repo_id="$1"
     local p_version="$2"
-    local p_install_win_cmds=1          #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
+    local p_is_win_binary=1          #(0) Los binarios de los repositorios se estan instalando en el Windows asociado al WSL2
                                         #(1) Los binarios de los comandos se estan instalando en Linux
     if [ "$3" = "0" ]; then
-        p_install_win_cmds=0
+        p_is_win_binary=0
     fi
 
     #Calcular la ruta de archivo/comando donde se obtiene la version
     local l_path_file=""
-    if [ $p_install_win_cmds -eq 0 ]; then
+    if [ $p_is_win_binary -eq 0 ]; then
        l_path_file="${g_win_programs_path}/DotNet"
     else
        l_path_file="${g_programs_path}/dotnet"
@@ -209,7 +209,7 @@ function _dotnet_exist_version()
     #Obtener las versiones instaladas
     local l_info=""
     local l_status
-    if [ $p_install_win_cmds -eq 0 ]; then
+    if [ $p_is_win_binary -eq 0 ]; then
         l_info=$(${l_path_file}/dotnet.exe ${l_cmd_option} 2> /dev/null)
         l_status=$?
     else
@@ -661,12 +661,12 @@ function clean_folder_on_program()
 
 
         #Validar si se requiere realizar limpieza antes del copiado
-        if [ $p_clean_type -eq 1 ]; then
+        if [ $p_clean_type -eq 0 ]; then
 
             printf 'Eliminado todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
             rm -rf ${l_target_path}/
 
-        elif [ $p_clean_type -eq 2 ]; then
+        elif [ $p_clean_type -eq 1 ]; then
 
             if [ -d "${l_target_path}${p_sufix_subfolder}" ]; then
 
@@ -705,12 +705,12 @@ function clean_folder_on_program()
     if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
 
         #Validar si se requiere realizar limpieza antes del copiado
-        if [ $p_clean_type -eq 1 ]; then
+        if [ $p_clean_type -eq 0 ]; then
 
             printf 'Eliminado todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
             rm -rf ${l_target_path}/
 
-        elif [ $p_clean_type -eq 2 ]; then
+        elif [ $p_clean_type -eq 1 ]; then
 
             if [ -d "${l_target_path}${p_sufix_subfolder}" ]; then
 
@@ -740,13 +740,13 @@ function clean_folder_on_program()
     #   - Este escenario solo puede ser: el runner es el usuario objetivo y el owner del folder de los programas es root.
 
     #Validar si se requiere realizar limpieza antes del copiado
-    if [ $p_clean_type -eq 1 ]; then
+    if [ $p_clean_type -eq 0 ]; then
 
         printf 'Eliminando todo el folder "%b%s%b"...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
         sudo rm -rf ${l_target_path}/
         sudo mkdir -pm 755 "${l_target_path}"
 
-    elif [ $p_clean_type -eq 2 ]; then
+    elif [ $p_clean_type -eq 1 ]; then
 
         if [ -d "${l_target_path}${p_sufix_subfolder}" ]; then
 

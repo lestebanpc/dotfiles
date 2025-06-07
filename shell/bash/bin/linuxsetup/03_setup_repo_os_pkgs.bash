@@ -8,7 +8,7 @@
 #  110  - Argumentos invalidos.
 #  111  - No se cumple los requisitos para ejecutar la logica principal del script.
 #  120  - Se require permisos de root y se nego almacenar las credenciales de SUDO.
-#  otro - Error en el procesamiento de la logica del script 
+#  otro - Error en el procesamiento de la logica del script
 
 
 
@@ -168,7 +168,7 @@ fi
 #------------------------------------------------------------------------------------------------------------------
 #> Funciones usadas durante la instalacion del paquete {{{
 #------------------------------------------------------------------------------------------------------------------
-# 
+#
 # Incluye las variable globales usadas como parametro de entrada y salida de la funcion que no sea resuda por otras
 # funciones, cuyo nombre inicia con '_g_'.
 #
@@ -176,19 +176,19 @@ fi
 
 
 #Un diccionario que muestra el estado actual de los paquetes hasta el momento procesados (instalados o desinstalados) en un menú.
-#Un arreglo de asociativo cuyo key es el ID del paquete hasta el momento procesados en el menu. 
+#Un arreglo de asociativo cuyo key es el ID del paquete hasta el momento procesados en el menu.
 #El valor almacenado para un paquete es 'X|Y', donde:
 # > 'X' es el estado de la primera configuración y sus valores son:
 #     > -1 > El paquete aun no se ha se ha analizado (ni iniciado su proceso).
 #     >  n > Si es durante la instalación los valores puede ser:
 #             0 > Se inicio la instalación y termino existosamente
 #             1 > Se inicio la instalación y termino con errores
-#             2 > No se inicio la instalación: El paquete ya esta instalado 
+#             2 > No se inicio la instalación: El paquete ya esta instalado
 #             3 > No se inicio la instalación: Parametros invalidos (impiden que se inicie su analisis/procesamiento).
 #     >  m > Si es durante la instalación los valores puede ser:
 #             0 > Se inicio la desinstalación y termino existosamente
 #             1 > Se inicio la desinstalación y termino con errores
-#             2 > No se inicio la desinstalación: El paquete no esta instalado 
+#             2 > No se inicio la desinstalación: El paquete no esta instalado
 #             3 > No se inicio la desinstalación: Parametros invalidos (impiden que se inicie su analisis/procesamiento).
 # > 'Y' es un listado de indice relativo (de las opcion de menú) separados por espacios ' ' donde (hasta el momento) se usa el paquete.
 #     El primer indice es de la primera opción del menu que instala los artefactos. Los demas opciones no vuelven a instalar el artefacto
@@ -196,7 +196,7 @@ declare -A _gA_processed_repo=()
 
 
 #Parametros de entrada (argumentos de entrada son):
-#  1 > Opciones de menu ingresada por el usuario 
+#  1 > Opciones de menu ingresada por el usuario
 #  2 > Indice relativo de la opcion en el menú de opciones (inicia con 0 y solo considera el indice del menu dinamico).
 #
 #Parametros de salida (El valor de retorno). Sus valores pueder ser
@@ -204,16 +204,16 @@ declare -A _gA_processed_repo=()
 #    1 > No se inicio con la configuración de la opcion del menu (no se instalo, ni se se inicializo/finalizo).
 #    2 > La inicialización de la opción no termino con exito.
 #    3 > Alguno de lo paquetes fallo en configurarse (instalación/configuración). Ello provoca que se detiene el proceso (y no se invoca a la finalización).
-#    4 > La finalización de la opción no termino con exito. 
-#   98 > El paquetes vinculados a la opcion del menu no han sido configurados correctamente. 
+#    4 > La finalización de la opción no termino con exito.
+#   98 > El paquetes vinculados a la opcion del menu no han sido configurados correctamente.
 #   99 > Argumentos ingresados son invalidos
 #
 #Parametros de salida (variables globales):
-#    > '_gA_processed_repo' retona el estado de procesamiento de todos los paquetes hasta el momento procesados por el usuario. 
-#           
+#    > '_gA_processed_repo' retona el estado de procesamiento de todos los paquetes hasta el momento procesados por el usuario.
+#
 function _install_menu_options() {
 
-    #1. Argumentos 
+    #1. Argumentos
     local p_input_options=-1
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_input_options=$1
@@ -255,11 +255,11 @@ function _install_menu_options() {
                          #1 > No se inicio su inicialización (tampoco se configuro/instalo, ni se finalizo).
                          #2 > La inicialización de la opción termino con errores.
                          #3 > Alguno de los paquetes fallo en configurarse/instalarse, se detiene el proceso (no se invoca a la finalización).
-                         #4 > La finalización de la opción no termino con exito. 
+                         #4 > La finalización de la opción no termino con exito.
 
     local l_option_value=$((1 << (p_option_relative_idx + g_offset_option_index_menu_install)))
 
-    if [ $((p_input_options & l_option_value)) -ne $l_option_value ]; then 
+    if [ $((p_input_options & l_option_value)) -ne $l_option_value ]; then
         l_result=1
     fi
     #echo "l_result: ${l_result}"
@@ -270,7 +270,7 @@ function _install_menu_options() {
 
     #Si se escogio la opcion para instalarlo, mostrar el titulo de la opcion de menu e inicializarlo
     if [ -z "$l_result" ]; then
-   
+
         #3.1. Mostrar el titulo del grupo de paquetes solo si si existe mas de 1 paquete
         if [ $l_n -gt 1 ]; then
             printf '\n'
@@ -280,7 +280,7 @@ function _install_menu_options() {
             else
                 printf -v l_title_template 'Package Group > %b%s%b' "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
             fi
-            printf "${l_title_template}\n" 
+            printf "${l_title_template}\n"
             print_line '─' $g_max_length_line "$g_color_gray1"
         fi
 
@@ -308,7 +308,7 @@ function _install_menu_options() {
     local la_aux
                       #   0 > Se inicio la instalación y termino existosamente
                       #   1 > Se inicio la Instalación y termino con errores
-                      #   2 > No se inicio la instalación: El paquete ya esta instalado 
+                      #   2 > No se inicio la instalación: El paquete ya esta instalado
     local la_previous_options_idx
     local l_status_first_setup
     local l_repo_name_aux
@@ -333,7 +333,7 @@ function _install_menu_options() {
 
         #4.1. Obtener el estado del paquete antes de su instalación.
         l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
-        
+
         IFS='|'
         la_aux=(${l_aux})
         IFS=$' \t\n'
@@ -342,7 +342,7 @@ function _install_menu_options() {
                                              # -1 > El paquete no se ha iniciado su analisis ni su proceso.
                                              #  0 > Se inicio la instalación y termino existosamente
                                              #  1 > Se inicio la instalación y termino con errores
-                                             #  2 > No se inicio la instalación: El paquete ya esta instalado 
+                                             #  2 > No se inicio la instalación: El paquete ya esta instalado
                                              #  3 > No se inicio la instalación: Parametros invalidos (impiden que se inicie su analisis/procesamiento).
 
 
@@ -391,7 +391,7 @@ function _install_menu_options() {
             #Estados de un proceso no iniciado:
                       #   0 > Se inicio la instalación y termino existosamente
                       #   1 > Se inicio la Instalación y termino con errores
-                      #   2 > No se inicio la instalación: El paquete ya esta instalado 
+                      #   2 > No se inicio la instalación: El paquete ya esta instalado
             #  3 > Al package tiene parametros invalidos que impiden su analisis.
             if [ $l_status_first_setup -eq 3 ]; then
 
@@ -455,27 +455,27 @@ function _install_menu_options() {
                       "$g_color_gray1" "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             #Si se ejecuta sin usar el menú
             else
-                printf -v l_title_template "%sGroup >%s Package %s(%s/%s)%s > '%s%s%s' %s%%s%s" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" \ 
+                printf -v l_title_template "%sGroup >%s Package %s(%s/%s)%s > '%s%s%s' %s%%s%s" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" \
                        "$((l_j + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
         fi
-        
-        g_install_package "$l_repo_id" "$l_title_template" 
+
+        g_install_package "$l_repo_id" "$l_title_template"
         l_status=$?   #Solo se puede mostrar el titulo del packege cuando no retorna [6, infinito].
                       #   0 > Se inicio la instalación y termino existosamente
                       #   1 > Se inicio la instalación y termino con errores
-                      #   2 > No se inicio la instalación: El paquete ya esta instalado 
+                      #   2 > No se inicio la instalación: El paquete ya esta instalado
                       #   3 > No se inicio la instalación: No se obtuvo el nombre real del paquete
                       #   4 > No se inicio la instalación: No se obtuvo información si el paquete esta instalado o no
                       #   5 > No se inicio la instalación: Se envio otros parametros invalidos
-                      # 120 > No se inicio la instalación: No se permitio almacenar las credenciales para sudo 
+                      # 120 > No se inicio la instalación: No se permitio almacenar las credenciales para sudo
 
         #Se requiere almacenar las credenciales para realizar cambios con sudo.
         if [ $l_status -eq 120 ]; then
             return 120
         fi
 
-        #4.4. Si no se inicio el el proceso de configuración por no contar informacion correcta: 
+        #4.4. Si no se inicio el el proceso de configuración por no contar informacion correcta:
 
         #     3> No se obtuvo el nombre real del paquete
         if [ $l_status -eq 3 ]; then
@@ -514,7 +514,7 @@ function _install_menu_options() {
 
         fi
 
-        #     5> Se tiene parametros invalidos que impiden que se instale 
+        #     5> Se tiene parametros invalidos que impiden que se instale
         if [ $l_status -eq 5 ]; then
 
             #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
@@ -548,7 +548,7 @@ function _install_menu_options() {
         #4.5.3. Mostrar información adicional
 
         #A. Estados de un proceso no iniciado:
-        #   2 > El paqueta ya esta instalado 
+        #   2 > El paqueta ya esta instalado
         if [ $l_processed_repo -eq 2 ]; then
 
             #No se considera un error, continue con el procesamiento de los siguientes paquetes.
@@ -579,7 +579,7 @@ function _install_menu_options() {
 
     #Establecer el estado despues del procesamiento
     if [ -z "$l_result" ]; then
-    
+
         #Si se inicio la configuración de algun paquete y se obtuvo error
         if [ $l_exits_error -eq 0 ]; then
             l_result=3
@@ -589,7 +589,7 @@ function _install_menu_options() {
 
     #5. Iniciar la finalización (solo si se proceso correctamente todos los paquetes de la opción de menú)
     if [ -z "$l_result" ]; then
-   
+
 
         #5.1. Inicializar la opcion si aun no ha sido inicializado.
         install_finalize_menu_option $p_option_relative_idx
@@ -612,7 +612,7 @@ function _install_menu_options() {
 
 #
 #Parametros de entrada (argumentos de entrada son):
-#  1 > Opciones de menu ingresada por el usuario 
+#  1 > Opciones de menu ingresada por el usuario
 #  2 > Indice relativo de la opcion en el menú de opciones (inicia con 0 y solo considera el indice del menu dinamico).
 #
 #Parametros de salida (El valor de retorno). Sus valores pueder ser
@@ -620,16 +620,16 @@ function _install_menu_options() {
 #    1 > No se ha inicio la desinstalacíon de la opcion del menu debido a que no se cumple las precondiciones requeridas (no se desintaló, ni se se inicializo/finalizo).
 #    2 > La inicialización de la opción no termino con exito.
 #    3 > Alguno de lo paquetes fallo en desinstalacíon. Ello provoca que se detiene el proceso (y no se invoca a la finalización).
-#    4 > La finalización de la opción no termino con exito. 
-#   98 > El paquetes vinculados a la opcion del menu no tienen parametros configurados correctos. 
+#    4 > La finalización de la opción no termino con exito.
+#   98 > El paquetes vinculados a la opcion del menu no tienen parametros configurados correctos.
 #   99 > Argumentos ingresados son invalidos
 #
 #Parametros de salida (variables globales):
-#    > '_gA_processed_repo' retona el estado de procesamiento de los paquetes hasta el momento procesados por el usuario. 
-#           
+#    > '_gA_processed_repo' retona el estado de procesamiento de los paquetes hasta el momento procesados por el usuario.
+#
 function _uninstall_menu_options() {
 
-    #1. Argumentos 
+    #1. Argumentos
     local p_input_options=-1
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_input_options=$1
@@ -670,13 +670,13 @@ function _uninstall_menu_options() {
                          #1 > No se inicio su inicialización (tampoco se configuro/desinstalo, ni se finalizo).
                          #2 > La inicialización de la opción termino con errores.
                          #3 > Alguno de los paquetes fallo en configurarse/desinstalarse, se detiene el proceso (no se invoca a la finalización).
-                         #4 > La finalización de la opción no termino con exito. 
+                         #4 > La finalización de la opción no termino con exito.
 
     local l_option_value=$((1 << (p_option_relative_idx + g_offset_option_index_menu_uninstall)))
 
     if [ $((p_input_options & l_option_value)) -ne $l_option_value ]; then
         #No inicializar ni instalar
-        l_result=1 
+        l_result=1
     fi
 
     #echo "index: ${p_option_relative_idx}, input: ${p_input_options}, value: ${l_option_value}"
@@ -687,7 +687,7 @@ function _uninstall_menu_options() {
 
     #Si se escogio la opcion para instalarlo, mostrar el titulo de la opcion de menu e inicializarlo
     if [ -z "$l_result" ]; then
-   
+
         #3.1. Mostrar el titulo, solo si existe mas de 1 paquete en el grupo
         if [ $l_n -gt 1 ]; then
 
@@ -712,7 +712,7 @@ function _uninstall_menu_options() {
 
         l_status=$?
 
-        #3.3. Si se inicializo con error (cancelado por el usuario u otro error) 
+        #3.3. Si se inicializo con error (cancelado por el usuario u otro error)
         if [ $l_status -ne 0 ]; then
             printf 'No se ha completo la inicialización de la opción del menu elegida...\n'
             l_result=2
@@ -753,7 +753,7 @@ function _uninstall_menu_options() {
 
         #4.1. Obtener el estado del paquete antes de su instalación.
         l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
-        
+
         IFS='|'
         la_aux=(${l_aux})
         IFS=$' \t\n'
@@ -762,7 +762,7 @@ function _uninstall_menu_options() {
                                              # -1 > El paquete no se ha iniciado su analisis ni su proceso.
                                              #  0 > Se inicio la desinstalación y termino existosamente
                                              #  1 > Se inicio la desinstalación y termino con errores
-                                             #  2 > No se inicio la desinstalación: El paquete ya esta instalado 
+                                             #  2 > No se inicio la desinstalación: El paquete ya esta instalado
                                              #  3 > No se inicio la desinstalación: Parametros invalidos (impiden que se inicie su analisis/procesamiento).
 
 
@@ -882,16 +882,16 @@ function _uninstall_menu_options() {
                        "$l_n" "$g_color_reset" "$g_color_cian1" "$l_repo_name_aux" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
             fi
         fi
-        
-        g_uninstall_package "$l_repo_id" "$l_title_template" 
+
+        g_uninstall_package "$l_repo_id" "$l_title_template"
         l_status=$?   #'g_uninstall_package' solo se puede mostrar el titulo del paquete cuando no es [4, infinito>
                       #   0 > Se inicio la desinstalación y termino existosamente
                       #   1 > Se inicio la desinstalación y termino con errores
-                      #   2 > No se inicio la desinstalación: El paquete no esta instalado 
+                      #   2 > No se inicio la desinstalación: El paquete no esta instalado
                       #   3 > No se inicio la desinstalación: No se obtuvo el nombre real del paquete
                       #   4 > No se inicio la desinstalación: No se obtuvo información si el paquete esta instalado o no
                       #   5 > No se inicio la desinstalación: Se envio otros parametros invalidos
-                      # 120 > No se inicio la desinstalación: No se permitio almacenar las credenciales para sudo 
+                      # 120 > No se inicio la desinstalación: No se permitio almacenar las credenciales para sudo
 
         #Se requiere almacenar las credenciales para realizar cambios con sudo.
         if [ $l_status -eq 120 ]; then
@@ -1056,15 +1056,15 @@ function _uninstall_menu_options() {
 #Parametros de salida (El valor de retorno). Sus valores pueder ser
 #   0 > Se inicio la desinstalación y termino existosamente
 #   1 > Se inicio la desinstalación y termino con errores
-#   2 > No se inicio la desinstalación: El paquete no esta instalado 
+#   2 > No se inicio la desinstalación: El paquete no esta instalado
 #   3 > No se inicio la desinstalación: No se obtuvo el nombre real del paquete
 #   4 > No se inicio la desinstalación: No se obtuvo información si el paquete esta instalado o no
 #   5 > No se inicio la desinstalación: Se envio otros parametros invalidos
-# 120 > No se inicio la desinstalación: No se permitio almacenar las credenciales para sudo 
-#           
+# 120 > No se inicio la desinstalación: No se permitio almacenar las credenciales para sudo
+#
 function g_uninstall_package() {
 
-    #1. Argumentos 
+    #1. Argumentos
     local p_package_id="$1"
     local p_package_title_template="$2"
 
@@ -1095,7 +1095,7 @@ function g_uninstall_package() {
         printf 'No se pudo obtener el nombre real del paquete "%s"\n' "$l_package_name_default"
         return 3
     fi
-    
+
     #3. ¿El paquete esta instalado?
     is_package_installed "$l_package_name" $g_os_subtype_id $l_status
     l_status=$?
@@ -1110,13 +1110,13 @@ function g_uninstall_package() {
         return 2
     fi
 
-    #4. Instalar el paquete    
+    #4. Instalar el paquete
 
     #Solicitar credenciales para sudo y almacenarlas temporalmente
     if [ $g_status_crendential_storage -eq 0 ]; then
         storage_sudo_credencial
         g_status_crendential_storage=$?
-        #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+        #Se requiere almacenar las credenciales para realizar cambio con sudo.
         #  Si es 0 o 1: la instalación/configuración es completar
         #  Si es 2    : el usuario no acepto la instalación/configuración
         #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
@@ -1140,7 +1140,7 @@ function g_uninstall_package() {
 
     #printf 'Codigo develto: %s\n' "$l_status"
     if [ $l_status -eq 9 ]; then
-        return 5 
+        return 5
     fi
 
     return $l_status
@@ -1158,15 +1158,15 @@ function g_uninstall_package() {
 #Parametros de salida (El valor de retorno). Sus valores pueder ser
 #   0 > Se inicio la instalación y termino existosamente
 #   1 > Se inicio la Instalación y termino con errores
-#   2 > No se inicio la instalación: El paquete ya esta instalado 
+#   2 > No se inicio la instalación: El paquete ya esta instalado
 #   3 > No se inicio la instalación: No se obtuvo el nombre real del paquete
 #   4 > No se inicio la instalación: No se obtuvo información si el paquete esta instalado o no
 #   5 > No se inicio la instalación: Se envio otros parametros invalidos
-# 120 > No se inicio la instalación: No se permitio almacenar las credenciales para sudo 
-#           
+# 120 > No se inicio la instalación: No se permitio almacenar las credenciales para sudo
+#
 function g_install_package() {
 
-    #1. Argumentos 
+    #1. Argumentos
     local p_package_id="$1"
     local p_package_title_template="$2"
 
@@ -1198,15 +1198,15 @@ function g_install_package() {
         printf 'No se pudo obtener el nombre real del paquete "%s"\n' "$l_package_name_default"
         return 3
     fi
-    
+
 
     #3. El paquete ¿esta instalado?
-    
+
     #Si el paquete esta vinculado a un programa principal, determinar si el programa existe
     local l_status=1
     local l_program_name=$(get_main_binary_of_package "$p_package_id")
     #printf 'El programa del paquete: "%s"\n' "$l_program_name"
-    
+
     if [ ! -z "$l_program_name" ]; then
 
         #Validar si el programa existe
@@ -1237,13 +1237,13 @@ function g_install_package() {
         return 2
     fi
 
-    #4. Instalar el paquete    
+    #4. Instalar el paquete
 
     #Solicitar credenciales para sudo y almacenarlas temporalmente
     if [ $g_status_crendential_storage -eq 0 ]; then
         storage_sudo_credencial
         g_status_crendential_storage=$?
-        #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+        #Se requiere almacenar las credenciales para realizar cambio con sudo.
         #  Si es 0 o 1: la instalación/configuración es completar
         #  Si es 2    : el usuario no acepto la instalación/configuración
         #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
@@ -1267,7 +1267,7 @@ function g_install_package() {
 
     #printf 'Codigo develto: %s\n' "$l_status"
     if [ $l_status -eq 9 ]; then
-        return 5 
+        return 5
     fi
 
     return $l_status
@@ -1279,8 +1279,8 @@ function g_install_package() {
 #  1 > Opciones relacionados con los paquetes que se se instalaran (entero que es suma de opciones de tipo 2^n).
 #
 function g_install_packages_byopc() {
-    
-    #1. Argumentos 
+
+    #1. Argumentos
     local p_input_options=-1
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_input_options=$1
@@ -1306,7 +1306,7 @@ function g_install_packages_byopc() {
             if [ $g_status_crendential_storage -eq 0 ]; then
                 storage_sudo_credencial
                 g_status_crendential_storage=$?
-                #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+                #Se requiere almacenar las credenciales para realizar cambio con sudo.
                 #  Si es 0 o 1: la instalación/configuración es completar
                 #  Si es 2    : el usuario no acepto la instalación/configuración
                 #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
@@ -1332,7 +1332,7 @@ function g_install_packages_byopc() {
     _gA_processed_repo=()
 
     for((l_x=0; l_x < ${#ga_menu_options_packages[@]}; l_x++)); do
-        
+
         _install_menu_options $p_input_options $l_x
         l_status=$?
 
@@ -1358,7 +1358,7 @@ function g_install_packages_byopc() {
 #  1 > Flag '0' si se actualiza los paquetes SO.
 #  2 > Listado de ID de paquetes separados por coma.
 function g_install_packages_byid() {
-    
+
     #1. Argumentos
     local p_upgrade_os_packages=1
     if [ "$1" = "0" ]; then
@@ -1394,7 +1394,7 @@ function g_install_packages_byid() {
         if [ $g_status_crendential_storage -eq 0 ]; then
             storage_sudo_credencial
             g_status_crendential_storage=$?
-            #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+            #Se requiere almacenar las credenciales para realizar cambio con sudo.
             #  Si es 0 o 1: la instalación/configuración es completar
             #  Si es 2    : el usuario no acepto la instalación/configuración
             #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
@@ -1416,7 +1416,7 @@ function g_install_packages_byid() {
     if [ $g_status_crendential_storage -eq 0 ]; then
         storage_sudo_credencial
         g_status_crendential_storage=$?
-        #Se requiere almacenar las credenciales para realizar cambio con sudo. 
+        #Se requiere almacenar las credenciales para realizar cambio con sudo.
         #  Si es 0 o 1: la instalación/configuración es completar
         #  Si es 2    : el usuario no acepto la instalación/configuración
         #  Si es 3 0 4: la instalacion/configuración es parcial (solo se instala/configura, lo que no requiere sudo)
@@ -1434,7 +1434,7 @@ function g_install_packages_byid() {
     local l_title_template=""
 
     for((l_x=0; l_x < ${l_n}; l_x++)); do
-        
+
         #Nombre a mostrar del paquete
         l_repo_id="${pa_packages[$l_x]}"
         l_repo_name="${gA_packages[${l_repo_id}]}"
@@ -1458,7 +1458,7 @@ function g_install_packages_byid() {
 
 
         if [ "$l_repo_name" = "$g_empty_str" ]; then
-            
+
             if [ ! -z "$l_title_template" ]; then
                 printf '\n'
                 print_line '-' $g_max_length_line  "$g_color_gray1"
@@ -1470,16 +1470,16 @@ function g_install_packages_byid() {
             l_status=$?   #Solo se puede mostrar el titulo del packege cuando NO retorna [6, infinito].
                           #   0 > Se inicio la instalación y termino existosamente
                           #   1 > Se inicio la instalación y termino con errores
-                          #   2 > No se inicio la instalación: El paquete ya esta instalado 
+                          #   2 > No se inicio la instalación: El paquete ya esta instalado
                           #   5 > No se inicio la instalación: Se envio otros parametros invalidos
                           # 120 > No se inicio la instalación: No se permitio almacenar las credenciales para sudo
 
         else
-            g_install_package "$l_repo_id" "$l_title_template" 
+            g_install_package "$l_repo_id" "$l_title_template"
             l_status=$?   #Solo se puede mostrar el titulo del packege cuando NO retorna [6, infinito].
                           #   0 > Se inicio la instalación y termino existosamente
                           #   1 > Se inicio la instalación y termino con errores
-                          #   2 > No se inicio la instalación: El paquete ya esta instalado 
+                          #   2 > No se inicio la instalación: El paquete ya esta instalado
                           #   3 > No se inicio la instalación: No se obtuvo el nombre real del paquete
                           #   4 > No se inicio la instalación: No se obtuvo información si el paquete esta instalado o no
                           #   5 > No se inicio la instalación: Se envio otros parametros invalidos
@@ -1491,7 +1491,7 @@ function g_install_packages_byid() {
             return 120
         fi
 
-        #4.4. Si no se inicio el el proceso de configuración por no contar informacion correcta: 
+        #4.4. Si no se inicio el el proceso de configuración por no contar informacion correcta:
 
         #     3> No se obtuvo el nombre real del paquete
         if [ $l_status -eq 3 ]; then
@@ -1514,7 +1514,7 @@ function g_install_packages_byid() {
 
         fi
 
-        #     5> Se tiene parametros invalidos que impiden que se instale 
+        #     5> Se tiene parametros invalidos que impiden que se instale
         if [ $l_status -eq 5 ]; then
 
             #Es un error, se debe detener el proceso de la opción de menu (y no se debe invocar a la finalización).
@@ -1530,7 +1530,7 @@ function g_install_packages_byid() {
         #4.5. Si se inicio el pocesamiento del package.
 
         #A. Estados de un proceso no iniciado:
-        #   2 > El paqueta ya esta instalado 
+        #   2 > El paqueta ya esta instalado
         if [ $l_status -eq 2 ]; then
 
             #No se considera un error, continue con el procesamiento de los siguientes paquetes.
@@ -1571,8 +1571,8 @@ function g_install_packages_byid() {
 #  1 > Opciones relacionados con los paquetes que se se instalaran (entero que es suma de opciones de tipo 2^n).
 #
 function g_uninstall_packages() {
-    
-    #1. Argumentos 
+
+    #1. Argumentos
     local p_input_options=-1
     if [[ "$1" =~ ^[0-9]+$ ]]; then
         p_input_options=$1
@@ -1596,7 +1596,7 @@ function g_uninstall_packages() {
     _gA_processed_repo=()
 
     for((l_x=0; l_x < ${#ga_menu_options_packages[@]}; l_x++)); do
-        
+
         _uninstall_menu_options $p_input_options $l_x
         l_status=$?
 
@@ -1621,9 +1621,9 @@ function g_uninstall_packages() {
 function g_install_main() {
 
     #1. Pre-requisitos
-   
+
     #2. Mostrar el Menu
-    print_line '─' $g_max_length_line "$g_color_green1" 
+    print_line '─' $g_max_length_line "$g_color_green1"
     print_text_in_center "Menu de Opciones (Install/Upgrade)" $g_max_length_line "$g_color_green1"
     print_line '-' $g_max_length_line  "$g_color_gray1"
     printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
@@ -1650,41 +1650,41 @@ function g_install_main() {
         case "$l_options" in
             a)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_green1" 
+                print_line '─' $g_max_length_line "$g_color_green1"
                 g_install_packages_byopc $l_value_option_a 0
                 ;;
 
             q)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_green1" 
+                print_line '─' $g_max_length_line "$g_color_green1"
                 ;;
 
 
             0)
                 l_flag_continue=0
                 printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_gray1" 
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 ;;
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '─' $g_max_length_line "$g_color_green1" 
+                    print_line '─' $g_max_length_line "$g_color_green1"
                     g_install_packages_byopc $l_options 0
                 else
                     l_flag_continue=0
                     printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
-                    print_line '-' $g_max_length_line "$g_color_gray1" 
+                    print_line '-' $g_max_length_line "$g_color_gray1"
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
                 printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_gray1" 
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 ;;
         esac
-        
+
     done
 
 }
@@ -1693,8 +1693,8 @@ function g_install_main() {
 function g_uninstall_main() {
 
 
-    #Mostar el menu principal 
-    print_line '─' $g_max_length_line "$g_color_green1" 
+    #Mostar el menu principal
+    print_line '─' $g_max_length_line "$g_color_green1"
 
     print_text_in_center "Menu de Opciones (Uninstall)" $g_max_length_line "$g_color_green1"
     print_line '-' $g_max_length_line  "$g_color_gray1"
@@ -1719,7 +1719,7 @@ function g_uninstall_main() {
 
             q)
                 l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_green1" 
+                print_line '─' $g_max_length_line "$g_color_green1"
                 ;;
 
 
@@ -1727,29 +1727,29 @@ function g_uninstall_main() {
                 l_flag_continue=0
                 printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
 
-                print_line '-' $g_max_length_line "$g_color_gray1" 
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 ;;
 
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
                     l_flag_continue=1
-                    print_line '─' $g_max_length_line "$g_color_green1" 
+                    print_line '─' $g_max_length_line "$g_color_green1"
                     g_uninstall_packages $l_options 0
                 else
                     l_flag_continue=0
                     printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
-                    print_line '-' $g_max_length_line "$g_color_gray1" 
+                    print_line '-' $g_max_length_line "$g_color_gray1"
                 fi
                 ;;
 
             *)
                 l_flag_continue=0
                 printf '%bOpción incorrecta%b\n' "$g_color_gray1" "$g_color_reset"
-                print_line '-' $g_max_length_line "$g_color_gray1" 
+                print_line '-' $g_max_length_line "$g_color_gray1"
                 ;;
         esac
-        
+
     done
 
 }
@@ -1758,7 +1758,7 @@ function g_uninstall_main() {
 g_usage() {
 
     printf 'Usage:\n'
-    printf '  > %bDesintalar paquetes mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset" 
+    printf '  > %bDesintalar paquetes mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b%s/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash uninstall\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '    %b%s/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash uninstall REPO_NAME\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '  > %bInstalar paquetes mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
@@ -1914,7 +1914,7 @@ else
 
     #4.2.1. Por defecto, mostrar el menu para escoger lo que se va instalar
     if [ $gp_type_calling -eq 0 ]; then
-    
+
         # 1> Tipo de configuración: 1 (instalación/actualización).
 
         #Validar los requisitos
@@ -1930,10 +1930,10 @@ else
         else
             _g_result=111
         fi
-    
+
     #2.2.2. No mostrar el menu. Instalando los paquetes especificados por las opciones indicas en '$2'
     elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
-    
+
         #Parametros del script usados hasta el momento:
         # 1> Tipo de configuración: 1 (instalación/actualización).
         # 2> Opciones de menu a ejecutar: entero positivo.
@@ -1977,10 +1977,10 @@ else
        else
            _g_result=111
        fi
-    
+
     #2.2.3. Instalando un solo paquetes del ID indicao por '$2'
     else
-    
+
         #Parametros del script usados hasta el momento:
         # 1> Tipo de configuración: 1 (instalación/actualización).
         # 2> ID del paquete a instalar: identificado interno del respositorio
@@ -2004,7 +2004,7 @@ else
         if [ "$4" = "0" ]; then
             gp_upgrade_os_packages=0
         fi
-    
+
 
         #Validar los requisitos
         #  1 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
@@ -2028,16 +2028,12 @@ else
         else
             _g_result=111
         fi
-    
+
     fi
-    
+
 fi
 
 exit $_g_result
 
 
 #}}}
-
-
-
-
