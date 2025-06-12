@@ -372,6 +372,9 @@ vim.keymap.set('n', '<leader>tw', ':lua require("fzf-lua").tags()<CR>', { norema
 vim.keymap.set('n', '<leader>tt', ':lua require("fzf-lua").btags()<CR>', { noremap = true, silent = true })
 
 
+--Listar help tags de vim (archivos de ayuda de vim)
+vim.keymap.set('n', '<leader>lt', ':lua require("fzf-lua").helptags()<CR>', { noremap = true, silent = true })
+
 
 
 --Remplazar el "vim.ui.select" por defecto de NeoVIM

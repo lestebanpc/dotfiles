@@ -158,59 +158,48 @@ fi
 declare -r g_default_list_package_ids='curl,unzip,openssl,tmux'
 
 #Opciones de '04_install_profile.bash' para configurar VIM/NeoVIM
-#  0> Crear archivos de configuración como Editor
-#  1> Crear archivos de configuración como IDE
-#  2> Descargar plugins de Editor e indexarlos
-#  3> Descargar plugins de Editor (sin indexarlos)
-#  4> Descargar plugins de IDE e indexarlos
-#  5> Descargar plugins de IDE (sin indexarlos)
-#  6> Indexar la documentación (de plugins anteriormente descargados)
-#  7> Inicializar los plugins de IDE
-declare -ra ga_options_config_vim=(32768 65536 131072 262144 524288 1048576 2097152 4194304)
-declare -ra ga_options_config_nvim=(8388608 16777216 33554432 67108864 134217728 268435456 536870912 1073741824)
+#  (0) Flag para configurar el modo developer
+#  (1) Configuración: Crear los archivos de configuración
+#  (2) Configuración: Descargar los plugins e indexar su documentación
+#  (3) Configuración: Descargar los plugins sin indexar su documentación
+#  (4) Indexar la documentación de los plugins existentes
+declare -ra ga_options_vim=(16 32 64 128 256)
+declare -ra ga_options_nvim=(1024 2048 4096 8192 16384)
 declare -ra ga_title_config=(
-    "Crear archivos de configuración como Editor"
-    "Crear archivos de Configuración como IDE"
-    "Descargar plugins de Editor e indexarlos"
-    "Descargar plugins de Editor (sin indexarlos)"
-    "Descargar plugins de IDE e indexarlos"
-    "Descargar plugins de IDE (sin indexarlos)"
-    "Indexar la documentación (de plugins anteriormente descargados)"
-    "Inicializar los plugins de IDE")
+    "Flag para configurar el modo developer"
+    "Configuración: Crear los archivos de configuración"
+    "Configuración: Descargar los plugins e indexar su documentación"
+    "Configuración: Descargar los plugins sin indexar su documentación"
+    "Indexar la documentación de los plugins existentes"
+    )
 
 #Opciones de '04_install_profile.bash'para instalar lo necesario para VIM/NeoVIM
-#  0> Instalar Python
-#  1> Instalar paquete de usuario de Python: 'jtbl'
-#  2> Instalar paquete de usuario de Python: 'jtbl', 'compiledb', 'rope' y 'pynvim'
-#  3> Instalar NodeJS
-#  4> Instalar paquete globales de NodeJS: 'Prettier'
-#  5> Instalar paquete globales de NodeJS: 'Prettier', 'NeoVIM' y 'TreeSitter CLI'
-#  6> Instalar VIM
-#  7> Instalar NeoVIM
-declare -ra ga_options_install=(8 8192 32 16 16384 64 128 1024)
-declare -ra ga_title_install=(
-    "Python/Pip"
-    "Paquetes de usuario de Python 'jtbl'"
-    "Paquetes de usuario de Python 'jtbl', 'compiledb', 'rope' y 'pynvim'"
-    "NodeJS"
-    "Paquetes globales de Python 'Prettier'"
-    "Paquetes globales de Python 'Prettier', 'NeoVIM' y 'TreeSitter CLI'"
-    "VIM"
-    "NeoVIM")
-
-#Opciones de '04_install_profile.bash' generales
-# 0> Actualizar los paquetes del SO
-# 1> Crear los enlaces simbolicos del profile del usuario
-# 2> Flag para re-crear un enlaces simbolicos en caso de existir
-declare -ra ga_options_general=(1 2 4)
-declare -ra ga_title_general=(
-    "Actualizar los paquetes del SO"
-    "Crear los enlaces simbolicos del profile del usuario"
-    "Flag para re-crear un enlaces simbolicos en caso de existir")
-
-
+#  (0) Configurar archivos del profile del usuario actual
+#  (1) Flag para overwrite symbolic link en caso de existir
+#  (2) Flag para overwrite file en caso de existir
+#  (3) Python > Instalar paquetes de usuario basicos
+#  (4) Python > Instalar paquetes de usuario sobre LSP/DAP
+#  (5) Python > Instalar paquetes de usuario otros
+#  (6) NodeJS > Instalar paquetes globales basicos:
+#  (7) NodeJS > Instalar paquetes globales sobre LSP/DAP:
+#  (8) NodeJS > Instalar paquetes globales otros:
+declare -ra ga_options_others=(1 2 4 1048576 2097152 4194304 65536 131072 262144)
+declare -ra ga_title_others=(
+    "General > ${g_color_blue1}Configurar archivos del profile del usuario actual"
+    "General > ${g_color_blue1}Flag para overwrite symbolic link en caso de existir"
+    "General > ${g_color_blue1}Flag para overwrite file en caso de existir"
+    "Python  > ${g_color_blue1}Instalar paquetes de usuario basicos"
+    "Python  > ${g_color_blue1}Instalar paquetes de usuario sobre LSP/DAP"
+    "Python  > ${g_color_blue1}Instalar paquetes de usuario otros"
+    "NodeJS  > ${g_color_blue1}Instalar paquetes globales basicos"
+    "NodeJS  > ${g_color_blue1}Instalar paquetes globales sobre LSP/DAP:"
+    "NodeJS  > ${g_color_blue1}Instalar paquetes globales otros"
+    )
 
 #}}}
+
+
+
 
 
 
@@ -223,180 +212,224 @@ declare -ra ga_title_general=(
 #
 
 
-function _setup_os_packages() {
+# Instalar programas del sistema usando paquetes del sistema
+# > Parametros de entrada
+# > Parametros de salida
+#    0> Se instala el programam
+#    1> No se instala ningun programa (no se cumple las precondiciones)
+function _setup_os_package() {
 
     #1. Argumentos
     local p_input_options=$1
 
     local p_list_pckg_ids="$g_default_list_package_ids"
+    if [ ! -z "$2" ]; then
+        p_list_pckg_ids="$2"
+    fi
+
+
+    #2. Validar si se puede instalar
+    if [ $p_input_options -le 0 ]; then
+        return 1
+    fi
+
+    local l_flag_packages=1
+    local l_flag_upgrade_os=1
+
+    # Validar si la opcion esta habilitada
+    local l_option=2
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ] && [ ! -z "$p_list_pckg_ids" ]; then
+        l_flag_packages=0
+    fi
+
+    l_option=1
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        l_flag_upgrade_os=0
+    fi
+
+    # Si ninguna de las opciones se ha habilitado
+    if [ $l_flag_packages -ne 0 ] && [ $l_flag_upgrade_os -ne 0 ]; then
+        return 1
+    fi
+
+    # Solo lo puede instalar root
+    if [ $g_runner_sudo_support -eq 2 ] || [ $g_runner_sudo_support -eq 3 ]; then
+
+        printf '%bSe requiere acceso a root%b para instalar paquete del SO "%b%s%b".\n' "$g_color_red1" "$g_color_reset" "$g_color_gray1" \
+               "$g_default_list_package_ids" "$g_color_reset"
+        return 1
+
+    fi
+
+    #3. Instalar
+    local l_status
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_is_noninteractive=0
+    fi
+
+    # Mostrar el titulo de instalacion
+    printf '\n'
+    print_line '─' $g_max_length_line  "$g_color_blue1"
+    printf "> %bSystem Programs >%b Instalando '%b%s%b'\n" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "${p_list_pckg_ids//,/, }" "$g_color_reset"
+    print_line '─' $g_max_length_line "$g_color_blue1"
+
+
+    # Parametros:
+    # 1> Tipo de ejecución: 2/4 (ejecución sin menu, para instalar/actualizar un grupo paquetes).
+    # 2> Paquetes a instalar.
+    # 3> El estado de la credencial almacenada para el sudo.
+    # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
+    if [ $l_is_noninteractive -eq 1 ]; then
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $l_flag_upgrade_os
+        l_status=$?
+    else
+        ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $l_flag_upgrade_os
+        l_status=$?
+    fi
+
+    # Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+        g_status_crendential_storage=0
+    # Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
+    fi
+
+    return 0
+
+}
+
+
+
+# Instalar programas del sistema basicos (comandos del sistema) usando respositorios donde se desacargan estos.
+# > Parametros de entrada
+# > Parametros de salida
+#    0> Se instala el programam
+#    1> No se instala ningun programa (no se cumple las precondiciones)
+function _setup_basic_system_cmd() {
+
+    #1. Argumentos
+    local p_input_options=$1
+
+
+    #2. Validar si se puede instalar
+    if [ $p_input_options -le 0 ]; then
+        return 1
+    fi
+
+    # Validar si la opcion esta habilitada
+    local l_option=4
+    if [ $(( $p_input_options & $l_option )) -ne $l_option ]; then
+        return 1
+    fi
+
+
+    # Solo lo puede instalar root
+    if [ $g_runner_sudo_support -eq 2 ] || [ $g_runner_sudo_support -eq 3 ]; then
+
+        printf '%bSe requiere acceso a root%b para instalar "%bcomandos basicos%b" en el SO.\n' "$g_color_red1" "$g_color_reset" "$g_color_gray1" \
+               "$g_color_reset"
+        return 1
+
+    fi
+
+    #3. Descargar e configurar los comandos basicos (usar un grupo de comandos especifico)
+    local l_status
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_is_noninteractive=0
+    fi
+
+    # Mostrar el titulo de instalacion
+    printf '\n'
+    print_line '─' $g_max_length_line  "$g_color_blue1"
+    if [ $g_os_subtype_id -eq 1 ]; then
+        printf "> %bSystem Programs >%b Instalando %bcomandos%b: '%bbat, jq, yq, ripgrep, delta, oh-my-posh, fd, zoxide y eza%b.'\n" "$g_color_gray1" "$g_color_reset" \
+                "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    else
+        printf "> %bSystem Programs >%b Instalando %bcomandos%b: '%bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd, zoxide y eza%b.'\n" "$g_color_gray1" "$g_color_reset" \
+               "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    fi
+    print_line '─' $g_max_length_line "$g_color_blue1"
+
+    # Parametros usados por el script:
+    #  1> Tipo de llamado: 1/3 (sin menu interactivo/no-interactivo).
+    #  2> Opciones de menu a ejecutar: entero positivo.
+    #  3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
+    #  4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+    #  5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
+    #     "/var/opt/tools" o "~/tools".
+    #  6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+    #  7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    #  8> El estado de la credencial almacenada para el sudo.
+    #  9> Install only last version: por defecto es 1 (representa a 'false'). Solo si su valor es 0 representa a 'true'.
+    # 11> Flag para filtrar el listado de repositorios segun el tipo de progrmas. '0' solo programas del usuario, '1' solo programas que no son de usuario.
+    #     Otro valor, no hay filtro. Valor por defecto es '2'.
+    # 12> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
+    if [ $l_is_noninteractive -eq 1 ]; then
+        ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 1 4 "$g_targethome_path" "$g_repo_name" "$g_programs_path" "$g_cmd_base_path" \
+            "$g_temp_path" $g_status_crendential_storage 0
+        l_status=$?
+    else
+        ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 3 4 "$g_targethome_path" "$g_repo_name" "$g_programs_path" "$g_cmd_base_path" \
+            "$g_temp_path" $g_status_crendential_storage 0
+        l_status=$?
+    fi
+
+    # Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+       g_status_crendential_storage=0
+    # Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
+    fi
+
+    return 0
+
+}
+
+
+# Instalar programas del sistema/usuario descargando archivos de repositorios externos.
+#   > Los programas de sistema se instalan en rutas reservadas del sistema y el owner siempre es root.
+#   > Los programas de usuario NO se instalan en rutas reservadas del sistema y el owner puede ser root u otro usuario.
+# > Parametros de entrada
+#    1> Flag '0' si es un programa de usuario y '1' si no es un programa del usuario (programa de sistema, system font, os package, custom).
+#    3> Lista de opciones de ID del programa a instalar.
+#    2> Opcionalmente la opciones de instalacion (solo usuado si se instala programas de usuario)
+# > Parametros de salida
+#    0> Se instala el programam
+#    1> No se instala ningun programa (no se cumple las precondiciones)
+function _setup_programs() {
+
+    #1. Argumentos
+    local p_flag_user_prgs=1
+    if [ "$1" = "0" ]; then
+        p_flag_user_prgs=0
+    fi
+
+    local p_list_repo_ids=""
+    if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
+        p_list_repo_ids="$2"
+    fi
+
+    local p_input_options=0
     if [ ! -z "$3" ]; then
-        p_list_pckg_ids="$3"
-    fi
-
-    local p_flag_upgrade_os_pkgs=1
-    if [ "$5" = "0" ]; then
-        p_flag_upgrade_os_pkgs=0
-    fi
-
-    #2.Inicialización
-    local l_is_noninteractive=1
-    if [ $gp_type_calling -eq 2 ]; then
-        l_is_noninteractive=0
+        p_input_options=$3
     fi
 
 
-    #3. Instalar paquetes basicos del SO: Curl, OpenSSL y Tmux
-    local l_status=0
-    local l_option=1024
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ] && [ ! -z "$p_list_pckg_ids" ]; then
-
-        #Solo soportado para los que tenga acceso a root
-        if [ $g_runner_sudo_support -ne 2 ] && [ $g_runner_sudo_support -ne 3 ]; then
-
-            #Mostrar el titulo de instalacion
-            printf '\n'
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            printf "> Instalando '%b%s%b'\n" "$g_color_cian1" "${p_list_pckg_ids//,/, }" "$g_color_reset"
-            print_line '─' $g_max_length_line "$g_color_blue1"
-
-            #Parametros:
-            # 1> Tipo de ejecución: 2/4 (ejecución sin menu, para instalar/actualizar un grupo paquetes)
-            # 2> Paquetes a instalar
-            # 3> El estado de la credencial almacenada para el sudo
-            # 4> Actualizar los paquetes del SO antes. Por defecto es 1 (false).
-            if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 2 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
-                l_status=$?
-            else
-                ${g_shell_path}/bash/bin/linuxsetup/03_setup_repo_os_pkgs.bash 4 "$p_list_pckg_ids" $g_status_crendential_storage $p_flag_upgrade_os_pkgs
-                l_status=$?
-            fi
-
-            if [ $l_exist_packages_installed -ne 0 ]; then
-                l_exist_packages_installed=0
-            fi
-
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-                g_status_crendential_storage=0
-            #Si no se paso las precondiciones iniciales
-            elif [ $l_status -eq 111 ]; then
-                return $l_status
-            fi
-
-        else
-            printf '%bSe requiere acceso a root%b para instalar paquete.\n' "$g_color_red1" "$g_color_reset"
-        fi
-
-    fi
-
-}
-
-
-function _setup_cmd_binaries() {
-
-    #1. Argumentos
-    local p_input_options=$1
-
-    local p_list_repo_ids=""
-    if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
-        p_list_repo_ids="$2"
-    fi
-
-
-    #2.Inicialización
-    local l_is_noninteractive=1
-    if [ $gp_type_calling -eq 2 ]; then
-        l_is_noninteractive=0
-    fi
-
-    #4. Descargar e configurar los comandos basicos (usar un grupo de comandos especifico)
-    l_option=2048
-    if [ $p_input_options -gt 0 ] && [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-
-        #Solo soportado para los que tenga acceso a root
-        if [ $g_runner_sudo_support -ne 2 ] && [ $g_runner_sudo_support -ne 3 ]; then
-
-            #Mostrar el titulo de instalacion
-            printf '\n'
-            print_line '─' $g_max_length_line  "$g_color_blue1"
-            if [ $g_os_subtype_id -eq 1 ]; then
-                printf "> Instalando %bComandos Basicos%b: '%bbat, jq, yq, ripgrep, delta, oh-my-posh, fd, zoxide y eza%b.'\n" "$g_color_cian1" "$g_color_reset" \
-                       "$g_color_cian1" "$g_color_reset"
-            else
-                printf "> Instalando %bComandos Basicos%b: '%bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd, zoxide y eza%b.'\n" "$g_color_cian1" "$g_color_reset" \
-                       "$g_color_cian1" "$g_color_reset"
-            fi
-            print_line '─' $g_max_length_line "$g_color_blue1"
-
-            #Parametros usados por el script:
-            # 1> Tipo de llamado: 1/3 (sin menu interactivo/no-interactivo).
-            # 2> Opciones de menu a ejecutar: entero positivo.
-            # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
-            # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
-            # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
-            #    "/var/opt/tools" o "~/tools".
-            # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
-            # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
-            # 8> El estado de la credencial almacenada para el sudo.
-            # 9> Install only last version: por defecto es 1 (representa a 'false'). Solo si su valor es 0 representa a 'true'.
-            if [ $l_is_noninteractive -eq 1 ]; then
-                ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 1 4 "$g_targethome_path" "$g_repo_name" "$g_programs_path" "$g_cmd_base_path" \
-                    "$g_temp_path" $g_status_crendential_storage 0
-                l_status=$?
-            else
-                ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 3 4 "$g_targethome_path" "$g_repo_name" "$g_programs_path" "$g_cmd_base_path" \
-                    "$g_temp_path" $g_status_crendential_storage 0
-                l_status=$?
-            fi
-
-            #Si no se acepto almacenar credenciales
-            if [ $l_status -eq 120 ]; then
-                return 120
-            #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-            elif [ $l_status -eq 119 ]; then
-               g_status_crendential_storage=0
-            #Si no se paso las precondiciones iniciales
-            elif [ $l_status -eq 111 ]; then
-                return $l_status
-            fi
-
-        fi
-
-    fi
-
-
-}
-
-
-function _setup_prgs_binaries() {
-
-    #1. Argumentos
-    local p_input_options=$1
-
-
-    local p_list_repo_ids=""
-    if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
-        p_list_repo_ids="$2"
-    fi
-
-
-    #2.Inicialización
-    local l_is_noninteractive=1
-    if [ $gp_type_calling -eq 2 ]; then
-        l_is_noninteractive=0
-    fi
-
-    #5. Descargar y configurar una lista de repositorios de comandos adicionales a instalar (segun una lista de ID de repositorios)
-
-    #¿Se adiciona repositorios adicionales?
-    if [ $p_input_options -gt 0 ]; then
+    #2. Adicionar programas de usuario adicionales
+    if [ $p_flag_user_prgs -eq 0 ] && [ $p_input_options -gt 0 ]; then
 
         #LSP/DAP de Java: jdtls
-        l_option=4194304
+        local l_option=1024
         if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
             if [[ ! $p_list_repo_ids =~ ,jdtls$ ]] && [[ ! $p_list_repo_ids =~ ,jdtls, ]] && [[ ! $p_list_repo_ids =~ ^jdtls, ]]; then
@@ -410,14 +443,14 @@ function _setup_prgs_binaries() {
         fi
 
         #LSP/DAP de .NET : roslyn,netcoredbg
-        l_option=2097152
+        l_option=512
         if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
 
-            if [[ ! $p_list_repo_ids =~ ,roslyn$ ]] && [[ ! $p_list_repo_ids =~ ,roslyn, ]] && [[ ! $p_list_repo_ids =~ ^roslyn, ]]; then
+            if [[ ! $p_list_repo_ids =~ ,omnisharp-ls$ ]] && [[ ! $p_list_repo_ids =~ ,omnisharp-ls, ]] && [[ ! $p_list_repo_ids =~ ^omnisharp-ls, ]]; then
                 if [ -z "$p_list_repo_ids" ]; then
-                    p_list_repo_ids="roslyn"
+                    p_list_repo_ids="omnisharp-ls"
                 else
-                    p_list_repo_ids="${p_list_repo_ids},roslyn"
+                    p_list_repo_ids="${p_list_repo_ids},omnisharp-ls"
                 fi
             fi
 
@@ -433,360 +466,728 @@ function _setup_prgs_binaries() {
 
     fi
 
-    #Instalar los repositorios de comandos
-    if [ ! -z "$p_list_repo_ids" ]; then
+    #3. Validaciones
+    if [ -z "$p_list_repo_ids" ]; then
+        return 1
+    fi
 
-        #Mostrar el titulo de instalacion
-        printf '\n'
-        print_line '─' $g_max_length_line  "$g_color_blue1"
-        printf "> Instalando repositorios %bcomandos/programas%b: '%b%s%b'\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" \
-               "${p_list_repo_ids//,/, }" "$g_color_reset"
-        print_line '─' $g_max_length_line "$g_color_blue1"
+    # Si se instala programas del sistema (fuente, paquete de SO y custom), requiere se root
+    if [ $p_flag_user_prgs -ne 0 ]; then
 
-        #Parametros del script usados hasta el momento:
-        # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
-        # 2> Listado de ID del repositorios a instalar separados por coma.
-        # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
-        # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
-        # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
-        #    "/var/opt/tools" o "~/tools".
-        # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
-        # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
-        # 8> El estado de la credencial almacenada para el sudo.
-        # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
-        #10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1'
-        if [ $l_is_noninteractive -eq 1 ]; then
+        # Solo lo puede instalar root
+        if [ $g_runner_sudo_support -eq 2 ] || [ $g_runner_sudo_support -eq 3 ]; then
 
-            ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 2 "$p_list_repo_ids" "$g_targethome_path" "$g_repo_name" "$g_programs_path" \
-                "$g_cmd_base_path" "$g_temp_path" $g_status_crendential_storage 0 1
-            l_status=$?
-        else
-            ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 4 "$p_list_repo_ids" "$g_targethome_path" "$g_repo_name" "$g_programs_path" \
-                "$g_cmd_base_path" "$g_temp_path" $g_status_crendential_storage 0 1
-            l_status=$?
-        fi
+            printf '%bSe requiere acceso a root%b para instalar paquete del SO "%b%s%b".\n' "$g_color_red1" "$g_color_reset" "$g_color_gray1" \
+                   "$g_default_list_package_ids" "$g_color_reset"
+            return 1
 
-        #Obligar a limpiar el cache: ¿algunos instalacion, instala paquetes?
-        if [ $l_exist_packages_installed -ne 0 ]; then
-            l_exist_packages_installed=0
-        fi
-
-        #Si no se acepto almacenar credenciales
-        if [ $l_status -eq 120 ]; then
-            return 120
-        #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-        elif [ $l_status -eq 119 ]; then
-           g_status_crendential_storage=0
-        #Si no se paso las precondiciones iniciales
-        elif [ $l_status -eq 111 ]; then
-            return $l_status
         fi
 
     fi
 
+    # Si se instala programas del usuario
+    # No validar?
+
+
+    #4. Descargar y configurar una lista de repositorios de comandos adicionales a instalar (segun una lista de ID de repositorios)
+    local l_is_noninteractive=1
+    local l_status
+    if [ $gp_type_calling -eq 2 ]; then
+        l_is_noninteractive=0
+    fi
+
+    #Mostrar el titulo de instalacion
+    printf '\n'
+    print_line '─' $g_max_length_line  "$g_color_blue1"
+
+    if [ $p_flag_user_prgs -ne 0 ]; then
+        printf "> %bSystem Programs >%b Instalando %bprogramas%b de: '%b%s%b'\n" "$g_color_gray1" "$g_color_reset" \
+               "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "${p_list_repo_ids//,/, }" "$g_color_reset"
+    else
+        printf "> %bUser Programs >%b Instalando %bprogramas%b de: '%b%s%b'\n" "$g_color_gray1" "$g_color_reset" \
+               "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "${p_list_repo_ids//,/, }" "$g_color_reset"
+    fi
+
+    print_line '─' $g_max_length_line "$g_color_blue1"
+
+    #Parametros del script usados hasta el momento:
+    # 1> Tipo de llamado: 2/4 (sin menu interactivo/no-interactivo).
+    # 2> Listado de ID del repositorios a instalar separados por coma.
+    # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
+    # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+    # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
+    #    "/var/opt/tools" o "~/tools".
+    # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+    # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    # 8> El estado de la credencial almacenada para el sudo.
+    # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
+    #10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1'
+    #11> Flag para filtrar el listado de repositorios segun el tipo de progrmas. '0' solo programas del usuario, '1' solo programas que no son de usuario.
+    #    Otro valor, no hay filtro. Valor por defecto es '2'.
+    #12> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
+    if [ $l_is_noninteractive -eq 1 ]; then
+
+        ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 2 "$p_list_repo_ids" "$g_targethome_path" "$g_repo_name" "$g_programs_path" \
+            "$g_cmd_base_path" "$g_temp_path" $g_status_crendential_storage 0 1 $p_flag_user_prgs
+        l_status=$?
+    else
+        ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 4 "$p_list_repo_ids" "$g_targethome_path" "$g_repo_name" "$g_programs_path" \
+            "$g_cmd_base_path" "$g_temp_path" $g_status_crendential_storage 0 1 $p_flag_user_prgs
+        l_status=$?
+    fi
+
+    #Si se omitido la instalacion de todos los repositorios
+    if [ $l_status -eq 118 ]; then
+        return 1
+    #Si no se acepto almacenar credenciales
+    elif [ $l_status -eq 120 ]; then
+        return 120
+    #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+       g_status_crendential_storage=0
+    #Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
+    fi
+
+    return 0
 
 }
 
 
 
 
+function _setup_system_tools() {
+
+    #1. Argumentos
+    local p_options=$1
+
+    if [ $p_options -le 0 ]; then
+        return 1
+    fi
+
+
+    #2. Determinar opciones validas
+    local l_flag_setup_vim=1
+    local l_flag_setup_python=1
+
+    local l_option=8
+    if [ $(( $p_options & $l_option )) -eq $l_option ]; then
+        l_flag_setup_vim=0
+    fi
+
+    l_option=16
+    if [ $(( $p_options & $l_option )) -eq $l_option ]; then
+        l_flag_setup_python=0
+    fi
+
+    #echo "p_options=${p_options}"
+
+    # Si no se tiene opocion para instalar
+    if [ $l_flag_setup_vim -ne 0 ] && [ $l_flag_setup_python -ne 0 ]; then
+        return 1
+    fi
+
+    # Solo lo puede instalar root
+    if [ $g_runner_sudo_support -eq 2 ] || [ $g_runner_sudo_support -eq 3 ]; then
+
+        printf '%bSe requiere acceso a root%b para instalar paquete del SO "%b%s%b".\n' "$g_color_red1" "$g_color_reset" "$g_color_gray1" \
+               "$g_default_list_package_ids" "$g_color_reset"
+        return 1
+
+    fi
+
+    #3. Instalar programas de sistemas: ptyhon, vim
+    local l_aux=''
+
+    # Etiqueta para el titulo
+    if [ $l_flag_setup_python -eq 0 ]; then
+
+        if [ -z "$l_aux" ]; then
+            printf -v l_aux '%b%s%b, %b%s%b, %b%s%b' "$g_color_blue1" "python" "$g_color_reset" "$g_color_blue1" "pip" "$g_color_reset" \
+                   "$g_color_blue1" "pipx" "$g_color_reset"
+
+        else
+            printf -v l_aux '%b, %b%s%b, %b%s%b, %b%s%b' "$l_aux" "$g_color_blue1" "python" "$g_color_reset" "$g_color_blue1" "pip" "$g_color_reset" \
+                   "$g_color_blue1" "pipx" "$g_color_reset"
+        fi
+
+    fi
+
+    if [ $l_flag_setup_vim -eq 0 ]; then
+
+        if [ -z "$l_aux" ]; then
+            printf -v l_aux '%b%s%b' "$g_color_blue1" "vim" "$g_color_reset"
+        else
+            printf -v l_aux '%b, %b%s%b' "$l_aux" "$g_color_blue1" "vim" "$g_color_reset"
+        fi
+
+    fi
+
+    # Mostrar el titulo
+    if [ ! -z "$l_aux" ]; then
+
+        #Mostrar el titulo de instalacion
+        printf '\n'
+        print_line '─' $g_max_length_line  "$g_color_blue1"
+
+        printf "> %bSystem Programs >%b Instalando %btools%b: %b\n" "$g_color_gray1" "$g_color_reset" \
+               "$g_color_cian1" "$g_color_reset" "$l_aux"
+
+        print_line '─' $g_max_length_line "$g_color_blue1"
+
+    fi
+
+    # Instalar programnas del sistema: Python y sus gestores de paquetes Pip/Pix
+    local l_status
+    if [ $l_flag_setup_python -eq 0 ]; then
+
+        install_python 1
+        l_status=$?
+
+        # Si no se acepto almacenar credenciales
+        if [ $l_status -eq 120 ]; then
+            return 120
+        # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+        elif [ $l_status -eq 119 ]; then
+            g_status_crendential_storage=0
+        # Si no se paso las precondiciones iniciales
+        elif [ $l_status -eq 111 ]; then
+            return $l_status
+        fi
+
+    fi
+
+    # Instalar programnas del sistema: VIM
+    if [ $l_flag_setup_vim -eq 0 ]; then
+
+        install_vim 1
+        l_status=$?
+
+        # Si no se acepto almacenar credenciales
+        if [ $l_status -eq 120 ]; then
+            return 120
+        # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+        elif [ $l_status -eq 119 ]; then
+            g_status_crendential_storage=0
+        # Si no se paso las precondiciones iniciales
+        elif [ $l_status -eq 111 ]; then
+            return $l_status
+        fi
+
+    fi
+
+
+    return 0
+
+}
+
+
+
+
+
+function _setup_user_tools() {
+
+    #1. Argumentos
+    local p_options=$1
+
+    if [ $p_options -le 0 ]; then
+        return 1
+    fi
+
+    #2. Determinar opciones validas
+    local l_flag_setup_nvim=1
+    local l_flag_setup_nodejs=1
+    local l_flag_setup_basic_pcks=1
+    local l_flag_setup_extra_pcks=1
+
+    local l_option=32
+    if [ $(( $p_options & $l_option )) -eq $l_option ]; then
+        l_flag_setup_nvim=0
+    fi
+
+    l_option=64
+    if [ $(( $p_options & $l_option )) -eq $l_option ]; then
+        l_flag_setup_nodejs=0
+    fi
+
+    l_option=128
+    if [ $(( $p_options & $l_option )) -eq $l_option ]; then
+        l_flag_setup_basic_pcks=0
+    fi
+
+    l_option=256
+    if [ $(( $p_options & $l_option )) -eq $l_option ]; then
+        l_flag_setup_extra_pcks=0
+    fi
+
+
+    # Si no se tiene opocion para instalar
+    if [ $l_flag_setup_nvim -ne 0 ] && [ $l_flag_setup_nodejs -ne 0 ] && [ $l_flag_setup_basic_pcks -ne 0 ] && [ $l_flag_setup_extra_pcks -ne 0 ]; then
+        return 1
+    fi
+
+
+    #3. Instalar programas de usuarios: nodejs, nvim
+    local l_aux=''
+
+    # Etiqueta para el titulo
+    if [ $l_flag_setup_nodejs -eq 0 ]; then
+
+        if [ -z "$l_aux" ]; then
+            printf -v l_aux '%b%s%b' "$g_color_blue1" "nodejs" "$g_color_reset"
+        else
+            printf -v l_aux '%b, %b%s%b' "$l_aux" "$g_color_blue1" "nodejs" "$g_color_reset"
+        fi
+
+    fi
+
+
+    if [ $l_flag_setup_nvim -eq 0 ]; then
+
+        if [ -z "$l_aux" ]; then
+            printf -v l_aux '%b%s%b' "$g_color_blue1" "neovim" "$g_color_reset"
+        else
+            printf -v l_aux '%b, %b%s%b' "$l_aux" "$g_color_blue1" "neovim" "$g_color_reset"
+        fi
+
+    fi
+
+
+    # Validar y mostrar el titulo
+    if [ ! -z "$l_aux" ]; then
+
+        # Solo lo puede instalar ...
+        #if [ $g_runner_sudo_support -eq 2 ] || [ $g_runner_sudo_support -eq 3 ]; then
+
+        #    printf '%bSe requiere acceso a root%b para instalar paquete del SO "%b%s%b".\n' "$g_color_red1" "$g_color_reset" "$g_color_gray1" \
+        #           "$g_default_list_package_ids" "$g_color_reset"
+        #    return 1
+
+        #fi
+
+        #Considerar que se instalan paquetes de SO, ello permitirá limpiar el cache de paquete descargados.
+        if [ $l_exist_packages_installed -ne 0 ]; then
+            l_exist_packages_installed=0
+        fi
+
+        #Mostrar el titulo de instalacion
+        printf '\n'
+        print_line '─' $g_max_length_line  "$g_color_blue1"
+
+        printf "> %bUser Programs >%b Instalando %btools%b: %b\n" "$g_color_gray1" "$g_color_reset" \
+               "$g_color_cian1" "$g_color_reset" "$l_aux"
+
+        print_line '─' $g_max_length_line "$g_color_blue1"
+
+    fi
+
+    # Instalar programnas del Usuario: NodeJS
+    local l_is_nodejs_installed=-1   #(-1) No determinado, (0) Instalado, (1) No instalado
+    local l_status
+    if [ $l_flag_setup_nodejs -eq 0 ]; then
+
+        install_nodejs 1 "$g_programs_path"
+        l_status=$?
+
+        # Si no se acepto almacenar credenciales
+        if [ $l_status -eq 120 ]; then
+            return 120
+        # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+        elif [ $l_status -eq 119 ]; then
+            g_status_crendential_storage=0
+        # Si no se paso las precondiciones iniciales
+        elif [ $l_status -eq 111 ]; then
+            return $l_status
+        fi
+
+        if [ $l_status -eq 0 ]; then
+            l_is_nodejs_installed=0
+        else
+            l_is_nodejs_installed=1
+        fi
+    fi
+
+
+
+    # Instalar programnas del Usuario: NoeVIM
+    if [ $l_flag_setup_nvim -eq 0 ]; then
+
+        install_neovim 1 "$g_programs_path"
+        l_status=$?
+
+        # Si no se acepto almacenar credenciales
+        if [ $l_status -eq 120 ]; then
+            return 120
+        # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+        elif [ $l_status -eq 119 ]; then
+            g_status_crendential_storage=0
+        # Si no se paso las precondiciones iniciales
+        elif [ $l_status -eq 111 ]; then
+            return $l_status
+        fi
+
+    fi
+
+
+    #3. Instalar programas de usuarios: paquetes globales de nodejs
+
+    # Si no se tiene opciones a instalar
+    if [ $l_flag_setup_basic_pcks -ne 0 ] && [ $l_flag_setup_extra_pcks -ne 0 ]; then
+        return 0
+    fi
+
+    # Si aun se desconoce si nodejs, determinar si nodejs esta instalado
+    local l_version
+    if [ $l_is_nodejs_installed -eq -1 ]; then
+
+        #Validar si 'node' esta instalado (puede no esta en el PATH)
+        l_version=$(get_nodejs_version "$g_programs_path")
+        l_status=$?
+
+        if [ $l_status -eq 3 ]; then
+            l_is_nodejs_installed=1
+        else
+            l_is_nodejs_installed=0
+        fi
+
+    fi
+
+    # Validar si nodejs esta instalado
+    if [ $l_is_nodejs_installed -eq 1 ]; then
+        printf 'NodeJS > %bNodeJS%b NO esta instalado o NO esta el PATH del usuario. Ello es requerido para instalar los paquetes.\n' \
+               "$g_color_red1" "$g_color_reset"
+        return 1
+    fi
+
+    # Validar que el runner es root el modo suplantacion del usuario objetivo
+    if [ $g_runner_is_target_user -ne 0 ]; then
+
+        printf 'NodeJS > La instalación de paquetes de NodeJS globales lo tiene que ejecutar con el usuario "%b%s%b".\n' \
+               "$g_color_gray1" "$g_targethome_owner" "$g_color_yellow1"
+
+        return 1
+    fi
+
+    # Validar que el owner del folder de nodejs puede instalar paquetes globales para no generar problemas en los permisos.
+    local l_owner_nodejs
+    l_owner_nodejs=$(get_owner_of_nodejs "$g_programs_path")
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        printf 'NodeJS > No se pueden obtener el owner del folder de "%bNodeJS%b".\n' "$g_color_gray1" "$g_color_reset"
+        return 1
+    fi
+
+    if [ "$g_runner_user" != "$l_owner_nodejs" ]; then
+        printf 'NodeJS > No se debe instalar paquetes globales en "%b%s%b" usando como usuario "%b%s%b". Lo debe realizar el owner "%b%s%b".\n' \
+               "$g_color_gray1" "$l_nodejs_bin_path" "$g_color_reset" "$g_color_gray1" "$g_runner_user" "$g_color_reset" \
+               "$g_color_gray1" "$l_owner_nodejs" "$g_color_reset"
+        return 1
+    fi
+
+
+    # Etiqueta para el titulo
+    #  (6) NodeJS > Instalar paquetes globales basicos:
+    #  (7) NodeJS > Instalar paquetes globales sobre LSP/DAP:
+    #  (8) NodeJS > Instalar paquetes globales otros:
+    local l_prg_options=0
+    l_aux=''
+
+    if [ $l_flag_setup_basic_pcks -eq 0 ]; then
+
+        ((l_prg_options = l_prg_options + ${ga_options_others[6]}))
+        if [ -z "$l_aux" ]; then
+            printf -v l_aux '%b%s%b node package' "$g_color_blue1" "basic" "$g_color_reset"
+        else
+            printf -v l_aux '%b, %b%s%b node package' "$l_aux" "$g_color_blue1" "basic" "$g_color_reset"
+        fi
+
+    fi
+
+    if [ $l_flag_setup_extra_pcks -eq 0 ]; then
+
+        ((l_prg_options = l_prg_options + ${ga_options_others[7]} + ${ga_options_others[8]}))
+        if [ -z "$l_aux" ]; then
+            printf -v l_aux '%b%s%b node package' "$g_color_blue1" "extra" "$g_color_reset"
+        else
+            printf -v l_aux '%b, %b%s%b node package' "$l_aux" "$g_color_blue1" "extra" "$g_color_reset"
+        fi
+
+    fi
+
+    # Mostrar el titulo de instalacion
+    printf '\n'
+    print_line '─' $g_max_length_line  "$g_color_blue1"
+
+    printf "> %bUser Programs >%b Instalando %bNodeJS packages%b: %b\n" "$g_color_gray1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset" "$l_aux"
+
+    print_line '─' $g_max_length_line "$g_color_blue1"
+
+
+    # Instalar paquetes de NodeJS
+    l_status=0
+    local l_is_noninteractive=1
+    if [ $gp_type_calling -eq 2 ]; then
+        l_is_noninteractive=0
+    fi
+
+    #Parametros usados por el script:
+    # 1> Tipo de configuración: 1/2 (instalación sin un menu interactivo/no-interactivo).
+    # 2> Opciones de menu a ejecutar: entero positivo.
+    # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
+    # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+    # 5> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
+    # 6> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+    # 7> El estado de la credencial almacenada para el sudo.
+    if [ $l_is_noninteractive -eq 1 ]; then
+        ${g_shell_path}/bash/bin/linuxsetup/04_install_profile.bash 1 $l_prg_options "$g_targethome_path" "$g_repo_name" \
+            $g_status_crendential_storage
+        l_status=$?
+    else
+        ${g_shell_path}/bash/bin/linuxsetup/04_install_profile.bash 2 $l_prg_options "$g_targethome_path" "$g_repo_name" \
+            $g_status_crendential_storage
+        l_status=$?
+    fi
+
+
+    #Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+        g_status_crendential_storage=0
+    #Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
+    fi
+
+    return 0
+
+}
+
+
+
+
+# Configurar archivos del home del usuario
+# > Parametros de entrada
+# > Parametros de salida
+#    0> Se instala el programam
+#    1> No se instala ningun programa (no se cumple las precondiciones)
 function _setup_user_profile() {
 
     #1. Argumentos
     local p_input_options=$1
 
 
+    #2. Validaciones
+    if [ $p_input_options -le 0 ]; then
+        return 1
+    fi
 
-    #2.Inicialización
+    #3. Determinar las opciones elegidas por el usuario
+
+    # Opciones generales usando 'ga_options_others'
+    #     (0) Configurar archivos del profile del usuario actual
+    #     (1) Flag para overwrite symbolic link en caso de existir
+    #     (2) Flag para overwrite file en caso de existir
+    #     (3) Python > Instalar paquetes de usuario basicos
+    #     (4) Python > Instalar paquetes de usuario sobre LSP/DAP
+    #     (5) Python > Instalar paquetes de usuario otros
+    local -a la_options_others=(1 1 1 1 1 1)
+
+    # > Crear archivos del profile del usuario
+    l_option=2048
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_others[0]=0
+    fi
+
+    # > Flag overwrite symbolic link en caso de existir
+    l_option=4096
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_others[1]=0
+    fi
+
+    # > Flag overwrite file en caso de existir
+    l_option=8192
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_others[2]=0
+    fi
+
+    # > Instalar paquetes del usuario basicos
+    l_option=4194304
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_others[3]=0
+    fi
+
+    # > Instalar paquetes del usuario adicionales
+    l_option=8388608
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_others[4]=0
+        la_options_others[5]=0
+    fi
+
+
+    # Opciones para configurar VIM/NeoVIM usando 'ga_options_vim' y 'ga_options_nvim'
+    #     (0) Flag para configurar el modo developer
+    #     (1) Configuración: Crear los archivos de configuración
+    #     (2) Configuración: Descargar los plugins e indexar su documentación
+    #     (3) Configuración: Descargar los plugins sin indexar su documentación
+    #     (4) Indexar la documentación de los plugins existentes
+    local -a la_options_vim=(1 1 1 1 1)
+    local -a la_options_nvim=(1 1 1 1 1)
+
+    # > VIM > Flag para configurar el modo developer
+    l_option=16384
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_vim[0]=0
+    fi
+
+    # > VIM > Descargar plugins
+    l_option=32768
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_vim[3]=0
+    fi
+
+    # > VIM > Crear config files e indexar plugins existentes
+    l_option=65536
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_vim[1]=0
+        la_options_vim[4]=0
+    fi
+
+    # > VIM > Crear config files, Descargar plugins e indexarlos
+    l_option=131072
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_vim[1]=0
+        la_options_vim[2]=0
+    fi
+
+
+    # > NeoVIM > Flag para configurar el modo developer
+    l_option=262144
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_vim[0]=0
+    fi
+
+    # > NeoVIM > Descargar plugins
+    l_option=524288
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_vim[3]=0
+    fi
+
+    # > NeoVIM > Crear config files e indexar plugins existentes
+    l_option=1048576
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_vim[1]=0
+        la_options_vim[4]=0
+    fi
+
+    # > NeoVIM > Crear config files, Descargar plugins e indexarlos
+    l_option=2097152
+    if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
+        la_options_vim[1]=0
+        la_options_vim[2]=0
+    fi
+
+
+
+
+    #4. Determinar el valor de estas las opciones elegidas
+    local l_i=0
+    local l_prg_options=0
+    local l_info='Se realizara las siguientes configuraciones en el profile:'
+
+    for (( l_i = 0; l_i < 6; l_i++ )); do
+
+        if [ ${la_options_others[${l_i}]} -ne 0 ]; then
+            continue
+        fi
+
+        ((l_prg_options= l_prg_options + ${ga_options_others[${l_i}]}))
+        printf -v l_info '%s\n   > %b%b%b %b(opción de "04_install_profile": %s)%b' "$l_info" "$g_color_gray1" "${ga_title_others[${l_i}]}" \
+               "$g_color_reset" "$g_color_gray1" "${ga_options_others[${l_i}]}" "$g_color_reset"
+
+    done
+
+    for (( l_i = 0; l_i < ${#ga_options_vim[@]}; l_i++ )); do
+
+        if [ ${la_options_vim[${l_i}]} -ne 0 ]; then
+            continue
+        fi
+
+        ((l_prg_options= l_prg_options + ${ga_options_vim[${l_i}]}))
+        printf -v l_info '%s\n   > %bVIM     >%b %b%s%b %b(opción de "04_install_profile": %s)%b' "$l_info" "$g_color_gray1" "$g_color_reset" \
+               "$g_color_blue1" "${ga_title_config[${l_i}]}" "$g_color_reset" "$g_color_gray1" "${ga_options_vim[${l_i}]}" "$g_color_reset"
+
+    done
+
+    for (( l_i = 0; l_i < ${#ga_options_nvim[@]}; l_i++ )); do
+
+        if [ ${la_options_nvim[${l_i}]} -ne 0 ]; then
+            continue
+        fi
+
+        ((l_prg_options= l_prg_options + ${ga_options_nvim[${l_i}]}))
+        printf -v l_info '%s\n   > %bNeoVIM  >%b %b%s%b %b(opción de "04_install_profile": %s)%b' "$l_info" "$g_color_gray1" "$g_color_reset" \
+            "$g_color_blue1" "${ga_title_config[${l_i}]}" "$g_color_reset" "$g_color_gray1" "${ga_options_nvim[${l_i}]}" "$g_color_reset"
+
+    done
+
+
+    # Validar si tiene opciones a configurar
+    if [ $l_prg_options -le 0 ]; then
+        return 1
+    fi
+
+    #5. Instalar/Configurar el profile
+    local l_status
     local l_is_noninteractive=1
     if [ $gp_type_calling -eq 2 ]; then
         l_is_noninteractive=0
     fi
 
-    #6. Instalar y/o Configurar todo lo relacionado con VIM/NeoVIM: NodeJs (y sus paquetes globales), Python/Pip (y sus paquetes de usuario), VIM y NeoVIM
 
-    #6.1. Determinar las opciones elegidas por el usuario
-    local la_options_config_vim=()
-    local la_options_config_nvim=()
-    local la_options_install=()
-    local la_options_general=()
-    local l_i=0
-    local l_info=''
-    local l_prg_options=0
+    #Mostrar el titulo de instalacion
+    printf '\n'
+    print_line '─' $g_max_length_line  "$g_color_blue1"
+    printf "> Configurando el profile del usuario\n"
+    print_line '─' $g_max_length_line "$g_color_blue1"
+    printf '%b\n' "$l_info"
 
-    if [ $p_input_options -gt 0 ]; then
-
-        #6.1.1. Determinar las opciones elegidas
-
-        #Opciones recomendados para ejecutar con root:
-        # (0004096) Instalar NodeJS y Npm
-        # (0008192) Instalar paquetes globales de NodeJS: 'Prettier'
-        # (0016384) Instalar Python y Pip
-        # (0032768) Instalar VIM
-        # (0065536) Instalar NeoVIM
-        # (0131072) Descargar Plugins de Editor de VIM
-        # (0262144) Descargar Plugins de Editor de NeoVIM
-        # (0524288) Descargar Plugins de IDE    de VIM
-        # (1048576) Descargar Plugins de IDE    de NeoVIM
-
-
-        #Solo actualizar los paquetes del SO, si no se hizo antes
-        # 0> Actualizar los paquetes del SO
-        if [ $p_flag_upgrade_os_pkgs -eq 0 ] && [ $l_exist_packages_installed -ne 0 ]; then
-            la_options_general[0]=0
-        fi
-
-        # 3> Instalar NodeJS
-        l_option=4096
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_install[3]=0
-        fi
-
-        # 4> Instalar paquete globales de NodeJS: 'Prettier'
-        l_option=8192
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_install[4]=0
-        fi
-
-        # 5> Instalar paquete globales de NodeJS: 'Prettier', 'NeoVIM' y 'TreeSitter CLI'
-        #l_option=xxxx
-        #if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-        #    la_options_install[5]=0
-        #fi
-
-        # 0> Instalar Python
-        l_option=16384
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_install[0]=0
-        fi
-
-        # 6> Instalar VIM
-        l_option=32768
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_install[6]=0
-        fi
-
-        # 7> Instalar NeoVIM
-        l_option=65536
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_install[7]=0
-        fi
-
-        # 3> Descargar plugins de Editor (sin indexarlos)
-        l_option=131072
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_vim[3]=0
-        fi
-
-        # 5> Descargar plugins de IDE (sin indexarlos)
-        l_option=262144
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_nvim[5]=0
-        fi
-
-        # 3> Descargar plugins de Editor (sin indexarlos)
-        l_option=524288
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_vim[3]=0
-        fi
-
-        # 5> Descargar plugins de IDE (sin indexarlos)
-        l_option=1048576
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_nvim[5]=0
-        fi
-
-
-        #Opciones recomendados para ejecutar con el usuario:
-        # (0000001) Configurar el profile del usuario
-        # (0000002) Instalar paquetes usuario de Python: 'jtbl'
-        # (0000004) VIM como Editor    > Crear archivos de configuración, Descargar plugins e indexarlos
-        # (0000008) VIM como IDE       > Crear archivos de configuración, Descargar plugins e indexarlos, Inicializar los plugins
-        # (0000016) NeoVIM como Editor > Crear archivos de configuración, Descargar plugins e indexarlos
-        # (0000032) NeoVIM como IDE    > Crear archivos de configuración, Descargar plugins e indexarlos, Inicializar los plugins
-        # (0000064) VIM como Editor    > Crear archivos de configuración, Indexar plugins
-        # (0000128) VIM como IDE       > Crear archivos de configuración, Indexar plugins, Inicializar los plugins
-        # (0000256) NeoVIM como Editor > Crear archivos de configuración, Indexar plugins
-        # (0000512) NeoVIM como IDE    > Crear archivos de configuración, Indexar plugins, Inicializar los plugins
-
-
-        # 1> Crear los enlaces simbolicos del profile del usuario
-        l_option=1
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_general[1]=0
-        fi
-
-        #Siempre recrear los enlaces simbolicos si no existe
-        # 2> Flag para re-crear un enlaces simbolicos en caso de existir
-        la_options_general[2]=0
-
-        # 1> Instalar paquete de usuario de Python: 'jtbl'
-        l_option=2
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_install[1]=0
-        fi
-
-        # 2> Instalar paquete de usuario de Python: 'jtbl', 'compiledb', 'rope' y 'pynvim'
-        #l_option=xxxx
-        #if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-        #    la_options_install[1]=0
-        #fi
-
-        # 0> Crear archivos de configuración como Editor
-        # 2> Descargar plugins de Editor e indexarlos
-        l_option=4
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_vim[0]=0
-            la_options_config_vim[2]=0
-        fi
-
-        # 1> Crear archivos de configuración como IDE
-        # 4> Descargar plugins de IDE e indexarlos
-        # 7> Inicializar los plugins de IDE
-        l_option=8
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_vim[1]=0
-            la_options_config_vim[4]=0
-            la_options_config_vim[7]=0
-        fi
-
-        # 0> Crear archivos de configuración como Editor
-        # 2> Descargar plugins de Editor e indexarlos
-        l_option=16
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_nvim[0]=0
-            la_options_config_nvim[2]=0
-        fi
-
-        # 1> Crear archivos de configuración como IDE
-        # 4> Descargar plugins de IDE e indexarlos
-        # 7> Inicializar los plugins de IDE
-        l_option=32
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_nvim[1]=0
-            la_options_config_nvim[4]=0
-            la_options_config_nvim[7]=0
-        fi
-
-        # 0> Crear archivos de configuración como Editor
-        # 6> Indexar la documentación (de plugins anteriormente descargados)
-        l_option=64
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_vim[0]=0
-            la_options_config_vim[6]=0
-        fi
-
-        # 1> Crear archivos de configuración como IDE
-        # 6> Indexar la documentación (de plugins anteriormente descargados)
-        # 7> Inicializar los plugins de IDE
-        l_option=128
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_vim[1]=0
-            la_options_config_vim[6]=0
-            la_options_config_vim[7]=0
-        fi
-
-        # 0> Crear archivos de configuración como Editor
-        # 6> Indexar la documentación (de plugins anteriormente descargados)
-        l_option=256
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_nvim[0]=0
-            la_options_config_nvim[6]=0
-        fi
-
-        # 1> Crear archivos de configuración como IDE
-        # 6> Indexar la documentación (de plugins anteriormente descargados)
-        # 7> Inicializar los plugins de IDE
-        l_option=512
-        if [ $(( $p_input_options & $l_option )) -eq $l_option ]; then
-            la_options_config_nvim[1]=0
-            la_options_config_nvim[6]=0
-            la_options_config_nvim[7]=0
-        fi
-
-        #6.1.1. Determinar el valor de estas las opciones elegidas
-        l_prg_options=0
-        l_info='Se realizara las siguientes instalaciones/configuraciones:'
-
-        for (( l_i = 0; l_i < ${#ga_options_general[@]}; l_i++ )); do
-            if [ "${la_options_general[${l_i}]}" = "0" ]; then
-                ((l_prg_options= l_prg_options + ${ga_options_general[${l_i}]}))
-                printf -v l_info '%s\n   > General > %b%s%b %b(opción de "02_install_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_general[${l_i}]}" \
-                       "$g_color_reset" "$g_color_gray1" "${ga_options_general[${l_i}]}" "$g_color_reset"
-            fi
-        done
-
-        for (( l_i = 0; l_i < ${#ga_options_install[@]}; l_i++ )); do
-            if [ "${la_options_install[${l_i}]}" = "0" ]; then
-                ((l_prg_options= l_prg_options + ${ga_options_install[${l_i}]}))
-                printf -v l_info '%s\n   > Instalar %b%s%b %b(opción de "02_install_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_install[${l_i}]}" \
-                       "$g_color_reset" "$g_color_gray1" "${ga_options_install[${l_i}]}" "$g_color_reset"
-            fi
-        done
-
-        for (( l_i = 0; l_i < ${#ga_options_config_vim[@]}; l_i++ )); do
-            if [ "${la_options_config_vim[${l_i}]}" = "0" ]; then
-                ((l_prg_options= l_prg_options + ${ga_options_config_vim[${l_i}]}))
-                printf -v l_info '%s\n   > Configuración VIM   > %b%s%b %b(opción de "02_install_profile": %s)%b' "$l_info" "$g_color_blue1" "${ga_title_config[${l_i}]}" \
-                       "$g_color_reset" "$g_color_gray1" "${ga_options_config_vim[${l_i}]}" "$g_color_reset"
-            fi
-        done
-
-        for (( l_i = 0; l_i < ${#ga_options_config_nvim[@]}; l_i++ )); do
-            if [ "${la_options_config_nvim[${l_i}]}" = "0" ]; then
-                ((l_prg_options= l_prg_options + ${ga_options_config_nvim[${l_i}]}))
-                printf -v l_info '%s\n   > Configuración NeoVIM > %b%s%b %b(opción de "02_install_profile": %s)%b' "$l_info" "$g_color_blue1" \
-                    "${ga_title_config[${l_i}]}" "$g_color_reset" "$g_color_gray1" "${ga_options_config_nvim[${l_i}]}" "$g_color_reset"
-            fi
-        done
-
+    #Parametros usados por el script:
+    # 1> Tipo de configuración: 1/2 (instalación sin un menu interactivo/no-interactivo).
+    # 2> Opciones de menu a ejecutar: entero positivo.
+    # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
+    # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+    # 5> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
+    # 6> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+    # 7> El estado de la credencial almacenada para el sudo.
+    if [ $l_is_noninteractive -eq 1 ]; then
+        ${g_shell_path}/bash/bin/linuxsetup/04_install_profile.bash 1 $l_prg_options "$g_targethome_path" "$g_repo_name" \
+            $g_status_crendential_storage
+        l_status=$?
+    else
+        ${g_shell_path}/bash/bin/linuxsetup/04_install_profile.bash 2 $l_prg_options "$g_targethome_path" "$g_repo_name" \
+            $g_status_crendential_storage
+        l_status=$?
     fi
 
-    #6.3. Instalar/Configurar el profile
-    if [ $l_prg_options -ne 0 ] && [ $l_prg_options -ne 4 ] && [ $l_prg_options -ne 5 ]; then
 
-       #Mostrar el titulo de instalacion
-       printf '\n'
-       print_line '─' $g_max_length_line  "$g_color_blue1"
-       printf "> Instalando/configurando para VIM/NeoVIM como Editor/IDE\n"
-       print_line '─' $g_max_length_line "$g_color_blue1"
-       printf '%b\n' "$l_info"
-
-       #Parametros usados por el script:
-       # 1> Tipo de configuración: 1/2 (instalación sin un menu interactivo/no-interactivo).
-       # 2> Opciones de menu a ejecutar: entero positivo.
-       # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
-       # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
-       # 5> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git.
-       # 6> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
-       # 7> El estado de la credencial almacenada para el sudo.
-       if [ $l_is_noninteractive -eq 1 ]; then
-           ${g_shell_path}/bash/bin/linuxsetup/04_install_profile.bash 1 $l_prg_options "$g_targethome_path" "$g_repo_name" \
-               $g_status_crendential_storage
-           l_status=$?
-       else
-           ${g_shell_path}/bash/bin/linuxsetup/04_install_profile.bash 2 $l_prg_options "$g_targethome_path" "$g_repo_name" \
-               $g_status_crendential_storage
-           l_status=$?
-       fi
-
-       #Considerar que siempre se instalan paquetes de SO, es decir se debe limpiar el cache de paquete descargados.
-       if [ $l_exist_packages_installed -ne 0 ]; then
-           l_exist_packages_installed=0
-       fi
-
-       #Si no se acepto almacenar credenciales
-       if [ $l_status -eq 120 ]; then
-           return 120
-       #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
-       elif [ $l_status -eq 119 ]; then
-           g_status_crendential_storage=0
-        #Si no se paso las precondiciones iniciales
-        elif [ $l_status -eq 111 ]; then
-            return $l_status
-       fi
-
+    #Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    #Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+        g_status_crendential_storage=0
+    #Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
     fi
+
+    return 0
+
 }
 
 
@@ -807,11 +1208,6 @@ function g_install_options() {
         p_input_options=$1
     fi
 
-    #if [ $p_input_options -le 0 ]; then
-    #    echo "ERROR: Argumento de opciones \"${p_input_options}\" es incorrecta"
-    #    return 99
-    #fi
-
     local p_list_repo_ids=""
     if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
         p_list_repo_ids="$2"
@@ -827,37 +1223,154 @@ function g_install_options() {
         p_flag_clean_os_cache=0
     fi
 
-    local p_flag_upgrade_os_pkgs=1
-    if [ "$5" = "0" ]; then
-        p_flag_upgrade_os_pkgs=0
-    fi
 
     #2.Inicialización
-    local l_is_noninteractive=1
-    if [ $gp_type_calling -eq 2 ]; then
-        l_is_noninteractive=0
-    fi
+    local l_status
 
-    #Flag '0' cuando no se realizo ninguna instalacion de paquetes
+    # Flag '0' cuando no se realizo ninguna instalacion de paquetes
     local l_exist_packages_installed=1
 
 
 
+    #3. Instalar paquetes del SO
+    _setup_os_package $p_input_options "$p_list_pckg_ids"
+    l_status=$?
+
+    # Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+        g_status_crendential_storage=0
+    # Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
+    fi
+
+    if [ "$l_status" -ne 1 ]; then
+        l_exist_packages_installed=0
+    fi
 
 
-    #7. Limpiar el cache, si se instalo paquetes
+
+    #4. Instalar programnas del sistema: comandos basicos
+    _setup_basic_system_cmd $p_input_options
+    l_status=$?
+
+    # Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+        g_status_crendential_storage=0
+    # Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
+    fi
+
+
+
+    #5. Instalar programnas del sistema, fuentes, paquetes OS y custom
+    _setup_programs 1 "$p_list_repo_ids"
+    l_status=$?
+
+    # Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+        g_status_crendential_storage=0
+    # Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
+    fi
+
+
+
+    #6. Instalar programnas del usuario
+    _setup_programs 0 "$p_list_repo_ids" $p_input_options
+    l_status=$?
+
+    # Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+        g_status_crendential_storage=0
+    # Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
+    fi
+
+
+
+    #6. Instalar tools: Python, Vim
+    _setup_system_tools $p_input_options
+    l_status=$?
+
+    # Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+        g_status_crendential_storage=0
+    # Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
+    fi
+
+
+
+    #6. Instalar tools: NodeJS, NeoVIM
+    _setup_user_tools $p_input_options
+    l_status=$?
+
+    # Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+        g_status_crendential_storage=0
+    # Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
+    fi
+
+
+
+    #7. Configurar el profile del usuario
+    _setup_user_profile $p_input_options
+    l_status=$?
+
+    # Si no se acepto almacenar credenciales
+    if [ $l_status -eq 120 ]; then
+        return 120
+    # Si se almaceno las credenciales dentro del script invocado, el script caller (este script), es el responsable de caducarlo.
+    elif [ $l_status -eq 119 ]; then
+        g_status_crendential_storage=0
+    # Si no se paso las precondiciones iniciales
+    elif [ $l_status -eq 111 ]; then
+        return $l_status
+    fi
+
+
+
+    #8. Limpiar el cache, si se instalo paquetes
     if [ $p_flag_clean_os_cache -eq 0 ] && [ $l_exist_packages_installed -eq 0 ]; then
         printf '\n%bClean packages cache%b...\n' "$g_color_gray1" "$g_color_reset"
         clean_os_cache $g_os_subtype_id $l_is_noninteractive
     fi
 
-    #8. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
+
+
+    #9. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
     #   Si no se invoca usando el menú y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
     if [ $g_status_crendential_storage -eq 0 ] && [ $gp_type_calling -eq 0 ]; then
     #if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
         clean_sudo_credencial
     fi
 
+    return 0
 
 }
 
@@ -866,7 +1379,12 @@ function g_install_options() {
 function _show_menu_install_core() {
 
     #0. Parametros
-    local l_pckg_ids="${1//,/, }"
+    local l_repo_ids="$1"
+    if [ ! -z "$l_repo_ids" ]; then
+        l_repo_ids="${1//,/, }"
+    fi
+
+    local l_pckg_ids="${2//,/, }"
 
     #1. Menu
     print_text_in_center "Menu de Opciones (Install/Configuration)" $g_max_length_line "$g_color_green1"
@@ -876,68 +1394,76 @@ function _show_menu_install_core() {
     local l_max_digits=8
 
 
-    printf " ( ) Setup a nivel sistema %b(el owner es root y estan fuera de home del usuario)%b:\n" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) Instalar %bpaquetes basicos%b: %b%s%b\n" "$g_color_green1" "1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" \
-           "$l_pckg_ids" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) Instalar %bcomandos basicos%b: %bfzf, bat, jq, yq, ripgrep, delta, oh-my-posh, fd, zoxide y eza.%b\n" "$g_color_green1" \
-           "2" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) Instalar %bVIM%b\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bPython%b > Instalar Python y sus gestores pip y pipx\n" "$g_color_green1" "8" \
+    printf " ( ) Programas del sistema %b(fuera del home del usuario y el owner es root)%b:\n" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > Actualizar %bpaquetes existes%b del SO\n" "$g_color_green1" "1" "$g_color_reset" "$g_color_gray1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > Instalar %bpaquetes basicos%b: %b%s (modificado segun parametro)%b\n" "$g_color_green1" "2" "$g_color_reset" "$g_color_gray1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$l_pckg_ids" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > Instalar %bcomandos basicos%b %b(opcion 4 de 01_setup_binaries.bash)%b\n" "$g_color_green1" \
+           "4" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > %bVIM%b    > Instalar VIM\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_gray1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bDeveloper%b > %bPython%b > Instalar Python y sus gestores pip y pipx\n" "$g_color_green1" "16" \
            "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
 
 
 
-    printf " ( ) Setup a nivel global cuyo owner es un usuario especifico %b(puede ser root, estan fuera de home del usuario)%b:\n" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) Instalar %bNeoVIM%b\n" "$g_color_green1" "16" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bNodeJS%b > Instalar NodeJS\n" "$g_color_green1" "32" \
+    printf " ( ) Programas global del usuario %b(fuera de home del usuario, owner puede ser root)%b:\n" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > %bNeoVIM%b > Instalar NeoVIM\n" "$g_color_green1" "32" "$g_color_reset" "$g_color_gray1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bDeveloper%b > %bNodeJS%b > Instalar NodeJS\n" "$g_color_green1" "64" \
            "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bNodeJS%b > Instalar paquetes globales basicos\n" "$g_color_green1" "64" \
+    printf "     (%b%${l_max_digits}d%b) %bDeveloper%b > %bNodeJS%b > Instalar paquetes globales basicos\n" "$g_color_green1" "128" \
            "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bNodeJS%b > Instalar paquetes globales adicionales\n" "$g_color_green1" "128" \
+    printf "     (%b%${l_max_digits}d%b) %bDeveloper%b > %bNodeJS%b > Instalar paquetes globales adicionales\n" "$g_color_green1" "256" \
            "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bOtros%b  > LSP/DAP de .NET: %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "256" \
-           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bOtros%b  > LSP/DAP de Java: %bEclipse JDT LS%b\n" "$g_color_green1" "512" \
-           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bDeveloper%b > %bOtros%b  > LSP/DAP de .NET: %bOmnisharp-Roslyn, NetCoreDbg%b\n" "$g_color_green1" "512" \
+           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bDeveloper%b > %bOtros%b  > LSP/DAP de Java: %bEclipse JDT LS%b\n" "$g_color_green1" "1024" \
+           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
 
     printf " ( ) Setup a nivel usuario %b(siempre estan en el home del usuario)%b:\n" "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) Configurar el %bprofile del usuario%b\n" "$g_color_green1" "1024" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-
-    printf "     (%b%${l_max_digits}d%b) %bModo basico%b    > %bVIM%b    > Descargar plugins\n" "$g_color_green1" "2048" "$g_color_reset" "$g_color_gray1" \
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > Crear %barchivos del profile%b del usuario\n" "$g_color_green1" "2048" "$g_color_reset" "$g_color_gray1" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo basico%b    > %bVIM%b    > Crear config files e indexar plugins existentes\n" "$g_color_green1" "4096" \
-           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo basico%b    > %bVIM%b    > Crear config files, Descargar plugins e indexarlos\n" "$g_color_green1" "8192" \
-           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo basico%b    > %bNeoVIM%b > Descargar plugins\n" "$g_color_green1" "16384" "$g_color_reset" "$g_color_gray1" \
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > Flag %boverwrite symbolic link%b en caso de existir\n" "$g_color_green1" "4096" "$g_color_reset" "$g_color_gray1" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo basico%b    > %bNeoVIM%b > Crear config files e indexar plugins existentes\n" "$g_color_green1" "32768" \
-           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo basico%b    > %bNeoVIM%b > Crear config files, Descargar plugins e indexarlos\n" "$g_color_green1" "65536" \
-           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-
-
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bVIM%b    > Descargar plugins\n" "$g_color_green1" "131072" "$g_color_reset" "$g_color_gray1" \
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > Flag %boverwrite file%b en caso de existir\n" "$g_color_green1" "8192" "$g_color_reset" "$g_color_gray1" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bVIM%b    > Crear config files e indexar plugins existentes\n" "$g_color_green1" "262144" \
-           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bVIM%b    > Crear config files, Descargar plugins e indexarlos\n" "$g_color_green1" "524288" \
-           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bNeoVIM%b > Descargar plugins\n" "$g_color_green1" "1048576" "$g_color_reset" "$g_color_gray1" \
+
+    printf "     (%b%${l_max_digits}d%b) %bDeveloper%b > %bVIM%b    > Flag para configurar el modo developer\n" "$g_color_green1" "16384" "$g_color_reset" "$g_color_gray1" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bNeoVIM%b > Crear config files e indexar plugins existentes\n" "$g_color_green1" "2097152" \
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > %bVIM%b    > Descargar plugins\n" "$g_color_green1" "32768" "$g_color_reset" "$g_color_gray1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > %bVIM%b    > Crear config files e indexar plugins existentes\n" "$g_color_green1" "65536" \
            "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bNeoVIM%b > Crear config files, Descargar plugins e indexarlos\n" "$g_color_green1" "4194304" \
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > %bVIM%b    > Crear config files, Descargar plugins e indexarlos\n" "$g_color_green1" "131072" \
+           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bDeveloper%b > %bNeoVIM%b > Flag para configurar el modo developer\n" "$g_color_green1" "262144" "$g_color_reset" "$g_color_gray1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > %bNeoVIM%b > Descargar plugins\n" "$g_color_green1" "524288" "$g_color_reset" "$g_color_gray1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > %bNeoVIM%b > Crear config files e indexar plugins existentes\n" "$g_color_green1" "1048576" \
+           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > %bNeoVIM%b > Crear config files, Descargar plugins e indexarlos\n" "$g_color_green1" "2097152" \
            "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
 
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bPython%b > Instalar paquetes del usuario basicos\n" "$g_color_green1" "8388608" \
+
+    printf "     (%b%${l_max_digits}d%b) %bDeveloper%b > %bPython%b > Instalar paquetes del usuario basicos\n" "$g_color_green1" "4194304" \
            "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) %bModo developer%b > %bPython%b > Instalar paquetes del usuario adicionales\n" "$g_color_green1" "16777216" \
+    printf "     (%b%${l_max_digits}d%b) %bDeveloper%b > %bPython%b > Instalar paquetes del usuario adicionales\n" "$g_color_green1" "8388608" \
            "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
 
 
+    printf " (0) Programas adicionales de %busuario%b/%bsistema%b que siempre se instalarán:\n" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
 
+    if [ -z "$l_repo_ids" ]; then
+        printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > %bNingun%b programa adicional se instalará\n" "$g_color_green1" "0" \
+               "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+    else
+        printf "     (%b%${l_max_digits}d%b) %bGeneral%b   > Programas: %b%s%b\n" "$g_color_green1" "0" \
+               "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_repo_ids"  "$g_color_reset"
+    fi
 
     print_line '-' $g_max_length_line "$g_color_gray1"
 
@@ -947,13 +1473,15 @@ function _show_menu_install_core() {
 function g_install_main() {
 
     #0. Parametros
+    local p_list_repo_ids="$1"
+
     local p_list_pckg_ids="$g_default_list_package_ids"
-    if [ ! -z "$1" ]; then
-        p_list_pckg_ids="$1"
+    if [ ! -z "$2" ]; then
+        p_list_pckg_ids="$2"
     fi
 
     p_flag_clean_os_cache=1
-    if [ "$2" = "0" ]; then
+    if [ "$3" = "0" ]; then
         p_flag_clean_os_cache=0
     fi
 
@@ -961,7 +1489,7 @@ function g_install_main() {
 
     #2. Mostrar el Menu
     print_line '─' $g_max_length_line "$g_color_green1"
-    _show_menu_install_core "$p_list_pckg_ids"
+    _show_menu_install_core "$p_list_repo_ids" "$p_list_pckg_ids"
 
     #3. Mostar la ultima parte del menu y capturar la opcion elegida
     local l_flag_continue=0
@@ -969,7 +1497,7 @@ function g_install_main() {
     while [ $l_flag_continue -eq 0 ]; do
 
         printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
-        read -r l_options
+        read -er l_options
 
         case "$l_options" in
 
@@ -991,7 +1519,7 @@ function g_install_main() {
                     l_flag_continue=1
                     print_line '─' $g_max_length_line "$g_color_green1"
 
-                    g_install_options $l_options "EMPTY" "$p_list_pckg_ids" $p_flag_clean_os_cache 0
+                    g_install_options $l_options "$p_list_repo_ids" "$p_list_pckg_ids" $p_flag_clean_os_cache
 
                 else
                     l_flag_continue=0
@@ -1024,24 +1552,22 @@ function g_install_main() {
 g_usage() {
 
     printf 'Usage:\n'
-    printf '  > %bDesintalar repositorios mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/shell/bash/bin/linuxsetup/00_setup_summary.bash uninstall\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '  > %bInstalar repositorios mostrando el menú de opciones (interactivo)%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b%s/shell/bash/bin/linuxsetup/00_setup_summary.bash\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/shell/bash/bin/linuxsetup/00_setup_summary.bash 0 LIST-PCKG-IDS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH CLEAN-OS-CACHE\n%b' \
+    printf '    %b%s/shell/bash/bin/linuxsetup/00_setup_summary.bash 0 LIST_REPO_IDS LIST_PCKG_IDS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH CLEAN-OS-CACHE\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un grupo de opciones sin mostrar el menú%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/shell/bash/bin/linuxsetup/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/shell/bash/bin/linuxsetup/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS LIST-PCKG-IDS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' \
+    printf '    %b%s/shell/bash/bin/linuxsetup/00_setup_summary.bash CALLING_TYPE MENU_OPTIONS\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/shell/bash/bin/linuxsetup/00_setup_summary.bash CALLING_TYPE MENU_OPTIONS LIST_REPO_IDS LIST_PCKG_IDS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/shell/bash/bin/linuxsetup/00_setup_summary.bash CALLING_TYPE MENU-OPTIONS LIST-REPO-IDS LIST-PCKG-IDS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS CLEAN-OS-CACHE UPGRADE-OS-PACKAGES\n\n%b' \
+    printf '    %b%s/shell/bash/bin/linuxsetup/00_setup_summary.bash CALLING_TYPE MENU_OPTIONS LIST_REPO_IDS LIST_PCKG_IDS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO_STORAGE_OPTIONS CLEAN-OS-CACHE\n\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf 'Donde:\n'
     printf '  > %bCALLING_TYPE%b es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bMENU-OPTIONS%b Las opciones de menu a instalar. Si no desea especificar coloque 0.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bLIST-REPO-IDS %bID de los repositorios de comandos a configurar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".%b\n' \
+    printf '  > %bMENU_OPTIONS%b Las opciones de menu a instalar. Si no desea especificar coloque 0.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bLIST_REPO_IDS %bID de los repositorios de comandos a configurar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bLIST-PCKG-IDS %b.ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 1024. Si desea usar el los los paquetes por defecto envie "EMPTY".%b\n' \
+    printf '  > %bLIST_PCKG_IDS %b.ID de los paquetes del repositorio del SO, separados por coma, a instalar si elige la opcion de menu 1024. Si desea usar el los los paquetes por defecto envie "EMPTY".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bLos paquete basicos por defecto que son: Curl, UnZip, OpenSSL y Tmux.%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bTARGET_HOME_PATH %bRuta base donde el home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:%b\n' \
@@ -1064,12 +1590,11 @@ g_usage() {
     printf '      %b> Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bTEMP_PATH %bes la ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado "/tmp".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
+    printf '  > %bSUDO_STORAGE_OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"
-    printf '  > %bCLEAN-OS-CACHE%b es 0 si se limpia el cache de paquetes instalados. Por defecto es 1.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bUPGRADE-OS-PACKAGES%b Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.\n\n%b' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bCLEAN-OS-CACHE%b es 0 si se limpia el cache de paquetes instalados. Por defecto es 1.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -1238,36 +1763,42 @@ if [ $gp_type_calling -eq 0 ]; then
 
     #Parametros usados por el script:
     # 1> Tipo de invocación: 0 (usando un menu interactivo)
-    # 2> ID de los paquetes del repositorio, separados por coma, que se mostrara en el menu para que pueda instalarse. Si desea usar el por defecto envie "EMPTY".
+    # 2> ID de los repositorios de comandos a configurar, separados por coma. Si no desea configurarse ninguno envie "EMPTY".
+    # 3> ID de los paquetes del repositorio, separados por coma, que se mostrara en el menu para que pueda instalarse. Si desea usar el por defecto envie "EMPTY".
     #    Los paquete basicos, por defecto, que se muestran en el menu son: Curl,UnZip, OpenSSL y Tmux
-    # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:
+    # 4> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
     #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
     #    - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
-    # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
+    # 5> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     #    Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
     #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
-    # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado \
+    # 6> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado \
     #    "/var/opt/tools" o "~/tools".
-    # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+    # 7> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
     #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
     #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
     #       > Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)
     #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
-    # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
-    # 8> Flag '0' para limpiar el cache de paquetes del sistema operativo. Caso contrario, use 1.
-    _gp_list_pckg_ids="$g_default_list_package_ids"
+    # 8> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
+    # 9> Flag '0' para limpiar el cache de paquetes del sistema operativo. Caso contrario, use 1.
+    _gp_list_repo_ids=""
     if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
-        _gp_list_pckg_ids="$2"
+        _gp_list_repo_ids="$2"
+    fi
+
+    _gp_list_pckg_ids="$g_default_list_package_ids"
+    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+        _gp_list_pckg_ids="$4"
     fi
 
     #Calcular el valor efectivo de 'g_repo_name'.
-    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
+    if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
         #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_repo_name="$4"
+        g_repo_name="$5"
     fi
 
     if [ -z "$g_repo_name" ]; then
@@ -1275,9 +1806,9 @@ if [ $gp_type_calling -eq 0 ]; then
     fi
 
     #Obtener los valores efectivo de la variable 'g_targethome_path', 'g_repo_path', 'g_targethome_owner', 'g_targethome_group'
-    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
         #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_targethome_path="$3"
+        g_targethome_path="$4"
     fi
 
     get_targethome_info "$g_repo_name" "$g_targethome_path"
@@ -1288,9 +1819,9 @@ if [ $gp_type_calling -eq 0 ]; then
 
 
     #Obtener la ruta real del folder donde se alamacena los de programas 'g_programs_path'
-    if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
+    if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
         #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_programs_path="$5"
+        g_programs_path="$6"
     fi
 
     _g_is_noninteractive=1
@@ -1304,9 +1835,9 @@ if [ $gp_type_calling -eq 0 ]; then
 
 
     #Obtener la ruta real del folder base de comandos 'g_cmd_base_path'
-    if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
+    if [ ! -z "$7" ] && [ "$7" != "EMPTY" ]; then
         #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_cmd_base_path="$6"
+        g_cmd_base_path="$7"
     fi
 
     get_command_path $_g_is_noninteractive "$g_cmd_base_path"
@@ -1319,14 +1850,14 @@ if [ $gp_type_calling -eq 0 ]; then
 
 
     #Obtener la ruta rel del folder de los archivos temporales 'g_temp_path'
-    if [ ! -z "$7" ] && [ "$7" != "EMPTY" ]; then
+    if [ ! -z "$8" ] && [ "$8" != "EMPTY" ]; then
         #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
-        g_temp_path="$7"
+        g_temp_path="$8"
     fi
     get_temp_path "$g_temp_path"
 
     _gp_flag_clean_os_cache=1
-    if [ "$8" = "0" ]; then
+    if [ "$9" = "0" ]; then
         _gp_flag_clean_os_cache=0
     fi
 
@@ -1340,7 +1871,7 @@ if [ $gp_type_calling -eq 0 ]; then
 
     #Iniciar el procesamiento
     if [ $_g_status -eq 0 ]; then
-        g_install_main "$_gp_list_pckg_ids" $_gp_flag_clean_os_cache
+        g_install_main "$_gp_list_repo_ids" "$_gp_list_pckg_ids" $_gp_flag_clean_os_cache
     else
         _g_result=111
     fi
@@ -1376,12 +1907,11 @@ else
     # 9> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
     #10> El estado de la credencial almacenada para el sudo.
     #11> Flag '0' para limpiar el cache de paquetes del sistema operativo. Caso contrario, use 1.
-    #12> Actualizar los paquetes del SO. Por defecto es 1 (false), si desea actualizar use 0.
-    _gp_opciones=0
+    _gp_options=0
     if [ "$2" = "0" ]; then
-        _gp_opciones=-1
+        _gp_options=-1
     elif [[ "$2" =~ ^[0-9]+$ ]]; then
-        _gp_opciones=$2
+        _gp_options=$2
     else
         echo "Opciones de menu a instalar (parametro 2) \"$2\" no es valido."
         exit 110
@@ -1392,8 +1922,8 @@ else
         _gp_list_repo_ids="$3"
     fi
 
-    if [ $_gp_opciones -lt 0 ] && [ -z "$_gp_list_repo_ids" ]; then
-        printf 'Se debe ingresar un valor valido para el pametro 2 "%s" o el parametro 3 "%s". Ambos no pueden ser empty.\n' "$_gp_opciones" "$_gp_list_repo_ids"
+    if [ $_gp_options -lt 0 ] && [ -z "$_gp_list_repo_ids" ]; then
+        printf 'Se debe ingresar un valor valido para el pametro 2 "%s" o el parametro 3 "%s". Ambos no pueden ser empty.\n' "$_gp_options" "$_gp_list_repo_ids"
         return 110
     fi
 
@@ -1414,11 +1944,6 @@ else
     _gp_flag_clean_os_cache=1
     if [ "${11}" = "0" ]; then
         _gp_flag_clean_os_cache=0
-    fi
-
-    _gp_flag_upgrade_os_pkgs=1
-    if [ "${12}" = "0" ]; then
-        _gp_flag_upgrade_os_pkgs=0
     fi
 
     #Calcular el valor efectivo de 'g_repo_name'.
@@ -1486,7 +2011,7 @@ else
     #Iniciar el procesamiento
     if [ $_g_status -eq 0 ]; then
 
-        g_install_options $_gp_opciones "$_gp_list_repo_ids" "$_gp_list_pckg_ids" $_gp_flag_clean_os_cache $_gp_flag_upgrade_os_pkgs
+        g_install_options $_gp_options "$_gp_list_repo_ids" "$_gp_list_pckg_ids" $_gp_flag_clean_os_cache
         _g_status=$?
 
         #Informar si se nego almacenar las credencial cuando es requirido

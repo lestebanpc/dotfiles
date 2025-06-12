@@ -12,8 +12,6 @@
 
 #TODO > Si se incluye .net runtime con el SDK podria actualizarse un runtime independientemente de su SDK.
 #       por ello se esta desabilitando la instalacion de runtime por aqui
-#     > Diferenciar entre un comando (usualmente instalado en '/usr/local/bin' con owner root) y program (instalado en /var/opt/tools)
-#       cuyo owner es un usuario especifico, se tiene adicionar al PATH)
 
 # ID de los repositorios y sus rutas bases
 # Menu dinamico: Listado de repositorios que son instalados por las opcion de menu dinamicas
@@ -120,9 +118,9 @@ gA_packages=(
 # Menu dinamico: Titulos de las opciones del menú
 #  - Cada entrada define un opcion de menú. Su valor define el titulo.
 ga_menu_options_title=(
-    "Comandos basicos"
-    "Comandos alternativos 1"
-    "Comandos alternativos 2"
+    "Comandos del sistema basicos"
+    "Comandos del sistema alternativos 1"
+    "Comandos del sistema alternativos 2"
     "Las fuentes 'Nerd Fonts'"
     "El editor 'NeoVim'"
     "Shell 'Powershell'"
@@ -156,7 +154,7 @@ ga_menu_options_title=(
 ga_menu_options_packages=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
     "tmux-thumbs,tmux-fingers,sesh,grpcurl,websocat,protoc,xsv,jwt"
-    "rclone,biome,step,evans,yazi,lazygit,gum,butane,wezterm"
+    "rclone,biome,step,evans,yazi,lazygit,gum,butane"
     "nerd-fonts"
     "neovim"
     "powershell"

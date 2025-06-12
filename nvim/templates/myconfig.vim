@@ -169,7 +169,8 @@ let g:completion_filetypes = {
 "  > lua           : Para Lua. Usa el LSP 'Lua LS'.
 "  > viml          : Para VimScript. Usa el LSP 'Vim LS'.
 "  > bash          : Para Bash. Usa de 'Bash LS'
-" Adaptadores LSP (asociado a ciertos archivos) en modo IDE NeoVim usando el cliente LSP nativo :
+" Adaptadores LSP, asociado a ciertos archivos, en modo IDE NeoVim usando el cliente LSP nativo (usualmente
+" usados para autocompletado):
 "  > ansible       : Para Ansible. Usa de 'Ansible LS' (requiere Python, Ansible y Ansible-Lint).
 "  > gradle        : Para archivo de configuración de gradle.
 "  > dockerfile    : Para archivo dockerfile. Use linter 'hadolint' para mejorar el linting.
@@ -181,6 +182,7 @@ let g:completion_filetypes = {
 "  > html          : Para archivo html.
 "  > css           : Para archivo css.
 "  > tailwindcss   : Para uso de tailwindcss asociado a css.
+"  > kulula        : Para archivos .http y .rest usados por el client rest 'kulala'.
 " Solo aplica si NO usa CoC. CoC estas configuracion se realiza usualmente por extensiones.
 " Comente/descomente, establezca el valor de las lineas deseadas.
 let g:use_lsp_adapters = {
@@ -210,6 +212,7 @@ let g:use_lsp_adapters = {
 \   'html'          : v:true,
 \   'css'           : v:true,
 "\   'tailwindcss'   : v:true,
+\   'kulala'        : v:true,
 \}
 
 
@@ -297,6 +300,8 @@ let g:ale_linters = {
 "\   'cs'          : ['OmniSharp'],
 "\   'python'      : ['pylint', 'flake8'],
 "\   'xml'        : ['xmllint'],
+\   'http'        : ['kulala_fmt'],
+\   'rest'        : ['kulala_fmt'],
 \   'dockerfile'  : ['hadolint'],
 "\   'javascript'  : ['eslint'],
 "\   'typescript'  : ['eslint'],
@@ -331,6 +336,8 @@ let g:ale_fixers = {
 "\   'python'     : ['black', 'isort'],
 "\   'javascript' : ['prettier', 'eslint'],
 "\   'typescript' : ['prettier', 'eslint'],
+\   'http'        : ['kulala_fmt'],
+\   'rest'        : ['kulala_fmt'],
 \   'javascript' : ['biome'],
 \   'typescript' : ['biome'],
 \   'yaml'       : ['prettier'],

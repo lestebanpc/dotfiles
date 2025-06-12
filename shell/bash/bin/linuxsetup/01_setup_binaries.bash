@@ -2,7 +2,9 @@
 
 #Codigo respuesta con exito:
 #    0  - OK (si se ejecuta directamente y o en caso de no hacerlo, no requiere alamcenar las credenciales de SUDO).
-#  119  - OK (en caso que NO se ejecute directamente o interactivamente y se requiera credenciales de SUDO).
+#  118  - OK (solo si se no se muestra el menu y se indica el listado de respositorios a instalar)
+#         No se instala ningun repositorio, debido a que ninguno de los repositorios del listado es valido o no cumple los prerequisitos.
+#  119  - OK (solo en caso que NO se ejecute directamente o interactivamente y se requiera credenciales de SUDO).
 #         Las credenciales de SUDO se almaceno en este script (localmente). avisar para que lo cierre el caller
 #Codigo respuesta con error:
 #  110  - Argumentos invalidos.
@@ -2685,6 +2687,11 @@ function g_install_repositories_byopc() {
 #
 #Parametros de entrada (Argumentos):
 #  1 > Listado de ID de paquetes separados por coma.
+#  2 > Mostrar el titulo ...
+#  3 > Filtrar los paquetes instalados
+#      (2) No se filtra
+#      (1) Se filtra programas de usuario
+#      (0) Se filtra programas de sistema
 function g_install_repositories_byid() {
 
     #1. Argumentos
@@ -2696,6 +2703,13 @@ function g_install_repositories_byid() {
     p_show_title_on_onerepo=1
     if [ "$2" = "0" ]; then
         p_show_title_on_onerepo=0
+    fi
+
+    p_filter_usr_programs=2
+    if [ "$3" = "0" ]; then
+        p_filter_usr_programs=0
+    elif [ "$3" = "1" ]; then
+        p_filter_usr_programs=1
     fi
 
     local IFS=','
@@ -2721,16 +2735,29 @@ function g_install_repositories_byid() {
     local l_status
     local l_aux=""
     local l_processed_repo=""
+    local l_repo_type
+
+    local l_ommited=0
+    local l_ommited_aux=''
 
     for((l_x=0; l_x < ${l_n}; l_x++)); do
 
-        #A.1. Nombre a mostrar del paquete
+        # Nombre a mostrar del paquete
         l_repo_id="${pa_packages[$l_x]}"
         if [ -z "$l_repo_id" ]; then
+
+            ((l_ommited++))
+            if [ -z "$l_ommited_aux" ]; then
+                printf -v l_ommited_aux '%b%s%b' "$g_color_red1" "$l_x" "$g_color_reset"
+            else
+                printf -v l_ommited_aux '%b, %b%s%b' "$l_ommited_aux" "$g_color_red1" "$l_x" "$g_color_reset"
+            fi
+
             #Omitir los campos vacios ingresados por error
             continue
         fi
 
+        # Validar si existe el repositorio
         l_repo_name_aux="${gA_packages[${l_repo_id}]}"
         if [ -z "$l_repo_name_aux" ]; then
             printf 'El repositorio "%b%s%b" NO esta definido en "gA_packages" para su instalacion.\n' \
@@ -2742,6 +2769,48 @@ function g_install_repositories_byid() {
             l_repo_name_aux="$l_repo_id"
         fi
 
+        # Filtrar solo repositorios con programas de usuario
+        l_repo_type="${gA_main_arti_type[$l_repo_id]:-0}"
+        if [ $p_filter_usr_programs -eq 0 ]; then
+
+            # Omitir los repositorio que no tengan programas de usuario
+            if [ $l_repo_type -eq 1 ]; then
+
+                ((l_ommited++))
+                if [ -z "$l_ommited_aux" ]; then
+                    printf -v l_ommited_aux '%b%s%b' "$g_color_gray1" "$l_repo_id" "$g_color_reset"
+                else
+                    printf -v l_ommited_aux '%b, %b%s%b' "$l_ommited_aux" "$g_color_gray1" "$l_repo_id" "$g_color_reset"
+                fi
+
+                printf 'El repositorio "%b%s%b" no es un "%bprograma del usuario%b" (%b%s%b) por lo que %bse omitira su setup%b.\n' \
+                       "$g_color_red1" "$l_repo_id" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_repo_type" "$g_color_reset" \
+                       "$g_color_red1" "$g_color_reset"
+                continue
+            fi
+
+        # Filtrar solo repositorios que no tenga programas de usuario
+        elif [ $p_filter_usr_programs -eq 1 ]; then
+
+            # Omitir los repositorio que tengan un programas de usuario
+            if [ $l_repo_type -ne 1 ]; then
+
+                ((l_ommited++))
+                if [ -z "$l_ommited_aux" ]; then
+                    printf -v l_ommited_aux '%b%s%b' "$g_color_gray1" "$l_repo_id" "$g_color_reset"
+                else
+                    printf -v l_ommited_aux '%b, %b%s%b' "$l_ommited_aux" "$g_color_gray1" "$l_repo_id" "$g_color_reset"
+                fi
+
+                printf 'El repositorio "%b%s%b" es un "%bprograma del usuario%b" (%b%s%b) por lo que %bse omitira su setup%b.\n' \
+                       "$g_color_red1" "$l_repo_id" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_repo_type" "$g_color_reset" \
+                       "$g_color_red1" "$g_color_reset"
+                continue
+            fi
+
+        fi
+
+        # Procesar el repositorio
         l_title_template=""
         if [ $l_n -ne 1 ]; then
             printf -v l_title_template "Repository %s(%s/%s)%s > '%s%s%s' %s%%s%s" "$g_color_gray1" "$((l_x + 1))" "$l_n" "$g_color_reset" "$g_color_cian1" \
@@ -2876,6 +2945,9 @@ function g_install_repositories_byid() {
 
     done
 
+    if [ $l_ommited -gt 0 ]; then
+        printf '\nSe han omitido el setup de %s repostorio: %b\n' "$l_ommited" "$l_ommited_aux"
+    fi
 
     #6. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
     #   Si no se invoca usando el menú y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
@@ -2926,7 +2998,7 @@ function g_install_main() {
     while [ $l_flag_continue -eq 0 ]; do
 
         printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
-        read -r l_options
+        read -re l_options
 
         case "$l_options" in
 
@@ -3806,7 +3878,7 @@ function i_uninstall_repositories() {
     fi
 
     if [ $p_input_options -eq 0 ]; then
-        echo "ERROR: Argumento de opciones \"${p_opciones}\" es incorrecta"
+        echo "ERROR: Argumento de opciones \"${p_input_options}\" es incorrecta"
         return 23;
     fi
 
@@ -3873,7 +3945,7 @@ function g_uninstall_main() {
     while [ $l_flag_continue -eq 0 ]; do
 
         printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
-        read -r l_options
+        read -re l_options
 
         case "$l_options" in
 
@@ -4381,7 +4453,7 @@ else
             _g_result=111
         fi
 
-    #5.2. Instalando los repositorios especificados por las opciones indicas en '$2'
+    #5.2. Instalando los repositorios especificados por un numero $2 que es la suma binaria de las opciones a instalar
     elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
 
         #Parametros usados por el script:
@@ -4411,15 +4483,15 @@ else
         # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
         #10> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
 
-        _gp_opciones=0
+        _gp_menu_options=0
         if [[ "$2" =~ ^[0-9]+$ ]]; then
-            _gp_opciones=$2
+            _gp_menu_options=$2
         else
             echo "Parametro 2 \"$2\" debe ser una opción de menú valida."
             exit 110
         fi
 
-        if [ $gp_menu_options -le 0 ]; then
+        if [ $_gp_menu_options -le 0 ]; then
             echo "Parametro 2 \"$2\" debe ser un entero positivo."
             exit 110
         fi
@@ -4517,7 +4589,7 @@ else
         #Iniciar el procesamiento
         if [ $_g_status -eq 0 ]; then
 
-            g_install_repositories_byopc $_gp_opciones
+            g_install_repositories_byopc $_gp_menu_options
             _g_status=$?
 
             #Informar si se nego almacenar las credencial cuando es requirido
@@ -4532,7 +4604,7 @@ else
             _g_result=111
         fi
 
-    #5.3. Instalando un solo repositorio del ID indicao por '$2'
+    #5.3. Instalando los binarios asociados a un listado de repositorio del ID indicao por '$2'
     else
 
         #Parametros del script usados hasta el momento:
@@ -4559,7 +4631,9 @@ else
         #  8> El estado de la credencial almacenada para el sudo.
         #  9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
         # 10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1'
-        # 11> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
+        # 11> Flag para filtrar el listado de repositorios segun el tipo de progrmas. '0' solo programas del usuario, '1' solo programas que no son de usuario.
+        #     Otro valor, no hay filtro. Valor por defecto es '2'.
+        # 12> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
         _gp_list_repo_ids="$2"
         if [ -z "$_gp_list_repo_ids" ] || [ "$_gp_list_repo_ids" = "EMPTY" ]; then
            echo "Parametro 2 \"$2\" debe ser un ID de repositorio valido"
@@ -4578,8 +4652,15 @@ else
             g_setup_only_last_version=0
         fi
 
-        _g_show_title_on_onerepo=1
+        _gp_filter_usr_programs=2
         if [ "${10}" = "0" ]; then
+            _gp_filter_usr_programs=0
+        elif [ "${10}" = "1" ]; then
+            _gp_filter_usr_programs=1
+        fi
+
+        _g_show_title_on_onerepo=1
+        if [ "${11}" = "0" ]; then
             _g_show_title_on_onerepo=0
         fi
 
@@ -4659,20 +4740,20 @@ else
         #Iniciar el procesamiento
         if [ $_g_status -eq 0 ]; then
 
-            g_install_repositories_byid "$_gp_list_repo_ids" $_g_show_title_on_onerepo
+            g_install_repositories_byid "$_gp_list_repo_ids" $_g_show_title_on_onerepo $_gp_filter_usr_programs
             _g_status=$?
 
             #Informar si se nego almacenar las credencial cuando es requirido
-            if [ $_g_status -eq 0 ]; then
-
-                if [ $_g_status -eq 120 ]; then
-                    _g_result=120
-                #Si la credencial se almaceno en este script (localmente). avisar para que lo cierre el caller
-                elif [ $g_is_credential_storage_externally -ne 0 ] && [ $g_status_crendential_storage -eq 0 ]; then
-                    _g_result=119
-                fi
-
+            if [ $_g_status -eq 120 ]; then
+                _g_result=120
+            #Si no repostorio validor a instalar
+            elif [ $_g_status -eq 118 ]; then
+                _g_result=118
+            #Si la credencial se almaceno en este script (localmente). avisar para que lo cierre el caller
+            elif [ $g_is_credential_storage_externally -ne 0 ] && [ $g_status_crendential_storage -eq 0 ]; then
+                _g_result=119
             fi
+
 
         else
             _g_result=111

@@ -2564,21 +2564,32 @@ function copy_file_on_home() {
 # Parametros de salida
 #  > Valores de retorno:
 #     0 > OK.
-#     1 > El se encuentra la ubicacion del binario 'node' (no instalado o no registrado en el PATH)
+#     1 > NO se encuentra la ubicacion del binario 'node' (no instalado o no registrado en el PATH)
 #     2 > Ocurrio un error al obtener el owner del folder
 #  > SDTOUT: El usuario onwer de la carpeta de binarios de NodeJS
 function get_owner_of_nodejs() {
 
-    # Obtener la ruta donde esta los binarios de nodojs
-    local l_nodejs_bin_path=$(which node)
+    #1. Parametros
+    local p_programs_path="$1"
 
-    if [ -z "$l_nodejs_bin_path" ]; then
-        return 1
+    #2. Obtener la ruta donde esta los binarios de nodojs
+    local l_nodejs_bin_path=''
+
+    if [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/nodejs/bin/node" ]; then
+
+        l_nodejs_bin_path=$(which node)
+        if [ -z "$l_nodejs_bin_path" ]; then
+            return 1
+        fi
+
+        l_nodejs_bin_path=${l_nodejs_bin_path%/node}
+
+    else
+        l_nodejs_bin_path="${p_programs_path}/nodejs/bin"
     fi
 
-    l_nodejs_bin_path=${l_nodejs_bin_path%/node}
 
-    # Obtener el owner del folder
+    #3. Obtener el owner del folder
     local l_aux=''
     l_aux=$(get_owner_of_folder "$l_nodejs_bin_path")
     local l_status=$?
@@ -2845,11 +2856,13 @@ install_nodejs() {
         p_show_title=0
     fi
 
+    local p_programs_path="$2"
+
     #1. Validar si 'nodejs' esta instado (puede no estar en el PATH)
     local l_version=''
     local l_status
 
-    l_version=$(get_nodejs_version)
+    l_version=$(get_nodejs_version "$p_programs_path")
     l_status=$?
 
     #echo "l_version=${l_version}, l_status=${l_status}"
@@ -2896,14 +2909,16 @@ install_nodejs() {
     # 8> El estado de la credencial almacenada para el sudo.
     # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
     #10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1'
-    #11> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
+    #11> Flag para filtrar el listado de repositorios segun el tipo de progrmas. '0' solo programas del usuario, '1' solo programas que no son de usuario.
+    #    Otro valor, no hay filtro. Valor por defecto es '2'.
+    #12> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
     if [ $l_is_noninteractive -eq 1 ]; then
         ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 2 "nodejs" "$g_targethome_path" "$g_repo_name" "" "" "" \
-            $g_status_crendential_storage 1 1 0
+            $g_status_crendential_storage 1 1 2 0
         l_status=$?
     else
         ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 4 "nodejs" "$g_targethome_path" "$g_repo_name" "" "" "" \
-            $g_status_crendential_storage 1 1 0
+            $g_status_crendential_storage 1 1 2 0
         l_status=$?
     fi
 
@@ -2934,7 +2949,7 @@ install_nodejs() {
     fi
 
     #4. Volver a validar si las componentes fueron instalados
-    l_version=$(get_nodejs_version)
+    l_version=$(get_nodejs_version "$p_programs_path")
     l_status=$?
 
     if [ $l_status -ne 0 ]; then
@@ -3229,11 +3244,13 @@ install_neovim() {
         p_show_title=0
     fi
 
+    local p_programs_path="$2"
+
     #1. Validar si 'nvim' esta instado (puede no estar en el PATH)
     local l_version=''
     local l_status
 
-    l_version=$(get_neovim_version)
+    l_version=$(get_neovim_version "$p_programs_path")
     l_status=$?
 
     if [ ! -z "$l_version" ]; then
@@ -3321,15 +3338,17 @@ install_neovim() {
         # 8> El estado de la credencial almacenada para el sudo.
         # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
         #10> Flag '0' para mostrar un titulo si se envia un repositorio en el parametro 2. Por defecto es '1'
-        #11> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
+        #11> Flag para filtrar el listado de repositorios segun el tipo de progrmas. '0' solo programas del usuario, '1' solo programas que no son de usuario.
+        #    Otro valor, no hay filtro. Valor por defecto es '2'.
+        #12> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
         if [ $l_is_noninteractive -eq 1 ]; then
 
             ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 2 "neovim" "$g_targethome_path" "$g_repo_name" "" "" "" \
-                $g_status_crendential_storage 1 1 0
+                $g_status_crendential_storage 1 1 2 0
             l_status=$?
         else
             ${g_shell_path}/bash/bin/linuxsetup/01_setup_binaries.bash 4 "neovim" "$g_targethome_path" "$g_repo_name" "" "" "" \
-                $g_status_crendential_storage 1 1 0
+                $g_status_crendential_storage 1 1 2 0
             l_status=$?
         fi
 
@@ -3362,7 +3381,7 @@ install_neovim() {
     fi
 
     #5. Volver a validar si las componentes fueron instalados
-    l_version=$(get_neovim_version)
+    l_version=$(get_neovim_version "$p_programs_path")
     l_status=$?
 
     if [ $l_status -ne 0 ]; then

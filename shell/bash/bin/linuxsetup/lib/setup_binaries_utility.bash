@@ -17,24 +17,25 @@ g_usage() {
     printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash 0 TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SETUP_ONLYLAST_VERSION\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un grupo de repositorios sin mostrar el menú y usando los ID del menu%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE MENU-OPTIONS\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE MENU_OPTIONS\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE MENU_OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO_STORAGE_OPTIONS\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE MENU-OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION\n%b' \
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE MENU_OPTIONS TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO_STORAGE_OPTIONS SETUP_ONLYLAST_VERSION\n%b' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 1 si es interactivo, 3 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bInstalar/Actualizar un repositorio sin mostrar el  menú y usando los ID de los repositorios%b:\n' "$g_color_cian1" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE LIST-REPO-ID%b\n' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE LIST-REPO-ID TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS%b\n' \
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE LIST_REPO_ID%b\n' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE LIST_REPO_ID TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO_STORAGE_OPTIONS%b\n' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
-    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE LIST-REPO-ID TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO-STORAGE-OPTIONS SETUP_ONLYLAST_VERSION SHOW-TITLE-1REPO%b\n' \
+    printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash CALLING_TYPE LIST_REPO_ID TARGET_HOME_PATH REPO_NAME PRG_PATH CMD_BASE_PATH TEMP_PATH SUDO_STORAGE_OPTIONS SETUP_ONLYLAST_VERSION SHOW_TITLE_1REPO FLAG_FILTER_PRGS%b\n' \
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '    > %bLIST-REPO-ID%b lista de ID repositorios separados por coma. Si no %b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '    > %bSHOW-TITLE-1REPO%b Es 0, si muestra el titulo cuando solo se instala 1 repositorio. Por defecto es 1.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf 'Donde:\n'
+    printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    > %bLIST_REPO_ID%b lista de ID repositorios separados por coma. Si no %b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    > %bSHOW_TITLE_1REPO%b Es 0, si muestra el titulo cuando solo se instala 1 repositorio. Por defecto es 1.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    > %bFLAG_FILTER_PRGS%b indica el filtro de programas en LIST_REPO_ID. Si es 0 solo se considera programas de usuarios, Si es 1 considera todos excepto los programas del usuario, otro valor no se realiza filtro.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '\nDonde:\n'
     printf '  > %bTARGET_HOME_PATH %bRuta base donde el home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %b> El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")%b\n' "$g_color_gray1" "$g_color_reset"
@@ -57,7 +58,7 @@ g_usage() {
     printf '      %b> Archivo fuente: "/usr/share/fonts"    (todos los usuarios) y "~/.local/share/fonts" (solo el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bTEMP_PATH %bes la ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado "/tmp".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
+    printf '  > %bSUDO_STORAGE_OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"

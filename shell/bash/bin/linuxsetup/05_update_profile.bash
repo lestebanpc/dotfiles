@@ -321,11 +321,11 @@ function _update_repository2() {
     #5. Si la rama local es diferente al rama remota
 
     #4. Realizando una actualizacion destructiva y para quedar solo con el ultimo nodo de la rama remota
-    printf 'Updating local branch "%b%s%b" form remote branch "%b%s%b" (%bgit reset --hard %s/HEAD%b)...\n' "$g_color_gray1" "$l_local_branch" \
+    printf 'Updating local branch "%b%s%b" form remote branch "%b%s%b" (%bgit reset --hard %s%b)...\n' "$g_color_gray1" "$l_remote_branch" \
            "$g_color_reset" "$g_color_gray1" "$l_remote_branch" "$g_color_reset" "$g_color_green1" "$l_remote" "$g_color_reset"
 
     printf '%b' "$g_color_gray1"
-    git reset --hard ${l_remote}/HEAD
+    git reset --hard ${l_remote_branch}
     l_status=$?
     printf '%b' "$g_color_reset"
 
@@ -620,7 +620,7 @@ function _update_vim_package() {
 function _update_vim() {
 
     #1. Argumentos
-    local p_opciones=$1
+    local p_options=$1
     local p_is_neovim=1
     if [ "$2" = "0" ]; then
         p_is_neovim=0
@@ -633,20 +633,20 @@ function _update_vim() {
 
 
     #2. Validar si se debe actualizar VIM/NeoVIM
-    local l_flag_setup=1
+    if [ $p_options -le 0 ]; then
+        return 1
+    fi
+
     local l_option=1
-    if [ $p_is_vim -ne 0 ]; then
+    if [ $p_is_neovim -eq 0 ]; then
         l_option=2
     fi
 
-    if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-        l_flag_install=0
-    fi
-
     # Si no se debe actualizar
-    if [ $l_flag_setup -ne 0 ]; then
+    if [ $(( $p_options & $l_option )) -ne $l_option ]; then
         return 1
     fi
+
 
     # Se requiere tener Git instalado
     if ! git --version 1> /dev/null 2>&1; then
@@ -711,9 +711,9 @@ function _update_vim() {
 function _update_all() {
 
     #1. Argumentos
-    local p_opciones=0
+    local p_options=0
     if [[ "$1" =~ ^[0-9]+$ ]]; then
-        p_opciones=$1
+        p_options=$1
     fi
 
     #2. Inicialización
@@ -727,7 +727,7 @@ function _update_all() {
     #3. Actualizar plugins de VIM
     local l_status
 
-    _update_vim $p_opciones 1
+    _update_vim $p_options 1
     l_status=$?
     if [ $l_status -eq 111 ]; then
         #No se cumplen las precondiciones obligatorios
@@ -738,7 +738,7 @@ function _update_all() {
     fi
 
     #4. Actualizar plugins de NeoVIM
-    _update_vim $p_opciones 0
+    _update_vim $p_options 0
     l_status=$?
     if [ $l_status -eq 111 ]; then
         #No se cumplen las precondiciones obligatorios
@@ -787,7 +787,7 @@ function g_main() {
     while [ $l_flag_continue -eq 0 ]; do
 
         printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
-        read -r l_options
+        read -re l_options
 
         case "$l_options" in
             a)
@@ -1035,15 +1035,15 @@ else
     #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
     # 5> El estado de la credencial almacenada para el sudo.
-    gp_menu_options=0
+    _gp_menu_options=0
     if [[ "$2" =~ ^[0-9]+$ ]]; then
-        gp_menu_options=$2
+        _gp_menu_options=$2
     else
         echo "Parametro 2 \"$2\" debe ser una opción valida."
         exit 110
     fi
 
-    if [ $gp_menu_options -le 0 ]; then
+    if [ $_gp_menu_options -le 0 ]; then
         echo "Parametro 2 \"$2\" debe ser un entero positivo."
         exit 110
     fi
@@ -1098,7 +1098,7 @@ else
     if [ $_g_status -eq 0 ]; then
 
         #Ejecutar las opciones de menu escogidas
-        _update_all $gp_menu_options
+        _update_all $_gp_menu_options
         _g_status=$?
 
         #Informar si se nego almacenar las credencial cuando es requirido

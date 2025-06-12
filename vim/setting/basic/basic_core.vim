@@ -427,7 +427,7 @@ nnoremap <silent> <leader>ff :Rg<CR>
 nnoremap <silent> <leader>fw :Rg <C-r><C-w><CR>
 "nnoremap <silent> <leader>fW :call fzf#vim#grep('rg --vimgrep --no-heading --smart-case ' . shellescape(expand('<cWORD>')), 1, fzf#vim#with_preview(), 0)
 
-"Recomendaciones del uso de tags:
+"Recomendaciones del uso de tags de codigo:
 " - Regenerar los tags cuando realiza cambios ejecutando 'ctags -R' en el folder root del proyecto.
 " - Crear archivos 'option files' dentro del proyecto (ubicados usualmente carpata './.ctags.d/'),
 "   donde defina las opciones por defecto cuando se ejecuta 'ctags', por ejemplo, coloque los archivos
@@ -438,3 +438,6 @@ nnoremap <silent> <leader>tw :Tags<CR>
 
 "Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
 nnoremap <silent> <leader>tt :BTags<CR>
+
+"Listar help tags de vim (archivos de ayuda de vim)
+nnoremap <silent> <leader>lt :Helptags<CR>

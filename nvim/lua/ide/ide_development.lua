@@ -182,3 +182,208 @@ vim.keymap.set("n", "<space>co", "<cmd>AerialToggle!<CR>", { noremap=true, silen
 
 -- Navegacion en los  simbolo del buffer actual e ir a este.
 vim.keymap.set("n", "<space>s2", "<cmd>AerialNavToggle<CR>", { noremap=true, silent=true, desc = "Toggle Code Navigator" })
+
+
+
+--------------------------------------------------------------------------------------------------
+-- Tool> REST Client 'Kulala'
+--------------------------------------------------------------------------------------------------
+--
+-- > URL: https://github.com/mistweaverco/kulala.nvim
+--        https://neovim.getkulala.net/docs/getting-started
+-- > Si se usa CoC, no funcionara el autocomletado si no se configura un cio para su cliente LSP
+--
+
+
+-- 01. Asociando el filtetype al una extension
+--     Similar al siuguiente autocomando vim
+--        augroup kulala_filetype_detect
+--          autocmd!
+--          autocmd BufRead,BufNewFile *.http set filetype=http
+--          autocmd BufRead,BufNewFile *.rest set filetype=rest
+--        augroup END
+
+vim.filetype.add({
+  extension = {
+    ['http'] = 'http',
+    --['rest'] = 'rest',
+  },
+})
+
+
+-- 02. Configuracion (https://neovim.getkulala.net/docs/getting-started/configuration-options)
+local kulala_mod = require("kulala")
+
+kulala_mod.setup({
+
+    -- Keymapping global y del filetype 'http' y 'rest'
+    -- Vease: https://github.com/mistweaverco/kulala.nvim/blob/main/lua/kulala/config/keymaps.lua
+    global_keymaps_prefix = "<leader>r",
+
+    global_keymaps = true,
+    --global_keymaps = {
+
+    --    -- Keymapping global
+    --    ["Open scratchpad"] = {
+    --      "b", function() kulala_mod.scratchpad()  end,
+    --    },
+
+    --    ["Open kulala"] = {
+    --      "o", function() kulala_mod.open() end,
+    --    },
+
+    --    ["Send request"] = {
+    --      "s", function() kulala_mod.run() end, mode = { "n", "v" },
+    --    },
+
+    --    ["Send all requests"] = {
+    --      "a", function() kulala_mod.run_all() end, mode = { "n", "v" },
+    --    },
+
+    --    ["Replay the last request"] = {
+    --      "r", function() kulala_mod.replay() end,
+    --    },
+
+    --    -- Keymapping asociado al filetype 'http' y 'rest'
+    --    ["Close window"] = {
+    --      "q", function() kulala_mod.close() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Copy as cURL"] = {
+    --      "c", function() kulala_mod.copy() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Paste from curl"] = {
+    --      "C", function() kulala_mod.from_curl() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Inspect current request"] = {
+    --      "i", function() kulala_mod.inspect() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Select environment"] = {
+    --      "e", function() kulala_mod.set_selected_env() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Manage Auth Config"] = {
+    --      "u", function() require("kulala.ui.auth_manager").open_auth_config() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Send request <cr>"] = {
+    --      "<CR>", function() kulala_mod.run() end, mode = { "n", "v" }, ft = { "http", "rest" }, prefix = false,
+    --    },
+
+    --    ["Download GraphQL schema"] = {
+    --      "g", function() kulala_mod.download_graphql_schema() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Jump to next request"] = {
+    --      "n", function() kulala_mod.jump_next() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Jump to previous request"] = {
+    --      "p", function() kulala_mod.jump_prev() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Find request"] = {
+    --      "f", function() kulala_mod.search() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Toggle headers/body"] = {
+    --      "t", function() kulala_mod.toggle_view() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Show stats"] = {
+    --      "S", function() kulala_mod.show_stats() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Clear globals"] = {
+    --      "x", function() kulala_mod.scripts_clear_global() end, ft = { "http", "rest" },
+    --    },
+
+    --    ["Clear cached files"] = {
+    --      "X", function() kulala_mod.clear_cached_files() end, ft = { "http", "rest" },
+    --    },
+    --},
+
+    -- Keymapping asicaido popup 'Kulala UI'
+    -- Vease: https://github.com/mistweaverco/kulala.nvim/blob/main/lua/kulala/config/keymaps.lua
+    kulala_keymaps_prefix = "",
+
+    kulala_keymaps = true,
+    --kulala_keymaps = {
+
+    --    ["Show headers"] = {
+    --      "H", function() require("kulala.ui").show_headers() end,
+    --    },
+
+    --    ["Show body"] = {
+    --      "B", function() require("kulala.ui").show_body() end,
+    --    },
+
+    --    ["Show headers and body"] = {
+    --      "A", function() require("kulala.ui").show_headers_body() end,
+    --    },
+
+    --    ["Show verbose"] = {
+    --      "V", function() require("kulala.ui").show_verbose() end,
+    --    },
+
+    --    ["Show script output"] = {
+    --      "O", function() require("kulala.ui").show_script_output() end,
+    --    },
+
+    --    ["Show stats"] = {
+    --      "S", function() require("kulala.ui").show_stats() end,
+    --    },
+
+    --    ["Show report"] = {
+    --      "R", function() require("kulala.ui").show_report() end,
+    --    },
+
+    --    ["Show filter"] = {
+    --      "F", function() require("kulala.ui").toggle_filter() end,
+    --    },
+
+    --    ["Next response"] = {
+    --      "]", function() require("kulala.ui").show_next() end, prefix = false,
+    --    },
+
+    --    ["Previous response"] = {
+    --      "[", function() require("kulala.ui").show_previous() end, prefix = false,
+    --    },
+
+    --    ["Jump to response"] = {
+    --      "<CR>", function() require("kulala.ui").keymap_enter() end, mode = { "n", "v" },
+    --      desc = "also: Update filter and Send WS message for WS connections", prefix = false,
+    --    },
+
+    --    ["Clear responses history"] = {
+    --      "X", function() require("kulala.ui").clear_responses_history() end,
+    --    },
+
+    --    ["Send WS message"] = {
+    --      "<S-CR>", function() require("kulala.cmd.websocket").send() end, mode = { "n", "v" }, prefix = false,
+    --    },
+
+    --    ["Interrupt requests"] = {
+    --      "<C-c>", function()  require("kulala.ui").interrupt_requests() end,
+    --      desc = "also: CLose WS connection", prefix = false,
+    --    },
+
+    --    ["Show help"] = {
+    --      "?", function() require("kulala.ui").show_help() end, prefix = false,
+    --    },
+
+    --    ["Show news"] = {
+    --      "g?", function() require("kulala.ui").show_news() end, prefix = false,
+    --    },
+
+    --    ["Close"] = {
+    --      "q", function() require("kulala.ui").close_kulala_buffer() end, prefix = false,
+    --    },
+
+    --},
+
+
+})

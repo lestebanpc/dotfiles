@@ -1,0 +1,2 @@
+# Modo VI para la edicion interactiva del readline
+set editing-mode vi

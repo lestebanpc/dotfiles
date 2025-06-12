@@ -1017,6 +1017,35 @@ if use_adapter ~= nil and use_adapter == true then
 end
 
 
+--------------------------------------------------------------------------------------------------
+--LSP Client> Para archivos .http y .rest del cliente rest 'kulala'
+--------------------------------------------------------------------------------------------------
+
+--
+-- LSP Server : Kulala LS
+-- URL        : https://github.com/mistweaverco/kulala-ls
+--
+-- Install    : npm install -g @mistweaverco/kulala-ls
+-- Validate   :
+--
+use_adapter = vim.g.use_lsp_adapters['kulala']
+adapter_name = 'kulala_ls'
+
+if use_adapter ~= nil and use_adapter == true then
+
+
+    vim.lsp.config(adapter_name, {
+
+        cmd = { "kulala-ls", "--stdio" },
+        filetypes = { "http" },
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+end
+
+
+
 
 -- https://github.com/sqls-server/sqls
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#sqls

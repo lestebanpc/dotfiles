@@ -1008,6 +1008,16 @@ function _setup_user_profile() {
 
     #5. Creando enlaces simbolico independiente del tipo de distribución Linux
 
+    #Archivo de configuración del GNU ReadLine
+    l_target_path=""
+    l_target_link=".inputrc"
+    l_source_path="${g_repo_name}/etc/readline"
+    l_source_filename='inputrc'
+
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    l_status=$?
+
+
     #Crear el enlace de TMUX (no usaramos '~/.tmux.conf', usaramos '~/.config/tmux/tmux.conf')
     create_folderpath_on_home ".config" "tmux"
     l_target_path=".config/tmux"
@@ -2435,7 +2445,7 @@ function g_main() {
     while [ $l_flag_continue -eq 0 ]; do
 
         printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
-        read -r l_options
+        read -re l_options
 
         case "$l_options" in
 
@@ -2810,15 +2820,15 @@ else
     #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
     # 5> El estado de la credencial almacenada para el sudo.
-    gp_menu_options=0
+    _gp_menu_options=0
     if [[ "$2" =~ ^[0-9]+$ ]]; then
-        gp_menu_options=$2
+        _gp_menu_options=$2
     else
         echo "Parametro 2 \"$2\" debe ser una opción valida."
         exit 110
     fi
 
-    if [ $gp_menu_options -le 0 ]; then
+    if [ $_gp_menu_options -le 0 ]; then
         echo "Parametro 2 \"$2\" debe ser un entero positivo."
         exit 110
     fi
@@ -2867,7 +2877,7 @@ else
     #Iniciar el procesamiento
     if [ $_g_status -eq 0 ]; then
 
-        _setup $gp_menu_options
+        _setup $_gp_menu_options
         _g_status=$?
 
         #No se cumplen las precondiciones obligatorios

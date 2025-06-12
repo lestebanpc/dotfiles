@@ -672,17 +672,17 @@ is_package_installed() {
     #Si es un distribucion de la familia Fedora
     elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
 
-        #Si es Fedora, usaremos 'dnf list intalled | grep package' y no 'rpm -qa | grep package'
+        #Si es Fedora, usaremos 'dnf list --intalled | grep package' y no 'rpm -qa | grep package'
         #
         #En fodora, el nombre del paquete incluye el tipo de arquitectura. Por ejemplo el paquete 'python3-pip':
-        #dnf list installed | grep python3-pip
+        #dnf list --installed | grep python3-pip
         #python3-pip.noarch                     21.3.1-2.amzn2023.0.5              @amazonlinux
         #python3-pip-wheel.noarch               21.3.1-2.amzn2023.0.5              @System
         #containerd.io.x86_64                   1.6.20-3.1.fc36                    @docker-ce-stable
         #
 
-        printf 'Buscando OS packages: %bdnf list installed | grep "%s" 2> /dev/null%b\n' "$g_color_gray1" "$p_package_name_part" "$g_color_reset"
-        l_aux=$(dnf list installed | grep "$p_package_name_part" 2> /dev/null)
+        printf 'Buscando OS packages: %bdnf list --installed | grep "%s" 2> /dev/null%b\n' "$g_color_gray1" "$p_package_name_part" "$g_color_reset"
+        l_aux=$(dnf list --installed | grep "$p_package_name_part" 2> /dev/null)
         l_status=$?
 
         if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then

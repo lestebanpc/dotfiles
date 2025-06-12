@@ -323,6 +323,8 @@ if !exists("g:ale_linters") || empty(g:ale_linters)
     "\   'go'         : ['golangci-lint'],
     "\   'python'     : ['pylint', 'flake8'],
     "\   'xml'        : ['xmllint'],
+    \   'http'       : ['kulala_fmt'],
+    \   'rest'       : ['kulala_fmt'],
     \   'dockerfile' : ['hadolint'],
     \   'javascript' : ['biome'],
     \   'typescript' : ['biome'],
@@ -353,6 +355,8 @@ if !exists("g:ale_fixers") || empty(g:ale_fixers)
     "\   'rust'       : ['rustfmt'],
     "\   'go'         : ['gofmt', 'goimports'],
     "\   'python'     : ['black', 'isort'],
+    \   'http'       : ['kulala_fmt'],
+    \   'rest'       : ['kulala_fmt'],
     \   'javascript' : ['biome'],
     \   'typescript' : ['biome'],
     \   'yaml'       : ['prettier'],
@@ -390,7 +394,8 @@ endif
 "  > bash          : Para Bash. Usa de 'Bash LS'
 "  > ansible       : Para Ansible. Usa de 'Ansible LS' (requiere Python, Ansible y Ansible-Lint).
 "  > markdown      : Para archivo Markdown.
-" Adaptadores LSP (asociado a ciertos archivos) en modo IDE NeoVim usando el cliente LSP nativo :
+" Adaptadores LSP, asociado a ciertos archivos, en modo IDE NeoVim usando el cliente LSP nativo (usualmente
+" usados para autocompletado):
 "  > ansible       : Para Ansible. Usa de 'Ansible LS' (requiere Python, Ansible y Ansible-Lint).
 "  > gradle        : Para archivo de configuración de gradle.
 "  > dockerfile    : Para archivo dockerfile. Use linter 'hadolint' para mejorar el linting.
@@ -402,6 +407,7 @@ endif
 "  > html          : Para archivo html.
 "  > css           : Para archivo css.
 "  > tailwindcss   : Para uso de tailwindcss asociado a css.
+"  > kulula        : Para archivos .http y .rest usados por el client rest 'kulala'.
 " Solo aplica si NO usa CoC. CoC estas configuracion se realiza usualmente por extensiones.
 " Estableciendo el valor por defecto si no se define antes.
 if !exists("g:use_lsp_adapters") || empty(g:use_lsp_adapters)
@@ -433,6 +439,7 @@ if !exists("g:use_lsp_adapters") || empty(g:use_lsp_adapters)
     \   'html'          : v:true,
     \   'css'           : v:true,
     "\   'tailwindcss'   : v:true,
+    \   'kulala'        : v:true,
     \}
 
 endif

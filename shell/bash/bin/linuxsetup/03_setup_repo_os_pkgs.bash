@@ -1645,7 +1645,7 @@ function g_install_main() {
     while [ $l_flag_continue -eq 0 ]; do
 
         printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
-        read -r l_options
+        read -re l_options
 
         case "$l_options" in
             a)
@@ -1713,7 +1713,7 @@ function g_uninstall_main() {
     while [ $l_flag_continue -eq 0 ]; do
 
         printf "Ingrese la opción %b(no ingrese los ceros a la izquierda)%b: " "$g_color_gray1" "$g_color_reset"
-        read -r l_options
+        read -re l_options
 
         case "$l_options" in
 

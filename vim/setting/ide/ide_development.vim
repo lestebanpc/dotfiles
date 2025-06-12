@@ -80,6 +80,12 @@ if g:is_neovim
     "Package IDE> Code Outline
     packadd aerial.nvim
 
+
+    "Package IDE> Client Rest 'Kulala'
+    "Si se usa CoC, no funcionara el autocomletado si no se configura un cio para su cliente LSP
+    packadd  kulala.nvim
+
+
     "Configuración de NeoVim para development
     lua require('ide.ide_development')
 

@@ -85,7 +85,7 @@
           "background_templates": [
             "{{ if .Working.Changed }}#973d46{{ end }}",
             "{{ if .Staging.Changed }}#3f0001{{ end }}",
-            "{{ if and (gt .Ahead 0) (gt .Behind 0) }}#ff9248{{ end }}",
+            "{{ if and (gt .Ahead 0) (gt .Behind 0) }}#a35a00{{ end }}",
             "{{ if gt .Ahead 0 }}#235284{{ end }}",
             "{{ if gt .Behind 0 }}#84791b{{ end }}"
           ]

@@ -47,5 +47,13 @@
     "value": " 󰎠 ",
     "enumMember": "  ",
     "default": "  "
+  },
+  "languageserver": {
+    "kulala_ls": {
+      "command": "kulala-ls",
+      "args": ["--stdio"],
+      "filetypes": ["http"],
+      "rootPatterns": [".git/"]
+    }
   }
 }
