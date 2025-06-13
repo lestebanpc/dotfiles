@@ -293,6 +293,7 @@ fzf_lua.setup({
     winopts = {
         width  = 0.99,
         height = 0.80,
+        border = "none",
         preview = {
             --Use fzf native previewers (not use 'neovim floating window' in order to support tmux)
             default        = "bat",

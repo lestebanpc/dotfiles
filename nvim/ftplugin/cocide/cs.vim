@@ -162,7 +162,7 @@ nnoremap <silent> <buffer> <space>aa <Plug>(omnisharp_code_actions)
 xnoremap <silent> <buffer> <space>aa <Plug>(omnisharp_code_actions)
 
 " > QuickFix > Repetir el ultima 'Quick Fix' ejecutado
-nnoremap <silent> <buffer> <space>a. <Plug>(omnisharp_code_action_repeat)
+nnoremap <silent> <buffer> <space>q. <Plug>(omnisharp_code_action_repeat)
 
 " > Refactor > Renombrar un simbolo
 nnoremap <silent> <buffer> <space>rn <Plug>(omnisharp_rename)

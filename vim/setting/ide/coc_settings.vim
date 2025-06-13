@@ -246,14 +246,15 @@ nnoremap <silent> <space>dw  :<C-u>CocFzfList diagnostics<cr>
 " CoC> LSP Client > Code Formatting
 "###################################################################################
 
-"1. Formateo de una selección/buffer (Acciones personalizadas VIM)
-nnoremap <silent> <space>cf :<C-u>call CocActionAsync('format')<CR>
+"1. Formateo de el buffer
+nnoremap <space>cf  <Plug>(coc-format)
+
+"2. Formateo de una selección
 xnoremap <space>cf  <Plug>(coc-format-selected)
-"nnoremap <space>cf  <Plug>(coc-format-selected)
 
 
-"2. Formateo del buffer ':Format' (Comando personalizado de VIM)
-command! -nargs=0 Format :call CocActionAsync('format')
+"3. Formateo del buffer ':Format' (Comando personalizado de VIM)
+"command! -nargs=0 Format :call CocActionAsync('format')
 
 
 
@@ -326,7 +327,7 @@ nnoremap <silent> <space>oi :<C-u>call CocAction('runCommand', 'editor.action.or
 "nnoremap <silent> <space>oi :<C-u>call CocActionAsync('runCommand', 'editor.action.organizeImport')<CR>
 
 " > QuickFix CA > Ejecutar los 'Code Actions' de tipo 'QuickFix' existentes en la linea actual
-nnoremap <space>fx  <Plug>(coc-fix-current)
+nnoremap <space>qf  <Plug>(coc-fix-current)
 
 " > Refactor CA > Renombrar un simbolo.
 nnoremap <space>rn <Plug>(coc-rename)

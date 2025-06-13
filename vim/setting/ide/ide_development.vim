@@ -202,8 +202,8 @@ nnoremap <silent> ]d <Plug>(ale_next)
 nnoremap <silent> [d <Plug>(ale_previous)
 
 
-"Habilitar o desabilitar el diagnostico del buffer
-"nnoremap <silent> <space>dd <Plug>(ale_toggle_buffer)
+" Ejecutar el fixing usando los fixers (tool externas)
+nnoremap <silent> <space>fx :<C-u>ALEFix<CR>
 
 
 "###################################################################################

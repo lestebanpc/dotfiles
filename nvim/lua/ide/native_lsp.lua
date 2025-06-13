@@ -45,6 +45,8 @@ vim.opt.updatetime = 400
 --       --Las capacidades de completado + por defecto de cliente LSP ('vim.lsp.protocol.make_client_capabilities()')
 --       local capabilities = require('cmp_nvim_lsp').default_capabilities()
 --
+local fzf_lua = require("fzf-lua")
+
 vim.api.nvim_create_autocmd('LspAttach', {
     desc = 'LSP Actions',
     callback = function(args)
@@ -132,19 +134,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
         vim.keymap.set('n', ']2', '<cmd>lua vim.diagnostic.goto_next()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Go Next diagnostic' })
 
 
-        -- ---------------------------------------------------------------------------------------------
-        -- Keymapping > Code Formatting
-        -- ---------------------------------------------------------------------------------------------
-
-        -- > Formateo del codigo
-        vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.formatting()<cr>', { noremap = true, buffer = buffer, desc = 'LSP Format buffer code' })
-        --Neovim 0.7 - timeout 2 segundos
-        --vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.formatting_sync(nil, 2000)<cr>', { noremap = true, buffer = buffer, desc = '' })
-        --Neovim 0.8 - timeout 2 segundos
-        --vim.keymap.set('n', '<space>cf', '<cmd>lua vim.lsp.buf.format({ timeout_ms = 2000 })<cr>', { noremap = true, buffer = buffer, desc = '' })
-
-        -- > Formateo del codigo de rango seleccionado
-        vim.keymap.set('x', '<space>cf', '<cmd>lua vim.lsp.buf.range_formatting()<CR>', { noremap = true, buffer = buffer, desc = 'LSP Format selected range' })
 
 
         -- ---------------------------------------------------------------------------------------------
@@ -195,104 +184,279 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
 
         -- ---------------------------------------------------------------------------------------------
-        -- Keymapping > Utilties > Workspace
-        -- ---------------------------------------------------------------------------------------------
-
-        -- > Acciones relacionados al 'Workspace' (proyecto)
-        vim.keymap.set('n', '<space>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', { noremap = true, buffer = buffer, desc = 'LSP Add folder to workspace' })
-        vim.keymap.set('n', '<space>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', { noremap = true, buffer = buffer, desc = 'LSP Remove folder to workspace' })
-
-        -- ---------------------------------------------------------------------------------------------
-        -- Otros
+        -- Otros donde es necesario que el cliente LSP esta conectado con el servidor
         -- ---------------------------------------------------------------------------------------------
 
         -- Obtener el client LSP actual
         local id = vim.tbl_get(args, 'data', 'client_id')
         local client = id and vim.lsp.get_client_by_id(id)
 
-        -- Si se tiene un cliente asignado
-        if client ~= nil then
+        -- Si el cliente asignado ya no esta conectado al servidor LSP
+        if client == nil then
+            return
+        end
 
+        --
+        -- Disable semantic highlights
+        --
+        -- ¿No permite que el LSP cambie el color del texto?
+        --client.server_capabilities.semanticTokensProvider = nil
+
+
+        --
+        -- Highlight symbol under cursor (Resaltado de palabras similaras al actual)
+        --
+        if client.supports_method('textDocument/documentHighlight') then
+
+            local group = vim.api.nvim_create_augroup('highlight_symbol', {clear = false})
+
+            vim.api.nvim_clear_autocmds({buffer = buffer, group = group})
+
+            vim.api.nvim_create_autocmd({'CursorHold', 'CursorHoldI'}, {
+                group = group,
+                buffer = buffer,
+                callback = vim.lsp.buf.document_highlight,
+            })
+
+            vim.api.nvim_create_autocmd({'CursorMoved', 'CursorMovedI'}, {
+                group = group,
+                buffer = buffer,
+                callback = vim.lsp.buf.clear_references,
+            })
+
+        end
+
+        --
+        -- Enable inlay hints
+        --
+        -- Algunos LSP server por defecto tiene 'inlay hints' desactivado, activarlo si LSP server lo soporta.
+        if client.supports_method('textDocument/inlayHint') then
+
+            vim.lsp.inlay_hint.enable(true, {bufnr = buffer})
+
+        end
+
+        --
+        -- CodeLens
+        --
+        if client.server_capabilities.codeLensProvider then
+
+            -- Refrescar CodeLens automáticamente en eventos relevantes
+            vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave", "BufWritePost" }, {
+                buffer = buffer,
+                callback = vim.lsp.codelens.refresh,
+            })
+
+            -- ---------------------------------------------------------------------------------------------
+            -- Keymapping > Code Lens
+            -- ---------------------------------------------------------------------------------------------
             --
-            -- Disable semantic highlights
+
+            vim.keymap.set('n', '<space>cl', '<cmd>lua vim.lsp.codelens.run()<CR>', { noremap = true, buffer = buffer, desc = 'LSP CodeLens run' })
+
+        end
+
+        --
+        -- Formatting
+        --
+        if client.supports_method("textDocument/formatting") then
+
+            -- ---------------------------------------------------------------------------------------------
+            -- Keymapping > Code Formatting
+            -- ---------------------------------------------------------------------------------------------
             --
-            -- ¿No permite que el LSP cambie el color del texto?
-            --client.server_capabilities.semanticTokensProvider = nil
-
+            -- Los API 'vim.lsp.buf.formatting()' y 'vim.lsp.buf.range_formatting()' estan deprecatedi desde Neovim 0.80.
+            -- Se debe usar 'vim.lsp.buf.format()'.
             --
-            -- Highlight symbol under cursor (Resaltado de palabras similaras al actual)
-            --
-            if client.supports_method('textDocument/documentHighlight') then
 
-                local group = vim.api.nvim_create_augroup('highlight_symbol', {clear = false})
-
-                vim.api.nvim_clear_autocmds({buffer = buffer, group = group})
-
-                vim.api.nvim_create_autocmd({'CursorHold', 'CursorHoldI'}, {
-                    group = group,
-                    buffer = buffer,
-                    callback = vim.lsp.buf.document_highlight,
-                })
-
-                vim.api.nvim_create_autocmd({'CursorMoved', 'CursorMovedI'}, {
-                    group = group,
-                    buffer = buffer,
-                    callback = vim.lsp.buf.clear_references,
-                })
-
-            end
-
-            --
-            -- Enable inlay hints
-            --
-            -- Algunos LSP server por defecto tiene 'inlay hints' desactivado, activarlo si LSP server lo soporta.
-            if client.supports_method('textDocument/inlayHint') then
-
-                vim.lsp.inlay_hint.enable(true, {bufnr = buffer})
-
-            end
-
-            --
-            -- CodeLens
-            --
-            if client.server_capabilities.codeLensProvider then
-
-                -- Refrescar CodeLens automáticamente en eventos relevantes
-                vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave", "BufWritePost" }, {
-                    buffer = buffer,
-                    callback = vim.lsp.codelens.refresh,
-                })
-
-                -- ---------------------------------------------------------------------------------------------
-                -- Keymapping > Code Lens
-                -- ---------------------------------------------------------------------------------------------
-                --
-
-                vim.keymap.set('n', '<space>cl', '<cmd>lua vim.lsp.codelens.run()<CR>', { noremap = true, buffer = buffer, desc = 'LSP CodeLens run' })
-
-            end
-
-
-            --
-            -- Mostrar el popup de diagnostics de la linea actual cuando el prompt
-            --
-            --vim.api.nvim_create_autocmd("CursorHold", {
-            --    buffer = buffer,
-            --    callback = function()
-            --        local opts_ = {
-            --            focusable = false,
-            --            close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
-            --            border = 'rounded',
-            --            source = 'always',
-            --            prefix = ' ',
-            --            scope = 'cursor',
-            --        }
-            --        vim.diagnostic.open_float(nil, opts_)
-            --    end
-            --})
+            -- Formateo del codigo del buffer de manera asincorna
+            vim.keymap.set('n', '<space>cf',
+                function()
+                    vim.lsp.buf.format({ async = true })
+                end,
+                { noremap = true, buffer = buffer, desc = 'LSP Format buffer code' }
+            )
 
 
         end
+
+        if client.supports_method("textDocument/rangeFormatting") then
+
+            -- Pemite el formatting usando la funcion 'v:formatexpr' el cual sera la funcion definido por el LSP server.
+            -- > Si hay texto seleccionado (visual mode), use 'gq' para formatear la seleccion.
+            -- > Si hay texto seleccionado (normal mode), use 'gq' para formatear todo el documento.
+            vim.api.nvim_buf_set_option(buffer, "formatexpr", "v:lua.vim.lsp.formatexpr()")
+
+
+            -- ---------------------------------------------------------------------------------------------
+            -- Keymapping > Code Formatting
+            -- ---------------------------------------------------------------------------------------------
+            --
+            -- Los API 'vim.lsp.buf.formatting()' y 'vim.lsp.buf.range_formatting()' estan deprecatedi desde Neovim 0.80.
+            -- Se debe usar 'vim.lsp.buf.format()'.
+            --
+
+            -- Formateo del codigo de rango seleccionado
+            vim.keymap.set('x', '<space>cf',
+                function()
+
+                    -- Marcas '< y '> dan inicio y fin de la selección
+                    local pos_start = vim.api.nvim_buf_get_mark(0, "<")
+                    local pos_end   = vim.api.nvim_buf_get_mark(0, ">")
+
+                    vim.lsp.buf.format({
+                        range = {
+                            start = { line = pos_start[1] - 1, character = pos_start[2] },
+                            -- 'end' es una palabra reservada
+                            ["end"]   = { line = pos_end[1]   - 1, character = pos_end[2] },
+                        },
+                    })
+
+                end,
+                { noremap = true, buffer = buffer, desc = 'LSP Format selected range' }
+            )
+
+        end
+
+        --
+        -- Workspace folder
+        --
+        local g_color_reset   = "\x1b[0m"
+        --local g_color_green1  = "\x1b[32m"
+        local g_color_gray1   = "\x1b[90m"
+        local g_color_cian1   = "\x1b[36m"
+        --local g_color_yellow1 = "\x1b[33m"
+        --local g_color_red1    = "\x1b[31m"
+        --local g_color_blue1   = "\x1b[34m"
+
+        if client.server_capabilities.workspace and client.server_capabilities.workspace.workspaceFolders then
+
+            -- Adicionar un 'Workspace' al proyecto
+            vim.keymap.set('n', '<space>wa',
+                function()
+
+                    -- Listar directorios desde cwd
+                    local dirs = vim.fn.systemlist("fd -t d .")
+                    --local dirs = vim.fn.systemlist("fd -t d " .. vim.loop.cwd())
+
+                    -- Mostrar picker personalizado
+                    fzf_lua.fzf_exec(dirs, {
+                        prompt = "Add Workspace> ",
+
+                        -- Opciones generales de la ventana
+                        winopts  = {
+                            border = "none",
+                        },
+
+                        -- Opciones basicas
+                        fzf_opts = {
+
+                            -- Habilitar el 'ANSI scape code' para mostrar colores del texto
+                            --["--ansi"] = "",
+
+                            -- comando de preview ({} será reemplazado por cada entry)
+                            ["--preview"] = "eza --tree --color=always --icons always -L 5 {} | head -n 300",
+
+                            -- ventana de preview: 50% a la derecha, con wrap
+                            ["--preview-window"] = "right:50%:wrap",
+                        },
+
+                        -- Definimos dos acciones:
+                        actions = {
+                            ["default"] = function(selected)
+                                local folder = vim.loop.cwd() .. "/" .. selected[1]
+                                --local folder = selected[1]
+                                vim.lsp.buf.add_workspace_folder(folder)
+                                print("Workspace added: ", folder)
+                            end,
+                        },
+                    })
+                end,
+                { noremap = true, buffer = buffer, desc = 'LSP Add folder to workspace' }
+            )
+
+            -- Listar 'Workspace' del proyecto y/o remover un 'Workspace'
+            vim.keymap.set('n', '<space>ww',
+                function()
+
+                    -- Obtener el listado de folder de workspace
+                    local folders = vim.lsp.buf.list_workspace_folders()
+                    if vim.tbl_isempty(folders) then
+                        print("No hay carpetas en el workspace.")
+                        return
+                    end
+
+                    -- Mostrar el popup
+                    fzf_lua.fzf_exec(folders, {
+                        prompt = "Workspace folders> ",
+
+                        -- Opciones generales de la ventana
+                        winopts  = {
+                            border = "none",
+                        },
+
+                        -- Opciones basicas
+                        fzf_opts = {
+
+                            ["--header"] = g_color_cian1 .. "CTRL-d " .. g_color_gray1 .. "(remove workspace folder)" .. g_color_reset,
+
+                            -- Habilitar el 'ANSI scape code' para mostrar colores del texto
+                            ["--ansi"] = "",
+
+                            -- comando de preview ({} será reemplazado por cada entry)
+                            ["--preview"] = "eza --tree --color=always --icons always -L 5 {} | head -n 300",
+
+                            -- ventana de preview: 50% a la derecha, con wrap
+                            ["--preview-window"] = "right:50%:wrap",
+                        },
+
+                        -- Definimos dos acciones:
+                        actions = {
+
+                            -- <C-d> elimina el workspace seleccionado
+                            ["ctrl-d"] = function(selected)
+                                local path = selected[1]
+                                vim.lsp.buf.remove_workspace_folder(path)
+                                print(("Eliminado: %s"):format(path))
+                            end,
+
+                            -- Enter copia la ruta al registro por defecto
+                            ["default"] = function(selected)
+                                local path = selected[1]
+                                -- setreg(reg, value): registramos en el register ""
+                                vim.fn.setreg('"', path)
+                                print(("Copiado al register: %s"):format(path))
+                            end,
+                        },
+
+                    })
+
+                end,
+                { noremap = true, buffer = buffer, desc = 'LSP List and Remove folder to workspace' }
+            )
+
+        end
+
+
+        --
+        -- Mostrar el popup de diagnostics de la linea actual cuando el prompt
+        --
+        --vim.api.nvim_create_autocmd("CursorHold", {
+        --    buffer = buffer,
+        --    callback = function()
+        --        local opts_ = {
+        --            focusable = false,
+        --            close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+        --            border = 'rounded',
+        --            source = 'always',
+        --            prefix = ' ',
+        --            scope = 'cursor',
+        --        }
+        --        vim.diagnostic.open_float(nil, opts_)
+        --    end
+        --})
+
+
 
 
   end,

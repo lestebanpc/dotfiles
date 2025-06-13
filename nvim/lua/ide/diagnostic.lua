@@ -1,63 +1,5 @@
-
 --------------------------------------------------------------------------------------------------
--- Diagnostic> Simbolos e Iconos
---------------------------------------------------------------------------------------------------
-
-
---01. Signos (iconos/simbolos) usuados para el diagnostivo
---    En NeoVim <= 0.9.5, se usa 'vim.fn.sign_define()'
---    En NeoVim >= 0.10, se usa 'vim.diagnostic.config()'
---
---vim.fn.sign_define('DiagnosticSignError', { text = '✘', texthl = 'DiagnosticSignError', numhl = '' })
---vim.fn.sign_define('DiagnosticSignWarn',  { text = '▲', texthl = 'DiagnosticSignWarn', numhl = '' })
---vim.fn.sign_define('DiagnosticSignHint',  { text = '⚑', texthl = 'DiagnosticSignHint', numhl = '' })
---vim.fn.sign_define('DiagnosticSignInfo',  { text = '', texthl = 'DiagnosticSignInfo', numhl = '' })
---vim.fn.sign_define('DiagnosticSignInfo',  { text = '', texthl = 'DiagnosticSignInfo', numhl = '' })
-
-vim.diagnostic.config({
-    signs = {
-
-        -- Signo que se muestra segun la severidad del diagnostivo
-        text = {
-            [vim.diagnostic.severity.ERROR] = '✘',
-            [vim.diagnostic.severity.WARN] = '',
-            [vim.diagnostic.severity.HINT] = '⚑',
-            [vim.diagnostic.severity.INFO] = '»',
-        },
-
-        -- Hihgligth group asociado a la linea de texto donde ocurre la severidad
-        linehl = {
-            [vim.diagnostic.severity.ERROR] = "ErrorMsg",
-        },
-
-        -- Hihgligth group asociado al la linea de la columna de numero donde ocurre la severidad
-        numhl = {
-            [vim.diagnostic.severity.WARN] = "WarningMsg",
-        },
-    },
-
-
-    -- Soporte a los virtual lines (NeoVim >= 0.11)
-    -- https://gpanders.com/blog/whats-new-in-neovim-0-11/#virtual-lines
-    virtual_lines = true,
-})
-
---02. Autocomando (evento) cuando se ingresa al modo insert y se sale del modo insert)
---    Desabilitar el diganostico en el modo inserción
-vim.api.nvim_create_autocmd('ModeChanged', {
-    pattern = {'n:i', 'v:s'},
-    desc = 'Disable diagnostics in insert and select mode',
-    callback = function(e) vim.diagnostic.disable(e.buf) end,
-})
-
-vim.api.nvim_create_autocmd('ModeChanged', {
-    pattern = 'i:n',
-    desc = 'Enable diagnostics when leaving insert mode',
-    callback = function(e) vim.diagnostic.enable(e.buf) end,
-})
-
---------------------------------------------------------------------------------------------------
--- Diagnostic>
+-- Diagnostic> Confioguracion general
 --------------------------------------------------------------------------------------------------
 
 local codes = {
@@ -139,18 +81,45 @@ local codes = {
     }
 }
 
---2. Configuración global de diagnósticos
+--1. Signos (iconos/simbolos) usuados para el diagnostivo (deprecated)
+--    En NeoVim <= 0.9.5, se usa 'vim.fn.sign_define()'
+--    En NeoVim >= 0.10, se usa 'vim.diagnostic.config()'
+--
+--vim.fn.sign_define('DiagnosticSignError', { text = '✘', texthl = 'DiagnosticSignError', numhl = '' })
+--vim.fn.sign_define('DiagnosticSignWarn',  { text = '▲', texthl = 'DiagnosticSignWarn', numhl = '' })
+--vim.fn.sign_define('DiagnosticSignHint',  { text = '⚑', texthl = 'DiagnosticSignHint', numhl = '' })
+--vim.fn.sign_define('DiagnosticSignInfo',  { text = '', texthl = 'DiagnosticSignInfo', numhl = '' })
+--vim.fn.sign_define('DiagnosticSignInfo',  { text = '', texthl = 'DiagnosticSignInfo', numhl = '' })
+
+
+--2. Autocomando (evento) cuando se ingresa al modo insert y se sale del modo insert)
+--    Desabilitar el diganostico en el modo inserción
+vim.api.nvim_create_autocmd('ModeChanged', {
+    pattern = {'n:i', 'v:s'},
+    desc = 'Disable diagnostics in insert and select mode',
+    callback = function(e) vim.diagnostic.disable(e.buf) end,
+})
+
+vim.api.nvim_create_autocmd('ModeChanged', {
+    pattern = 'i:n',
+    desc = 'Enable diagnostics when leaving insert mode',
+    callback = function(e) vim.diagnostic.enable(e.buf) end,
+})
+
+
+--3. Configuración global de diagnósticos
 vim.diagnostic.config({
 
-    --Muestra mensaje de diagnóstico con un "texto virtual" al final de la línea.
-    virtual_text = {
-        source = 'always',     --Si es 'always' siempre se muestra la fuente de diagnóstico 'always'
-                               --Si es 'if_many' solo se muestra la fuente si existe mas de uno.
-        prefix = '●',          --Establece el carácter que precede al texto virtual
-    },
+    --Muestra mensaje de diagnóstico eb 'virtual text' al final de la línea.
+    --virtual_text = {
+    --    source = 'always',     --Si es 'always' siempre se muestra la fuente de diagnóstico 'always'
+    --                           --Si es 'if_many' solo se muestra la fuente si existe mas de uno.
+    --    prefix = '●',          --Establece el carácter que precede al texto virtual
+    --},
 
-    --Mostrar un "signo" en la línea donde hay un diagnóstico presente.
-    signs = true,
+    -- Mostrar mensaje del diagnosito en 'virtual lines' (NeoVim >= 0.11)
+    -- https://gpanders.com/blog/whats-new-in-neovim-0-11/#virtual-lines
+    virtual_lines = true,
 
     --Subrayar la localización de un diagnóstico.
     underline = true,
@@ -160,6 +129,30 @@ vim.diagnostic.config({
 
     --Ordenar los diagnósticos de acuerdo a su prioridad.
     severity_sort = true,
+
+    --Mostrar un "signo" en la línea donde hay un diagnóstico presente.
+    signs = {
+
+        -- Signo que se muestra segun la severidad del diagnostivo
+        text = {
+            [vim.diagnostic.severity.ERROR] = '✘',
+            [vim.diagnostic.severity.WARN] = '',
+            [vim.diagnostic.severity.HINT] = '⚑',
+            [vim.diagnostic.severity.INFO] = '»',
+        },
+
+        -- Hihgligth group asociado a la linea de texto donde ocurre la severidad
+        linehl = {
+            [vim.diagnostic.severity.ERROR] = "ErrorMsg",
+        },
+
+        -- Hihgligth group asociado al la linea de la columna de numero donde ocurre la severidad
+        numhl = {
+            [vim.diagnostic.severity.WARN] = "WarningMsg",
+        },
+    },
+
+
 
     --Habilitar ventanas flotantes para mostrar los mensajes de diagnósticos.
     float = {

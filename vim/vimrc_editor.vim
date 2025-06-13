@@ -178,15 +178,15 @@ let g:use_dap_adapters = {}
 "#########################################################################################################
 
 " Establecer opciones VIM, variables de uso interno, keymapping basicos (clipboard, etc).
-runtime setting/setting_basic.vim
+runtime setting/setting_core.vim
 
 
 "#########################################################################################################
 " Setup plugins basicos
 "#########################################################################################################
 
-"StatusLine, TabLine, TMUX, ...
-runtime setting/ui/ui_basic.vim
+" StatusLine, TabLine, TMUX, FZF, NERDTree.
+runtime setting/basic/basic_core.vim
 
-"Utilitarios basicos: FZF, NERDTree, ...
-runtime setting/ui/ui_extended.vim
+" Autocpmpletado de la linea de comandos, Highlighting Sintax (resaltado de sintaxis)
+runtime setting/basic/basic_extended.vim
