@@ -147,12 +147,12 @@ let g:ale_linters_explicit = 1
 " Ejecutar el fixers (si este esta configurado para el filetype actual) cuando se guarda el documento.
 " > Si el fixer no tiene un regla configurada o no puede arreglar un error/warning, no lo hace.
 " > Muchos fixer incluye en formato del documento como parte de su reglas predefinidas.
-let g:ale_fix_on_save = 1
+"let g:ale_fix_on_save = get(g:, 'ale_fix_on_save', 1)
 
 
 " Ejecutar el linter (si este esta configurado para el filetype actual) cuando se guarda el documento.
 " > Los errors/warning que detecta el linter dependera de las reglas configurada (por defecto incluye algunas).
-let g:ale_lint_on_save = 1
+let g:ale_lint_on_save = get(g:, 'ale_lint_on_save', 1)
 
 " Por defecto NO activara el linter cuando se escribre.
 " > Se recomienda usar las capacidade del linting y fixing basicas que ofrece su LSP.

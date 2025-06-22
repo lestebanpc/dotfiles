@@ -2687,13 +2687,13 @@ function get_nodejs_version() {
 #         4 > Si esta instalado pipx.
 #    Los cuales puede ser:
 #     0 > No esta instalado python.
-#     1 > Instalado ptyhon sin los gestor de paquetes pip y pipx
-#     3 > Instalado ptyhon y solo el gestor de paquetes pip
-#     5 > Instalado ptyhon y solo el gestor de paquetes pipx
-#     7 > Instalado ptyhon y los gestor de paquetes pip y pipx
+#     1 > Instalado python sin los gestor de paquetes pip y pipx
+#     3 > Instalado python y solo el gestor de paquetes pip
+#     5 > Instalado python y solo el gestor de paquetes pipx
+#     7 > Instalado python y los gestor de paquetes pip y pipx
 function get_python_versions() {
 
-    # TODO Considerar cuando no es ptyhon del sistema y cuando es un venv
+    # TODO Considerar cuando no es python del sistema y cuando es un venv
     #      ¿que vim/neovim siempre usen el pyhton/nodejs del sistema?
 
     # Validar si esta instalado python

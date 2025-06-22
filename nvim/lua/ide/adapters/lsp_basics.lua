@@ -501,57 +501,71 @@ end
 -- Install    : Descargar binario
 -- Validate   : lua-language-server --version
 --
-use_adapter = vim.g.use_lsp_adapters['lua']
+local is_lua_for_nvim = false
 adapter_name = 'luals'
+
+use_adapter = vim.g.use_lsp_adapters['lua']
+if use_adapter == nil or use_adapter == false then
+
+    use_adapter = vim.g.use_lsp_adapters['lua_nvim']
+    if use_adapter ~= nil and use_adapter == true then
+        is_lua_for_nvim = true
+    end
+
+end
+
 
 if use_adapter ~= nil and use_adapter == true then
 
-   if (vim.g.os_type == 0) then
-       --Si es Windows
-       lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/luals/bin/lua-language-server.exe'
-   else
-       --Si es Linux
-       lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/luals/bin/lua-language-server'
-   end
+    if (vim.g.os_type == 0) then
+        --Si es Windows
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/luals/bin/lua-language-server.exe'
+    else
+        --Si es Linux
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/luals/bin/lua-language-server'
+    end
 
-    vim.lsp.config(adapter_name, {
-
-        on_init = function(client)
-            if client.workspace_folders then
-                local path = client.workspace_folders[1].name
-                if path ~= vim.fn.stdpath('config') and (vim.uv.fs_stat(path..'/.luarc.json') or vim.uv.fs_stat(path..'/.luarc.jsonc')) then
-                    return
-                end
-            end
-
-            client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
-                runtime = {
-                    -- Tell the language server which version of Lua you're using
-                    -- (most likely LuaJIT in the case of Neovim)
-                    version = 'LuaJIT'
-                },
-                -- Make the server aware of Neovim runtime files
-                workspace = {
-                    checkThirdParty = false,
-                    library = {
-                        vim.env.VIMRUNTIME
-                        -- Depending on the usage, you might want to add additional paths here.
-                        -- "${3rd}/luv/library"
-                        -- "${3rd}/busted/library",
-                    }
-                    -- or pull in all of 'runtimepath'. NOTE: this is a lot slower and will cause issues when working on your own configuration
-                    -- (see https://github.com/neovim/nvim-lspconfig/issues/3189)
-                    -- library = vim.api.nvim_get_runtime_file("", true)
-                }
-              })
-        end,
-        --settings = {
-        --    Lua = {}
-        --},
+    -- Callback de inicializacion usara por LuaLs este configurada para NeoVIM
+    local config = {
         cmd = { lsp_server_path },
         filetypes = { "lua" },
+    }
 
-    })
+    if is_lua_for_nvim then
+
+        config.settings = {
+
+            Lua = {
+                diagnostics = {
+                    globals = { 'vim', 'it', 'describe' }
+                },
+                runtime = {
+                    version = "LuaJIT",
+                    --pathStrict = true,
+                    path = {
+                        'lua/?.lua',
+                        'lua/?/init.lua',
+                    },
+                },
+                workspace = {
+                    -- RuntimePath donde se encuentra los archivos lua de la librerias
+                    library = {
+                        vim.env.VIMRUNTIME,
+                        vim.fn.stdpath('config'),
+                    },
+                    checkThirdParty = false,
+                },
+                telemetry = {
+                    enable = false,
+                },
+            },
+
+        }
+
+    end
+
+    -- Configuracion del cliente LSP
+    vim.lsp.config(adapter_name, config)
 
     lsp_adapters[#lsp_adapters + 1] = adapter_name
 

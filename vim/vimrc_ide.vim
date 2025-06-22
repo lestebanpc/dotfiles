@@ -379,6 +379,36 @@ if !exists("g:use_lsp_adapters") || empty(g:use_lsp_adapters)
 endif
 
 
+" Ejecutar el fixers (si este esta configurado para el filetype actual) cuando se guarda el documento.
+" > Si el fixer no tiene un regla configurada o no puede arreglar un error/warning, no lo hace.
+" > Muchos fixer incluye en formato del documento como parte de su reglas predefinidas.
+" El valor real, se obtendra segun orden de prioridad:
+"  > El valor definido por la variable de entorno 'FIX_ON_SAVE'
+"    > 0 ('true' ), si se desactiva las capacidades IDE.
+"      Ejemplo : 'FIX_ON_SAVE=0 vim'
+"    > 1 ('false'), si se preserva las capacidades IDE.
+"      Ejemplo : 'FIX_ON_SAVE=1 vim'
+"    > Cualquiere otro valor se considera no definido.
+"  > El valor definido por esta variable VIM
+"    > v:true (o diferente a '0') si es 'true'
+"    > v:false (o '0') si es false.
+"    > Si no se especifica, se considera no definido
+" Si no se define, su valor por defecto es 'v:true' (valor diferente a 0).
+if $FIX_ON_SAVE != ''
+
+    if $FIX_ON_SAVE == 0
+        let g:ale_fix_on_save = v:true
+    elseif $FIX_ON_SAVE == 1
+        let g:ale_fix_on_save = v:false
+    else
+        let g:ale_fix_on_save = v:true
+    endif
+
+elseif !exists("g:ale_fix_on_save")
+    let g:ale_fix_on_save = v:true
+endif
+
+
 " Variables globales no usuadas
 let g:use_coc = v:true
 let g:use_dap_adapters = {}

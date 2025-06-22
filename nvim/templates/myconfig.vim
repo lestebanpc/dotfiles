@@ -51,7 +51,7 @@
 
 
 "#########################################################################################
-" IDE> Variables globales para VIM/NeoVim
+" IDE> Variables globales para VIM/NeoVim en modo developer
 "#########################################################################################
 "
 
@@ -166,6 +166,8 @@ let g:completion_filetypes = {
 "  > pyright       : Para Python. Usa el servidor 'PyRight'.
 "  > typescript    : Para Javascript/Typescript. Usa 'Typescript LS' un adapador de 'TsServer'
 "                    Use linter como 'eslint' y 'biome' para mejorar el linting.
+"  > lua_nvim      : Para Lua. Usa el LSP 'Lua LS' pero configurado para crear LUA en Neovim.
+"                    Si se define tambien 'lua', 'lua_nvim' prevalece.
 "  > lua           : Para Lua. Usa el LSP 'Lua LS'.
 "  > viml          : Para VimScript. Usa el LSP 'Vim LS'.
 "  > bash          : Para Bash. Usa de 'Bash LS'
@@ -198,7 +200,8 @@ let g:use_lsp_adapters = {
 "\   'python'        : v:true,
 "\   'pyright'       : v:true,
 "\   'typescript'    : v:true,
-\   'lua'           : v:true,
+\   'lua_nvim'      : v:true,
+"\   'lua'           : v:true,
 \   'viml'          : v:true,
 \   'bash'          : v:true,
 "\   'ansible'       : v:true,
@@ -216,9 +219,147 @@ let g:use_lsp_adapters = {
 \}
 
 
+" Activar los linter a usar
+"  > Si establece 'v:null' o '{}', se activara los linter definido por defecto..
+"  > Use las capacidades de linting y fixing del servidor LSP.
+"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
+"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
+"    > Para LSP asociados a archivos, como 'DockerFile' (Docker LS), use linting.
+"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
+"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
+"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
+"    ese caso, desactve el linter/fixer de ALE para esos archivos.
+"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
+"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
+"    como CoC.
+let g:ale_linters = {
+"\   'cpp'         : ['clangtidy'],
+"\   'c'           : ['clangtidy'],
+"\   'rust'        : ['clippy'],
+"\   'go'          : ['golangci-lint'],
+"\   'cs'          : ['OmniSharp'],
+"\   'python'      : ['pylint', 'flake8'],
+"\   'xml'        : ['xmllint'],
+\   'http'        : ['kulala_fmt'],
+\   'rest'        : ['kulala_fmt'],
+\   'dockerfile'  : ['hadolint'],
+"\   'javascript'  : ['eslint'],
+"\   'typescript'  : ['eslint'],
+\   'javascript'  : ['biome'],
+\   'typescript'  : ['biome'],
+\}
+
+
+" Activar los fixer a usar
+"  > Si establece 'v:null' o '{}', se activara los linter definido por defecto.
+"  > Use las capacidades de linting y fixing del servidor LSP.
+"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
+"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
+"    > Para LSP asociados a archivos, como 'DockerFile' (Docker LS), use linting.
+"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
+"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
+"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
+"    ese caso, desactve el linter/fixer de ALE para esos archivos.
+"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
+"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
+"    como CoC.
+let g:ale_fixers = {
+\   '*'          : ['remove_trailing_lines', 'trim_whitespace'],
+"\   'cpp'        : ['clang-format', 'clangtidy'],
+"\   'c'          : ['clang-format', 'clangtidy'],
+"\   'rust'       : ['rustfmt'],
+"\   'go'         : ['gofmt', 'goimports'],
+"\   'python'     : ['black', 'isort'],
+"\   'javascript' : ['prettier', 'eslint'],
+"\   'typescript' : ['prettier', 'eslint'],
+\   'http'        : ['kulala_fmt'],
+\   'rest'        : ['kulala_fmt'],
+\   'javascript' : ['biome'],
+\   'typescript' : ['biome'],
+\   'yaml'       : ['prettier'],
+\   'json'       : ['prettier'],
+\   'html'       : ['prettier'],
+\   'css'        : ['prettier'],
+\}
+
+
+" Ejecutar el fixers (si este esta configurado para el filetype actual) cuando se guarda el documento.
+" > Si el fixer no tiene un regla configurada o no puede arreglar un error/warning, no lo hace.
+" > Muchos fixer incluye en formato del documento como parte de su reglas predefinidas.
+" El valor real, se obtendra segun orden de prioridad:
+"  > El valor definido por la variable de entorno 'FIX_ON_SAVE'
+"    > 0 ('true' ), si se desactiva las capacidades IDE.
+"      Ejemplo : 'FIX_ON_SAVE=0 vim'
+"    > 1 ('false'), si se preserva las capacidades IDE.
+"      Ejemplo : 'FIX_ON_SAVE=1 vim'
+"    > Cualquiere otro valor se considera no definido.
+"  > El valor definido por esta variable VIM
+"    > v:true (o diferente a '0') si es 'true'
+"    > v:false (o '0') si es false.:
+"    > Si no se especifica, se considera no definido
+" Si no se define, su valor por defecto es 'v:true' (valor diferente a 0).
+"let g:ale_fix_on_save = v:true
+
+
+" Ejecutar el linter (si este esta configurado para el filetype actual) cuando se guarda el documento.
+" > Los errors/warning que detecta el linter dependera de las reglas configurada (por defecto incluye algunas).
+"let g:ale_lint_on_save = v:true
+
+
+" Por defecto NO activara el linter cuando se escribre.
+" > Se recomienda usar las capacidade del linting y fixing basicas que ofrece su LSP.
+"   - El LSP cuando se escribe realiza linting basico (analisis no tan profundo y enfocado en responder rapido).
+"   - El LSP muestra 'Code Actions', el cual si el usario lo ejecuta, puede ejecutar fixing basico.
+" > Solo usa el linting avanzado cuando se guarda el documento.
+"let g:ale_lint_on_text_changed = 'never'
+
+
+
+" ---------------------------------------------------------------------------------------
+" Para C++ (Linter 'CLangTidy' y Fixer 'CLang-Format')
+" ---------------------------------------------------------------------------------------
+"
+" Opciones del linter 'CLangTidy' (opcionalmente, puede usar un archivo '.clang-tidy')
+"let g:ale_cpp_clangtidy_options = '--checks=modernize-*,readability-*'
+"leg g:ale_cpp_clangtidy_options = '--checks=modernize-*,performance-*,bugprone-* --header-filter=.*'
+
+" Opciones del fixer 'CLang-Format')
+"let g:ale_cpp_clangformat_options = '--style=Google'
+
+
+" ---------------------------------------------------------------------------------------
+" Para Rust (Linter 'Clippy' y Format 'rustfmt')
+" ---------------------------------------------------------------------------------------
+"
+" Opciones del linter 'Clippy'
+"let g:ale_rust_clippy_options = '-- -W clippy::pedantic -W clippy::nursery'
+
+
+" ---------------------------------------------------------------------------------------
+" Para Go (Linter 'golangci-lint' y Format 'gofmt' o 'goimports')
+" ---------------------------------------------------------------------------------------
+"
+" Opciones del linter 'golangci-lint'
+"let g:ale_go_golangci_lint_options = '--enable=all --fast --exclude-use-default=false'
+"let g:ale_go_golangci_lint_options = '--enable=govet,staticcheck,typecheck,errcheck'
+"let g:ale_go_golangci_lint_options = '--disable-all --enable=staticcheck --enable=errcheck'
+
+
+" ---------------------------------------------------------------------------------------
+" Para Python (Linters 'pylint' o 'flake8' y Formats 'black' o 'isort')
+" ---------------------------------------------------------------------------------------
+"
+
+
+" ---------------------------------------------------------------------------------------
+" Para Go (Linter 'eslint' y Format 'prettier')
+" ---------------------------------------------------------------------------------------
+"
+
+
 
 "#########################################################################################
-" IDE> Variables globales solo para NeoVim
+" IDE> Variables globales solo para NeoVim en modo developer
 "#########################################################################################
 "
 
@@ -272,121 +413,26 @@ let g:use_dap_adapters = {
 \   'typescript'    : v:true,
 \}
 
+" Nombre del programa que creara el DAP server 'debugpy' de python.
+" > El programa debera especificar su ruta absoluta o estar el PATH del usuario.
+" > El inteprete python usado para ejecutar el servidor DAP 'debugpy' no requiere que sea el mismo del programa a depurar.
+" > Valores posibles:
+"   > 'python' y 'python3', para Windows/Mac y Linux respectivamente.
+"     > Usar el inteprete python para crear el servidor 'debugpy'.
+"   > 'debugpy-adapter'
+"     > Comando creado cuando se instala 'debugpy' y permite crear el servidor 'debugpy'
+"     > Identifica automaticamente el interprete python a usar, por lo que no se debe espeficar.
+"   > 'uv'
+"     > Comando que permite crear el servidor 'debugpy'.
+"     > Identifica automaticamente el interprete python a usar, por lo que no se debe espeficar.
+"   > Ruta absoluta de 'python', 'python3' o 'debugpy-adapter' cuando esta instalado en entorno virtual.
+" > Valor por defecto: 'python3' en Linux y 'python' en cualquier otro sistema.
+"let g:dap_launcher_python = 'python'
 
-
-"#########################################################################################
-" IDE> Variables para configurar el Linter/Fixer de ALE (VIM/NeoVim)
-"#########################################################################################
-"
-" Activar los linter a usar
-"  > Si establece 'v:null' o '{}', se activara los linter definido por defecto..
-"  > Use las capacidades de linting y fixing del servidor LSP.
-"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
-"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
-"    > Para LSP asociados a archivos, como 'DockerFile' (Docker LS), use linting.
-"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
-"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
-"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
-"    ese caso, desactve el linter/fixer de ALE para esos archivos.
-"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
-"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
-"    como CoC.
-
-let g:ale_linters = {
-"\   'cpp'         : ['clangtidy'],
-"\   'c'           : ['clangtidy'],
-"\   'rust'        : ['clippy'],
-"\   'go'          : ['golangci-lint'],
-"\   'cs'          : ['OmniSharp'],
-"\   'python'      : ['pylint', 'flake8'],
-"\   'xml'        : ['xmllint'],
-\   'http'        : ['kulala_fmt'],
-\   'rest'        : ['kulala_fmt'],
-\   'dockerfile'  : ['hadolint'],
-"\   'javascript'  : ['eslint'],
-"\   'typescript'  : ['eslint'],
-\   'javascript'  : ['biome'],
-\   'typescript'  : ['biome'],
-\}
-
-"let g:ale_linters = v:null
-"let g:ale_linters = {}
-
-
-" Activar los fixer a usar
-"  > Si establece 'v:null' o '{}', se activara los linter definido por defecto.
-"  > Use las capacidades de linting y fixing del servidor LSP.
-"  > Si su servidores tiene capacidades muy limitidas de linting/fixing use ALE.
-"    > Para Typescript/Javascript debe usar linting/fixing para complementar a 'tsserver'.
-"    > Para LSP asociados a archivos, como 'DockerFile' (Docker LS), use linting.
-"  > Solo en caso que considere que el linting/fixing ofrecido de su servidor LSP es limitado,
-"    configure ALE usando diferentes reglas para que no existe reglas duplicadas.
-"  > Si usa CoC, algunas extensiones impelementan un LSP como linting/fixing adicional. Solo en
-"    ese caso, desactve el linter/fixer de ALE para esos archivos.
-"  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
-"    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
-"    como CoC.
-
-let g:ale_fixers = {
-\   '*'          : ['remove_trailing_lines', 'trim_whitespace'],
-"\   'cpp'        : ['clang-format', 'clangtidy'],
-"\   'c'          : ['clang-format', 'clangtidy'],
-"\   'rust'       : ['rustfmt'],
-"\   'go'         : ['gofmt', 'goimports'],
-"\   'python'     : ['black', 'isort'],
-"\   'javascript' : ['prettier', 'eslint'],
-"\   'typescript' : ['prettier', 'eslint'],
-\   'http'        : ['kulala_fmt'],
-\   'rest'        : ['kulala_fmt'],
-\   'javascript' : ['biome'],
-\   'typescript' : ['biome'],
-\   'yaml'       : ['prettier'],
-\   'json'       : ['prettier'],
-\   'html'       : ['prettier'],
-\   'css'        : ['prettier'],
-\}
-
-"let g:ale_fixers = v:null
-"let g:ale_fixers = {}
-
-
-" ---------------------------------------------------------------------------------------
-" Para C++ (Linter 'CLangTidy' y Fixer 'CLang-Format')
-" ---------------------------------------------------------------------------------------
-"
-" Opciones del linter 'CLangTidy' (opcionalmente, puede usar un archivo '.clang-tidy')
-"let g:ale_cpp_clangtidy_options = '--checks=modernize-*,readability-*'
-"leg g:ale_cpp_clangtidy_options = '--checks=modernize-*,performance-*,bugprone-* --header-filter=.*'
-
-" Opciones del fixer 'CLang-Format')
-"let g:ale_cpp_clangformat_options = '--style=Google'
-
-
-" ---------------------------------------------------------------------------------------
-" Para Rust (Linter 'Clippy' y Format 'rustfmt')
-" ---------------------------------------------------------------------------------------
-"
-" Opciones del linter 'Clippy'
-"let g:ale_rust_clippy_options = '-- -W clippy::pedantic -W clippy::nursery'
-
-
-" ---------------------------------------------------------------------------------------
-" Para Go (Linter 'golangci-lint' y Format 'gofmt' o 'goimports')
-" ---------------------------------------------------------------------------------------
-"
-" Opciones del linter 'golangci-lint'
-"let g:ale_go_golangci_lint_options = '--enable=all --fast --exclude-use-default=false'
-"let g:ale_go_golangci_lint_options = '--enable=govet,staticcheck,typecheck,errcheck'
-"let g:ale_go_golangci_lint_options = '--disable-all --enable=staticcheck --enable=errcheck'
-
-
-" ---------------------------------------------------------------------------------------
-" Para Python (Linters 'pylint' o 'flake8' y Formats 'black' o 'isort')
-" ---------------------------------------------------------------------------------------
-"
-
-
-" ---------------------------------------------------------------------------------------
-" Para Go (Linter 'eslint' y Format 'prettier')
-" ---------------------------------------------------------------------------------------
-"
+" Obtener el framerwork de testing de Python a usar
+" > Los valores puede ser: 'unittest', 'pytest', 'django'
+" > Para determinar el framework, se usara la siguiente prioridad:
+"   > Usar el framework especificado por la variable global
+"   > Si no se especifica se intentara obtener detectar el framework a usar.
+"   > Si no logra determinar el framework usara 'unittest'
+"let g:python_tester_type = 'pytest'

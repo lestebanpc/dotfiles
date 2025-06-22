@@ -459,11 +459,22 @@ set ignorecase
 " - Excepto se tenga al menos una letra en mayuscula
 set smartcase
 
+
+
 "2. Opciones de encoding
+
+" Codificación interna de Vim (recomendado UTF-8)
 set encoding=utf-8
-set fileencoding=utf-8
-set fileencodings=utf-8
+
+" Lista para la detección automática del 'fileencoding' cuando se abre un archivos.
+" - Si no se especifica.se usara el valor definido en 'encoding'.
+" - Si un archivo no tiene ninguno de estos encoding, se usara para mostrar el 'encoding' pero la opcion
+"   'fileencoding' es vacio.
+set fileencodings=ucs-bom,utf-8,iso-8859-1,cp1252,macroman,default
+
+" Formato de fin de línea multiplataforma: '\n' (Unix), '\r\n' (Windows) y '\r' (macOS Classic).
 set fileformats=unix,dos,mac
+
 
 
 "3. Soporte del mouse

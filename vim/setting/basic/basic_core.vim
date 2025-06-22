@@ -406,38 +406,43 @@ let g:fzf_colors =
 "let g:fzf_vim.tags_command = 'ctags -R'
 
 
-"Listar archivos del proyecto, Seleccionar/Examinar e Ir
-nnoremap <silent> <leader>ll :Files<CR>
-"Listar archivos del 'Git Files', Seleccionar/Examinar e Ir
-nnoremap <silent> <leader>lg :GFiles<CR>
-"Listar archivos del 'Git Status Files', Seleccionar/Examinar e Ir
-nnoremap <silent> <leader>ls :GFiles?<CR>
-"Listar comandos VIM, seleccionar y ejecutar
-nnoremap <silent> <leader>lc :History:<CR>
-"Listar las marcas (marks), seleccionar e ir
-nnoremap <silent> <leader>mm :Marks<CR>
-"Listar los saltos (jumps), seleccionar e ir
-nnoremap <silent> <leader>jj :Jumps<CR>
-
-"Listar, Selexionar/Examinar e Ir al buffer
-nnoremap <silent> <leader>bb :Buffers<CR>
-
 "Busqueda de archivos del proyecto usando busqueda difuso 'ripgrep'.
 nnoremap <silent> <leader>ff :Rg<CR>
 nnoremap <silent> <leader>fw :Rg <C-r><C-w><CR>
 "nnoremap <silent> <leader>fW :call fzf#vim#grep('rg --vimgrep --no-heading --smart-case ' . shellescape(expand('<cWORD>')), 1, fzf#vim#with_preview(), 0)
+
+"Listar, Selexionar/Examinar e Ir al buffer
+nnoremap <silent> <leader>bb :Buffers<CR>
+
+"Listar archivos del proyecto, Seleccionar/Examinar e Ir
+nnoremap <silent> <leader>ll :Files<CR>
+
+"Listar archivos del 'Git Files', Seleccionar/Examinar e Ir
+nnoremap <silent> <leader>lg :GFiles<CR>
+
+"Listar archivos del 'Git Status Files', Seleccionar/Examinar e Ir
+nnoremap <silent> <leader>ls :GFiles?<CR>
+
+"Listar comandos VIM, seleccionar y ejecutar
+nnoremap <silent> <leader>lc :History:<CR>
+
+"Listar las marcas (marks), seleccionar e ir
+nnoremap <silent> <leader>lm :Marks<CR>
+
+"Listar los saltos (jumps), seleccionar e ir
+nnoremap <silent> <leader>lj :Jumps<CR>
+
+"Listar todos los tags del proyecto. (Si no se encuenta el archivo tags, debe generarlo usando 'ctags -R')
+nnoremap <silent> <leader>lT :Tags<CR>
+
+"Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
+nnoremap <silent> <leader>lt :BTags<CR>
+
+"Listar help tags de vim (archivos de ayuda de vim)
+nnoremap <silent> <leader>lh :Helptags<CR>
 
 "Recomendaciones del uso de tags de codigo:
 " - Regenerar los tags cuando realiza cambios ejecutando 'ctags -R' en el folder root del proyecto.
 " - Crear archivos 'option files' dentro del proyecto (ubicados usualmente carpata './.ctags.d/'),
 "   donde defina las opciones por defecto cuando se ejecuta 'ctags', por ejemplo, coloque los archivos
 "   y carpetas de exclusiion.
-
-"Listar todos los tags del proyecto. (Si no se encuenta el archivo tags, lo genera usando 'ctags -R')
-nnoremap <silent> <leader>tw :Tags<CR>
-
-"Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
-nnoremap <silent> <leader>tt :BTags<CR>
-
-"Listar help tags de vim (archivos de ayuda de vim)
-nnoremap <silent> <leader>lt :Helptags<CR>

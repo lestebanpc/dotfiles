@@ -50,7 +50,7 @@
 
 
 "#########################################################################################
-" IDE> Variables globales para VIM/NeoVim
+" IDE> Variables globales para VIM/NeoVim en modo developer
 "#########################################################################################
 "
 
@@ -157,12 +157,6 @@ let g:use_lsp_adapters = {
 \}
 
 
-
-"#########################################################################################
-" IDE> Variables para configurar el Linter/Fixer de ALE (VIM/NeoVim)
-"#########################################################################################
-"
-
 " Activar los linter a usar
 "  > Si establece 'v:null' o '{}', se activara los linter definido por defecto..
 "  > Use las capacidades de linting y fixing del servidor LSP.
@@ -176,8 +170,8 @@ let g:use_lsp_adapters = {
 "  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
 "    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
 "    como CoC.
-
 let g:ale_linters = {
+\   'dockerfile'  : ['hadolint'],
 "\   'cpp'         : ['clangtidy'],
 "\   'c'           : ['clangtidy'],
 "\   'rust'        : ['clippy'],
@@ -185,15 +179,11 @@ let g:ale_linters = {
 "\   'cs'          : ['OmniSharp'],
 "\   'python'      : ['pylint', 'flake8'],
 "\   'xml'        : ['xmllint'],
-\   'dockerfile'  : ['hadolint'],
 "\   'javascript'  : ['eslint'],
 "\   'typescript'  : ['eslint'],
 \   'javascript'  : ['biome'],
 \   'typescript'  : ['biome'],
 \}
-
-"let g:ale_linters = v:null
-"let g:ale_linters = {}
 
 
 " Activar los fixer a usar
@@ -209,7 +199,6 @@ let g:ale_linters = {
 "  > Si usa CoC, se ha configurado para que todo diagnostico generado por CoC, se envie a ALE para
 "    que lo presente. ALE siemre mostrara el diagnostico ya sea generado por este o por un externo
 "    como CoC.
-
 let g:ale_fixers = {
 \   '*'          : ['remove_trailing_lines', 'trim_whitespace'],
 "\   'cpp'        : ['clang-format', 'clangtidy'],
@@ -227,8 +216,36 @@ let g:ale_fixers = {
 \   'css'        : ['prettier'],
 \}
 
-"let g:ale_fixers = v:null
-"let g:ale_fixers = {}
+
+" Ejecutar el fixers (si este esta configurado para el filetype actual) cuando se guarda el documento.
+" > Si el fixer no tiene un regla configurada o no puede arreglar un error/warning, no lo hace.
+" > Muchos fixer incluye en formato del documento como parte de su reglas predefinidas.
+" El valor real, se obtendra segun orden de prioridad:
+"  > El valor definido por la variable de entorno 'FIX_ON_SAVE'
+"    > 0 ('true' ), si se desactiva las capacidades IDE.
+"      Ejemplo : 'FIX_ON_SAVE=0 vim'
+"    > 1 ('false'), si se preserva las capacidades IDE.
+"      Ejemplo : 'FIX_ON_SAVE=1 vim'
+"    > Cualquiere otro valor se considera no definido.
+"  > El valor definido por esta variable VIM
+"    > v:true (o diferente a '0') si es 'true'
+"    > v:false (o '0') si es false.
+"    > Si no se especifica, se considera no definido
+" Si no se define, su valor por defecto es 'v:true' (valor diferente a 0).
+"let g:ale_fix_on_save = v:true
+
+
+" Ejecutar el linter (si este esta configurado para el filetype actual) cuando se guarda el documento.
+" > Los errors/warning que detecta el linter dependera de las reglas configurada (por defecto incluye algunas).
+"let g:ale_lint_on_save = v:true
+
+
+" Por defecto NO activara el linter cuando se escribre.
+" > Se recomienda usar las capacidade del linting y fixing basicas que ofrece su LSP.
+"   - El LSP cuando se escribe realiza linting basico (analisis no tan profundo y enfocado en responder rapido).
+"   - El LSP muestra 'Code Actions', el cual si el usario lo ejecuta, puede ejecutar fixing basico.
+" > Solo usa el linting avanzado cuando se guarda el documento.
+"let g:ale_lint_on_text_changed = 'never'
 
 
 " ---------------------------------------------------------------------------------------

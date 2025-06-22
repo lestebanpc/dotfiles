@@ -222,6 +222,12 @@ cmp.setup({
             'InsertEnter',
             'TextChanged',
         },
+
+        -- Pertmite un comportamiento similar al completado por defecto de CoC
+        -- > Siempre aparece resaltado (highlinting) el primer elemento del completado.
+        -- > Por defecto <CR> esta mapeado como 'cmp.mapping.confirm({ select = true })' el cual siempre
+        --   acepta el primer elemento de la lista.
+        completeopt = 'menu,menuone,noinsert',
     },
 
     -- Funciones invocados por el completado cuando el elemento es un snippet.

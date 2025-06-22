@@ -98,15 +98,25 @@ require("avante").setup({
         enable_cursor_planning_mode = false, -- Whether to enable Cursor Planning Mode. Default to false.
     },
 
+    providers = {
+        copilot = {
+            endpoint = 'https://api.githubcopilot.com/',
+            model = 'claude-3.5-sonnet',
+            proxy = nil, -- [protocol://]host[:port] Use this proxy
+            allow_insecure = false, -- Do not allow insecure server connections
+            extra_request_body = {
+                timeout = 30000, -- Timeout in milliseconds
+                temperature = 0.1, -- kinda creative
+                --max_tokens = 8192,
+            },
+        },
+    },
 
-    copilot = {
-        endpoint = 'https://api.githubcopilot.com/',
-        model = 'claude-3.5-sonnet',
-        proxy = nil, -- [protocol://]host[:port] Use this proxy
-        allow_insecure = false, -- Do not allow insecure server connections
-        timeout = 30000, -- Timeout in milliseconds
-        temperature = 0.1, -- kinda creative
-        max_tokens = 8192,
+    web_search_engine = {
+        -- tavily, serpapi, searchapi, google, kagi, brave, or searxng
+        provider = "tavily",
+        -- proxy support, e.g., http://127.0.0.1:7890
+        proxy = nil,
     },
 })
 

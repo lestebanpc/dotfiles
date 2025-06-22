@@ -7,6 +7,19 @@ local dap_server_path = ""
 -- API        : require("dap").configuration
 -- URL        : https://github.com/mfussenegger/nvim-dap/blob/master/doc/dap.txt
 --
+-- DAP Server:
+-- > El servidor DAP es un proceso que puede controlar al programa a depurar.
+-- > En programas interpretados, el programa a depurar se puede ejecutar dentro del proceso del servidor DAP.
+-- > En programa a depurar require tener la informacion de la linea de codigo que esta examinando para enviarselo
+--   al cliente DAP. Por ello, los programas compilados debera tener dicha informacion (por ejemplo usando los
+--   'simbolos de depuracion').
+--
+-- DAP Client:
+-- > Usualmente ofrece un GUI y No requiere tener el RTE del programa a depurar.
+-- > Tiene el codigo fuente del programa a depurar.
+-- > Tiene reglas de 'path mappings' que definen como se traduce la ruta remota enviada por el servidor DAP con la
+--   ruta local donde se tiene el codigo fuente.
+--
 -- Variables que se puede usar:
 -- > `${file}`: Active filename
 -- > `${fileBasename}`: The current file's basename
@@ -499,13 +512,13 @@ end
 --
 use_adapter = vim.g.use_dap_adapters['swift']
 
-if use_adapter ~= nil and use_adapter == true then
+--if use_adapter ~= nil and use_adapter == true then
 
     -- Configuracion del cliente DAP y/o su adapador.
 
     -- Configuracion del proyecto (NO USAR. Usar archivo '.vscode/launch.json')
 
-end
+--end
 
 
 --------------------------------------------------------------------------------------------------
@@ -520,13 +533,13 @@ end
 --
 use_adapter = vim.g.use_dap_adapters['kotlin']
 
-if use_adapter ~= nil and use_adapter == true then
+--if use_adapter ~= nil and use_adapter == true then
 
     -- Configuracion del cliente DAP y/o su adapador.
 
     -- Configuracion del proyecto (NO USAR. Usar archivo '.vscode/launch.json')
 
-end
+--end
 
 
 --------------------------------------------------------------------------------------------------
@@ -543,58 +556,181 @@ use_adapter = vim.g.use_dap_adapters['python']
 
 if use_adapter ~= nil and use_adapter == true then
 
-    -- Configuracion del cliente DAP y/o su adapador.
+    --1. Configuracion del cliente DAP y/o su adapador.
+
+    -- Si la configuracion ingresada no define la ruta de python o la funcion para calcular la ruta
+    -- se usara una funcion para obtener la ruta del venv usado por el proyecto
+    local enrich_config = function(config, on_config)
+
+        if not config.pythonPath and not config.python then
+
+            local pythonPath = require("utils.python").get_venv_python_path()
+            if pythonPath == nil or pythonPath == "" then
+                -- Si es Linux
+                if vim.g.os_type == 2 or vim.g.os_type == 3 then
+                    pythonPath = 'python3'
+                else
+                    pythonPath = 'python'
+                end
+            end
+            config.pythonPath = pythonPath
+
+        end
+
+        on_config(config)
+
+    end
+
+    -- Se usara un callback, debido a que los valores a usar dependeran de la configuracion ingresada.
     dap.adapters.python = function(cb, config)
+
+        local adapter
+
+        -- Si el cliente DAP se vincula a un servidor DAP (proceso 'debugpy')
+        -- > El servidor DAP esta enlazado a un programa a depurar que esta en ejecución.
+        -- > El cliente DAP tiene los archivos de codigo (no requiere el RTE del programa), y 'path mappings'
         if config.request == 'attach' then
-            ---@diagnostic disable-next-line: undefined-field
+
             local port = (config.connect or config).port
-            ---@diagnostic disable-next-line: undefined-field
             local host = (config.connect or config).host or '127.0.0.1'
-            cb({
+            adapter = {
                 type = 'server',
                 port = assert(port, '`connect.port` is required for a python `attach` configuration'),
                 host = host,
+                --enrich_config = enrich_config,
                 options = {
                   source_filetype = 'python',
                 },
-            })
+            }
+
+        -- Si el cliente DAP inicia el servidor DAP y programa a depurar.
+        -- > El cliente DAP crea el servidor DAP usando un determino interprete python (no es necesariamente el mismo del proyecto).
+        -- > El cliente DAP tambien ejecuta programa a depurar el debe usar el interprete python asociado al proyecto.
         else
-            cb({
+
+            local cmd = vim.g.dap_launcher_python
+
+            local basename
+            if cmd == nil or cmd == "" then
+
+                -- Si es Linux
+                if vim.g.os_type == 2 or vim.g.os_type == 3 then
+                    cmd = 'python3'
+                    basename = cmd
+                else
+                    cmd = 'python'
+                    basename = cmd
+                end
+
+            else
+                cmd = vim.fn.expand(vim.fn.trim(cmd), true)
+                basename = vim.fn.fnamemodify(cmd, ":t")
+            end
+
+            adapter= {
                 type = 'executable',
-                command = 'path/to/virtualenvs/debugpy/bin/python',
+                command = cmd,
                 args = { '-m', 'debugpy.adapter' },
+                enrich_config = enrich_config,
                 options = {
                   source_filetype = 'python',
                 },
-            })
+            }
+
+            if basename == "uv" then
+                adapter.args = { "run", "--with", "debugpy", "python", "-m", "debugpy.adapter" }
+            elseif basename == "debugpy-adapter" then
+                adapter.args = {}
+            end
+
         end
+
+        -- Inicalizar el cliente DAP
+        cb(adapter)
+
     end
 
+    -- Compabilidad con vscode que renombre 'python' con 'debugpy'
+    dap.adapters.debugpy = dap.adapters.python
 
-    -- Configuracion del proyecto (NO USAR. Usar archivo '.vscode/launch.json')
+    --2. Configuracion del proyecto (Usar archivo '.vscode/launch.json' para crear nuevas configuraciones)
     dap.configurations.python = {
         {
-            -- The first three options are required by nvim-dap
-            type = 'python'; -- the type here established the link to the adapter definition: `dap.adapters.python`
+            --1. Options are required by nvim-dap
+            type = 'python';
+            request = 'attach';
+            name = "Attach";
+
+            --2. Options for debugpy
+            --   URL: https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
+            connect = function ()
+                local host = vim.fn.input('Host [127.0.0.1]: ')
+                host = host ~= '' and host or '127.0.0.1'
+                local port = tonumber(vim.fn.input('Port [5678]: ')) or 5678
+                return { host = host, port = port }
+            end;
+        },
+        {
+            --1. Options are required by nvim-dap
+            type = 'python';
             request = 'launch';
             name = "Launch file";
 
-            -- Options below are for debugpy, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings for supported options
+            --2. Options for debugpy
+            --   URL: https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
+            program = "${file}";
+            pythonPath = nil;
+            console = "integratedTerminal";
+        },
+        {
+            --1. Options are required by nvim-dap
+            type = 'python';
+            request = 'launch';
+            name = "Launch DocTest file";
 
-            program = "${file}"; -- This configuration will launch the current file if used.
-            pythonPath = function()
-                -- debugpy supports launching an application with a different interpreter then the one used to launch debugpy itself.
-                -- The code below looks for a `venv` or `.venv` folder in the current directly and uses the python within.
-                -- You could adapt this - to for example use the `VIRTUAL_ENV` environment variable.
-                local cwd = vim.fn.getcwd()
-                if vim.fn.executable(cwd .. '/venv/bin/python') == 1 then
-                    return cwd .. '/venv/bin/python'
-                elseif vim.fn.executable(cwd .. '/.venv/bin/python') == 1 then
-                    return cwd .. '/.venv/bin/python'
-                else
-                    return '/usr/bin/python'
+            --2. Options for debugpy
+            --   URL: https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
+            module = 'doctest';
+            args = { "${file}" };
+            noDebug = true;
+            pythonPath = nil;
+            console = "integratedTerminal";
+        },
+        {
+            --1. Options are required by nvim-dap
+            type = 'python';
+            request = 'launch';
+            name = "Launch package module";
+
+            --2. Options for debugpy
+            --   URL: https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
+            module = function ()
+
+                local mod = vim.fn.input('Module [mymod.main]: ')
+                if mod == nil or mod == "" then
+                    return "mymod.main"
                 end
+
+                return mod
+
             end;
+            args = function ()
+
+                -- Obtener los argumentos de modulo
+                local args_string = vim.fn.input('Arguments: ')
+                if args_string == nil or args_string == "" then
+                    return {}
+                end
+
+                -- Convertir una cadena en un arreglo de opciones de un comando
+                -- Input  : 'python3 -m debugpy --listen 5678'
+                -- Output : '{"python3", "-m", "debugpy", "--listen", "5678"}'
+                local utils = require("dap.utils")
+                return utils.splitstr(args_string)
+
+            end;
+            pythonPath = nil;
+            console = "integratedTerminal";
         },
     }
 

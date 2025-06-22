@@ -16,7 +16,6 @@ declare -A gA_python_pckgs_name=(
     ['ansible']='ansible'
     ['debugpy']='debugpy'
     ['compiledb']='compiledb'
-    ['rope']='rope'
     )
 
 # Grupo de paquete python usado para ordenar los paquetes en grupos de instalacion diferentes.
@@ -33,7 +32,6 @@ declare -A gA_python_pckgs_group=(
     ['debugpy']=1
     ['ansible']=2
     ['compiledb']=2
-    ['rope']=2
     )
 
 # Descripcion del paquete que se mostrara en lo logs
@@ -60,9 +58,7 @@ declare -A gA_python_pckgs_type=(
     ['basedpyright']=1
     ['pyright']=1
     ['ansible-lint']=1
-    ['debugpy']=1
     ['compiledb']=1
-    ['rope']=0
     ['ansible']=2
     )
 

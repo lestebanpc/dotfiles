@@ -1110,6 +1110,15 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
 
+    #Crear el enlace simbolico de comandos basicos
+    create_folderpath_on_home "" ".local/bin"
+    l_target_path=".local/bin"
+    l_target_link="tmux_run_cmd"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='tmux_run_cmd.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    l_status=$?
+
 
     #Archivo de configuración de Git y sus archivo de connfiguracion personalzida.
     l_target_path=""

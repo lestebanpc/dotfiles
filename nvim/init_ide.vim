@@ -318,7 +318,7 @@ if !exists("g:ale_linters") || empty(g:ale_linters)
     "Establecer valores por defecto
     let g:ale_linters = {
     "\   'cpp'        : ['clangtidy'],
-    "\   'c'          :   ['clangtidy'],
+    "\   'c'          : ['clangtidy'],
     "\   'rust'       : ['clippy'],
     "\   'go'         : ['golangci-lint'],
     "\   'python'     : ['pylint', 'flake8'],
@@ -423,8 +423,9 @@ if !exists("g:use_lsp_adapters") || empty(g:use_lsp_adapters)
     "\   'swift'         : v:true,
     "\   'kotlin'        : v:true,
     "\   'python'        : v:true,
-    "\   'pyright'       : v:true,
+    \   'pyright'       : v:true,
     "\   'typescript'    : v:true,
+    "\   'lua_nvim'      : v:true,
     \   'lua'           : v:true,
     \   'viml'          : v:true,
     \   'bash'          : v:true,
@@ -481,6 +482,37 @@ if !exists("g:use_dap_adapters") || empty(g:use_dap_adapters)
     \}
 endif
 
+
+" Ejecutar el fixers (si este esta configurado para el filetype actual) cuando se guarda el documento.
+" > Si el fixer no tiene un regla configurada o no puede arreglar un error/warning, no lo hace.
+" > Muchos fixer incluye en formato del documento como parte de su reglas predefinidas.
+" El valor real, se obtendra segun orden de prioridad:
+"  > El valor definido por la variable de entorno 'FIX_ON_SAVE'
+"    > 0 ('true' ), si se desactiva las capacidades IDE.
+"      Ejemplo : 'FIX_ON_SAVE=0 vim'
+"    > 1 ('false'), si se preserva las capacidades IDE.
+"      Ejemplo : 'FIX_ON_SAVE=1 vim'
+"    > Cualquiere otro valor se considera no definido.
+"  > El valor definido por esta variable VIM
+"    > v:true (o diferente a '0') si es 'true'
+"    > v:false (o '0') si es false.
+"    > Si no se especifica, se considera no definido
+" Si no se define, su valor por defecto es 'v:true' (valor diferente a 0).
+if $FIX_ON_SAVE != ''
+
+    if $FIX_ON_SAVE == 0
+        let g:ale_fix_on_save = v:true
+    elseif $FIX_ON_SAVE == 1
+        let g:ale_fix_on_save = v:false
+    else
+        let g:ale_fix_on_save = v:true
+    endif
+
+elseif !exists("g:ale_fix_on_save")
+    let g:ale_fix_on_save = v:true
+endif
+
+
 " Solo para NeoVIM. Habilitar el uso de COC.
 " El valor real, se obtendra segun orden de prioridad:
 "  > El valor definido por la variable de entorno 'USE_COC'
@@ -502,18 +534,9 @@ if $USE_COC != ''
         let g:use_coc = v:false
     endif
 
-elseif exists("g:use_coc")
-
-    if empty(g:use_coc)
-        let g:use_coc = v:false
-    else
-        let g:use_coc = v:true
-    endif
-
-else
+elseif !exists("g:use_coc")
     let g:use_coc = v:false
 endif
-
 
 
 "#########################################################################################################
@@ -588,7 +611,8 @@ runtime setting/ide/ide_development.vim
 " > Para 'Unit testing' en VIM se usara 'vim-test' (facilita la ejecucion desde vim)
 " > Para 'Unit testing' en NeoVIM se usara 'nvim-neotest' el cual permite:
 "   - Facilita la ejecucion desde NeoVIM.
-"   - Muestra reportes de la ejecucion e indicadores del estado en buffer de las pruebas ejecutadas.  runtime setting/ide/ide_testing.vim
+"   - Muestra reportes de la ejecucion e indicadores del estado en buffer de las pruebas ejecutadas.
+runtime setting/ide/ide_testing.vim
 
 " Capacidades adicionales de IDE
 " > IA Chat
