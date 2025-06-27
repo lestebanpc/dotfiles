@@ -224,7 +224,6 @@ declare -A gA_repos_type=(
         ['b0o/SchemaStore.nvim']=5
         ['kosayoda/nvim-lightbulb']=5
         ['doxnit/cmp-luasnip-choice']=5
-        ['seblyng/roslyn.nvim']=5
         ['mfussenegger/nvim-jdtls']=5
         ['mfussenegger/nvim-dap']=7
         ['rcarriga/nvim-dap-ui']=7
@@ -284,7 +283,6 @@ declare -A gA_repos_scope=(
         ['theHamsta/nvim-dap-virtual-text']=2
         ['rcarriga/nvim-dap-ui']=2
         ['nvim-neotest/nvim-nio']=2
-        ['seblyng/roslyn.nvim']=2
         ['mfussenegger/nvim-jdtls']=2
         ['zbirenbaum/copilot.lua']=2
         ['zbirenbaum/copilot-cmp']=2
@@ -1013,6 +1011,16 @@ function _setup_user_profile() {
     l_target_link=".inputrc"
     l_source_path="${g_repo_name}/etc/readline"
     l_source_filename='inputrc'
+
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    l_status=$?
+
+
+    #Archivo de configuración para LFTP
+    l_target_path=""
+    l_target_link=".lftprc"
+    l_source_path="${g_repo_name}/etc/lftp"
+    l_source_filename='lftprc_default.conf'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?

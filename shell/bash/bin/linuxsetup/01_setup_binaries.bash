@@ -509,24 +509,43 @@ function _install_artifacts() {
         p_flag_install=0
     fi
 
-    #2. Descargar los artectos del repositorio
-    local l_n=${#pnra_artifact_names[@]}
+    #2. Obtener informacion requerida antes de instalcion
 
-    local l_artifact_filename
-    local l_artifact_type
-    local l_i=0
-
-    #3. Instalación de los artectactos
-    local l_is_last=1
-    local l_tmp=""
-    mkdir -p "${g_temp_path}/${p_repo_id}"
-
+    # Obtener el tag (solo para logs)
     local l_tag="${p_repo_id}${g_color_gray1}[${p_repo_last_pretty_version}]"
     if [ ! -z "${p_arti_subversion_version}" ]; then
         l_tag="${l_tag}[${p_arti_subversion_version}]${g_color_reset}"
     else
         l_tag="${l_tag}${g_color_reset}"
     fi
+
+    # Obtener el tipo de artefacto (solo para logs)
+    local l_tmp="${gA_main_arti_type[$p_repo_id]:-0}"
+    local l_main_artifact='system program'
+
+    if [ $l_tmp -eq 1 ]; then
+        l_main_artifact='user program'
+    elif [ $l_tmp -eq 2 ]; then
+        l_main_artifact='OS package'
+    elif [ $l_tmp -eq 3 ]; then
+        l_main_artifact='system fonts'
+    elif [ $l_tmp -eq 4 ]; then
+        l_main_artifact='custom artifact'
+    fi
+
+    # Numero de artefactos
+    local l_n=${#pnra_artifact_names[@]}
+
+    #3. Crear el folder si no existe
+    mkdir -p "${g_temp_path}/${p_repo_id}"
+
+
+    #4. Instalación de los artectactos
+    local l_artifact_filename
+    local l_artifact_type
+    local l_i=0
+    local l_is_last=1
+    l_tmp=""
 
     local l_artifact_filename_without_ext=""
     local l_status=0
@@ -547,7 +566,8 @@ function _install_artifacts() {
         if [ $l_artifact_type -eq 0 ]; then
 
             #Copiar los archivos necesarios
-            printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas de comandos/programas ...\n' "${l_tag}" "${l_i}" "${l_artifact_filename}"
+            printf 'Copiando binarios del artefacto "%b[%s]" ("%s") en las rutas del %b%s%b ...\n' "${l_tag}" "${l_i}" "${l_artifact_filename}" \
+                   "$g_color_gray1" "$l_main_artifact" "$g_color_reset"
             if [ $p_is_win_binary -eq 0 ]; then
                 l_artifact_filename_without_ext="${l_artifact_filename%.exe}"
             else
@@ -561,7 +581,7 @@ function _install_artifacts() {
             l_status=$?
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_filename}"
 
-        #Si el tipo de item es 1 si es package
+        #Si el tipo de item es 1 si es package del SO
         elif [ $l_artifact_type -eq 1 ]; then
 
             #Si no es de la familia Debian
@@ -581,7 +601,7 @@ function _install_artifacts() {
             l_status=0
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_filename}"
 
-        #Si el tipo de item es un paquete
+        #Si el tipo de item es un comprimido (es un comprimido)
         elif [ $l_artifact_type -ge 10 ] && [ $l_artifact_type -le 14 ]; then
 
 
@@ -594,7 +614,8 @@ function _install_artifacts() {
 
 
             #Copiar los archivos necesarios
-            printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas de comandos/programas ...\n' "${l_tag}" "${l_i}" "${l_artifact_filename}"
+            printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas del %b%s%b ...\n' "${l_tag}" "${l_i}" "${l_artifact_filename}" \
+                   "$g_color_gray1" "$l_main_artifact" "$g_color_reset"
 
             _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_filename" "$l_artifact_filename_without_ext" $l_artifact_type $p_is_win_binary \
                 "$p_repo_current_pretty_version" "$p_repo_last_version" "$p_repo_last_pretty_version" $l_is_last "$p_arti_subversion_version" \
@@ -603,14 +624,15 @@ function _install_artifacts() {
             l_status=$?
             printf 'Artefacto "%b[%s]" ("%s") finalizo su configuración\n' "${l_tag}" "${l_i}" "${l_artifact_filename}"
 
-        #Si el tipo de item es un paquete
+        #Si el tipo de item es un comprimido (que no se descromprime)
         elif [ $l_artifact_type -ge 20 ] && [ $l_artifact_type -le 24 ]; then
 
             #Obteniendo el nombre del archivo comprimido sin extensión
             l_artifact_filename_without_ext=$(get_filename_withoutextension "${l_artifact_filename}" $((l_artifact_type - 20)))
 
             #Copiar los archivos necesarios
-            printf 'Copiando los archivos de artefacto "%b[%s]" ("%s") en las rutas de comandos/programas ...\n' "${l_tag}" "${l_i}" "${l_artifact_filename}"
+            printf 'Copiando el comprimido del artefacto "%b[%s]" ("%s") en las rutas del %b%s%b ...\n' "${l_tag}" "${l_i}" "${l_artifact_filename}" \
+                   "$g_color_gray1" "$l_main_artifact" "$g_color_reset"
 
             _copy_artifact_files "$p_repo_id" $l_i "$l_artifact_filename" "$l_artifact_filename_without_ext" $l_artifact_type $p_is_win_binary \
                 "$p_repo_current_pretty_version" "$p_repo_last_version" "$p_repo_last_pretty_version" $l_is_last "$p_arti_subversion_version" \

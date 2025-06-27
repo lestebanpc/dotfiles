@@ -127,10 +127,10 @@
           "properties": {
             "cache_duration": "none"
           },
-          "template": " ffff>\ue235</> {{ if .Venv }}{{ .Venv }}<#000>\uf054</>{{ end }}{{ .Full }} ",
+          "template": " \ue235 {{ if .Venv }}{{ .Venv }}<#000000>\uf054</>{{ end }}{{ .Full }} ",
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",
-          "background": "#744e6d",
+          "background": "#4e2c5d",
           "type": "python",
           "style": "powerline"
         },

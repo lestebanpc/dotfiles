@@ -431,7 +431,7 @@ function create_or_clean_folder_on_program()
         create_folderpath_on_program $p_is_lnx_prgs "" "$p_program_subfolder"
         l_status=$?
 
-        if [ l_status -ne 0 ]; then
+        if [ $l_status -ne 0 ]; then
             printf 'Error: %bno se ha podido crear con exito la ruta retativa "%b%s%b" del folder del programa%b.\n' "$g_color_red1" \
                    "$g_color_gray1" "$p_program_subfolder" "$g_color_red1" "$g_color_reset"
             return 1
@@ -941,11 +941,11 @@ function copy_man_files()
         printf 'Copiando los archivos "%b%s/*.%s%b" y/o "%b%s/*.%s.gz%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "$p_source_path" \
                "$p_man_type" "$g_color_reset" "$g_color_gray1" "$p_source_path" "$p_man_type" "$g_color_reset" "$g_color_gray1" \
                "${l_target_path}/" "$g_color_reset"
-               find "$p_source_path" \( -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" \) -exec cp {} "$l_target_path/" \;
+               find "$p_source_path" -type f \( -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" \) -exec cp {} "$l_target_path/" \;
 
         #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
         if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_command_owner -eq 0 ]; then
-            find "$p_target_path" \( -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" \) ! -user "$g_targethome_owner" \
+            find "$p_target_path" -type f \( -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" \) ! -user "$g_targethome_owner" \
                  -exec chown "${g_targethome_owner}:${g_targethome_group}" {} \:
         fi
 
@@ -970,7 +970,7 @@ function copy_man_files()
     printf 'Copiando los archivos "%b%s/*.%s%b" y/o "%b%s/*.%s.gz%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "$p_source_path" \
            "$p_man_type" "$g_color_reset" "$g_color_gray1" "$p_source_path" "$p_man_type" "$g_color_reset" "$g_color_gray1" \
            "${l_target_path}/" "$g_color_reset"
-           sudo find "$p_source_path" \( -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" \) -exec cp {} "$l_target_path/" \;
+           sudo find "$p_source_path" -type f \( -name "*.${p_man_type}" -o -name "*.${p_man_type}.gz" \) -exec cp {} "$l_target_path/" \;
 
     return 0
 

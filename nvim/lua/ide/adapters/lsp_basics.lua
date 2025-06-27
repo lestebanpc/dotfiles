@@ -254,6 +254,110 @@ end
 --------------------------------------------------------------------------------------------------
 
 --
+-- LSP Server : Roslyn LS para C#
+-- URL: https://github.com/seblyng/roslyn.nvim
+--
+local log_path = nil
+
+use_adapter = vim.g.use_lsp_adapters['csharp']
+adapter_name = 'roslyn_ls'
+
+if use_adapter ~= nil and use_adapter == true then
+
+    if (vim.g.os_type == 0) then
+        --Si es Windows
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/roslyn_ls/Microsoft.CodeAnalysis.LanguageServer.dll'
+    else
+        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/roslyn_ls/Microsoft.CodeAnalysis.LanguageServer.dll'
+    end
+
+    --local roslyn_cfg = require('roslyn')
+
+    --roslyn_cfg.setup({
+    --    config = {
+    --        cmd = {
+    --            "dotnet",
+    --            lsp_server_path,
+    --            "--logLevel=Information",
+    --            "--extensionLogDirectory=" .. vim.fs.dirname(vim.lsp.get_log_path()),
+    --            "--stdio",
+    --        },
+    --    },
+    --})
+
+    -- Ruta del logs
+    -- > vim.uv.os_tmpdir()     : '/tmp/roslyn_ls/logs/'
+    -- > vim.lsp.get_log_path() : '~/.local/state/nvim/'
+    log_path=vim.fs.joinpath(vim.uv.os_tmpdir(), 'roslyn_ls/logs')
+    vim.fn.mkdir(log_path, "p")
+
+
+    local utils = require("utils.roslyn")
+    --utils.setup(false, false, false, nil, nil)
+
+    vim.lsp.config(adapter_name, {
+        cmd = {
+            "dotnet",
+            lsp_server_path,
+            "--logLevel",
+            "Information",
+            "--extensionLogDirectory",
+            log_path,
+            "--stdio",
+        },
+
+        --root_dir = utils.get_root_dir,
+        --on_init = {
+        --    utils.on_init,
+        --},
+        --on_exit = {
+        --    utils.on_exit,
+        --},
+
+
+
+        handlers = utils.get_roslyn_handlers(),
+        --commands = utils.get_roslyn_commands(),
+
+        settings = {
+            ["csharp|background_analysis"] = {
+                dotnet_analyzer_diagnostics_scope = "fullSolution",
+                dotnet_compiler_diagnostics_scope = "fullSolution"
+            },
+            ["csharp|code_lens"] = {
+                dotnet_enable_references_code_lens = true
+            },
+            ["csharp|completion"] = {
+                dotnet_provide_regex_completions = true,
+                dotnet_show_completion_items_from_unimported_namespaces = true,
+                dotnet_show_name_completion_suggestions = true
+            },
+            ["csharp|inlay_hints"] = {
+                csharp_enable_inlay_hints_for_implicit_object_creation = true,
+                csharp_enable_inlay_hints_for_implicit_variable_types = true,
+                csharp_enable_inlay_hints_for_lambda_parameter_types = true,
+                csharp_enable_inlay_hints_for_types = true,
+                dotnet_enable_inlay_hints_for_indexer_parameters = true,
+                dotnet_enable_inlay_hints_for_literal_parameters = true,
+                dotnet_enable_inlay_hints_for_object_creation_parameters = true,
+                dotnet_enable_inlay_hints_for_other_parameters = true,
+                dotnet_enable_inlay_hints_for_parameters = true,
+                dotnet_suppress_inlay_hints_for_parameters_that_differ_only_by_suffix = true,
+                dotnet_suppress_inlay_hints_for_parameters_that_match_argument_name = true,
+                dotnet_suppress_inlay_hints_for_parameters_that_match_method_intent = true
+            },
+            ["csharp|symbol_search"] = {
+                dotnet_search_reference_assemblies = true
+            }
+        },
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+
+end
+
+--
 -- LSP Server : OmniSharp
 -- URL        : https://github.com/omnisharp/omnisharp-roslyn
 -- Prioridad  : Si de define usar tambien 'Roslyn LSP' para C# de Microsoft, no se usara este adaptador.
@@ -397,10 +501,13 @@ if use_adapter ~= nil and use_adapter == true then
                 analysis = {
                     autoSearchPaths = true,
                     diagnosticMode = "openFilesOnly",
-                    useLibraryCodeForTypes = true
-                }
-            }
-        }
+                    useLibraryCodeForTypes = true,
+                    -- Adiciona el subfolder './src' se adicione al 'sys.path' del python que ejecuta el servidor LSP.
+                    -- Permite que el servidor LSP puede identificar correctamente los simbolos durante el linting.
+                    extraPaths = { "src" },
+                },
+            },
+        },
 
     })
 
@@ -419,25 +526,32 @@ use_adapter = vim.g.use_lsp_adapters['pyright']
 adapter_name = 'pyright'
 
 if use_adapter ~= nil and use_adapter == true then
-
-
     -- No usar si se definio usar 'BasedPyRight'
     use_adapter = vim.g.use_lsp_adapters['python']
     if use_adapter == nil or use_adapter ~= true then
-
         vim.lsp.config(adapter_name, {
 
             cmd = { "pyright-langserver", "--stdio" },
             filetypes = { "python" },
 
+            settings = {
+                python = {
+                    analysis = {
+                        autoSearchPaths = true,
+                        diagnosticMode = "openFilesOnly",
+                        useLibraryCodeForTypes = true,
+                        -- Adiciona el subfolder './src' se adicione al 'sys.path' del python que ejecuta el servidor LSP.
+                        -- Permite que el servidor LSP puede identificar correctamente los simbolos durante el linting.
+                        extraPaths = { "src" },
+                    },
+                },
+            },
+
         })
 
         lsp_adapters[#lsp_adapters + 1] = adapter_name
-
     end
-
 end
-
 
 --------------------------------------------------------------------------------------------------
 --LSP Client> Para Bash

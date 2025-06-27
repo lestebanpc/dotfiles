@@ -207,16 +207,14 @@ nnoremap <silent> <buffer> <space>tf <Plug>(omnisharp_run_tests_in_file_no_build
 
 
 "--------------------------------------------------------------------------------
-" Omnisharp > Keymapping > Unit Test ejecutado sobre Debugger UI
+" Omnisharp > Keymapping > Unit Test ejecutado sobre Debugger UI (Vimspector)
 "--------------------------------------------------------------------------------
 "
-" Depende de Vimspector
-"
-" Similar a 'Run to cursor' de Vimspector pero asociado a Unit Test.
-nnoremap <silent> <buffer> <space>td <Plug>(omnisharp_debug_test_no_build)
+" Iniciar debugging 'nearest test method'.
+"nnoremap <silent> <buffer> <space>dtm <Plug>(omnisharp_debug_test_no_build)
 
-" Similar a 'Run to cursor' de Vimspector, pero asociado a Unit Test y realiza un build antes.
-"nnoremap <silent> <buffer> <space>tdb <Plug>(omnisharp_debug_test)
+" Iniciar debugging 'nearest test method' (compilar antes).
+nnoremap <silent> <buffer> <space>dtm <Plug>(omnisharp_debug_test)
 
 
 

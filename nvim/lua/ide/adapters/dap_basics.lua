@@ -557,101 +557,14 @@ use_adapter = vim.g.use_dap_adapters['python']
 if use_adapter ~= nil and use_adapter == true then
 
     --1. Configuracion del cliente DAP y/o su adapador.
+    local utils = require("utils.python")
 
-    -- Si la configuracion ingresada no define la ruta de python o la funcion para calcular la ruta
-    -- se usara una funcion para obtener la ruta del venv usado por el proyecto
-    local enrich_config = function(config, on_config)
-
-        if not config.pythonPath and not config.python then
-
-            local pythonPath = require("utils.python").get_venv_python_path()
-            if pythonPath == nil or pythonPath == "" then
-                -- Si es Linux
-                if vim.g.os_type == 2 or vim.g.os_type == 3 then
-                    pythonPath = 'python3'
-                else
-                    pythonPath = 'python'
-                end
-            end
-            config.pythonPath = pythonPath
-
-        end
-
-        on_config(config)
-
-    end
-
-    -- Se usara un callback, debido a que los valores a usar dependeran de la configuracion ingresada.
-    dap.adapters.python = function(cb, config)
-
-        local adapter
-
-        -- Si el cliente DAP se vincula a un servidor DAP (proceso 'debugpy')
-        -- > El servidor DAP esta enlazado a un programa a depurar que esta en ejecución.
-        -- > El cliente DAP tiene los archivos de codigo (no requiere el RTE del programa), y 'path mappings'
-        if config.request == 'attach' then
-
-            local port = (config.connect or config).port
-            local host = (config.connect or config).host or '127.0.0.1'
-            adapter = {
-                type = 'server',
-                port = assert(port, '`connect.port` is required for a python `attach` configuration'),
-                host = host,
-                --enrich_config = enrich_config,
-                options = {
-                  source_filetype = 'python',
-                },
-            }
-
-        -- Si el cliente DAP inicia el servidor DAP y programa a depurar.
-        -- > El cliente DAP crea el servidor DAP usando un determino interprete python (no es necesariamente el mismo del proyecto).
-        -- > El cliente DAP tambien ejecuta programa a depurar el debe usar el interprete python asociado al proyecto.
-        else
-
-            local cmd = vim.g.dap_launcher_python
-
-            local basename
-            if cmd == nil or cmd == "" then
-
-                -- Si es Linux
-                if vim.g.os_type == 2 or vim.g.os_type == 3 then
-                    cmd = 'python3'
-                    basename = cmd
-                else
-                    cmd = 'python'
-                    basename = cmd
-                end
-
-            else
-                cmd = vim.fn.expand(vim.fn.trim(cmd), true)
-                basename = vim.fn.fnamemodify(cmd, ":t")
-            end
-
-            adapter= {
-                type = 'executable',
-                command = cmd,
-                args = { '-m', 'debugpy.adapter' },
-                enrich_config = enrich_config,
-                options = {
-                  source_filetype = 'python',
-                },
-            }
-
-            if basename == "uv" then
-                adapter.args = { "run", "--with", "debugpy", "python", "-m", "debugpy.adapter" }
-            elseif basename == "debugpy-adapter" then
-                adapter.args = {}
-            end
-
-        end
-
-        -- Inicalizar el cliente DAP
-        cb(adapter)
-
-    end
+    -- Se usara un funcion, debido a que los valores a usar dependeran de la configuracion ingresada.
+    dap.adapters.python = utils.setup_dap_adapter
 
     -- Compabilidad con vscode que renombre 'python' con 'debugpy'
     dap.adapters.debugpy = dap.adapters.python
+
 
     --2. Configuracion del proyecto (Usar archivo '.vscode/launch.json' para crear nuevas configuraciones)
     dap.configurations.python = {
@@ -725,8 +638,8 @@ if use_adapter ~= nil and use_adapter == true then
                 -- Convertir una cadena en un arreglo de opciones de un comando
                 -- Input  : 'python3 -m debugpy --listen 5678'
                 -- Output : '{"python3", "-m", "debugpy", "--listen", "5678"}'
-                local utils = require("dap.utils")
-                return utils.splitstr(args_string)
+                local dap_utils = require("dap.utils")
+                return dap_utils.splitstr(args_string)
 
             end;
             pythonPath = nil;

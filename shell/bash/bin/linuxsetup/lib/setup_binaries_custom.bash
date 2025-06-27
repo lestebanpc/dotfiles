@@ -22,7 +22,6 @@
 gA_packages=(
         ['bat']='sharkdp/bat'
         ['ripgrep']='BurntSushi/ripgrep'
-        ['xsv']='BurntSushi/xsv'
         ['delta']='dandavison/delta'
         ['fzf']='junegunn/fzf'
         ['jq']='stedolan/jq'
@@ -31,12 +30,15 @@ gA_packages=(
         ['fd']='sharkdp/fd'
         ['zoxide']='ajeetdsouza/zoxide'
         ['eza']='eza-community/eza'
+        ['tailspin']='bensadeh/tailspin'
+        ['qsv']='dathere/qsv'
+        ['xan']='medialab/xan'
         ['yazi']='sxyazi/yazi'
         ['lazygit']='jesseduffield/lazygit'
-        ['step']='smallstep/cli'
         ['grpcurl']='fullstorydev/grpcurl'
         ['websocat']='vi/websocat'
         ['jwt']='mike-engel/jwt-cli'
+        ['step']='smallstep/cli'
         ['butane']='coreos/butane'
         ['evans']='ktr0731/evans'
         ['protoc']='protocolbuffers/protobuf'
@@ -153,8 +155,8 @@ ga_menu_options_title=(
 #    El binario se puede encontrar en nerdctl-full.
 ga_menu_options_packages=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
-    "tmux-thumbs,tmux-fingers,sesh,grpcurl,websocat,protoc,xsv,jwt"
-    "rclone,biome,step,evans,yazi,lazygit,gum,butane"
+    "tmux-thumbs,tmux-fingers,sesh,grpcurl,websocat,protoc,jwt"
+    "rclone,tailspin,qsv,xan,evans,gum,butane,biome,step,yazi,lazygit"
     "nerd-fonts"
     "neovim"
     "powershell"
@@ -229,7 +231,6 @@ declare -A gA_repo_config_os_type=(
 #   1 (00001) x86_64
 #   2 (00010) aarch64 (arm64)
 declare -A gA_repo_config_proc_type=(
-        ['xsv']=1
         ['jwt']=1
         ['less']=1
         ['clangd']=1
@@ -327,6 +328,7 @@ declare -A gA_main_arti_type=(
         ['ctags-nowin']=1
         ['marksman']=1
         ['wezterm']=1
+        ['qsv']=1
     )
 
 # Define las formas de obtener la version actual (version amigable del repositorio instalada) de un repositorio
@@ -424,6 +426,7 @@ declare -A gA_current_version_parameter1=(
     ['buildkit']='buildkitd'
     ['ctags-win']='ctags.info'
     ['ctags-nowin']='ctags.info'
+    ['tailspin']='tspin'
     )
 
 
@@ -478,6 +481,7 @@ declare -A gA_current_version_parameter4=(
     ['luals']='lsp_servers/luals/bin'
     ['taplo']='lsp_servers/toml_ls'
     ['async-profiler']='async_profiler/bin'
+    ['qsv']='qsv'
     )
 
 
@@ -2162,6 +2166,7 @@ function get_repo_artifacts() {
             fi
             ;;
 
+
         ripgrep)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_is_win_binary -eq 0 ]; then
@@ -2188,29 +2193,110 @@ function get_repo_artifacts() {
             fi
             ;;
 
-        xsv)
-            #No soportado para architecture ARM de 64 bits
-            if [ "$g_os_architecture_type" = "aarch64" ]; then
-                pna_artifact_baseurl=()
-                pna_artifact_names=()
-                return 2
-            fi
 
+
+        #xsv)
+        #    #No soportado para architecture ARM de 64 bits
+        #    if [ "$g_os_architecture_type" = "aarch64" ]; then
+        #        pna_artifact_baseurl=()
+        #        pna_artifact_names=()
+        #        return 2
+        #    fi
+
+        #    #Generar los datos de artefactado requeridos para su configuración:
+        #    if [ $p_is_win_binary -eq 0 ]; then
+        #        pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-pc-windows-msvc.zip")
+        #        pna_artifact_types=(11)
+        #    else
+        #        #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+        #        if [ $g_os_subtype_id -eq 1 ]; then
+        #            pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.tar.gz")
+        #        else
+        #            pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.tar.gz")
+        #            #pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-unknown-linux-gnu.tar.gz")
+        #        fi
+        #        pna_artifact_types=(10)
+        #    fi
+        #    ;;
+
+
+
+        tailspin)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_is_win_binary -eq 0 ]; then
-                pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-pc-windows-msvc.zip")
+                pna_artifact_names=("tailspin-x86_64-pc-windows-msvc.zip")
                 pna_artifact_types=(11)
             else
                 #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
                 if [ $g_os_subtype_id -eq 1 ]; then
-                    pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.tar.gz")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("tailspin-aarch64-unknown-linux-musl.tar.gz")
+                    else
+                        pna_artifact_names=("tailspin-x86_64-unknown-linux-musl.tar.gz")
+                    fi
                 else
-                    pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.tar.gz")
-                    #pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-unknown-linux-gnu.tar.gz")
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("tailspin-aarch64-unknown-linux-musl.tar.gz")
+                    else
+                        pna_artifact_names=("tailspin-x86_64-unknown-linux-musl.tar.gz")
+                    fi
                 fi
                 pna_artifact_types=(10)
             fi
             ;;
+
+
+        qsv)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                pna_artifact_names=("qsv-${p_repo_last_pretty_version}-x86_64-pc-windows-msvc.zip")
+                pna_artifact_types=(21)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("qsv-${p_repo_last_pretty_version}-aarch64-unknown-linux-gnu.zip")
+                    else
+                        pna_artifact_names=("qsv-${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.zip")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("qsv-${p_repo_last_pretty_version}-aarch64-unknown-linux-gnu.zip")
+                    else
+                        pna_artifact_names=("qsv-${p_repo_last_pretty_version}-x86_64-unknown-linux-gnu.zip")
+                    fi
+                fi
+                pna_artifact_types=(21)
+            fi
+            ;;
+
+
+        xan)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                pna_artifact_names=("xan-x86_64-pc-windows-msvc.zip")
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("xan-x86_64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("xan-x86_64-unknown-linux-gnu.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("xan-x86_64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("xan-x86_64-unknown-linux-gnu.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
+
+
 
         bat)
             #Generar los datos de artefactado requeridos para su configuración:
@@ -2243,7 +2329,7 @@ function get_repo_artifacts() {
             #URL base fijo     :  "https://github.com"
             #l_base_url_fixed="${gA_repo_base_url[${p_repo_id}]:-https://github.com}"
             #URL base variable :
-            l_base_url_variable="${p_repo_name}/releases/download/cli%2Fv${p_repo_last_pretty_version}"
+            l_base_url_variable="${p_repo_name}/releases/download/%40biomejs%2Fbiome%40${p_repo_last_pretty_version}"
 
             #URL base para un repositorio GitHub
             pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
@@ -3965,7 +4051,29 @@ function _copy_artifact_files() {
             fi
             ;;
 
-        xsv)
+
+        #xsv)
+
+        #    #Ruta local de los artefactos
+        #    l_source_path="${p_repo_id}/${p_artifact_index}"
+
+        #    #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+        #    if [ $p_is_win_binary -ne 0 ]; then
+
+        #        #Copiar el comando
+        #        copy_binary_on_command "${l_source_path}" "xsv" 0 1
+
+        #    else
+
+        #        #Copiar el comando
+        #        copy_binary_on_command "${l_source_path}" "xsv.exe" 1 1
+
+        #    fi
+        #    ;;
+
+
+
+        tailspin)
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
@@ -3974,15 +4082,40 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -ne 0 ]; then
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "xsv" 0 1
+                copy_binary_on_command "${l_source_path}" "tspin" 0 1
 
             else
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "xsv.exe" 1 1
+                copy_binary_on_command "${l_source_path}" "tspin.exe" 1 1
 
             fi
             ;;
+
+
+
+
+        xan)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -ne 0 ]; then
+
+                #Copiar el comando
+                copy_binary_on_command "${l_source_path}" "xan" 0 1
+
+            else
+
+                #Copiar el comando
+                copy_binary_on_command "${l_source_path}" "xan.exe" 1 1
+
+            fi
+            ;;
+
+
+
 
 
         biome)
@@ -4750,6 +4883,44 @@ function _copy_artifact_files() {
 
 
 
+        qsv)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                #Creando el folder si no existe y limpiarlo si existe
+                create_or_clean_folder_on_program 1 "qsv" 2 ""
+
+                #Descomprimir
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "qsv" "" ""
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    return 40
+                fi
+
+                return 0
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Creando el folder si no existe y limpiarlo si existe
+            create_or_clean_folder_on_program 0 "qsv" 2 ""
+
+            #Descomprimir
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "qsv" "" ""
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 40
+            fi
+
+            ;;
+
+
+
         marksman)
 
             #Ruta local de los artefactos
@@ -4767,6 +4938,7 @@ function _copy_artifact_files() {
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
                 save_prettyversion_on_program "" "marksman.info" "$p_repo_last_pretty_version" 1
 
+                return 0
             fi
 
             #Creando el folder si no existe y limpiarlo si existe
@@ -4799,6 +4971,7 @@ function _copy_artifact_files() {
                 #Copiar el comando
                 copy_binary_on_program "${l_source_path}" "taplo.exe" 1 "lsp_servers/toml_ls" 1
 
+                return 0
 
             fi
 
@@ -4835,6 +5008,7 @@ function _copy_artifact_files() {
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
                 save_prettyversion_on_program "" "lemminx.info" "$p_repo_last_pretty_version" 1
 
+                return 0
             fi
 
             #Creando el folder si no existe y limpiarlo si existe

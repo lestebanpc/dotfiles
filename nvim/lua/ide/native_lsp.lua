@@ -206,7 +206,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
         --
         -- Highlight symbol under cursor (Resaltado de palabras similaras al actual)
         --
-        if client.supports_method('textDocument/documentHighlight') then
+        if client:supports_method('textDocument/documentHighlight') then
 
             local group = vim.api.nvim_create_augroup('highlight_symbol', {clear = false})
 
@@ -230,7 +230,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- Enable inlay hints
         --
         -- Algunos LSP server por defecto tiene 'inlay hints' desactivado, activarlo si LSP server lo soporta.
-        if client.supports_method('textDocument/inlayHint') then
+        if client:supports_method('textDocument/inlayHint') then
 
             vim.lsp.inlay_hint.enable(true, {bufnr = buffer})
 
@@ -259,7 +259,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
         --
         -- Formatting
         --
-        if client.supports_method("textDocument/formatting") then
+        if client:supports_method("textDocument/formatting") then
 
             -- ---------------------------------------------------------------------------------------------
             -- Keymapping > Code Formatting
@@ -280,12 +280,13 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
         end
 
-        if client.supports_method("textDocument/rangeFormatting") then
+        if client:supports_method("textDocument/rangeFormatting") then
 
             -- Pemite el formatting usando la funcion 'v:formatexpr' el cual sera la funcion definido por el LSP server.
             -- > Si hay texto seleccionado (visual mode), use 'gq' para formatear la seleccion.
             -- > Si hay texto seleccionado (normal mode), use 'gq' para formatear todo el documento.
             vim.api.nvim_buf_set_option(buffer, "formatexpr", "v:lua.vim.lsp.formatexpr()")
+            --vim.api.nvim_buf_set_value("formatexpr", "v:lua.vim.lsp.formatexpr()", { buf = buffer })
 
 
             -- ---------------------------------------------------------------------------------------------

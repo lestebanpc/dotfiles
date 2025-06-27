@@ -42,13 +42,7 @@ if g:is_neovim && !g:use_coc
     "Package IDE> Lightbulb para Code Actions
     packadd nvim-lightbulb
 
-    "Package IDE> Adaptador del cliente LSP para 'Roslyn LSP' para C#
-    let s:use_adapter = get(g:use_lsp_adapters, "csharp", v:false)
-    if s:use_adapter == v:true
-
-        packadd roslyn.nvim
-
-    endif
+    "packadd roslyn.nvim
 
     "Package IDE> Adaptador del cliente LSP para 'Eclipse JDTLS' para Java SE
     let s:use_adapter = get(g:use_lsp_adapters, "java", v:false)
