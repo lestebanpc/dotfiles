@@ -329,8 +329,8 @@ fzf_lua.setup({
     fzf_colors= {
         true,
         --["bg"]      = { "bg", "Normal" },
-        ["fg"]      = { "fg", "Normal" },
-        --["border"]  = { "fg", "Normal" },
+        --["fg"]      = { "fg", "CursorLine" },
+        ["border"]  = { "fg", "Comment" },
     },
     files = {
         actions = {

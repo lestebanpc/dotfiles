@@ -2,8 +2,8 @@ local M = {}
 
 
 
--- Si la configuracion ingresada no define la ruta de python o la funcion para calcular la ruta
--- se usara una funcion para obtener la ruta del venv usado por el proyecto
+-- Genera el 'config.pythonPath' de la configuracion definida si este no define dicho valor (usualmente
+-- la valor de 'config.pythonPath' o la funcion 'config.python')
 local function enrich_dap_config(config, on_config)
 
     if not config.pythonPath and not config.python then
@@ -25,7 +25,10 @@ local function enrich_dap_config(config, on_config)
 
 end
 
+
+
 -- Inicializar el DAP client usando la configuracion ingresada por el usuario.
+-- En un cliente 'launch', genera el 'config.pythonPath' de la configuracion definida si este no define dicho valor.
 function M.setup_dap_adapter(cb, config)
 
     -- Parametros del DAP client
@@ -76,6 +79,7 @@ function M.setup_dap_adapter(cb, config)
             type = 'executable',
             command = cmd,
             args = { '-m', 'debugpy.adapter' },
+            -- Genera el 'config.pythonPath' de la configuracion definida si este no define dicho valor.
             enrich_config = enrich_dap_config,
             options = {
               source_filetype = 'python',

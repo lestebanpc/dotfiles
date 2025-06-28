@@ -160,27 +160,40 @@ if vim.g.use_tmux then
 end
 
 
---4. Key-Mappings
 
+--------------------------------------------------------------------------------------------------
+--DAP Client> Keymappings
+--------------------------------------------------------------------------------------------------
+--
+-- URL: https://github.com/mfussenegger/nvim-dap/blob/master/doc/dap.txt
+--
+
+
+--1. Crear/Iniciar o Continuar una sesion DAP
+--   > Si aún no hay una sesión activa.
+--     > Se carga la configuración (definido en 'dap.configurations.java[]' y en '.vscode/launch.json').
+--     > Si existe mas de uno, muestra un selector de configuracion a usar. Si solo existe uno, solo usa este.
+--     > Se usa la configuracion seleccionada y se ejecuta 'requiere("dap").run(selected_config)'.
+--   > Si existe una session activa (detenida), se usa la sesion activa y ejecuta la sesion
+--     Se ejecuta hasta encontrar otro breakpoint o terminar la aplicacion.
 vim.keymap.set("n", "<F5>", function() dap.continue() end, { noremap=true, silent=true, desc="DAP Start/Continue" })
---vim.keymap.set("n", "<F5>",
---    function()
---        --Si el archivo donde se configura el adaptador existe cargar su configuracion
---        if vim.fn.filereadable(".vscode/launch.json") == 1 then
---            require('dap.ext.vscode').load_launchjs()
---        --elseif vim.fn.filereadable(".launch.json") == 1 then
---        end
---        -- Iniciar o continuar el DAP
---        require("dap").continue()
---    end,
---    { noremap=true, silent=true, desc="DAP Start/Continue" }
---)
 
-vim.keymap.set("n", "<space><F5>", function() dap.run() end, { noremap=true, silent=true, desc="DAP Run" })
 
+--2. Termina solo la sesion DAP manteniendo los panels UI
+--   Permite usar la UI para iniciar una nueva sesion y continuar la depuracion
+vim.keymap.set("n", '<F3>', function() dap.disconnect() end, { noremap=true, silent=true, desc="DAP Disconnect" })
+
+
+--3. Crear/Iniciar una sesion DAP usando la ultima configuracion usada.
+--   > Ejecuta 'requiere("dap").run(config)' usando la ultima configuracion usada.
+vim.keymap.set("n", "<F4>", function() dap.run_last()() end, { noremap=true, silent=true, desc="DAP Run" })
+
+
+--4. Terminar la sesion DAP y cerrar los paneles UI
 vim.keymap.set("n", "<space><F4>", function() dap.terminate() end, { noremap=true, silent=true, desc="DAP Terminate" })
---vim.keymap.set("n", nnoremap('<leader>dd', function() dap.disconnect() end, { noremap=true, silent=true, desc="DAP Disconnect" })
 
+
+--5. Gestion de keymappings
 vim.keymap.set("n", "<F9>", function() dap.toggle_breakpoint() end, { noremap=true, desc="DAP Toogle breakpoint" })
 
 vim.keymap.set("n", "<space><F9>",
@@ -190,28 +203,29 @@ vim.keymap.set("n", "<space><F9>",
     { noremap=true, silent=true, desc="DAP Set conditional breakpoint" }
 )
 
---vim.keymap.set("n", "<space><F9>", "<cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>", { noremap=true, silent=true, desc="DAP Set log point" })
---vim.keymap.set("n", "<leader>br", "<cmd>lua require'dap'.clear_breakpoints()<cr>", { noremap=true, silent=true, desc="DAP Clear breakpoints"})
+--vim.keymap.set("n", "<space>dbs", "<cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>", { noremap=true, silent=true, desc="DAP Set log point" })
+--vim.keymap.set("n", "<space>dbc", "<cmd>lua require'dap'.clear_breakpoints()<cr>", { noremap=true, silent=true, desc="DAP Clear breakpoints"})
 
+
+--6. Navegacion dentro de la sesion DAP actual
 vim.keymap.set("n", "<space><F8>", function() dap.run_to_cursor() end, { noremap=true, silent=true, desc="DAP Run to cursor" })
 vim.keymap.set("n", "<F10>", function() dap.step_over() end, { noremap=true, silent=true, desc="DAP Step over" })
 vim.keymap.set("n", "<F11>", function() dap.step_into() end, { noremap=true, silent=true, desc="DAP Step into" } )
 vim.keymap.set("n", "<F12>", function() dap.step_out() end, { noremap=true, silent=true, desc="DAP Step out" })
 
--- Re-runs the last debug adapter / configuration that ran using
---vim.keymap.set("n", noremap("<leader>dl", "<cmd>lua require'dap'.run_last()<cr>", { noremap=true, silent=true, desc="DAP Run last"})
+
+--7. Generales
+
+-- Abrir o cerrar (toogle) la consola integrada (REPL Console)
+vim.keymap.set("n", "<space>dc", function() dap.repl.toggle() end, { noremap=true, silent=true, desc="DAP Toggle REPL console" })
 
 --vim.keymap.set("n", "<space>dh", "<cmd>lua require('dapui').eval()<CR>", { noremap=true, silent=true, desc="DAP Evaluate" })
 
 
--- Open a REPL / Debug-console.
---vim.keymap.set("n", noremap("<leader>dr", "<cmd>lua require'dap'.repl.toggle()<cr>", { noremap=true, silent=true, desc="DAP Open REPL" })
-
 -- Listar, ir o eliminar breakpoint (usando fzf-lua)
---vim.keymap.set("n", "<space>ba", "<cmd>dap_breakpoints<CR>", { noremap=true, silent=true, desc="DAP Step out" })
-
 vim.keymap.set("n", "<space>db", function() require("fzf-lua").dap_breakpoints() end, { noremap=true, silent=true, desc="DAP List breakpoints" })
 
+-- Listar e ir a los frames de depuracion (requiere una sesion DAP activa)
 vim.keymap.set("n", "<space>df", function() require("fzf-lua").dap_frames() end, { noremap=true, silent=true, desc="DAP List debug frames" })
 
 

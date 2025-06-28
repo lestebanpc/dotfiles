@@ -560,6 +560,7 @@ if use_adapter ~= nil and use_adapter == true then
     local utils = require("utils.python")
 
     -- Se usara un funcion, debido a que los valores a usar dependeran de la configuracion ingresada.
+    -- En un cliente 'launch', genera el 'config.pythonPath' de la configuracion definida si este no define dicho valor.
     dap.adapters.python = utils.setup_dap_adapter
 
     -- Compabilidad con vscode que renombre 'python' con 'debugpy'
@@ -567,6 +568,7 @@ if use_adapter ~= nil and use_adapter == true then
 
 
     --2. Configuracion del proyecto (Usar archivo '.vscode/launch.json' para crear nuevas configuraciones)
+    --   En un cliente 'launch', colocar a 'config.pythonPath' a 'nil' o '', para que se autogenere dicho valor.
     dap.configurations.python = {
         {
             --1. Options are required by nvim-dap
