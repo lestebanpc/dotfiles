@@ -2778,9 +2778,9 @@ g_targethome_path=''
 g_repo_name=''
 
 # Tipo de profile a configurar
-# > 0 - Local  - Usado para su equipo local
-# > 1 - Remote - Usado por una VM cuyo owner soy yo
-# > 2 - Remote - Usado por una VM cuyo owner NO soy yo
+# > 0 - Local  - Usado para su equipo local o un equipo remoto pero que se accede desde escritorio.
+# > 1 - Remote - Usado por una VM accedido por comando ssh, cuyo owner soy yo
+# > 2 - Remote - Usado por una VM accedido por comando ssh, cuyo owner NO soy yo
 g_profile_type=0
 
 #Obtener los parametros del archivos de configuración
