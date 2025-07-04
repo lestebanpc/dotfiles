@@ -452,23 +452,23 @@ function _validate_treesitter_requirements() {
     l_version=$(curl --version 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ]; then
-        printf '%s > El comando %b%s%b es requerido para %s pero %bNO esta instalado%b.\n' "$l_tag" \
-               "$g_color_gray1" "curl" "$g_color_reset" "descargar 'treesiter parser'" "$g_color_gray1" "$g_color_reset"
+        printf '%s > El comando %b%s%b es requerido para descargar "%b%s%b" pero %bNO esta instalado%b.\n' "$l_tag" \
+               "$g_color_yellow1" "curl" "$g_color_reset" "$g_color_gray1" "treesiter parser" "$g_color_reset" "$g_color_yellow1" "$g_color_reset"
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-        printf '%s > El comando %b%s%b usado para %s esta instalado (%b%s%b).\n' "$l_tag" \
-               "$g_color_gray1" "curl" "$g_color_reset" "descargar 'treesiter parser'" "$g_color_gray1" "$l_version" "$g_color_reset"
+        printf '%s > El comando %b%s%b usado para descargar "%b%s%b" esta instalado (%b%s%b).\n' "$l_tag" \
+               "$g_color_gray1" "curl" "$g_color_reset" "$g_color_gray1" "treesiter parser" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
     fi
 
     l_version=$(tar --version 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ]; then
-        printf '%s > El comando %b%s%b es requerido para %s pero %bNO esta instalado%b.\n' "$l_tag" \
-               "$g_color_gray1" "tar" "$g_color_reset" "descomprimir 'treesiter parser'" "$g_color_gray1" "$g_color_reset"
+        printf '%s > El comando %b%s%b es requerido para descomprimir "%b%s%b" pero %bNO esta instalado%b.\n' "$l_tag" \
+               "$g_color_yellow1" "tar" "$g_color_reset" "$g_color_gray1" "treesiter parser" "$g_color_reset" "$g_color_yellow1" "$g_color_reset"
     else
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-        printf '%s > El comando %b%s%b usado para %s esta instalado (%b%s%b).\n' "$l_tag" \
-               "$g_color_gray1" "tar" "$g_color_reset" "descomprimir 'treesiter parser'" "$g_color_gray1" "$l_version" "$g_color_reset"
+        printf '%s > El comando %b%s%b usado para descomprimir "%b%s%b" esta instalado (%b%s%b).\n' "$l_tag" \
+               "$g_color_gray1" "tar" "$g_color_reset" "$g_color_gray1" "treesiter parser" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
     fi
 
     # Requisitos para compilar del paquetes (fuentes) de los parser treesitter
@@ -480,20 +480,20 @@ function _validate_treesitter_requirements() {
         l_version=$(clang --version 2> /dev/null)
         l_status=$?
         if [ $l_status -ne 0 ]; then
-            printf '%s > El compilador %b%s%b ni el compilador %b%s%b, que son requeridos para %s, %bNO esta instalado%b.\n' "$l_tag" \
-                   "$g_color_gray1" "gcc" "$g_color_reset" "$g_color_gray1" "clang" "$g_color_reset" "compilar 'treesiter parser'" \
+            printf '%s > El compilador %b%s%b ni el compilador %b%s%b, que son requeridos para compilar "%b%s%b", %bNO esta instalado%b.\n' "$l_tag" \
+                   "$g_color_yellow1" "gcc" "$g_color_reset" "$g_color_yellow1" "clang" "$g_color_reset" "$g_color_gray1" "treesiter parser" "$g_color_reset" \
                    "$g_color_gray1" "$g_color_reset"
         else
             l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-            printf '%s > El compilador %b%s%b usado para %s esta instalado (%b%s%b).\n' "$l_tag" \
-                   "$g_color_gray1" "clang" "$g_color_reset" "compilar 'treesiter parser'" "$g_color_gray1" "$l_version" "$g_color_reset"
+            printf '%s > El compilador %b%s%b usado para compilar "%b%s%b" esta instalado (%b%s%b).\n' "$l_tag" \
+                   "$g_color_gray1" "clang" "$g_color_reset" "$g_color_gray1" "treesiter parser" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
         fi
 
     else
 
         l_version=$(echo "$l_version" | head -n 1 | sed "$g_regexp_sust_version1")
-        printf '%s > El compilador %b%s%b usado para %s esta instalado (%b%s%b).\n' "$l_tag" \
-               "$g_color_gray1" "gcc" "$g_color_reset" "compilar 'treesiter parser'" "$g_color_gray1" "$l_version" "$g_color_reset"
+        printf '%s > El compilador %b%s%b usado para compilar "%b%s%b" esta instalado (%b%s%b).\n' "$l_tag" \
+               "$g_color_gray1" "gcc" "$g_color_reset" "$g_color_gray1" "treesiter parser" "$g_color_reset" "$g_color_gray1" "$l_version" "$g_color_reset"
 
     fi
 
@@ -636,6 +636,14 @@ function show_vim_config_report() {
 
     fi
 
+    #5. Si es NeoVIM, validar si se tiene lo minimo para usar 'Treesitter Parser'
+    if [ $p_is_neovim -eq 0 ]; then
+
+        printf '%s > Requisitos minimos para generar %bTreesitter Parser%b.\n' "$l_tag" "$g_color_gray1" "$g_color_reset"
+        _validate_treesitter_requirements "$l_empty_space"
+
+    fi
+
 
     #5. Si esta en el modo basico de VIM/NeoVIM
     if [ $p_flag_developer -ne 0  ]; then
@@ -687,13 +695,6 @@ function show_vim_config_report() {
         printf '%s > Python esta instalado (%b%s%b).\n' "$l_tag" "$g_color_gray1" "${la_versions[0]}" "$g_color_reset"
     fi
 
-    #8. Si esta en el modo developer > Si es NeoVIM, Validar que esta NodeJS instalado
-    if [ $p_is_neovim -eq 0 ]; then
-
-        printf '%s > Requisitos minimos para generar %bTreesitter Parser%b.\n' "$l_tag" "$g_color_gray1" "$g_color_reset"
-        _validate_treesitter_requirements "$l_empty_space"
-
-    fi
 
 
     #9. Recomendaciones de uso

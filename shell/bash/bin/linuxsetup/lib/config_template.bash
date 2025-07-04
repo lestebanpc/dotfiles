@@ -1,6 +1,12 @@
 #!/bin/bash
 
-#Consideraciones:
+# Para habilitar el uso de este archivo de configurar, deberará:
+# > Copiarlo en la ruta:
+#   cp ~/.files/shell/bash/bin/linuxsetup/lib/config_template.bash ~/.files/shell/bash/bin/linuxsetup/.config.bash
+# > Descomentar y cambiar los valores deseados
+#
+#
+# Consideraciones:
 #
 # 1. El script "04_setup_packages" no requiere el uso de este archivo de configuración y permite realizar instalaciones de paquetes del SO
 #    para todos los usuarios.

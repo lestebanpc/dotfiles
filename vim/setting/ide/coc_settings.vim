@@ -20,7 +20,7 @@ let g:coc_fzf_preview = 'down:50%'
 let g:coc_fzf_opts = ['--layout=reverse']
 
 " Instalar extensiones automaticamente
-let g:coc_global_extensions = ['coc-json', 'coc-yaml', 'coc-xml', 'coc-html', 'coc-css', 'coc-snippets', 'coc-lightbulb', 'coc-tsserver', 'coc-pyright']
+let g:coc_global_extensions = ['coc-json', 'coc-yaml', 'coc-xml', 'coc-html', 'coc-css', 'coc-snippets', 'coc-lightbulb', 'coc-tsserver', 'coc-pyright', 'coc-git']
 
 if g:os_type != 0
     " Si no es Windows
