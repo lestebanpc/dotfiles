@@ -1,6 +1,9 @@
 local M = {}
 
 
+local m_path_jdtls = vim.g.programs_base_path .. '/lsp_servers/jdtls'
+local m_path_vsc_extension = vim.g.programs_base_path .. '/vsc_extensions'
+
 ---@return string|nil
 function M.get_workspace_root()
 
@@ -25,37 +28,152 @@ function M.get_workspace_root()
 end
 
 
+function M.get_server_capabilities()
 
--- Language server `initializationOptions`
+    -- Modificar las capacidades ofrecidas por defecto por el servidor LSP
+    local lsp_capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+    -- Modificando algunas capacidades por defecto
+    --lsp_capabilities.textDocument.completion.completionItem.snippetSupport = true
+    --lps_capabilities.textDocument.foldingRange = {
+    --    dynamicRegistration = false,
+    --    lineFoldingOnly = true,
+    --  }
+
+    return lsp_capabilities
+
+end
+
+---@param p_folder string
+---@param p_files_patterns string[]
+---@param p_files_to_exclude string[]|nil
+---@return string[]
+local function get_file_of_patterns(p_folder, p_files_patterns, p_files_to_exclude)
+
+    local all_files = {}
+
+    for i = 1, #p_files_patterns do
+        local files_str = vim.fn.glob(p_folder .. '/' .. p_files_patterns[i], false)
+        local files = vim.split(files_str, '\n')
+
+        local n = #files
+        local item = nil
+        local excluded = false
+
+        for j = 1, n do
+
+            item = files[j]
+
+            -- Verificar si se exluye
+            excluded = false
+
+            if p_files_to_exclude ~= nil then
+
+                for k = 1, #p_files_to_exclude do
+                    if not excluded and vim.startswith(item, p_files_to_exclude[k]) then
+                        excluded = true
+                    end
+                end
+
+            end
+
+            -- Adicionar si no se excluye
+            if not excluded then
+                table.insert(all_files, item)
+            end
+
+        end
+
+
+    end
+
+    return all_files
+
+end
+
+-- Language server 'initializationOptions'
 -- Plugins usados para JDTLS
 -- See: https://github.com/mfussenegger/nvim-jdtls#java-debug-installation
-function M.get_init_options()
+function M.get_osgi_bundles()
 
     --1. Obtiener la ruta de jar plugins para el JDTLS
 
     -- Adicionar la ruta de plugins de VSCode Java Debugger
-    local bundles = {
-        vim.fn.glob( vim.g.programs_base_path .. '/vsc_extensions/ms_java_debug/server/com.microsoft.java.debug.plugin-*.jar'),
-    }
+    local bundles = get_file_of_patterns(m_path_vsc_extension .. '/ms_java_debug/server', { 'com.microsoft.java.debug.plugin-*.jar' }, nil)
 
     -- Adicionar la ruta plugin para VSCode Java Test
-    vim.list_extend(bundles, vim.split(vim.fn.glob(vim.g.programs_base_path .. '/vsc_extensions/ms_java_test/server/*.jar', false), "\n"))
+    local new_items = get_file_of_patterns(m_path_vsc_extension .. '/ms_java_test/server',
+        {
+            'junit-jupiter-*.jar',
+            'junit-platform-*.jar',
+            'junit-vintage-engine_*.jar',
+            'org.opentest4j*.jar',
+            'org.apiguardian.api_*.jar',
+            'org.eclipse.jdt.junit4.runtime_*.jar',
+            'org.eclipse.jdt.junit5.runtime_*.jar',
+            'org.opentest4j_*.jar',
+            'org.jacoco.*.jar',
+            'org.objectweb.asm*.jar'
+        },
+        {
+            'com.microsoft.java.test.runner-jar-with-dependencies.jar',
+            'com.microsoft.java.test.runner.jar'
+        })
+
+    if #new_items > 0 then
+        vim.list_extend(bundles, new_items)
+    end
+
+    -- Adicionar la ruta de plugins de VSCode Eclipse PDE
+    new_items = get_file_of_patterns(m_path_vsc_extension .. '/tf_eclipse_pde/server', { '*.jar' }, nil)
+
+    if #new_items > 0 then
+        vim.list_extend(bundles, new_items)
+    end
+
+    -- Adicionar la ruta de plugins de VSCode Java Decompiler
+    new_items = get_file_of_patterns(m_path_vsc_extension .. '/dg_java_decompiler/server', { '*.jar' }, nil)
+
+    if #new_items > 0 then
+        vim.list_extend(bundles, new_items)
+    end
+
+    -- Adicionar la ruta de plugins de VSCode Spring Boot
+    if vim.g.java_springboot == true then
+
+        local base_path = m_path_vsc_extension .. '/vm_spring_boot/jars/'
+
+        -- https://github.com/spring-projects/spring-tools/blob/7d3d91ecfa6087ae2d0e0f595da61ce8f52fed96/vscode-extensions/vscode-spring-boot/package.json#L33
+        -- https://github.com/JavaHello/spring-boot.nvim/blob/main/lua/spring_boot.lua
+        new_items = {
+            base_path .. "io.projectreactor.reactor-core.jar",
+            base_path .. "org.reactivestreams.reactive-streams.jar",
+            base_path .. "jdt-ls-commons.jar",
+            base_path .. "jdt-ls-extension.jar",
+            base_path .. "sts-gradle-tooling.jar",
+        }
+
+        vim.list_extend(bundles, new_items)
+    end
 
     --vim.notify('jdtls> lsp_server_config_path: \n' .. vim.inspect(bundles))
+    return bundles
 
+end
 
-    --2. Capacidades adicionales al por defecto enviados por el LSP server
+-- Language server 'initializationOptions'
+-- Plugins usados para JDTLS
+-- See: https://github.com/mfussenegger/nvim-jdtls#java-debug-installation
+function M.get_client_capabilities()
+
+    -- Capacidades adicionales al por defecto enviados por el LSP server
     local lsp_extendedClientCapabilities = require('jdtls').extendedClientCapabilities
     lsp_extendedClientCapabilities.resolveAdditionalTextEditsSupport = true
     lsp_extendedClientCapabilities.onCompletionItemSelectedCommand = "editor.action.triggerParameterHints"
 
-    return {
-        bundles = bundles,
-        extendedClientCapabilities = lsp_extendedClientCapabilities,
-    }
+    return lsp_extendedClientCapabilities
 
 end
-
 
 -- Configure 'eclipse.jdt.ls' specific settings.
 -- See https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
@@ -218,13 +336,13 @@ function M.get_lsp_cmd(metadata_name, java_home)
 
 
     --2. Obtener la ruta del LSP server
-    local lsp_server_path = vim.g.programs_base_path .. "/lsp_servers/jdtls/plugins/org.eclipse.equinox.launcher_*.jar"
+    local lsp_server_path = m_path_jdtls .. "/plugins/org.eclipse.equinox.launcher_*.jar"
     lsp_server_path = vim.fn.glob(lsp_server_path)
     --vim.notify('jdtls> lsp_server_path: ' .. lsp_server_path)
 
 
     --3. Ruta del archivo de configuracion del LSP server
-    local lsp_server_config_path = vim.g.programs_base_path .. "/lsp_servers/jdtls/config_"
+    local lsp_server_config_path = m_path_jdtls .. "/config_"
 
     if (vim.g.os_type == 0) then
         --Si es Windows
@@ -255,7 +373,7 @@ function M.get_lsp_cmd(metadata_name, java_home)
         '--add-opens', 'java.base/java.util=ALL-UNNAMED',
         '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
         -- If you use lombok, download the lombok jar and place it in
-        '-javaagent:' .. vim.g.programs_base_path .. '/lsp_servers/jdtls/lombok.jar',
+        '-javaagent:' .. m_path_jdtls .. '/lombok.jar',
 
         -- The jar file is located where jdtls was installed. This will need to be updated
         -- to the location where you installed jdtls
@@ -318,9 +436,19 @@ end
 
 
 local function show_profile_traces()
-    vim.cmd.tabnew()
-    vim.fn.jobstart({ "flamelens", "/tmp/traces.txt" }, { term = true })
-    vim.cmd.startinsert()
+
+    -- Si no se soporta tmux, mostar en un tab de vim
+    if not vim.g.use_tmux then
+        vim.cmd.tabnew()
+        vim.fn.jobstart({ "flamelens", "/tmp/traces.txt" }, { term = true })
+        vim.cmd.startinsert()
+
+        return
+    end
+
+    -- Si soporta tmux, ejecutar en un panel de una windows siguiente al actual
+    vim.system({ 'tmux_run_cmd', '-s', '-c', '--', 'flamelens "/tmp/traces.txt"' })
+
 end
 
 function M.test_with_profile(test_fn)

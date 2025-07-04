@@ -1030,12 +1030,25 @@ function _setup_user_profile() {
     create_folderpath_on_home ".config" "tmux"
     l_target_path=".config/tmux"
     l_target_link="tmux.conf"
-    l_source_path="${g_repo_name}/tmux"
-    l_source_filename='tmux.conf'
+    l_source_path="${g_repo_name}/etc/tmux"
+
+    if [ $g_profile_type -eq 0 ]; then
+        l_source_filename='tmux_local.conf'
+    else
+        l_source_filename='tmux_remote.conf'
+    fi
+
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/tmux" "template_tmux_custom.conf" ".config/tmux" "tmux_custom.conf" $l_flag_overwrite_file "        > "
+
+    if [ $g_profile_type -eq 0 ]; then
+        l_source_filename='tmux_custom_template_local.conf'
+    else
+        l_source_filename='tmux_custom_template_remote.conf'
+    fi
+
+    copy_file_on_home "${g_repo_path}/etc/tmux" "$l_source_filename" ".config/tmux" "tmux_custom.conf" $l_flag_overwrite_file "        > "
     l_status=$?
     printf 'Profile > Edite los archivos "%b%s%b" si desea personalizar las opciones de tmux.\n' \
            "$g_color_gray1" "~/.config/tmux/tmux_custom.conf" "$g_color_reset"
@@ -1148,11 +1161,61 @@ function _setup_user_profile() {
            "$g_color_gray1" "$g_color_reset"
 
     #Archivo de configuración de Oh-My-Posh
-    if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
-        copy_file_on_home "${g_repo_path}/etc/oh-my-posh" "lepc-montys-purple1.json" "${g_repo_name}/etc/oh-my-posh" "default_settings.json" $l_flag_overwrite_file "        > "
+    if [ $g_profile_type -eq 0 ]; then
+
+        # Local> Es WSL (siempre remoto)
+        if [ $g_os_type -eq 1 ]; then
+
+            # Si el que instala es el usuario root
+            if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
+                l_source_filename='lepc-montys-orange1.json'
+            # Si el que instala es el usuario no-root
+            else
+                l_source_filename='lepc-montys-blue1.json'
+            fi
+
+        # Local> Linux clasico (No es WSL)
+        else
+
+            # Si el que instala es el usuario root
+            if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
+                l_source_filename='lepc-montys-purple1.json'
+            # Si el que instala es el usuario no-root
+            else
+                l_source_filename='lepc-montys-cyan1.json'
+            fi
+
+        fi
+
     else
-        copy_file_on_home "${g_repo_path}/etc/oh-my-posh" "lepc-montys-cyan1.json" "${g_repo_name}/etc/oh-my-posh" "default_settings.json" $l_flag_overwrite_file "        > "
+
+        # Remote> Es WSL
+        if [ $g_os_type -eq 1 ]; then
+
+            # Si el que instala es el usuario root
+            if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
+                l_source_filename='lepc-montys-orange1.json'
+            # Si el que instala es el usuario no-root
+            else
+                l_source_filename='lepc-montys-blue1.json'
+            fi
+
+        # Remote> Linux clasico (No es WSL)
+        else
+
+            # Si el que instala es el usuario root
+            if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
+                l_source_filename='lepc-montys-yellow1.json'
+            # Si el que instala es el usuario no-root
+            else
+                l_source_filename='lepc-montys-green1.json'
+            fi
+
+        fi
+
     fi
+
+    copy_file_on_home "${g_repo_path}/etc/oh-my-posh" "$l_source_filename" "${g_repo_name}/etc/oh-my-posh" "default_settings.json" $l_flag_overwrite_file "        > "
     l_status=$?
     printf 'Profile > Edite los archivos "%b%s%b" si desea personalizar las opciones de oh-my-posh\n' \
            "$g_color_gray1" "~/.config/etc/oh-my-posh/defaut_settings.json" "$g_color_reset"
@@ -2699,20 +2762,26 @@ fi
 
 #2. Variables globales cuyos valor puede ser modificados el usuario
 
-#Ruta del home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git.
-#Este valor se obtendra segun orden prioridad:
+# Ruta del home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git.
+# Este valor se obtendra segun orden prioridad:
 # - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
 # - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
 # - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
 # - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
 g_targethome_path=''
 
-#Nombre del repositorio git o la ruta relativa del repositorio git respecto al home de usuario OBJETIVO (al cual se desea configurar el profile del usuario).
-#Este valor se obtendra segun orden prioridad:
+# Nombre del repositorio git o la ruta relativa del repositorio git respecto al home de usuario OBJETIVO (al cual se desea configurar el profile del usuario).
+# Este valor se obtendra segun orden prioridad:
 # - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
 # - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
 # - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 g_repo_name=''
+
+# Tipo de profile a configurar
+# > 0 - Local  - Usado para su equipo local
+# > 1 - Remote - Usado por una VM cuyo owner soy yo
+# > 2 - Remote - Usado por una VM cuyo owner NO soy yo
+g_profile_type=0
 
 #Obtener los parametros del archivos de configuración
 if [ -f "${g_shell_path}/bash/bin/linuxsetup/.config.bash" ]; then
@@ -2727,7 +2796,6 @@ fi
 
 
 #3. Variables globales cuyos valor son AUTOGENERADOS internamente por el script
-
 
 #Usuario OBJETIVO al cual se desa configurar su profile. Su valor es calcuado por 'get_targethome_info'.
 g_targethome_owner=''

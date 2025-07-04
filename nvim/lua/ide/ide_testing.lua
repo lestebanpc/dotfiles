@@ -32,6 +32,7 @@ local dap_ui=require("dapui")
 --1. Paquete 'nvim-dap-ui': Adicionar mejoras en el UI por defecto de nVim.DAP
 --Usar la configuración por defecto
 dap_ui.setup({
+
     icons = { expanded = "", collapsed = "", current_frame = "" },
     mappings = {
         -- Use a table to apply multiple mappings
@@ -42,6 +43,7 @@ dap_ui.setup({
         repl = "r",
         toggle = "t",
     },
+
     -- Use this to override mappings for specific elements
     element_mappings = {
         -- Example:
@@ -50,9 +52,11 @@ dap_ui.setup({
         --   expand = "o",
         -- }
     },
+
     -- Expand lines larger than the window
     -- Requires >= 0.7
-    expand_lines = vim.fn.has("nvim-0.7") == 1,
+    expand_lines = true,
+
     -- Layouts define sections of the screen to place windows.
     -- The position can be "left", "right", "top" or "bottom".
     -- The size specifies the height/width depending on position. It can be an Int
@@ -112,6 +116,8 @@ dap_ui.setup({
     }
 
 })
+
+
 --2. Mostrar y cerrar UI segun los eventos del DAP
 dap.listeners.after.event_initialized["dapui_config"] = function()
 
@@ -135,8 +141,6 @@ dap.listeners.before.event_exited["dapui_config"] = function()
 
 
 --3. External terminal
-
-
 if vim.g.use_tmux then
 
     --dap.defaults.fallback.external_terminal = {
@@ -147,7 +151,9 @@ if vim.g.use_tmux then
 
     dap.defaults.fallback.external_terminal = {
         command = 'tmux_run_cmd',
-        args = { '-w' , vim.fn.getcwd(), '-h', '20', '--', },
+        -- Cuando se pada rutas (por ejemplo 'vim.fn.getcwd') el valor de la opcion debe estar entrecomillado
+        -- No se soporta unir opciones
+        args = { '-n', '-h', '20', '--', },
     }
 
 --else
@@ -217,9 +223,18 @@ vim.keymap.set("n", "<F12>", function() dap.step_out() end, { noremap=true, sile
 --7. Generales
 
 -- Abrir o cerrar (toogle) la consola integrada (REPL Console)
+-- TODO: Visualmente, no funciona correctamente
 vim.keymap.set("n", "<space>dc", function() dap.repl.toggle() end, { noremap=true, silent=true, desc="DAP Toggle REPL console" })
 
---vim.keymap.set("n", "<space>dh", "<cmd>lua require('dapui').eval()<CR>", { noremap=true, silent=true, desc="DAP Evaluate" })
+-- Evaluar expresiones
+vim.keymap.set("n", "<space>de", function ()
+    local expr = vim.fn.input('Eval expr: ')
+    dap_ui.eval(expr)
+end, { noremap=true, silent=true, desc="DAP Evaluate expresion" })
+
+vim.keymap.set("n", "<space>dh", function ()
+    dap_ui.eval()
+end, { noremap=true, silent=true, desc="DAP Evaluate expresion (over o visual)" })
 
 
 -- Listar, ir o eliminar breakpoint (usando fzf-lua)

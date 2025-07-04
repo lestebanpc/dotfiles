@@ -202,3 +202,14 @@
 # Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
 # Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
 #g_setup_only_last_version=0
+
+
+##############################################################################################
+# Usado por los script "04_install_profile.bash"
+##############################################################################################
+
+# Tipo de profile a configurar
+# > 0 - Local  - Usado para su equipo local
+# > 1 - Remote - Usado por una VM cuyo owner soy yo
+# > 2 - Remote - Usado por una VM cuyo owner NO soy yo
+#g_profile_type=0

@@ -100,7 +100,21 @@ if g:os_type != 0
         "let g:VimuxOrientation = 'h'
 
         "Abrir el panel tmux (por defecto es horizontal).
+        "function! s:MyOpenRunner() abort
+
+        "    " Abrimos el panel de tmux de Vimux
+        "    call VimuxOpenRunner()
+
+        "    if exists('g:VimuxRunnerIndex') && !empty(g:VimuxRunnerIndex)
+        "        "Remover el caracter '%' del ID panel tmux
+        "        let pane_id = g:VimuxRunnerIndex[1:]
+        "        silent call system('tmux set-window-option @cmd_pane_idx ' . pane_id)
+        "    endif
+
+        "endfunction
+
         nnoremap <Leader>to :VimuxOpenRunner<CR>
+        "nnoremap <Leader>to :call <SID>MyOpenRunner()<CR>
 
         "Cerrar el panel tmux (por defecto es horizontal).
         nnoremap <Leader>tq :VimuxCloseRunner<CR>
@@ -118,17 +132,38 @@ if g:os_type != 0
         nnoremap <Leader>tz :VimuxZoomRunner<CR>
 
         "Ejecutar comando un comando (sin ir/salir de panel de VIM):
+        "function! s:MyPromptCommand() abort
+
+        "    let save_pane_id = v:false
+        "    if exists('g:VimuxRunnerIndex') && !empty(g:VimuxRunnerIndex)
+        "        save_pane_id = v:true
+        "    endif
+
+        "    " Abrimos el panel de tmux de Vimux si no esta abierto y ejecutar un comando
+        "    call VimuxPromptCommand()
+
+        "    if exists('g:VimuxRunnerIndex') && !empty(g:VimuxRunnerIndex) && save_pane_id
+        "        "Remover el caracter '%' del ID panel tmux
+        "        let pane_id = g:VimuxRunnerIndex[1:]
+        "        silent call system('tmux set-window-option @cmd_pane_idx ' . pane_id)
+        "    endif
+
+        "endfunction
+
         nnoremap <Leader>tp :VimuxPromptCommand<CR>
+        "nnoremap <Leader>tp :call <SID>MyPromptCommand()<CR>
 
         "Ejecutar comando espaciales (sin ir/salir de panel de VIM):
         " > Ejecutar el ultimo comando.
-        nnoremap <Leader>tl :VimuxRunLastCommand<CR>
+        nnoremap <Leader>tr :VimuxRunLastCommand<CR>
         "
         " > Cancelar el comando en ejecución (CTRL + C).
         nnoremap <Leader>tx :VimuxInterruptRunner<CR>
         "
         " > Limpiar la terminal (clear).
-        nnoremap <Leader>tc :VimuxClearTerminalScreen<CR>
+        nnoremap <Leader>tc :call VimuxRunCommand('clear')<CR>
+        " Ejeucta CTRL+L el cual no soportado bash vim solo el emacs
+        "nnoremap <Leader>tc :VimuxClearTerminalScreen<CR>
 
     endif
 

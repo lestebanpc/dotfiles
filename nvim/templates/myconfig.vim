@@ -429,10 +429,14 @@ let g:use_dap_adapters = {
 " > Valor por defecto: 'python3' en Linux y 'python' en cualquier otro sistema.
 "let g:dap_launcher_python = 'python'
 
-" Obtener el framerwork de testing de Python a usar
+" Obtener el framework de testing de Python a usar
 " > Los valores puede ser: 'unittest', 'pytest', 'django'
 " > Para determinar el framework, se usara la siguiente prioridad:
 "   > Usar el framework especificado por la variable global
 "   > Si no se especifica se intentara obtener detectar el framework a usar.
 "   > Si no logra determinar el framework usara 'unittest'
 "let g:python_tester_type = 'pytest'
+
+" Habilitar el soporte de 'Spring Boot' el el LSP 'Eclipse JDTLS'
+" Por defecto es false
+"let g:java_springboot = v:false

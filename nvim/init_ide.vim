@@ -538,6 +538,12 @@ elseif !exists("g:use_coc")
     let g:use_coc = v:false
 endif
 
+" Habilitar el soporte de 'Spring Boot' el el LSP 'Eclipse JDTLS'
+" Por defecto es false
+if !exists("g:java_springboot")
+    let g:java_springboot = v:false
+endif
+
 
 "#########################################################################################################
 " Basic Settings

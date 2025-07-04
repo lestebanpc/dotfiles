@@ -63,6 +63,7 @@ gA_packages=(
         ['vscode-cpptools']='microsoft/vscode-cpptools'
         ['rust-analyzer']='rust-lang/rust-analyzer'
         ['vscode-go']='golang/vscode-go'
+        ['vscode-pde']='testforstephen/vscode-pde'
         ['vscode-js-debug']='microsoft/vscode-js-debug'
         ['graalvm']='graalvm/graalvm-ce-builds'
         ['nodejs']="$g_empty_str"
@@ -102,9 +103,15 @@ gA_packages=(
         ['jbang']='jbangdev/jbang'
         ['maven']="$g_empty_str"
         ['async-profiler']='async-profiler/async-profiler'
+        ['vscode-java']="$g_empty_str"
         ['vscode-java-test']="$g_empty_str"
         ['vscode-java-debug']="$g_empty_str"
+        ['vscode-maven']="$g_empty_str"
         ['vscode-gradle']="$g_empty_str"
+        ['vscode-microprofile']="$g_empty_str"
+        ['vscode-quarkus']="$g_empty_str"
+        ['vscode-jdecompiler']="$g_empty_str"
+        ['vscode-springboot']="$g_empty_str"
         ['roslyn-ls-lnx']="$g_empty_str"
         ['roslyn-ls-win']="$g_empty_str"
         ['luals']='LuaLS/lua-language-server'
@@ -168,7 +175,7 @@ ga_menu_options_packages=(
     "k0s"
     "cni-plugins,kubectl,kubelet,kubeadm"
     "net-sdk,omnisharp-ls,roslyn-ls-lnx,roslyn-ls-win,netcoredbg"
-    "graalvm,maven,jbang,jdtls,async-profiler,vscode-java-debug,vscode-java-test,vscode-gradle"
+    "graalvm,maven,jbang,jdtls,async-profiler,vscode-java,vscode-java-debug,vscode-java-test,vscode-maven,vscode-gradle,vscode-microprofile,vscode-quarkus,vscode-jdecompiler,vscode-springboot"
     "clangd,codelldb,cmake,ninja"
     "nodejs"
     "rust,rust-analyzer"
@@ -257,9 +264,15 @@ declare -A gA_repo_base_url=(
         ['awscli']='https://awscli.amazonaws.com'
         ['rclone']='https://downloads.rclone.org'
         ['maven']='https://dlcdn.apache.org'
+        ['vscode-java']='https://marketplace.visualstudio.com'
         ['vscode-java-test']='https://marketplace.visualstudio.com'
         ['vscode-java-debug']='https://marketplace.visualstudio.com'
+        ['vscode-maven']='https://marketplace.visualstudio.com'
         ['vscode-gradle']='https://marketplace.visualstudio.com'
+        ['vscode-microprofile']='https://marketplace.visualstudio.com'
+        ['vscode-quarkus']='https://marketplace.visualstudio.com'
+        ['vscode-jdecompiler']='https://marketplace.visualstudio.com'
+        ['vscode-springboot']='htps://marketplace.visualstudio.com'
     )
 
 
@@ -315,12 +328,19 @@ declare -A gA_main_arti_type=(
         ['jbang']=1
         ['maven']=1
         ['async-profiler']=1
+        ['vscode-java']=1
         ['vscode-java-debug']=1
         ['vscode-java-test']=1
+        ['vscode-maven']=1
         ['vscode-gradle']=1
+        ['vscode-microprofile']=1
+        ['vscode-quarkus']=1
+        ['vscode-jdecompiler']=1
+        ['vscode-springboot']=1
         ['codelldb']=1
         ['vscode-cpptools']=1
         ['vscode-go']=1
+        ['vscode-pde']=1
         ['vscode-js-debug']=1
         ['lemminx']=1
         ['cni-plugins']=1
@@ -375,12 +395,19 @@ declare -A gA_current_version_method_type=(
     ['jdtls']=2
     ['jbang']=2
     ['maven']=3
+    ['vscode-java']=2
     ['vscode-java-debug']=2
     ['vscode-java-test']=2
+    ['vscode-maven']=2
     ['vscode-gradle']=2
+    ['vscode-microprofile']=2
+    ['vscode-quarkus']=2
+    ['vscode-jdecompiler']=2
+    ['vscode-springboot']=2
     ['codelldb']=2
     ['vscode-cpptools']=2
     ['vscode-go']=2
+    ['vscode-pde']=2
     ['vscode-js-debug']=2
     ['lemminx']=2
     ['fuse-overlayfs']=1
@@ -581,8 +608,8 @@ function get_repo_last_version() {
             if [ $l_status -ne 0 ]; then
                 return 2
             fi
-
             ;;
+
 
         oc)
 
@@ -782,8 +809,6 @@ function get_repo_last_version() {
             fi
             ;;
 
-
-
         rust)
 
             l_repo_last_version=$(curl -Ls "${l_base_url_fixed}/channel-rust-stable.toml" | grep -A 2 '\[pkg.rust\]' | \
@@ -793,55 +818,6 @@ function get_repo_last_version() {
                 return 2
             fi
             ;;
-
-
-        vscode-java-test)
-
-            #Obtener la version
-            l_repo_last_version=$(get_extension_info_vscode 'vscjava.vscode-java-test' 1)
-
-            l_status=$?
-            if [ $l_status -ne 0 ]; then
-                l_repo_last_version=''
-                return $l_status
-            fi
-            ;;
-
-
-        vscode-java-debug)
-
-            #Obtener la version
-            l_repo_last_version=$(get_extension_info_vscode 'vscjava.vscode-java-debug' 1)
-
-            l_status=$?
-            if [ $l_status -ne 0 ]; then
-                l_repo_last_version=''
-                return $l_status
-            fi
-            ;;
-
-
-        vscode-gradle)
-
-            #Obtener la version
-            l_repo_last_version=$(get_extension_info_vscode 'vscjava.vscode-gradle' 1)
-
-            l_status=$?
-            if [ $l_status -ne 0 ]; then
-                l_repo_last_version=''
-                return $l_status
-            fi
-            ;;
-
-
-        #wezterm)
-
-            #No se obtiene la version de la metadata. Solo el hash, el cual no tiene comparacion > o <, solo =
-            #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/tags"
-            #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/tags" | jq '.[] | select(.name == "nightly")'
-            #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/commits/c53ca64c33d1658602b9a3aaa412eca9c6544294"
-            #;;
-
 
         roslyn-ls-lnx)
 
@@ -923,6 +899,133 @@ function get_repo_last_version() {
             ;;
 
 
+        vscode-java)
+
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'redhat.java' 1)
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                l_repo_last_version=''
+                return $l_status
+            fi
+            ;;
+
+
+
+        vscode-java-test)
+
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'vscjava.vscode-java-test' 1)
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                l_repo_last_version=''
+                return $l_status
+            fi
+            ;;
+
+
+        vscode-java-debug)
+
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'vscjava.vscode-java-debug' 1)
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                l_repo_last_version=''
+                return $l_status
+            fi
+            ;;
+
+
+        vscode-maven)
+
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'vscjava.vscode-maven' 1)
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                l_repo_last_version=''
+                return $l_status
+            fi
+            ;;
+
+
+
+        vscode-gradle)
+
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'vscjava.vscode-gradle' 1)
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                l_repo_last_version=''
+                return $l_status
+            fi
+            ;;
+
+
+        vscode-microprofile)
+
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'redhat.vscode-microprofile' 1)
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                l_repo_last_version=''
+                return $l_status
+            fi
+            ;;
+
+
+        vscode-quarkus)
+
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'redhat.vscode-quarkus' 1)
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                l_repo_last_version=''
+                return $l_status
+            fi
+            ;;
+
+
+        vscode-jdecompiler)
+
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'dgileadi.java-decompiler' 1)
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                l_repo_last_version=''
+                return $l_status
+            fi
+            ;;
+
+
+        vscode-springboot)
+
+            #Obtener la version
+            l_repo_last_version=$(get_extension_info_vscode 'vmware.vscode-spring-boot' 1)
+
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                l_repo_last_version=''
+                return $l_status
+            fi
+            ;;
+
+
+        #wezterm)
+
+            #No se obtiene la version de la metadata. Solo el hash, el cual no tiene comparacion > o <, solo =
+            #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/tags"
+            #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/tags" | jq '.[] | select(.name == "nightly")'
+            #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/commits/c53ca64c33d1658602b9a3aaa412eca9c6544294"
+            #;;
+
         *)
             #Si no esta instalado 'jq' no continuar
             if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
@@ -936,9 +1039,6 @@ function get_repo_last_version() {
 
             #Usando el API resumido del repositorio de GitHub
             l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_bin_cmdpath}/jq -r '.tag_name')
-            #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            #l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "https://api.github.com/repos/${p_repo_name}/releases/latest" | \
-            #                      ${g_bin_cmdpath}/jq -r '.tag_name')
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 2
@@ -954,6 +1054,7 @@ function get_repo_last_version() {
 
     echo "$l_repo_last_version"
     return 0
+
 }
 
 
@@ -2845,10 +2946,21 @@ function get_repo_artifacts() {
             pna_artifact_names=("vscode_go.zip")
 
             #Generar los datos de artefactado requeridos para su configuración:
-            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/go-0.46.1.vsix")
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/go-${p_repo_last_pretty_version}.vsix")
             pna_artifact_types=(11)
             ;;
 
+
+
+        vscode-pde)
+
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_names=("vscode_pde.zip")
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}/vscode-pde-${p_repo_last_pretty_version}.vsix")
+            pna_artifact_types=(11)
+            ;;
 
 
 
@@ -3432,6 +3544,24 @@ function get_repo_artifacts() {
             ;;
 
 
+        vscode-java)
+
+            #Obtener la URL del artefacto a descargar
+            l_aux=$(get_extension_info_vscode 'redhat.java' 2)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("$l_aux")
+            pna_artifact_names=("${p_repo_id}.zip") #No se usara la extensión '.vsix'
+            pna_artifact_types=(11)
+            ;;
+
+
+
         vscode-java-debug)
 
             #Obtener la URL del artefacto a descargar
@@ -3466,6 +3596,25 @@ function get_repo_artifacts() {
             ;;
 
 
+        vscode-maven)
+
+            #Obtener la URL del artefacto a descargar
+            l_aux=$(get_extension_info_vscode 'vscjava.vscode-maven' 2)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("$l_aux")
+            pna_artifact_names=("${p_repo_id}.zip") #No se usara la extensión '.vsix'
+            pna_artifact_types=(11)
+            ;;
+
+
+
+
         vscode-gradle)
 
             #Obtener la URL del artefacto a descargar
@@ -3481,6 +3630,81 @@ function get_repo_artifacts() {
             pna_artifact_names=("${p_repo_id}.zip") #No se usara la extensión '.vsix'
             pna_artifact_types=(11)
             ;;
+
+
+
+        vscode-microprofile)
+
+            #Obtener la URL del artefacto a descargar
+            l_aux=$(get_extension_info_vscode 'redhat.vscode-microprofile' 2)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("$l_aux")
+            pna_artifact_names=("${p_repo_id}.zip") #No se usara la extensión '.vsix'
+            pna_artifact_types=(11)
+            ;;
+
+
+
+        vscode-quarkus)
+
+            #Obtener la URL del artefacto a descargar
+            l_aux=$(get_extension_info_vscode 'redhat.vscode-quarkus' 2)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("$l_aux")
+            pna_artifact_names=("${p_repo_id}.zip") #No se usara la extensión '.vsix'
+            pna_artifact_types=(11)
+            ;;
+
+
+
+
+        vscode-jdecompiler)
+
+            #Obtener la URL del artefacto a descargar
+            l_aux=$(get_extension_info_vscode 'dgileadi.java-decompiler' 2)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("$l_aux")
+            pna_artifact_names=("${p_repo_id}.zip") #No se usara la extensión '.vsix'
+            pna_artifact_types=(11)
+            ;;
+
+
+
+        vscode-springboot)
+
+            #Obtener la URL del artefacto a descargar
+            l_aux=$(get_extension_info_vscode 'vmware.vscode-spring-boot' 2)
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("$l_aux")
+            pna_artifact_names=("${p_repo_id}.zip") #No se usara la extensión '.vsix'
+            pna_artifact_types=(11)
+            ;;
+
+
 
 
         butane)
@@ -6569,6 +6793,43 @@ function _copy_artifact_files() {
 
 
 
+        vscode-java)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "rh_java" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/rh_java"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "rh_java" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/rh_java"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+
         vscode-java-test)
 
             #Ruta local de los artefactos
@@ -6642,6 +6903,44 @@ function _copy_artifact_files() {
 
 
 
+        vscode-maven)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "ms_java_maven" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_maven"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "ms_java_maven" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_maven"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+
+
         vscode-gradle)
 
             #Ruta local de los artefactos
@@ -6675,6 +6974,158 @@ function _copy_artifact_files() {
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
             save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
+
+
+
+        vscode-microprofile)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "m4_java_microprofile" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/m4_java_microprofile"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "m4_java_microprofile" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/m4_java_microprofile"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+
+
+
+        vscode-quarkus)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "rh_java_quarkus" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/rh_java_quarkus"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "rh_java_quarkus" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/rh_java_quarkus"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+
+
+        vscode-jdecompiler)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "dg_java_decompiler" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/dg_java_decompiler"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "dg_java_decompiler" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/dg_java_decompiler"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+
+        vscode-springboot)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "vm_spring_boot" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/vm_spring_boot"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "vm_spring_boot" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/vm_spring_boot"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
 
 
 
@@ -6795,6 +7246,42 @@ function _copy_artifact_files() {
 
             #Mover la extension en su carpeta
             move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/go_tools"
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            ;;
+
+
+
+        vscode-pde)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe la ruta base lo crea)
+                clean_folder_on_program 1 "vsc_extensions" "tf_eclipse_pde" 0 ""
+
+                #Mover la extension en su carpeta
+                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/tf_eclipse_pde"
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+
+                return 0
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Limpiando el folder si existe (si no existe la ruta base lo crea)
+            clean_folder_on_program 0 "vsc_extensions" "tf_eclipse_pde" 0 ""
+
+            #Mover la extension en su carpeta
+            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/tf_eclipse_pde"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
             save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0

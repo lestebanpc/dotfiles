@@ -130,30 +130,24 @@ local config = {
     flags = {
         debounce_text_changes = 80,
     },
+    init_options = { },
     settings = { },
 }
 
 -- We pass our on_attach keybindings to the configuration map
 config.on_attach = on_attach
 
--- Modificar las capacidades ofrecidas por defecto por el servidor LSP
-local lsp_capabilities = require('cmp_nvim_lsp').default_capabilities()
 
--- Modificando algunas capacidades por defecto
---lsp_capabilities.textDocument.completion.completionItem.snippetSupport = true
---lps_capabilities.textDocument.foldingRange = {
---    dynamicRegistration = false,
---    lineFoldingOnly = true,
---  }
-
-config.capabilities = lsp_capabilities
+config.capabilities = utils.get_server_capabilities()
 
 -- Set the root directory to our found root_marker
 config.root_dir = root_path
 
 -- Language server `initializationOptions`
 -- See: https://github.com/mfussenegger/nvim-jdtls#java-debug-installation
-config.init_options = utils.get_init_options()
+config.init_options.bundles = utils.get_osgi_bundles()
+config.init_options.extendedClientCapabilities = utils.get_client_capabilities()
+
 
 -- Configure 'eclipse.jdt.ls' specific settings.
 -- See https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request

@@ -499,6 +499,8 @@ if use_adapter ~= nil and use_adapter == true then
         settings = {
             basedpyright = {
                 analysis = {
+                    disableOrganizeImports = false,
+                    autoImportCompletions = true,
                     autoSearchPaths = true,
                     diagnosticMode = "openFilesOnly",
                     useLibraryCodeForTypes = true,
