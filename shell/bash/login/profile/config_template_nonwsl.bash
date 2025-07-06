@@ -7,7 +7,7 @@
 #
 
 #-----------------------------------------------------------------------------------
-# Variables globales generales
+# Variables globales de configuracion (generales)
 #-----------------------------------------------------------------------------------
 
 # Nombre del repositorio git o la ruta relativa del repositorio git respecto al HOME.
@@ -36,6 +36,31 @@
 # de mis funciones definidas en "~/${g_repo_name}/shell/bash/lib/mod_myfunc.bash" usados por mi PC.
 # Cualquier otro valor, no se cargara este script. Su valor por defecto es 1 (no se carga el script).
 #g_load_myfunc=0
+
+
+#-----------------------------------------------------------------------------------
+# My enviroment variables
+#-----------------------------------------------------------------------------------
+
+# Definir el identificador del emulador de terminal a usar.
+# > Useló en pseudo-terminales creadas por programas (tmux, ssh, etc.) donde no se puede identificar que terminal se esta usando.
+# > En vim/nvim/tmux es usado para determinar, de manera automatica, el mecanismo de escritura al clipboard.
+# > Si 'TERM_PROGRAM' tiene algunos de los siguientes valores 'foot', 'Wezterm', 'contour', 'iTerm.app', 'kitty',
+#   'alacritty'; se usara OSC-52 para escribir al clipboard ('paste').
+#export TERM_PROGRAM='foot'
+
+# La variable de entorno 'SET_CIPBOARD' define, de fomra manual, el mecanismo de escritura de clipboard en 'tmux':
+# > 0 : No habilita la escritura en el clipboard.
+# > 1 : Habilita la escritura usando el caracter de escape ANSI OSC-52 (la terminal debe soportarlo)
+# > 2 : Habilita la escritura usando comandos externos (requiere tener instalado 'xsel', 'xclip' or 'wl-copy').
+#export SET_CLIPBOARD=1
+
+# La variable de entorno 'CIPBOARD' define, de fomra manual, el mecanismo de escritura de clipboard en 'vim'/'nvim':
+# > 0 : Usar el mecanismo nativo de VIM/NeoVIM (siempre que este esta habilitado).
+# > 1 : Implementar un mecanismo usando OSC-52 (la terminal debe soportarlo).
+# > 2 : Implementar un mecanismo usando comandos externos de gestion de clipboard.
+#export CLIPBOARD=0
+
 
 #-----------------------------------------------------------------------------------
 # My custom alias

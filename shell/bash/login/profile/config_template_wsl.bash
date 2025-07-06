@@ -7,7 +7,7 @@
 #
 
 #-----------------------------------------------------------------------------------
-# Variables globales generales
+# Variables globales de configuracion (generales)
 #-----------------------------------------------------------------------------------
 
 # Nombre del repositorio git o la ruta relativa del repositorio git respecto al HOME.
@@ -44,7 +44,7 @@ g_load_wslfunc=0
 
 
 #-----------------------------------------------------------------------------------
-# Variables globales solo para Linux en WSL2
+# Variables globales de configuracion (para Linux WSL)
 #-----------------------------------------------------------------------------------
 
 # Folder base, donde se almacena el programas, comando y afines usados por Windows.
@@ -56,6 +56,30 @@ g_load_wslfunc=0
 #     > "${g_win_base_path}/cmds/etc" : subfolder donde se almacena archivos adicionales del comando.
 #     > "${g_win_base_path}/fonts" : subfolder donde se almacena los archivos de fuentes tipograficas.
 #$g_win_base_path='/mnt/d/cli'
+
+
+#-----------------------------------------------------------------------------------
+# My enviroment variables
+#-----------------------------------------------------------------------------------
+
+# Definir el identificador del emulador de terminal a usar.
+# > Useló en pseudo-terminales creadas por programas (tmux, ssh, etc.) donde no se puede identificar que terminal se esta usando.
+# > En vim/nvim/tmux es usado para determinar, de manera automatica, el mecanismo de escritura al clipboard.
+# > Si 'TERM_PROGRAM' tiene algunos de los siguientes valores 'foot', 'Wezterm', 'contour', 'iTerm.app', 'kitty',
+#   'alacritty'; se usara OSC-52 para escribir al clipboard ('paste').
+#export TERM_PROGRAM='foot'
+
+# La variable de entorno 'SET_CIPBOARD' define, de fomra manual, el mecanismo de escritura de clipboard en 'tmux':
+# > 0 : No habilita la escritura en el clipboard.
+# > 1 : Habilita la escritura usando el caracter de escape ANSI OSC-52 (la terminal debe soportarlo)
+# > 2 : Habilita la escritura usando comandos externos (requiere tener instalado 'xsel', 'xclip' or 'wl-copy').
+#export SET_CLIPBOARD=1
+
+# La variable de entorno 'CIPBOARD' define, de fomra manual, el mecanismo de escritura de clipboard en 'vim'/'nvim':
+# > 0 : Usar el mecanismo nativo de VIM/NeoVIM (siempre que este esta habilitado).
+# > 1 : Implementar un mecanismo usando OSC-52 (la terminal debe soportarlo).
+# > 2 : Implementar un mecanismo usando comandos externos de gestion de clipboard.
+#export CLIPBOARD=0
 
 
 #-----------------------------------------------------------------------------------
