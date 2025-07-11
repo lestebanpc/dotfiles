@@ -20,17 +20,17 @@ let g:coc_fzf_preview = 'down:50%'
 let g:coc_fzf_opts = ['--layout=reverse']
 
 " Instalar extensiones automaticamente
-let g:coc_global_extensions = ['coc-json', 'coc-yaml', 'coc-xml', 'coc-html', 'coc-css', 'coc-snippets', 'coc-lightbulb', 'coc-tsserver', 'coc-pyright', 'coc-git']
+let g:coc_global_extensions = ['coc-json', 'coc-yaml', 'coc-xml', 'coc-html', 'coc-css', 'coc-snippets', 'coc-lightbulb', 'coc-tsserver', 'coc-pyright']
 
 if g:os_type != 0
     " Si no es Windows
     call extend(g:coc_global_extensions, ['coc-sh'])
 endif
 
-"if !g:is_neovim
-"    " Si es VIM
-"    call extend(g:coc_global_extensions, ['coc-symbol-line'])
-"endif
+if !g:is_neovim
+    " Si es VIM
+    call extend(g:coc_global_extensions, ['coc-git'])
+endif
 
 "###################################################################################
 " CoC> Completion Popup (modo inserción)

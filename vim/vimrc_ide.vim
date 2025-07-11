@@ -76,13 +76,14 @@
 runtime myconfig.vim
 
 
-" Establecer el modo de escritura (copy) al clipboard a usar por VIM/NeoVim
+" Establecer un mecanismo de escritura (copy) al clipboard para VIM/NeoVim, lo cual incluye:
+"  > Acciones de escritura al clipboard usanbdo el valor de los registros VIM.
+"  > EScritura automatica al clipboard despues de realizar el yank (si esta habilitado 'g:yank_to_clipboard').
 " El valor real, se obtendra segun orden de prioridad:
 "  > El valor definido por la variable de entorno 'CLIPBOARD'
 "    Ejemplo : 'CLIPBOARD=1 vim'
 "  > El valor definido por esta variable VIM 'g:clipboard_mode'.
 " Sus valores es un entero y puden ser:
-"  > '0', si se usa el mecanismo nativo de escritura al clipboard de NeoVIM
 "  > '1', si se implementa el mecanismo de uso OSC 52
 "  > '2', si se implementar el mecanismo de uso comandos externo del gestion de clipboard,
 "         por ejemplo: 'wlcopy', 'xsel', 'xclip', etc.
@@ -99,9 +100,7 @@ runtime myconfig.vim
 " de determacion del clipboard de VIM/NeoVIM se realize automaticamente.
 if $CLIPBOARD != ''
 
-    if $CLIPBOARD == 0
-        let g:clipboard_mode = 0
-    elseif $CLIPBOARD == 1
+    if $CLIPBOARD == 1
         let g:clipboard_mode = 1
     elseif $CLIPBOARD == 2
         let g:clipboard_mode = 2
@@ -111,7 +110,7 @@ if $CLIPBOARD != ''
 
 elseif exists("g:clipboard_mode")
 
-    if g:clipboard_mode != 0 && g:clipboard_mode != 1 && g:clipboard_mode != 2
+    if g:clipboard_mode != 1 && g:clipboard_mode != 2
         let g:clipboard_mode = 9
     endif
 
@@ -161,6 +160,41 @@ else
 endif
 
 
+" Permitir que cuando se realize un 'yank' se copie automaticamente al clipboard.
+" El valor real, se obtendra segun orden de prioridad:
+"  > El valor definido por la variable de entorno 'YANK_TO_CB'
+"    > 0 ('true' ), si se cuando realiza un yank este se copiara automaticamente al clipboard.
+"      Ejemplo : 'YANK_TO_CB=0 vim'
+"    > 1 ('false'), si realiza un yank este NO se copiara al clipboard.
+"      Ejemplo : 'YANK_TO_CB=1 vim'
+"    > Cualquiere otro valor se considera no definido.
+"  > El valor definido por esta variable VIM 'g:yank_to_clipboard'
+"    > v:true (o diferente a '0') si realiza un yank este tambien se copia al clipboard
+"    > v:false (o '0') si se realiza un yank este no se copiara al clipboard.
+"    > Si no se especifica, se considera no definido
+" Si no se define, su valor por defecto es 'v:false' (es decir '0').
+if $YANK_TO_CB != ''
+
+    if $YANK_TO_CB == 0
+        let g:yank_to_clipboard = v:true
+    elseif $YANK_TO_CB == 1
+        let g:yank_to_clipboard = v:false
+    else
+        let g:yank_to_clipboard = v:false
+    endif
+
+elseif exists("g:yank_to_clipboard")
+
+    if empty(g:yank_to_clipboard)
+        let g:yank_to_clipboard = v:false
+    else
+        let g:yank_to_clipboard = v:true
+    endif
+
+else
+    let g:yank_to_clipboard = v:false
+endif
+
 
 " Deshabilitación manual de las capacidades de modo IDE
 "  > La deshabilitación automatica de las capacidades de modo IDE se realiza si no cumple requisitos
@@ -172,7 +206,7 @@ endif
 "    > 1 ('false'), si se preserva las capacidades IDE.
 "      Ejemplo : 'ONLY_BASIC=1 vim'
 "    > Cualquiere otro valor se considera no definido.
-"  > El valor definido por esta variable VIM
+"  > El valor definido por esta variable VIM 'g:use_ide'
 "    > v:true (o diferente a '0') si es 'true'
 "    > v:false (o '0') si es false.
 "    > Si no se especifica, se considera no definido
@@ -489,6 +523,8 @@ runtime setting/ide/ide_development.vim
 runtime setting/ide/ide_testing.vim
 
 " Capacidades adicionales de IDE
+" > Client REST
+" > Tools for GIT
 " > IA Chat
 " > AI Agent
 runtime setting/ide/ide_extended.vim

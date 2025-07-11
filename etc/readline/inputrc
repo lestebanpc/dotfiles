@@ -1,2 +1,27 @@
 # Modo VI para la edicion interactiva del readline
 set editing-mode vi
+
+# Actailizar el prompt cuando se cambia de modo
+set show-mode-in-prompt on
+
+# Cambiar lka forma del cursor cuando se cambia de modo de la linea de comandos en modo 'vi'
+# > Submodo edicion: estado inicial (default), donde se escribe el comando
+# > Submodo comando: estado donde se puede navegar/editar el texto ingresado y buscar en el historial de comandos.
+# El tipo de cursor es el entero '<n>' que esta en '\e[<n> q' o '\e[?<n>c'.
+# > Para las pseudoterminal su valor puede ser
+#   0: blinking block
+#   1: blinking block (default)
+#   2: steady block
+#   3: blinking underline
+#   4: steady underline
+#   5: blinking bar (xterm)
+#   6: steady bar (xterm)
+$if term=linux
+    # Si se usa 'Virtual Console'
+	set vi-ins-mode-string \1\e[?8c\2
+    set vi-cmd-mode-string \1\e[?0c\2
+$else
+    # Si se usa un pseudo-terminal
+	set vi-ins-mode-string \1\e[1 q\2
+	set vi-cmd-mode-string \1\e[5 q\2
+$endif

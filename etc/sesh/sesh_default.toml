@@ -1,0 +1,41 @@
+
+[default_session]
+preview_command = "eza --tree --color=always --icons always -L 4 {}"
+#preview_command = "eza --tree --color=always --icons always -L 5 {} | head -n 300"
+#preview_command = "eza --all --git --icons --color=always {}"
+
+[[session]]
+name = "dotfiles"
+path = "~/.files"
+startup_command = "vim -c ':Files'"
+
+[[session]]
+name = "downloads"
+path = "/tempo/download"
+#startup_command = "yazi"
+
+[[session]]
+name = "tmux config"
+path = "~/.config/tmux"
+startup_command = "vim tmux.conf tmux_custom.conf"
+
+[[session]]
+name = "git config"
+path = "~/.config/git"
+startup_command = "vim -c ':Files'"
+
+[[session]]
+name = "wezterm config"
+path = "~/.config/wezterm"
+startup_command = "vim wezterm.lua config.lua"
+
+[[session]]
+name = "ssh config"
+path = "~/.ssh"
+startup_command = "vim config"
+
+# ¿como evitar la sustitucion de '{}' de sesh?
+#[[session]]
+#name = "vim plugins"
+#path = "~/.vim/pack"
+#startup_command = "sesh connect $(find ./ -mindepth 3 -maxdepth 4 -name '.git' -type d -exec bash -c 'echo ${0%/.git}' {} \\; | fzf --ansi --preview 'bat {}/README.md') && exit"

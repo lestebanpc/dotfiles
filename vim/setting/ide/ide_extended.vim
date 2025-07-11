@@ -1,10 +1,38 @@
-" Si no esta habilitado AI, no continuar.
-if g:use_ai_plugins != v:true
-    finish
+"###################################################################################
+" Tools> For Git
+"###################################################################################
+"
+
+" Para NeoVim
+if g:is_neovim
+
+    "Tools> Show signs for GIT stangin area changes
+    "      Muestra signs de los cambios del staging area
+    "      Muesta infromacion del ultimo commit realizado para la linea de codigo ('git blame')
+    packadd gitsigns.nvim
+
+    "Tools> Merge Tool y File History for Git
+    packadd diffview.nvim
+
 endif
 
 "###################################################################################
-" IDE> AI Autocomplete
+" Tools> Rest Client
+"###################################################################################
+"
+
+" Para NeoVim
+if g:is_neovim
+
+    "Package IDE> Client Rest 'Kulala'
+    "Si se usa CoC, no funcionara el autocomletado si no se configura un cio para su cliente LSP
+    packadd  kulala.nvim
+
+endif
+
+
+"###################################################################################
+" Tools> AI Autocomplete
 "###################################################################################
 "
 " > URL
@@ -19,49 +47,51 @@ endif
 "
 
 " Si es CoC, se usara 'github/copilot.vim'
-if g:use_coc
+if g:use_ai_plugins
 
-    "Package IDE> AI Completion
-    packadd copilot.vim
+    if g:use_coc
 
-    "Deshabilitar el keymapping por defecto generado
-    let g:copilot_no_maps = v:true
-    let g:copilot_no_tab_map = v:true
+        "Tools> AI Completion
+        packadd copilot.vim
 
-    "Estableder el keymapping para aceptar el autocompletado
-    "imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
+        "Deshabilitar el keymapping por defecto generado
+        let g:copilot_no_maps = v:true
+        let g:copilot_no_tab_map = v:true
 
-    "Por defecto se desabilita la sugerencias (autocompletado)  AI, cuando VIM termino de cargarse.
+        "Estableder el keymapping para aceptar el autocompletado
+        "imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
 
-    "Para habilitarlo cuando se use ':Copilot enable'
-    autocmd VimEnter * Copilot disable
+        "Por defecto se desabilita la sugerencias (autocompletado)  AI, cuando VIM termino de cargarse.
 
-    " En la documentación oficial no existe esta variable, pero en el codigo es usado.
-    " > URL : https://github.com/orgs/community/discussions/57887
-    "let g:copilot_enabled
+        "Para habilitarlo cuando se use ':Copilot enable'
+        autocmd VimEnter * Copilot disable
 
-    "Usar los filetypes definidos para el autocompletado por AI
-    let g:copilot_filetypes = g:completion_filetypes
+        " En la documentación oficial no existe esta variable, pero en el codigo es usado.
+        " > URL : https://github.com/orgs/community/discussions/57887
+        "let g:copilot_enabled
+
+        "Usar los filetypes definidos para el autocompletado por AI
+        let g:copilot_filetypes = g:completion_filetypes
+
+    endif
 
 
-endif
+    " Se usa NeoVim sin CoC, se usara 'zbirenbaum/copilot.lua'
+    if g:is_neovim && !g:use_coc
 
+        "Tools> AI Completion
+        packadd copilot.lua
 
-" Se usa NeoVim sin CoC, se usara 'zbirenbaum/copilot.lua'
-if g:is_neovim && !g:use_coc
+        "Por defecto se desabilita la sugerencias (autocompletado)  AI, cuando VIM termino de cargarse.
+        "Para habilitarlo cuando se use ':Copilot enable' o el keymapping '<Leder>cc'
+        autocmd VimEnter * Copilot disable
 
-    "Package IDE> AI Completion
-    packadd copilot.lua
-
-    "Por defecto se desabilita la sugerencias (autocompletado)  AI, cuando VIM termino de cargarse.
-    "Para habilitarlo cuando se use ':Copilot enable' o el keymapping '<Leder>cc'
-    autocmd VimEnter * Copilot disable
-
+    endif
 
 endif
 
 "###################################################################################
-" IDE> AI Chat y AI Agents
+" Tools> AI Chat, AI Agents
 "###################################################################################
 "
 " > Para 'AI Agent' se usara Avente, usando la API ofrecido por 'GitHub Copilot'.
@@ -70,14 +100,16 @@ endif
 " Para NeoVim
 if g:is_neovim
 
+    "Tools> Plugin requeridos para AI Chat, AI Agents
+    if g:use_ai_plugins
 
-    "Package IDE> AI Chat, AI Agents
-    packadd avante.nvim
-    packadd dressing.nvim
-    packadd nui.nvim
-    packadd render-markdown.nvim
-    packadd img-clip.nvim
+        packadd avante.nvim
+        packadd dressing.nvim
+        packadd nui.nvim
+        packadd render-markdown.nvim
+        packadd img-clip.nvim
 
+    endif
 
     lua require('ide.ide_extended')
 
@@ -85,6 +117,5 @@ if g:is_neovim
     finish
 
 endif
-
 
 " Para VIM

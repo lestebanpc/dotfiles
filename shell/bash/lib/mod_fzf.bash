@@ -158,14 +158,16 @@ ge_rg() {
 
 _g_fzf_gnrl_path=''
 
-#Permite listar sesiones y folderes para abrir/seleionar una sesion tmux
+#Permite gestionar las 'tmux session':
+# > Listar e ir a sesiones activas
+# > Listar folderes para abrir/seleionar una sesion tmux usando esta ruta
 #Parametro de entrada:
 # > Folder donde Buscar
 #Notas:
 # > El comando 'find' cuando se envia la opcion '-exec' como expansion de una cadena se debera tener mayor consideraciones,
 #   por lo que no esta funcionando, por tal motivo, en vez de ejecutar directamente el comando en la accion, se ejecuta un
 #   subshell usando el comando 'bash'.
-t () {
+s () {
 
     #Validar si existe el comando sesh
     if ! sesh --version 2> /dev/null 1>&2; then
@@ -275,6 +277,7 @@ _fzf_git_check() {
     return 1
 }
 
+_g_fzf_data1=''
 
 #. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 # Funciones
@@ -345,17 +348,44 @@ gi_tags() {
 gi_hashes() {
     _fzf_git_check || return
 
-    git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always |
-    _fzf_git_fzf --ansi --no-sort --bind 'ctrl-s:toggle-sort' \
-        --prompt '🍡 Hashes> ' \
-        --header $'CTRL-o (Open in browser), CTRL-d (Diff), CTRL-s (Toggle sort)\n\n' \
+    local p_file="$1"
+
+    local l_status=1
+    local l_result=''
+    local l_prompt='🍡 Hashes> '
+    _g_fzf_data1=''
+    if [ -z "$p_file" ]; then
+        l_result=$(git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always)
+        l_status=$?
+    else
+        printf -v l_prompt '🍡 Hashes of %s> ' "$p_file"
+        printf -v _g_fzf_data1 " -- '%s'" "$p_file"
+        l_result=$(git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=always -- "$p_file")
+        l_status=$?
+    fi
+
+
+    echo "data1: ${_g_fzf_data1}"
+
+
+    if [ $l_status -ne 0 ]; then
+        printf 'Ocurrio un error en obtener los commits: %b\n' "$l_result"
+        return 1
+    fi
+
+
+    echo "$l_result" | _fzf_git_fzf --ansi --no-sort --bind 'ctrl-s:toggle-sort' \
+        --prompt "$l_prompt" \
+        --header $'CTRL-o (Open in browser), CTRL-d (View Diff), CTRL-s (Toggle sort)\n\n' \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
         --bind "ctrl-o:execute-silent:bash ${_g_script_path}/fun_git.bash git_open_url 1 {}" \
-        --bind 'ctrl-d:execute:grep -o "[a-f0-9]\{7,\}" <<< {} | head -n 1 | xargs git diff | delta > /dev/tty' \
+        --bind "ctrl-d:execute:grep -o '[a-f0-9]\{7,\}' <<< {} | head -n 1 | xargs -I%% git diff --color=always %% ${_g_fzf_data1} | delta > /dev/tty" \
         --color hl:underline,hl+:underline \
         --preview-window "right,60%" \
-        --preview 'grep -o "[a-f0-9]\{7,\}" <<< {} | head -n 1 | xargs git show --color=always | delta' "$@" |
+        --preview "grep -o '[a-f0-9]\{7,\}' <<< {} | head -n 1 | xargs -I%% git show --color=always %% ${_g_fzf_data1} | delta" |
     awk 'match($0, /[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*/) { print substr($0, RSTART, RLENGTH) }'
+
+    return 0
 }
 
 #alias glog='git log --color=always --format="%C(cyan)%h%Creset %C(blue)%ar%Creset%C(auto)%d%Creset %C(yellow)%s%+b %C(white)%ae%Creset" "$@"'

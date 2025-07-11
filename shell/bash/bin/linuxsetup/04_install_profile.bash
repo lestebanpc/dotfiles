@@ -168,13 +168,13 @@ declare -r g_version_none='0.0.0'
 # (01) Grupo Basic > Core               - StatusLine, TabLine, FZF, TMUX utilities, Files Tree
 # (02) Grupo Basic > Extended           - Highlighting Sintax, Autocompletion para linea de comandos.
 # (03) Grupo IDE > Utils                - Libreries, Typing utilities.
-# (04) Grupo IDE > Development > Common - Plugin comunes para development de la implementacion nativa o CoC.
-# (05) Grupo IDE > Development > Native - LSP, Snippets, ... usando la implementacion nativa.
-# (06) Grupo IDE > Development > CoC    - LSP, Snippets, ... usando CoC.
+# (04) Grupo IDE > Development > Common - Plugin comunes de soporte independiente de tipo LSP usado (nativa o CoC).
+# (05) Grupo IDE > Development > Native - LSP, Snippets, Compeletion  ... usando la implementacion nativa.
+# (06) Grupo IDE > Development > CoC    - LSP, Snippets, Completion ... usando CoC.
 # (07) Grupo IDE > Testing              - Unit Testing y Debugging.
-# (08) Grupo IDE > Extended > Common    - Plugin comunes para AI usando la implementacion nativa o CoC.
-# (09) Grupo IDE > Extended > Native    - AI Completin/Chatbot, AIAgent for Development usando CoC.
-# (10) Grupo IDE > Extended > CoC       - AI Completin/Chatbot, AIAgent for Development usando implementacion nativa.
+# (08) Grupo IDE > Extended > Common    - Plugin de tools independiente del tipo de LSP usado (nativa o CoC).
+# (09) Grupo IDE > Extended > Native    - Tools: Git, Rest Client, AI Completion/Chatbot, AI Agent, etc.
+# (10) Grupo IDE > Extended > CoC       - Tools: Git, Rest Client, AI Completin/Chatbot, AI Agent, etc.
 declare -A gA_repos_type=(
         ['morhetz/gruvbox']=0
         ['joshdick/onedark.vim']=0
@@ -213,7 +213,6 @@ declare -A gA_repos_type=(
         ['hrsh7th/cmp-cmdline']=2
         ['nvim-lua/plenary.nvim']=3
         ['nvim-treesitter/nvim-treesitter-context']=4
-        ['mistweaverco/kulala.nvim']=4
         ['stevearc/aerial.nvim']=4
         ['neovim/nvim-lspconfig']=5
         ['ray-x/lsp_signature.nvim']=5
@@ -230,7 +229,9 @@ declare -A gA_repos_type=(
         ['theHamsta/nvim-dap-virtual-text']=7
         ['nvim-neotest/nvim-nio']=7
         ['vim-test/vim-test']=7
-        ['github/copilot.vim']=10
+        ['mistweaverco/kulala.nvim']=8
+        ['lewis6991/gitsigns.nvim']=8
+        ['sindrets/diffview.nvim']=8
         ['zbirenbaum/copilot.lua']=9
         ['zbirenbaum/copilot-cmp']=9
         ['stevearc/dressing.nvim']=9
@@ -238,6 +239,7 @@ declare -A gA_repos_type=(
         ['MeanderingProgrammer/render-markdown.nvim']=9
         ['HakonHarnes/img-clip.nvim']=9
         ['yetone/avante.nvim']=9
+        ['github/copilot.vim']=10
     )
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
@@ -266,6 +268,8 @@ declare -A gA_repos_scope=(
         ['nvim-treesitter/nvim-treesitter-textobjects']=2
         ['nvim-treesitter/nvim-treesitter-context']=2
         ['mistweaverco/kulala.nvim']=2
+        ['sindrets/diffview.nvim']=2
+        ['lewis6991/gitsigns.nvim']=2
         ['neovim/nvim-lspconfig']=2
         ['hrsh7th/nvim-cmp']=2
         ['hrsh7th/cmp-nvim-lsp']=2
@@ -998,10 +1002,10 @@ function _setup_user_profile() {
         copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "config_template_wsl.bash" "" ".config.bash" $l_flag_overwrite_file "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-              "$g_color_gray1" "~/.config.bash" "$g_color_reset"
+              "$g_color_yellow1" "~/.config.bash" "$g_color_reset"
     else
-        printf 'Profile > Si desea personalizar el profile, realize: "%bcp ~/.files/shell/bash/login/profile/config_template_nonwsl.bash ~/.config.bash%b"\n' \
-              "$g_color_gray1" "$g_color_reset"
+        printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/config_template_nonwsl.bash %b~/.config.bash%b"\n' \
+              "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
     fi
 
     #5. Creando enlaces simbolico independiente del tipo de distribución Linux
@@ -1050,8 +1054,16 @@ function _setup_user_profile() {
 
     copy_file_on_home "${g_repo_path}/etc/tmux" "$l_source_filename" ".config/tmux" "tmux_custom.conf" $l_flag_overwrite_file "        > "
     l_status=$?
-    printf 'Profile > Edite los archivos "%b%s%b" si desea personalizar las opciones de tmux.\n' \
-           "$g_color_gray1" "~/.config/tmux/tmux_custom.conf" "$g_color_reset"
+    printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de tmux.\n' \
+           "$g_color_yellow1" "~/.config/tmux/tmux_custom.conf" "$g_color_reset"
+
+
+    # Archivo de configuracion de 'sesh' (comando que gestiona sesiones para TMUX)
+    copy_file_on_home "${g_repo_path}/etc/sesh" "sesh_default.toml" ".config/sesh" "sesh.toml" $l_flag_overwrite_file "        > "
+    l_status=$?
+    printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
+           "$g_color_yellow1" "~/.config/sesh/sesh.toml" "$g_color_reset"
+
 
     #Archivo de configuración para el emulador de terminal wezterm
     l_target_path=".config/wezterm"
@@ -1066,7 +1078,7 @@ function _setup_user_profile() {
     copy_file_on_home "${g_repo_path}/wezterm" "linux_config_template.lua" ".config/wezterm" "config.lua" $l_flag_overwrite_file "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
-           "$g_color_gray1" "~/.config/wezterm/config.lua" "$g_color_reset"
+           "$g_color_yellow1" "~/.config/wezterm/config.lua" "$g_color_reset"
 
     #Archivo de configuración para el emulador de terminal foot
     l_target_path=".config/foot"
@@ -1122,6 +1134,27 @@ function _setup_user_profile() {
     l_status=$?
 
 
+    #Archivo de configuración para cliente MDP 'rmpc'
+    l_target_path=".config/rmpc"
+    create_folderpath_on_home ".config" "rmpc"
+
+    l_target_link="config.ron"
+    l_source_path="${g_repo_name}/rmpc"
+    l_source_filename='config_default.ron'
+
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    l_status=$?
+
+    create_folderpath_on_home ".config/rmpc" "themes"
+
+    l_target_path=".config/rmpc/themes"
+    l_target_link="theme_default.ron"
+    l_source_path="${g_repo_name}/rmpc/themes"
+    l_source_filename='theme_default.ron'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrite_link
+    l_status=$?
+
+
     #Crear el enlace simbolico de comandos basicos
     create_folderpath_on_home "" ".local/bin"
     l_target_path=".local/bin"
@@ -1157,7 +1190,7 @@ function _setup_user_profile() {
     copy_file_on_home "${g_repo_path}/etc/git" "template_work_gitconfig_linux.toml" ".config/git" "work_mywork.toml" $l_flag_overwrite_file "        > "
     l_status=$?
     printf 'Profile > Edite los archivos "%b%s%b" y "%b%s%b" si desea personalizar las opciones a nivel global del usuario ("%b~/.gitconfig%b")\n' \
-           "$g_color_gray1" "~/.config/git/main.toml" "$g_color_reset" "$g_color_gray1" "~/.config/git/work_mywork.toml" "$g_color_reset" \
+           "$g_color_yellow1" "~/.config/git/main.toml" "$g_color_reset" "$g_color_yellow1" "~/.config/git/work_mywork.toml" "$g_color_reset" \
            "$g_color_gray1" "$g_color_reset"
 
     #Archivo de configuración de Oh-My-Posh
@@ -1217,8 +1250,8 @@ function _setup_user_profile() {
 
     copy_file_on_home "${g_repo_path}/etc/oh-my-posh" "$l_source_filename" "${g_repo_name}/etc/oh-my-posh" "default_settings.json" $l_flag_overwrite_file "        > "
     l_status=$?
-    printf 'Profile > Edite los archivos "%b%s%b" si desea personalizar las opciones de oh-my-posh\n' \
-           "$g_color_gray1" "~/.config/etc/oh-my-posh/defaut_settings.json" "$g_color_reset"
+    printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de oh-my-posh\n' \
+           "$g_color_yellow1" "~/.config/etc/oh-my-posh/defaut_settings.json" "$g_color_reset"
 
     #Archivo de configuración para el comando UrlScan (hecho en python)
     l_target_path=".config/urlscan"

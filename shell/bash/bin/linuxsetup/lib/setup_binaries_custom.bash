@@ -33,8 +33,11 @@ gA_packages=(
         ['tailspin']='bensadeh/tailspin'
         ['qsv']='dathere/qsv'
         ['xan']='medialab/xan'
+        ['glow']='charmbracelet/glow'
+        ['gum']='charmbracelet/gum'
         ['yazi']='sxyazi/yazi'
         ['lazygit']='jesseduffield/lazygit'
+        ['rmpc']='mierak/rmpc'
         ['grpcurl']='fullstorydev/grpcurl'
         ['websocat']='vi/websocat'
         ['jwt']='mike-engel/jwt-cli'
@@ -93,7 +96,6 @@ gA_packages=(
         ['ctags-nowin']='universal-ctags/ctags-nightly-build'
         ['tmux-fingers']='Morantron/tmux-fingers'
         ['sesh']='joshmedeski/sesh'
-        ['gum']='charmbracelet/gum'
         ['tmux-thumbs']='fcsonline/tmux-thumbs'
         ['wezterm']='wez/wezterm'
         ['cilium']='cilium/cilium-cli'
@@ -163,7 +165,7 @@ ga_menu_options_title=(
 ga_menu_options_packages=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
     "tmux-thumbs,tmux-fingers,sesh,grpcurl,websocat,protoc,jwt"
-    "rclone,tailspin,qsv,xan,evans,gum,butane,biome,step,yazi,lazygit"
+    "rclone,tailspin,qsv,xan,evans,glow,gum,butane,biome,step,yazi,lazygit,rmpc"
     "nerd-fonts"
     "neovim"
     "powershell"
@@ -228,6 +230,7 @@ declare -A gA_repo_config_os_type=(
         ['tmux-thumbs']=14
         ['cilium']=14
         ['async-profiler']=14
+        ['rmpc']=14
     )
 
 
@@ -353,15 +356,18 @@ declare -A gA_main_arti_type=(
 
 # Define las formas de obtener la version actual (version amigable del repositorio instalada) de un repositorio
 # Puede ser:
-# > (0) Obteniendo la version usando el comando principal del programa y usando sed con 'g_regexp_sust_version1'.
+# > (0) Obteniendo la version usando el comando principal del programa usando logica estandar.
 #       > Valor por defecto para 'programa del sistema' y 'programa del usuario'.
-#       > Si no se especifica el comando a usar se usara '<repo-id> --version 2> /dev/null' y solo se considera la primera linea.
+#       > El bloque de texto donde se obtiene la version se usara algo similar a '<repo-id> --version 2> /dev/null'.
+#         De dicho bloque de texto se obtendra la version actual y amigable:
+#         > Solo se considera la 1ra linea.
+#         > Se filtrara usando sed con 'g_regexp_sust_version1'.
 #       > Puede ser usado para repositorios cuyo artefacto principal sea programa de sistema/usuario o paquete de SO.
 #       > NO puede ser usado para repositorios cuyo artefacto principal sea custom.
-# > (1) Obteniendo la version usando el comando principal del programa pero requiere usar logica persalizada para
-#       extreaer.
-#       > Si no se especifica el comando a usar se usara '<repo-id> --version 2> /dev/null'.
-#       > Todos el texto anterior se enviara a una funcion personalzida para generar la logica para obtener la version.
+# > (1) Obteniendo la version usando el comando principal del programa pero requiere usar logica persalizada para extreaerlo.
+#       > Se debe modificar la funcion '_get_repo_current_pretty_version2' para implementar su logica.
+#       > El bloque de texto donde se obtiene la version se usara algo similar a '<repo-id> --version 2> /dev/null'.
+#         > Todo el bloque de texto se enviara a una funcion personalzida para generar la logica para obtener la version.
 #       > Puede ser usado para repositorios cuyo artefacto principal sea programa de sistema/usuario o paquete de SO.
 #       > NO puede ser usado para repositorios cuyo artefacto principal sea custom.
 # > (2) Obteniendo la version desde un archivo de texto en el folder de programas de usuario.
@@ -369,7 +375,8 @@ declare -A gA_main_arti_type=(
 #       > Puede ser usado para repositorios cuyo artefacto principal sea custom.
 #       > Si no especifica el nombre del archivo esto sera '<repo-id>.info'
 #       > Duranta la instalacion del respositorio se crea y/o actualiza el archivo el cual tendra como primera linea la version amigable.
-# > (3) Custom
+# > (3) Custom.
+#       > Se debe modificar la funcion '_get_repo_current_pretty_version1' para implementar su logica
 #       > Se especifica la logica en una funcion bash.
 #       > Puede ser usado para repositorios cuyo artefacto principal sea custom.
 declare -A gA_current_version_method_type=(
@@ -473,6 +480,7 @@ declare -A gA_current_version_parameter2=(
     ['net-sdk']='--list-sdks version'
     ['net-rt-core']='--list-runtimes version'
     ['net-rt-aspnet']='--list-runtimes version'
+    ['rmpc']='version'
     )
 
 
@@ -2067,6 +2075,36 @@ function get_repo_artifacts() {
                 pna_artifact_types=(10)
             fi
             ;;
+
+
+
+        rmpc)
+
+            #No soportado para Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 2
+            fi
+
+            #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+            if [ $g_os_subtype_id -eq 1 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    rna_artifact_names=("rmpc-v${p_repo_last_pretty_version}-aarch64-unknown-linux-musl.tar.gz")
+                else
+                    pna_artifact_names=("rmpc-v${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.tar.gz")
+                fi
+                pna_artifact_types=(11)
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("rmpc-v${p_repo_last_pretty_version}-aarch64-unknown-linux-gnu.tar.gz")
+                else
+                    pna_artifact_names=("rmpc-v${p_repo_last_pretty_version}-x86_64-unknown-linux-gnu.tar.gz")
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
 
 
         rclone)
@@ -4062,6 +4100,32 @@ function get_repo_artifacts() {
             ;;
 
 
+        glow)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                pna_artifact_names=("glow_${p_repo_last_pretty_version}_Windows_x86_64.zip")
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
+
         gum)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_is_win_binary -eq 0 ]; then
@@ -4942,6 +5006,49 @@ function _copy_artifact_files() {
             ;;
 
 
+        rmpc)
+
+            #Si es un binario de Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
+                return 40
+            fi
+
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+
+            #A. Si es Linux (no WSL)
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            copy_binary_on_command "${l_source_path}" "rmpc" 0 1
+
+            #Copiar los archivos de ayuda man para comando
+            copy_man_files "${g_temp_path}/${l_source_path}/man" 1
+
+            #Copiar los archivos de autocompletado
+            echo "Copiando \"./completions/rmpc.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
+            cp "${g_temp_path}/${l_source_path}/completions/rmpc.bash" ${g_repo_path}/shell/bash/login/autocomplete/rmpc.bash
+
+            echo "Copiando \"./completions/rmpc.fish\" a \"~/.files/shell/fish/login/autocomplete/\" ..."
+            cp "${g_temp_path}/${l_source_path}/completions/rmpc.fish" ${g_repo_path}/shell/fish/login/autocomplete/rmpc.fish
+
+            echo "Copiando \"./completions/_yazi\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
+            cp "${g_temp_path}/${l_source_path}/completions/_rmpc" ${g_repo_path}/shell/zsh/login/autocomplete/rmpc.zsh
+
+            if [ $g_runner_is_target_user -ne 0 ]; then
+
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/rmpc.bash
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/fish/login/autocomplete/rmpc.fish
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/zsh/login/autocomplete/rmpc.zsh
+
+            fi
+            ;;
+
+
 
         fd)
             #Ruta local de los artefactos
@@ -5592,6 +5699,48 @@ function _copy_artifact_files() {
             #Copiando el binario en una ruta del path
             copy_binary_on_command "${l_source_path}" "sesh" 0 1
             ;;
+
+
+
+        glow)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
+
+            #A. Si es WSL de Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                copy_binary_on_command "${l_source_path}" "glow.exe" 1 1
+                return 0
+
+            fi
+
+            #B. Si es Linux (no WSL)
+
+            #Copiando el binario en una ruta del path
+            copy_binary_on_command "${l_source_path}" "glow" 0 1
+
+            #Copiar los archivos de ayuda man para comando
+            copy_man_files "${g_temp_path}/${l_source_path}/manpages" 1
+
+            #Copiando los script para el autocompletado
+            echo "Copiando \"completions/gum.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
+            cp "${g_temp_path}/${l_source_path}/completions/glow.bash" ${g_repo_path}/shell/bash/login/autocomplete/glow.bash
+
+            echo "Copiando \"completions/gum.zsh\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
+            cp "${g_temp_path}/${l_source_path}/completions/glow.zsh" ${g_repo_path}/shell/zsh/login/autocomplete/glow.zsh
+
+            echo "Copiando \"completions/gum.fish\" a \"~/.files/shell/fish/login/autocomplete/\" ..."
+            cp "${g_temp_path}/${l_source_path}/completions/glow.fish" ${g_repo_path}/shell/fish/login/autocomplete/glow.fish
+
+            #Fix permisos
+            if [ $g_runner_is_target_user -ne 0 ]; then
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/glow.bash
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/zsh/login/autocomplete/glow.zsh
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/fish/login/autocomplete/glow.fish
+            fi
+            ;;
+
 
 
         gum)

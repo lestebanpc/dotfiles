@@ -4,11 +4,14 @@
 # URL   : https://github.com/gpakosz/.tmux
 # Se modifica para tener shell en otro archivos y no dentro de los archivos de configuracion.
 
-#TMUX_SHELL_OHMYTMUX="$TMUX_SHELL_PATH/fun_ohmytmux.sh"
-#TMUX_SHELL_CUSTOM_STATUSBAR="$TMUX_SHELL_PATH/fun_custom_statusbar.sh"
-
 # exit the script if any statement returns a non-true return value
 set -e
+
+
+
+# ---------------------------------------------------------------------------------------------------
+# Inicializaciones
+# ---------------------------------------------------------------------------------------------------
 
 unset GREP_OPTIONS
 export LC_NUMERIC=C
@@ -47,6 +50,12 @@ else
 fi
 
 _tmux_version=$(tmux -V | awk '{gsub(/[^0-9.]/, "", $2); print ($2+0) * 100}')
+
+
+
+# ---------------------------------------------------------------------------------------------------
+# Funciones de utilidad generales
+# ---------------------------------------------------------------------------------------------------
 
 _is_true() {
   [ "$1" = "true" ] || [ "$1" = "yes" ] || [ "$1" = "1" ]
@@ -557,82 +566,98 @@ _loadavg() {
   esac
 }
 
-_new_window_ssh() {
-  pane_pid=${1:-$(tmux display -p '#{pane_pid}')}
-  pane_tty=${2:-$(tmux display -p '#{b:pane_tty}')}
-  shift 2
 
-  pane_info=$(_pane_info "$pane_pid" "$pane_tty")
-  command=${pane_info#*:}
-  command=${command#*:}
 
-  case "$command" in
-    *mosh-client*)
-      # shellcheck disable=SC2046
-       tmux new-window "$@" mosh $(echo "$command" | sed -E -e 's/.*mosh-client -# (.*)\|.*$/\1/')
-     ;;
-    *ssh*)
-      # shellcheck disable=SC2046
-      tmux new-window "$@" $(echo "$command" | sed -e 's/;/\\;/g')
-      ;;
-    *)
-      tmux new-window "$@"
-  esac
-}
+# ---------------------------------------------------------------------------------------------------
+# Funciones de utilidad no relacionados al 'Status Line' (no usuados)
+# ---------------------------------------------------------------------------------------------------
 
-_new_window() {
-  _new_window_ssh "$@"
-}
+#_new_window_ssh() {
+#  pane_pid=${1:-$(tmux display -p '#{pane_pid}')}
+#  pane_tty=${2:-$(tmux display -p '#{b:pane_tty}')}
+#  shift 2
+#
+#  pane_info=$(_pane_info "$pane_pid" "$pane_tty")
+#  command=${pane_info#*:}
+#  command=${command#*:}
+#
+#  case "$command" in
+#    *mosh-client*)
+#      # shellcheck disable=SC2046
+#       tmux new-window "$@" mosh $(echo "$command" | sed -E -e 's/.*mosh-client -# (.*)\|.*$/\1/')
+#     ;;
+#    *ssh*)
+#      # shellcheck disable=SC2046
+#      tmux new-window "$@" $(echo "$command" | sed -e 's/;/\\;/g')
+#      ;;
+#    *)
+#      tmux new-window "$@"
+#  esac
+#}
+#
+#
+#_new_window() {
+#  _new_window_ssh "$@"
+#}
+#
+#
+#_split_window_ssh() {
+#  pane_pid=${1:-$(tmux display -p '#{pane_pid}')}
+#  pane_tty=${2:-$(tmux display -p '#{b:pane_tty}')}
+#  shift 2
+#
+#  pane_info=$(_pane_info "$pane_pid" "$pane_tty")
+#  command=${pane_info#*:}
+#  command=${command#*:}
+#
+#  case "$command" in
+#    *mosh-client*)
+#      # shellcheck disable=SC2046
+#       tmux split-window "$@" mosh $(echo "$command" | sed -E -e 's/.*mosh-client -# (.*)\|.*$/\1/')
+#     ;;
+#    *ssh*)
+#      # shellcheck disable=SC2046
+#      tmux split-window "$@" $(echo "$command" | sed -e 's/;/\\;/g')
+#      ;;
+#    *)
+#      tmux split-window "$@"
+#  esac
+#}
+#
+#
+#_split_window() {
+#  _split_window_ssh "$@"
+#}
 
-_split_window_ssh() {
-  pane_pid=${1:-$(tmux display -p '#{pane_pid}')}
-  pane_tty=${2:-$(tmux display -p '#{b:pane_tty}')}
-  shift 2
 
-  pane_info=$(_pane_info "$pane_pid" "$pane_tty")
-  command=${pane_info#*:}
-  command=${command#*:}
 
-  case "$command" in
-    *mosh-client*)
-      # shellcheck disable=SC2046
-       tmux split-window "$@" mosh $(echo "$command" | sed -E -e 's/.*mosh-client -# (.*)\|.*$/\1/')
-     ;;
-    *ssh*)
-      # shellcheck disable=SC2046
-      tmux split-window "$@" $(echo "$command" | sed -e 's/;/\\;/g')
-      ;;
-    *)
-      tmux split-window "$@"
-  esac
-}
+# ---------------------------------------------------------------------------------------------------
+# Funciones usados para configurar 'Status Line'
+# ---------------------------------------------------------------------------------------------------
 
-_split_window() {
-  _split_window_ssh "$@"
-}
+#_apply_tmux_256color() {
+#  case "$(tmux show -gv default-terminal)" in
+#    tmux-256color|tmux-direct)
+#     return
+#      ;;
+#  esac
+#
+#  # when tmux-256color is available, use it
+#  # on macOS though, make sure to use /usr/bin/infocmp to probe if it's availalbe system wide
+#  case "$_uname_s" in
+#    *Darwin*)
+#      if /usr/bin/infocmp -x tmux-256color > /dev/null 2>&1; then
+#        tmux set -g default-terminal 'tmux-256color'
+#      fi
+#      ;;
+#     *)
+#      if command infocmp -x tmux-256color > /dev/null 2>&1; then
+#        tmux set -g default-terminal 'tmux-256color'
+#      fi
+#      ;;
+#  esac
+#}
 
-_apply_tmux_256color() {
-  case "$(tmux show -gv default-terminal)" in
-    tmux-256color|tmux-direct)
-     return
-      ;;
-  esac
-
-  # when tmux-256color is available, use it
-  # on macOS though, make sure to use /usr/bin/infocmp to probe if it's availalbe system wide
-  case "$_uname_s" in
-    *Darwin*)
-      if /usr/bin/infocmp -x tmux-256color > /dev/null 2>&1; then
-        tmux set -g default-terminal 'tmux-256color'
-      fi
-      ;;
-     *)
-      if command infocmp -x tmux-256color > /dev/null 2>&1; then
-        tmux set -g default-terminal 'tmux-256color'
-      fi
-      ;;
-  esac
-}
 
 _apply_24b() {
   tmux_conf_theme_24b_colour=${tmux_conf_theme_24b_colour:-auto}
@@ -660,140 +685,6 @@ _apply_24b() {
   fi
 }
 
-_apply_bindings() {
-  cfg=$(mktemp) && trap 'rm -f $cfg*' EXIT
-
-  tmux_conf_preserve_stock_bindings=${tmux_conf_preserve_stock_bindings:-false}
-  tmux list-keys | grep -vF 'TMUX_CUSTOM_CONF' | grep -E 'new-window|split(-|_)window|new-session|copy-selection|copy-pipe' > "$cfg"
-  if _is_true "$tmux_conf_preserve_stock_bindings"; then
-    probe_socket="$(dirname "$TMUX_SOCKET")/tmux-stock-bindings-$$"
-    TMUX_SOCKET="$probe_socket" tmux -f /dev/null list-keys >> "$cfg"
-    rm -f "%probe_socket"
-  fi
-
-
-  # tmux 3.0 doesn't include 02254d1e5c881be95fd2fc37b4c4209640b6b266 and the
-  # output of list-keys can be truncated
-  perl -p -i -e "s/'#\{\?window_zoomed_flag,Unzoom,Zoom\}' 'z' \{resize-pane -$/'#{?window_zoomed_flag,Unzoom,Zoom}' 'z' {resize-pane -Z}\"/g" "$cfg"
-
-  tmux_conf_new_window_retain_current_path=${tmux_conf_new_window_retain_current_path:-true}
-  if ! _is_disabled "$tmux_conf_new_window_retain_current_path"; then
-    perl -p -i -e "
-      s/\brun-shell\b\s+(\"|')sh\s+(.+?)\s+_new_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^\n\1]*?)(?:\s+-c\s+((?:\\\\{1,3}\")?|\"?|'?)#\{pane_current_path\}\4)([^\n\1]*?)\1/run-shell \1sh \2 _new_window #\{pane_pid\} #\{b:pane_tty\}\3\5\1/g
-      ;
-      s/\brun-shell\b\s+(\"|')sh\s+.+?\s+_new_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}(\s+.+?)?\1/new-window\2/g
-      ;
-      s/\bnew-window\b([^;}\n]*?)(?:\s+-c\s+((?:\\\\\")?|\"?|'?)#\{pane_current_path\}\2)/new-window\1/g" \
-      "$cfg"
-  fi
-
-
-  perl -p -i -e "
-    s,\bnew-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?(?:\s+(\bssh\b))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?,run-shell 'sh \"$TMUX_SHELL_OHMYTMUX\" _new_window_ssh #\{pane_pid\} #\{b:pane_tty\}\1',g if /\bnew-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?(?:\s+(ssh))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?/"\
-  "$cfg"
-
-  tmux_conf_new_window_reconnect_ssh=${tmux_conf_new_window_reconnect_ssh:-false}
-  if ! _is_disabled "$tmux_conf_new_window_reconnect_ssh" && _is_true "$tmux_conf_new_window_reconnect_ssh"; then
-    perl -p -i -e "s,\bnew-window\b([^;}\n\"]*),run-shell 'sh \"$TMUX_SHELL_OHMYTMUX\" _new_window #\{pane_pid\} #\{b:pane_tty\}\1',g" "$cfg"
-  fi
-
-
-  tmux_conf_new_window_retain_current_path=${tmux_conf_new_window_retain_current_path:-false}
-  if ! _is_disabled "$tmux_conf_new_window_retain_current_path" && _is_true "$tmux_conf_new_window_retain_current_path"; then
-    perl -p -i -e "
-      s/\bnew-window\b(?!\s+(?:-|}))/{$&}/g if /\bdisplay-menu\b/
-      ;
-      s/\bnew-window\b/new-window -c '#{pane_current_path}'/g
-      ;
-      s/\brun-shell\b\s+'sh\s+(.+?)\s+_new_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'sh \1 _new_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \\\\\"#\{pane_current_path\}\\\\\"\3'/g if /\bdisplay-menu\b/
-      ;
-      s/\brun-shell\b\s+'sh\s+(.+?)\s+_new_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'sh \1 _new_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \"#\{pane_current_path\}\"\3'/g" \
-      "$cfg"
-  fi
-
-
-  tmux_conf_new_pane_retain_current_path=${tmux_conf_new_pane_retain_current_path:-true}
-  if ! _is_disabled "$tmux_conf_new_pane_retain_current_path"; then
-    perl -p -i -e "
-      s/\brun-shell\b\s+(\"|')sh\s+(.+?)\s+_split_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^\n\1]*?)(?:\s+-c\s+((?:\\\\{1,3}\")?|\"?|'?)#\{pane_current_path\}\4)([^\n\1]*?)\1/run-shell \1sh \2 _split_window #\{pane_pid\} #\{b:pane_tty\}\3\5\1/g
-      ;
-      s/\brun-shell\b\s+(\"|')sh\s+.+?\s+_split_window\s+#\{pane_pid\}\s+#\{b:pane_tty\}(\s+.+?)?\1/split-window\2/g
-      ;
-      s/\bsplit-window\b([^;}\n]*?)(?:\s+-c\s+((?:\\\\\")?|\"?|'?)#\{pane_current_path\}\2)/split-window\1/g" \
-      "$cfg"
-  fi
-
-
-  perl -p -i -e "
-    s,\bsplit-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?(?:\s+(\bssh\b))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!\bssh\b)[^\s]+))*)?,run-shell 'sh \"$TMUX_SHELL_OHMYTMUX\" _split_window_ssh #\{pane_pid\} #\{b:pane_tty\}\1',g if /\bsplit-window\b((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?(?:\s+(ssh))((?:(?:[ \t]+-[bdfhIvP])|(?:[ \t]+-[celtF][ \t]+(?!ssh)[^\s]+))*)?/"\
-  "$cfg"
-
-  tmux_conf_new_pane_reconnect_ssh=${tmux_conf_new_pane_reconnect_ssh:-false}
-  if ! _is_disabled "$tmux_conf_new_pane_reconnect_ssh" && _is_true "$tmux_conf_new_pane_reconnect_ssh"; then
-    perl -p -i -e "s,\bsplit-window\b([^;}\n\"]*),run-shell 'sh \"$TMUX_SHELL_OHMYTMUX\" _split_window #\{pane_pid\} #\{b:pane_tty\}\1',g" "$cfg"
-  fi
-
-  if ! _is_disabled "$tmux_conf_new_pane_retain_current_path" && _is_true "$tmux_conf_new_pane_retain_current_path"; then
-    perl -p -i -e "
-      s/\bsplit-window\b(?!\s+(?:-|}))/{$&}/g if /\bdisplay-menu\b/
-      ;
-      s/\bsplit-window\b/split-window -c '#{pane_current_path}'\1/g
-      ;
-      s/\brun-shell\b\s+'sh\s+(.+?)\s+_split_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'sh \1 _split_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \\\\\"#\{pane_current_path\}\\\\\"\3'/g if /\bdisplay-menu\b/
-      ;
-      s/\brun-shell\b\s+'sh\s+(.+?)\s+_split_window(_ssh)?\s+#\{pane_pid\}\s+#\{b:pane_tty\}([^}\n']*)'/run-shell 'sh \1 _split_window\2 #\{pane_pid\} #\{b:pane_tty\} -c \"#\{pane_current_path\}\"\3'/g" \
-      "$cfg"
-  fi
-
-
-
-  tmux_conf_new_session_prompt=${tmux_conf_new_session_prompt:-false}
-  if ! _is_disabled "$tmux_conf_new_session_prompt" && _is_true "$tmux_conf_new_session_prompt"; then
-    perl -p -i -e "
-      s/(?<!command-prompt -p )\b(new-session)\b(?!\s+(?:-|}))/{$&}/g if /\bdisplay-menu\b/
-      ;
-      s/(?<!\bcommand-prompt -p )\bnew-session\b(?! -s)/command-prompt -p new-session \"new-session -s '%%'\"/g" \
-      "$cfg"
-  else
-    perl -p -i -e "s/\bcommand-prompt\s+-p\s+new-session\s+\"new-session\s+-s\s+'%%'\"/new-session/g" "$cfg"
-  fi
-
-
-  tmux_conf_new_session_retain_current_path=${tmux_conf_new_session_retain_current_path:-false}
-  if ! _is_disabled "$tmux_conf_new_session_retain_current_path" && _is_true "$tmux_conf_new_session_retain_current_path"; then
-    perl -p -i -e "
-      s/(?<!\bcommand-prompt -p )\bnew-session\b/new-session -c '#{pane_current_path}'/g" \
-      "$cfg"
-  else
-    perl -p -i -e "
-      s/\bnew-session\b([^;}\n]*?)(?:\s+-c\s+((?:\\\\\")?|\"?|'?)#\{pane_current_path\}\2)/new-session\1/g" \
-      "$cfg"
-  fi
-
-
-  # until tmux >= 3.0, output of tmux list-keys can't be consumed back by tmux source-file without applying some escapings
-  awk < "$cfg" \
-    '{i = $2 == "-T" ? 4 : 5; gsub(/^[;]$/, "\\\\&", $i); gsub(/^[$"#~]$/, "'"'"'&'"'"'", $i); gsub(/^['"'"']$/, "\"&\"", $i); print}' > "$cfg.in"
-
-  #cat "$cfg.in" > /tmp/tmux_cfg.txt
-
-  # ignore bindings with errors
-  if ! tmux source-file "$cfg.in"; then
-
-    #echo "error"
-    if tmux source-file -v /dev/null 2> /dev/null; then
-      verbose_flag='-v'
-    fi
-    while ! out=$(tmux source-file "${verbose_flag:+$verbose_flag}" "$cfg.in"); do
-      line=$(printf "%s" "$out" | tail -1 | cut -d':' -f2)
-      perl -n -i -e "if ($. != $line) { print }" "$cfg.in"
-    done
-
-  fi
-
-  #echo "end"
-
-}
 
 _apply_theme() {
   tmux_conf_theme=${tmux_conf_theme:-enabled}
@@ -1323,11 +1214,11 @@ _apply_theme() {
 
   # -- custom variables ------------------------------------------------------
 
-  if [ -f "$TMUX_SHELL_CUSTOM_STATUSBAR" ] && [ "$(sh 2>/dev/null "$TMUX_SHELL_CUSTOM_STATUSBAR" printf probe)" = "probe" ]; then
-    replacements=$(perl -n -e 'print if s!^#\s+([^_][^()\s]+)\s*\(\)\s*{\s*(?:#.*)?\n!s%#\\\{\1((?:\\s+(?:[^\{\}]+?|#\\{(?:[^\{\}]+?)\}))*)\\\}%#(sh \"\\\$TMUX_SHELL_CUSTOM_STATUSBAR\" \1\\1)%g; !p' "$TMUX_SHELL_CUSTOM_STATUSBAR")
-    status_left=$(echo "$status_left" | perl -p -e "$replacements" || echo "$status_left")
-    status_right=$(echo "$status_right" | perl -p -e "$replacements" || echo "$status_right")
-  fi
+  #if [ -f "$TMUX_SHELL_CUSTOM_STATUSBAR" ] && [ "$(sh 2>/dev/null "$TMUX_SHELL_CUSTOM_STATUSBAR" printf probe)" = "probe" ]; then
+  #  replacements=$(perl -n -e 'print if s!^#\s+([^_][^()\s]+)\s*\(\)\s*{\s*(?:#.*)?\n!s%#\\\{\1((?:\\s+(?:[^\{\}]+?|#\\{(?:[^\{\}]+?)\}))*)\\\}%#(sh \"\\\$TMUX_SHELL_CUSTOM_STATUSBAR\" \1\\1)%g; !p' "$TMUX_SHELL_CUSTOM_STATUSBAR")
+  #  status_left=$(echo "$status_left" | perl -p -e "$replacements" || echo "$status_left")
+  #  status_right=$(echo "$status_right" | perl -p -e "$replacements" || echo "$status_right")
+  #fi
 
   # --------------------------------------------------------------------------
 
@@ -1340,23 +1231,8 @@ _apply_theme() {
 }
 
 
-_apply_important() {
-  cfg=$(mktemp) && trap 'rm -f $cfg*' EXIT
 
-  if perl -n -e 'print if /^\s*(?:set|bind|unbind).+?#!important\s*$/' "$TMUX_CUSTOM_CONF" 2>/dev/null > "$cfg.local"; then
-    if ! tmux source-file "$cfg.local"; then
-      if tmux source-file -v /dev/null 2> /dev/null; then
-        verbose_flag='-v'
-      fi
-      while ! out=$(tmux source-file "${verbose_flag:+$verbose_flag}" "$cfg.local"); do
-        line=$(printf "%s" "$out" | tail -1 | cut -d':' -f2)
-        perl -n -i -e "if ($. != $line) { print }" "$cfg.local"
-      done
-    fi
-  fi
-}
-
-_apply_configuration() {
+setup_statusline() {
   window_active="$(tmux display -p '#{window_active}' 2>/dev/null || true)"
   if [ -z "$window_active" ]; then
     if ! command -v perl > /dev/null 2>&1; then
@@ -1388,14 +1264,10 @@ _apply_configuration() {
       ;;
   esac
 
-  _apply_tmux_256color
+  #_apply_tmux_256color
   _apply_24b&
   _apply_theme&
-  _apply_bindings&
   wait
-
-  #Desactivar ¿se requiere?
-  #_apply_important
 
   # shellcheck disable=SC2046
   tmux setenv -gu tmux_conf_dummy $(printenv | grep -E -o '^tmux_conf_[^=]+' | awk '{printf "; setenv -gu %s", $0}')

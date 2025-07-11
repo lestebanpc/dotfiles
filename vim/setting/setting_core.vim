@@ -52,6 +52,12 @@ else
     let g:has_python3 = v:false
 endif
 
+"Si esta compilado tiene nativo para poder escribir en el clipboard del SO. En NeoVIM, siempre es 1 (v:true).
+if has('clipboard')
+    let s:has_clipboard = v:true
+else
+    let s:has_clipboard = v:false
+endif
 
 "Determinar si se usa TMUX
 "if (g:os_type != 0) && exists('$TMUX') && executable('tmux')
@@ -94,288 +100,6 @@ if g:use_ide
     endif
 
 endif
-
-
-
-"-----------------------------------------------------------------------------------
-" Clipboard de SO
-"-----------------------------------------------------------------------------------
-"
-"Uso de 'ctrl+C' para enviar texto al portapapeles y 'ctrl+V' para obtener texto del portapapeles:
-" > Cuando (el panel actual de) la terminal no está ejecutando un comando, las terminales procesan estas
-"   teclas y acceden al clipboard:
-"   > Ante cualquier texto seleccionado (ya sea con el ratón o con otros atajos de teclado), usando 'ctr+C',
-"     la puede capturar el terminal y enviarla al clipboard del SO (donde está la terminal).
-"     > Algunas  terminales permiten el copiado automático ante cualquier texto seleccionado a la terminal,
-"       solo requiere seleccionar y esto ya se copia en la terminal.
-"     > Esta opción permite enviar al portapapeles cual texto del STDOUT generado por el comando (después
-"       de su ejecución).
-"     > Cuando este en la línea de ejecución del prompt  actual de la terminal, puede usar 'ctrl+V' para
-"       obtener el texto del portapapeles y pegarlo después del prompt actual.
-" > Cuando (el panel actual de) la terminal está ejecutando un comando, las terminales la terminales reenvias
-"   las teclas al comando de ejecución:
-"   > Cuando se usa 'ctrl+V', es la terminal la que obtiene el texto del portapapeles y reenvía la tecla
-"     'ctrl+V' al comando de ejecución.
-"   > Algunos comandos, como 'vim', 'nvim', 'tmux', 'ssh', …. implementan un acción frente a este evento
-"     algunos no lo implementan.
-"   > Cuando se usa 'ctrl+C', este se envía al programa, pero muchos comandos una accion para gestionar el
-"     portapapeles, debido a que acoplan la lógica del comando con el API de gestión de portapapeles del SO.
-"     VIM/Neovim no implementan logica de pegado al portapapeles con esta key.
-"
-
-"Si esta compilado tiene nativo para poder escribir en el clipboard del SO. En NeoVIM, siempre es 1 (v:true).
-if has('clipboard')
-    let s:has_clipboard = v:true
-else
-    let s:has_clipboard = v:false
-endif
-
-"Determinar si existe el backend de gestion del clipboard y obtener del comando externo para escribir el portapapeles
-let s:clipboard_command = ''
-
-"Si es Linux (sea WSL y no-WSL)
-if (g:os_type == 2) || (g:os_type == 3)
-
-if  exists('$WAYLAND_DISPLAY')
-        if executable('wl-copy')
-            let s:clipboard_command='wl-copy'
-        endif
-    elseif exists('$DISPLAY')
-        if executable('xclip')
-            let s:clipboard_command='xclip -i -selection clipboard'
-        elseif executable('xclip')
-            let s:clipboard_command='xsel -i -b'
-        endif
-    endif
-
-"Si es Windows
-elseif g:os_type == 0
-
-    if executable('clip.exe')
-        let s:clipboard_command='clip.exe'
-    endif
-
-"Si es MacOS
-elseif g:os_type == 1
-
-    if executable('pbcopy')
-        let s:clipboard_command='pbcopy'
-    endif
-
-endif
-
-
-"Establecer el mecanismo de escritura en el clipboard del SO. Variable 'g:clipboard_mode' cuyos
-"valores son:
-"  0 > Usar el mecanismo nativo de VIM/NeoVIM (siempre que este esta habilitado).
-"  1 > Implementar un mecanismo usando OSC 52.
-"  2 > Implementar un mecanismo usando comandos externos de gestion de clipboard.
-"  9 > No se puedo Implementar ninguno de los mecanismos.
-
-" Si no se especifica, se debe calcular automaticamente el modo de escritura al clipboard
-if g:clipboard_mode != 0 && g:clipboard_mode != 1 && g:clipboard_mode != 2
-
-    "1. Intentar determinar si la terminal soporta OSC 52
-    "   > Parte de la logica 'setting_clipboard()' definida en './shell/bash/bin/tmux/fun_general.bash'.
-    "   > La 1ra prioridad de uso del mecanismo del clipboard es OSC 52.
-    let s:terminal_use_osc54 = v:false
-
-    "Si esta ejecutando sobre tmux
-    if g:use_tmux
-
-        "Si usa el archivo de configuracion './tmux/tmux.conf', se establece la variable de entorno 'TMUX_SET_CLIPBOARD'
-        "con valor 1 o 2, si se configurado tmux con soporte a OSC 52
-        if ($TMUX_SET_CLIPBOARD == 1) || ($TMUX_SET_CLIPBOARD == 2)
-            let s:terminal_use_osc54 = v:true
-        endif
-
-    "Si esta ejecutando directamente sobre la terminal.
-    else
-
-        "Los siguientes emuladores definen por defecto la variable de entorno 'TERM_PROGRAM'
-        if ($TERM_PROGRAM == 'WezTerm') || ($TERM_PROGRAM == 'contour') || ($TERM_PROGRAM == 'iTerm.app')
-
-            let s:terminal_use_osc54 = v:true
-
-        "Los siguientes emuladores debera definir la variable 'TERM_PROGRAM' con este valor en su archivo de configuracion:
-        elseif ($TERM_PROGRAM == 'foot') || ($TERM_PROGRAM == 'kitty') || ($TERM_PROGRAM == 'alacritty')
-
-            let s:terminal_use_osc54 = v:true
-
-        "Opcionalmente, aunque no se recomienta usar un TERM personalizado (no estan en todos los equipos que accede
-        "por SSH), algunas terminales definen un TERM personalizado (aunque por campatibilidad, puede modificarlo).
-        else
-            if ($TERM == 'xterm-kitty') || ($TERM == 'alacritty') || ($TERM == 'foot')
-                let s:terminal_use_osc54 = v:true
-            endif
-        endif
-
-    endif
-
-
-    "2. Determinar el mecanismo de escritura del clipboard a usar:
-    if g:is_neovim
-
-        " Determinar el mecanismo de escritura del clipboard a usar, segun orden de prioridad
-        "  > Implementar el mecanismo OSC 52.
-        "    > Se definira la variable 'g:clipboard' para definirlo como prioridad.
-        "  > Usar mecanismo nativo (SOC y comandos externos) si esta habilitado. Segun prioridad.
-        "    > El proveedor definido en 'g:clipboard' (no aplicara para nuestro caso).
-        "    > Usando un proveedor (backend externo):
-        "      > MacOS: pbcopy / pbpaste
-        "      > Linux con Wayland: wl-copy / wl-paste, waycopy / waypaste
-        "    > Usando OSC 52
-        "    > Si es Linux X11, usa proveedor: usa libreria 'libxcb' y 'libX11'.
-        "    > Si es Windows y esta compilado con la opcion '+clipboard', utiliza el API de Win32.
-        if s:terminal_use_osc54
-            let g:clipboard_mode = 1
-        else
-            if s:has_clipboard
-                let g:clipboard_mode = 0
-            else
-                if s:clipboard_command != ''
-                    let g:clipboard_mode = 2
-                else
-                    let g:clipboard_mode = 1
-                endif
-            endif
-        endif
-
-    else
-
-        " Determinar automaticamente el mecanismo correcto segun order de prioridad:
-        "  > Implementar el mecanismo OSC 52, si la terminal lo permite.
-        "  > Usar mecanismo nativo (API del SO) si esta habilitado.
-        "  > Implementar el mecanismo de uso comandos externo del gestion de clipboard
-        "  > Si no existe comando externo, se implementara el mecanismo OSC 52
-
-
-        if s:terminal_use_osc54
-            let g:clipboard_mode = 1
-        else
-            if s:has_clipboard
-                let g:clipboard_mode = 0
-            else
-                if s:clipboard_command != ''
-                    let g:clipboard_mode = 2
-                else
-                    let g:clipboard_mode = 1
-                endif
-            endif
-        endif
-
-    endif
-
-endif
-
-
-"Establecer la opcion VIM 'clipboard' para acceder al clipboard del SO
-if g:is_neovim
-
-    "NeoVIM no interactua directamente con el clipboard del SO (no usa API del SO) y tiene una Integracion
-    "nativa con:
-    " > Usa el caracter de escape OSC 52 para enviar texto a la terminal, para que este lo interprete y escriba
-    "   al portapales del SO de la terminal.
-    " > Usa comandos externos de gestion de clipboard (backend de clipboard) las cuales registra a eventos de
-    "   establecer texto en registro de yank de VIM.
-    if s:has_clipboard
-
-        "Si es NeoVIM, siempre se usa la opción 'unnamedplus'
-        set clipboard=unnamedplus
-
-    else
-        set clipboard=
-    endif
-
-else
-
-
-    " Si se usa el mecanismo nativo de acceso al clipboard
-    if g:clipboard_mode == 0
-
-        "VIM puede interactuar directamente con el clipboard del SO (usa el API del SO para ello)
-        "La instegracion con comandos externos de gestion de clipboard y OSC 52, no lo hace de forma nativa.
-        if (g:os_type == 2) || (g:os_type == 3 )
-
-            "Si VIM y es Linux
-
-            "Usar como registro predeterminado a '+' vinculado al portapales principal del SO
-            "En Linux, se usa el portapales 'CLIPBOARD' del servidor X11
-            "Para copiar selecione y use 'CTRL + c', para pegar use 'CTRL + v'
-            set clipboard=unnamedplus
-
-            "Usar como registro predeterminado a '*' (que apunta al portapales 'PRIMARY' del servidor X11)
-            "Para copiar el al portapales solo selecione el texto,
-            "Para pegar del portapales use el boton central o boton secundario o 'SHFIT + INSERT'
-            "Se esta usando esto en Linux porque es mas facil usar y mas eficiente en recursos
-            "set clipboard+=unnamed
-
-        else
-            "Si es VIM y no es Linux
-            set clipboard=unnamed
-        endif
-
-    else
-
-        "Desabilitar el menanismo nativo de escritura del clipboard
-        set clipboard=
-
-    endif
-
-endif
-
-
-"Solo sera usado cuando 'g:clipboard_mode' es '1' y puede tener los siguientes posibles valores:
-"    0 > Formato OSC 52 estandar que es enviado directmente una terminal que NO use como '$TERM' a GNU screen.
-"    1 > Formato OSC52 es dividio en pequeños trozos y enmascador en formato DSC, para enviarlo directmente a una terminal
-"        basada en GNU ('$TERM' inicia con screen).
-"    2 > Formato OSC52 se enmascara DSC enmascarado para TMUX (tmux requiere un formato determinado) y sera este el que
-"        decida si este debera reenvíarse a la terminal donde corre tmux (en este caso Tmux desenmacara y lo envia).
-"    Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta
-"    de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un
-"    contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.
-
-" Si el modo de escritura del clipboard es usando OSC-52, determinar el formato a usar.
-if g:clipboard_mode == 1
-
-    " Si se debe calcular el valor automaticamente
-    if g:clipboard_osc52_format != 0 && g:clipboard_osc52_format != 1 && g:clipboard_osc52_format != 2
-
-        "Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM
-        "se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh
-        "o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM'
-        "a screen.
-        if g:use_tmux
-            let g:clipboard_osc52_format = 2
-        elseif match($TERM, 'screen') > -1
-            let g:clipboard_osc52_format = 1
-        else
-            let g:clipboard_osc52_format = 0
-        endif
-
-    endif
-
-endif
-
-
-
-
-"BUG IN VIM : Cuanto la terminal soporta 'modifyOtherKeys' de nivel 2, cuando se apreta ciertos key
-"reservados (usando 'ctrl', 'shfit', 'alt') se genera texto con caracteres escapa/control la cual puede generar
-"comportamiento inesperados cuando el comando no lo reconoce este tips de key y el tipp de 'modifyOtherKeys'.
-"En caso de VIM, estas secuenncias de escapa puede generar que algunos keybiding dejen de funcionar.
-" > Issue VIM  : https://github.com/vim/vim/issues/9014
-"                https://codeberg.org/dnkl/foot/wiki#ctrl-key-breaks-input-in-vim
-"                https://codeberg.org/dnkl/foot/issues/849
-" > WORKAROUND : Caundo la terminal soporte 'modifyOtherKeys' de nivel 2, forzar que VIM soporte los secuencias de
-"   escape generados
-" > Los emuladores de terminal, como 'foot', no definir por defecto la variable 'TERM_PROGRAM', por lo que debera
-"   definir manualmente este valor en su archivo de configuracion.
-if !g:is_neovim && ($TERM_PROGRAM == 'foot' || $TERM_PROGRAM == 'WezTerm')
-    let &t_TI = "\<Esc>[>4;2m"
-    let &t_TE = "\<Esc>[>4;m"
-endif
-
 
 
 "-----------------------------------------------------------------------------------
@@ -616,6 +340,12 @@ set t_ut=
 "Si su terminal no traduce bien los 16 bits de color que envia su servidor, COMENTE esta linea y habilite 'set t_Co=256'
 set termguicolors
 
+"Soporte a 'undercurl' (undercurled text)
+if g:is_neovim
+    let &t_Cs = "\e[4:3m"
+    let &t_Ce = "\e[4:0m"
+endif
+
 "You might have to force true color when using regular vim inside tmux as the colorscheme can appear to be grayscale
 "with 'termguicolors' option enabled.
 "if !g:is_neovim && !s:is_gui_vim
@@ -786,6 +516,342 @@ nnoremap N Nzzzv
 
 
 "-----------------------------------------------------------------------------------
+" Clipboard > Calcular las variables interas requeridas
+"-----------------------------------------------------------------------------------
+"
+"Uso de 'ctrl+C' para enviar texto al portapapeles y 'ctrl+V' para obtener texto del portapapeles:
+" > Cuando (el panel actual de) la terminal no está ejecutando un comando, las terminales procesan estas
+"   teclas y acceden al clipboard:
+"   > Ante cualquier texto seleccionado (ya sea con el ratón o con otros atajos de teclado), usando 'ctr+C',
+"     la puede capturar el terminal y enviarla al clipboard del SO (donde está la terminal).
+"     > Algunas  terminales permiten el copiado automático ante cualquier texto seleccionado a la terminal,
+"       solo requiere seleccionar y esto ya se copia en la terminal.
+"     > Esta opción permite enviar al portapapeles cual texto del STDOUT generado por el comando (después
+"       de su ejecución).
+"     > Cuando este en la línea de ejecución del prompt  actual de la terminal, puede usar 'ctrl+V' para
+"       obtener el texto del portapapeles y pegarlo después del prompt actual.
+" > Cuando (el panel actual de) la terminal está ejecutando un comando, las terminales la terminales reenvias
+"   las teclas al comando de ejecución:
+"   > Cuando se usa 'ctrl+V', es la terminal la que obtiene el texto del portapapeles y reenvía el texto al STDIN
+"     del comando de ejecución (le programa nunca procesa las teclas, solo el texto).
+"   > Algunos comandos, como 'vim', 'nvim', 'tmux', 'ssh', …. implementan un logica de hacer frente a cuando se
+"     colocan texto a dicho programa.
+"   > Cuando se usa 'ctrl+C', este se envía al programa, pero muchos comandos una accion para gestionar el
+"     portapapeles, debido a que acoplan la lógica del comando con el API de gestión de portapapeles del SO.
+"     VIM/Neovim no implementan logica de pegado al portapapeles con esta key.
+"
+
+
+"Establecer el mecanismo de escritura en el clipboard del SO (define acciones VIM y escritura automatica en el blipboard
+"cuando se realiza un yank). Definido por la variiable VIM 'g:clipboard_mode' cuyos valores son:
+"  1 > Implementar un mecanismo de escritura del clipboard usando OSC-52.
+"  2 > Implementar un mecanismo de escritura del clipboard usando comandos externos de gestion de clipboard.
+"  9 > No se puedo implementar mecanismos es escritura.
+
+" Si no se especifica, se debe calcular automaticamente el modo de escritura al clipboard
+if g:clipboard_mode != 1 && g:clipboard_mode != 2
+
+    "1. Intentar determinar si la terminal soporta OSC 52
+    "   > Parte de la logica 'setting_clipboard()' definida en './shell/bash/bin/tmux/fun_general.bash'.
+    "   > La 1ra prioridad de uso del mecanismo del clipboard es OSC 52.
+    let s:terminal_use_osc54 = v:false
+
+    "Si esta ejecutando sobre tmux
+    if g:use_tmux
+
+        "Si usa el archivo de configuracion './tmux/tmux.conf', se establece la variable de entorno 'TMUX_SET_CLIPBOARD'
+        "con valor 1 o 2, si se configurado tmux con soporte a OSC 52
+        if ($TMUX_SET_CLIPBOARD == 1) || ($TMUX_SET_CLIPBOARD == 2)
+            let s:terminal_use_osc54 = v:true
+        endif
+
+    "Si esta ejecutando directamente sobre la terminal.
+    else
+
+        "Los siguientes emuladores definen por defecto la variable de entorno 'TERM_PROGRAM'
+        if ($TERM_PROGRAM == 'WezTerm') || ($TERM_PROGRAM == 'contour') || ($TERM_PROGRAM == 'iTerm.app')
+
+            let s:terminal_use_osc54 = v:true
+
+        "Los siguientes emuladores debera definir la variable 'TERM_PROGRAM' con este valor en su archivo de configuracion:
+        elseif ($TERM_PROGRAM == 'foot') || ($TERM_PROGRAM == 'kitty') || ($TERM_PROGRAM == 'alacritty')
+
+            let s:terminal_use_osc54 = v:true
+
+        "Opcionalmente, aunque no se recomienta usar un TERM personalizado (no estan en todos los equipos que accede
+        "por SSH), algunas terminales definen un TERM personalizado (aunque por campatibilidad, puede modificarlo).
+        else
+            if ($TERM == 'xterm-kitty') || ($TERM == 'alacritty') || ($TERM == 'foot')
+                let s:terminal_use_osc54 = v:true
+            endif
+        endif
+
+    endif
+
+
+    "2. Determinar el mecanismo de escritura del clipboard a usar:
+    if g:is_neovim
+
+        " Determinar el mecanismo de escritura del clipboard a usar, segun orden de prioridad
+        "  > Implementar el mecanismo OSC 52.
+        "    > Se definira la variable 'g:clipboard' para definirlo como prioridad.
+        "  > Usar mecanismo nativo (SOC y comandos externos) si esta habilitado. Segun prioridad.
+        "    > El proveedor definido en 'g:clipboard' (no aplicara para nuestro caso).
+        "    > Usando un proveedor (backend externo):
+        "      > MacOS: pbcopy / pbpaste
+        "      > Linux con Wayland: wl-copy / wl-paste, waycopy / waypaste
+        "    > Usando OSC 52
+        "    > Si es Linux X11, usa proveedor: usa libreria 'libxcb' y 'libX11'.
+        "    > Si es Windows y esta compilado con la opcion '+clipboard', utiliza el API de Win32.
+        if s:terminal_use_osc54
+            let g:clipboard_mode = 1
+        else
+            let g:clipboard_mode = 2
+        endif
+
+    else
+
+        " Determinar automaticamente el mecanismo correcto segun order de prioridad:
+        "  > Implementar el mecanismo OSC 52, si la terminal lo permite.
+        "  > Usar mecanismo nativo (API del SO) si esta habilitado.
+        "  > Implementar el mecanismo de uso comandos externo del gestion de clipboard
+        "  > Si no existe comando externo, se implementara el mecanismo OSC 52
+        if s:terminal_use_osc54
+            let g:clipboard_mode = 1
+        else
+            let g:clipboard_mode = 2
+        endif
+
+    endif
+
+endif
+
+"Determinar si existe el backend de gestion del clipboard y obtener del comando externo para escribir el portapapeles
+let s:clipboard_command = ''
+
+if g:clipboard_mode == 2
+
+    "Si es Linux no-WSL
+    if g:os_type == 2
+
+        if exists('$WAYLAND_DISPLAY')
+            if executable('wl-copy')
+                let s:clipboard_command='wl-copy'
+            endif
+        elseif exists('$DISPLAY')
+            if executable('xclip')
+                let s:clipboard_command='xclip -i -selection clipboard'
+            elseif executable('xclip')
+                let s:clipboard_command='xsel -i -b'
+            endif
+        endif
+
+    "Si es Linux WSL (sobre Windows). Siempre debe usarse el clipboard de Windows, debido a que el emulador de terminal
+    "siempre sera un programa windows que accedera a dicho clipboard y WSL2 no implementa un clipboard.
+    elseif g:os_type == 2
+
+        if executable('/mnt/c/windows/system32/clip.exe')
+            let s:clipboard_command='/mnt/c/windows/system32/clip.exe'
+        endif
+
+    "Si es Windows
+    elseif g:os_type == 0
+
+        if executable('clip.exe')
+            let s:clipboard_command='clip.exe'
+        endif
+
+    "Si es MacOS
+    elseif g:os_type == 1
+
+        if executable('pbcopy')
+            let s:clipboard_command='pbcopy'
+        endif
+
+    endif
+
+    "Si no existe el comando: ¿forzar el uso de OSC-52?
+    if s:clipboard_command != ''
+        "let g:clipboard_mode = 1
+        let g:clipboard_mode = 9
+    endif
+
+endif
+
+
+"Solo sera usado cuando 'g:clipboard_mode' es '1' y puede tener los siguientes posibles valores:
+"    0 > Formato OSC 52 estandar que es enviado directmente una terminal que NO use como '$TERM' a GNU screen.
+"    1 > Formato OSC52 es dividio en pequeños trozos y enmascador en formato DSC, para enviarlo directmente a una terminal
+"        basada en GNU ('$TERM' inicia con screen).
+"    2 > Formato OSC52 se enmascara DSC enmascarado para TMUX (tmux requiere un formato determinado) y sera este el que
+"        decida si este debera reenvíarse a la terminal donde corre tmux (en este caso Tmux desenmacara y lo envia).
+"    Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta
+"    de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un
+"    contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.
+
+" Si el modo de escritura del clipboard es usando OSC-52, determinar el formato a usar.
+if g:clipboard_mode == 1
+
+    " Si se debe calcular el valor automaticamente
+    if g:clipboard_osc52_format != 0 && g:clipboard_osc52_format != 1 && g:clipboard_osc52_format != 2
+
+        "Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM
+        "se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh
+        "o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM'
+        "a screen.
+        if g:use_tmux
+            let g:clipboard_osc52_format = 2
+        elseif match($TERM, 'screen') > -1
+            let g:clipboard_osc52_format = 1
+        else
+            let g:clipboard_osc52_format = 0
+        endif
+
+    endif
+
+endif
+
+
+
+"-----------------------------------------------------------------------------------
+" Clipboard> Cambiar el registro por defecto
+"-----------------------------------------------------------------------------------
+"
+" > El registro por defecto es aquel:
+"   - Es el registro donde todo 'yank' o 'delete'  almacena el registro, si no especifica el registro donde se almacena. 
+"   - Es el registro donde todo 'put' se obtiene la data para pegar su contenido, si no especifica el registro donde se obtiene. 
+" > Usaramos como registro por defecto al registro unnamed '"'.
+" > Para uso del clipboard se recomienda usar el registro '+' (Windows, MacOS, Linux Wayland, Linux con X11 representa a la
+"   seleccion X11 secundaria).
+" > Evitaremos de usar el registro '*' (Linux con X11 representa al la seleccion X11 primaria).
+" > No se cambiara el registro por a los registros del clipboar '+' ni '*'.
+"
+
+"if g:is_neovim
+"
+"    if s:has_clipboard
+"
+"        "Si es NeoVIM, siempre se usa la opción 'unnamedplus'
+"        set clipboard=unnamedplus
+"
+"    else
+"        set clipboard=
+"    endif
+"
+"else
+"
+"
+"    " Si se usa el mecanismo nativo de acceso al clipboard
+"    if g:clipboard_mode == 0
+"
+"        "VIM puede interactuar directamente con el clipboard del SO (usa el API del SO para ello)
+"        "La instegracion con comandos externos de gestion de clipboard y OSC 52, no lo hace de forma nativa.
+"        if (g:os_type == 2) || (g:os_type == 3 )
+"
+"            "Si VIM y es Linux
+"
+"            set clipboard=unnamedplus
+"
+"        else
+"            "Si es VIM y no es Linux
+"            set clipboard=unnamed
+"        endif
+"
+"    else
+"
+"        "Desabilitar el menanismo nativo de escritura del clipboard
+"        set clipboard=
+"
+"    endif
+"
+"endif
+
+
+
+"-----------------------------------------------------------------------------------
+" Clipboards> Implementar el mecanismo de escritura del clipboard
+"-----------------------------------------------------------------------------------
+"
+" > Se implementara:
+"   > Acciones de escritura al clipboard usanbdo el valor de los registros VIM.
+"   > EScritura automatica al clipboard despues de realizar el yank (si esta habilitado 'g:yank_to_clipboard').
+" > No se usara el menacnismo implementado por NeoVIM para tener un mejor soporte a OSC-52 con TMUX.
+"
+"
+
+" Si no se tiene un mecanismo implementado
+if g:clipboard_mode == 9
+
+    " No se puede establecer el mecanismo solicitado
+    echo 'Not exist clipboard backend'
+
+" Si se requiere usar OSC 52
+elseif g:clipboard_mode == 1
+
+    "A. Escritura manual al clipboard del sistema
+    runtime setting/utils/osc52.vim
+
+    " Copiar el registro por defecto al clipboard (el ultimo yank o delete)
+    nnoremap <Leader>cc :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@"'))<CR>
+
+    " Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
+    nnoremap <Leader>c0 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@0'))<CR>
+
+    " Copiar el registro de los ultimo deletes al clipboard
+    nnoremap <Leader>c1 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@1'))<CR>
+    nnoremap <Leader>c2 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@2'))<CR>
+    nnoremap <Leader>c3 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@3'))<CR>
+
+    "B. Escritura automatica al clipboard del sistema
+    if g:yank_to_clipboard
+
+        " Escritura automatico al clipboard cuando se realiza un yank.
+        " > Se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim.
+        augroup VimYank
+            autocmd!
+            autocmd TextYankPost * if v:event.operator ==# 'y' | call PutClipboard(g:clipboard_osc52_format, getreg('"')) | endif
+        augroup END
+
+    endif
+
+
+" Si un backend para el clipboard
+else
+
+    "A. Escritura manual al clipboard del sistema
+
+    " Copiar el registro por defecto al clipboard (el ultimo yank o delete)
+    nnoremap <Leader>cc :<C-u>call system(s:clipboard_command, @")<CR>
+
+    " Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
+    nnoremap <Leader>c0 :<C-u>call system(s:clipboard_command, @0)<CR>
+
+    " Copiar el registro de los ultimo deletes
+    nnoremap <Leader>c1 :<C-u>call system(s:clipboard_command, @1)<CR>
+    nnoremap <Leader>c2 :<C-u>call system(s:clipboard_command, @2)<CR>
+    nnoremap <Leader>c3 :<C-u>call system(s:clipboard_command, @3)<CR>
+
+
+    "B. Escritura automatica al clipboard del sistema
+    "   Si se requiere usar comandos externos de gestion de clicomandos externos de gestion de clipboardd
+    if g:yank_to_clipboard
+
+
+        " Escritura automatico al clipboard cuando se realiza un yank.
+        " > Se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim.
+        augroup VimYank
+            autocmd!
+            autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system(s:clipboard_command, @") | endif
+        augroup END
+
+    endif
+
+
+endif
+
+
+
+"-----------------------------------------------------------------------------------
 " Mappings - Apariencia
 "-----------------------------------------------------------------------------------
 "
@@ -794,121 +860,6 @@ nnoremap <Leader>hh :set cursorline!<CR>
 
 "Habilitar/Desabiliar la linea de resaltado ('Highlight Line') Vertical
 nnoremap <Leader>vv :set cursorcolumn!<CR>
-
-
-
-"-----------------------------------------------------------------------------------
-" Mappings - Clipboards
-"-----------------------------------------------------------------------------------
-"
-"NeoVIM no interactua directamente con el clipboard del SO (no usa API del SO) y tiene una Integracion
-"nativa con:
-" > Usa el caracter de escape OSC 52 para enviar texto a la terminal, para que este lo interprete y escriba
-"   al portapales del SO de la terminal.
-" > Usa comandos externos de gestion de clipboard (backend de clipboard) las cuales registra a eventos de
-"   establecer texto en registro de yank de VIM.
-"
-"VIM puede interactuar directamente con el clipboard del SO (usa el API del SO para ello)
-"La instegracion con comandos externos de gestion de clipboard y OSC 52, no lo hace de forma nativa.
-"
-
-
-" Si se requiere usar OSC 52
-if g:clipboard_mode == 1
-
-    "A. Escritura manual al clipboard del sistema
-    runtime setting/utils/osc52.vim
-
-    " Copiar el registro por defecto al clipboard (el ultimo yank o delete)
-    nnoremap <Leader>c" :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@"'))<CR>
-    " Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
-    nnoremap <Leader>c0 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@0'))<CR>
-    " Copiar el registro de los ultimo deletes al clipboard
-    nnoremap <Leader>c1 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@1'))<CR>
-    nnoremap <Leader>c2 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@2'))<CR>
-    nnoremap <Leader>c3 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@3'))<CR>
-
-    "B. Escritura automatica al clipboard del sistema
-    if g:is_neovim
-
-        " Lectura y escritura al clipboard del sistema
-        let g:clipboard = 'osc52'
-
-    else
-
-        " Escritura automatico al clipboard cuando se realiza un yank.
-        " > Se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim.
-        augroup VimYank
-            autocmd!
-            autocmd TextYankPost * if v:event.operator ==# 'y' | call PutClipboard(g:clipboard_osc52_format, getreg('"')) | endif
-            "autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call OSCYankRegister('') | endif
-            "autocmd TextYankPost * call s:VimOSCYankPostCallback(v:event)
-        augroup END
-
-    endif
-
-
-" Si se tinene un mecanismo diferente al OSC 42
-elseif g:clipboard_mode != 9
-
-    "A. Escritura manual al clipboard del sistema
-    if s:clipboard_command != ''
-
-       " Copiar el registro por defecto al clipboard (el ultimo yank o delete)
-        nnoremap <Leader>c" :<C-u>call system(s:clipboard_command, @")<CR>
-        " Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
-        nnoremap <Leader>c0 :<C-u>call system(s:clipboard_command, @0)<CR>
-        " Copiar el registro de los ultimo deletes
-        nnoremap <Leader>c1 :<C-u>call system(s:clipboard_command, @1)<CR>
-        nnoremap <Leader>c2 :<C-u>call system(s:clipboard_command, @2)<CR>
-        nnoremap <Leader>c3 :<C-u>call system(s:clipboard_command, @3)<CR>
-
-        " Copiar las lineas seleccionadas al portapapeles ('CLIPBOARD' selection)
-        "vnoremap <Leader>cl :w !s:clipboard_command<CR><CR>
-
-    endif
-
-    "B. Escritura automatica al clipboard del sistema
-    "   Si se requiere usar comandos externos de gestion de clicomandos externos de gestion de clipboardd
-    if g:clipboard_mode == 2
-
-        if s:clipboard_command == ''
-
-            " No se puede establecer el mecanismo solicitado
-            let g:clipboard_mode = 9
-            echo 'Not exist clipboard backend'
-
-        else
-
-            " Escritura automatico al clipboard cuando se realiza un yank.
-            " > Se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim.
-            augroup VimYank
-                autocmd!
-                autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system(s:clipboard_command, @") | endif
-            augroup END
-
-
-            " Si es WSL2, habilitar el envio automatico, al clipboard del SO Windows, del ultimo yank realizado.
-            " > En WSL2, el portapapeles de Linux WSL2 es diferente al de Windows. Por tal motivo cuando se usa VIM/NeoVIM dentro de WSL2,
-            "   se requiere que aparte de copiar el buffer del yank al portapapeles de Linux, se usara requiere tambien copiarlo a Windows
-            "   para poderlo ver desde cualquier aplicacion windows.
-            if g:os_type == 3
-
-                "Copia cualquier yank que esta en el registro " (por defecto) se copia al portapales del SO
-                "(se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim)
-                augroup WslYank
-                    autocmd!
-                    autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system('/mnt/c/windows/system32/clip.exe ',@") | endif
-                augroup END
-
-            endif
-
-        endif
-
-    endif
-
-
-endif
 
 
 
@@ -964,3 +915,26 @@ endif
 
 "Opens a tab edit command with the path of the currently edited file filled
 "noremap <Leader>te :tabe <C-R>=expand("%:p:h") . "/" <CR>
+
+
+
+"-----------------------------------------------------------------------------------
+" Fix manual de Bugs
+"-----------------------------------------------------------------------------------
+"
+" Bugs en VIM :
+" > Cuanto la terminal soporta 'modifyOtherKeys' de nivel 2, cuando se apreta ciertos key reservados (usando 'ctrl', 'shfit', 'alt')
+"   se genera texto con caracteres escapa/control la cual puede generar comportamiento inesperados cuando el comando no lo reconoce
+"   este tips de key y el tipp de 'modifyOtherKeys'.
+" > En caso de VIM, estas secuenncias de escapa puede generar que algunos keybiding dejen de funcionar.
+" > Issue VIM  : https://github.com/vim/vim/issues/9014
+"                https://codeberg.org/dnkl/foot/wiki#ctrl-key-breaks-input-in-vim
+"                https://codeberg.org/dnkl/foot/issues/849
+" > WORKAROUND : Caundo la terminal soporte 'modifyOtherKeys' de nivel 2, forzar que VIM soporte los secuencias de
+"   escape generados
+" > Los emuladores de terminal, como 'foot', no definir por defecto la variable 'TERM_PROGRAM', por lo que debera
+"   definir manualmente este valor en su archivo de configuracion.
+if !g:is_neovim && ($TERM_PROGRAM == 'foot' || $TERM_PROGRAM == 'WezTerm')
+    let &t_TI = "\<Esc>[>4;2m"
+    let &t_TE = "\<Esc>[>4;m"
+endif

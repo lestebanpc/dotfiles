@@ -10,75 +10,64 @@ if g:is_neovim
     "Plugin IDE> Modulos a usar del plugin 'nvim-treeSitter'
     packadd nvim-treesitter-context
 
-endif
+    " Si se usa un Noevim con LSP nativo (sin CoC)
+    if !g:use_coc
+
+        "Package IDE> LSP Client (nativo de NeoVim)
+        packadd nvim-lspconfig
+
+        "Package IDE> Mejor soporte a popup 'signature-help' en el completado de un metodo
+        "packadd cmp-nvim-lsp-signature-help
+        packadd lsp_signature.nvim
+
+        "Package IDE> Fuente CMP: Cliente LSP
+        packadd cmp-nvim-lsp
+
+        "Package IDE> Motor/Frameework de Snippet
+        "             Muestra los snippets cargados. Si elegimos un snippet lo expande.
+        packadd LuaSnip
+
+        "Package IDE> Implementacion de Snippet para LuaSnip
+        packadd friendly-snippets
+
+        "Package IDE> Fuente CMP: Snippet tipo LuaSnip
+        packadd cmp_luasnip
+
+        "Package IDE> Fuente CMP: Lista los valores de un 'Choice Nodos' de un snippets
+        packadd cmp-luasnip-choice
+
+        "Package IDE> Lightbulb para Code Actions
+        packadd nvim-lightbulb
 
 
-if g:is_neovim && !g:use_coc
+        "packadd roslyn.nvim
 
+        "Package IDE> Adaptador del cliente LSP para 'Eclipse JDTLS' para Java SE
+        let s:use_adapter = get(g:use_lsp_adapters, "java", v:false)
+        if s:use_adapter == v:true
 
-    "Package IDE> LSP Client (nativo de NeoVim)
-    packadd nvim-lspconfig
+            packadd nvim-jdtls
 
-    "Package IDE> Mejor soporte a popup 'signature-help' en el completado de un metodo
-    "packadd cmp-nvim-lsp-signature-help
-    packadd lsp_signature.nvim
+        endif
 
-    "Package IDE> Fuente CMP: Cliente LSP
-    packadd cmp-nvim-lsp
+        "Package IDE> Plugin para establer las reglas de filtro de 'JSON Schema Store' para JSON/YAML
+        "             Solo se usara para el LSP de archivos JSON.
+        let s:use_adapter = get(g:use_lsp_adapters, "json", v:false)
+        if s:use_adapter == v:true
 
-    "Package IDE> Motor/Frameework de Snippet
-    "             Muestra los snippets cargados. Si elegimos un snippet lo expande.
-    packadd LuaSnip
+            packadd SchemaStore.nvim
 
-    "Package IDE> Implementacion de Snippet para LuaSnip
-    packadd friendly-snippets
+        endif
 
-    "Package IDE> Fuente CMP: Snippet tipo LuaSnip
-    packadd cmp_luasnip
-
-    "Package IDE> Fuente CMP: Lista los valores de un 'Choice Nodos' de un snippets
-    packadd cmp-luasnip-choice
-
-    "Package IDE> Lightbulb para Code Actions
-    packadd nvim-lightbulb
-
-    "packadd roslyn.nvim
-
-    "Package IDE> Adaptador del cliente LSP para 'Eclipse JDTLS' para Java SE
-    let s:use_adapter = get(g:use_lsp_adapters, "java", v:false)
-    if s:use_adapter == v:true
-
-        packadd nvim-jdtls
+        "Package IDE> Fuente de completado de 'nvim-cmp'
+        if g:use_ai_plugins == v:true
+            packadd copilot-cmp
+        endif
 
     endif
-
-    "Package IDE> Plugin para establer las reglas de filtro de 'JSON Schema Store' para JSON/YAML
-    "             Solo se usara para el LSP de archivos JSON.
-    let s:use_adapter = get(g:use_lsp_adapters, "json", v:false)
-    if s:use_adapter == v:true
-
-        packadd SchemaStore.nvim
-
-    endif
-
-    "Package IDE> Fuente de completado de 'nvim-cmp'
-    if g:use_ai_plugins == v:true
-        packadd copilot-cmp
-    endif
-
-endif
-
-
-if g:is_neovim
 
     "Package IDE> Code Outline
     packadd aerial.nvim
-
-
-    "Package IDE> Client Rest 'Kulala'
-    "Si se usa CoC, no funcionara el autocomletado si no se configura un cio para su cliente LSP
-    packadd  kulala.nvim
-
 
     "Configuración de NeoVim para development
     lua require('ide.ide_development')

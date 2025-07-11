@@ -87,6 +87,17 @@ shell/zsh/login/keybindings/zoxide.*
 shell/others/login/keybindings/zoxide.*
 shell/powershell/login/keybindings/zoxide.*
 
+shell/bash/login/autocomplete/glow.*
+shell/fish/login/autocomplete/glow.*
+shell/zsh/login/autocomplete/glow.*
+shell/others/login/autocomplete/glow.*
+shell/powershell/login/autocomplete/glow.*
+shell/bash/login/keybindings/glow.*
+shell/fish/login/keybindings/glow.*
+shell/zsh/login/keybindings/glow.*
+shell/others/login/keybindings/glow.*
+shell/powershell/login/keybindings/glow.*
+
 shell/bash/login/autocomplete/gum.*
 shell/fish/login/autocomplete/gum.*
 shell/zsh/login/autocomplete/gum.*
@@ -152,5 +163,3 @@ shell/fish/login/keybindings/step.*
 shell/zsh/login/keybindings/step.*
 shell/others/login/keybindings/step.*
 shell/powershell/login/keybindings/step.*
-
-
