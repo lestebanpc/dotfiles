@@ -284,10 +284,10 @@ setting_clipboard() {
         # entre ellas no se permite el reenvio de la secuencias de escapa de OSC 52 (si permite permite la secuancias del escapes
         # basicas como el movimiento de prompt, sonido, ...).
         # Para habilitar ello debe usar la opcion 'on' o 'all'
-        if [ $TMUX_VERSION -ge 330 ]; then
-            $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -w -g allow-passthrough on
-            #$TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -g allow-passthrough on
-        fi
+        #if [ $TMUX_VERSION -ge 330 ]; then
+        #    $TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -w -g allow-passthrough on
+        #    #$TMUX_PROGRAM ${TMUX_SOCKET:+-S "$TMUX_SOCKET"} set-option -g allow-passthrough on
+        #fi
 
         # Definir el keybinding a usar el modo copia
         _set_keybinding_copymode "$p_key" ""

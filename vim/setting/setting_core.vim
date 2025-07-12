@@ -627,7 +627,7 @@ if g:clipboard_mode != 1 && g:clipboard_mode != 2
 endif
 
 "Determinar si existe el backend de gestion del clipboard y obtener del comando externo para escribir el portapapeles
-let s:clipboard_command = ''
+let g:clipboard_command = ''
 
 if g:clipboard_mode == 2
 
@@ -636,13 +636,13 @@ if g:clipboard_mode == 2
 
         if exists('$WAYLAND_DISPLAY')
             if executable('wl-copy')
-                let s:clipboard_command='wl-copy'
+                let g:clipboard_command='wl-copy'
             endif
         elseif exists('$DISPLAY')
             if executable('xclip')
-                let s:clipboard_command='xclip -i -selection clipboard'
+                let g:clipboard_command='xclip -i -selection clipboard'
             elseif executable('xclip')
-                let s:clipboard_command='xsel -i -b'
+                let g:clipboard_command='xsel -i -b'
             endif
         endif
 
@@ -651,27 +651,27 @@ if g:clipboard_mode == 2
     elseif g:os_type == 2
 
         if executable('/mnt/c/windows/system32/clip.exe')
-            let s:clipboard_command='/mnt/c/windows/system32/clip.exe'
+            let g:clipboard_command='/mnt/c/windows/system32/clip.exe'
         endif
 
     "Si es Windows
     elseif g:os_type == 0
 
         if executable('clip.exe')
-            let s:clipboard_command='clip.exe'
+            let g:clipboard_command='clip.exe'
         endif
 
     "Si es MacOS
     elseif g:os_type == 1
 
         if executable('pbcopy')
-            let s:clipboard_command='pbcopy'
+            let g:clipboard_command='pbcopy'
         endif
 
     endif
 
     "Si no existe el comando: ¿forzar el uso de OSC-52?
-    if s:clipboard_command != ''
+    if g:clipboard_command != ''
         "let g:clipboard_mode = 1
         let g:clipboard_mode = 9
     endif
@@ -792,15 +792,58 @@ elseif g:clipboard_mode == 1
     runtime setting/utils/osc52.vim
 
     " Copiar el registro por defecto al clipboard (el ultimo yank o delete)
-    nnoremap <Leader>cc :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@"'))<CR>
+    nnoremap <Leader>cc :<C-u>call PutClipboard(g:clipboard_osc52_format, @")<CR>
 
     " Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
-    nnoremap <Leader>c0 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@0'))<CR>
+    nnoremap <Leader>c0 :<C-u>call PutClipboard(g:clipboard_osc52_format, @0)<CR>
 
     " Copiar el registro de los ultimo deletes al clipboard
-    nnoremap <Leader>c1 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@1'))<CR>
-    nnoremap <Leader>c2 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@2'))<CR>
-    nnoremap <Leader>c3 :<C-u>call PutClipboard(g:clipboard_osc52_format, getreg('@3'))<CR>
+    nnoremap <Leader>c1 :<C-u>call PutClipboard(g:clipboard_osc52_format, @1)<CR>
+    nnoremap <Leader>c2 :<C-u>call PutClipboard(g:clipboard_osc52_format, @2)<CR>
+    nnoremap <Leader>c3 :<C-u>call PutClipboard(g:clipboard_osc52_format, @3)<CR>
+
+
+    function! s:WriteToClipboard1(use_delete) abort
+
+        "1. Yank or Delete la selección actual al registro 'z'
+        if a:use_delete
+            silent normal! gv"zd
+        else
+            silent normal! gv"zy
+        endif
+
+        "2. Obtener el texto yankeado
+        let l:txt = getreg('z')
+
+        if empty(l:txt)
+            echo "Must select some text."
+            return
+        endif
+
+        "3. Limpieza
+
+        " Eliminar salto final extra
+        let l:txt = substitute(l:txt, '\n\%$', '', '')
+
+        "4. Escribir al clipboard
+        call PutClipboard(g:clipboard_osc52_format, l:txt)
+
+        "5. Mensaje de confirmación
+        "let l:lines = count(l:text, "\n") + 1
+        "if a:use_delete
+        "    echo printf("%d lines was %s and wrote to clipboard.", l:lines, 'deleted')
+        "else
+        "    echo printf("%d lines was %s and wrote to clipboard.", l:lines, 'yanked')
+        "endif
+
+    endfunction
+
+    " En el modo visual: 'yank' el texto selecionado y escribirlo al clipboard
+    vnoremap <Leader>cy :<C-u>call <SID>WriteToClipboard1(v:false)<CR>
+
+    " En el modo visual: 'delete' el texto selecionado y escribirlo al clipboard
+    vnoremap <Leader>cd :<C-u>call <SID>WriteToClipboard1(v:true)<CR>
+
 
     "B. Escritura automatica al clipboard del sistema
     if g:yank_to_clipboard
@@ -821,15 +864,56 @@ else
     "A. Escritura manual al clipboard del sistema
 
     " Copiar el registro por defecto al clipboard (el ultimo yank o delete)
-    nnoremap <Leader>cc :<C-u>call system(s:clipboard_command, @")<CR>
+    nnoremap <Leader>cc :<C-u>call system(g:clipboard_command, @")<CR>
 
     " Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
-    nnoremap <Leader>c0 :<C-u>call system(s:clipboard_command, @0)<CR>
+    nnoremap <Leader>c0 :<C-u>call system(g:clipboard_command, @0)<CR>
 
     " Copiar el registro de los ultimo deletes
-    nnoremap <Leader>c1 :<C-u>call system(s:clipboard_command, @1)<CR>
-    nnoremap <Leader>c2 :<C-u>call system(s:clipboard_command, @2)<CR>
-    nnoremap <Leader>c3 :<C-u>call system(s:clipboard_command, @3)<CR>
+    nnoremap <Leader>c1 :<C-u>call system(g:clipboard_command, @1)<CR>
+    nnoremap <Leader>c2 :<C-u>call system(g:clipboard_command, @2)<CR>
+    nnoremap <Leader>c3 :<C-u>call system(g:clipboard_command, @3)<CR>
+
+    function! s:WriteToClipboard2(use_delete) abort
+
+        "1. Yank or Delete la selección actual al registro 'z'
+        if a:use_delete
+            silent normal! gv"zd
+        else
+            silent normal! gv"zy
+        endif
+
+        "2. Obtener el texto yankeado
+        let l:txt = getreg('z')
+
+        if empty(l:txt)
+            echo "Must select some text."
+            return
+        endif
+
+        "3. Limpieza
+
+        " Eliminar salto final extra
+        let l:txt = substitute(l:txt, '\n\%$', '', '')
+
+        "4. Escribir al clipboard
+        call system(g:clipboard_command, l:txt)
+
+        "5. Mensaje de confirmación
+        let l:lines = count(l:txt, "\n") + 1
+        if a:use_delete
+            echo printf("%d lines was %s and wrote to clipboard.", l:lines, 'deleted')
+        else
+            echo printf("%d lines was %s and wrote to clipboard.", l:lines, 'yanked')
+        endif
+
+    endfunction
+
+    " En el modo visual: 'yank' el texto selecionado y escribirlo al clipboard
+    vnoremap <Leader>cy :<C-u>call <SID>WriteToClipboard2(v:false)<CR>
+
+    " En el modo visual: 'delete' el texto selecionado y escribirlo al clipboard
+    vnoremap <Leader>cd :<C-u>call <SID>WriteToClipboard2(v:true)<CR>
 
 
     "B. Escritura automatica al clipboard del sistema
@@ -841,7 +925,7 @@ else
         " > Se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim.
         augroup VimYank
             autocmd!
-            autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system(s:clipboard_command, @") | endif
+            autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system(g:clipboard_command, @") | endif
         augroup END
 
     endif

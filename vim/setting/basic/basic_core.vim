@@ -83,111 +83,252 @@ endif
 "###################################################################################
 
 "En Windows no existe TMUX (Solo en Linux, incluyendo: WSL, solo en Linux y MacOS)
-if g:os_type != 0
 
-    if g:use_tmux
+if g:use_tmux
 
-        "Package UI> Crear paneles TMUX desde VIM
-        packadd vimux
+    "1. Package UI> Crear paneles TMUX desde VIM
+    packadd vimux
 
-        "The percent of the screen the split pane Vimux will spawn should take up.
-        "let g:VimuxHeight = '20'
+    "The percent of the screen the split pane Vimux will spawn should take up.
+    "let g:VimuxHeight = '20'
 
-        "The default orientation of the split tmux pane. This tells tmux to make the pane either vertically or
-        "horizontally, which is backward from how Vim handles creating splits.
-        "   'v': vertical
-        "   'h': horizontal
-        "let g:VimuxOrientation = 'h'
+    "The default orientation of the split tmux pane. This tells tmux to make the pane either vertically or
+    "horizontally, which is backward from how Vim handles creating splits.
+    "   'v': vertical
+    "   'h': horizontal
+    "let g:VimuxOrientation = 'h'
 
-        "Abrir el panel tmux (por defecto es horizontal).
-        "function! s:MyOpenRunner() abort
+    "Abrir el panel tmux (por defecto es horizontal).
+    "function! s:MyOpenRunner() abort
 
-        "    " Abrimos el panel de tmux de Vimux
-        "    call VimuxOpenRunner()
+    "    " Abrimos el panel de tmux de Vimux
+    "    call VimuxOpenRunner()
 
-        "    if exists('g:VimuxRunnerIndex') && !empty(g:VimuxRunnerIndex)
-        "        "Remover el caracter '%' del ID panel tmux
-        "        let pane_id = g:VimuxRunnerIndex[1:]
-        "        silent call system('tmux set-window-option @cmd_pane_idx ' . pane_id)
-        "    endif
+    "    if exists('g:VimuxRunnerIndex') && !empty(g:VimuxRunnerIndex)
+    "        "Remover el caracter '%' del ID panel tmux
+    "        let pane_id = g:VimuxRunnerIndex[1:]
+    "        silent call system('tmux set-window-option @cmd_pane_idx ' . pane_id)
+    "    endif
 
-        "endfunction
+    "endfunction
 
-        nnoremap <Leader>to :VimuxOpenRunner<CR>
-        "nnoremap <Leader>to :call <SID>MyOpenRunner()<CR>
+    nnoremap <Leader>to :VimuxOpenRunner<CR>
+    "nnoremap <Leader>to :call <SID>MyOpenRunner()<CR>
 
-        "Cerrar el panel tmux (por defecto es horizontal).
-        nnoremap <Leader>tq :VimuxCloseRunner<CR>
+    "Cerrar el panel tmux (por defecto es horizontal).
+    nnoremap <Leader>tq :VimuxCloseRunner<CR>
 
-        "Ir al panel tmux, ingresar al modo copia del panel tmux.
-        " > Inicie la selección usando 'v' o [SPACE]
-        " > Despues de la selección, copie el texto al buffer de tmux y el portapeles (del SO de la terminal) usando
-        "   'y' o '[ENTER]'
-        " > Para pegar el texto en el prompt de la terminal, usando el buffer 'CTRL + B, ]' o usando el portapeles
-        "   los atajos del sistema operativo donde ejecuta el terminal.
-        " > Para pegar/mostrar en el flujo de salida estandar, usando el comando 'tmux show-buffer'.
-        nnoremap <Leader>t[ :VimuxInspectRunner<CR>
+    "Ir al panel tmux, ingresar al modo copia del panel tmux.
+    " > Inicie la selección usando 'v' o [SPACE]
+    " > Despues de la selección, copie el texto al buffer de tmux y el portapeles (del SO de la terminal) usando
+    "   'y' o '[ENTER]'
+    " > Para pegar el texto en el prompt de la terminal, usando el buffer 'CTRL + B, ]' o usando el portapeles
+    "   los atajos del sistema operativo donde ejecuta el terminal.
+    " > Para pegar/mostrar en el flujo de salida estandar, usando el comando 'tmux show-buffer'.
+    nnoremap <Leader>t[ :VimuxInspectRunner<CR>
 
-        "Ir al panel tmux, maximizando el panel (para restaurar/maximizar nuevamente el panel use 'CTRL + B, z')
-        nnoremap <Leader>tz :VimuxZoomRunner<CR>
+    "Ir al panel tmux, maximizando el panel (para restaurar/maximizar nuevamente el panel use 'CTRL + B, z')
+    nnoremap <Leader>tz :VimuxZoomRunner<CR>
 
-        "Ejecutar comando un comando (sin ir/salir de panel de VIM):
-        "function! s:MyPromptCommand() abort
+    "Ejecutar comando un comando (sin ir/salir de panel de VIM):
+    "function! s:MyPromptCommand() abort
 
-        "    let save_pane_id = v:false
-        "    if exists('g:VimuxRunnerIndex') && !empty(g:VimuxRunnerIndex)
-        "        save_pane_id = v:true
-        "    endif
+    "    let save_pane_id = v:false
+    "    if exists('g:VimuxRunnerIndex') && !empty(g:VimuxRunnerIndex)
+    "        save_pane_id = v:true
+    "    endif
 
-        "    " Abrimos el panel de tmux de Vimux si no esta abierto y ejecutar un comando
-        "    call VimuxPromptCommand()
+    "    " Abrimos el panel de tmux de Vimux si no esta abierto y ejecutar un comando
+    "    call VimuxPromptCommand()
 
-        "    if exists('g:VimuxRunnerIndex') && !empty(g:VimuxRunnerIndex) && save_pane_id
-        "        "Remover el caracter '%' del ID panel tmux
-        "        let pane_id = g:VimuxRunnerIndex[1:]
-        "        silent call system('tmux set-window-option @cmd_pane_idx ' . pane_id)
-        "    endif
+    "    if exists('g:VimuxRunnerIndex') && !empty(g:VimuxRunnerIndex) && save_pane_id
+    "        "Remover el caracter '%' del ID panel tmux
+    "        let pane_id = g:VimuxRunnerIndex[1:]
+    "        silent call system('tmux set-window-option @cmd_pane_idx ' . pane_id)
+    "    endif
 
-        "endfunction
+    "endfunction
 
-        nnoremap <Leader>tp :VimuxPromptCommand<CR>
-        "nnoremap <Leader>tp :call <SID>MyPromptCommand()<CR>
+    nnoremap <Leader>tp :VimuxPromptCommand<CR>
+    "nnoremap <Leader>tp :call <SID>MyPromptCommand()<CR>
 
-        "Ejecutar comando espaciales (sin ir/salir de panel de VIM):
-        " > Ejecutar el ultimo comando.
-        nnoremap <Leader>tr :VimuxRunLastCommand<CR>
-        "
-        " > Cancelar el comando en ejecución (CTRL + C).
-        nnoremap <Leader>tx :VimuxInterruptRunner<CR>
-        "
-        " > Limpiar la terminal (clear).
-        nnoremap <Leader>tc :call VimuxRunCommand('clear')<CR>
-        " Ejeucta CTRL+L el cual no soportado bash vim solo el emacs
-        "nnoremap <Leader>tc :VimuxClearTerminalScreen<CR>
-
-    endif
-
-    " Paquete UI> Permite navegar entre split VIM y hacia paneles TMUX.
-    " URI : https://github.com/christoomey/vim-tmux-navigator
-    " > Pemite ir de un split VIM a un panel tmux (identifica si existe un panel TMUX, y genera comando tmux
-    "   para ir panel), pero, para ir de panel TMUX a un split VIM, requiere configurar estos keybinding en
-    "   el 'tmux.config', para reenviar las teclas en VIM.
+    "Ejecutar comando espaciales (sin ir/salir de panel de VIM):
+    " > Ejecutar el ultimo comando.
+    nnoremap <Leader>tr :VimuxRunLastCommand<CR>
     "
-    " Los default keybinding se mantiene:
-    "  > En VIM  'CTRL + w, ...'
-    "  > En TMUX 'CTRL + b, ...'
+    " > Cancelar el comando en ejecución (CTRL + C).
+    nnoremap <Leader>tx :VimuxInterruptRunner<CR>
     "
-    " Los keybinding defenidos, estan el modo normal y terminal, por este mantiene:
-    "  > <CTRL-h> => Left
-    "  > <CTRL-j> => Down
-    "  > <CTRL-k> => Up
-    "  > <CTRL-l> => Right
-    "  > <CTRL-\> => Previous split
+    " > Limpiar la terminal (clear).
+    nnoremap <Leader>tl :call VimuxRunCommand('clear')<CR>
+    " Ejeucta CTRL+L el cual no soportado bash vim solo el emacs
+    "nnoremap <Leader>tc :VimuxClearTerminalScreen<CR>
+
+
+    "2. Paquete UI> Permite navegar entre split VIM y hacia paneles TMUX.
+    "   URI : https://github.com/christoomey/vim-tmux-navigator
+    "   > Pemite ir de un split VIM a un panel tmux (identifica si existe un panel TMUX, y genera comando tmux
+    "     para ir panel), pero, para ir de panel TMUX a un split VIM, requiere configurar estos keybinding en
+    "     el 'tmux.config', para reenviar las teclas en VIM.
+    "
+    "   Los default keybinding se mantiene:
+    "    > En VIM  'CTRL + w, ...'
+    "    > En TMUX 'CTRL + b, ...'
+    "
+    "   Los keybinding defenidos, estan el modo normal y terminal, por este mantiene:
+    "    > <CTRL-h> => Left
+    "    > <CTRL-j> => Down
+    "    > <CTRL-k> => Up
+    "    > <CTRL-l> => Right
+    "    > <CTRL-\> => Previous split
     "
     packadd vim-tmux-navigator
 
-endif
 
+    "3. Adicionar soporte a la escritura del buffer de tmux
+
+    " Funcion que obtiene el texto de un vim record y lo escribe en un tmux buffer
+    function! s:RecordToTmuxBuffer(record_name, tmux_buffer_idx) abort
+
+        "1. Obtener el texto yankeado
+        let l:txt = getreg(a:record_name)
+
+        if empty(l:txt)
+            echo printf("Record '%s' is empty.", a:record_name)
+            return
+        endif
+
+        "2. Limpieza
+
+        " Eliminar salto final extra
+        let l:txt = substitute(l:txt, '\n\%$', '', '')
+
+        "3. Convertir el texto para usar en un entrecomillado doble en bash
+        let l:str_parameter = substitute(l:txt, '\n$', '', '')
+        let l:str_parameter = substitute(l:str_parameter, '"', '\\"', 'g')
+        let l:str_parameter = substitute(l:str_parameter, '$', '\\n', 'g')
+        let l:str_parameter = substitute(l:str_parameter, '\n', '\\n', 'g')
+
+        "4. Escribir al tmux buffer
+        let l:full_cmd = printf('tmux set-buffer -b %d "%s"', a:tmux_buffer_idx, l:str_parameter)
+        call system(l:full_cmd)
+
+        if v:shell_error != 0
+            echo printf("Error to write tmux buffer %d.", a:tmux_buffer_idx)
+            return
+        endif
+
+        "5. Mensaje de confirmación
+        "let l:lines = count(l:text, "\n") + 1
+        echo printf("Record '%s' was written to tmux buffer '%d'.", a:record_name, a:tmux_buffer_idx)
+
+    endfunction
+
+    " Copiar el registro por defecto al clipboard (el ultimo yank o delete)
+    nnoremap <Leader>tt :<C-u>call <SID>RecordToTmuxBuffer('"', 0)<CR>
+
+    " Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
+    nnoremap <Leader>t0 :<C-u>call <SID>RecordToTmuxBuffer('0', 0)<CR>
+
+    " Copiar el registro de los ultimo deletes
+    nnoremap <Leader>t1 :<C-u>call <SID>RecordToTmuxBuffer('1', 0)<CR>
+    nnoremap <Leader>t2 :<C-u>call <SID>RecordToTmuxBuffer('2', 0)<CR>
+    nnoremap <Leader>t3 :<C-u>call <SID>RecordToTmuxBuffer('3', 0)<CR>
+
+    " Funcion que delete/yank el texto selecionado y luego escribe en un tmux buffer
+    function! s:WriteToTmuxBuffer(use_delete, tmux_buffer_idx) abort
+
+        "1. Yank or Delete la selección actual al registro 'x'
+        if a:use_delete
+            silent normal! gv"xd
+        else
+            silent normal! gv"xy
+        endif
+
+        "2. Obtener el texto yankeado (por defecto obtiene un solo texto y no una lista)
+        let l:txt = getreg('x')
+
+        if empty(l:txt)
+            echo "Must select some text."
+            return
+        endif
+
+        "3. Limpieza
+
+        " Eliminar salto final extra
+        let l:txt = substitute(l:txt, '\n\%$', '', '')
+
+        "4. Convertir el texto para usar en un entrecomillado doble en bash
+        let l:str_parameter = substitute(l:txt, '\n$', '', '')
+        let l:str_parameter = substitute(l:str_parameter, '"', '\\"', 'g')
+        let l:str_parameter = substitute(l:str_parameter, '$', '\\n', 'g')
+        let l:str_parameter = substitute(l:str_parameter, '\n', '\\n', 'g')
+
+        "5. Escribir al tmux buffer
+        let l:full_cmd = printf('tmux set-buffer -b %d "%s"', a:tmux_buffer_idx, l:str_parameter)
+        call system(l:full_cmd)
+
+        if v:shell_error != 0
+            echo printf("Error to write tmux buffer %d.", a:tmux_buffer_idx)
+            return
+        endif
+
+        "6. Mensaje de confirmación
+        let l:lines = count(l:txt, "\n") + 1
+        echo printf("%d lines was written to tmux buffer '%d'.", l:lines, a:tmux_buffer_idx)
+
+    endfunction
+
+    " En el modo visual: 'yank' el texto selecionado y escribirlo al clipboard
+    vnoremap <Leader>ty :<C-u>call <SID>WriteToTmuxBuffer(v:false, 0)<CR>
+
+    " En el modo visual: 'delete' el texto selecionado y escribirlo al clipboard
+    vnoremap <Leader>td :<C-u>call <SID>WriteToTmuxBuffer(v:true, 0)<CR>
+
+
+    "4. Adicionar soporte a la lectura del buffer de tmux y escribirlo despues del cursor actual
+
+    " Funcion que obtiene el texto de un vim record y lo escribe en un tmux buffer
+    function! s:PasteTmuxAfterCursor(tmux_buffer_idx)
+
+        "1. Obtener el texto del buffer
+        let l:full_cmd = printf('tmux show-buffer -b %d', a:tmux_buffer_idx)
+        let l:txt = system(l:full_cmd)
+
+        if v:shell_error != 0
+            echo printf("Error to get tmux buffer %d.", a:tmux_buffer_idx)
+            return
+        endif
+
+        "3. Limpieza
+
+        " Eliminar salto final extra
+        let l:txt = substitute(l:txt, '\n\%$', '', '')
+
+        "4.Guardalo en el registro 'x', forzando characterwise ('v')
+        call setreg('x', l:txt, 'v')
+
+        "5. Pegar justo después del cursor
+        execute 'normal! "xp'
+
+    endfunction
+
+
+    " Normal mode: insertar contenido de buffer tmux 0 con <C-1>
+    nnoremap <C-F1> :<C-u>call <SID>PasteTmuxAfterCursor(0)<CR>
+    nnoremap <C-F2> :<C-u>call <SID>PasteTmuxAfterCursor(1)<CR>
+    nnoremap <C-F3> :<C-u>call <SID>PasteTmuxAfterCursor(2)<CR>
+    nnoremap <C-F4> :<C-u>call <SID>PasteTmuxAfterCursor(3)<CR>
+    nnoremap <C-F5> :<C-u>call <SID>PasteTmuxAfterCursor(4)<CR>
+
+    " Insert mode: lo mismo sin salir de Insert
+    inoremap <C-F1> :<C-u>call <SID>PasteTmuxAfterCursor(0)<CR>
+    inoremap <C-F2> :<C-u>call <SID>PasteTmuxAfterCursor(1)<CR>
+    inoremap <C-F3> :<C-u>call <SID>PasteTmuxAfterCursor(2)<CR>
+    inoremap <C-F4> :<C-u>call <SID>PasteTmuxAfterCursor(3)<CR>
+    inoremap <C-F5> :<C-u>call <SID>PasteTmuxAfterCursor(4)<CR>
+
+endif
 
 
 "###################################################################################
