@@ -582,6 +582,33 @@ end
 
 
 --------------------------------------------------------------------------------------------------
+--LSP Client> Para Powershell
+--------------------------------------------------------------------------------------------------
+
+--
+-- LSP Server : Powershell Editor Service
+-- URL        : https://github.com/PowerShell/PowerShellEditorServices
+-- Validate   : Descargar el binario
+--
+use_adapter = vim.g.use_lsp_adapters['powershell']
+adapter_name = 'powershell_es'
+
+if use_adapter ~= nil and use_adapter == true then
+
+    vim.lsp.config(adapter_name, {
+
+        bundle_path = vim.g.programs_base_path .. '/lsp_servers/powershell_es',
+        shell = 'pwsh',
+
+    })
+
+    lsp_adapters[#lsp_adapters + 1] = adapter_name
+
+end
+
+
+
+--------------------------------------------------------------------------------------------------
 --LSP Client> Para VimL (VimScript)
 --------------------------------------------------------------------------------------------------
 

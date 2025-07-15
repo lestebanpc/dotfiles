@@ -139,6 +139,7 @@ let g:completion_filetypes = {
 \   'cs'          : v:true,
 \   'python'      : v:true,
 \   'sh'          : v:false,
+\   'ps1'         : v:false,
 \   'lua'         : v:false,
 \   'vim'         : v:false,
 \   'javascript'  : v:true,

@@ -57,7 +57,7 @@ local l_os_type = l_get_os_type(wezterm.target_triple)
 
 --2. Obtener las variables a usar al ejecutar el modulo/script de mis configuraciones
 --local l_myconfig
-local l_ok, l_myconfig = pcall(require, 'config')
+local l_ok, l_myconfig = pcall(require, 'custom_config')
 --local l_ok = true
 if not l_ok then
 

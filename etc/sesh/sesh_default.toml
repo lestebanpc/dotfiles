@@ -1,3 +1,6 @@
+import = [
+  "~/.config/sesh/custom_config.toml",
+]
 
 [default_session]
 preview_command = "eza --tree --color=always --icons always -L 4 {}"
@@ -7,32 +10,36 @@ preview_command = "eza --tree --color=always --icons always -L 4 {}"
 name = "dotfiles"
 path = "~/.files"
 startup_command = "vim -c ':Files'"
+windows = [ "shell" ]
 
 [[session]]
-name = "downloads"
-path = "/tempo/download"
-#windows = [ "explorer" ]
-
-[[session]]
-name = "tmux config"
+name = "config tmux"
 path = "~/.config/tmux"
 startup_command = "vim tmux.conf tmux_custom.conf"
+windows = [ "sesh" ]
 
 [[session]]
-name = "git config"
+name = "config git"
 path = "~/.config/git"
-startup_command = "vim -c ':Files'"
+startup_command = "vim ~/.gitconfig user_*.toml"
 
 [[session]]
-name = "wezterm config"
+name = "config wezterm"
 path = "~/.config/wezterm"
-startup_command = "vim wezterm.lua config.lua"
+startup_command = "vim wezterm.lua custom_config.lua"
 
+# Cambir el preview
 [[session]]
-name = "ssh config"
+name = "config ssh"
 path = "~/.ssh"
+preview_command = "bat ~/.ssh/config"
 startup_command = "vim config"
 
 [[window]]
-name = "explorer"
-startup_script = "yazi"
+name = "shell"
+startup_script = "clear"
+
+[[window]]
+name = "sesh"
+path = "~/.config/sesh"
+startup_script = "vim sesh.toml custom_config.toml"

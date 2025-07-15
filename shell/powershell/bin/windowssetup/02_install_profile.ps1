@@ -4,134 +4,174 @@
 
 $g_max_length_line= 130
 
-# Repositorios GIT donde estan los plugins VIM
-# Valores:
-#   (1) Perfil Editor - Tema
-#   (2) Perfil Editor - StatusLine, TabLine, FZF, TMUX utilities, Files Tree, etc.
-#   (3) Perfil IDE    - Utilities (Libreries, Typing utilities)
-#   (4) Perfil IDE    - Development
-#   (4) Perfil IDE    - Testing (Unit Testing y Debugging)
+# Grupo de plugins de VIM/NeoVIM :
+# (00) Grupo Basic > Themes             - Temas
+# (01) Grupo Basic > Core               - StatusLine, TabLine, FZF, TMUX utilities, Files Tree
+# (02) Grupo Basic > Extended           - Highlighting Sintax, Autocompletion para linea de comandos.
+# (03) Grupo IDE > Utils                - Libreries, Typing utilities.
+# (04) Grupo IDE > Development > Common - Plugin comunes de soporte independiente de tipo LSP usado (nativa o CoC).
+# (05) Grupo IDE > Development > Native - LSP, Snippets, Compeletion  ... usando la implementacion nativa.
+# (06) Grupo IDE > Development > CoC    - LSP, Snippets, Completion ... usando CoC.
+# (07) Grupo IDE > Testing              - Unit Testing y Debugging.
+# (08) Grupo IDE > Extended > Common    - Plugin de tools independiente del tipo de LSP usado (nativa o CoC).
+# (09) Grupo IDE > Extended > Native    - Tools: Git, Rest Client, AI Completion/Chatbot, AI Agent, etc.
+# (10) Grupo IDE > Extended > CoC       - Tools: Git, Rest Client, AI Completin/Chatbot, AI Agent, etc.
 $gd_repos_type= @{
-        'morhetz/gruvbox'= 1
-        'joshdick/onedark.vim'= 1
-        'vim-airline/vim-airline'= 2
-        'vim-airline/vim-airline-themes'= 2
-        'preservim/nerdtree'= 2
-        'ryanoasis/vim-devicons'= 2
-        'preservim/vimux'= 2
-        'christoomey/vim-tmux-navigator'= 2
-        'junegunn/fzf'= 2
-        'junegunn/fzf.vim'= 2
-        'ibhagwan/fzf-lua'= 2
-        'tpope/vim-surround'= 3
-        'mg979/vim-visual-multi'= 3
-        'mattn/emmet-vim'= 3
-        'dense-analysis/ale'= 4
-        'neoclide/coc.nvim'= 4
-        'antoinemadec/coc-fzf'= 4
-        'liuchengxu/vista.vim'= 4
-        'SirVer/ultisnips' = 4
-        'OmniSharp/omnisharp-vim'= 4
-        'honza/vim-snippets'= 4
-        'puremourning/vimspector'= 4
-        'folke/tokyonight.nvim'= 1
-        'catppuccin/nvim'= 1
-        'kyazdani42/nvim-web-devicons'= 2
-        'nvim-lualine/lualine.nvim'= 2
-        'akinsho/bufferline.nvim'= 2
-        'nvim-lua/plenary.nvim'= 2
-        'nvim-telescope/telescope.nvim'= 2
-        'nvim-tree/nvim-tree.lua'= 2
-        'nvim-treesitter/nvim-treesitter'= 4
-        'nvim-treesitter/nvim-treesitter-textobjects'= 4
-        'nvim-treesitter/nvim-treesitter-context'= 4
-        'neovim/nvim-lspconfig'= 4
-        'hrsh7th/nvim-cmp'= 4
-        'ray-x/lsp_signature.nvim'= 4
-        'hrsh7th/cmp-nvim-lsp'= 4
-        'hrsh7th/cmp-buffer'= 4
-        'hrsh7th/cmp-path'= 4
-        'L3MON4D3/LuaSnip'= 4
-        'rafamadriz/friendly-snippets'= 4
-        'saadparwaiz1/cmp_luasnip'= 4
-        'doxnit/cmp-luasnip-choice' = 4
-        'b0o/SchemaStore.nvim' = 4
-        'stevearc/aerial.nvim'= 4
-        'kosayoda/nvim-lightbulb'= 4
-        'mfussenegger/nvim-dap'= 4
-        'nvim-neotest/nvim-nio'= 4
-        'theHamsta/nvim-dap-virtual-text'= 4
-        'rcarriga/nvim-dap-ui'= 4
-        'seblyng/roslyn.nvim'= 4
-        'mfussenegger/nvim-jdtls'= 4
-        'vim-test/vim-test'= 4
-        'github/copilot.vim'= 4
-        'stevearc/dressing.nvim'= 4
-        'MunifTanjim/nui.nvim'= 4
-        'MeanderingProgrammer/render-markdown.nvim'= 4
-        'HakonHarnes/img-clip.nvim'= 4
-        'yetone/avante.nvim'= 4
-	}
+        'morhetz/gruvbox' = 0
+        'joshdick/onedark.vim' = 0
+        'vim-airline/vim-airline' = 1
+        'vim-airline/vim-airline-themes' = 1
+        'preservim/nerdtree' = 1
+        'ryanoasis/vim-devicons' = 1
+        'preservim/vimux' = 1
+        'christoomey/vim-tmux-navigator' = 1
+        'junegunn/fzf' = 1
+        'junegunn/fzf.vim' = 1
+        'ibhagwan/fzf-lua' = 1
+        'girishji/vimsuggest' = 2
+        'tpope/vim-surround' = 3
+        'mg979/vim-visual-multi' = 3
+        'mattn/emmet-vim' = 3
+        'dense-analysis/ale' = 4
+        'liuchengxu/vista.vim' = 4
+        'neoclide/coc.nvim' = 6
+        'antoinemadec/coc-fzf' = 6
+        'SirVer/ultisnips' = 6
+        'OmniSharp/omnisharp-vim' = 6
+        'honza/vim-snippets' = 6
+        'puremourning/vimspector' = 7
+        'folke/tokyonight.nvim' = 0
+        'catppuccin/nvim' = 0
+        'kyazdani42/nvim-web-devicons' = 1
+        'nvim-lualine/lualine.nvim' = 1
+        'akinsho/bufferline.nvim' = 1
+        'nvim-tree/nvim-tree.lua' = 1
+        'nvim-treesitter/nvim-treesitter' = 2
+        'nvim-treesitter/nvim-treesitter-textobjects' = 2
+        'hrsh7th/nvim-cmp' = 2
+        'hrsh7th/cmp-buffer' = 2
+        'hrsh7th/cmp-path' = 2
+        'hrsh7th/cmp-cmdline' = 2
+        'nvim-lua/plenary.nvim' = 3
+        'nvim-treesitter/nvim-treesitter-context' = 4
+        'stevearc/aerial.nvim' = 4
+        'neovim/nvim-lspconfig' = 5
+        'ray-x/lsp_signature.nvim' = 5
+        'hrsh7th/cmp-nvim-lsp' = 5
+        'L3MON4D3/LuaSnip' = 5
+        'rafamadriz/friendly-snippets' = 5
+        'saadparwaiz1/cmp_luasnip' = 5
+        'b0o/SchemaStore.nvim' = 5
+        'kosayoda/nvim-lightbulb' = 5
+        'doxnit/cmp-luasnip-choice' = 5
+        'mfussenegger/nvim-jdtls' = 5
+        'mfussenegger/nvim-dap' = 7
+        'rcarriga/nvim-dap-ui' = 7
+        'theHamsta/nvim-dap-virtual-text' = 7
+        'nvim-neotest/nvim-nio' = 7
+        'vim-test/vim-test' = 7
+        'mistweaverco/kulala.nvim' = 8
+        'lewis6991/gitsigns.nvim' = 8
+        'sindrets/diffview.nvim' = 8
+        'zbirenbaum/copilot.lua' = 9
+        'zbirenbaum/copilot-cmp' = 9
+        'stevearc/dressing.nvim' = 9
+        'MunifTanjim/nui.nvim' = 9
+        'MeanderingProgrammer/render-markdown.nvim' = 9
+        'HakonHarnes/img-clip.nvim' = 9
+        'yetone/avante.nvim' = 9
+        'github/copilot.vim' = 10
+    }
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
 #  1 - Para VIM
 #  2 - Para NeoVIM
 $gd_repos_scope= @{
-        'morhetz/gruvbox'= 1
-        'joshdick/onedark.vim'= 1
-        'vim-airline/vim-airline'= 1
-        'vim-airline/vim-airline-themes'= 1
-        'ryanoasis/vim-devicons'= 1
-        'preservim/nerdtree'= 1
-        'liuchengxu/vista.vim'=1
-        'folke/tokyonight.nvim'= 2
-        'kyazdani42/nvim-web-devicons'= 2
-        'nvim-lualine/lualine.nvim'= 2
-        'akinsho/bufferline.nvim'= 2
-        'nvim-lua/plenary.nvim'= 2
-        'nvim-telescope/telescope.nvim'= 2
-        'nvim-tree/nvim-tree.lua'= 2
-        'stevearc/aerial.nvim'= 2
-        'nvim-treesitter/nvim-treesitter'= 2
-        'nvim-treesitter/nvim-treesitter-textobjects'= 2
-        'nvim-treesitter/nvim-treesitter-context'= 2
-        'ibhagwan/fzf-lua'= 2
-        'neovim/nvim-lspconfig'= 2
-        'hrsh7th/nvim-cmp'= 2
-        'ray-x/lsp_signature.nvim'= 2
-        'hrsh7th/cmp-nvim-lsp'= 2
-        'hrsh7th/cmp-buffer'= 2
-        'hrsh7th/cmp-path'= 2
-        'L3MON4D3/LuaSnip'= 2
-        'rafamadriz/friendly-snippets'= 2
-        'saadparwaiz1/cmp_luasnip'= 2
+        'morhetz/gruvbox' = 1
+        'joshdick/onedark.vim' = 1
+        'vim-airline/vim-airline' = 1
+        'vim-airline/vim-airline-themes' = 1
+        'ryanoasis/vim-devicons' = 1
+        'preservim/nerdtree' = 1
+        'girishji/vimsuggest' = 1
+        'liuchengxu/vista.vim' = 1
+        'puremourning/vimspector' = 1
+        'folke/tokyonight.nvim' = 2
+        'catppuccin/nvim' = 2
+        'kyazdani42/nvim-web-devicons' = 2
+        'ibhagwan/fzf-lua' = 2
+        'nvim-lualine/lualine.nvim' = 2
+        'akinsho/bufferline.nvim' = 2
+        'nvim-lua/plenary.nvim' = 2
+        'nvim-tree/nvim-tree.lua' = 2
+        'stevearc/aerial.nvim' = 2
+        'nvim-treesitter/nvim-treesitter' = 2
+        'nvim-treesitter/nvim-treesitter-textobjects' = 2
+        'nvim-treesitter/nvim-treesitter-context' = 2
+        'mistweaverco/kulala.nvim' = 2
+        'sindrets/diffview.nvim' = 2
+        'lewis6991/gitsigns.nvim' = 2
+        'neovim/nvim-lspconfig' = 2
+        'hrsh7th/nvim-cmp' = 2
+        'hrsh7th/cmp-nvim-lsp' = 2
+        'hrsh7th/cmp-buffer' = 2
+        'hrsh7th/cmp-path' = 2
+        'hrsh7th/cmp-cmdline' = 2
+        'ray-x/lsp_signature.nvim' = 2
+        'L3MON4D3/LuaSnip' = 2
+        'rafamadriz/friendly-snippets' = 2
+        'saadparwaiz1/cmp_luasnip' = 2
         'doxnit/cmp-luasnip-choice' = 2
         'b0o/SchemaStore.nvim' = 2
-        'kosayoda/nvim-lightbulb'= 2
-        'nvim-neotest/nvim-nio'= 2
-        'mfussenegger/nvim-dap'= 2
-        'theHamsta/nvim-dap-virtual-text'= 2
-        'rcarriga/nvim-dap-ui'= 2
-        'seblyng/roslyn.nvim'=2
-        'mfussenegger/nvim-jdtls'=2
-        'stevearc/dressing.nvim'= 2
-        'MunifTanjim/nui.nvim'= 2
-        'MeanderingProgrammer/render-markdown.nvim'= 2
-        'HakonHarnes/img-clip.nvim'= 2
-        'yetone/avante.nvim'= 2
-	}
+        'kosayoda/nvim-lightbulb' = 2
+        'mfussenegger/nvim-dap' = 2
+        'theHamsta/nvim-dap-virtual-text' = 2
+        'rcarriga/nvim-dap-ui' = 2
+        'nvim-neotest/nvim-nio' = 2
+        'mfussenegger/nvim-jdtls' = 2
+        'zbirenbaum/copilot.lua' = 2
+        'zbirenbaum/copilot-cmp' = 2
+        'stevearc/dressing.nvim' = 2
+        'MunifTanjim/nui.nvim' = 2
+        'MeanderingProgrammer/render-markdown.nvim' = 2
+        'HakonHarnes/img-clip.nvim' = 2
+        'yetone/avante.nvim' = 2
+    }
+
 
 # Repositorios Git - Branch donde esta el plugin no es el por defecto
 $gd_repos_branch= @{
-        'neoclide/coc.nvim'= 'release'
+        'neoclide/coc.nvim' = 'release'
     }
 
-# Repositorios Git - Deep de la clonacion del repositorio que no es el por defecto
-$gd_repos_depth= @{
-        'neoclide/coc.nvim'= 1
-        'junegunn/fzf'= 1
-        'dense-analysis/ale'= 1
-	}
+
+# Repositorios Git que tiene submodulos y requieren obtener/actualizar en conjunto al modulo principal
+# > Por defecto no se tiene submodulos (valor 0)
+# > Valores :
+#   (0) El repositorio solo tiene un modulo principal y no tiene submodulos.
+#   (1) El repositorio tiene un modulo principal y submodulos de 1er nivel.
+#   (2) El repositorio tiene un modulo principal y submodulos de varios niveles.
+$gd_repos_with_submmodules= @{
+        'mistweaverco/kulala.nvim' = 1
+    }
+
+
+# Permite definir el nombre del folder donde se guardaran los plugins segun el grupo al que pertenecen.
+$ga_group_plugin_folder= @(
+    "basic_themes"
+    "basic_core"
+    "basic_extended"
+    "ide_utils"
+    "ide_dev_common"
+    "ide_dev_native"
+    "ide_dev_coc"
+    "ide_testing"
+    "ide_ext_common"
+    "ide_ext_native"
+    "ide_ext_coc"
+    )
+
+
 
 $g_is_nodejs_installed= $true
 
@@ -144,7 +184,7 @@ function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, 
 
 
     $l_target_base = Split-Path -Parent $p_target_link
-	$l_tmp= $null
+    $l_tmp= $null
 	if(! (Test-Path "${l_target_base}")) {
 		$l_tmp= New-Item -ItemType Directory -Force -Path "${l_target_base}"
     }
@@ -155,7 +195,7 @@ function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, 
 
     $l_source_fullfilename="${p_source_path}\${p_source_filename}"
 	if(! (Test-Path "$p_target_link")) {
-		cmd /c mklink "$p_target_link" "$l_source_fullfilename"
+		sudo cmd /c mklink "$p_target_link" "$l_source_fullfilename"
         Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha creado " -NoNewline
 		Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
 		return
@@ -166,14 +206,14 @@ function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, 
     if ( $l_info.LinkType -eq "SymbolicLink" ) {
 		if(! (Test-Path $l_info.LinkTarget)) {
 			rm "$p_target_link"
-			cmd /c mklink "$p_target_link" "$l_source_fullfilename"
+			sudo cmd /c mklink "$p_target_link" "$l_source_fullfilename"
 			Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha re-creado debido a que el destino no existe " -NoNewline
 			Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
 		}
         else {
 			if($p_override_target_link) {
 				rm "$p_target_link"
-				cmd /c mklink "$p_target_link" "$l_source_fullfilename"
+				sudo cmd /c mklink "$p_target_link" "$l_source_fullfilename"
 				Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha re-creado " -NoNewline
 				Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
 			}
@@ -185,7 +225,7 @@ function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, 
 	}
     else {
         rm "$p_target_link"
-		cmd /c mklink "$p_target_link" "$l_source_fullfilename"
+		sudo cmd /c mklink "$p_target_link" "$l_source_fullfilename"
         Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha creado " -NoNewline
 		Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
     }
@@ -204,7 +244,7 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
     }
 
 	if(! (Test-Path "${p_target_link}")) {
-		cmd /c mklink /d "$p_target_link" "$p_source_path"
+		sudo cmd /c mklink /d "$p_target_link" "$p_source_path"
         Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha creado " -NoNewline
 		Write-Host "(ruta real '${p_source_path}')" -ForegroundColor DarkGray
 		return
@@ -215,14 +255,14 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
 	if ( $l_info.LinkType -eq "SymbolicLink" ) {
 		if(! (Test-Path $l_info.LinkTarget)) {
 			rmdir "$p_target_link"
-			cmd /c mklink /d "$p_target_link" "$p_source_path"
+			sudo cmd /c mklink /d "$p_target_link" "$p_source_path"
 			Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha re-creado debido a que el destino no existe " -NoNewline
 			Write-Host "(ruta real '${l_source_fullfilename}')" -ForegroundColor DarkGray
 		}
         else {
 			if($p_override_target_link) {
 				rmdir "$p_target_link"
-				cmd /c mklink /d "$p_target_link" "$p_source_path"
+				sudo cmd /c mklink /d "$p_target_link" "$p_source_path"
 				Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha re-creado " -NoNewline
 				Write-Host "(ruta real '${p_source_path}')" -ForegroundColor DarkGray
 			}
@@ -234,7 +274,7 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
 	}
     else {
         rmdir "$p_target_link"
-		cmd /c mklink /d "$p_target_link" "$p_source_path"
+		sudo cmd /c mklink /d "$p_target_link" "$p_source_path"
         Write-Host "${p_tag}El enlace simbolico '${p_target_link}' se ha creado " -NoNewline
 		Write-Host "(ruta real '${p_source_path}')" -ForegroundColor DarkGray
     }
@@ -244,7 +284,8 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
 
 
 function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
-	#1. Argumentos
+
+    #1. Argumentos
 
     #2. Ruta base donde se instala el plugins/paquete
     $l_tag="VIM"
@@ -257,20 +298,26 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
         $l_tag="NeoVIM"
     }
 
-    #2. Crear las carpetas de basicas
+    #3. Crear las carpetas de basicas
     Write-Host "Instalando los paquetes usados por ${l_tag} en `"${l_base_plugins}`"..."
 
-    $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}"
-    $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\themes\start"
-    $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\themes\opt"
-    $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\ui\start"
-    $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\ui\opt"
-    if ($p_flag_developer)
-	{
-        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\typing\start"
-        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\typing\opt"
-        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\ide\start"
-        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\ide\opt"
+    $l_tmp= $null
+    $l_group_folder = $null
+    for ($i=0; $i -lt $ga_group_plugin_folder.Count; $i++) {
+
+        $l_group_folder= $ga_group_plugin_folder[$i]
+        if (!$l_group_folder) {
+            continue
+        }
+
+        if (!$p_flag_developer && $i -ge 3) {
+            #Si no es developer, no se crean los grupos de plugins de IDE
+            break
+        }
+
+        # Crear la carpeta base del grupo de plugins
+        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\${l_group_folder}\opt"
+        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\${l_group_folder}\start"
     }
 
 
@@ -278,9 +325,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
     $l_base_path= ""
     $l_repo_name= ""
     $l_repo_type=1
-    $l_repo_url= ""
     $l_repo_branch= ""
-    $l_repo_depth= 1
     $l_repo_scope= ""
     $l_aux= ""
 
@@ -309,37 +354,27 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
             continue
         }
 
-        #4.2 Obtener la ruta base donde se clonara el paquete (todos los paquetes son opcionale, se inicia bajo configuraci├│n)
-        $l_base_path=""
-        switch ($l_repo_type) {
-            1 {
-                $l_base_path="${l_base_plugins}\themes\opt"
-            }
-            2 {
-                $l_base_path="${l_base_plugins}\ui\opt"
-            }
-            3 {
-                $l_base_path="${l_base_plugins}\typing\opt"
-            }
-            4 {
-                $l_base_path="${l_base_plugins}\ide\opt"
-            }
-            default {
 
-                Write-Host "Paquete ${l_tag} (${l_repo_type}) `"${l_repo_git}`": No tiene tipo valido."
-                continue
-            }
+        #4.2 Obtener la ruta base donde se clonara el paquete (todos los paquetes son opcionale, se inicia bajo configuracion)
+        l_group_folder= $null
+        if ($l_repo_type -ge 0 -and $l_repo_type -lt $ga_group_plugin_folder.Count) {
+            l_group_folder=$ga_group_plugin_folder[$l_repo_type]
         }
+
+        if($null -eq $l_group_folder) {
+            Write-Host "Paquete ${l_tag} (${l_repo_type}) `"${l_repo_git}`": No tiene tipo valido."
+            continue
+        }
+
+        $l_base_path= "${l_base_plugins}\${l_group_folder}\opt"
 
         #Si es un repositorio para developer no debe instalarse en el perfil basico
-        if (!$p_flag_developer) {
-			if( $l_repo_type -eq 3 || $l_repo_type -eq 4 ) {
-				#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
-				continue
-			}
+        if (-not $p_flag_developer -and $l_repo_type -ge 3) {
+			#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
+			continue
         }
-
 		#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
+
 
         #4.3 Validar si el paquete ya esta instalando
 		if(Test-Path "${l_base_path}\${l_repo_name}\.git") {
@@ -347,8 +382,10 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
              continue
         }
 
+
         #4.5 Instalando el paquete
-        cd "${l_base_path}"
+        Set-Location "${l_base_path}"
+
         Write-Host ""
 	    Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
         if ($p_is_neovim) {
@@ -359,32 +396,32 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
         }
 	    Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 
-        $l_aux=""
+
+        #Siempre realizar una clonacion superficial (obtener solo el ultimo commit)
+        $l_aux="--depth 1"
+
+        #Si el repositorio tiene submodulos, se debe clonar con los submodulos
+        $l_repo_with_submodules= $gd_repos_with_submmodules.Item("${l_repo_git}")
+        if($null -ne $l_repo_with_submodules -and ($l_repo_with_submodules -eq 1 -or $l_repo_with_submodules -eq 2)) {
+
+            # Clona los submodulos definidos en '.gitmodules' y lo hace de manera superficial
+            $l_aux="${l_aux} --recurse-submodules --shallow-submodules"
+
+        }
+
+        # La rama a clonar
         $l_repo_branch= $gd_repos_branch.Item("${l_repo_git}")
-		if (${l_repo_branch}) {
-		    $l_aux= "--branch ${l_repo_branch}"
+		if ($null -ne ${l_repo_branch}) {
+		    $l_aux= "${l_aux} --branch ${l_repo_branch}"
         }
 
-        $l_repo_depth= $gd_repos_depth.Item("${l_repo_git}")
-        if (${l_repo_depth}) {
-            if (!${l_aux}) {
-                $l_aux="--depth ${l_repo_depth}"
-            }
-			else {
-                $l_aux="${l_aux} --depth ${l_repo_depth}"
-            }
-        }
 
+        # Clonar la rama
 		#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Repo-Branch: '${l_repo_branch}', Repo-Depth: '${l_repo_depth}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
 
-        if (${l_aux}) {
-            Write-Host "Ejecutando `"git clone ${l_aux} https://github.com/${l_repo_git}.git`""
-            Invoke-Expression "git clone ${l_aux} https://github.com/${l_repo_git}.git"
-        }
-		else {
-			Write-Host "Ejecutando `"git clone https://github.com/${l_repo_git}.git`""
-            git clone https://github.com/${l_repo_git}.git
-		}
+        Write-Host "Ejecutando `"git clone ${l_aux} https://github.com/${l_repo_git}.git`""
+        Invoke-Expression "git clone ${l_aux} https://github.com/${l_repo_git}.git"
+        #git clone https://github.com/${l_repo_git}.git
 
         #Almacenando las ruta de documentacion a indexar
 		if(Test-Path "${l_base_path}\${l_repo_name}\doc") {
@@ -770,6 +807,9 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
     #3. Creando enlaces simbolico dependientes del tipo de distribución Linux
 
+    #TODO this variable is null
+    #$g_win_base_path='C:\cli'
+
     #Si es Linux WSL
     $l_target_link= ""
     $l_source_path= ""
@@ -785,7 +825,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
     #Archivo de configuracion de Git
     $l_target_link="${env:USERPROFILE}\.gitconfig"
     $l_source_path="${env:USERPROFILE}\.files\etc\git"
-	$l_source_filename='root_gitconfig_windows.toml'
+	$l_source_filename='gitconfig_win.toml'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
 	if(! (Test-Path "${env:USERPROFILE}\.config\git")) {
@@ -793,15 +833,15 @@ function m_setup_profile($l_overwrite_ln_flag) {
     }
 
     if(! (Test-Path "${env:USERPROFILE}\.config\git\main.toml" )) {
-		Write-Host "            > Creando el archivo '~\.config\git\main.toml' ..."
-        Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\template_main_gitconfig_windows.toml" -Destination "${env:USERPROFILE}\.config\git\main.toml"
-        Write-Host "            > Creando el archivo '~\.config\git\work_mywork.toml' ..."
-        Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\template_work_gitconfig_windows.toml" -Destination "${env:USERPROFILE}\.config\git\work_mywork.toml"
+		Write-Host "            > Creando el archivo '~\.config\git\user_main.toml' ..."
+        Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\user_main_template_win.toml" -Destination "${env:USERPROFILE}\.config\git\user_main.toml"
+        Write-Host "            > Creando el archivo '~\.config\git\user_mywork.toml' ..."
+        Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\user_work_template_win.toml" -Destination "${env:USERPROFILE}\.config\git\user_mywork.toml"
 
-        Write-Host "            > Edite '~\.config\git\main.toml' y '~\.config\git\work_mywork.toml' si desea crear modificar las opciones de '~/.gitignore'."
+        Write-Host "            > Edite '~\.config\git\user_main.toml' y '~\.config\git\user_mywork.toml' si desea crear modificar las opciones de '~/.gitignore'."
 	}
     else {
-        Write-Host "            > Edite '~\.config\git\main.toml' y '~\.config\git\work_mywork.toml' si desea crear modificar las opciones de '~/.gitignore'."
+        Write-Host "            > Edite '~\.config\git\user_main.toml' y '~\.config\git\user_mywork.toml' si desea crear modificar las opciones de '~/.gitignore'."
     }
 
     #Archivo de configuracion de SSH
@@ -851,18 +891,8 @@ function m_setup_profile($l_overwrite_ln_flag) {
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
     #Creando archivo de configuracion para Wezterm
-    $l_target_link="${env:USERPROFILE}\.config\wezterm\wezterm.lua"
-    $l_source_path="${env:USERPROFILE}\.files\wezterm"
-	$l_source_filename='wezterm.lua'
-    m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
-    #TODO this variable is null
-    #$g_win_base_path='C:\cli'
-
-	#if(! (Test-Path "${g_win_base_path}\prgs\wezterm\wezterm_modules")) {
-	#	New-Item -ItemType Directory -Force -Path "${g_win_base_path}\prgs\wezterm\wezterm_modules"
-    #}
-
+    # Configuracion de 'oh-my-posh'
     if(! (Test-Path "${env:USERPROFILE}\.files\etc\default_settings.json" )) {
 		Write-Host "            > Creando el archivo '${env:USERPROFILE}\.files\etc\default_settings.json' ..."
         Copy-Item -Path "${env:USERPROFILE}\.files\etc\lepc-montys-cyan1.json" "${env:USERPROFILE}\.files\etc\default_settings.json"
@@ -874,76 +904,31 @@ function m_setup_profile($l_overwrite_ln_flag) {
     }
 
 
+    # Configuracion de wezterm
+    $l_target_link="${env:USERPROFILE}\.config\wezterm\wezterm.lua"
+    $l_source_path="${env:USERPROFILE}\.files\wezterm"
+	$l_source_filename='wezterm.lua'
+    m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
+
+
+	#if(! (Test-Path "${g_win_base_path}\prgs\wezterm\wezterm_modules")) {
+	#	New-Item -ItemType Directory -Force -Path "${g_win_base_path}\prgs\wezterm\wezterm_modules"
+    #}
 
     if(! (Test-Path "${env:USERPROFILE}\.config\wezterm\config.lua" )) {
-		Write-Host "            > Creando el archivo '${env:USERPROFILE}\.config\wezterm\config.lua' ..."
-        Copy-Item -Path "${env:USERPROFILE}\.files\wezterm\windows_config_template.lua" -Destination "${env:USERPROFILE}\.config\wezterm\config.lua"
+		Write-Host "            > Creando el archivo '${env:USERPROFILE}\.config\wezterm\custom_config.lua' ..."
+        Copy-Item -Path "${env:USERPROFILE}\.files\wezterm\custom_config_template_win.lua" -Destination "${env:USERPROFILE}\.config\wezterm\custom_config.lua"
 
-        Write-Host "            > Edite '${env:USERPROFILE}\.config\wezterm\config.lua' si desea modificar las opciones Wezterm."
+        Write-Host "            > Edite '${env:USERPROFILE}\.config\wezterm\custom_config.lua' si desea modificar las opciones Wezterm."
 	}
     else {
-        Write-Host "            > Edite '${env:USERPROFILE}\.config\wezterm\config.lua' si desea modificar las opciones Wezterm."
+        Write-Host "            > Edite '${env:USERPROFILE}\.config\wezterm\custom_config.lua' si desea modificar las opciones Wezterm."
     }
 
 
-    #Creando el profile del interprete shell
-    #$l_target_link="${HOME}\.bashrc"
-    #$l_source_path="${HOME}\.files\shell\bash\profile"
-	#$l_source_filename='debian_aarch64_local.bash'
-    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
-
-
-    #4. Creando enlaces simbolico independiente del tipo de distribución Linux
-
-    #Crear el enlace de TMUX
-    #$l_target_link="${HOME}\.tmux.conf"
-    #$l_source_path="${HOME}\.files\tmux"
-    #$l_source_filename='tmux.conf'
-    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
-
-    #Configuracion de un CLI de alto nivel del 'Container Runtime' 'ContainerD': nerdctl
-    #$l_target_link="${HOME}\.config\nerdctl\nerdctl.toml"
-    #$l_source_path="${HOME}\.files\config\nerdctl"
-    #$l_source_filename='default_config.toml'
-    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
-
-
-    #Configuracion principal de un 'Container Runtime'\CLI de alto nivel (en modo 'rootless'): Podman
-    #$l_target_link="${HOME}\.config\containers\containers.conf"
-    #$l_source_path="${HOME}\.files\config\podman"
-    #$l_source_filename='default_config.toml'
-    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
-
-    #Configuracion de los registros de imagenes de un 'Container Runtime'\CLI de alto nivel (en modo 'rootless'): Podman
-    #$l_target_link="${HOME}\.config\containers\registries.conf"
-    #$l_source_path="${HOME}\.files\config\podman"
-    #$l_source_filename='default_registries.toml'
-    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
-
-
-    #Configuracion de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
-    #$l_target_link="${HOME}\.config\containerd\config.toml"
-    #$l_source_path="${HOME}\.files\config\containerd"
-    #$l_source_filename='default_config.toml'
-    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
-
-
-    #Configuracion del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
-    #$l_target_link="${HOME}\.config\buildkit\buildkitd.toml"
-    #$l_source_path="${HOME}\.files\config\buildkit"
-    #$l_source_filename='default_config.toml'
-    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
-
-
-    #Configuracion por defecto para un Cluster de Kubernates
-    #$l_target_link="${HOME}\.kube\config"
-    #$l_source_path="${HOME}\.files\config\kubectl"
-    #$l_source_filename='default_config.yaml'
-    #m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
-
     #Configuracion por Lazygit
     $l_target_link="${env:LOCALAPPDATA}\lazygit\config.yml"
-    $l_source_path="${env:USERPROFILE}\.files\wezterm"
+    $l_source_path="${env:USERPROFILE}\.files\lazygit"
     $l_source_filename='config_default.yaml'
 
 	if(! (Test-Path "${env:LOCALAPPDATA}\lazygit")) {
@@ -1120,9 +1105,9 @@ $g_temp_path=''
 $g_setup_only_last_version=1
 
 # Cargar la información:
-if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/config.ps1") {
+if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1") {
 
-    . "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/config.ps1"
+    . "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1"
 
     #Fix the bad entry values
     if( "$g_setup_only_last_version" -eq "0" ) {

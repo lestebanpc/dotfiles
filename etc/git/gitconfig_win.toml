@@ -1,11 +1,11 @@
-# Opciones generales 
+# Opciones generales
 [core]
 	autocrlf = true
 	pager = delta
 	editor = vim
 
 
-# 
+#
 [init]
 	defaultBranch = main
 
@@ -17,24 +17,21 @@
 	syntax-theme = Coldark-Dark
 
 
-# 
+#
 [interactive]
     diffFilter = delta --color-only
 
 
-# 
+#
 [diff]
     colorMoved = default
 
 
-# 
+#
 [merge]
     conflictstyle = diff3
 
 
 # Incluir los temas configuraciones personalizadas
 [include]
-    path = ~/.config/git/main.toml
-
-
-
+    path = ~/.config/git/user_main.toml

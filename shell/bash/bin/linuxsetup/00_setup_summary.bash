@@ -1573,13 +1573,13 @@ g_usage() {
     printf '  > %bTARGET_HOME_PATH %bRuta base donde el home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %b> El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '    %b> El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio "g_repo_name".%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bREPO_NAME %bNombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario. Este valor se obtendra segun orden prioridad:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %b> El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '    %b> El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si ninguno de los anteriores se establece, se usara el valor ".files".%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado "/var/opt/tools" o "~/tools".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -1651,7 +1651,7 @@ fi
 #Ruta del home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git.
 #Este valor se obtendra segun orden prioridad:
 # - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
+# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
 # - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
 # - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
 g_targethome_path=''
@@ -1659,7 +1659,7 @@ g_targethome_path=''
 #Nombre del repositorio git o la ruta relativa del repositorio git respecto al home de usuario OBJETIVO (al cual se desea configurar el profile del usuario).
 #Este valor se obtendra segun orden prioridad:
 # - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
+# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
 # - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 g_repo_name=''
 
@@ -1707,10 +1707,10 @@ g_setup_only_last_version=1
 
 
 #Obtener los parametros del archivos de configuración
-if [ -f "${g_shell_path}/bash/bin/linuxsetup/.config.bash" ]; then
+if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
 
     #Obtener los valores por defecto de las variables
-    . ${g_shell_path}/bash/bin/linuxsetup/.config.bash
+    . ${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash
 
     #Corregir algunos valores
     if [ "$g_setup_only_last_version" = "0" ]; then
@@ -1768,13 +1768,13 @@ if [ $gp_type_calling -eq 0 ]; then
     #    Los paquete basicos, por defecto, que se muestran en el menu son: Curl,UnZip, OpenSSL y Tmux
     # 4> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
     #    - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
     # 5> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     #    Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
     # 6> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado \
     #    "/var/opt/tools" o "~/tools".
@@ -1797,7 +1797,7 @@ if [ $gp_type_calling -eq 0 ]; then
 
     #Calcular el valor efectivo de 'g_repo_name'.
     if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
         g_repo_name="$5"
     fi
 
@@ -1807,7 +1807,7 @@ if [ $gp_type_calling -eq 0 ]; then
 
     #Obtener los valores efectivo de la variable 'g_targethome_path', 'g_repo_path', 'g_targethome_owner', 'g_targethome_group'
     if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
         g_targethome_path="$4"
     fi
 
@@ -1820,7 +1820,7 @@ if [ $gp_type_calling -eq 0 ]; then
 
     #Obtener la ruta real del folder donde se alamacena los de programas 'g_programs_path'
     if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
         g_programs_path="$6"
     fi
 
@@ -1836,7 +1836,7 @@ if [ $gp_type_calling -eq 0 ]; then
 
     #Obtener la ruta real del folder base de comandos 'g_cmd_base_path'
     if [ ! -z "$7" ] && [ "$7" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
         g_cmd_base_path="$7"
     fi
 
@@ -1851,7 +1851,7 @@ if [ $gp_type_calling -eq 0 ]; then
 
     #Obtener la ruta rel del folder de los archivos temporales 'g_temp_path'
     if [ ! -z "$8" ] && [ "$8" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
         g_temp_path="$8"
     fi
     get_temp_path "$g_temp_path"
@@ -1889,13 +1889,13 @@ else
     #    Los paquetes por defecto que son: Curl, UnZip, OpenSSL y Tmux.
     # 5> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
     #    - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
     # 6> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     #    Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
     # 7> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
     #    "/var/opt/tools" o "~/tools".
@@ -1948,7 +1948,7 @@ else
 
     #Calcular el valor efectivo de 'g_repo_name'.
     if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
         g_repo_name="$6"
     fi
 
@@ -1958,7 +1958,7 @@ else
 
     #Obtener los valores efectivo de la variable 'g_targethome_path', 'g_repo_path', 'g_targethome_owner', 'g_targethome_group'
     if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
         g_targethome_path="$5"
     fi
 
@@ -1971,7 +1971,7 @@ else
 
     #Obtener la ruta real del folder donde se alamacena los de programas 'g_programs_path'
     if [ ! -z "$7" ] && [ "$7" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
         g_programs_path="$7"
     fi
 
@@ -1987,7 +1987,7 @@ else
 
     #Obtener la ruta real del folder base de comandos 'g_cmd_base_path'
     if [ ! -z "$8" ] && [ "$8" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
         g_cmd_base_path="$8"
     fi
 
@@ -1995,7 +1995,7 @@ else
 
     #Obtener los folderes temporal 'g_temp_path'
     if [ ! -z "$9" ] && [ "$9" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración '.config.bash'
+        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
         g_temp_path="$9"
     fi
     get_temp_path "$g_temp_path"

@@ -18,6 +18,19 @@ $g_regexp_sust_version4='[^0-9]*([0-9]+).*'
 $g_regexp_sust_version5='.*\s+([0-9]+.[0-9.]+).*'
 
 
+# Repositorios Git que tiene submodulos y requieren obtener/actualizar en conjunto al modulo principal
+# > Por defecto no se tiene submodulos (valor 0)
+# > Valores :
+#   (0) El repositorio solo tiene un modulo principal y no tiene submodulos.
+#   (1) El repositorio tiene un modulo principal y submodulos de 1er nivel.
+#   (2) El repositorio tiene un modulo principal y submodulos de varios niveles.
+$gd_repos_with_submmodules= @{
+        'kulala.nvim' = 1
+    }
+
+
+
+
 
 #------------------------------------------------------------------------------------------------
 # Funciones
@@ -110,7 +123,7 @@ function m_update_repository($p_path, $p_repo_name, $p_is_neovim)
 	}
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 
-    cd $p_path
+    Set-Location "$p_path"
 
     #2. Validar si el directorio .git del repositorio es valido
     git rev-parse --git-dir > $null 2>&1
@@ -731,9 +744,9 @@ $g_temp_path=''
 $g_setup_only_last_version=1
 
 # Cargar la información:
-if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/config.ps1") {
+if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1") {
 
-    . "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/config.ps1"
+    . "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1"
 
     #Fix the bad entry values
     if( "$g_setup_only_last_version" -eq "0" ) {

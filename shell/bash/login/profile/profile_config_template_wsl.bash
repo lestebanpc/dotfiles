@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #
-# Para habilitar su uso genere el arcivo '~/.config.bash':
-#  cp ~/.files/shell/bash/login/profile/config_template_wsl.bash ~/.config.bash
-#  vim ~/.config.bash
+# Para habilitar su uso genere el arcivo '~/.custom_profile.bash':
+#  cp ~/.files/shell/bash/login/profile/profile_config_template_wsl.bash ~/.custom_profile.bash
+#  vim ~/.custom_profile.bash
 #
 
 #-----------------------------------------------------------------------------------

@@ -23,6 +23,45 @@ Las estructura folderes es:
   - './tmux/' archivos de configuracion usando script TMUX.
   - './wezterm/' archivos de configuracion de terminal Wezterm (en LUA).
 
+
+ - Archivos para personalizar la configuracion por defecto en Linux:
+
+```bash
+# Archivos para personalizar la configuracion del profile de bash
+~/.profile_config.bash
+
+# Archivos para personalizar la configuracion del profile de powershell
+~/.config/powershell/profile_config.ps1
+
+# Archivos para personalizar la configuracion de VIM
+~/.vim/custom_config.vim
+
+# Archivos para personalizar la configuracion de NeoVIM
+~/.config/nvim/custom_config.vim
+
+# Archivos para personalizar los script de configuración
+shell/bash/bin/linuxsetup/.setup_config.bash
+shell/bash/bin/termuxsetup/.setup_config.bash
+shell/powershell/bin/linuxsetup/.setup_config.ps1
+```
+
+ - Archivos para personalizar la configuracion por defecto en Windows:
+
+```powershell
+# Archivos para personalizar la configuracion del profile de powershell
+~/.profile_config.ps1
+
+# Archivos para personalizar los script de configuración
+shell/powershell/bin/windowssetup/.setup_config.ps1
+
+# Archivos para personalizar la configuracion de VIM
+~/.vimfiles/custom_config.vim
+
+# Archivos para personalizar la configuracion de NeoVIM
+./nvim/custom_config.vim
+```
+
+
 # Configuración en Linux
 
 Para la configuracion se puede usar una de las siguientes script de configuración.
@@ -84,12 +123,12 @@ git clone https://github.com/lestebanpc/dotfiles.git ~/.files
 3. Opcional. Configuración de los script de instalación/actualización.
    Los script de instalación usan variable globales con valores por defecto, las cuales puede ser modificados, segun orden de prioridad:
 - Los argumentos enviados a ejecutar el script,
-- Las variables especificadas en el archivos de configuración ".config.bash" (por defecto este archivo no existe, tiene que crearlo).
+- Las variables especificadas en el archivos de configuración ".setup_config.bash" (por defecto este archivo no existe, tiene que crearlo).
 
 Puede copiar el archivo basando en la plantilla existente en su repositorio:
 
 ```shell
-cp ~/.files/shell/bash/bin/linuxsetup/template_config.bash ~/.files/shell/bash/bin/linuxsetup/.config.bash
+cp ~/.files/shell/bash/bin/linuxsetup/lib/setup_config_template.bash ~/.files/shell/bash/bin/linuxsetup/.setup_config.bash
 ```
 
 Descomente las variables que desea modificar y establecer el valor deseado.
@@ -128,14 +167,15 @@ Descomente las variables que desea modificar y establecer el valor deseado.
 ```
 
 7. Opcional. Configuración de su profile del shell del SO:
-   El script de profile `~/.bashrc` define algunas variable globales con valores por defecto, las cuales puede ser modificados, defiendo el archivo de configuración `.config.bash`.
-   El archivo de configuración por defecto no existe y debe ser creado en `~/.files/shell/bash/profile/.config.bash`.
+   El script de profile `~/.bashrc` define algunas variable globales con valores por defecto, las cuales puede ser modificados, defiendo el archivo de configuración `.custom_profile.bash`.
+   El archivo de configuración por defecto no existe y debe ser creado en `~/.custom_profile.bash`.
 
    Tambien puede copiar el archivo basando en la plantilla existente en su repositorio:
    Descomente las variables que desea modificar y establecer el valor deseado.
 
 ```shell
-cp ~/.files/shell/bash/profile/template_config.bash ~/.files/shell/bash/profile/.config.bash
+cp ~/.files/shell/bash/login/profile/profile_config_template_nonwsl.bash ~/.custom_profile.bash
+cp ~/.files/shell/bash/login/profile/profile_config_template_wsl.bash ~/.custom_profile.bash
 ```
 
 8. Vuelva a cargar su profile para registrar la variables de entorno de su profile del usuario.

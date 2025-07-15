@@ -1,13 +1,7 @@
-# Usuario personal
+# Usuario personal principal
 [user]
-	email = lpenac@mymail.com
-	name  = Mi name
-
-
-# Opciones generales 
-[core]
-    # Editor (colocar la ruta completa si este no esta en el 'PATH'.
-	editor = C:/Tools/Vim/vim91/vim.exe
+	email = lucianoepc@gmail.com
+	name  = Luciano Esteban
 
 
 # Incluir los temas del comando 'delta'
@@ -20,6 +14,7 @@
     # Tema que se usara para delta
     #features = kingfisher
 
+
 # Alias del comando git (use el nombre del alias como un subcomando: 'git alias')
 [alias]
     log0 = log --color=always --format='%C(cyan)%h%Creset %C(blue)%ar%Creset%C(auto)%d%Creset %C(yellow)%s%+b %C(white)%ae%Creset'
@@ -30,10 +25,11 @@
     log2-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(auto)%d%C(reset)%n          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'
     log3-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n          %C(white)%s%C(reset)%n        %C(dim white)- %an <%ae> %C(reset) %C(dim white)(committer: %cn <%ce>)%C(reset)'
 
-
-# Usuario de work 'mywork'
-#[includeIf "gitdir/i:c:/code/mywork/"]
-#    path = work_mywork.toml
-
+# Usuario de personal alternativo
+#[includeIf "gitdir:~/code/mygmail2/"]
+#    path = user_mygmail2.toml
 
 
+# Usuario de trabajo 'mywork'
+#[includeIf "gitdir:~/code/work1/"]
+#    path = user_work1.toml

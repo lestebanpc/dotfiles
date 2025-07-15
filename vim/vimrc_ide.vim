@@ -57,14 +57,14 @@
 "  ./rte_cocide/ftplugin/    (NeoVIM)
 "      Carpeta de plugin de filetypes usado por NeoVIM en modo IDE usando el cliente LSP de CoC.
 "      > En es un enlace simbolico a '~/.files/nvim/ftplugin/cocide/'.
-"  ./myconfig.vim
+"  ./custom_config.vim
 "      Archivo que permite modificar las variables globales de este secript.
-"      Por defecto no existe pero la plantilla se puede obtener de '~/.files/nvim/myconfig_template.vim' o
-"      '~/.files/vim/myconfig_template.vim':
-"        cp ~/.files/vim/myconfig_template.vim ~/.vim/myconfig.vim
-"        cp ~/.files/nvim/myconfig_template.vim ~/.config/nvim/myconfig.vim
-"        cp ${env:USERPROFILE}/.files/vim/myconfig_template.vim ${env:USERPROFILE}/vimfiles/myconfig.vim
-"        cp ${env:USERPROFILE}/.files/nvim/myconfig_template.vim ${env:LOCALAPPDATA}/nvim/myconfig.vim
+"      Por defecto no existe pero la plantilla se puede obtener de '~/.files/nvim/templates/custom_config.vim' o
+"      '~/.files/vim/templates/custom_config.vim':
+"        cp ~/.files/vim/templates/custom_config.vim ~/.vim/custom_config.vim
+"        cp ~/.files/nvim/templates/custom_config.vim ~/.config/nvim/custom_config.vim
+"        cp ${env:USERPROFILE}/.files/vim/templates/custom_config.vim ${env:USERPROFILE}/vimfiles/custom_config.vim
+"        cp ${env:USERPROFILE}/.files/nvim/templates/custom_config.vim ${env:LOCALAPPDATA}/nvim/custom_config.vim
 "
 "
 "
@@ -73,7 +73,7 @@
 "#########################################################################################################
 
 " Cargar los valores de las variables globales
-runtime myconfig.vim
+runtime custom_config.vim
 
 
 " Establecer un mecanismo de escritura (copy) al clipboard para VIM/NeoVim, lo cual incluye:
@@ -267,6 +267,7 @@ if !exists("g:completion_filetypes") || empty(g:completion_filetypes)
     \   'cs'          : v:true,
     \   'python'      : v:true,
     \   'sh'          : v:false,
+    \   'ps1'         : v:false,
     \   'lua'         : v:false,
     \   'vim'         : v:false,
     \   'javascript'  : v:true,

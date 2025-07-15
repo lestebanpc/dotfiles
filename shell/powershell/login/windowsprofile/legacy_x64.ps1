@@ -3,8 +3,8 @@
 #------------------------------------------------------------------------------------------------
 
 # Cargar la información:
-if(Test-Path "${env:USERPROFILE}/config.ps1") {
-    . "${env:USERPROFILE}/config.ps1"
+if(Test-Path "${env:USERPROFILE}/.profile_config.ps1") {
+    . "${env:USERPROFILE}/.profile_config.ps1"
 }
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT
@@ -93,4 +93,4 @@ Invoke-Expression (& { (zoxide init powershell | Out-String) })
 #Funciones personalizadas del usuario
 #------------------------------------------------------------------------------------------------
 
-. "${env:USERPROFILE}\${g_repo_name}\shell\powershell\login\windowsprofile\custom_profile_modules.ps1"
+. "${env:USERPROFILE}\${g_repo_name}\shell\powershell\login\windowsprofile\custom_modules.ps1"

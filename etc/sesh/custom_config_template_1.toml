@@ -1,0 +1,12 @@
+# Sesiones especificas para el usuario
+
+[[session]]
+name = "downloads"
+path = "/tempo/download"
+
+
+[[session]]
+name = "upload movies"
+path = "/dt2/tmp"
+preview_command = "eza --tree --color=always --icons always -L 4 {}"
+startup_script = "~/.files/shell/bash/bin/tmux_layout/tmx_upload_movies.bash"

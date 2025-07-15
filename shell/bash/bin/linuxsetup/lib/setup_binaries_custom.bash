@@ -121,6 +121,8 @@ gA_packages=(
         ['taplo']='tamasfe/taplo'
         ['lemminx']='redhat-developer/vscode-xml'
         ['flamelens']='YS-L/flamelens'
+        ['opencode']='sst/opencode'
+        ['powershell_es']='PowerShell/PowerShellEditorServices'
     )
 
 
@@ -165,7 +167,7 @@ ga_menu_options_title=(
 ga_menu_options_packages=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
     "tmux-thumbs,tmux-fingers,sesh,grpcurl,websocat,protoc,jwt"
-    "rclone,tailspin,qsv,xan,evans,glow,gum,butane,biome,step,yazi,lazygit,rmpc"
+    "rclone,tailspin,qsv,xan,evans,glow,gum,butane,biome,step,yazi,lazygit,rmpc,opencode"
     "nerd-fonts"
     "neovim"
     "powershell"
@@ -183,7 +185,7 @@ ga_menu_options_packages=(
     "rust,rust-analyzer"
     "go"
     "uv"
-    "marksman,luals,taplo,lemminx,flamelens"
+    "marksman,luals,taplo,lemminx,flamelens,powershell_es"
     "ctags-win,ctags-nowin"
     "awscli"
     )
@@ -352,6 +354,7 @@ declare -A gA_main_arti_type=(
         ['marksman']=1
         ['wezterm']=1
         ['qsv']=1
+        ['powershell_es']=1
     )
 
 # Define las formas de obtener la version actual (version amigable del repositorio instalada) de un repositorio
@@ -428,6 +431,7 @@ declare -A gA_current_version_method_type=(
     ['marksman']=2
     ['tmux-fingers']=2
     ['wezterm']=1
+    ['powershell_es']=2
     )
 
 
@@ -2094,7 +2098,7 @@ function get_repo_artifacts() {
                 else
                     pna_artifact_names=("rmpc-v${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.tar.gz")
                 fi
-                pna_artifact_types=(11)
+                pna_artifact_types=(10)
             else
                 if [ "$g_os_architecture_type" = "aarch64" ]; then
                     pna_artifact_names=("rmpc-v${p_repo_last_pretty_version}-aarch64-unknown-linux-gnu.tar.gz")
@@ -2105,6 +2109,47 @@ function get_repo_artifacts() {
             fi
             ;;
 
+
+
+
+        opencode)
+
+            #Si es un binario para Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                pna_artifact_names=("opencode-windows-x64.zip")
+                pna_artifact_types=(11)
+
+            else
+
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        rna_artifact_names=("opencode-linux-arm64.zip")
+                    else
+                        pna_artifact_names=("opencode-linux-x64.zip")
+                    fi
+                    pna_artifact_types=(11)
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("opencode-linux-arm64.zip")
+                    else
+                        pna_artifact_names=("opencode-linux-x64.zip")
+                    fi
+                    pna_artifact_types=(11)
+                fi
+
+            fi
+            ;;
+
+
+
+        powershell_es)
+
+            #Si es un binario para Windows
+            pna_artifact_names=("PowerShellEditorServices.zip")
+            pna_artifact_types=(21)
+            ;;
 
 
         rclone)
@@ -4403,6 +4448,26 @@ function _copy_artifact_files() {
             ;;
 
 
+        opencode)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -ne 0 ]; then
+
+                #Copiar el comando
+                copy_binary_on_command "${l_source_path}" "opencode" 0 1
+
+            else
+
+                #Copiar el comando
+                copy_binary_on_command "${l_source_path}" "opencode.exe" 1 1
+
+            fi
+            ;;
+
+
 
 
 
@@ -5248,6 +5313,50 @@ function _copy_artifact_files() {
                 return 40
             fi
 
+            ;;
+
+
+
+
+        powershell_es)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                #Creando el folder si no existe y limpiarlo si existe
+                create_or_clean_folder_on_program 1 "lsp_servers/powershell_es" 2 ""
+
+                #Descomprimir
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "lsp_servers/powershell_es" "" ""
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    return 40
+                fi
+
+                #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+                save_prettyversion_on_program "" "$p_repo_id" "$p_repo_last_pretty_version" 1
+
+                return 0
+            fi
+
+
+            #B. Si son binarios Linux
+
+            #Creando el folder si no existe y limpiarlo si existe
+            create_or_clean_folder_on_program 0 "lsp_servers/powershell_es" 2 ""
+
+            #Descomprimir
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "lsp_servers/powershell_es" "" ""
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 40
+            fi
+
+            #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
+            save_prettyversion_on_program "" "$p_repo_id" "$p_repo_last_pretty_version" 0
             ;;
 
 

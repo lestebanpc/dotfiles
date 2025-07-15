@@ -2,7 +2,7 @@
 
 # Para habilitar el uso de este archivo de configurar, deberará:
 # > Copiarlo en la ruta:
-#   cp ~/.files/shell/bash/bin/linuxsetup/lib/config_template.bash ~/.files/shell/bash/bin/linuxsetup/.config.bash
+#   cp ~/.files/shell/bash/bin/linuxsetup/lib/setup_config_template.bash ~/.files/shell/bash/bin/linuxsetup/.setup_config.bash
 # > Descomentar y cambiar los valores deseados
 #
 #
@@ -115,7 +115,7 @@
 #Ruta del home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git.
 #Este valor se obtendra segun orden prioridad:
 # - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
+# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config" (debe ser diferente de vacio)
 # - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
 # - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
 #g_targethome_path='/home/lucianoepc'
@@ -123,7 +123,7 @@
 #Nombre del repositorio git o la ruta relativa del repositorio git respecto al home de usuario OBJETIVO (al cual se desea configurar el profile del usuario).
 #Este valor se obtendra segun orden prioridad:
 # - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)
+# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config" (debe ser diferente de vacio)
 # - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 #g_repo_name='.files'
 

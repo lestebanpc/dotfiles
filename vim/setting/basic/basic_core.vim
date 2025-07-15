@@ -314,14 +314,14 @@ if g:use_tmux
     endfunction
 
 
-    " Normal mode: insertar contenido de buffer tmux 0 con <C-1>
+    " Normal mode: insertar contenido de buffer tmux despues del cursor actual
     nnoremap <C-F1> :<C-u>call <SID>PasteTmuxAfterCursor(0)<CR>
     nnoremap <C-F2> :<C-u>call <SID>PasteTmuxAfterCursor(1)<CR>
     nnoremap <C-F3> :<C-u>call <SID>PasteTmuxAfterCursor(2)<CR>
     nnoremap <C-F4> :<C-u>call <SID>PasteTmuxAfterCursor(3)<CR>
     nnoremap <C-F5> :<C-u>call <SID>PasteTmuxAfterCursor(4)<CR>
 
-    " Insert mode: lo mismo sin salir de Insert
+    " Normal insert: insertar contenido de buffer tmux despues del cursor actual
     inoremap <C-F1> :<C-u>call <SID>PasteTmuxAfterCursor(0)<CR>
     inoremap <C-F2> :<C-u>call <SID>PasteTmuxAfterCursor(1)<CR>
     inoremap <C-F3> :<C-u>call <SID>PasteTmuxAfterCursor(2)<CR>

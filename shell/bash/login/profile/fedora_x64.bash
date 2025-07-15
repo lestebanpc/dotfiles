@@ -33,6 +33,20 @@ fi
 #
 #unset rc
 
+# Alias para usar colores por defecto
+alias ls='ls --color=auto'
+alias dir='dir --color=auto'
+alias vdir='vdir --color=auto'
+
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# Otros alias
+alias ll='ls -alF'
+#alias la='ls -A'
+#alias l='ls -CF'
+
 
 #-------------------------------------------------------------------------------------
 # Command history
@@ -54,15 +68,12 @@ shopt -s histappend
 
 
 #-----------------------------------------------------------------------------------
-# Variables globales obtenidos del archivo de configuración '~/_config.bash'
+# Variables globales obtenidos del archivo de configuración '~/.profile_config.bash'
 #-----------------------------------------------------------------------------------
 
 # Obtener los parametros del archivos de configuración
-if [ -f ~/.config.bash ]; then
-
-    # Obtener los valores por defecto de las variables
-    . ~/.config.bash
-
+if [ -f ~/.profile_config.bash ]; then
+    . ~/.profile_config.bash
 fi
 
 
@@ -242,4 +253,4 @@ alias step-jwt='step crypto jwt'
 #-----------------------------------------------------------------------------------
 
 # Funciones basicas
-source ~/${g_repo_name}/shell/bash/login/profile/custom_profile_modules.bash
+source ~/${g_repo_name}/shell/bash/login/profile/custom_modules.bash

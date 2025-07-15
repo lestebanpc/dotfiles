@@ -39,19 +39,19 @@ g_usage() {
     printf '  > %bTARGET_HOME_PATH %bRuta base donde el home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %b> El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '    %b> El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio "g_repo_name".%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bREPO_NAME %bNombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario. Este valor se obtendra segun orden prioridad:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %b> El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '    %b> El valor ingresado en el archivo de configuracion ".config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si ninguno de los anteriores se establece, se usara el valor ".files".%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY, se usara su valor se buscara segun orden prioridad en: lo indicado en el ".config.bash", "/var/opt/tools" o "~/tools".%b\n' \
+    printf '  > %bPRG_PATH %bes la ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY, se usara su valor se buscara segun orden prioridad en: lo indicado en el "./linuxsetup/.setup_config.bash", "/var/opt/tools" o "~/tools".%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bCMD_BASE_PATH %bes ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts"). Si se envia vacio o EMPTY se usara segun orden de prioridad:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '    %b> Lo indicado en el archivo de configuración: ".config.bash"%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    %b> Lo indicado en el archivo de configuración: "./linuxsetup/.setup_config.bash"%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Rutas predeterminados:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '      %b> Comandos      : "/usr/local/bin"      (todos los usuarios) y "~/.local/bin"         (solo el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '      %b> Archivos man1 : "/usr/local/man/man1" (todos los usuarios) y "~/.local/man/man1"    (solo el usuario actual)%b\n' "$g_color_gray1" "$g_color_reset"

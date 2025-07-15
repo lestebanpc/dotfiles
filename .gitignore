@@ -25,10 +25,10 @@ keys/secret/*
 keys/shared/*
 
 # Archivo de configuracion para los archivos de setup del SO y el profile del usuario
-shell/bash/bin/linuxsetup/.config.bash
-shell/bash/bin/termuxsetup/.config.bash
-shell/powershell/bin/linuxsetup/.config.ps1
-shell/powershell/bin/windowssetup/config.ps1
+shell/bash/bin/linuxsetup/.setup_config.bash
+shell/bash/bin/termuxsetup/.setup_config.bash
+shell/powershell/bin/linuxsetup/.setup_config.ps1
+shell/powershell/bin/windowssetup/.setup_config.ps1
 
 # Ingnorar archivos personalizados incluidos en '.gitignore'
 #etc/git/custom/*

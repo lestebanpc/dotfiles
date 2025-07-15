@@ -54,17 +54,13 @@ shopt -s histappend
 
 
 #-----------------------------------------------------------------------------------
-# Variables globales obtenidos del archivo de configuración '~/_config.bash'
+# Variables globales obtenidos del archivo de configuración '~/.profile_config.bash'
 #-----------------------------------------------------------------------------------
 
 # Obtener los parametros del archivos de configuración
-if [ -f ~/.config.bash ]; then
-
-    # Obtener los valores por defecto de las variables
-    . ~/.config.bash
-
+if [ -f ~/.profile_config.bash ]; then
+    . ~/.profile_config.bash
 fi
-
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT
 [ -z "$g_repo_name" ] && g_repo_name='.files'
@@ -245,4 +241,4 @@ alias step-jwt='step crypto jwt'
 #-----------------------------------------------------------------------------------
 
 # Funciones basicas
-source ~/${g_repo_name}/shell/bash/login/profile/custom_profile_modules.bash
+source ~/${g_repo_name}/shell/bash/login/profile/custom_modules.bash

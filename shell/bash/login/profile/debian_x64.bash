@@ -12,20 +12,23 @@ esac
 
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
+
     [ -r ~/.dircolors ] && eval "$(dircolors -b ~/.dircolors)"
+
     alias ls='ls --color=auto'
-    #alias dir='dir --color=auto'
-    #alias vdir='vdir --color=auto'
+    alias dir='dir --color=auto'
+    alias vdir='vdir --color=auto'
 
     alias grep='grep --color=auto'
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
+
 fi
 
 # some more ls aliases
 alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
+#alias la='ls -A'
+#alias l='ls -CF'
 
 # Add an "alert" alias for long running commands.  Use like so:  sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
@@ -76,13 +79,13 @@ shopt -s checkwinsize
 # directories and subdirectories.
 #shopt -s globstar
 
-#-------------------------------------------------------------------------------------
-# Variables globales obtenidos del archivo de configuración '~/_config.bash'
+#-----------------------------------------------------------------------------------
+# Variables globales obtenidos del archivo de configuración '~/.profile_config.bash'
 #-----------------------------------------------------------------------------------
 
 # Obtener los parametros del archivos de configuración
-if [ -f ~/.config.bash ]; then
-    . ~/.config.bash
+if [ -f ~/.profile_config.bash ]; then
+    . ~/.profile_config.bash
 fi
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT
@@ -263,4 +266,4 @@ alias step-jwt='step crypto jwt'
 #-----------------------------------------------------------------------------------
 
 # Funciones basicas
-source ~/${g_repo_name}/shell/bash/login/profile/custom_profile_modules.bash
+source ~/${g_repo_name}/shell/bash/login/profile/custom_modules.bash

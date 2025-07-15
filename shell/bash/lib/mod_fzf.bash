@@ -13,7 +13,7 @@ if [ -z "$_g_fzf_bat" ]; then
 fi
 
 #Ruta del script para ejecutar funciones en acciones FZF
-_g_script_path=~/${g_repo_name}/shell/bash/bin/fzf
+_g_script_path=~/${g_repo_name}/shell/bash/fun/fzf
 
 #Carpetas de archivos temporales ¿porque usar la memoria y no usar "/var/tmp/"?
 _g_tmp_data_path="/tmp/.files"
@@ -29,8 +29,97 @@ fi
 
 
 ################################################################################################
-# FZF> GEneral Functions
+# FZF> General Functions
 ################################################################################################
+
+_g_fzf_gnrl_path=''
+
+#Permite gestionar las 'tmux session':
+# > Listar e ir a sesiones activas
+# > Listar folderes para abrir/seleionar una sesion tmux usando esta ruta
+#Parametro de entrada:
+# > Folder donde Buscar
+#Notas:
+# > El comando 'find' cuando se envia la opcion '-exec' como expansion de una cadena se debera tener mayor consideraciones,
+#   por lo que no esta funcionando, por tal motivo, en vez de ejecutar directamente el comando en la accion, se ejecuta un
+#   subshell usando el comando 'bash'.
+s () {
+
+    #Validar si existe el comando sesh
+    if ! sesh --version 2> /dev/null 1>&2; then
+       printf 'El comando "%b%s%b" no esta instalado.\n' "$g_color_gray1" "sesh" "$g_color_reset"
+       return 2
+    fi
+
+    #Obtener el folder donde se analizara las carpetas
+    local l_path=''
+    if [ ! -z "$1" ]; then
+
+        if [ ! -d "$1" ]; then
+            printf 'La ruta ingresada "%b%s%b" no existe o no se tiene permisos.\n' "$g_color_gray1" "$1" "$g_color_reset"
+            return 2
+        fi
+
+        l_path="$1"
+
+    fi
+
+    if [ -z "$l_path" ]; then
+        if [ -d "$HOME/code" ]; then
+            l_path="$HOME/code"
+        else
+            l_path="$HOME"
+        fi
+    fi
+
+    _g_fzf_gnrl_path="$l_path"
+
+    #Escoger el nombre de la sesion o la ruta de inicio de la sesion
+    local l_title=''
+    printf -v l_title "%bSession%b: (%bctrl+t%b) show active, (%bctrl+i%b) show configured, (%bctrl+d%b) kill. %bSession + zoxide%b folders: (%bctrl+a%b)\n%bFolders%b: (%bctrl+x%b) zoxide. %bSubfolders%b of %b%s%b: (%bctrl+g%b) git, (%bctrl+f%b) all" \
+           "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
+           "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$l_path" "$g_color_reset" "$g_color_cian1" "$g_color_reset"\
+           "$g_color_cian1" "$g_color_reset"
+
+
+    local l_fzf_size='--height 60%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,99%,60%'
+    fi
+
+
+    local l_session_or_path=$(sesh list --icons | fzf $l_fzf_size \
+		--no-sort --ansi --prompt '⚡Session + Zoxide> ' \
+        --header "$l_title" \
+        --preview-window 'right:40%' --preview "bash ${_g_script_path}/fun_general.bash show_sesh_preview {}" \
+		--bind 'tab:down,btab:up' \
+		--bind 'ctrl-a:change-prompt(⚡Session + Zoxide> )+reload(sesh list --icons)' \
+		--bind 'ctrl-t:change-prompt(🪟 Active sessions> )+reload(sesh list -t --icons)' \
+		--bind 'ctrl-i:change-prompt(⚙️ Configured sessions> )+reload(sesh list -c --icons)' \
+		--bind 'ctrl-x:change-prompt(📁 Zoxide folder> )+reload(sesh list -z --icons)' \
+		--bind "ctrl-f:change-prompt(🔎 Work folder> )" --bind "ctrl-f:+reload:bash ${_g_script_path}/fun_general.bash list_work_folder '${_g_fzf_gnrl_path}' 1 7" \
+		--bind "ctrl-g:change-prompt(🔎 Git folder> )" --bind "ctrl-g:+reload:bash ${_g_script_path}/fun_general.bash list_git_folder '${_g_fzf_gnrl_path}' 1 7" \
+        --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡ Session + Zoxide> )+reload(sesh list --icons)')
+
+    if [ -z "$l_session_or_path" ]; then
+        return 0
+    fi
+
+    #echo "$l_session_or_path"
+
+    #Ir a la sesion o crear la sesion basandose en la ruta
+    # > Si la sesion existe:
+    #   - Si el cliente ya esta conectado a uno, lo desvincuala del cliente actual y luego los vuncual a la sesion existente.
+    #   - Si el cliente no esta conectado, vincula el cliente a la sesion existente.
+    # > Si la sesion no existe, lo crea
+    #   - Si el cliente ya esta conectado a uno, lo desvincuala del cliente actual y luego los vuncual a la sesion creada.
+    #   - Si el cliente no esta conectado, vincula el cliente a la sesion creada.
+    sesh connect "$l_session_or_path"
+    return 0
+
+}
+
 
 # Listar archivos/folderes de una carpeta.
 # - Argumentos :
@@ -156,93 +245,6 @@ ge_rg() {
         --bind 'enter:become(vim {1} +{2})'
 }
 
-_g_fzf_gnrl_path=''
-
-#Permite gestionar las 'tmux session':
-# > Listar e ir a sesiones activas
-# > Listar folderes para abrir/seleionar una sesion tmux usando esta ruta
-#Parametro de entrada:
-# > Folder donde Buscar
-#Notas:
-# > El comando 'find' cuando se envia la opcion '-exec' como expansion de una cadena se debera tener mayor consideraciones,
-#   por lo que no esta funcionando, por tal motivo, en vez de ejecutar directamente el comando en la accion, se ejecuta un
-#   subshell usando el comando 'bash'.
-s () {
-
-    #Validar si existe el comando sesh
-    if ! sesh --version 2> /dev/null 1>&2; then
-       printf 'El comando "%b%s%b" no esta instalado.\n' "$g_color_gray1" "sesh" "$g_color_reset"
-       return 2
-    fi
-
-    #Obtener el folder donde se analizara las carpetas
-    local l_path=''
-    if [ ! -z "$1" ]; then
-
-        if [ ! -d "$1" ]; then
-            printf 'La ruta ingresada "%b%s%b" no existe o no se tiene permisos.\n' "$g_color_gray1" "$1" "$g_color_reset"
-            return 2
-        fi
-
-        l_path="$1"
-
-    fi
-
-    if [ -z "$l_path" ]; then
-        if [ -d "$HOME/code" ]; then
-            l_path="$HOME/code"
-        else
-            l_path="$HOME"
-        fi
-    fi
-
-    _g_fzf_gnrl_path="$l_path"
-
-    #Escoger el nombre de la sesion o la ruta de inicio de la sesion
-    local l_title=''
-    printf -v l_title "%bSession%b: (%bctrl+t%b) show active, (%bctrl+i%b) show configured, (%bctrl+d%b) kill. %bSession + zoxide%b folders: (%bctrl+a%b)\n%bFolders%b: (%bctrl+x%b) zoxide. %bSubfolders%b of %b%s%b: (%bctrl+g%b) git, (%bctrl+f%b) all" \
-           "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
-           "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$l_path" "$g_color_reset" "$g_color_cian1" "$g_color_reset"\
-           "$g_color_cian1" "$g_color_reset"
-
-
-    local l_fzf_size='--height 60%'
-    if [ ! -z "$TMUX" ]; then
-        l_fzf_size='--tmux center,99%,60%'
-    fi
-
-
-    local l_session_or_path=$(sesh list --icons | fzf $l_fzf_size \
-		--no-sort --ansi --prompt '⚡Session + Zoxide> ' \
-        --header "$l_title" \
-        --preview-window 'right:40%' --preview "bash ${_g_script_path}/fun_general.bash show_sesh_preview {}" \
-		--bind 'tab:down,btab:up' \
-		--bind 'ctrl-a:change-prompt(⚡Session + Zoxide> )+reload(sesh list --icons)' \
-		--bind 'ctrl-t:change-prompt(🪟 Active sessions> )+reload(sesh list -t --icons)' \
-		--bind 'ctrl-i:change-prompt(⚙️ Configured sessions> )+reload(sesh list -c --icons)' \
-		--bind 'ctrl-x:change-prompt(📁 Zoxide folder> )+reload(sesh list -z --icons)' \
-		--bind "ctrl-f:change-prompt(🔎 Work folder> )" --bind "ctrl-f:+reload:bash ${_g_script_path}/fun_general.bash list_work_folder '${_g_fzf_gnrl_path}' 1 7" \
-		--bind "ctrl-g:change-prompt(🔎 Git folder> )" --bind "ctrl-g:+reload:bash ${_g_script_path}/fun_general.bash list_git_folder '${_g_fzf_gnrl_path}' 1 7" \
-        --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡ Session + Zoxide> )+reload(sesh list --icons)')
-
-    if [ -z "$l_session_or_path" ]; then
-        return 0
-    fi
-
-    #echo "$l_session_or_path"
-
-    #Ir a la sesion o crear la sesion basandose en la ruta
-    # > Si la sesion existe:
-    #   - Si el cliente ya esta conectado a uno, lo desvincuala del cliente actual y luego los vuncual a la sesion existente.
-    #   - Si el cliente no esta conectado, vincula el cliente a la sesion existente.
-    # > Si la sesion no existe, lo crea
-    #   - Si el cliente ya esta conectado a uno, lo desvincuala del cliente actual y luego los vuncual a la sesion creada.
-    #   - Si el cliente no esta conectado, vincula el cliente a la sesion creada.
-    sesh connect "$l_session_or_path"
-    return 0
-
-}
 
 ################################################################################################
 # FZF> GIt Functions

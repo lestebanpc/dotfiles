@@ -138,6 +138,7 @@ let g:completion_filetypes = {
 \   'cs'          : v:true,
 \   'python'      : v:true,
 \   'sh'          : v:false,
+\   'ps1'         : v:false,
 \   'lua'         : v:false,
 \   'vim'         : v:false,
 \   'javascript'  : v:true,
@@ -185,6 +186,7 @@ let g:completion_filetypes = {
 "  > lua           : Para Lua. Usa el LSP 'Lua LS'.
 "  > viml          : Para VimScript. Usa el LSP 'Vim LS'.
 "  > bash          : Para Bash. Usa de 'Bash LS'
+"  > powershell    : Para Powershell. Usa de 'Powershell Editor Service'.
 " Adaptadores LSP, asociado a ciertos archivos, en modo IDE NeoVim usando el cliente LSP nativo (usualmente
 " usados para autocompletado):
 "  > ansible       : Para Ansible. Usa de 'Ansible LS' (requiere Python, Ansible y Ansible-Lint).
@@ -214,10 +216,11 @@ let g:use_lsp_adapters = {
 "\   'python'        : v:true,
 "\   'pyright'       : v:true,
 "\   'typescript'    : v:true,
-\   'lua_nvim'      : v:true,
-"\   'lua'           : v:true,
+"\   'lua_nvim'      : v:true,
+\   'lua'           : v:true,
 \   'viml'          : v:true,
 \   'bash'          : v:true,
+\   'powershell'    : v:true,
 "\   'ansible'       : v:true,
 "\   'gradle'        : v:true,
 \   'dockerfile'    : v:true,

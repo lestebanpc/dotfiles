@@ -552,7 +552,7 @@ nnoremap N Nzzzv
 if g:clipboard_mode != 1 && g:clipboard_mode != 2
 
     "1. Intentar determinar si la terminal soporta OSC 52
-    "   > Parte de la logica 'setting_clipboard()' definida en './shell/bash/bin/tmux/fun_general.bash'.
+    "   > Parte de la logica 'setting_clipboard()' definida en './shell/bash/fun/tmux/fun_general.bash'.
     "   > La 1ra prioridad de uso del mecanismo del clipboard es OSC 52.
     let s:terminal_use_osc54 = v:false
 
@@ -801,6 +801,7 @@ elseif g:clipboard_mode == 1
     nnoremap <Leader>c1 :<C-u>call PutClipboard(g:clipboard_osc52_format, @1)<CR>
     nnoremap <Leader>c2 :<C-u>call PutClipboard(g:clipboard_osc52_format, @2)<CR>
     nnoremap <Leader>c3 :<C-u>call PutClipboard(g:clipboard_osc52_format, @3)<CR>
+    nnoremap <Leader>c4 :<C-u>call PutClipboard(g:clipboard_osc52_format, @4)<CR>
 
 
     function! s:WriteToClipboard1(use_delete) abort
@@ -873,6 +874,7 @@ else
     nnoremap <Leader>c1 :<C-u>call system(g:clipboard_command, @1)<CR>
     nnoremap <Leader>c2 :<C-u>call system(g:clipboard_command, @2)<CR>
     nnoremap <Leader>c3 :<C-u>call system(g:clipboard_command, @3)<CR>
+    nnoremap <Leader>c4 :<C-u>call system(g:clipboard_command, @4)<CR>
 
     function! s:WriteToClipboard2(use_delete) abort
 
