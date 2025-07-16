@@ -82,7 +82,7 @@ runtime custom_config.vim
 " El valor real, se obtendra segun orden de prioridad:
 "  > El valor definido por la variable de entorno 'CLIPBOARD'
 "    Ejemplo : 'CLIPBOARD=1 vim'
-"  > El valor definido por esta variable VIM 'g:clipboard_mode'.
+"  > El valor definido por esta variable VIM 'g:clipboard_writer_mode'.
 " Sus valores es un entero y puden ser:
 "  > '1', si se implementa el mecanismo de uso OSC 52
 "  > '2', si se implementar el mecanismo de uso comandos externo del gestion de clipboard,
@@ -101,25 +101,25 @@ runtime custom_config.vim
 if $CLIPBOARD != ''
 
     if $CLIPBOARD == 1
-        let g:clipboard_mode = 1
+        let g:clipboard_writer_mode = 1
     elseif $CLIPBOARD == 2
-        let g:clipboard_mode = 2
+        let g:clipboard_writer_mode = 2
     else
-        let g:clipboard_mode = 9
+        let g:clipboard_writer_mode = 9
     endif
 
-elseif exists("g:clipboard_mode")
+elseif exists("g:clipboard_writer_mode")
 
-    if g:clipboard_mode != 1 && g:clipboard_mode != 2
-        let g:clipboard_mode = 9
+    if g:clipboard_writer_mode != 1 && g:clipboard_writer_mode != 2
+        let g:clipboard_writer_mode = 9
     endif
 
 else
-    let g:clipboard_mode = 9
+    let g:clipboard_writer_mode = 9
 endif
 
 
-" Solo se debe usar si 'clipboard_mode' es '1' (manual o automático).
+" Solo se debe usar si 'clipboard_writer_mode' es '1' (manual o automático).
 " Establecer el formato OSC52 a usar para escribir en el clipboard.
 " El valor real, se obtendra segun orden de prioridad:
 "  > El valor definido por la variable de entorno 'OSC52_FORMAT'

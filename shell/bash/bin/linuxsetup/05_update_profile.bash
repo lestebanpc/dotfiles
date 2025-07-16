@@ -234,7 +234,7 @@ function _update_repository2() {
     printf '%s > Git repository "%b%s%b" %b(%s)%b\n' "$l_tag" "$g_color_cian1" "$p_repo_name" "$g_color_reset" "$g_color_gray1" "$p_repo_path" "$g_color_gray1"
     print_line '.' $g_max_length_line "$g_color_gray1"
 
-    #1. Validar si existe directorio
+    # Validar si existe directorio
     if [ ! -d $p_repo_path ]; then
         echo "Folder \"${p_repo_path}\" not exists"
         return 9
@@ -242,27 +242,32 @@ function _update_repository2() {
 
     cd $p_repo_path
 
-    #2. Validar si el directorio .git del repositorio es valido
+    # Validar si el directorio .git del repositorio es valido
     if ! git rev-parse --git-dir > /dev/null 2>&1; then
         printf '%bInvalid git repository%b\n' "$g_color_red1" "$g_color_reset"
         return 9
     fi
 
+    #3. Obtener datos del repositorio actual
+
     # Ejemplo : 'main'
     local l_local_branch=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
     if [ "$l_local_branch" = "HEAD" ]; then
-        printf '%bInvalid current branch of  repository%b\n' "$g_color_red1" "$g_color_reset"
+        printf '%bInvalid current branch of repository%b\n' "$g_color_red1" "$g_color_reset"
         return 8
     fi
 
     # Ejemplo : 'origin'
     local l_remote=$(git config branch.${l_local_branch}.remote)
+
     # Ejemplo : 'origin/main'
     local l_remote_branch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u})
+
+    # El repositorio tiene submodulos git
     local l_status
     local l_submodules_types=${gA_repos_with_submmodules[${p_repo_name}]:-0}
 
-    #3. Actualizando la rama remota del repositorio local desde el repositorio remoto
+    #4. Actualizando la rama remota del repositorio local desde el repositorio remoto
     printf 'Fetching from remote repository "%b%s%b" to remote branch "%b%s%b" (%bgit fetch --depth=1 %s %s%b)...\n' "$g_color_gray1" "$l_remote"  "$g_color_reset" "$g_color_gray1" \
            "$l_remote_branch" "$g_color_reset" "$g_color_green1" "$l_remote" "$l_local_branch" "$g_color_reset"
 
@@ -278,13 +283,13 @@ function _update_repository2() {
     fi
 
 
-    #4. Verificar si esta actualizado las ramas local y la de sigimiento
+    #5. Verificar si esta actualizado las ramas local y la de sigimiento
     local l_hash_head=$(git rev-parse HEAD)
     local l_hash_remote=$(git rev-parse FETCH_HEAD)
 
     if [ "$l_hash_head" = "$l_hash_remote" ]; then
 
-        # Actualiza los submoduos
+        # Si tiene submodulos, actualizar los submoduos
         if [ $l_submodules_types -eq 1 ] || [ $l_submodules_types -eq 2 ]; then
 
             printf '%bMain module is already up-to-date%b.\n' "$g_color_green1" "$g_color_reset"
@@ -310,17 +315,20 @@ function _update_repository2() {
             fi
 
             printf '%bSubmodules was uptodated%b.\n' "$g_color_green1" "$g_color_reset"
+            return 0
 
-        else
-            printf '%bAlready up-to-date%b.\n' "$g_color_green1" "$g_color_reset"
         fi
 
+        # Si solo tiene el modulo principal
+        printf '%bAlready up-to-date%b.\n' "$g_color_green1" "$g_color_reset"
         return 0
+
     fi
 
-    #5. Si la rama local es diferente al rama remota
 
-    #4. Realizando una actualizacion destructiva y para quedar solo con el ultimo nodo de la rama remota
+    #6. Si la rama local es diferente al rama remota
+
+    # Realizando una actualizacion destructiva y para quedar solo con el ultimo nodo de la rama remota
     printf 'Updating local branch "%b%s%b" form remote branch "%b%s%b" (%bgit reset --hard %s%b)...\n' "$g_color_gray1" "$l_remote_branch" \
            "$g_color_reset" "$g_color_gray1" "$l_remote_branch" "$g_color_reset" "$g_color_green1" "$l_remote" "$g_color_reset"
 

@@ -185,10 +185,14 @@ if g:use_tmux
     packadd vim-tmux-navigator
 
 
-    "3. Adicionar soporte a la escritura del buffer de tmux
+
+    "3. Adicionar soporte para copiar el contenido de 'vim record' a un 'tmux buffer'
 
     " Funcion que obtiene el texto de un vim record y lo escribe en un tmux buffer
-    function! s:RecordToTmuxBuffer(record_name, tmux_buffer_idx) abort
+    " > El buffer a crear siempre se adiciona a la pila de buffer existentes en tmux.
+    " Parameters :
+    " > 'record_name' : Nombre del registro.
+    function! s:RecordToTmuxBuffer(record_name) abort
 
         "1. Obtener el texto yankeado
         let l:txt = getreg(a:record_name)
@@ -198,137 +202,271 @@ if g:use_tmux
             return
         endif
 
-        "2. Limpieza
-
         " Eliminar salto final extra
-        let l:txt = substitute(l:txt, '\n\%$', '', '')
+        if g:os_type == 3
+            let l:txt = substitute(l:txt, '\r', '', 'g')
+        endif
+        let l:txt = substitute(l:txt, '\n\+$', '', '')
 
-        "3. Convertir el texto para usar en un entrecomillado doble en bash
-        let l:str_parameter = substitute(l:txt, '\n$', '', '')
-        let l:str_parameter = substitute(l:str_parameter, '"', '\\"', 'g')
-        let l:str_parameter = substitute(l:str_parameter, '$', '\\n', 'g')
-        let l:str_parameter = substitute(l:str_parameter, '\n', '\\n', 'g')
 
-        "4. Escribir al tmux buffer
-        let l:full_cmd = printf('tmux set-buffer -b %d "%s"', a:tmux_buffer_idx, l:str_parameter)
-        call system(l:full_cmd)
+        "2. Obtener el correlativo del ultimo buffer creado por vim
+        let l:full_cmd = "tmux list-buffers -F '#{buffer_name}' | grep -P '^vim\\d+$' | awk -F 'vim' '{print $2}' | head -n 1"
+        let l:correlative = 0
+        let l:result = system(full_cmd)
+
+        if v:shell_error == 0
+
+            " Eliminar el fin de linea final
+            if g:os_type == 3
+                let l:result = substitute(l:result, '\r', '', 'g')
+            endif
+            let l:result = substitute(l:result, '\n\+$', '', '')
+
+            " Convertir a entero y sumar
+            if !empty(l:result)
+                let l:correlative = str2nr(l:result) + 1
+            endif
+
+        endif
+
+
+        "3. Escribir en el tmux buffer (crear un tmux buffer)
+        let l:full_cmd = printf('tmux set-buffer -b vim%d -', l:correlative)
+        call system(l:full_cmd, l:txt)
 
         if v:shell_error != 0
-            echo printf("Error to write tmux buffer %d.", a:tmux_buffer_idx)
+            echo printf("Error to write tmux buffer 'vim%d'.", l:correlative)
             return
         endif
 
-        "5. Mensaje de confirmación
+        "4. Mensaje de confirmación
         "let l:lines = count(l:text, "\n") + 1
-        echo printf("Record '%s' was written to tmux buffer '%d'.", a:record_name, a:tmux_buffer_idx)
+        echo printf("Record '%s' was written to tmux buffer 'vim%d'.", a:record_name, l:correlative)
 
     endfunction
 
-    " Copiar el registro por defecto al clipboard (el ultimo yank o delete)
-    nnoremap <Leader>tt :<C-u>call <SID>RecordToTmuxBuffer('"', 0)<CR>
+    " Copiar el registro por defecto (el ultimo yank o delete) en un nuevo tmux buffer.
+    nnoremap <Leader>tt :<C-u>call <SID>RecordToTmuxBuffer('"')<CR>
 
-    " Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
-    nnoremap <Leader>t0 :<C-u>call <SID>RecordToTmuxBuffer('0', 0)<CR>
+    " Copiar el registro del ultimo yank realizado en un nuevo tmux buffer.
+    nnoremap <Leader>t0 :<C-u>call <SID>RecordToTmuxBuffer('0')<CR>
 
-    " Copiar el registro de los ultimo deletes
-    nnoremap <Leader>t1 :<C-u>call <SID>RecordToTmuxBuffer('1', 0)<CR>
-    nnoremap <Leader>t2 :<C-u>call <SID>RecordToTmuxBuffer('2', 0)<CR>
-    nnoremap <Leader>t3 :<C-u>call <SID>RecordToTmuxBuffer('3', 0)<CR>
+    " Copiar el registro de los ultimo deletes en un nuevo tmux buffer.
+    nnoremap <Leader>t1 :<C-u>call <SID>RecordToTmuxBuffer('1')<CR>
+    nnoremap <Leader>t2 :<C-u>call <SID>RecordToTmuxBuffer('2')<CR>
+    nnoremap <Leader>t3 :<C-u>call <SID>RecordToTmuxBuffer('3')<CR>
+
+
+
+    "4. Adicionar soporte para realizar un delete/yank una seleccion y luego copiarlo al 'tmux buffer'
 
     " Funcion que delete/yank el texto selecionado y luego escribe en un tmux buffer
-    function! s:WriteToTmuxBuffer(use_delete, tmux_buffer_idx) abort
+    " Parameters :
+    " > 'use_delete' : Si se realiza un yank o un delete.
+    function! s:WriteToTmuxBuffer(use_delete) abort
 
         "1. Yank or Delete la selección actual al registro 'x'
+        "   Desde el modo normal, realiza la ultima seleccion (gv) y luego realiza la operacion en el registro '"').
         if a:use_delete
             silent normal! gv"xd
         else
             silent normal! gv"xy
         endif
 
+
         "2. Obtener el texto yankeado (por defecto obtiene un solo texto y no una lista)
         let l:txt = getreg('x')
 
+        " Eliminar salto final extra
+        if g:os_type == 3
+            let l:txt = substitute(l:txt, '\r', '', 'g')
+        endif
+        let l:txt = substitute(l:txt, '\n\+$', '', '')
+
+        " Si es vacio
         if empty(l:txt)
-            echo "Must select some text."
+            echo "No text in the clipboard."
             return
         endif
 
-        "3. Limpieza
 
-        " Eliminar salto final extra
-        let l:txt = substitute(l:txt, '\n\%$', '', '')
+        "3. Obtener el correlativo del ultimo buffer creado por vim
+        let l:full_cmd = "tmux list-buffers -F '#{buffer_name}' | grep -P '^vim\\d+$' | awk -F 'vim' '{print $2}' | head -n 1"
+        let l:correlative = 0
+        let l:result = system(full_cmd)
 
-        "4. Convertir el texto para usar en un entrecomillado doble en bash
-        let l:str_parameter = substitute(l:txt, '\n$', '', '')
-        let l:str_parameter = substitute(l:str_parameter, '"', '\\"', 'g')
-        let l:str_parameter = substitute(l:str_parameter, '$', '\\n', 'g')
-        let l:str_parameter = substitute(l:str_parameter, '\n', '\\n', 'g')
+        if v:shell_error == 0
 
-        "5. Escribir al tmux buffer
-        let l:full_cmd = printf('tmux set-buffer -b %d "%s"', a:tmux_buffer_idx, l:str_parameter)
-        call system(l:full_cmd)
+            " Eliminar el fin de linea final
+            if g:os_type == 3
+                let l:result = substitute(l:result, '\r', '', 'g')
+            endif
+            let l:result = substitute(l:result, '\n\+$', '', '')
+
+            " Convertir a entero y sumar
+            if !empty(l:result)
+                let l:correlative = str2nr(l:result) + 1
+            endif
+
+        endif
+
+
+        "4. Escribir en el tmux buffer (crear un tmux buffer)
+        let l:full_cmd = printf('tmux load-buffer -b vim%d -', l:correlative)
+        call system(l:full_cmd, l:txt)
 
         if v:shell_error != 0
-            echo printf("Error to write tmux buffer %d.", a:tmux_buffer_idx)
+            echo printf("Error to write tmux buffer 'vim%d'.", l:correlative)
             return
         endif
+
 
         "6. Mensaje de confirmación
         let l:lines = count(l:txt, "\n") + 1
-        echo printf("%d lines was written to tmux buffer '%d'.", l:lines, a:tmux_buffer_idx)
+        echo printf("%d lines was written to tmux buffer 'vim%d'.", l:lines, l:correlative)
 
     endfunction
 
-    " En el modo visual: 'yank' el texto selecionado y escribirlo al clipboard
-    vnoremap <Leader>ty :<C-u>call <SID>WriteToTmuxBuffer(v:false, 0)<CR>
+    " En el modo visual: 'yank' el texto selecionado (escribe en el buffer por defecto) y luego crea un tmux buffer
+    vnoremap <Leader>ty :<C-u>call <SID>WriteToTmuxBuffer(v:false)<CR>
 
-    " En el modo visual: 'delete' el texto selecionado y escribirlo al clipboard
-    vnoremap <Leader>td :<C-u>call <SID>WriteToTmuxBuffer(v:true, 0)<CR>
+    " En el modo visual: 'delete' el texto selecionado (escribe en el buffer por defecto) y leugo crea un tmux buffer
+    vnoremap <Leader>td :<C-u>call <SID>WriteToTmuxBuffer(v:true)<CR>
 
 
-    "4. Adicionar soporte a la lectura del buffer de tmux y escribirlo despues del cursor actual
+    "5. Adicionar pegar un 'tmux buffer' en buffer actual
 
-    " Funcion que obtiene el texto de un vim record y lo escribe en un tmux buffer
-    function! s:PasteTmuxAfterCursor(tmux_buffer_idx)
+    " Funcion que obtiene el texto de un tmux buffer y lo pega al buffer actual
+    " Parameters :
+    " > 'tmux_buffer_pos' : posicion en la pila del tmux buffer a escribir (inicia desde 1).
+    " > 'record_type' : 'c' (carácter), 'l' (línea), 'b' (bloque).
+    " > 'insert_mode' : true si se usa en insert mode
+    function! s:PasteTmuxAfterCursor(use_insert_mode, tmux_buffer_pos, record_type)
 
-        "1. Obtener el texto del buffer
-        let l:full_cmd = printf('tmux show-buffer -b %d', a:tmux_buffer_idx)
+        if empty(a:record_type)
+            let a:record_type = "c"
+        endif
+
+        "1. Obtener el nombre del buffer segun la posicion en la pila
+        let l:full_cmd = printf('tmux list-buffers -F "#{buffer_name}" | sed -n "%dp"', a:tmux_buffer_pos)
+        let l:result = system(full_cmd)
+        let l:buffer_name = ''
+
+        if v:shell_error == 0
+
+            " Eliminar el fin de linea final
+            if g:os_type == 3
+                let l:result = substitute(l:result, '\r', '', 'g')
+            endif
+            let l:result = substitute(l:result, '\n\+$', '', '')
+
+            " Convertir a entero y sumar
+            let l:buffer_name = l:result
+
+        endif
+
+        "Si no se encontro un buffer
+        if empty(l:buffer_name)
+            echo printf("No buffer found at position %d of the buffer stack.", a:tmux_buffer_pos)
+            return ''
+        endif
+
+        "2. Obtener texto del buffer
+        let l:full_cmd = printf('tmux show-buffer -b %s', l:buffer_name)
         let l:txt = system(l:full_cmd)
 
         if v:shell_error != 0
-            echo printf("Error to get tmux buffer %d.", a:tmux_buffer_idx)
-            return
+            echo printf("Error to get content of tmux buffer '%s'.", l:buffer_name)
+            return ''
         endif
 
-        "3. Limpieza
-
         " Eliminar salto final extra
-        let l:txt = substitute(l:txt, '\n\%$', '', '')
+        if g:os_type == 3
+            let l:txt = substitute(l:txt, '\r', '', 'g')
+        endif
+        let l:txt = substitute(l:txt, '\n\+$', '', '')
 
-        "4.Guardalo en el registro 'x', forzando characterwise ('v')
-        call setreg('x', l:txt, 'v')
+        if empty(l:txt)
+            echo printf("The tmux buffer '%s' has no text.", l:buffer_name)
+            return ''
+        endif
+
+
+        "3.Guardalo en el registro 'x'
+        if a:record_type == "c"
+            call setreg('x', l:txt)
+        else
+
+            " TODO: No funciona 'l' ni 'b'
+            " Obtener un arreglo con las lineas (requerido para un pegado en 'line' y 'block')
+            let l:lines = split(l:txt, '\n')
+            if a:record_type == "l"
+                call setreg('x', l:lines, 'V')
+            else
+
+                " Calcular el ancho máximo del bloque (columna más ancha)
+                let l:width = max(map(copy(l:lines), {_, v -> len(v)}))
+
+                " Crear diccionario para el bloque visual
+                let l:block = {
+                    \ 'type': "\<C-V>",
+                    \ 'lines': l:lines,
+                    \ 'width': l:width
+                \ }
+
+                " Guardar en el registro
+                call setreg('x', l:block)
+
+            endif
+
+        endif
+
 
         "5. Pegar justo después del cursor
-        execute 'normal! "xp'
+        if a:use_insert_mode
+        "if mode() =~ 'i'
+            "call feedkeys("\<C-o>\"xp", 'n')
+            "return ''
+            return "\<C-o>\"xp"
+        endif
+
+        silent normal! "xp
+        return ''
 
     endfunction
 
 
     " Normal mode: insertar contenido de buffer tmux despues del cursor actual
-    nnoremap <C-F1> :<C-u>call <SID>PasteTmuxAfterCursor(0)<CR>
-    nnoremap <C-F2> :<C-u>call <SID>PasteTmuxAfterCursor(1)<CR>
-    nnoremap <C-F3> :<C-u>call <SID>PasteTmuxAfterCursor(2)<CR>
-    nnoremap <C-F4> :<C-u>call <SID>PasteTmuxAfterCursor(3)<CR>
-    nnoremap <C-F5> :<C-u>call <SID>PasteTmuxAfterCursor(4)<CR>
+    nnoremap <C-F1>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,1,"c")<CR>
+    nnoremap <C-F2>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,2,"c")<CR>
+    nnoremap <C-F3>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,3,"c")<CR>
+    nnoremap <C-F4>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,4,"c")<CR>
+    nnoremap <C-F5>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,5,"c")<CR>
 
-    " Normal insert: insertar contenido de buffer tmux despues del cursor actual
-    inoremap <C-F1> :<C-u>call <SID>PasteTmuxAfterCursor(0)<CR>
-    inoremap <C-F2> :<C-u>call <SID>PasteTmuxAfterCursor(1)<CR>
-    inoremap <C-F3> :<C-u>call <SID>PasteTmuxAfterCursor(2)<CR>
-    inoremap <C-F4> :<C-u>call <SID>PasteTmuxAfterCursor(3)<CR>
-    inoremap <C-F5> :<C-u>call <SID>PasteTmuxAfterCursor(4)<CR>
+    "nnoremap <C-F6>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,1,"b")<CR>
+    "nnoremap <C-F7>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,2,"b")<CR>
+    "nnoremap <C-F8>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,3,"b")<CR>
+    "nnoremap <C-F9>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,4,"b")<CR>
+    "nnoremap <C-F10> :<C-u>call <SID>PasteTmuxAfterCursor(v:false,5,"b")<CR>
+
+
+    " Insert mode: insertar contenido de buffer tmux despues del cursor actual
+    inoremap <expr> <C-F1>  <SID>PasteTmuxAfterCursor(v:true,1,"c")
+    inoremap <expr> <C-F2>  <SID>PasteTmuxAfterCursor(v:true,2,"c")
+    inoremap <expr> <C-F3>  <SID>PasteTmuxAfterCursor(v:true,3,"c")
+    inoremap <expr> <C-F4>  <SID>PasteTmuxAfterCursor(v:true,4,"c")
+    inoremap <expr> <C-F5>  <SID>PasteTmuxAfterCursor(v:true,5,"c")
+
+    "inoremap <expr> <C-F6>  <SID>PasteTmuxAfterCursor(v:true,1,"b")
+    "inoremap <expr> <C-F7>  <SID>PasteTmuxAfterCursor(v:true,2,"b")
+    "inoremap <expr> <C-F8>  <SID>PasteTmuxAfterCursor(v:true,3,"b")
+    "inoremap <expr> <C-F9>  <SID>PasteTmuxAfterCursor(v:true,4,"b")
+    "inoremap <expr> <C-F10> <SID>PasteTmuxAfterCursor(v:true,5,"b")
+
+
 
 endif
+
 
 
 "###################################################################################

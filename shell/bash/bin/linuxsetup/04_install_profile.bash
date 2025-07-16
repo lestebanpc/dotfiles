@@ -2498,7 +2498,7 @@ function _show_menu_core() {
            "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "7680" "$g_color_reset"
     printf " (%bj%b) %bModo developer%b > Instalar y configurar %bVIM%b y %bNeoVIM%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "7800" "$g_color_reset"
-    printf " (%bk%b) %bModo developer%b > Configurar todo el profile en modo basico %b(Profile, NodeJS, Python, VIM, NoeVIM)%b %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
+    printf " (%bk%b) %bModo developer%b > Configurar todo el profile en modo developer %b(Profile, NodeJS, Python, VIM, NoeVIM)%b %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
            "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "7801" "$g_color_reset"
 
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"

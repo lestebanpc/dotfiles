@@ -212,73 +212,73 @@ cp ~/.files/nvim/template_config.vim ~/.config/nvim/config.vim
 
 13. Uso de VIM/NeoVIM/Tmux
 
-    En NeoVIM se puede usar las siguientes variables de entorno:
+En NeoVIM se puede usar las siguientes variables de entorno:
 
-    - La variable de entorno `ONLY_BASIC` desactiva el plugins usado para modo IDE
+ - La variable de entorno `ONLY_BASIC` desactiva el plugins usado para modo IDE
 
-    - La variable de entorno `USE_COC` es 1 usa CoC en vez del LSP nativo (como lo hace VIM)
+ - La variable de entorno `USE_COC` es 1 usa CoC en vez del LSP nativo (como lo hace VIM)
 
-    - La variable de entorno `CLIPBOARD` pueden tener los siguientes valores:
+ - La variable de entorno `CLIPBOARD` pueden tener los siguientes valores:
 
-      - `0` Usar el mecanismo nativo de escritura al clipboard de NeoVIM
-      - `1` Implementar el mecanismo de uso OSC 52
-      - `2` Implementar el mecanismo de uso comandos externo del gestion de clipboard
-      - Otro valor, determina automaticamente el mecanismo correcto segun order de prioridad:
-        - Usar mecanismo nativo (SOC y comandos externos) si esta habilitado.
-        - Implementar el mecanismo OSC 52.
+   - `0` Usar el mecanismo nativo de escritura al clipboard de NeoVIM
+   - `1` Implementar el mecanismo de uso OSC 52
+   - `2` Implementar el mecanismo de uso comandos externo del gestion de clipboard
+   - Otro valor, determina automaticamente el mecanismo correcto segun order de prioridad:
+     - Usar mecanismo nativo (SOC y comandos externos) si esta habilitado.
+     - Implementar el mecanismo OSC 52.
 
-    - La variable de entorno `OSC52_FORMAT`. Esta variable solo sera usado cuando `g:set_clipboard_type` es `1` y puede tener
-      los siguientes posibles valores:
+ - La variable de entorno `OSC52_FORMAT`. Esta variable solo sera usado cuando `g:set_clipboard_type` es `1` y puede tener
+   los siguientes posibles valores:
 
-      - `0` Formato OSC 52 estandar que es enviado directmente una terminal que NO use como '$TERM' a GNU screen.
-      - `1` Formato DSC chunking que es enviado directmente a una terminal que use como '$TERM' a GNU screen. La data es enviada por varias trozos pequeños en formato DSC.
-      - `2` Formato DSC enmascarado para TMUX (tmux requiere un formato determinado, y si esta configurado, este se encargara de traducir al formato OSC 52 estandar y reenviarlo a la terminal donde corre tmux). Enmascara el OSC52 como un parametro de una secuancia de escape DSC.
-        Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.
+   - `0` Formato OSC 52 estandar que es enviado directmente una terminal que NO use como '$TERM' a GNU screen.
+   - `1` Formato DSC chunking que es enviado directmente a una terminal que use como '$TERM' a GNU screen. La data es enviada por varias trozos pequeños en formato DSC.
+   - `2` Formato DSC enmascarado para TMUX (tmux requiere un formato determinado, y si esta configurado, este se encargara de traducir al formato OSC 52 estandar y reenviarlo a la terminal donde corre tmux). Enmascara el OSC52 como un parametro de una secuancia de escape DSC.
+     Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.
 
-      Ejemplo de uso:
+   Ejemplo de uso:
 
-      - `CLIPBOARD=1 nvim`
-      - `CLIPBOARD=1 OSC52_FORMAT=2 nvim`
-      - `CLIPBOARD=1 OSC52_FORMAT=2 USE_COC=1 nvim`
-      - `CLIPBOARD=1 USE_COC=1 nvim`
-      - `ONLY_BASIC=1 nvim`
+   - `CLIPBOARD=1 nvim`
+   - `CLIPBOARD=1 OSC52_FORMAT=2 nvim`
+   - `CLIPBOARD=1 OSC52_FORMAT=2 USE_COC=1 nvim`
+   - `CLIPBOARD=1 USE_COC=1 nvim`
+   - `ONLY_BASIC=1 nvim`
 
-    En VIM se puede usar las siguientes variable de entorno:
+ En VIM se puede usar las siguientes variable de entorno:
 
-    - La variable de entorno `ONLY_BASIC` desactiva el plugins usado para modo IDE
+ - La variable de entorno `ONLY_BASIC` desactiva el plugins usado para modo IDE
 
-    - La variable de entorno `CLIPBOARD` pueden tener los siguientes valores:
+ - La variable de entorno `CLIPBOARD` pueden tener los siguientes valores:
 
-      - `0` Usar el mecanismo nativo de escritura al clipboard de VIM
-      - `1` Implementar el mecanismo de uso OSC 52
-      - `2` Implementar el mecanismo de uso comandos externo del gestion de clipboard
-      - Otro valor, Determinar automaticamente el mecanismo correcto segun order de prioridad:
-        - Implementar el mecanismo OSC 52, si la terminal lo permite.
-        - Usar mecanismo nativo (API del SO) si esta habilitado.
-        - Implementar el mecanismo de uso comandos externo del gestion de clipboard
-        - Si no existe comando externo, se Implementara el mecanismo OSC 52
+   - `0` Usar el mecanismo nativo de escritura al clipboard de VIM
+   - `1` Implementar el mecanismo de uso OSC 52
+   - `2` Implementar el mecanismo de uso comandos externo del gestion de clipboard
+   - Otro valor, Determinar automaticamente el mecanismo correcto segun order de prioridad:
+     - Implementar el mecanismo OSC 52, si la terminal lo permite.
+     - Usar mecanismo nativo (API del SO) si esta habilitado.
+     - Implementar el mecanismo de uso comandos externo del gestion de clipboard
+     - Si no existe comando externo, se Implementara el mecanismo OSC 52
 
-    - La variable de entorno `OSC52_FORMAT`. Esta variable solo sera usado cuando `g:set_clipboard_type` es `1` y puede tener
-      los siguientes posibles valores:
+ - La variable de entorno `OSC52_FORMAT`. Esta variable solo sera usado cuando `g:set_clipboard_type` es `1` y puede tener
+   los siguientes posibles valores:
 
-      - `0` Formato OSC 52 estandar que es enviado directmente una terminal que NO use como `$TERM` a GNU screen.
-      - `1` Formato DSC chunking que es enviado directmente a una terminal que use como `$TERM` a GNU screen. La data es enviada por varias trozos pequeños en formato DSC.
-      - `2` Formato DSC enmascarado para TMUX (tmux requiere un formato determinado, y si esta configurado, este se encargara de traducir al formato OSC 52 estandar y reenviarlo a la terminal donde corre tmux). Enmascara el OSC52 como un parametro de una secuancia de escape DSC.
-        Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.
+   - `0` Formato OSC 52 estandar que es enviado directmente una terminal que NO use como `$TERM` a GNU screen.
+   - `1` Formato DSC chunking que es enviado directmente a una terminal que use como `$TERM` a GNU screen. La data es enviada por varias trozos pequeños en formato DSC.
+   - `2` Formato DSC enmascarado para TMUX (tmux requiere un formato determinado, y si esta configurado, este se encargara de traducir al formato OSC 52 estandar y reenviarlo a la terminal donde corre tmux). Enmascara el OSC52 como un parametro de una secuancia de escape DSC.
+     Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.
 
-      Ejemplo de uso:
+   Ejemplo de uso:
 
-      - `CLIPBOARD=1 nvim`
-      - `CLIPBOARD=1 OSC52_FORMAT=2 nvim`
-      - `ONLY_BASIC=1 vim`
+   - `CLIPBOARD=1 nvim`
+   - `CLIPBOARD=1 OSC52_FORMAT=2 nvim`
+   - `ONLY_BASIC=1 vim`
 
-    En TMUX, autogenera los siguiente variables de entorno:
+ En TMUX, autogenera los siguiente variables de entorno:
 
-    - La variable de entorno `TMUX_SET_CLIPBOARD` cuyos posibles valores son:
-      - Otro valor, No se ha podido establecer un mecanismo del clipboard (se indica que usa comando externo, pero no se ubica.
-      - `0` Usar comandos externo de clipboard y la opcion 'set-clipboard' en 'off'
-      - `1` Usar OSC 52 con la opcion 'set-clipboard' en 'on'
-      - `2` Usar OSC 52 con la opcion 'set-clipboard' en 'external'
+ - La variable de entorno `TMUX_SET_CLIPBOARD` cuyos posibles valores son:
+   - Otro valor, No se ha podido establecer un mecanismo del clipboard (se indica que usa comando externo, pero no se ubica.
+   - `0` Usar comandos externo de clipboard y la opcion 'set-clipboard' en 'off'
+   - `1` Usar OSC 52 con la opcion 'set-clipboard' en 'on'
+   - `2` Usar OSC 52 con la opcion 'set-clipboard' en 'external'
 
 # Configuración en Windows
 
@@ -313,7 +313,7 @@ Si cuenta con WSL, 'NodeJS', '. Net' y 'Powershell Core'y lo podra instalar usan
   En las variables de entorno del sistema debe registrar la la ruta 'D:\CLI\Programs\PowerShell'.
   Si usa Windows Terminal, debera configurar adicionar un nuevo perfil para la terminal 'Powershell':
   - Nombre: Powershell
-  - Linea de comandos`: `D:\CLI\Programs\PowerShell\pwsh.exe`
+  - Linea de comandos: `D:\CLI\Programs\PowerShell\pwsh.exe`
   - Directorio de Inicio: `%USERPROFILE%`
   - Icono: `D:\CLI\Programs\PowerShell\assets\StoreLogo.png`
 

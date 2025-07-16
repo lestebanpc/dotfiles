@@ -543,13 +543,13 @@ nnoremap N Nzzzv
 
 
 "Establecer el mecanismo de escritura en el clipboard del SO (define acciones VIM y escritura automatica en el blipboard
-"cuando se realiza un yank). Definido por la variiable VIM 'g:clipboard_mode' cuyos valores son:
+"cuando se realiza un yank). Definido por la variiable VIM 'g:clipboard_writer_mode' cuyos valores son:
 "  1 > Implementar un mecanismo de escritura del clipboard usando OSC-52.
 "  2 > Implementar un mecanismo de escritura del clipboard usando comandos externos de gestion de clipboard.
 "  9 > No se puedo implementar mecanismos es escritura.
 
 " Si no se especifica, se debe calcular automaticamente el modo de escritura al clipboard
-if g:clipboard_mode != 1 && g:clipboard_mode != 2
+if g:clipboard_writer_mode != 1 && g:clipboard_writer_mode != 2
 
     "1. Intentar determinar si la terminal soporta OSC 52
     "   > Parte de la logica 'setting_clipboard()' definida en './shell/bash/fun/tmux/fun_general.bash'.
@@ -604,9 +604,9 @@ if g:clipboard_mode != 1 && g:clipboard_mode != 2
         "    > Si es Linux X11, usa proveedor: usa libreria 'libxcb' y 'libX11'.
         "    > Si es Windows y esta compilado con la opcion '+clipboard', utiliza el API de Win32.
         if s:terminal_use_osc54
-            let g:clipboard_mode = 1
+            let g:clipboard_writer_mode = 1
         else
-            let g:clipboard_mode = 2
+            let g:clipboard_writer_mode = 2
         endif
 
     else
@@ -617,69 +617,126 @@ if g:clipboard_mode != 1 && g:clipboard_mode != 2
         "  > Implementar el mecanismo de uso comandos externo del gestion de clipboard
         "  > Si no existe comando externo, se implementara el mecanismo OSC 52
         if s:terminal_use_osc54
-            let g:clipboard_mode = 1
+            let g:clipboard_writer_mode = 1
         else
-            let g:clipboard_mode = 2
+            let g:clipboard_writer_mode = 2
         endif
 
     endif
 
 endif
 
-"Determinar si existe el backend de gestion del clipboard y obtener del comando externo para escribir el portapapeles
-let g:clipboard_command = ''
+"Determinar si existe el backend para escribir en el clipboard
+let g:clipboard_writer_cmd = ''
 
-if g:clipboard_mode == 2
+if g:clipboard_writer_mode == 2
 
     "Si es Linux no-WSL
     if g:os_type == 2
 
         if exists('$WAYLAND_DISPLAY')
+
             if executable('wl-copy')
-                let g:clipboard_command='wl-copy'
+                let g:clipboard_writer_cmd='wl-copy'
             endif
+
         elseif exists('$DISPLAY')
+
             if executable('xclip')
-                let g:clipboard_command='xclip -i -selection clipboard'
+
+                let g:clipboard_writer_cmd='xclip -i -selection clipboard'
+
             elseif executable('xclip')
-                let g:clipboard_command='xsel -i -b'
+
+                let g:clipboard_writer_cmd='xsel -i -b'
+
             endif
+
         endif
 
     "Si es Linux WSL (sobre Windows). Siempre debe usarse el clipboard de Windows, debido a que el emulador de terminal
     "siempre sera un programa windows que accedera a dicho clipboard y WSL2 no implementa un clipboard.
-    elseif g:os_type == 2
+    elseif g:os_type == 3
 
         if executable('/mnt/c/windows/system32/clip.exe')
-            let g:clipboard_command='/mnt/c/windows/system32/clip.exe'
+            let g:clipboard_writer_cmd='/mnt/c/windows/system32/clip.exe'
         endif
 
     "Si es Windows
     elseif g:os_type == 0
 
         if executable('clip.exe')
-            let g:clipboard_command='clip.exe'
+            let g:clipboard_writer_cmd='clip.exe'
         endif
 
     "Si es MacOS
     elseif g:os_type == 1
 
         if executable('pbcopy')
-            let g:clipboard_command='pbcopy'
+            let g:clipboard_writer_cmd='pbcopy'
         endif
 
     endif
 
     "Si no existe el comando: ¿forzar el uso de OSC-52?
-    if g:clipboard_command != ''
-        "let g:clipboard_mode = 1
-        let g:clipboard_mode = 9
+    if g:clipboard_writer_cmd != ''
+        "let g:clipboard_writer_mode = 1
+        let g:clipboard_writer_mode = 9
     endif
 
 endif
 
+"Determinar si existe el backend para escribir en el clipboard
+let g:clipboard_reader_cmd = ''
 
-"Solo sera usado cuando 'g:clipboard_mode' es '1' y puede tener los siguientes posibles valores:
+if g:os_type == 2
+
+    "Si es Linux no-WSL
+    if exists('$WAYLAND_DISPLAY')
+
+        if executable('wl-paste')
+            let g:clipboard_reader_cmd='wl-paste'
+        endif
+
+    elseif exists('$DISPLAY')
+
+        if executable('xclip')
+
+            let g:clipboard_reader_cmd='xclip -o -selection clipboard'
+
+        elseif executable('xclip')
+
+            let g:clipboard_reader_cmd='xsel --clipboard --output'
+
+        endif
+
+    endif
+
+elseif g:os_type == 3
+
+    "Si es Linux WSL (sobre Windows). Siempre debe usarse el clipboard de Windows, debido a que el emulador de terminal
+    "siempre sera un programa windows que accedera a dicho clipboard y WSL2 no implementa un clipboard.
+    if executable('pwsh.exe')
+        let g:clipboard_reader_cmd='pwsh.exe -NoProfile -Command "Get-Clipboard"'
+    endif
+
+elseif g:os_type == 0
+
+    "Si es Windows
+    if executable('pwsh.exe')
+        let g:clipboard_reader_cmd='pwsh.exe -NoProfile -Command "Get-Clipboard"'
+    endif
+
+elseif g:os_type == 1
+
+    "Si es MacOS
+    if executable('pbpaste')
+        let g:clipboard_reader_cmd='pbpaste'
+    endif
+
+endif
+
+"Solo sera usado cuando 'g:clipboard_writer_mode' es '1' y puede tener los siguientes posibles valores:
 "    0 > Formato OSC 52 estandar que es enviado directmente una terminal que NO use como '$TERM' a GNU screen.
 "    1 > Formato OSC52 es dividio en pequeños trozos y enmascador en formato DSC, para enviarlo directmente a una terminal
 "        basada en GNU ('$TERM' inicia con screen).
@@ -690,7 +747,7 @@ endif
 "    contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM' a screen.
 
 " Si el modo de escritura del clipboard es usando OSC-52, determinar el formato a usar.
-if g:clipboard_mode == 1
+if g:clipboard_writer_mode == 1
 
     " Si se debe calcular el valor automaticamente
     if g:clipboard_osc52_format != 0 && g:clipboard_osc52_format != 1 && g:clipboard_osc52_format != 2
@@ -742,7 +799,7 @@ endif
 "
 "
 "    " Si se usa el mecanismo nativo de acceso al clipboard
-"    if g:clipboard_mode == 0
+"    if g:clipboard_writer_mode == 0
 "
 "        "VIM puede interactuar directamente con el clipboard del SO (usa el API del SO para ello)
 "        "La instegracion con comandos externos de gestion de clipboard y OSC 52, no lo hace de forma nativa.
@@ -769,7 +826,7 @@ endif
 
 
 "-----------------------------------------------------------------------------------
-" Clipboards> Implementar el mecanismo de escritura del clipboard
+" Clipboards> Escritura del clipboard
 "-----------------------------------------------------------------------------------
 "
 " > Se implementara:
@@ -780,13 +837,13 @@ endif
 "
 
 " Si no se tiene un mecanismo implementado
-if g:clipboard_mode == 9
+if g:clipboard_writer_mode == 9
 
     " No se puede establecer el mecanismo solicitado
     echo 'Not exist clipboard backend'
 
 " Si se requiere usar OSC 52
-elseif g:clipboard_mode == 1
+elseif g:clipboard_writer_mode == 1
 
     "A. Escritura manual al clipboard del sistema
     runtime setting/utils/osc52.vim
@@ -807,6 +864,7 @@ elseif g:clipboard_mode == 1
     function! s:WriteToClipboard1(use_delete) abort
 
         "1. Yank or Delete la selección actual al registro 'z'
+        "   Desde el modo normal, realiza la ultima seleccion (gv) y luego realiza la operacion en el registro '"').
         if a:use_delete
             silent normal! gv"zd
         else
@@ -830,11 +888,11 @@ elseif g:clipboard_mode == 1
         call PutClipboard(g:clipboard_osc52_format, l:txt)
 
         "5. Mensaje de confirmación
-        "let l:lines = count(l:text, "\n") + 1
+        "let l:lines_nbr = count(l:text, "\n") + 1
         "if a:use_delete
-        "    echo printf("%d lines was %s and wrote to clipboard.", l:lines, 'deleted')
+        "    echo printf("%d lines was %s and wrote to clipboard.", l:lines_nbr, 'deleted')
         "else
-        "    echo printf("%d lines was %s and wrote to clipboard.", l:lines, 'yanked')
+        "    echo printf("%d lines was %s and wrote to clipboard.", l:lines_nbr, 'yanked')
         "endif
 
     endfunction
@@ -865,20 +923,21 @@ else
     "A. Escritura manual al clipboard del sistema
 
     " Copiar el registro por defecto al clipboard (el ultimo yank o delete)
-    nnoremap <Leader>cc :<C-u>call system(g:clipboard_command, @")<CR>
+    nnoremap <Leader>cc :<C-u>call system(g:clipboard_writer_cmd, @")<CR>
 
     " Copiar el registro del ultimo yank al clipboard ('TextYankPost' solo se invoca interactivamente)
-    nnoremap <Leader>c0 :<C-u>call system(g:clipboard_command, @0)<CR>
+    nnoremap <Leader>c0 :<C-u>call system(g:clipboard_writer_cmd, @0)<CR>
 
     " Copiar el registro de los ultimo deletes
-    nnoremap <Leader>c1 :<C-u>call system(g:clipboard_command, @1)<CR>
-    nnoremap <Leader>c2 :<C-u>call system(g:clipboard_command, @2)<CR>
-    nnoremap <Leader>c3 :<C-u>call system(g:clipboard_command, @3)<CR>
-    nnoremap <Leader>c4 :<C-u>call system(g:clipboard_command, @4)<CR>
+    nnoremap <Leader>c1 :<C-u>call system(g:clipboard_writer_cmd, @1)<CR>
+    nnoremap <Leader>c2 :<C-u>call system(g:clipboard_writer_cmd, @2)<CR>
+    nnoremap <Leader>c3 :<C-u>call system(g:clipboard_writer_cmd, @3)<CR>
+    nnoremap <Leader>c4 :<C-u>call system(g:clipboard_writer_cmd, @4)<CR>
 
     function! s:WriteToClipboard2(use_delete) abort
 
         "1. Yank or Delete la selección actual al registro 'z'
+        "   Desde el modo normal, realiza la ultima seleccion (gv) y luego realiza la operacion en el registro '"').
         if a:use_delete
             silent normal! gv"zd
         else
@@ -899,14 +958,24 @@ else
         let l:txt = substitute(l:txt, '\n\%$', '', '')
 
         "4. Escribir al clipboard
-        call system(g:clipboard_command, l:txt)
+        call system(g:clipboard_writer_cmd, l:txt)
+
+        if v:shell_error != 0
+            if a:use_delete
+                echo printf("Error to write '%s' text to clipboard.", 'deleted')
+            else
+                echo printf("Error to write '%s' text to clipboard.", 'yanked')
+            endif
+
+            return
+        endif
 
         "5. Mensaje de confirmación
-        let l:lines = count(l:txt, "\n") + 1
+        let l:lines_nbr = count(l:txt, "\n") + 1
         if a:use_delete
-            echo printf("%d lines was %s and wrote to clipboard.", l:lines, 'deleted')
+            echo printf("%d lines was %s and wrote to clipboard.", l:lines_nbr, 'deleted')
         else
-            echo printf("%d lines was %s and wrote to clipboard.", l:lines, 'yanked')
+            echo printf("%d lines was %s and wrote to clipboard.", l:lines_nbr, 'yanked')
         endif
 
     endfunction
@@ -927,7 +996,7 @@ else
         " > Se descartara la operacion 'delete' para evitar su uso cuando se elimina por comandos vim.
         augroup VimYank
             autocmd!
-            autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system(g:clipboard_command, @") | endif
+            autocmd TextYankPost * if v:event.operator ==# 'y' | silent! call system(g:clipboard_writer_cmd, @") | endif
         augroup END
 
     endif
@@ -935,6 +1004,108 @@ else
 
 endif
 
+
+
+"-----------------------------------------------------------------------------------
+" Clipboards> Lectura del clipboard y escritura en buffer (opcional)
+"-----------------------------------------------------------------------------------
+"
+" > La terminal implementa un keymapping de lectura de clipboard (usualmente 'Ctrl + V' o 'Ctrl + v').
+"   > VIM/NeoVIM permiten que el texto enviado por la terminal se escriba automaticamente al buffer.
+"   > El texto se pega como si proveniera de una seleccion caracter (despues del cursor actual).
+" > Se implementara un mecanismo personalizado clipboard usando un programa backend del clipboard:
+"   > Permitira pegar el texto del clipboard como si la seleccion fuera en bloques.
+"   > Permitira pegar el texto del clipboard como si la seleccion fuera en linea.
+" > Este mecanismo alternativo, usara el backend de clipboard local, por lo que no usara necesariamente
+"   el clipboard usuado por la terminal
+"
+
+if g:clipboard_reader_cmd != ''
+
+    " Parameters :
+    " > 'record_type' : 'c' (carácter), 'l' (línea), 'b' (bloque).
+    " > 'insert_mode' : true si se usa en insert mode
+    function! s:PasteClipboardAfterCursor(insert_mode, record_type) abort
+
+        if empty(a:record_type)
+            let a:record_type = "c"
+        endif
+
+        "1. Obtener el texto del clipboard
+        let l:txt = system(g:clipboard_reader_cmd)
+
+        if v:shell_error != 0
+            echo "Error to read text to clipboard."
+            return ''
+        endif
+
+
+        "3. Limpieza
+
+        " Eliminar salto final extra
+        if g:os_type == 0 || g:os_type == 3
+            let l:txt = substitute(l:txt, '\r', '', 'g')
+        endif
+        let l:txt = substitute(l:txt, '\n\+$', '', '')
+
+        if empty(l:txt)
+            echo "No text in the clipboard."
+            return ''
+        endif
+
+
+        "4.Guardalo en el registro 'y'
+        if a:record_type == "c"
+            call setreg('y', l:txt)
+        else
+
+            " TODO: No funciona 'l' ni 'b'
+            " Obtener un arreglo con las lineas (requerido para un pegado en 'line' y 'block')
+            let l:lines = split(l:txt, '\n')
+            if a:record_type == "l"
+                call setreg('y', l:lines, 'V')
+            else
+
+                " Calcular el ancho máximo del bloque (columna más ancha)
+                let l:width = max(map(copy(l:lines), {_, v -> len(v)}))
+
+                " Crear diccionario para el bloque visual
+                let l:block = {
+                    \ 'type': "\<C-V>",
+                    \ 'lines': l:lines,
+                    \ 'width': l:width
+                \ }
+
+                " Guardar en el registro
+                call setreg('y', l:block)
+
+            endif
+
+        endif
+
+
+        "5. Pegar justo después del cursor
+        if a:use_insert_mode
+        "if mode() =~ 'i'
+            "call feedkeys("\<C-o>\"xp", 'n')
+            "return ''
+            return "\<C-o>\"yp"
+        endif
+
+        silent normal! "yp
+        return ''
+
+    endfunction
+
+    " Normal mode: insertar contenido de buffer tmux despues del cursor actual
+    "nnoremap <C-F11> :<C-u>call <SID>PasteClipboardAfterCursor(v:false,"b")<CR>
+    "nnoremap <C-F12> :<C-u>call <SID>PasteClipboardAfterCursor(v:false,"l")<CR>
+
+    " Normal insert: insertar contenido de buffer tmux despues del cursor actual
+    "inoremap <expr> <C-F11> <SID>PasteClipboardAfterCursor(v:true,"b")
+    "inoremap <expr> <C-F12> <SID>PasteClipboardAfterCursor(v:true,"l")
+
+endif
 
 
 "-----------------------------------------------------------------------------------
@@ -953,7 +1124,7 @@ nnoremap <Leader>vv :set cursorcolumn!<CR>
 " Mappings - Splits
 "-----------------------------------------------------------------------------------
 "
-"Navegación stre splits (no es necesario especificar, lo define el Plug-In 'vim-tmux-navigator').
+    "Navegación stre splits (no es necesario especificar, lo define el Plug-In 'vim-tmux-navigator').
 "noremap <C-j> <C-w>j
 "noremap <C-k> <C-w>k
 "noremap <C-l> <C-w>l

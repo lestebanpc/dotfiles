@@ -29,6 +29,8 @@ $gd_repos_with_submmodules= @{
     }
 
 
+# Importando funciones de utilidad
+. "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/lib/setup_profile_utility.ps1"
 
 
 
@@ -42,7 +44,7 @@ $gd_repos_with_submmodules= @{
 # 1 > No se obtuvo la version
 function m_get_nodejs_version() {
 
-    $l_version= node --version 2> $null
+    $l_version=$(node --version 2> $null)
     $l_status=$?
     if ($l_status) {
         #$l_version= $l_version[0]
@@ -110,6 +112,8 @@ function m_update_repository($p_path, $p_repo_name, $p_is_neovim)
         return 9
     }
 
+
+    #2. Mostrar el titulo
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 	if(${p_is_neovim})
 	{
@@ -123,67 +127,127 @@ function m_update_repository($p_path, $p_repo_name, $p_is_neovim)
 	}
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 
+    # Validar si el directorio .git del repositorio es valido
     Set-Location "$p_path"
 
-    #2. Validar si el directorio .git del repositorio es valido
     git rev-parse --git-dir > $null 2>&1
     if (! $?)
     {
-        #Si no es un repositorio valido salir
+        # Si no es un repositorio valido salir
         Write-Host 'Invalid git repository'
         return 8
     }
 
+
+    #3. Obtener datos del repositorio actual
+
+    # Ejemplo : 'main'
     $l_local_branch="$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)"
+    if ($l_local_branch -eq "HEAD") {
+        Write-Host "Invalid current branch name of repository `"${p_repo_name}`""
+        return 6
+    }
+
+    # Ejemplo : 'origin'
     $l_remote="$(git config branch.${l_local_branch}.remote)"
+
+    # Ejemplo : 'origin/main'
     $l_remote_branch="$(git rev-parse --abbrev-ref --symbolic-full-name `@`{u`})"
 
-    #3. Actualizando la rama remota del repositorio local desde el repositorio remoto
-    Write-Host "> Fetching from remote repository `"${l_remote}`" to remote branch `"${l_remote_branch}`"..."
-    git fetch $l_remote
-	if (! $?) {
+    # El repositorio tiene submodulos git
+    $l_submodules_types= $gd_repos_with_submmodules[$p_repo_name]
+
+    #4. Actualizando la rama remota del repositorio local desde el repositorio remoto
+    Write-Host "> Fetching from remote repository `"${l_remote}`" to remote branch `"${l_remote_branch}`" (git fetch --depth=1 ${l_remote} ${l_local_branch})..."
+    git fetch --depth=1 ${l_remote} ${l_local_branch}
+	if (-not $?) {
 		Write-Host "Error ($?) on Fetching from remote repository `"${l_remote}`" to remote branch `"${l_remote_branch}`""
 		return 3
 	}
 
-    #4. Si la rama local es igual a la rama remota
-    Write-Host "> Updating local branch `"${l_local_branch}`" from remote branch `"${l_remote_branch}`"..."
-    git merge-base --is-ancestor ${l_remote_branch} HEAD
-    if ($?) {
+
+    #5. Verificar si esta actualizado las ramas local y la de sigimiento
+    $l_hash_head="$(git rev-parse HEAD)"
+    $l_hash_remote="$(git rev-parse FETCH_HEAD)"
+
+    if ($l_hash_head -eq $l_hash_remote) {
+
+        # Si tiene submodulos, actualizar los submoduos
+        if ($l_submodules_types -eq 1 -or $l_submodules_types -eq 2) {
+
+            Write-Host 'Main module is already up-to-date.'
+
+            # Actualizar los submodulos definidos en '.gitmodules' y lo hace de manera superficial
+
+            if ($l_submodules_types -eq 1) {
+                Write-Host "> Updating submodules of repository `"${p_repo_name}`" (git submodule update --remote --depth 1 --force)..."
+                git submodule update --remote --depth 1 --force
+            }
+            else {
+                Write-Host "> Updating submodules of repository `"${p_repo_name}`" (git submodule update --remote --recursive --depth 1 --force)..."
+                git submodule update --remote --recursive --depth 1 --force
+            }
+
+            if (-not $?) {
+                Write-Host "Error ($?) on Updating submodules of repository `"${p_repo_name}`""
+                return 3
+            }
+
+            Write-Host '> Submodules updated successfully.'
+            return 0
+
+        }
+
+        # Si no tiene submodulos
         Write-Host '> Already up-to-date'
         return 0
     }
 
-    #5. Si la rama local es diferente al rama remota
 
-    #¿Es posible realizar 'merging'?
-	git merge-base --is-ancestor HEAD ${l_remote_branch}
-	if ($?) {
-		Write-Host '> Fast-forward possible. Merging...'
-		git merge --ff-only --stat ${l_remote_branch}
+    #6. Si la rama local es diferente al rama remota
 
-		if (! $?) {
-			Write-Host "Error ($?) on Merging from remote repository `"${l_remote}`" to remote branch `"${l_remote_branch}`""
-			return 4
-		}
-		return 1
-	}
+    # Del modulo principal, realizar una actualizacion destructiva y para quedar solo con el ultimo nodo de la rama remota
+    write-host "> Updating local branch `"${l_remote_branch}`" from remote branch `"${l_remote}`" (git reset --hard ${l_remote_branch})..."
 
-	Write-Host '> Fast-forward not possible. Rebasing...'
-	git rebase --preserve-merges --stat ${l_remote_branch}
-    #git rebase --rebase-merges --stat ${l_remote_branch}
-    #git rebase --stat ${l_remote_branch}
+    git reset --hard ${l_remote_branch}
 
-	if (! $?) {
-		Write-Host "Error ($?) on Rebasing from remote repository `"${l_remote}`" to remote branch `"${l_remote_branch}`""
-		return 5
-	}
+    if (-not $?) {
+        Write-Host "Error ($?) on Updating local branch `"${l_remote_branch}`" from remote branch `"${l_remote}`""
+        return 3
+    }
 
-	return 2
+    # Si tiene submodulos, actualizarlo
+    if ($l_submodules_types -eq 1 -or $l_submodules_types -eq 2) {
+
+        Write-Host '> Main module updated successfully.'
+
+        # Actualizar los submodulos definidos en '.gitmodules' y lo hace de manera superficial
+        if ($l_submodules_types -eq 1) {
+            Write-Host "> Updating submodules of repository `"${p_repo_name}`" (git submodule update --remote --depth 1 --force)..."
+            git submodule update --remote --depth 1 --force
+        }
+        else {
+            Write-Host "> Updating submodules of repository `"${p_repo_name}`" (git submodule update --remote --recursive --depth 1 --force)..."
+            git submodule update --remote --recursive --depth 1 --force
+        }
+
+        if (-not $?) {
+            Write-Host "Error ($?) on Updating submodules of repository `"${p_repo_name}`""
+            return 3
+        }
+
+        Write-Host '> Submodules updated successfully.'
+        return 0
+    }
+
+    # Si no tiene submodulos
+    Write-Host '> Repository updated successfully.'
+    return 0
+
 
 }
 
-function m_update_vim_repository($p_is_neovim, $p_is_coc_installed)
+function m_update_vim_packages($p_is_neovim)
 {
 
 	$l_show_title= $false
@@ -265,232 +329,92 @@ function m_update_vim_repository($p_is_neovim, $p_is_coc_installed)
 		}
 	}
 
-    Write-Host ""
-    #6. Inicializar los paquetes/plugin de VIM/NeoVIM que lo requieren.
-    if (!$p_is_coc_installed) {
-        Write-Host "Se ha instalando los plugin/paquetes de ${l_tag} como Editor."
-        return 0
-    }
-
-    Write-Host ""
-    Write-Host "Se ha instalando los plugin/paquetes de ${l_tag} como Developer."
-    if (!$g_is_nodejs_installed)  {
-
-        Write-Host "Recomendaciones:"
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"ONLY_BASIC=1 vim`""
-        if ($p_is_neovim -eq 0) {
-            Write-Host "    > NeoVIM como developer por defecto usa el adaptador LSP y autocompletado nativo. No esta habilitado el uso de CoC"
-        }
-		else {
-            Write-Host "    > VIM esta como developer pero NO puede usar CoC  (requiere que NodeJS este instalando)"
-        }
-        return 0
-
-	}
-
-    Write-Host "Los plugins del IDE CoC de ${l_tag} tiene componentes que requieren inicialización para su uso. Inicializando dichas componentes del plugins..."
-
-    #Instalando los parseadores de lenguaje de 'nvim-treesitter'
-    if ($p_is_neovim) {
-
-        #Requiere un compilador C/C++ y NodeJS: https://tree-sitter.github.io/tree-sitter/creating-parsers#installation
-		#TODO Obtener la version del compilador C/C++
-        $l_version="xxxx"
-        if(! $l_version ) {
-            Write-Host "  Instalando `"language parsers`" de TreeSitter `":TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash`""
-            nvim --headless -c  "TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash" -c "qa"
-
-            Write-Host "  Instalando `"language parsers`" de TreeSitter `":TSInstall java kotlin llvm lua rust swift c cpp go c_sharp`""
-            nvim --headless -c "TSInstall java kotlin llvm lua rust swift c cpp go c_sharp" -c "qa"
-        }
-	}
-
-    #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
-    Write-Host "  Instalando extensiones de CoC (Adaptador de LSP server basicos) `":CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh`""
-    if ($p_is_neovim) {
-		${env:USE_COC}=1
-		nvim --headless -c "CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh" -c "qa"
-	}
-    else {
-        vim -esc "CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh" -c "qa"
-    }
-
-    #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
-    Write-Host "  Instalando extensiones de CoC (Motor de snippets `"UtilSnips`") `":CocInstall coc-ultisnips`" (no se esta usando el nativo de CoC)"
-    if ($p_is_neovim) {
-		nvim --headless -c "CocInstall coc-ultisnips" -c "qa"
-	}
-    else {
-        vim -esc "CocInstall coc-ultisnips" -c "qa"
-    }
-
-    #Actualizar las extensiones de CoC
-    Write-Host "  Actualizando los extensiones existentes de CoC, ejecutando el comando `":CocUpdate`""
-    if ($p_is_neovim) {
-        nvim --headless -c "CocUpdate" -c "qa"
-		${env:USE_COC}=0
-	}
-    else {
-		vim -esc "CocUpdate" -c "qa"
-    }
-
-    #Actualizando los gadgets de 'VimSpector'
-    if (!$p_is_neovim) {
-        Write-Host "  Actualizando los gadgets de `"VimSpector`", ejecutando el comando `":VimspectorUpdate`""
-        vim -esc "VimspectorUpdate" -c "qa"
-    }
-
-	Write-Host ""
-    Write-Host "Recomendaciones:"
-    if (!$p_is_neovim) {
-
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:ONLY_BASIC}=1`" y luego `"vim`""
-        Write-Host "    > Se recomienda que configure su IDE CoC segun su necesidad:"
-	}
-    else {
-
-        Write-Host "  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM."
-        Write-Host "    > Si desea usar CoC, use: `"`${env:USE_COC}=1`" y luego `"nvim`""
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:ONLY_BASIC}=1`" y luego `"nvim`""
-
-        Write-Host "  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:"
-
-    }
-
-    Write-Host "        1> Instalar extensiones de COC segun su necesidad (Listar existentes `":CocList extensions`")"
-    Write-Host "        2> Revisar la Configuracion de COC `":CocConfig`":"
-    Write-Host "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-    Write-Host "               { `"diagnostic.displayByAle`": true }"
-    Write-Host "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-    Write-Host "               Si esta instalando esta extension, desintalarlo."
-
-
     return 0
-
-    #~\vimfiles\pack\ui\opt\fzf.vim
-    #Restaurar el archivo
-    #comprar con lo que se tiene en y actualizar el repo
 
 }
 
-function m_main_update($p_input_options) {
+
+function m_update_vim($p_options, $p_is_neovim)
+{
+
+    #1. Inicializacion
+
+    $l_tag= "VIM"
+    if ($p_is_neovim) {
+        $l_tag= "NeoVIM"
+    }
+
+    #2. Prerequisito: La opcion de actualizar VIM/NeoVIM esta habilitada
+    if ($p_options -le 0) {
+        return 1
+    }
+
+    $l_option = 1
+    if ($p_is_neovim) {
+        $l_option = 2
+    }
+
+    # Si no se debe actualizar
+    if (($p_options -band $l_option) -ne $l_option) {
+        return 1
+    }
 
 
-    #Obtener la version de NodeJS
-    $l_nodejs_version= m_get_nodejs_version
+    #3. Prerequisito: Git debe estar instalado
+    $l_version= $(git --version 2> $null)
+    if (-not $?) {
+        #No esta instalado Git, No configurarlo
+        Write-Host "Se requiere que Git este instalado para actualizar los plugins de ${l_tag}."
+        return 1
+    }
 
-    #4. Actualizar paquetes VIM instalados
-    $l_version
-    $l_aux=""
-    $l_is_coc_installed=1
-
-    $l_opcion=4
-    $l_flag= $l_opcion
-
-    if ($l_flag -eq $l_opcion) {
-
-        #Obtener la version actual de VIM
-        $l_version= vim --version 2> $null
-        $l_status=$?
-        if ($l_status) {
-            $l_version= $l_version[0]
-            #Write-Host "VIM Version: ${l_version}"
-            $l_version= $l_version -creplace "$g_regexp_sust_version1", '$1'
-        }
-        else {
-            $l_version=""
-        }
-
+    #4. Prerequisito: VIM/Neovim debe esta instalado
+    $l_version=$(vim --version 2> $null)
+    if (-not $?) {
+        $l_version= $l_version[0]
         #Write-Host "VIM Version: ${l_version}"
-
-        #Solo actualizar si esta instalado
-        if ($l_version) {
-
-            #Mostrar el titulo
-            $l_title= ">> Actualizar los paquetes de VIM (${l_version})"
-
-            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
-            Write-Host "$l_title" -ForegroundColor Blue
-            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
-
-            #Determinar si esta instalado en modo developer
-            $l_is_coc_installed= $false
-            $l_status= m_is_developer_vim_profile $false
-            if ($l_status -eq 1) {
-                if ($l_nodejs_version) {
-                    Write-Host "Se actualizará los paquetes/plugins de VIM ${l_version} (Modo developer, NodeJS `"${l_nodejs_version}`") ..."
-                    $l_is_coc_installed= $true
-                }
-                else {
-                    Write-Host "Se actualizará los paquetes/plugins de VIM ${l_version} (Modo developer, NodeJS no intalado) ..."
-                }
-            }
-            else {
-                Write-Host "Se actualizará los paquetes/plugins de VIM ${l_version} ..."
-            }
-            #Write-Host ""
-
-            #Actualizar los plugins
-            m_update_vim_repository $false $l_is_coc_installed
-       }
-
+        $l_version= $l_version -creplace "$g_regexp_sust_version1", '$1'
+    }
+    else {
+        $l_version=""
     }
 
-    #5. Actualizar paquetes NeoVIM instalados
-    $l_opcion=8
-    $l_flag= $l_opcion
-
-    if ($l_flag -eq $l_opcion) {
-
-        #Obtener la version actual de VIM
-        $l_version= nvim --version 2> $null
-        $l_status=$?
-        if ($l_status) {
-            $l_version= $l_version[0]
-            #Write-Host "NeoVIM Version: ${l_version}"
-            $l_version= $l_version -creplace "$g_regexp_sust_version1", '$1'
-        }
-        else {
-            $l_version=""
-        }
-
-        #Write-Host "NeoVIM Version: ${l_version}"
-
-        #Solo actualizar si esta instalado
-        if ($l_version) {
-
-            Write-Host ""
-            Write-Host ""
-
-            #Mostrar el titulo
-            $l_title= ">> Actualizar los paquetes de NeoVIM (${l_version})"
-            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
-            Write-Host "$l_title" -ForegroundColor Blue
-            Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
-
-            #Determinar si esta instalado en modo developer
-            $l_is_coc_installed= $false
-            $l_status= m_is_developer_vim_profile $true
-            if ($l_status -eq 1) {
-                if ($l_nodejs_version) {
-                    Write-Host "Se actualizará los paquetes/plugins de NeoVIM ${l_version} (Modo developer, NodeJS `"${l_nodejs_version}`") ..."
-                    $l_is_coc_installed= $true
-                }
-                else {
-                    Write-Host "Se actualizará los paquetes/plugins de NeoVIM ${l_version} (Modo developer, NodeJS no intalado) ..."
-                }
-            }
-            else {
-                Write-Host "Se actualizará los paquetes/plugins de NeoVIM ${l_version} ..."
-            }
-            #Write-Host ""
-
-            #Actualizar los plugins
-            m_update_vim_repository $true $l_is_coc_installed
-       }
-
+    if ($l_version -eq "") {
+        #No esta instalado VIM/NeoVIM, No configurarlo
+        Write-Host "Se requiere que ${l_tag} este instalado para actualizar sus paquetes."
+        return 1
     }
 
+    #Write-Host "VIM Version: ${l_version}"
+
+    #5. Actualizar los paquetes
+
+    #Mostrar el titulo
+    $l_title= ">> Actualizar los paquetes de ${l_tag} (${l_version})"
+
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
+    Write-Host "$l_title" -ForegroundColor Blue
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
+
+
+    # Actualizar los plugins
+    m_update_vim_packages $p_is_neovim
+
+    # Mostrar la informacion de lo instalado
+    show_vim_config_report $p_is_neovim
+
+    return 0
+
+}
+
+function m_update_all($p_input_options) {
+
+
+    #1. Actualizar paquetes VIM instalados
+    m_update_vim $p_input_options $false
+
+    #2. Actaulizar paquetes de NeoVIM
+    m_update_vim $p_input_options $true
 
 }
 
@@ -637,7 +561,7 @@ function m_setup($p_input_options)
 		return
 	}
 
-    $l_status= m_main_update $p_input_options
+    $l_status= m_update_all $p_input_options
 }
 
 
@@ -715,12 +639,12 @@ function show_menu()
 #------------------------------------------------------------------------------------------------
 
 #Procesar los argumentos
-$g_fix_fzf=0
-if($args.count -ge 1) {
-    if($args[0] -eq "1") {
-        $g_fix_fzf=1
-    }
-}
+#$g_fix_fzf=0
+#if($args.count -ge 1) {
+#    if($args[0] -eq "1") {
+#        $g_fix_fzf=1
+#    }
+#}
 
 # Folder base donde se almacena el programas, comando y afines usados por Windows.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).

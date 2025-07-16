@@ -172,8 +172,8 @@ $ga_group_plugin_folder= @(
     )
 
 
-
-$g_is_nodejs_installed= $true
+# Importando funciones de utilidad
+. "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/lib/setup_profile_utility.ps1"
 
 
 #------------------------------------------------------------------------------------------------
@@ -473,103 +473,15 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 	}
 
 
-    #6. Inicializar los paquetes/plugin de VIM/NeoVIM que lo requieren.
     if (!$p_flag_developer) {
-        Write-Host "Se ha instalando los plugin/paquetes de ${l_tag} como Editor."
+        Write-Host "Se ha instalado los plugin/paquetes de ${l_tag} como Editor."
         return 0
     }
 
-    Write-Host "Se ha instalando los plugin/paquetes de ${l_tag} como Developer."
-    if (!$g_is_nodejs_installed)  {
+    Write-Host "Se ha instalado los plugin/paquetes de ${l_tag} como Developer."
 
-        Write-Host "Recomendaciones:"
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"USE_EDITOR=1 vim`""
-        if ($p_is_neovim -eq 0) {
-            Write-Host "    > NeoVIM como developer por defecto usa el adaptador LSP y autocompletado nativo. No esta habilitado el uso de CoC"
-        }
-		else {
-            Write-Host "    > VIM esta como developer pero NO puede usar CoC  (requiere que NodeJS este instalando)"
-        }
-        return 0
-
-	}
-
-    Write-Host "Los plugins del IDE CoC de ${l_tag} tiene componentes que requieren inicialización para su uso. Inicializando dichas componentes del plugins..."
-
-    #Instalando los parseadores de lenguaje de 'nvim-treesitter'
-    if ($p_is_neovim) {
-
-        #Requiere un compilador C/C++ y NodeJS: https://tree-sitter.github.io/tree-sitter/creating-parsers#installation
-		#TODO Obtener la version del compilador C/C++
-        $l_version="xxxx"
-        if(! $l_version ) {
-            Write-Host "  Instalando `"language parsers`" de TreeSitter `":TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash`""
-            nvim --headless -c  "TSInstall html css javascript jq json yaml xml toml typescript proto make sql bash" -c "qa"
-
-            Write-Host "  Instalando `"language parsers`" de TreeSitter `":TSInstall java kotlin llvm lua rust swift c cpp go c_sharp`""
-            nvim --headless -c "TSInstall java kotlin llvm lua rust swift c cpp go c_sharp" -c "qa"
-        }
-	}
-
-    #Instalando extensiones basicos de CoC: Adaptador de LSP server basicos JS, Json, HTLML, CSS, Python, Bash
-    Write-Host "  Instalando extensiones de CoC (Adaptador de LSP server basicos) `":CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh`""
-    if ($p_is_neovim) {
-		${env:USE_COC}=1
-		nvim --headless -c "CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh" -c "qa"
-	}
-    else {
-        vim -esc "CocInstall coc-tsserver coc-json coc-html coc-css coc-pyrigh coc-sh" -c "qa"
-    }
-
-    #Instalando extensiones basicos de CoC: Motor de snippets 'UtilSnips'
-    Write-Host "  Instalando extensiones de CoC (Motor de snippets `"UtilSnips`") `":CocInstall coc-ultisnips`" (no se esta usando el nativo de CoC)"
-    if ($p_is_neovim) {
-		nvim --headless -c "CocInstall coc-ultisnips" -c "qa"
-	}
-    else {
-        vim -esc "CocInstall coc-ultisnips" -c "qa"
-    }
-
-    #Actualizar las extensiones de CoC
-    Write-Host "  Actualizando los extensiones existentes de CoC, ejecutando el comando `":CocUpdate`""
-    if ($p_is_neovim) {
-        nvim --headless -c "CocUpdate" -c "qa"
-		${env:USE_COC}=0
-	}
-    else {
-		vim -esc "CocUpdate" -c "qa"
-    }
-
-    #Actualizando los gadgets de 'VimSpector'
-    if (!$p_is_neovim) {
-        Write-Host "  Actualizando los gadgets de `"VimSpector`", ejecutando el comando `":VimspectorUpdate`""
-        vim -esc "VimspectorUpdate" -c "qa"
-    }
-
-	Write-Host ""
-    Write-Host "Recomendaciones:"
-    if (!$p_is_neovim) {
-
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:USE_EDITOR}=1`" y luego `"vim`""
-        Write-Host "    > Se recomienda que configure su IDE CoC segun su necesidad:"
-	}
-    else {
-
-        Write-Host "  > Por defecto, se ejecuta el IDE vinculado al LSP nativo de NeoVIM."
-        Write-Host "    > Si desea usar CoC, use: `"`${env:USE_COC}=1`" y luego `"nvim`""
-        Write-Host "    > Si desea usar como editor (no cargar plugins de IDE), use: `"`${env:USE_EDITOR}=1`" y luego `"nvim`""
-
-        Write-Host "  > Si usar como Developer con IDE CoC, se recomienda que lo configura segun su necesidad:"
-
-    }
-
-    Write-Host "        1> Instalar extensiones de COC segun su necesidad (Listar existentes `":CocList extensions`")"
-    Write-Host "        2> Revisar la Configuracion de COC `":CocConfig`":"
-    Write-Host "          2.1> El diganostico se enviara ALE (no se usara el integrado de CoC), revisar:"
-    Write-Host "               { `"diagnostic.displayByAle`": true }"
-    Write-Host "          2.2> El formateador de codigo 'Prettier' sera proveido por ALE (no se usara la extension 'coc-prettier')"
-    Write-Host "               Si esta instalando esta extension, desintalarlo."
-
+    #6. Mostrar la informacion de lo instalado
+    show_vim_config_report $p_is_neovim $p_flag_developer
 
     return 0
 
@@ -1075,12 +987,12 @@ function show_menu() {
 #------------------------------------------------------------------------------------------------
 
 #Procesar los argumentos
-$g_fix_fzf=0
-if($args.count -ge 1) {
-    if($args[0] -eq "1") {
-        $g_fix_fzf=1
-    }
-}
+#$g_fix_fzf=0
+#if($args.count -ge 1) {
+#    if($args[0] -eq "1") {
+#        $g_fix_fzf=1
+#    }
+#}
 
 
 # Folder base donde se almacena el programas, comando y afines usados por Windows.
