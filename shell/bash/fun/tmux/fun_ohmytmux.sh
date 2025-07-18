@@ -659,31 +659,31 @@ _loadavg() {
 #}
 
 
-_apply_24b() {
-  tmux_conf_theme_24b_colour=${tmux_conf_theme_24b_colour:-auto}
-  tmux_conf_24b_colour=${tmux_conf_24b_colour:-$tmux_conf_theme_24b_colour}
-  if [ "$tmux_conf_24b_colour" = "auto" ]; then
-    case "$COLORTERM" in
-      truecolor|24bit)
-        apply_24b=true
-        ;;
-    esac
-    if [ "$apply_24b" = "" ] && [ "$(tput colors)" = "16777216" ]; then
-      apply_24b=true
-    fi
-  elif _is_true "$tmux_conf_24b_colour"; then
-    apply_24b=true
-  fi
-  if [ "$apply_24b" = "true" ]; then
-    case "$TERM" in
-      screen-*|tmux-*)
-        ;;
-      *)
-        tmux set-option -ga terminal-overrides ",*256col*:Tc"
-        ;;
-    esac
-  fi
-}
+#_apply_24b() {
+#  tmux_conf_theme_24b_colour=${tmux_conf_theme_24b_colour:-auto}
+#  tmux_conf_24b_colour=${tmux_conf_24b_colour:-$tmux_conf_theme_24b_colour}
+#  if [ "$tmux_conf_24b_colour" = "auto" ]; then
+#    case "$COLORTERM" in
+#      truecolor|24bit)
+#        apply_24b=true
+#        ;;
+#    esac
+#    if [ "$apply_24b" = "" ] && [ "$(tput colors)" = "16777216" ]; then
+#      apply_24b=true
+#    fi
+#  elif _is_true "$tmux_conf_24b_colour"; then
+#    apply_24b=true
+#  fi
+#  if [ "$apply_24b" = "true" ]; then
+#    case "$TERM" in
+#      screen-*|tmux-*)
+#        ;;
+#      *)
+#        tmux set-option -ga terminal-overrides ",*256col*:Tc"
+#        ;;
+#    esac
+#  fi
+#}
 
 
 _apply_theme() {
@@ -1265,7 +1265,7 @@ setup_statusline() {
   esac
 
   #_apply_tmux_256color
-  _apply_24b&
+  #_apply_24b&
   _apply_theme&
   wait
 
