@@ -1403,17 +1403,21 @@ function _install_python_package() {
 
         #Se instalar a nivel usuario
         if [ $g_os_type -eq 19 ]; then
+
             printf '       > Ejecutando %b%s%b.\n' "$g_color_gray1" "pip3 install --user ${p_pkg_name}" "$g_color_reset"
             printf '%b' "$g_color_gray1"
             pip3 install --user ${p_pkg_name}
             l_status=$?
             printf '%b' "$g_color_reset"
+
         else
+
             printf '       > Ejecutando %b%s%b.\n' "$g_color_gray1" "pip3 install --user --break-system-packages ${p_pkg_name}" "$g_color_reset"
             printf '%b' "$g_color_gray1"
             pip3 install --user --break-system-packages ${p_pkg_name}
             l_status=$?
             printf '%b' "$g_color_reset"
+
         fi
 
         if [ $l_status -ne 0 ]; then
@@ -1428,14 +1432,29 @@ function _install_python_package() {
     # Si fuen instalado como libreria, deseintalarlo
     if [ ! -z "$l_version" ]; then
 
-        printf 'Python > El programa CLI "%b%s%b" se instalo como una libreria a nivel usuario (%b%s%b).\n' "$g_color_gray1" "$p_pkg_name" "$g_color_reset" \
-               "$g_color_gray1" "pip3 install --user ${p_pkg_name}" "$g_color_reset"
+        if [ $g_os_type -eq 19 ]; then
 
-        printf '       > Se realizará su desinstalacion %b%s%b.\n' "$g_color_gray1" "pip3 uninstall -y ${p_pkg_name}" "$g_color_reset"
-        printf '%b' "$g_color_gray1"
-        pip3 uninstall -y ${p_pkg_name}
-        l_status=$?
-        printf '%b' "$g_color_reset"
+            printf 'Python > El programa CLI "%b%s%b" se instalo como una libreria a nivel usuario (%b%s%b).\n' "$g_color_gray1" "$p_pkg_name" "$g_color_reset" \
+                   "$g_color_gray1" "pip3 install --user ${p_pkg_name}" "$g_color_reset"
+
+            printf '       > Se realizará su desinstalacion %b%s%b.\n' "$g_color_gray1" "pip3 uninstall -y ${p_pkg_name}" "$g_color_reset"
+            printf '%b' "$g_color_gray1"
+            pip3 uninstall -y ${p_pkg_name}
+            l_status=$?
+            printf '%b' "$g_color_reset"
+
+        else
+
+            printf 'Python > El programa CLI "%b%s%b" se instalo como una libreria a nivel usuario (%b%s%b).\n' "$g_color_gray1" "$p_pkg_name" "$g_color_reset" \
+                   "$g_color_gray1" "pip3 install --user --break-system-packages ${p_pkg_name}" "$g_color_reset"
+
+            printf '       > Se realizará su desinstalacion %b%s%b.\n' "$g_color_gray1" "pip3 uninstal --break-system-packagesl -y ${p_pkg_name}" "$g_color_reset"
+            printf '%b' "$g_color_gray1"
+            pip3 uninstall --break-system-packages -y ${p_pkg_name}
+            l_status=$?
+            printf '%b' "$g_color_reset"
+
+        fi
     fi
 
     # Verificar si esta instalado como tool CLI
