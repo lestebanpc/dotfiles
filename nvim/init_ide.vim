@@ -78,7 +78,7 @@ runtime custom_config.vim
 
 " Establecer un mecanismo de escritura (copy) al clipboard para VIM/NeoVim, lo cual incluye:
 "  > Acciones de escritura al clipboard usanbdo el valor de los registros VIM.
-"  > EScritura automatica al clipboard despues de realizar el yank (si esta habilitado 'g:yank_to_clipboard').
+"  > Escritura automatica al clipboard despues de realizar el yank (si esta habilitado 'g:yank_to_clipboard').
 " El valor real, se obtendra segun orden de prioridad:
 "  > El valor definido por la variable de entorno 'CLIPBOARD'
 "    Ejemplo : 'CLIPBOARD=1 vim'
