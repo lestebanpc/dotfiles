@@ -679,7 +679,7 @@ if g:clipboard_writer_mode == 2
     endif
 
     "Si no existe el comando: ¿forzar el uso de OSC-52?
-    if g:clipboard_writer_cmd != ''
+    if g:clipboard_writer_cmd == ''
         "let g:clipboard_writer_mode = 1
         let g:clipboard_writer_mode = 9
     endif
