@@ -536,19 +536,15 @@ config.key_map_preference = "Mapped"
 
 -- Leader key (called 'LEADER') stays active until a keypress is registered (whether it matches a key binding or not),
 -- or until it has been active for the duration specified by timeout_milliseconds, at which point it will automatically cancel itself.
-config.leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
+config.leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 2000 }
 
 -- Keybinding del modo normal
 local l_action = wezterm.action
 config.keys = {
 
-    --1. Ingresar a un determinado modo
-    { key = 'f', mods = 'CTRL|SHIFT', action = l_action.Search 'CurrentSelectionOrEmptyString' },
-    --{ key = 'f', mods = 'SUPER', action = l_action.Search 'CurrentSelectionOrEmptyString' },
-    { key = 'phys:Space', mods = 'CTRL|SHIFT', action = l_action.QuickSelect },
-    { key = 'w', mods = 'CTRL|SHIFT', action = l_action.ActivateCopyMode },
-    { key = 'u', mods = 'CTRL|SHIFT', action = l_action.CharSelect{ copy_on_select = true, copy_to =  'ClipboardAndPrimarySelection' } },
-
+    --------------------------------------------------------------------------------
+    --1. Capacidades basicas de la terminal
+    --------------------------------------------------------------------------------
 
     --2. Scrollback del panel actual en modo normal (Limpieza y navegacion)
     --{ key = 'k', mods = 'CTRL|SHIFT', action = l_action.ClearScrollback 'ScrollbackOnly' },
@@ -561,54 +557,6 @@ config.keys = {
     { key = 'End', mods = 'SHIFT', action = l_action.ScrollToBottom },
     { key = 'z', mods = 'CTRL|SHIFT', action = l_action.ScrollToPrompt(-1) },
     { key = 'x', mods = 'CTRL|SHIFT', action = l_action.ScrollToPrompt(1) },
-
-    --3. Gestion del Tab de la terminal
-    { key = '1', mods = 'ALT', action = l_action.ActivateTab(0) },
-    --{ key = '1', mods = 'SUPER', action = l_action.ActivateTab(0) },
-    { key = '2', mods = 'ALT', action = l_action.ActivateTab(1) },
-    --{ key = '2', mods = 'SUPER', action = l_action.ActivateTab(1) },
-    { key = '3', mods = 'ALT', action = l_action.ActivateTab(2) },
-    --{ key = '3', mods = 'SUPER', action = l_action.ActivateTab(2) },
-    { key = '4', mods = 'ALT', action = l_action.ActivateTab(3) },
-    --{ key = '4', mods = 'SUPER', action = l_action.ActivateTab(3) },
-    { key = '5', mods = 'ALT', action = l_action.ActivateTab(4) },
-    --{ key = '5', mods = 'SUPER', action = l_action.ActivateTab(4) },
-    { key = '6', mods = 'ALT', action = l_action.ActivateTab(5) },
-    --{ key = '6', mods = 'SUPER', action = l_action.ActivateTab(5) },
-    { key = '7', mods = 'ALT', action = l_action.ActivateTab(6) },
-    --{ key = '7', mods = 'SUPER', action = l_action.ActivateTab(6) },
-    { key = '8', mods = 'ALT', action = l_action.ActivateTab(7) },
-    --{ key = '8', mods = 'SUPER', action = l_action.ActivateTab(7) },
-    { key = '9', mods = 'ALT', action = l_action.ActivateTab(-1) },
-    --{ key = '9', mods = 'SUPER', action = l_action.ActivateTab(-1) },
-
-    --{ key = 'Tab', mods = 'CTRL', action = l_action.ActivateTabRelative(1) },
-    --{ key = ']', mods = 'SUPER|SHIFT', action = l_action.ActivateTabRelative(1) },
-    --{ key = 'PageDown', mods = 'CTRL', action = l_action.ActivateTabRelative(1) },
-    --{ key = '[', mods = 'SUPER|SHIFT', action = l_action.ActivateTabRelative(-1) },
-    --{ key = 'Tab', mods = 'CTRL|SHIFT', action = l_action.ActivateTabRelative(-1) },
-    --{ key = 'PageUp', mods = 'CTRL', action = l_action.ActivateTabRelative(-1) },
-
-    --{ key = 'w', mods = 'CTRL|SHIFT', action = l_action.CloseCurrentTab{ confirm = true } },
-    --{ key = 'w', mods = 'SUPER', action = l_action.CloseCurrentTab{ confirm = true } },
-    { key = 't', mods = 'SUPER|SHIFT', action = l_action.SpawnTab 'DefaultDomain' },
-    --{ key = 't', mods = 'SUPER', action = l_action.SpawnTab 'CurrentPaneDomain' },
-    { key = 't', mods = 'CTRL|SHIFT', action = l_action.SpawnTab 'CurrentPaneDomain' },
-
-    --4. Gestion del Panel del tab activo de la terminal
-
-    { key = '-', mods = 'LEADER', action = l_action.SplitVertical{ domain =  'CurrentPaneDomain' } },
-    { key = '=', mods = 'LEADER', action = l_action.SplitHorizontal{ domain =  'CurrentPaneDomain' } },
-    { key = '|', mods = 'LEADER', action = l_action.SplitHorizontal{ domain =  'CurrentPaneDomain' } },
-    { key = '|', mods = 'LEADER|SHIFT', action = l_action.SplitHorizontal{ domain =  'CurrentPaneDomain' } },
-    --{ key = '|', mods = 'LEADER|SHIFT', action = l_action.SplitHorizontal{ domain =  'CurrentPaneDomain' } },
-
-    { key = 'z', mods = 'LEADER', action = l_action.TogglePaneZoomState },
-
-    { key = 'a', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'activate_pane', one_shot = false, } },
-    { key = 's', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'resize_pane', one_shot = false, } },
-    --{ key = 'a', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'activate_pane', timeout_milliseconds = 1000, } },
-    --{ key = 's', mods = 'LEADER', action = l_action.ActivateKeyTable{ name = 'resize_pane', timeout_milliseconds = 1000, } },
 
     --5. Gestion de la fuente usado por la terminal
     { key = '+', mods = 'CTRL', action = l_action.IncreaseFontSize },
@@ -633,15 +581,113 @@ config.keys = {
     { key = 'Insert', mods = 'SHIFT', action = l_action.PasteFrom 'PrimarySelection' },
 
 
-    -- Generales
-    { key = 'phys:1', mods = 'CTRL|SHIFT', action = l_action.ShowLauncherArgs{ flags =  'LAUNCH_MENU_ITEMS' } },
-    { key = 'phys:2', mods = 'CTRL|SHIFT', action = l_action.ShowLauncherArgs{ flags =  'FUZZY|DOMAINS' } },
+    --------------------------------------------------------------------------------
+    --2. Gestion del Tab (Window)
+    --------------------------------------------------------------------------------
 
-    --{ key = 'a', mods = 'LEADER|CTRL', action = l_action.SendString '\u{1}' },
-    { key = 'l', mods = 'LEADER', action = l_action.ShowDebugOverlay },
+    -- Creation> Crear (create) el panel usando el dominio del panel actual
+    { key = 'c', mods = 'LEADER', action = l_action.SpawnTab('CurrentPaneDomain') },
+
+    -- Creation> Crear (create) el panel usado el dominio por defecto
+    { key = 'c', mods = 'LEADER|SHIFT', action = l_action.SpawnTab('DefaultDomain') },
+
+    -- Creation (interactive)> Usando el 'Domains Fuzzy Laucher'
+    { key = 'w', mods = 'LEADER', action = l_action.ShowLauncherArgs({ flags =  'FUZZY|DOMAINS' }) },
+
+    -- Creation (interactive)> Usando el 'Menu Laucher'
+    { key = 'w', mods = 'LEADER|SHIFT', action = l_action.ShowLauncherArgs({ flags =  'LAUNCH_MENU_ITEMS' }) },
+
+    -- Navegation> Ir a un tab segun su posicion (posicion: indice + 1)
+    { key = '1', mods = 'LEADER', action = l_action.ActivateTab(0) },
+    { key = '2', mods = 'LEADER', action = l_action.ActivateTab(1) },
+    { key = '3', mods = 'LEADER', action = l_action.ActivateTab(2) },
+    { key = '4', mods = 'LEADER', action = l_action.ActivateTab(3) },
+    { key = '5', mods = 'LEADER', action = l_action.ActivateTab(4) },
+    { key = '6', mods = 'LEADER', action = l_action.ActivateTab(5) },
+    { key = '7', mods = 'LEADER', action = l_action.ActivateTab(6) },
+    { key = '8', mods = 'LEADER', action = l_action.ActivateTab(7) },
+    { key = '9', mods = 'LEADER', action = l_action.ActivateTab(8) },
+    { key = '0', mods = 'LEADER', action = l_action.ActivateTab(9) },
+
+    -- Navegation> Ir a ultimo ('end') tab
+    { key = 'e', mods = 'LEADER', action = l_action.ActivateTab(-1) },
+
+    -- Navegation> Ir al next/previous tab
+    { key = 'n', mods = 'LEADER', action = l_action.ActivateTabRelative(1) },
+    { key = 'p', mods = 'LEADER', action = l_action.ActivateTabRelative(-1) },
+
+    -- Swap> Intercambiar de posicion 2 paneles continuos
+    { key = '>', mods = 'LEADER|SHIFT', action = l_action.MoveTabRelative(1) },
+    { key = '<', mods = 'LEADER|SHIFT', action = l_action.MoveTabRelative(-1) },
+    { key = '<', mods = 'LEADER', action = l_action.MoveTabRelative(-1) },
+
+    --{ key = 'w', mods = 'CTRL|SHIFT', action = l_action.CloseCurrentTab{ confirm = true } },
+    --{ key = 'w', mods = 'SUPER', action = l_action.CloseCurrentTab{ confirm = true } },
+
+
+    --------------------------------------------------------------------------------
+    --3. Gestion del Panel (de un Tab/Window)
+    --------------------------------------------------------------------------------
+
+    -- Variados> Fullscreen/Restaurar el tamaño del panel actual 
+    { key = 'z', mods = 'LEADER', action = l_action.TogglePaneZoomState },
+
+    -- Variados> Cerrar el panel actual
+    { key = 'x', mods = 'LEADER', action = l_action.CloseCurrentPane({ confirm = true }) },
+
+    -- Split> Dividir el panel actual verticalmente (crear un panel vertical)
+    { key = '"', mods = 'LEADER|SHIFT', action = l_action.SplitVertical({ domain =  'CurrentPaneDomain' }) },
+    { key = '=', mods = 'LEADER', action = l_action.SplitHorizontal({ domain =  'CurrentPaneDomain' }) },
+    { key = '=', mods = 'LEADER|SHIFT', action = l_action.SplitHorizontal({ domain =  'CurrentPaneDomain' }) },
+    { key = '|', mods = 'LEADER', action = l_action.SplitHorizontal({ domain =  'CurrentPaneDomain' }) },
+    { key = '|', mods = 'LEADER|SHIFT', action = l_action.SplitHorizontal({ domain =  'CurrentPaneDomain' }) },
+
+    -- Split> Dividir el panel actual verticalmente (crear un panel vertical)
+    { key = '%', mods = 'LEADER|SHIFT', action = l_action.SplitHorizontal({ domain =  'CurrentPaneDomain' }) },
+    { key = '-', mods = 'LEADER', action = l_action.SplitVertical({ domain =  'CurrentPaneDomain' }) },
+
+    -- Navegation> Ir al paneles continuo ('←/↓/↑/→' o 'h/j/k/l'
+    { key = 'LeftArrow', mods = 'LEADER', action = l_action.ActivatePaneDirection('Left') },
+    { key = 'h', mods = 'LEADER', action = l_action.ActivatePaneDirection('Left') },
+
+    { key = 'RightArrow', mods = 'LEADER', action = l_action.ActivatePaneDirection('Right') },
+    { key = 'l', mods = 'LEADER', action = l_action.ActivatePaneDirection('Right') },
+
+    { key = 'UpArrow', mods = 'LEADER', action = l_action.ActivatePaneDirection('Up') },
+    { key = 'k', mods = 'LEADER', action = l_action.ActivatePaneDirection('Up') },
+
+    { key = 'DownArrow', mods = 'LEADER', action = l_action.ActivatePaneDirection('Down') },
+    { key = 'j', mods = 'LEADER', action = l_action.ActivatePaneDirection('Down') },
+
+    -- Resizing> Modificar el tamaño de un panel
+    { key = 'r', mods = 'LEADER', action = l_action.ActivateKeyTable({ name = 'resize_pane', one_shot = false, }) },
+    --{ key = 'r', mods = 'LEADER', action = l_action.ActivateKeyTable({ name = 'resize_pane', timeout_milliseconds = 1000, }) },
+
+    -- Rotating > Rotar los paneles segun el sentido horario o antihorario
+    { key = '{', mods = 'LEADER|SHIFT', action = l_action.RotatePanes('CounterClockwise') },
+    { key = '{', mods = 'LEADER', action = l_action.RotatePanes('CounterClockwise') },
+    { key = '}', mods = 'LEADER|SHIFT', action = l_action.RotatePanes('Clockwise') },
+    { key = '}', mods = 'LEADER', action = l_action.RotatePanes('Clockwise') },
+
+    --------------------------------------------------------------------------------
+    --4. Generales
+    --------------------------------------------------------------------------------
+
+    -- Ingresar a un determinado modo
+    { key = 'f', mods = 'CTRL|SHIFT', action = l_action.Search('CurrentSelectionOrEmptyString') },
+    --{ key = 'f', mods = 'SUPER', action = l_action.Search 'CurrentSelectionOrEmptyString' },
+    { key = 'phys:Space', mods = 'CTRL|SHIFT', action = l_action.QuickSelect },
+    { key = 'w', mods = 'CTRL|SHIFT', action = l_action.ActivateCopyMode },
+    { key = 'u', mods = 'CTRL|SHIFT', action = l_action.CharSelect({ copy_on_select = true, copy_to =  'ClipboardAndPrimarySelection' }) },
+
+
+    { key = 'd', mods = 'LEADER|SHIFT', action = l_action.ShowDebugOverlay },
+    { key = 'r', mods = 'LEADER|SHIFT', action = l_action.ReloadConfiguration },
+    --{ key = 'a', mods = 'LEADER|CTRL', action = l_action.SendString('\u{1}') },
     --{ key = 'm', mods = 'CTRL|SHIFT', action = l_action.Hide },
     --{ key = 'p', mods = 'CTRL|SHIFT', action = l_action.ActivateCommandPalette },
-    { key = 'r', mods = 'LEADER', action = l_action.ReloadConfiguration },
+
+
 
   }
 
@@ -762,35 +808,33 @@ config.key_tables = {
     --------------------------------------------------------------------------
     -- 'ActivateKeyTable' del modo normal
     --------------------------------------------------------------------------
-     activate_pane = {
-        { key = 'LeftArrow', action = l_action.ActivatePaneDirection 'Left' },
-        { key = 'h', action = l_action.ActivatePaneDirection 'Left' },
-
-        { key = 'RightArrow', action = l_action.ActivatePaneDirection 'Right' },
-        { key = 'l', action = l_action.ActivatePaneDirection 'Right' },
-
-        { key = 'UpArrow', action = l_action.ActivatePaneDirection 'Up' },
-        { key = 'k', action = l_action.ActivatePaneDirection 'Up' },
-
-        { key = 'DownArrow', action = l_action.ActivatePaneDirection 'Down' },
-        { key = 'j', action = l_action.ActivatePaneDirection 'Down' },
-
-        -- Cancel the mode by pressing escape
-        { key = "Escape", action = "PopKeyTable" },
-    },
 
     resize_pane = {
-        { key = 'LeftArrow', action = l_action.AdjustPaneSize { 'Left', 1 } },
-        { key = 'h', action = l_action.AdjustPaneSize { 'Left', 1 } },
+        -- Incrementar/Reducir de 1 en 1
+        { key = 'LeftArrow', mods = 'NONE', action = l_action.AdjustPaneSize({ 'Left', 1 }) },
+        { key = 'h', mods = 'NONE', action = l_action.AdjustPaneSize({ 'Left', 1 }) },
 
-        { key = 'RightArrow', action = l_action.AdjustPaneSize { 'Right', 1 } },
-        { key = 'l', action = l_action.AdjustPaneSize { 'Right', 1 } },
+        { key = 'RightArrow', mods = 'NONE', action = l_action.AdjustPaneSize({ 'Right', 1 }) },
+        { key = 'l', mods = 'NONE', action = l_action.AdjustPaneSize({ 'Right', 1 }) },
 
-        { key = 'UpArrow', action = l_action.AdjustPaneSize { 'Up', 1 } },
-        { key = 'k', action = l_action.AdjustPaneSize { 'Up', 1 } },
+        { key = 'UpArrow', mods = 'NONE', action = l_action.AdjustPaneSize({ 'Up', 1 }) },
+        { key = 'k', mods = 'NONE', action = l_action.AdjustPaneSize({ 'Up', 1 }) },
 
-        { key = 'DownArrow', action = l_action.AdjustPaneSize { 'Down', 1 } },
-        { key = 'j', action = l_action.AdjustPaneSize { 'Down', 1 } },
+        { key = 'DownArrow', mods = 'NONE', action = l_action.AdjustPaneSize({ 'Down', 1 }) },
+        { key = 'j', mods = 'NONE', action = l_action.AdjustPaneSize({ 'Down', 1 }) },
+
+        -- Incrementar/Reducir de 5 en 5
+        { key = 'LeftArrow', mods = 'SHIFT', mods = 'SHIFT', action = l_action.AdjustPaneSize({ 'Left', 5 }) },
+        { key = 'h', mods = 'SHIFT', action = l_action.AdjustPaneSize({ 'Left', 5 }) },
+
+        { key = 'RightArrow', mods = 'SHIFT', action = l_action.AdjustPaneSize({ 'Right', 5 }) },
+        { key = 'l', mods = 'SHIFT', action = l_action.AdjustPaneSize({ 'Right', 5 }) },
+
+        { key = 'UpArrow', mods = 'SHIFT', action = l_action.AdjustPaneSize({ 'Up', 5 }) },
+        { key = 'k', mods = 'SHIFT', action = l_action.AdjustPaneSize({ 'Up', 5 }) },
+
+        { key = 'DownArrow', mods = 'SHIFT', action = l_action.AdjustPaneSize({ 'Down', 5 }) },
+        { key = 'j', mods = 'SHIFT', action = l_action.AdjustPaneSize({ 'Down', 5 }) },
 
         -- Cancel the mode by pressing escape
         { key = "Escape", action = "PopKeyTable" },

@@ -8,7 +8,7 @@ local l_mod= {}
 ------------------------------------------------------------------------------------
 
 -- Usar Wayland y solo si es Linux.
--- Debido a que la version de Wayland esta en rescontruccion por lo se optara por usar X11. 
+-- Debido a que la version de Wayland esta en rescontruccion por lo se optara por usar X11.
 -- Limitaciones al 2024.07.07:
 --  > No funciona correctamente el sopotte a OSC 52 para manejo del clipboard.
 --  > El estilo de ventanas funciona peor que el de X11.
@@ -47,7 +47,7 @@ local l_default_domain = nil
 --local l_default_domain = "local"
 --local l_default_domain = "wsl:ubuntu"
 
--- A multiplexing domain is area where the program to be executed/multiplexed is located. By default the GUI (including keyboard actions and events) runs locally, 
+-- A multiplexing domain is area where the program to be executed/multiplexed is located. By default the GUI (including keyboard actions and events) runs locally,
 -- but the program that runs the wezterm terminal (usually a shell interpreter) can run in another zone or domain.
 -- The multiplexing domains can be:
 --   > "local"
@@ -67,7 +67,7 @@ local l_ssh_domains = nil
 --    name = 'my.server',
 --    -- Identifies the host:port pair of the remote server. Can be a DNS name or an IP address with an optional ":port" on the end.
 --    remote_address = '192.168.1.1',
---    -- Whether agent auth should be disabled. Set to true to disable it. 
+--    -- Whether agent auth should be disabled. Set to true to disable it.
 --    --no_agent_auth = false,
 --    -- The username to use for authenticating with the remote host
 --    username = 'yourusername',
@@ -86,15 +86,15 @@ local l_ssh_domains = nil
 ------------------------------------------------------------------------------------
 
 local l_launch_menu = {
-   { 
+   {
        -- Optional label to show in the launcher. If omitted, a label is derived from the `args`.
-       label = " PowerShell Core", 
-       -- Command to run into new tab. The argument array to spawn. 
-       args =  { "pwsh" },
+       label = " PowerShell Core",
+       -- Command to run into new tab. The argument array to spawn.
+       args =  { "pwsh", "-l" },
        -- You can specify an alternative current working directory; if you don't specify one then a default based on the OSC 7
        -- escape sequence will be used (see the Shell Integration docs), falling back to the home directory.
        --cwd = "/some/path",
-       -- You can override environment variables just for this command by setting this here. 
+       -- You can override environment variables just for this command by setting this here.
        --set_environment_variables = { FOO = "bar" },
    },
    { label = " Bash", args = { "bash", "-l" }, },
