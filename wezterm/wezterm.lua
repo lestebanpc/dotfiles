@@ -37,7 +37,7 @@ end
 -- Carge del modulo 'wezterm'
 ------------------------------------------------------------------------------------
 
-local wezterm = require 'wezterm'
+local wezterm = require('wezterm')
 
 -- Obtain the default configuration. See: https://wezfurlong.org/wezterm/config/lua/config/index.html
 local config = wezterm.config_builder()
@@ -639,6 +639,8 @@ config.leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 2000 }
 
 -- Keybinding del modo normal
 local l_action = wezterm.action
+local sesh = require('utils.sesh')
+
 config.keys = {
 
     --------------------------------------------------------------------------------
@@ -787,6 +789,12 @@ config.keys = {
     --{ key = 'p', mods = 'CTRL|SHIFT', action = l_action.ActivateCommandPalette },
 
 
+    --------------------------------------------------------------------------------
+    --5. Custom
+    --------------------------------------------------------------------------------
+
+    { key = 's', mods = 'LEADER', action = sesh.switch_workspace(), },
+    { key = 's', mods = 'LEADER|SHIFT', action = sesh.switch_to_prev_workspace(), },
 
   }
 
