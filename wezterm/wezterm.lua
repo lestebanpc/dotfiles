@@ -211,8 +211,20 @@ config.use_ime = false
 -- Setting> Windows> General
 ------------------------------------------------------------------------------------
 
+--  > Estilo por defecto del TabBar autogenerado por Wezterm.
+--  > Estilo del borde de la ventana.
+--    En Linux, X11 no permite cambiar el borde de la ventana en Wayland si
+-- No incluye la barra de titulo por defecto generado por el gestor de ventana o escritorio.
+-- Url: https://wezfurlong.org/wezterm/config/lua/config/window_frame.html?h=window_frame
+config.window_frame = {
+    --'Roboto' es una fuente no-mono (proporcional) integrada/built-in dentro del binario de wezterm
+    --font = wezterm.font 'Roboto',
+    font_size = 10,
+}
+
 --print(l_myconfig.windows_style)
 
+-- Estilo de borde de la ventana el cual incluye:
 -- Si no esta definido el estilo de la ventana, definirlo
 -- Estilo a usar en la ventana de la terminal
 --  0 > Se establece el por defecto.
@@ -346,8 +358,20 @@ config.default_cursor_style = "BlinkingBlock"
 -- It is recommended to avoid blinking cursors when on battery power, as it is relatively costly to keep re-rendering for the blink!.
 --config.cursor_blink_rate = 700
 
+
 ------------------------------------------------------------------------------------
--- Setting> Windows> TabBar autogenerado por Wezterm
+-- Setting> Windows> Scroll
+------------------------------------------------------------------------------------
+
+-- Enable the scrollbar. This is currently disabled by default. It will occupy the right window padding space.
+config.enable_scroll_bar = l_myconfig.enable_scrollbar
+
+-- Lines of scrollback you want to retain (in memory) per tab (default is 3500)
+config.scrollback_lines = 5000
+
+
+------------------------------------------------------------------------------------
+-- Setting> Windows> Tab Bar (Barra de pestañas)
 ------------------------------------------------------------------------------------
 
 -- Controls whether the tab bar is enabled. Set to false to disable it.
@@ -383,18 +407,6 @@ end
 -- Futuras mejoras: https://github.com/wez/wezterm/issues/1180#issuecomment-1493128725
 config.use_fancy_tab_bar = true
 
--- Estilo de borde de la ventana el cual incluye:
---  > Estilo por defecto del TabBar autogenerado por Wezterm.
---  > Estilo del borde de la ventana.
---    En Linux, X11 no permite cambiar el borde de la ventana en Wayland si
--- No incluye la barra de titulo por defecto generado por el gestor de ventana o escritorio.
--- Url: https://wezfurlong.org/wezterm/config/lua/config/window_frame.html?h=window_frame
-config.window_frame = {
-    --'Roboto' es una fuente no-mono (proporcional) integrada/built-in dentro del binario de wezterm
-    --font = wezterm.font 'Roboto',
-    font_size = 10,
-}
-
 -- Specifies the maximum width that a tab can have in the tab bar when using retro tab mode. It is ignored when using fancy tab mode.
 -- Defaults to 16 glyphs in width.
 --config.tab_max_width = 32
@@ -417,70 +429,158 @@ config.window_frame = {
 -- Esto complementa el estilo usado para el tab 'https://wezfurlong.org/wezterm/config/appearance.html#retro-tab-bar-appearance'.
 -- Url: 'https://wezfurlong.org/wezterm/config/lua/window-events/format-tab-title.html'
 
----- Callback that change returns the suggested title for a tab.
----- It prefers the title that was set via `tab:set_title()` or `wezterm cli set-tab-title`,
----- but falls back to the title of the active pane in that tab.
---function tab_title(tab_info)
---  local title = tab_info.tab_title
---  -- if the tab title is explicitly set, take that
---  if title and #title > 0 then
---    return title
---  end
---  -- Otherwise, use the title from the active pane
---  -- in that tab
---  return tab_info.active_pane.title
---end
---
----- Event controller that change returns the suggested title and style for a tab.
---local SOLID_LEFT_ARROW = wezterm.nerdfonts.pl_right_hard_divider  -- The filled in variant of the < symbol
---local SOLID_RIGHT_ARROW = wezterm.nerdfonts.pl_left_hard_divider  -- The filled in variant of the > symbol
---
---wezterm.on(
---  'format-tab-title',
---  function(tab, tabs, panes, config, hover, max_width)
---    local edge_background = '#0b0022'
---    local background = '#1b1032'
---    local foreground = '#808080'
---
---    if tab.is_active then
---      background = '#2b2042'
---      foreground = '#c0c0c0'
---    elseif hover then
---      background = '#3b3052'
---      foreground = '#909090'
---    end
---
---    local edge_foreground = background
---
---    local title = tab_title(tab)
---
---    -- ensure that the titles fit in the available space, and that we have room for the edges.
---    title = wezterm.truncate_right(title, max_width - 2)
---
---    return {
---      { Background = { Color = edge_background } },
---      { Foreground = { Color = edge_foreground } },
---      { Text = SOLID_LEFT_ARROW },
---      { Background = { Color = background } },
---      { Foreground = { Color = foreground } },
---      { Text = title },
---      { Background = { Color = edge_background } },
---      { Foreground = { Color = edge_foreground } },
---      { Text = SOLID_RIGHT_ARROW },
---    }
---  end
---)
+
+-- Personalizar el nombre del tab
+
+
+-- Función para extraer nombre corto de proceso
+local function get_short_name(process_name)
+
+  -- Limpiar rutas y extensiones
+  local name = process_name:match("([^/\\]+)$"):gsub("%.exe$", ""):gsub("%.ELF$", "")
+  return name
+
+end
+
+-- Mapeo de íconos NerdFont para dominios
+local ld_domain_icons = {
+  ["wsl"] = "",
+  ["ssh"] = "󰣀",
+  ["local"] = "",
+  ["NONE"] = ""
+}
+
+-- Mapeo de íconos NerdFont para los programas
+local ld_program_icons = {
+  ["bash"] = "",
+  ["zsh"] = "",
+  ["fish"] = "󰈺",
+  ["pwsh"] = "",
+  ["powershell"] = "",
+  ["cmd"] = "",
+  ["vim"] = "",
+  ["nvim"] = "",
+  ["NONE"] = "󰙵"
+}
+
+-- Evento invocado por cada tab que requiere se redibujado
+wezterm.on('format-tab-title', function(tab, tabs, panes, config, hover, max_width)
+
+    local pane = tab.active_pane
+
+    --1. Obtener informacion del dominio de ejecucion actual
+    local domain = pane.domain_name
+    local domain_icon= ld_domain_icons["NONE"]
+
+    if not domain_name then
+        domain_icon = ld_domain_icons["local"]
+    elseif domain_name:match("^wsl:") then
+        domain_icon = ld_domain_icons["wsl"]
+    elseif domain_name:match("^ssh:") then
+        domain_icon = ld_domain_icons["ssh"]
+    end
+
+
+    --2. Obtener informacion del proceso actual en ejecucion (del panel actual)
+    local process = pane.foreground_process_name
+    local program_icon = ld_program_icons["NONE"]
+    local current_program = 'unknown'
+    local temp = ''
+
+    if process then
+
+        current_program = get_short_name(process)
+        temp = ld_program_icons[current_program]
+        if temp then
+            program_icon = temp
+        end
+
+    end
+
+    -- Prefir usar el nombre establecido 'tab:set_title()' or 'wezterm cli set-tab-title' que el programna actual
+    local tab_title =  tab.tab_title
+    if tab_title ~= null and tab_title ~= "" then
+        current_program = tab_title
+    end
+
+
+    --3. Otra informacion del tab
+    local zoom_indicator = "󰁌" --"󰊓"
+    local zoomed = false --pane:is_zoomed()
+    local tab_index = tab.tab_index + 1
+
+
+    --4. Construir título
+    local tab_title = ''
+
+    if zoomed then
+      tab_title = string.format(" %s %d: %s %s %s", domain_icon, tab_index, program_icon, current_program, zoom_indicator)
+      --tab_title = string.format(" %s %s %s %s", domain_icon, program_icon, current_program, zoom_indicator)
+    else
+      tab_title = string.format(" %s %d: %s %s ", domain_icon, tab_index, program_icon, current_program)
+      --tab_title = string.format(" %s %s %s ", domain_icon, program_icon, current_program)
+    end
+
+    return tab_title
+
+end)
+
 
 
 ------------------------------------------------------------------------------------
--- Setting> Windows> Scroll
+-- Setting> Windows> Status Bar (Barra de estado)
 ------------------------------------------------------------------------------------
+--
+-- Si el tabbar esta visible, se puede mostrar a la izquierda o derecha.
+-- Si el tabbar no esta visible, no se muestra.
+--
 
--- Enable the scrollbar. This is currently disabled by default. It will occupy the right window padding space.
-config.enable_scroll_bar = l_myconfig.enable_scrollbar
+-- Show which key table is active in the status area
+wezterm.on('update-status', function(window, pane)
 
--- Lines of scrollback you want to retain (in memory) per tab (default is 3500)
-config.scrollback_lines = 5000
+    local l_status = ''
+
+    -- Obtener el workspace actual
+    local l_workspace = window:active_workspace()
+
+    if l_workspace ~= null and l_workspace ~= "" then
+        if l_status == '' then
+            l_status = string.format('%s %s', wezterm.nerdfonts.cod_archive, l_workspace)
+        else
+            l_status = string.format('%s %s | %s', wezterm.nerdfonts.cod_archive, l_workspace, l_status)
+        end
+    end
+
+    -- Obtener el keytable activo
+    local l_keytable = window:active_key_table()
+
+    if l_keytable ~= null and l_keytable ~= "" then
+        if l_status == '' then
+            l_status = string.format('%s %s', wezterm.nerdfonts.cod_record_keys, l_keytable)
+        else
+            l_status = string.format('%s %s | %s', wezterm.nerdfonts.cod_record_keys, l_keytable, l_status)
+        end
+    end
+
+    -- Mostart el status
+    if l_status ~= '' then
+      l_status =  ' ' .. l_status .. '  '
+    end
+
+    window:set_right_status(l_status)
+
+    --window:set_right_status(wezterm.format({
+    --    { Attribute = { Intensity = "Normal" } },
+    --    { Foreground = { Color = "#f0f0f0" } },
+    --    { Background = { Color = "#333333" } },
+    --    { Text = l_status },
+    --}))
+
+end)
+
+
+-- Actualizar la barra cada 1 segundo (opcional)
+--config.status_update_interval = 1000,
 
 
 ------------------------------------------------------------------------------------
@@ -901,19 +1001,6 @@ if l_myconfig.launch_menu ~= nil then
     config.launch_menu = l_myconfig.launch_menu
 end
 
-
-------------------------------------------------------------------------------------
--- Wezterm Events
-------------------------------------------------------------------------------------
-
--- Show which key table is active in the status area
-wezterm.on('update-right-status', function(window, pane)
-  local name = window:active_key_table()
-  if name then
-    name = 'Key table: ' .. name .. ' '
-  end
-  window:set_right_status(name or '')
-end)
 
 ------------------------------------------------------------------------------------
 --- End
