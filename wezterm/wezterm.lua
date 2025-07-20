@@ -391,7 +391,7 @@ config.use_fancy_tab_bar = true
 -- Url: https://wezfurlong.org/wezterm/config/lua/config/window_frame.html?h=window_frame
 config.window_frame = {
     --'Roboto' es una fuente no-mono (proporcional) integrada/built-in dentro del binario de wezterm
-    font = wezterm.font 'Roboto',
+    --font = wezterm.font 'Roboto',
     font_size = 10,
 }
 
@@ -519,7 +519,6 @@ config.scrollback_lines = 5000
 -- Los 'keybord shorcut' capturados por la ventana wezterm, no es enviado a los paneles. Por tal motivo desabilitelo, si desea
 -- que estos no sean procesados por la ventana y sean procesados por el panel actual.
 -- La lista inicial se obtuvo de 'wezterm show-keys --lua' y luego se depurando para nuestro layout de teclado en ingles.
--- TODO: Adecuar para MacOS ¿por ejemplo cambiar SUPER con ..?
 
 
 -- If you don't want the default assignments to be registered, you can disable all of them with this configuration;

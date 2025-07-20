@@ -998,14 +998,25 @@ function _setup_user_profile() {
     l_status=$?
 
     #Para WSL copiar el archivo de configuracion del profile
-    if [ $g_os_type -eq 1 ]; then
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_wsl.bash" "" ".profile_config.bash" $l_flag_overwrite_file "        > "
+    if [ $g_profile_type -eq 0 ]; then
+
+        if [ $g_os_type -eq 1 ]; then
+            copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_local_wsl.bash" "" ".profile_config.bash" $l_flag_overwrite_file "        > "
+            l_status=$?
+            printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
+                  "$g_color_yellow1" "~/.profile_config.bash" "$g_color_reset"
+        else
+            printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/profile_config_template_local_nonwsl.bash %b~/.profile_config.bash%b"\n' \
+                  "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
+        fi
+
+    else
+
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_remote.bash" "" ".profile_config.bash" $l_flag_overwrite_file "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
               "$g_color_yellow1" "~/.profile_config.bash" "$g_color_reset"
-    else
-        printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/profile_config_template_nonwsl.bash %b~/.profile_config.bash%b"\n' \
-              "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
+
     fi
 
     #5. Creando enlaces simbolico independiente del tipo de distribución Linux
@@ -1035,23 +1046,12 @@ function _setup_user_profile() {
     l_target_path=".config/tmux"
     l_target_link="tmux.conf"
     l_source_path="${g_repo_name}/etc/tmux"
-
-    if [ $g_profile_type -eq 0 ]; then
-        l_source_filename='tmux_local.conf'
-    else
-        l_source_filename='tmux_remote.conf'
-    fi
+    l_source_filename='tmux.conf'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
 
-
-    if [ $g_profile_type -eq 0 ]; then
-        l_source_filename='custom_config_template_local.conf'
-    else
-        l_source_filename='custom_config_template_remote.conf'
-    fi
-
+    l_source_filename='custom_config_template_1.conf'
     copy_file_on_home "${g_repo_path}/etc/tmux" "$l_source_filename" ".config/tmux" "custom_config.conf" $l_flag_overwrite_file "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de tmux.\n' \
@@ -1183,11 +1183,21 @@ function _setup_user_profile() {
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
-    create_folderpath_on_home "" ".local/bin"
+    #create_folderpath_on_home "" ".local/bin"
     l_target_path=".local/bin"
     l_target_link="tmux_run_cmd"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='tmux_run_cmd.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    l_status=$?
+
+
+    #Crear el enlace simbolico de comandos basicos
+    #create_folderpath_on_home "" ".local/bin"
+    l_target_path=".local/bin"
+    l_target_link="sync_vault"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='sync_vault.bash'
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
 
@@ -1210,6 +1220,7 @@ function _setup_user_profile() {
     printf 'Profile > Edite los archivos "%b%s%b" y "%b%s%b" si desea personalizar las opciones a nivel global del usuario ("%b~/.gitconfig%b")\n' \
            "$g_color_yellow1" "~/.config/git/user_main.toml" "$g_color_reset" "$g_color_yellow1" "~/.config/git/user_mywork.toml" "$g_color_reset" \
            "$g_color_gray1" "$g_color_reset"
+
 
     #Archivo de configuración de Oh-My-Posh
     if [ $g_profile_type -eq 0 ]; then
@@ -2847,10 +2858,24 @@ g_targethome_path=''
 # - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 g_repo_name=''
 
-# Tipo de profile a configurar
-# > 0 - Local  - Usado para su equipo local o un equipo remoto pero que se accede desde escritorio.
-# > 1 - Remote - Usado por una VM accedido por comando ssh, cuyo owner soy yo
-# > 2 - Remote - Usado por una VM accedido por comando ssh, cuyo owner NO soy yo
+# Definir el tipo de profile del shell del usuario que se va a configurar (usando '04_install_profile.bash').
+# Su valores son:
+#  > 0 (Profile de un shell local)
+#    > El shell se ejecuta directamente en un emulador de terminal GUI (usa GUI Desktop) por lo cual tiene acceso a
+#      recursos como: clipboard, dispostivos de hardware como tarjeta de video, tarjeta de sonido, etc.
+#      Puede ser:
+#      > Un equipo local con GUI Desktop.
+#      > Un equipo remoto pero que se accede usando su GUI Desktop.
+#      > Una distribucion WSL2 es una VM linux especial que esta diseñada para acceso local desde su Windows, que se
+#        integra con el emulador de terminal GUI de Windows como local y con acceso al clipboard de Windows.
+#  > 1 (Profile de un shell remoto donde se es owner)
+#    > Por ejemplo, una VM accedido por comando ssh, cuyo owner soy yo.
+#  > 2 (Profile de un shell remote donde no se es ownwer)
+#    > Por ejemplo, una VM accedido por comando ssh, cuyo owner NO soy yo.
+# Si no se define el valor por defecto es '0' (Local).
+# Actualmente, es usado para definir valores por defecto en algunos archivos de configuracion (modificables) del profile:
+#  > El tema usado por 'oh-my-posh': '~/.files/etc/oh-my-posh/default_settings.json'
+#  > El archivo de parametros usados por el profile del usuario: '~/.profile.config'
 g_profile_type=0
 
 #Obtener los parametros del archivos de configuración

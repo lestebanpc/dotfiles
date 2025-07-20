@@ -214,8 +214,22 @@
 # Usado por los script "04_install_profile.bash"
 ##############################################################################################
 
-# Tipo de profile a configurar
-# > 0 - Local  - Usado para su equipo local o un equipo remoto pero que se accede desde escritorio.
-# > 1 - Remote - Usado por una VM accedido por comando ssh, cuyo owner soy yo
-# > 2 - Remote - Usado por una VM accedido por comando ssh, cuyo owner NO soy yo
+# Definir el tipo de profile del shell del usuario que se va a configurar (usando '04_install_profile.bash').
+# Su valores son:
+#  > 0 (Profile de un shell local)
+#    > El shell se ejecuta directamente en un emulador de terminal GUI (usa GUI Desktop) por lo cual tiene acceso a
+#      recursos como: clipboard, dispostivos de hardware como tarjeta de video, tarjeta de sonido, etc.
+#      Puede ser:
+#      > Un equipo local con GUI Desktop.
+#      > Un equipo remoto pero que se accede usando su GUI Desktop.
+#      > Una distribucion WSL2 es una VM linux especial que esta diseñada para acceso local desde su Windows, que se
+#        integra con el emulador de terminal GUI de Windows como local y con acceso al clipboard de Windows.
+#  > 1 (Profile de un shell remoto donde se es owner)
+#    > Por ejemplo, una VM accedido por comando ssh, cuyo owner soy yo.
+#  > 2 (Profile de un shell remote donde no se es ownwer)
+#    > Por ejemplo, una VM accedido por comando ssh, cuyo owner NO soy yo.
+# Si no se define el valor por defecto es '0' (Local).
+# Actualmente, es usado para definir valores por defecto en algunos archivos de configuracion (modificables) del profile:
+#  > El tema usado por 'oh-my-posh': '~/.files/etc/oh-my-posh/default_settings.json'
+#  > El archivo de parametros usados por el profile del usuario: '~/.profile.config'
 #g_profile_type=0

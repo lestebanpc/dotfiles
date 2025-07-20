@@ -35,9 +35,9 @@ screen_dcs() {
 #Parametros de entrada> Argumentos
 #  3> Indica el formato que se usara para enviar al clipboard.
 #    0 > Formato OSC 52 estandar que es enviado directmente una terminal que NO use como '$TERM' a GNU screen.
-#    1 > Formato OSC52 es dividio en pequeños trozos y enmascador en formato DSC, para enviarlo directmente a una terminal 
+#    1 > Formato OSC52 es dividio en pequeños trozos y enmascador en formato DSC, para enviarlo directmente a una terminal
 #        basada en GNU ('$TERM' inicia con screen).
-#    2 > Formato OSC52 se enmascara DSC enmascarado para TMUX (tmux requiere un formato determinado) y sera este el que 
+#    2 > Formato OSC52 se enmascara DSC enmascarado para TMUX (tmux requiere un formato determinado) y sera este el que
 #        decida si este debera reenvíarse a la terminal donde corre tmux (en este caso Tmux desenmacara y lo envia).
 #
 put_clipboard() {
@@ -76,7 +76,7 @@ put_clipboard() {
                     ;;
                 *)
                     p_format=0
-                    ;;                
+                    ;;
             esac
         fi
     fi
