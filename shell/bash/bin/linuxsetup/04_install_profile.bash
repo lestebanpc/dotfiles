@@ -1084,24 +1084,58 @@ function _setup_user_profile() {
 
 
     #Archivo de configuración para el emulador de terminal wezterm
-    l_target_path=".config/wezterm"
     create_folderpath_on_home ".config" "wezterm"
-    l_target_link="wezterm.lua"
-    l_source_path="${g_repo_name}/wezterm"
-    l_source_filename='wezterm.lua'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
-    l_status=$?
+    # Es WSL (es un local espacial: diseñado para ser accedido solo desde el windows local)
+    if [ $g_os_type -eq 1 ]; then
 
-    l_target_path=".config/wezterm"
-    l_target_link="utils"
-    l_source_path="${g_repo_name}/wezterm/utils"
-    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
+        #l_target_path=".config/wezterm"
+        #l_target_link="utils"
+        #l_source_path="${g_repo_name}/wezterm/remote/utils"
+        #create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
 
-    copy_file_on_home "${g_repo_path}/wezterm" "custom_config_template_lnx.lua" ".config/wezterm" "custom_config.lua" $l_flag_overwrite_file "        > "
-    l_status=$?
-    printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
-           "$g_color_yellow1" "~/.config/wezterm/custom_config.lua" "$g_color_reset"
+        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_wsl_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrite_file "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
+               "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
+
+    # Linux clasico (No es WSL)
+    else
+
+        if [ $g_profile_type -eq 0 ]; then
+
+            l_target_path=".config/wezterm"
+            l_target_link="wezterm.lua"
+            l_source_path="${g_repo_name}/wezterm/local"
+            l_source_filename='wezterm.lua'
+
+            create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+            l_status=$?
+
+            l_target_path=".config/wezterm"
+            l_target_link="utils"
+            l_source_path="${g_repo_name}/wezterm/local/utils"
+            create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
+
+            copy_file_on_home "${g_repo_path}/wezterm/local" "custom_config_template_lnx.lua" ".config/wezterm" "custom_config.lua" $l_flag_overwrite_file "        > "
+            l_status=$?
+            printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
+                   "$g_color_yellow1" "~/.config/wezterm/custom_config.lua" "$g_color_reset"
+
+        else
+
+            #l_target_path=".config/wezterm"
+            #l_target_link="utils"
+            #l_source_path="${g_repo_name}/wezterm/remote/utils"
+            #create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
+
+            copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_lnx_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrite_file "        > "
+            l_status=$?
+            printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
+                   "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
+
+        fi
+    fi
 
     #Archivo de configuración para el emulador de terminal foot
     l_target_path=".config/foot"
@@ -1112,7 +1146,6 @@ function _setup_user_profile() {
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
-
 
     #Archivo de configuración para Lazygit
     l_target_path=".config/lazygit"
@@ -1188,7 +1221,6 @@ function _setup_user_profile() {
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
-    #create_folderpath_on_home "" ".local/bin"
     l_target_path=".local/bin"
     l_target_link="tmux_run_cmd"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
@@ -1198,11 +1230,19 @@ function _setup_user_profile() {
 
 
     #Crear el enlace simbolico de comandos basicos
-    #create_folderpath_on_home "" ".local/bin"
     l_target_path=".local/bin"
     l_target_link="sync_vault"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='sync_vault.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    l_status=$?
+
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="mymusic"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='mymusic.bash'
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
 
@@ -1228,21 +1268,22 @@ function _setup_user_profile() {
 
 
     #Archivo de configuración de Oh-My-Posh
-    if [ $g_profile_type -eq 0 ]; then
 
-        # Local> Es WSL (siempre remoto)
-        if [ $g_os_type -eq 1 ]; then
+    # Es WSL (es un local espacial: diseñado para ser accedido solo desde el windows local)
+    if [ $g_os_type -eq 1 ]; then
 
-            # Si el que instala es el usuario root
-            if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
-                l_source_filename='lepc-montys-orange1.json'
-            # Si el que instala es el usuario no-root
-            else
-                l_source_filename='lepc-montys-blue1.json'
-            fi
-
-        # Local> Linux clasico (No es WSL)
+        # Si el que instala es el usuario root
+        if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
+            l_source_filename='lepc-montys-orange1.json'
+        # Si el que instala es el usuario no-root
         else
+            l_source_filename='lepc-montys-blue1.json'
+        fi
+
+    # Linux clasico (No es WSL)
+    else
+
+        if [ $g_profile_type -eq 0 ]; then
 
             # Si el que instala es el usuario root
             if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
@@ -1252,22 +1293,6 @@ function _setup_user_profile() {
                 l_source_filename='lepc-montys-cyan1.json'
             fi
 
-        fi
-
-    else
-
-        # Remote> Es WSL
-        if [ $g_os_type -eq 1 ]; then
-
-            # Si el que instala es el usuario root
-            if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
-                l_source_filename='lepc-montys-orange1.json'
-            # Si el que instala es el usuario no-root
-            else
-                l_source_filename='lepc-montys-blue1.json'
-            fi
-
-        # Remote> Linux clasico (No es WSL)
         else
 
             # Si el que instala es el usuario root

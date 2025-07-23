@@ -13,6 +13,8 @@ g_color_yellow1="\x1b[33m"
 g_color_red1="\x1b[31m"
 g_color_blue1="\x1b[34m"
 
+declare -r g_regexp_sust_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
+
 
 _g_sync_vault () {
 
@@ -251,7 +253,7 @@ _g_usage_sync_vault() {
     printf '    - %bpathname%b Adiciona el sufijo ".path1" o ".path2" segun sea el caso.%b\n' "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
     printf '    - %bdelete%b   Elimina el looser, dejando solo el winner.%b\n' "$g_color_cian1" "$g_color_gray1" "$g_color_reset"
     printf 'Los argumentos usados son:\n'
-    print '  > %bVAULT_SUFIX%b Sufijo de vault a sincronizar/homologar.%b\n' \
+    printf '  > %bVAULT_SUFIX%b Sufijo de vault a sincronizar/homologar.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bOPERATION_TYPE%b El tipo de operacion que se realiza entre path1 y path2. Sus valores puede ser:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -470,6 +472,8 @@ m_sync_vault () {
             l_losser_action='num'
         fi
 
+        #printf 'remote_name: %s, local_path: %s, operation_type: %d, path_position: %d, dry_run: %d, conflict_winner: %s, losser_action: %s, force: %d' \
+        #       "${l_remote_name}" "$l_local_path" 0 $l_path_position $l_flag_dry_run "$l_conflict_winner" "$l_losser_action" $l_flag_force
         _g_sync_vault "${l_remote_name}" "$l_local_path" 0 $l_path_position $l_flag_dry_run "$l_conflict_winner" "$l_losser_action" $l_flag_force
 
     elif [ $l_operation_type -eq 1 ]; then
@@ -494,6 +498,8 @@ m_sync_vault () {
             l_losser_action=''
         fi
 
+        #printf 'remote_name: %s, local_path: %s, operation_type: %d, path_position: %d, dry_run: %d, conflict_winner: %s, losser_action: %s, force: %d' \
+        #       "${l_remote_name}" "$l_local_path" 1 $l_path_position $l_flag_dry_run "$l_conflict_winner" "$l_losser_action" $l_flag_force
         _g_sync_vault "${l_remote_name}" "$l_local_path" 1 $l_path_position $l_flag_dry_run "$l_homologation_mode"
 
 
@@ -520,6 +526,8 @@ m_sync_vault () {
             l_losser_action=''
         fi
 
+        #printf 'remote_name: %s, local_path: %s, operation_type: %d, path_position: %d, dry_run: %d, conflict_winner: %s, losser_action: %s, force: %d' \
+        #       "${l_remote_name}" "$l_local_path" 2 $l_path_position $l_flag_dry_run "$l_conflict_winner" "$l_losser_action" $l_flag_force
         _g_sync_vault "${l_remote_name}" "$l_local_path" 2 $l_path_position $l_flag_dry_run
 
 
