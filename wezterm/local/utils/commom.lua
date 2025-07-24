@@ -94,14 +94,8 @@ function mod.get_custom_config()
     -- Si no se pudo cargar, establecer valores por defecto a las variables
     l_custom_config = {
 
-        -- Usar Wayland y solo si es Linux.
-        -- Debido a que la version de Wayland esta en rescontruccion por lo se optara por usar X11.
-        -- Limitaciones al 2024.07.07:
-        --  > No funciona correctamente el sopotte a OSC 52 para manejo del clipboard.
-        --  > El estilo de ventanas funciona peor que el de X11.
-        -- Si usa Wayland, revise que el compositor 'Xwayland' para X11 este activo: 'ps -fea | grep Xwayland'
+        -- Usar X11 (si usa Wayland debere tener el compositor 'Xwayland')
         enable_wayland = false,
-
 
         -- Built-in scheme: https://wezfurlong.org/wezterm/colorschemes/index.html
         color_scheme = 'Ayu Dark (Gogh)',
@@ -109,12 +103,18 @@ function mod.get_custom_config()
         -- Si establece en false la navegacion solo lo puede hacer usando teclas para ingresar al modo copia, busqueda, copia rapida.
         enable_scrollbar = false,
 
-        default_prog = nil,
         font_size = 10.5,
-        default_domain = nil,
-        ssh_domains = nil,
+
         launch_menu = nil,
         windows_style = 0,
+
+        ssh_domains = nil,
+        unix_domains = nil,
+        tls_clients = nil,
+
+        -- Parametros de inicio de Terminal GUI solo si usa 'wezterm start'
+        default_prog = nil,
+        default_domain = nil,
 
     }
 

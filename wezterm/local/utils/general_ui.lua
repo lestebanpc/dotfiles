@@ -1,5 +1,3 @@
-local mm_wezterm = require("wezterm")
-
 -- Miembros publicos del modulo
 local mod = {}
 
@@ -7,9 +5,18 @@ local mod = {}
 --local m_config = {}
 
 
+local mm_wezterm = require("wezterm")
+local mm_ucommon = require("utils.commom")
+
+-- Determinar el tipo de SO
+--   0 > Si es Linux
+--   1 > Si es Windows
+--   2 > Si es MacOS (Apple Silicon)
+--   3 > Si es MacOS (Intel)
+local m_os_type = mm_ucommon.get_os_type()
 
 ------------------------------------------------------------------------------------
--- Dominios de multiplexion de tipo SSH Domains
+-- Dominios de tipo SSH
 ------------------------------------------------------------------------------------
 
 -- > Por cada entrada 'Host' se creara 2 entradas: para iniciar SSH sin usar el mulitplexer server remoto o para usar con este.
@@ -23,32 +30,99 @@ local mod = {}
 --   > https://wezterm.org/config/lua/wezterm/default_ssh_domains.html
 function mod.get_ssh_domains(p_custom_ssh_domains)
 
+    -- Obtener dominios del '~/.ssh/config'
     local l_ssh_domains = mm_wezterm.default_ssh_domains()
 
-    -- Ignorar los dominios que tengan un wilcard en el nombre
-    local l_filtered_ssh_domains = {}
+    -- Ignorar los dominios del git server y el local
+    local l_domains = {}
+    local l_domain = nil
 
-    for _, domain in ipairs(l_ssh_domains) do
-        if not domain.name:match("^SSH.*:.local") and not domain.name:match("^SSH.*:gh-") and not domain.name:match("^SSH.*:gl-") then
-            table.insert(l_filtered_ssh_domains, domain)
+    if l_ssh_domains ~= nil then
+
+        for i = 1, #l_ssh_domains do
+
+            l_domain =  l_ssh_domains[i]
+            if not l_domain.name:match("^SSH.*:.local") and not l_domain.name:match("^SSH.*:gh-") and not l_domain.name:match("^SSH.*:gl-") then
+                table.insert(l_domains, l_domain)
+            end
+
         end
+
     end
+
 
     -- Adicionar los dominios adicionados por el usuario
     if p_custom_ssh_domains ~= nil then
 
-        for _, domain in ipairs(p_custom_ssh_domains) do
-            if not string.find(domain.name, "*") then
-                table.insert(l_filtered_ssh_domains, domain)
-            end
+        for i = 1, #p_custom_ssh_domains do
+
+            l_domain =  p_custom_ssh_domains[i]
+            table.insert(l_domains, l_domain)
+
         end
 
     end
 
-    return l_filtered_ssh_domains
+    return l_domains
 
 end
 
+
+------------------------------------------------------------------------------------
+-- Dominios de tipo Unix (Socket IPC)
+------------------------------------------------------------------------------------
+
+function mod.get_unix_domains(p_custom_unix_domains)
+
+    --1. Si se debe usar el multiplexer integrado
+    if p_use_builtin_multiplexer == nil or p_use_builtin_multiplexer == true then
+        return p_custom_ssh_domains
+    end
+
+    --2. Si no se usar multiplexer integrado
+    local l_domains = nil
+
+    -- Si no es Windows
+    if m_os_type ~= 1 then
+        l_domains =  {
+            {
+                name = 'default_ipc'
+            },
+        }
+    else
+        l_domains = {
+            {
+                name = 'wsl_ipc',
+                socket_path = '/mnt/c/Users/' .. os.getenv("USERNAME") .. '/.local/share/wezterm/sock',
+
+                serve_command = { 'wsl', 'wezterm-mux-server', '--daemonize' },
+
+                -- NTFS permissions will always be "wrong", so skip that check
+                --skip_permissions_check = true,
+            },
+        }
+    end
+
+    --if l_domains == nil then
+    --    return p_custom_unix_domains
+    --end
+
+    -- Adicionar los dominios adicionados por el usuario
+    if p_custom_unix_domains ~= nil then
+
+        local l_domain = nil
+        for i = 1, #p_custom_unix_domains do
+
+            l_domain =  p_custom_unix_domains[i]
+            table.insert(l_domains, l_domain)
+
+        end
+
+    end
+
+    return l_domains
+
+end
 
 
 ------------------------------------------------------------------------------------
@@ -88,7 +162,6 @@ local function m_get_title_of(p_domain_info, p_tab)
     end
 
     -- Obtener el titulo segun el dominio
-    local lm_ucommon = require("utils.commom")
     local l_title = ''
     --mm_wezterm.log_info("type: " .. p_domain_info.domain_type)
 
@@ -103,7 +176,7 @@ local function m_get_title_of(p_domain_info, p_tab)
             l_program_name = 'Overlay Window'
             l_program_icon = m_tbl_program_icons["overlaywindow"]
         else
-            l_program_name = lm_ucommon.get_basename(l_program_name)
+            l_program_name = mm_ucommon.get_basename(l_program_name)
             --mm_wezterm.log_info("program: " .. l_program_name)
             l_program_icon = m_tbl_program_icons[l_program_name]
             if l_program_icon == nil then
@@ -138,10 +211,14 @@ local function m_get_title_of(p_domain_info, p_tab)
     -- Si es un dominio Socket IPC
     if p_domain_info.domain_type == "unix" then
 
-        local l_socket_path = p_domain_info.domain_data.socket_path or 'unknown'
-        local l_socket_name = lm_ucommon.get_basename(l_socket_path)
+        local l_socket_path = p_domain_info.domain_data.socket_path
 
-        l_title = 'ipc:' .. l_socket_name
+        if l_socket_path == nil or l_socket_path == "" then
+            return p_domain_info.domain_data.name
+        end
+
+        local l_socket_name = mm_ucommon.get_basename(l_socket_path)
+        l_title = 'ipc: ' .. l_socket_name
         return l_title
 
     end
@@ -151,7 +228,7 @@ local function m_get_title_of(p_domain_info, p_tab)
     if p_domain_info.domain_type == "tls" then
 
         local l_server = p_domain_info.domain_data.remote_address or 'unknown:111'
-        return l_title
+        return l_server
 
     end
 
@@ -178,9 +255,8 @@ function mod.callback_format_tab_title(tab, tabs, panes, config, hover, max_widt
     local l_pane = tab.active_pane
 
     --1. Obtener informacion del dominio de ejecucion actual
-    local lm_ucommon = require("utils.commom")
     --mm_wezterm.log_info("domain_name: " .. pane.domain_name)
-    local l_domain_info = lm_ucommon.get_domain_info(l_pane.domain_name)
+    local l_domain_info = mm_ucommon.get_domain_info(l_pane.domain_name)
     --mm_wezterm.log_info("domain_type: " .. l_domain_info.domain_type)
 
     local l_domain_icon= m_tbl_domain_icons[l_domain_info.domain_type]
@@ -311,20 +387,32 @@ function mod.get_key_mappins()
 
 
         --------------------------------------------------------------------------------
-        --2. Gestion del Tab (Window)
+        --2. Gestion de Workspace (sesiones)
         --------------------------------------------------------------------------------
 
-        -- Creation> Crear (create) el panel usando el dominio del panel actual
+        { key = 's', mods = 'LEADER', action = mm_wezterm.action_callback(lm_uworkspace.callback_chose_workspace), },
+        { key = 's', mods = 'LEADER|SHIFT', action = mm_wezterm.action_callback(lm_uworkspace.callback_go_to_prev_workspace), },
+
+        --------------------------------------------------------------------------------
+        --3. Uso de 'Damain' y Gestion del 'Tab' (Window)
+        --------------------------------------------------------------------------------
+
+        -- Creation> Crear (create) un tab en usando el dominio usado por el panel actual
         { key = 'c', mods = 'LEADER', action = l_waction.SpawnTab('CurrentPaneDomain') },
 
-        -- Creation> Crear (create) el panel usado el dominio por defecto
+        -- Creation> Crear (create) una tab en el dominio por defecto
         { key = 'c', mods = 'LEADER|SHIFT', action = l_waction.SpawnTab('DefaultDomain') },
 
-        -- Creation (interactive)> Usando el 'Domains Fuzzy Laucher'
+        -- Creation (interactive)> Crear un tab usando un dominio existente (usa el 'Domains Fuzzy Laucher')
         { key = 'w', mods = 'LEADER', action = l_waction.ShowLauncherArgs({ flags =  'FUZZY|DOMAINS' }) },
 
-        -- Creation (interactive)> Usando el 'Menu Laucher'
+        -- Creation (interactive)> Crear un tab en el dominio 'local' que ejecuta un programa usando el 'Menu Laucher'
         { key = 'w', mods = 'LEADER|SHIFT', action = l_waction.ShowLauncherArgs({ flags =  'LAUNCH_MENU_ITEMS' }) },
+
+        -- Detach un 'multiplexing domain' (asociado al dominio del panel actual) del 'multiplexor server' externo a la terminal.
+        -- > No funciona con dominios locales. Funciona con dominios 'unix', 'tls' y solo con los 'ssh' que son multiplexing.
+        -- > Desvincula todos 'tab' del dominio y no se muestran en el workspace actual hasta que se vuelva a 'attach'.
+        { key = 'd', mods = 'LEADER', action = l_waction.DetachDomain('CurrentPaneDomain') },
 
         -- Navegation> Ir a un tab segun su posicion (posicion: indice + 1)
         { key = '1', mods = 'LEADER', action = l_waction.ActivateTab(0) },
@@ -416,13 +504,6 @@ function mod.get_key_mappins()
         --{ key = 'm', mods = 'CTRL|SHIFT', action = l_waction.Hide },
         --{ key = 'p', mods = 'CTRL|SHIFT', action = l_waction.ActivateCommandPalette },
 
-
-        --------------------------------------------------------------------------------
-        --5. Custom
-        --------------------------------------------------------------------------------
-
-        { key = 's', mods = 'LEADER', action = mm_wezterm.action_callback(lm_uworkspace.callback_chose_workspace), },
-        { key = 's', mods = 'LEADER|SHIFT', action = mm_wezterm.action_callback(lm_uworkspace.callback_go_to_prev_workspace), },
 
     }
 

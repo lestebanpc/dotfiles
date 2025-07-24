@@ -1,3 +1,55 @@
+--
+-- Consideraciones a tener en cuenta:
+-- > Por cada (emulador de) terminal iniciado se crea un proceso 'wezterm-gui'.
+--   > El comando 'wezterm' si es usado para crear una instancia (de emulador) de terminal siempre invocara al proceso 'wezterm-gui'.
+--   > Por cada instancia el archivo de configuracion '~/.config/wezterm/wezterm.lua' es ejecutado.
+--   > Por defecto el archivo de configuracion puede volver a cargarse automaticamete cuando este tiene un cambio.
+-- > El (emulador de) terminal es un programa GUI que usualmente se inicia de 2 formas:
+--   > 'wezterm start --domain <defualt_domain> -- <default_prog>'
+--   > 'wezterm-gui start  --domain <defualt_domain> -- <default_prog>', es usado en los 'launcher' de los diferentes sistemas operativo para
+--     iniciar el (emulador de terminal). Internamente invoca a 'wezterm start'.
+-- > Otras formas de iniciar una instancia del (emulador de terminal) es usando Los subcomandos:
+--     > 'wezterm connect <domian>' o 'wezterm-gui connect <domian>',
+--     > 'wezterm ssh <server>'     o 'wezterm-gui ssh <server>'
+--     > 'wezterm ssh serial'       o 'wezterm-gui ssh serial'
+--   Por defecto estos crean una instancia de (emulador de) terminal, pero algunas usando opciones como '--new-tab' permiten que si es
+--   eejcutado dentro de terminal existente (que sea WezTerm) puede ejecutar crear un 'Tab' en el workspace actual asociado al dominio asociado
+--   al subcomando.
+-- > Si inicia el (emulador de) terminal usando 'wezterm' o 'wezterm-gui' sin subcomando, se puede modificar el subcomando a usar estableciendo el
+--   parametro 'config.default_gui_startup_args' del archivo de configuracion y especificando, por ejemplo:
+--   > '{ 'start' }'               si desea usar 'wezterm start'
+--   > '{ 'ssh', '<server>' }'     si desea usar 'wezterm ssh <server>'
+--   > '{ 'connect', '<domain>' }' si desea usar 'wezterm connect <domain>'
+--   > '{ 'serial', '<server>' }'  si desea usar 'wezterm serial <server>'
+-- > El 'workspace' son agrupaciones de diferentes 'tab' (de diferentes dominios) y cuyo objeto solo existen en una instancia de emulador de terminal.
+-- > El 'domain' es un objeto que existe solo en una instancia de 'multiplexer'.
+--   > El objeto 'tab' solo pertenece a un dominio especifico.
+--   > El objeto 'pane' pertene a un ventana especifico.
+-- > Existe 2 tipos de 'multiplexer' usados por el (emulador de) terminal.
+--   > 'built-in multiplexer'
+--     > Cada instancia del (emulador de terminal) inicia su propio 'built-in multiplexer'
+--     > Se crea dentro del propio proceso de la instancia de la terminal.
+--     > Solo gestion objeto de dominio de tipo:
+--       > Local Domain
+--       > SSH Damain (solo si se indica que el servidor SSH implementa un 'multiplexer server').
+--   > 'multiplexer server'
+--     > Se ejecutan en un proceso 'wezterm-mux-server' externa a la terminal.
+--     > Se ejecuta en un servidor remoto require tambien de un proceso proxy 'wezterm cli proxy' que facilite la comunicacion de la terminal al
+--       'multiplexer server'.
+--     > Solo gestion objeto de dominio de tipo:
+--       > Unix Domain (local)
+--         > No valido en SO Windows. Define socket IPC para comunicar el cliente IPC (terminal) con el servidor IPC (multiplexer server).
+--         > El 'multiplexer server' esta en la misma maquina donde este el (emulador de) terminal.
+--       > TLS Domain  (remote)
+--         > El 'multiplexer server' implementa un TLS server. El cliente TLS es la terminal.
+--       > SSH Domain  (remote. only some of them)
+--         > Solo aquellos dominios SSH que estan configurados e indican que van a usar 'multiplexer server'.
+--         > La terminal seria el cliente SSH y el 'multiplexer server' esta en el servidor SSH.
+-- > Solo los dominios asciados a un 'multiplexer server' se pueden 'attach' o 'detach' del workspace actual de la terminal.
+-- > Si realiza un 'detach' de un multiplexing domian del worspace actual, se desvincual todos los tab asociados a dicho dominio, pero estos objetos
+--   no se destruyen y pueden ser vistos nuevamente dentro del workspace si se vuelve a vincular ('attach').
+--
+
 ------------------------------------------------------------------------------------
 -- My settings variables
 ------------------------------------------------------------------------------------
@@ -366,7 +418,6 @@ mm_wezterm.on('update-status', mm_ugeneralui.callback_update_status)
 --
 -- Los domains que se definen el WezTerm son:
 --   > Local Doamin
---     > La terminal (cliente), por defecto ('wezterm start'), crea su propio 'multiplexer server' y se conecta a este.
 --     > Si la terminal esta en Linux/MacOS este se comunica con el 'multiplexer server' usando socket IPC (la terminal hace de cliente IPC
 --       y el 'mulitplexer server' hace de server IPC).
 --     > Es un 'multiplexing domain' (asociado al a su 'multiplexer server') con un workspace creado por defecto llaamdo 'default'.
@@ -378,9 +429,9 @@ mm_wezterm.on('update-status', mm_ugeneralui.callback_update_status)
 --     > Definido a nivel cliente (terminal GUI) que hace de cliente SSH y que tiene acceso a un servidor SSH.
 --     > A nivel de servidor SSH, solo se requiere configurar cuando se usara un 'multiplexer server' remoto.
 --     > Puede ser de 2 tipos:
---       > El servidor SSH no tiene un 'server multiplexer' ejecutandose.
+--       > El servidor SSH no tiene un 'multiplexer server' ejecutandose.
 --         > El dominio no es considerado un 'multiplexing domain'.
---       > El servidor SSH tiene un 'server multiplexer' ejecutandose.
+--       > El servidor SSH tiene un 'multiplexer server' ejecutandose.
 --         > El dominio es considerado un 'multiplexing domain'.
 --   > TLS Domains (una terminal hace de cliente TLS que se conecta a un 'multiplexer server' que hace de servidor TLS).
 --     > Debe definirse tanto a nivel cliente (terminal GUI) que hace de cliente TLS como a nivel 'multiplexer server' que hace de servidor TLS.
@@ -428,7 +479,7 @@ end
 -- Establecer los Socket IPC domains
 -- > URLs:
 --   > https://wezterm.org/multiplexing.html#unix-domains
-local m_unix_domains = m_custom_config.unix_domains
+local m_unix_domains = mm_ugeneralui.get_unix_domains(m_custom_config.unix_domains)
 
 if m_unix_domains ~= nil then
     mod.unix_domains = m_unix_domains
@@ -443,12 +494,6 @@ if m_tls_clients ~= nil then
     mod.tls_clients = m_tls_clients
 end
 
--- Set default multiplexing domains.
--- Default is "local" multiplexing domain (if not using the serial or connect subcommands).
-if m_custom_config.default_domain ~= nil then
-    mod.default_domain = m_custom_config.default_domain
-end
-
 
 -- Sets which ssh backend should be used by default for the integrated ssh client.
 -- Possible values are:
@@ -458,6 +503,8 @@ end
 
 -- When set to true (the default), wezterm will configure the SSH_AUTH_SOCK environment variable for panes spawned in the local domain.
 --mod.mux_enable_ssh_agent = false
+
+
 
 
 ------------------------------------------------------------------------------------
@@ -547,15 +594,34 @@ mod.keys = mm_ugeneralui.get_key_mappins()
 
 
 ------------------------------------------------------------------------------------
--- Setting> Otros
-------------------------------------------------------------------------------------
+-- Setting> Parametros de inicio de Terminal GUI (usando subcomando 'start')
+--------------------------------------------------------------------------------
+--
+-- No aplica si se inicia sin subcomandos ('wezterm-gui' o 'wezterm') y se configura el parametro 'config.default_gui_startup_args'
+-- que no sea '{"start"}'.
+-- Es decir, no aplica si la terminal se crea usando 'wezterm connect', 'wezterm ssh' o 'wezterm serial'.
+--
 
--- This field is a array where the 0th element is the command to run and the rest of the elements are passed as the positional arguments to that command.
--- It is is the program used if the argument to the "start" subcommand is not specified. The default value is the current user's shell (executed in login mode).
+-- Establecer el dominio por defecto a usar.
+-- Si no se define el domonio por defecto sera 'local'.
+if m_custom_config.default_domain ~= nil then
+    mod.default_domain = m_custom_config.default_domain
+end
+
+-- Programa por defecto a ejecutar cuando se crea un nuevo tab del dominio 'local'. Si no se especifica se usara el shell predeterminado
+-- del usuario actual que usa la terminal GUI.
+-- > En otros dominios su valor se especifica cuando se define el dominio. Excepto cuando es un 'multiplexing domain' el shell a usar
+--   siempre es el shell predterminado donde se ejecuta el 'multiplexer domain'.
 if m_custom_config.default_prog ~= nil then
     mod.default_prog = m_custom_config.default_prog
 	--print(mod.default_prog)
 end
+
+
+
+------------------------------------------------------------------------------------
+-- Setting> Otros
+------------------------------------------------------------------------------------
 
 -- The launcher menu is accessed from the new tab button in the tab bar UI; the + button to the right of the tabs. Left clicking on the button will spawn a new tab,
 -- but right clicking on it will open the launcher menu. You may also bind a key to the ShowLauncher or ShowLauncherArgs action to trigger the menu.
@@ -567,7 +633,7 @@ end
 
 
 ------------------------------------------------------------------------------------
--- Setting> Settings internal useful modules
+-- Setting> Setup insternal modules
 ------------------------------------------------------------------------------------
 
 -- Establecer los dominios creados (usdos en la busqueda de dominios)

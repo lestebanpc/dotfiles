@@ -1,7 +1,9 @@
 --
--- El 'mulitplexer server' cuando se inicia, por defecto (sin configurar algo adicional) permite:
+-- El 'multiplexer server' cuando se inicia, por defecto (sin configurar algo adicional) permite:
 --   > Localmente abre un socket IPC por defecto.
---   > Acceso remoto usando conexion por SSH.
+--   > Acceso remoto requiere que se ejecute una proxy 'wezterm cli proxy'.
+--   > Por defectro el proxy se comuinica usando el tunel SSH. Tambien puede comunicarse usando TLS pero requiere configuracacion del
+--     'config.tls_server'.
 -- Adicional a esta configuracion por defecto se puede configurar:
 --   > Moficiar el socket IPC por defecto, establiendo uno con un nombre y ubicacion personalizada.
 --   > Crear otros sockets IPC para permitir instanciaer otras instancias del servidor.
@@ -76,10 +78,11 @@ mod.unix_domains = {
         -- Variables usado por cliente/server IPC:
 
         -- Nombre del dominio
-        name = 'wsl-mux',
+        name = 'wsl_ipc',
 
         -- Ruta y nombre de socket IPC. Si no se especifca se crea en base a nombre del dominio.
-        socket_path = "/mnt/c/tmp/wezterm/mux.sock",
+        -- Nota: Cambiar el nombre del usuario por el usuario usado en Windows.
+        socket_path = "/mnt/c/Users/lucianoepc/.local/share/wezterm/sock",
 
         -- If true, do not attempt to start this server if we try and fail to connect to it.
         --no_serve_automatically = false,

@@ -11,6 +11,16 @@ local mm_wezterm = require("wezterm")
 local m_waction = mm_wezterm.action
 local m_wmux = mm_wezterm.mux
 
+local mm_ucommon = require("utils.commom")
+
+-- Determinar el tipo de SO
+--   0 > Si es Linux
+--   1 > Si es Windows
+--   2 > Si es MacOS (Apple Silicon)
+--   3 > Si es MacOS (Intel)
+local m_os_type = mm_ucommon.get_os_type()
+
+
 ---@field m_zoxide_path string
 local m_zoxide_path = "zoxide"
 
@@ -53,12 +63,8 @@ local function run_child_process(cmd)
 
 	local process_args = { os.getenv("SHELL"), "-c", cmd }
 
-    -- Obtener el tipo de SO
-    local lm_ucommon = require("utils.commom")
-    local l_os_type = lm_ucommon.get_os_type()
-
     -- Si es Windows
-	if l_os_type == 1 then
+	if m_os_type == 1 then
 		process_args = { "cmd", "/c", cmd }
 	end
 	local success, stdout, stderr = mm_wezterm.run_child_process(process_args)

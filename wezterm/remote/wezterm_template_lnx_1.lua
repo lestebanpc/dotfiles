@@ -1,7 +1,9 @@
 --
 -- El 'mulitplexer server' cuando se inicia, por defecto (sin configurar algo adicional) permite:
 --   > Localmente abre un socket IPC por defecto.
---   > Acceso remoto usando conexion por SSH.
+--   > Acceso remoto requiere que se ejecute una proxy 'wezterm cli proxy'.
+--   > Por defectro el proxy se comuinica usando el tunel SSH. Tambien puede comunicarse usando TLS pero requiere configuracacion del
+--     'config.tls_server'.
 -- Adicional a esta configuracion por defecto se puede configurar:
 --   > Moficiar el socket IPC por defecto, establiendo uno con un nombre y ubicacion personalizada.
 --   > Crear otros sockets IPC para permitir instanciaer otras instancias del servidor.
@@ -26,32 +28,32 @@ local mod = mm_wezterm.config_builder()
 --   > El cliente TLS esta diseñado para conectar al servidor TLS con estos certificados autofirmados.
 -- > Vease: https://wezterm.org/multiplexing.html#tls-domains
 
-mod.tls_servers = {
-    {
-        -- The 'address:port' combination on which the server will listen for client connections.
-        -- Use '0.0.0.0' cuando dese vicular el puerto a todas las interfaz de red del servidor.
-        -- Use la IP especifica si desea vincular a la interfaz de red especifica (asociada a la IP).
-        bind_address = '0.0.0.0:8091',
-        --bind_address = '192.168.50.50:8091',
-
-        --
-        -- Campos requeridos si el cliente no se conecta usando SSH:
-        --
-
-        -- Clave privada del certificado del servidor TLS
-        --pem_private_key = "/path/to/key.pem",
-
-        -- Certificado del servidor TLS
-        --pem_cert = "/path/to/cert.pem",
-
-        -- Bundle de certificado del CA que realizan/validan la firman el certificado del servidor TLS
-        --pem_ca = "/path/to/chain.pem",
-
-        -- Lista de certificados CA adicionales usados como 'trust-store' para el 'multiplexer server' cuando
-        -- este actual como cliente TLS.
-        --pem_root_certs = { "/some/path/ca1.pem", "/some/path/ca2.pem" },
-    },
-}
+--mod.tls_servers = {
+--    {
+--        -- The 'address:port' combination on which the server will listen for client connections.
+--        -- Use '0.0.0.0' cuando dese vicular el puerto a todas las interfaz de red del servidor.
+--        -- Use la IP especifica si desea vincular a la interfaz de red especifica (asociada a la IP).
+--        bind_address = '0.0.0.0:8091',
+--        --bind_address = '192.168.50.50:8091',
+--
+--        --
+--        -- Campos requeridos si el cliente no se conecta usando SSH:
+--        --
+--
+--        -- Clave privada del certificado del servidor TLS
+--        --pem_private_key = "/path/to/key.pem",
+--
+--        -- Certificado del servidor TLS
+--        --pem_cert = "/path/to/cert.pem",
+--
+--        -- Bundle de certificado del CA que realizan/validan la firman el certificado del servidor TLS
+--        --pem_ca = "/path/to/chain.pem",
+--
+--        -- Lista de certificados CA adicionales usados como 'trust-store' para el 'multiplexer server' cuando
+--        -- este actual como cliente TLS.
+--        --pem_root_certs = { "/some/path/ca1.pem", "/some/path/ca2.pem" },
+--    },
+--}
 
 
 ------------------------------------------------------------------------------------
