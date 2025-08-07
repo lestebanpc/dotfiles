@@ -1786,8 +1786,8 @@ function fulfill_preconditions() {
     fi
 
     #Actualmente solo esta habilitado para distribucion de la familia Alpine, Debian y Fedora.
-    #if [ $g_os_subtype_id -lt 10 ] || [ $g_os_subtype_id -ge 50 ]; then
-    if [ $g_os_subtype_id -lt 0 ] || [ $g_os_subtype_id -ge 50 ]; then
+    #if [ $g_os_subtype_id -lt 10 ] || [ $g_os_subtype_id -ge 60 ]; then
+    if [ $g_os_subtype_id -lt 0 ] || [ $g_os_subtype_id -ge 60 ]; then
         printf 'No esta implementado para SO Linux de tipo "%s"\n' "$g_os_subtype_id"
         return 1
     fi
