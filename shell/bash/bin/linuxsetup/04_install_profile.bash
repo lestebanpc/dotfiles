@@ -116,6 +116,8 @@ if [ -z "$g_os_type" ]; then
     #    > 30 - 49 : Familia Debian
     #           30 : Debian
     #           31 : Ubuntu
+    #    > 50 - 59 : Familia Arch
+    #           50 : Arch Linux
     # > 'g_os_subtype_name'           : Nombre de distribucion Linux
     # > 'g_os_subtype_version'        : Version extendida de la distribucion Linux
     # > 'g_os_subtype_version_pretty' : Version corta de la distribucion Linux
@@ -958,6 +960,12 @@ function _setup_user_profile() {
         else
             l_source_filename='debian_x64.ps1'
         fi
+    elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+        if [ "$g_os_architecture_type" = "aarch64" ]; then
+            l_source_filename='arch_aarch64.ps1'
+        else
+            l_source_filename='arch_x64.ps1'
+        fi
     else
         if [ "$g_os_architecture_type" = "aarch64" ]; then
             l_source_filename='fedora_aarch64.ps1'
@@ -985,6 +993,12 @@ function _setup_user_profile() {
             l_source_filename='debian_aarch64.bash'
         else
             l_source_filename='debian_x64.bash'
+        fi
+    elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+        if [ "$g_os_architecture_type" = "aarch64" ]; then
+            l_source_filename='arch_aarch64.bash'
+        else
+            l_source_filename='arch_x64.bash'
         fi
     else
         if [ "$g_os_architecture_type" = "aarch64" ]; then

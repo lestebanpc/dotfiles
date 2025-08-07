@@ -81,8 +81,10 @@ mod.unix_domains = {
         name = 'wsl_ipc',
 
         -- Ruta y nombre de socket IPC. Si no se especifca se crea en base a nombre del dominio.
-        -- Nota: Cambiar el nombre del usuario por el usuario usado en Windows.
-        socket_path = "/mnt/c/Users/lucianoepc/.local/share/wezterm/sock",
+        -- Notas: Para que la terminal GUI usa la misma ruta del socket, modificar:
+        --   > Cambiar 'lucianoepc' por nombre del usuario usado en Windows.
+        --   > Cambiar 'Ubuntu' por el nombre de la distribucion linux a usado.
+        socket_path = "/mnt/c/Users/lucianoepc/.local/share/wezterm/Ubuntu.sock",
 
         -- If true, do not attempt to start this server if we try and fail to connect to it.
         --no_serve_automatically = false,

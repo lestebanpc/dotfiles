@@ -114,6 +114,8 @@ if [ -z "$g_os_type" ]; then
     #    > 30 - 49 : Familia Debian
     #           30 : Debian
     #           31 : Ubuntu
+    #    > 50 - 59 : Familia Arch
+    #           50 : Arch Linux
     # > 'g_os_subtype_name'           : Nombre de distribucion Linux
     # > 'g_os_subtype_version'        : Version extendida de la distribucion Linux
     # > 'g_os_subtype_version_pretty' : Version corta de la distribucion Linux

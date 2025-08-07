@@ -80,6 +80,8 @@ function get_os_type() {
 #       > 30 - 49 : Familia Debian
 #              30 : Debian
 #              31 : Ubuntu
+#       > 50 - 59 : Familia Arch
+#              50 : Arch Linux
 #    > 'g_os_subtype_name'           : Nombre de distribucion Linux
 #    > 'g_os_subtype_version'        : Version extendida de la distribucion Linux
 #    > 'g_os_subtype_version_pretty' : Version corta de la distribucion Linux
@@ -120,6 +122,10 @@ function get_linux_type_info() {
     # 31> Ubuntu:
     #     NAME="Ubuntu"
     #     PRETTY_NAME="Ubuntu 23.10"
+    # 50> Arch:
+    #     NAME="Arch Linux"
+    #     PRETTY_NAME="Arch Linux"
+    #     ID=arch
     #
     local l_tag="NAME"
     local l_expression='s/'"$l_tag"'="\(.*\)"/\1/'
@@ -152,6 +158,9 @@ function get_linux_type_info() {
         Alpine*)
             l_value=1
             ;;
+        Arch\ *)
+            l_value=50
+            ;;
         *)
             l_value=0
             ;;
@@ -182,10 +191,13 @@ function get_linux_type_info() {
     # 31> Ubuntu:
     #     VERSION="22.04.1 LTS (Jammy Jellyfish)"
     #     VERSION_ID="23.10"
+    # 50> Arch:
+    #     BUILD_ID=rolling
+    #     VERSION_ID=20250413.0.335299
     #
 
     #Si es Alpine
-    if [ $g_os_subtype_id -eq 1 ]; then
+    if [ $g_os_subtype_id -eq 1 ] || [ $g_os_subtype_id -eq 50 ]; then
         l_tag="VERSION_ID"
         l_expression='s/'"$l_tag"'=\(.*\)/\1/'
     #Si no es Alpine
@@ -641,6 +653,9 @@ is_package_installed() {
         #Si es un distribucion de la familia Fedora
         elif [ $p_os_subtype_id -ge 10 ] && [ $p_os_subtype_id -lt 30 ]; then
             p_package_name_part="^${1}\\."
+        #Si es un distribucion de la familia Arch Linux
+        elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+            p_package_name_part="^${1} "
         #Si es Alpine
         elif [ $p_os_subtype_id -eq 1 ]; then
             p_package_name_part="^${1}-[0-9]"
@@ -688,6 +703,18 @@ is_package_installed() {
         if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
             return 1
         fi
+
+    #Si es un distribucion de la familia Arch Linux
+    elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+
+        printf 'Buscando OS packages: %bpacman -Q | grep "%s" 2> /dev/null%b\n' "$g_color_gray1" "$p_package_name_part" "$g_color_reset"
+        l_aux=$(pacman -Q | grep "$p_package_name_part" 2> /dev/null)
+        l_status=$?
+
+        if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
+            return 1
+        fi
+
 
     #Si es Alpine
     elif [ $p_os_subtype_id -eq 1 ]; then
@@ -750,6 +777,8 @@ upgrade_os_packages() {
         #Alpine por defecto es non-inteactivo
         if [ $p_os_subtype_id -ne 1 ]; then
             p_non_interative='-y '
+        elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+            p_non_interative='--noconfirm '
         fi
 
     fi
@@ -780,6 +809,16 @@ upgrade_os_packages() {
             dnf $p_non_interative upgrade
         else
             sudo dnf $p_non_interative upgrade
+        fi
+        l_status=$?
+
+    #Si es un distribucion de la familia Arch Linux
+    elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+
+        if [ $g_runner_id -eq 0 ]; then
+            pacman -Syu $p_non_interative
+        else
+            sudo pacman -Syu $p_non_interative
         fi
         l_status=$?
 
@@ -837,6 +876,8 @@ install_os_package() {
         #Alpine por defecto es non-inteactivo
         if [ $p_os_subtype_id -ne 1 ]; then
             p_non_interative='-y '
+        elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+            p_non_interative='--noconfirm '
         fi
 
     fi
@@ -871,6 +912,18 @@ install_os_package() {
         else
            printf 'Instalando un OS package: %bsudo dnf %s install %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            sudo dnf $p_non_interative install $p_package_name
+        fi
+        l_status=$?
+
+    #Si es un distribucion de la familia Arch Linux
+    elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+
+        if [ $g_runner_id -eq 0 ]; then
+           printf 'Instalando un OS package: %bpacman -S %s %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
+           pacman -S $p_non_interative $p_package_name
+        else
+           printf 'Instalando un OS package: %bsudo pacman -S %s %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
+           sudo pacman -S $p_non_interative $p_package_name
         fi
         l_status=$?
 
@@ -930,6 +983,8 @@ uninstall_os_package() {
         #Alpine por defecto es non-inteactivo
         if [ $p_os_subtype_id -ne 1 ]; then
             p_non_interative='-y '
+        elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+            p_non_interative='--noconfirm '
         fi
 
     fi
@@ -964,6 +1019,18 @@ uninstall_os_package() {
         else
            printf 'Eliminando un OS package instalado: %bsudo dnf %s erase %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            sudo dnf $p_non_interative erase $p_package_name
+        fi
+        l_status=$?
+
+    #Si es un distribucion de la familia Arch Linux
+    elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+
+        if [ $g_runner_id -eq 0 ]; then
+           printf 'Instalando un OS package instalado: %bpacman -R %s %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
+           pacman -R $p_non_interative $p_package_name
+        else
+           printf 'Eliminando un OS package instalado: %bsudo pacman -R %s %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
+           sudo pacman -R $p_non_interative $p_package_name
         fi
         l_status=$?
 
@@ -1017,6 +1084,8 @@ clean_os_cache() {
         #Alpine por defecto es non-inteactivo
         if [ $p_os_subtype_id -ne 1 ]; then
             p_non_interative='-y '
+        elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+            p_non_interative='--noconfirm '
         fi
 
     fi
@@ -1047,6 +1116,16 @@ clean_os_cache() {
            dnf $p_non_interative clean all
         else
            sudo dnf $p_non_interative clean all
+        fi
+        l_status=$?
+
+    #Si es un distribucion de la familia Arch Linux
+    elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+
+        if [ $g_runner_id -eq 0 ]; then
+           pacman -Scc $p_non_interative
+        else
+           sudo pacman -Scc $p_non_interative
         fi
         l_status=$?
 

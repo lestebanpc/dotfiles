@@ -429,11 +429,21 @@ while [ $# -gt 0 ]; do
 
         --)
             shift
+
+            # Solo continuar si se encuentra la opcion '--'
             break
             ;;
 
-        *)
+
+        -*)
             printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
+                   "$g_color_gray1" "$1" "$g_color_reset"
+            _usage
+            exit 1
+            ;;
+
+        *)
+            printf '[%bERROR%b] Argumento "%b%s%b" no es esperado antes de opcion --.\n\n' "$g_color_red1" "$g_color_reset" \
                    "$g_color_gray1" "$1" "$g_color_reset"
             _usage
             exit 1
