@@ -151,6 +151,20 @@ get_package_name() {
                 l_package_name_custom="vim"
                 l_search_type=1
 
+            #Si es un distribucion de la familia Suse
+            elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+
+                #Si es Ubuntu
+                l_package_name_custom="vim"
+                l_search_type=1
+
+            #Si es un distribucion de la familia Arch
+            elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+
+                #Si es Ubuntu
+                l_package_name_custom="vim"
+                l_search_type=1
+
             #Si es Alpine
             elif [ $p_os_subtype_id -eq 1 ]; then
                 l_package_name_custom="vim"

@@ -960,11 +960,17 @@ function _setup_user_profile() {
         else
             l_source_filename='debian_x64.ps1'
         fi
-    elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+    elif [ $g_os_subtype_id -ge 50 ] && [ $g_os_subtype_id -lt 60 ]; then
         if [ "$g_os_architecture_type" = "aarch64" ]; then
             l_source_filename='arch_aarch64.ps1'
         else
             l_source_filename='arch_x64.ps1'
+        fi
+    elif [ $g_os_subtype_id -ge 60 ] && [ $g_os_subtype_id -lt 70 ]; then
+        if [ "$g_os_architecture_type" = "aarch64" ]; then
+            l_source_filename='suse_aarch64.ps1'
+        else
+            l_source_filename='suse_x64.ps1'
         fi
     else
         if [ "$g_os_architecture_type" = "aarch64" ]; then
@@ -994,11 +1000,17 @@ function _setup_user_profile() {
         else
             l_source_filename='debian_x64.bash'
         fi
-    elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+    elif [ $g_os_subtype_id -ge 50 ] && [ $g_os_subtype_id -lt 60 ]; then
         if [ "$g_os_architecture_type" = "aarch64" ]; then
             l_source_filename='arch_aarch64.bash'
         else
             l_source_filename='arch_x64.bash'
+        fi
+    elif [ $g_os_subtype_id -ge 60 ] && [ $g_os_subtype_id -lt 70 ]; then
+        if [ "$g_os_architecture_type" = "aarch64" ]; then
+            l_source_filename='suse_aarch64.bash'
+        else
+            l_source_filename='suse_x64.bash'
         fi
     else
         if [ "$g_os_architecture_type" = "aarch64" ]; then
@@ -2360,7 +2372,7 @@ function _setup_vim_environment() {
     if [ $l_is_vim_installed -ne 0 ]; then
 
         if [ $l_flag_setup_2 -eq 0 ]; then
-            printf '%s > %bSe omitira la indexacion de la documentación%b de los plugins a instalar debido a que %b%s% no esta instalado%b.\n' \
+            printf '%s > %bSe omitira la indexacion de la documentación%b de los plugins a instalar debido a que %b%s no esta instalado%b.\n' \
                    "$l_tag" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_tag" "$g_color_reset"
         fi
 
