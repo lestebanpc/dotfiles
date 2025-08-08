@@ -167,6 +167,9 @@ function get_linux_type_info() {
         Arch\ *)
             l_value=50
             ;;
+        openSUSE\ *)
+            l_value=60
+            ;;
         *)
             l_value=0
             ;;
