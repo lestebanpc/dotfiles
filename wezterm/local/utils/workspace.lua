@@ -13,7 +13,8 @@ local m_custom = {
     root_git_folder = nil,
     external_root_git_folder = nil,
 
-    external_equivalent_paths = nil,
+    load_local_builtin_tags = false,
+    load_external_builtin_tags = false,
 
     -- Usados para filtrar opciones de la consulta de zoxide
     -- Se adiciona despues del comando a ejecutar : 'zoxide query -l <zoxide_args>'.
@@ -73,19 +74,23 @@ end
 --                      Debido a que inicialemente es el nombre del workspace, debe ser unico no puede usarse el nombre de workspace
 --                      por defecto.
 -- > fullpath         : Ruta completa del directorio de trabajo.
--- > is_window_path   : Valor calculado segun el 'fullpath' ingresado.
 -- > domain_category  : Define una forma de agrupar el domino al cual puede pertener un ruta 'fullpath' (working directory).
 --     > local        : Si es el dominio local o un dominio de tipo 'unix' (si esta asociado a un servidor IPC ubicado en
 --                      el mismo host que el emulador de terminal.
 --     > distrobox    : Si es un dominio de tipo 'exec' asociado a un contenedor distrobox.
 --     > wsl          : Si es un dominio de tipo 'wsl'
 -- > domain           : Opcional. Si no se define, la ruta aplica a todos los dominios de la misma categoria
--- > callback         : Funcion con parametros usado que modifica o crea paneles del worspace. Los parametros de este callback son:
+-- > callback         : Funcion con parametros usado que modifica o crea paneles del workspace. Los parametros de este callback son:
 --   > Objeto 'Window'
---   > Objeto 'Pane'
+--   > Objeto 'Pane' (nuevo panel creado del tab por defecto del worspace creado)
 --   > Workspace name
---   > Workspace_info
-local m_tags = nil
+--   > Workspace info
+local m_local_tags = nil
+
+-- Arreglo com los campos similar a 'm_local_tags' pero se adiciona el campo:
+-- > realpath         : Es un diccionario cuya 'key' es el nombre del dominio y cuyo 'value' es la ruta completa y expandida por dominio
+--                      del directorio de trabajo para el dominio (tiene expandido el '~').
+local m_remote_tags = nil
 
 -- Constantes
 local m_color_gray1 = '#787878'
@@ -115,30 +120,83 @@ local mod = {}
 
 
 ------------------------------------------------------------------------------------
--- Funciones inicializacion
+-- Funciones para crear los Built-ins Tags
 ------------------------------------------------------------------------------------
 
--- Arreglo de tag de workspace 'built-in', usado para crear worspace basado en la configuracion (no en rutas de de folderes git o zoxide).
--- > name             : Nombre unico del tag.
---                      Debido a que inicialemente es el nombre del workspace, debe ser unico no puede usarse el nombre de workspace
---                      por defecto.
--- > fullpath         : Ruta completa del directorio de trabajo.
--- > is_window_path   : Valor calculado segun el 'fullpath' ingresado.
--- > domain_category  : Define una forma de agrupar el domino al cual puede pertener un ruta 'fullpath' (working directory).
---     > local        : Si es el dominio local o un dominio de tipo 'unix' (si esta asociado a un servidor IPC ubicado en
---                      el mismo host que el emulador de terminal.
---     > distrobox    : Si es un dominio de tipo 'exec' asociado a un contenedor distrobox.
---     > wsl          : Si es un dominio de tipo 'wsl'
--- > domain           : Opcional. Si no se define, la ruta aplica a todos los dominios de la misma categoria
--- > callback         : Funcion con parametros usado que modifica o crea paneles del worspace. Los parametros de este callback son:
---   > Objeto 'Window'
---   > Objeto 'Pane'
---   > Workspace name
---   > Working directory (campo 'fullpath')
---   > Nombre del dominio al cual pertenece al ruta 'fullpath'
-local function m_add_builtin_tags(p_tags)
 
-    -- TODO: Incluir rutas de windows y soporte de WSL (el arreglo debe tener todas la rutas, segun el SO)
+local function m_add_tags(p_add_tags)
+
+    if p_add_tags == nil then
+        return
+    end
+
+    -- Registrar los tag de workspace personalizados
+    local l_item = nil
+    local l_path = nil
+    for i = 1, #p_add_tags do
+
+        l_item = p_add_tags[i]
+        if l_item.name ~= nil and l_item.name ~= '' and
+            l_item.fullpath ~= nil and l_item.fullpath ~= '' and
+            l_item.domain_category ~= nil and l_item.domain_category ~= '' then
+
+            if l_item.domain_category == 'local' then
+
+                if m_local_tags == nil then
+                    m_local_tags = {}
+                end
+
+                l_path = l_item.fullpath
+                if string.sub(l_path, 1, 1) == '~' then
+                    l_path = mm_wezterm.home_dir .. string.sub(l_path,2)
+                end
+
+                table.insert(m_local_tags, l_item)
+
+            elseif l_item.domain_category == 'wsl' or l_item.domain_category == 'distrobox' then
+
+                l_item.realpath = {}
+                if m_remote_tags == nil then
+                    m_remote_tags = {}
+                end
+
+                table.insert(m_remote_tags, l_item)
+
+            end
+
+        end
+
+    end
+
+
+end
+
+
+-- Arreglo de tag de workspace 'built-in', usado para crear worspace basado en la configuracion (no en rutas de de folderes git o zoxide).
+local function m_add_local_builtin_tags()
+
+    if m_local_tags == nil then
+        m_local_tags = {}
+    end
+
+    -- Campos del Tag
+    -- > name             : Nombre unico del tag.
+    --                      Debido a que inicialemente es el nombre del workspace, debe ser unico no puede usarse el nombre de workspace
+    --                      por defecto.
+    -- > fullpath         : Ruta completa del directorio de trabajo.
+    -- > domain_category  : Define una forma de agrupar el domino al cual puede pertener un ruta 'fullpath' (working directory).
+    --     > local        : Si es el dominio local o un dominio de tipo 'unix' (si esta asociado a un servidor IPC ubicado en
+    --                      el mismo host que el emulador de terminal.
+    --     > distrobox    : Si es un dominio de tipo 'exec' asociado a un contenedor distrobox.
+    --     > wsl          : Si es un dominio de tipo 'wsl'
+    -- > domain           : Opcional. Si no se define, la ruta aplica a todos los dominios de la misma categoria
+    -- > callback         : Funcion con parametros usado que modifica o crea paneles del workspace. Los parametros de este callback son:
+    --   > Objeto 'Window'
+    --   > Objeto 'Pane' (nuevo panel creado del tab por defecto del worspace creado)
+    --   > Workspace name
+    --   > Workspace info
+
+    -- TODO La ruta de windows se usa / o \\?
 
     -- Ruta de configuracion de los archivo dotfiles
     local l_tag = {
@@ -148,7 +206,6 @@ local function m_add_builtin_tags(p_tags)
         domain = nil,
         callback = nil,
     }
-    l_tag.is_window_path = mm_ucommon.is_windows_path(l_tag.fullpath)
 
     -- Ruta de configuracion de wezterm
     l_tag = {
@@ -158,34 +215,41 @@ local function m_add_builtin_tags(p_tags)
         domain = nil,
         callback = nil,
     }
-    l_tag.is_window_path = mm_ucommon.is_windows_path(l_tag.fullpath)
 
-    table.insert(p_tags, l_tag)
+    table.insert(m_local_tags, l_tag)
 
 
     -- Ruta de configuracion de los archivo ssh
-    l_tag = {
-        name = 'config ssh',
-        fullpath = mm_wezterm.home_dir .. '/.ssh',
-        domain_category = 'local',
-        domain = nil,
-        callback = nil,
-    }
-    l_tag.is_window_path = mm_ucommon.is_windows_path(l_tag.fullpath)
+    if m_os_type ~= 1 then
 
-    table.insert(p_tags, l_tag)
+        l_tag = {
+            name = 'config ssh',
+            fullpath = mm_wezterm.home_dir .. '/.ssh',
+            domain_category = 'local',
+            domain = nil,
+            callback = nil,
+        }
+
+        table.insert(m_local_tags, l_tag)
+
+    end
+
 
     -- Ruta de configuracion de los archivo tmux
-    l_tag = {
-        name = 'config tmux',
-        fullpath = mm_wezterm.home_dir .. '/.config/tmux',
-        domain_category = 'local',
-        domain = nil,
-        callback = nil,
-    }
-    l_tag.is_window_path = mm_ucommon.is_windows_path(l_tag.fullpath)
+    if m_os_type ~= 1 then
 
-    table.insert(p_tags, l_tag)
+        l_tag = {
+            name = 'config tmux',
+            fullpath = mm_wezterm.home_dir .. '/.config/tmux',
+            domain_category = 'local',
+            domain = nil,
+            callback = nil,
+        }
+
+        table.insert(m_local_tags, l_tag)
+
+    end
+
 
     -- Ruta de configuracion de los archivo git
     l_tag = {
@@ -195,16 +259,125 @@ local function m_add_builtin_tags(p_tags)
         domain = nil,
         callback = nil,
     }
-    l_tag.is_window_path = mm_ucommon.is_windows_path(l_tag.fullpath)
 
-    table.insert(p_tags, l_tag)
+    table.insert(m_local_tags, l_tag)
 
 
 end
 
 
+-- Arreglo de tag de workspace 'built-in', usado para crear worspace basado en la configuracion (no en rutas de de folderes git o zoxide).
+local function m_add_external_builtin_tags()
 
-function mod.setup(p_tags, p_root_git_folder, p_external_root_git_folder, p_external_equivalent_paths, p_zoxide_args)
+    if m_os_type >= 2 then
+        return
+    end
+
+    if m_remote_tags == nil then
+        m_remote_tags = {}
+    end
+
+    -- Campos del Tag
+    -- > name             : Nombre unico del tag.
+    --                      Debido a que inicialemente es el nombre del workspace, debe ser unico no puede usarse el nombre de workspace
+    --                      por defecto.
+    -- > fullpath         : Ruta completa del directorio de trabajo.
+    -- > realpath         : Es un diccionario cuya 'key' es el nombre del dominio y cuyo 'value' es la ruta completa y expandida por dominio
+    --                      del directorio de trabajo para el dominio (tiene expandido el '~').
+    -- > domain_category  : Define una forma de agrupar el domino al cual puede pertener un ruta 'fullpath' (working directory).
+    --     > local        : Si es el dominio local o un dominio de tipo 'unix' (si esta asociado a un servidor IPC ubicado en
+    --                      el mismo host que el emulador de terminal.
+    --     > distrobox    : Si es un dominio de tipo 'exec' asociado a un contenedor distrobox.
+    --     > wsl          : Si es un dominio de tipo 'wsl'
+    -- > domain           : Opcional. Si no se define, la ruta aplica a todos los dominios de la misma categoria
+    -- > callback         : Funcion con parametros usado que modifica o crea paneles del workspace. Los parametros de este callback son:
+    --   > Objeto 'Window'
+    --   > Objeto 'Pane' (nuevo panel creado del tab por defecto del worspace creado)
+    --   > Workspace name
+    --   > Workspace info
+
+    -- TODO La ruta de windows se usa / o \\?
+
+    local l_prefix = 'dtb:'
+    local l_domain_category = 'distrobox'
+
+    if m_os_type == 1 then
+        l_prefix = 'wsl:'
+        l_domain_category = 'wsl'
+    end
+
+
+    -- Ruta de configuracion de los archivo dotfiles
+    local l_tag = {
+        name = l_prefix .. 'dotfiles',
+        fullpath = '~/.files',
+        realpath = {},
+        domain_category = l_domain_category,
+        domain = nil,
+        callback = nil,
+    }
+
+    -- Ruta de configuracion de wezterm
+    l_tag = {
+        name = l_prefix .. 'config wezterm',
+        fullpath = '~/.config/wezterm',
+        realpath = {},
+        domain_category = l_domain_category,
+        domain = nil,
+        callback = nil,
+    }
+
+    table.insert(m_remote_tags, l_tag)
+
+
+    -- Ruta de configuracion de los archivo ssh
+    l_tag = {
+        name = l_prefix .. 'config ssh',
+        fullpath = '~/.ssh',
+        realpath = {},
+        domain_category = l_domain_category,
+        domain = nil,
+        callback = nil,
+    }
+
+    table.insert(m_remote_tags, l_tag)
+
+
+
+    -- Ruta de configuracion de los archivo tmux
+    l_tag = {
+        name = l_prefix .. 'config tmux',
+        fullpath = '~/.config/tmux',
+        realpath = {},
+        domain_category = l_domain_category,
+        domain = nil,
+        callback = nil,
+    }
+
+    table.insert(m_remote_tags, l_tag)
+
+
+    -- Ruta de configuracion de los archivo git
+    l_tag = {
+        name = l_prefix .. 'config git',
+        fullpath = '~/.config/git',
+        realpath = {},
+        domain_category = l_domain_category,
+        domain = nil,
+        callback = nil,
+    }
+
+    table.insert(m_remote_tags, l_tag)
+
+
+end
+
+
+------------------------------------------------------------------------------------
+-- Funciones inicializacion
+------------------------------------------------------------------------------------
+
+function mod.setup(p_tags, p_load_local_builtin_tags, p_load_external_builtin_tags, p_root_git_folder, p_external_root_git_folder, p_zoxide_args)
 
     -- Establecer valores
     if p_root_git_folder ~= nil and p_root_git_folder ~= '' then
@@ -217,68 +390,69 @@ function mod.setup(p_tags, p_root_git_folder, p_external_root_git_folder, p_exte
         m_custom.root_git_folder = nil
     end
     m_custom.external_root_git_folder = p_external_root_git_folder
-    m_custom.external_equivalent_paths = p_external_equivalent_paths
     m_custom.zoxide_args = p_zoxide_args
 
     -- Registrar los tag de workspace built-in
-    m_tags = nil
+    m_local_tags = nil
+    m_remote_tags = nil
 
-    local l_tags = {}
-    m_add_builtin_tags(l_tags)
+    if p_load_local_builtin_tags ~= nil and p_load_local_builtin_tags == true then
+        m_add_local_builtin_tags()
+     end
 
-    -- Registrar los tag de workspace personalizados
-    local l_item = nil
-    if p_tags ~= nil then
+    if p_load_external_builtin_tags ~= nil and p_load_external_builtin_tags == true then
+        m_add_external_builtin_tags()
+    end
 
-        for i = 1, #p_tags do
+    m_add_tags(p_tags)
 
-            l_item = p_tags[i]
-            if l_item.name ~= nil and l_item.name ~= '' and
-                l_item.fullpath ~= nil and l_item.fullpath ~= '' and
-                l_item.domain_category ~= nil and l_item.domain_category ~= '' then
+end
 
-                l_item.is_window_path = mm_ucommon.is_windows_path(l_item.fullpath)
-                table.insert(l_tags, l_item)
+-- Solo para pruebas
+--function mod.test1()
+--
+--    return m_remote_tags
+--
+--end
 
+------------------------------------------------------------------------------------
+-- Funciones de Utilidad
+------------------------------------------------------------------------------------
+
+local function m_get_tag(p_tag_name)
+
+    if p_tag_name == nil or p_tag_name == '' then
+        return nil, true
+    end
+
+    local l_tag = nil
+    if m_local_tags ~= nil then
+
+        for i = 1, #m_local_tags do
+
+            l_tag = m_local_tags[i]
+            if l_tag.name == p_tag_name then
+                return l_tag, true
             end
 
         end
 
     end
 
-    if #l_tags > 0 then
-        m_tags = l_tags
-    end
+    if m_remote_tags ~= nil then
 
-end
+        for i = 1, #m_remote_tags do
 
+            l_tag = m_remote_tags[i]
+            if l_tag.name == p_tag_name then
+                return l_tag, false
+            end
 
-
-------------------------------------------------------------------------------------
--- Funciones de Utilidad
-------------------------------------------------------------------------------------
-
-function m_get_tag(p_tag_name)
-
-    if p_tag_name == nil or p_tag_name == '' then
-        return nil
-    end
-
-    if m_tags == nil then
-        return
-    end
-
-    local l_tag = nil
-    for i = 1, #m_tags do
-
-        l_tag = m_tags[i]
-        if l_tag.name == p_tag_name then
-            return l_tag
         end
 
     end
 
-    return nil
+    return nil, true
 
 end
 
@@ -413,6 +587,7 @@ local function m_is_available_tag_for_domain(p_tag, p_domain_info)
     -- Si los workspace asociados a fullpaths y tags es nulo o vacio
     local l_workspace_infos = mm_wezterm.GLOBAL.workspace_infos
     --mm_wezterm.log_info(l_workspace_infos)
+    --mm_wezterm.log_info(p_tag)
 
     if l_workspace_infos == nil then
     --if l_workspace_infos == nil or next(l_workspace_infos) == nil then
@@ -421,9 +596,16 @@ local function m_is_available_tag_for_domain(p_tag, p_domain_info)
 
     -- Si el tag ya esta vinculado a un workspace existente
     for _ , l_workspace_info in pairs(l_workspace_infos) do
-        if l_workspace_info.tag_name ~= nil and l_workspace_info.tag_name ~= '' and l_workspace_info.tag_name == p_tag.name then
-            return false
+
+        --mm_wezterm.log_info(l_workspace_info)
+        if l_workspace_info ~= nil then
+
+            if l_workspace_info.tag_name ~= nil and l_workspace_info.tag_name ~= '' and l_workspace_info.tag_name == p_tag.name then
+                return false
+            end
+
         end
+
     end
 
     return true
@@ -435,29 +617,73 @@ end
 --   > El dominio 'local' siempre esta registrado.
 --   > Un dominio de tipo 'wsl' siempre es registrados.
 --   > Una distribucion distrobox no estan registrado si este no esta en ejecucion y en la carga de archivo de configuracion se cargo.
-local function m_get_tags_of_domain(p_domain_info)
-
-    if m_tags == nil then
-        return nil
-    end
+local function m_get_tags_of_domain(p_domain_info, p_is_local)
 
     -- Si el dominio no tiene definido una categoria de agrupacion para workspace
     if p_domain_info == nil or p_domain_info.domain_category == nil or p_domain_info.domain_category == '' then
         return nil
     end
 
+    -- Obtener la fuente de tag a usar
+    local l_source_tags = nil
+    --if p_domain_info.domain_category == 'local' then
+    if p_is_local then
+        l_source_tags = m_local_tags
+    else
+        l_source_tags = m_remote_tags
+    end
+
+    if l_source_tags == nil then
+        return nil
+    end
+
+    -- Obtener los tags disponibles para el dominio y expandiendo el directorio
     local l_tags = {}
     local l_tag = nil
     local l_is_available = false
 
-    for i = 1, #m_tags do
+    local l_home_dir = nil
+    local l_real_path = nil
+    for i = 1, #l_source_tags do
 
-        l_tag = m_tags[i]
+        l_tag = l_source_tags[i]
 
-        -- Mostrar tags del dominio actual
+        -- Excluir los tags con workspace ya creados asociados al dominio actual y al tag
         l_is_available = m_is_available_tag_for_domain(l_tag, p_domain_info)
         if l_is_available then
+
+            if not p_is_local then
+
+                l_real_path = l_tag.realpath[p_domain_info.name]
+
+                -- Si no se calculo la ruta real asociado al dominio, generarlo y registrarlo
+                if l_real_path == nil then
+
+                    -- Expandir el fullpath
+                    l_real_path = l_tag.fullpath
+                    if string.sub(l_real_path, 1, 1) == '~' then
+
+                        if l_home_dir == nil then
+                            l_home_dir = mm_udomain.get_home_directory_of_domain1(p_domain_info)
+                        end
+
+                        if l_home_dir ~= nil and l_home_dir ~= '' then
+                            l_real_path = l_home_dir .. string.sub(l_real_path,2)
+                        end
+                        --mm_wezterm.log_info('real-path: ' .. l_real_path)
+
+                    end
+
+                    l_tag.realpath[p_domain_info.name] = l_real_path
+                    --l_source_tags[i] = l_tag
+
+                end
+                --mm_wezterm.log_info(l_tag)
+
+            end
+
             table.insert(l_tags, l_tag)
+
         end
 
     end
@@ -476,17 +702,26 @@ local function m_is_available_fullpath_for_domain(p_fullpath, p_domain_info)
         return true
     end
 
+    --mm_wezterm.log_info(mm_wezterm.GLOBAL.workspace_infos)
+
     -- Si el tag ya esta vinculado a un workspace existente
     for _ , l_workspace_info in pairs(l_workspace_infos) do
 
-        if l_workspace_info.fullpath ~= nil and l_workspace_info.fullpath ~= '' and
-           l_workspace_info.domain ~= nil and l_workspace_info.domain == p_domain_info.name then
 
-            if p_fullpath == l_workspace_info.fullpath then
-                return false
+        if l_workspace_info ~= nil then
+
+            if l_workspace_info.fullpath ~= nil and l_workspace_info.fullpath ~= '' and
+               l_workspace_info.domain ~= nil and l_workspace_info.domain == p_domain_info.name then
+
+                if p_fullpath == l_workspace_info.fullpath then
+                    return false
+                end
+
             end
 
         end
+
+
     end
 
     return true
@@ -596,12 +831,12 @@ local function m_get_git_folders(p_domain_info)
         elseif l_initial_char == '@' then
             l_home_dir = mm_wezterm.home_dir
         end
-        mm_wezterm.log_info(l_home_dir)
+        --mm_wezterm.log_info(l_home_dir)
 
         if l_home_dir ~= nil and l_home_dir ~= '' then
                 l_root_folder = l_home_dir .. string.sub(l_root_folder,2)
         end
-        mm_wezterm.log_info(l_root_folder)
+        --mm_wezterm.log_info(l_root_folder)
 
     end
     --mm_wezterm.log_info(l_root_folder)
@@ -750,18 +985,14 @@ local function m_get_choice_label_of_workspace(p_workspace_name, p_workspace_inf
                 l_text = p_workspace_info.fullpath
             end
 
-        elseif p_workspace_info.source_type == 2 then
-
-            l_source_icon = m_zoxide_folder_icon
-            if p_workspace_info.fullpath ~= p_workspace_name then
-                l_text = p_workspace_info.fullpath
-            end
-
         else
 
-            l_source_icon = m_git_folder_icon
-            if p_workspace_info.fullpath ~= p_workspace_name then
-                l_text = p_workspace_info.fullpath
+            l_text = p_workspace_info.fullpath
+
+            if p_workspace_info.source_type == 2 then
+                l_source_icon = m_zoxide_folder_icon
+            else
+                l_source_icon = m_git_folder_icon
             end
 
         end
@@ -809,14 +1040,11 @@ local function m_get_choice_label_of_tag(p_tag, p_home_dir, p_domain_info)
     table.insert(l_format_items, { Text = l_fix_tag_name .. ' ' } )
 
     -- Mostrar informacion adicional
-    if p_tag.name ~= p_tag.fullpath then
+    local l_short_fullpath = string.gsub(p_tag.fullpath, p_home_dir, '~')
+    table.insert(l_format_items, { Foreground = { Color =  m_color_gray1 } } )
+    table.insert(l_format_items, { Text = ' ' .. l_short_fullpath .. ' ' } )
+    table.insert(l_format_items, 'ResetAttributes' )
 
-        local l_short_fullpath = string.gsub(p_tag.fullpath, p_home_dir, '~')
-        table.insert(l_format_items, { Foreground = { Color =  m_color_gray1 } } )
-        table.insert(l_format_items, { Text = ' ' .. l_short_fullpath .. ' ' } )
-        table.insert(l_format_items, 'ResetAttributes' )
-
-    end
 
     return mm_wezterm.format(l_format_items)
 
@@ -848,7 +1076,6 @@ local function m_get_choice_label_of_folder(p_fullpath, p_home_dir, p_use_zoxide
 
     -- Enviar informacion del tag
     local l_short_fullpath = string.gsub(p_fullpath, p_home_dir, '~')
-    --local l_fix_fullpath = mm_ucommon.truncate_string(l_short_fullpath, 40)
     local l_folder_color = m_zoxide_folder_color
     local l_folder_icon = m_zoxide_folder_icon
     if not p_use_zoxide_folder then
@@ -860,7 +1087,6 @@ local function m_get_choice_label_of_folder(p_fullpath, p_home_dir, p_use_zoxide
     table.insert(l_format_items, { Text = ' ' .. l_folder_icon .. ' ' } )
     table.insert(l_format_items, 'ResetAttributes' )
     table.insert(l_format_items, { Text = l_short_fullpath .. ' ' } )
-    --table.insert(l_format_items, { Text = l_fix_fullpath .. ' ' } )
 
     return mm_wezterm.format(l_format_items)
 
@@ -1020,10 +1246,11 @@ local function m_get_choices(p_current_domain_name, p_current_workspace_name, p_
         end
 
     end
+    --mm_wezterm.log_info(l_alternative_domain_info)
 
     -- 4. Obtener los tags que se usara para crear los workspace
-    local l_current_tags = m_get_tags_of_domain(l_current_domain_info)
-    local l_alternative_tags = m_get_tags_of_domain(l_alternative_domain_info)
+    local l_current_tags = m_get_tags_of_domain(l_current_domain_info, true)
+    local l_alternative_tags = m_get_tags_of_domain(l_alternative_domain_info, false)
 
     -- 5. Obtener los folderes de Zoxide
     local l_current_folders = nil
@@ -1032,7 +1259,10 @@ local function m_get_choices(p_current_domain_name, p_current_workspace_name, p_
 
         l_current_folders = m_get_zoxide_folders(l_current_domain_info)
         l_alternative_folders = m_get_zoxide_folders(l_alternative_domain_info)
+        --mm_wezterm.log_info('Current folders:')
         --mm_wezterm.log_info(l_current_folders)
+        --mm_wezterm.log_info('Alternative folders:')
+        --mm_wezterm.log_info(l_alternative_folders)
 
     -- 6. Obtener los folderes de Git
     else
@@ -1063,17 +1293,78 @@ end
 -- Workspace selector> Procesar el 'choice' seleccionado
 ------------------------------------------------------------------------------------
 
+-- Genera un nombre de workspace único
+local function m_get_unique_workspace_name(p_value, p_is_fullpath)
+
+    if p_value == nil or p_value == '' then
+        return nil
+    end
+
+    -- Nombre inicial del workspace
+    local l_basename = nil
+    if p_is_fullpath then
+        -- Extraer basename (soporta tanto "/" como "\")
+        l_basename = p_value:match("([^/\\]+)$")
+    else
+        l_basename = p_value
+    end
+
+    -- Recoger todos los nombres de workspace existentes
+    local l_workspace_names = mm_wezterm.mux.get_workspace_names()
+
+    local l_used = {}
+    local l_item = nil
+
+    for i = 1, #l_workspace_names do
+        l_item = l_workspace_names[i]
+        l_used[l_item] = true
+    end
+
+    -- Si no existe, lo devolvemos tal cual
+    if not l_used[l_basename] then
+        return l_basename
+    end
+
+    -- Si existe, buscamos un sufijo libre
+    local i = 1
+    local l_candidate
+    repeat
+        l_candidate = string.format("%s_%d", l_basename, i)
+        i = i + 1
+    until not l_used[l_candidate]
+
+    return l_candidate
+
+end
+
 
 -- Crear el workspace asociado al dominio selecionado.
 local function m_create_workspace_of_tag(p_window, p_pane, p_selected_tag_name, p_selected_domain_info, p_current_domain_name)
 
     -- Obtener la informacion del tag seleccionado
-    local l_tag = m_get_tag(p_selected_tag_name)
+    local l_tag, l_is_local = m_get_tag(p_selected_tag_name)
     if l_tag == nil then
         return
     end
-
     --mm_wezterm.log_info(l_tag)
+
+    -- Obtener la ruta del tag expandido
+    local l_real_fullpath = l_tag.fullpath
+    if not l_is_local then
+        local l_path = l_tag.realpath[p_selected_domain_info.name]
+        if l_path ~= nil then
+            l_real_fullpath = l_path
+        end
+    end
+
+    -- Obtener el nombre del worspace
+    local l_workspace_name = m_get_unique_workspace_name(p_selected_tag_name, false)
+    if l_workspace_name == nil or l_workspace_name == '' then
+        mm_wezterm.log_error("Can't generate workspace name of '" .. p_selected_tag_name .. "'")
+        return
+    end
+    --mm_wezterm.log_info(l_workspace_name)
+
 
     -- Crear la informacion del workspace info
     --   > name                   : Nombre del workspace (mismo valor que el key del diccionario)
@@ -1099,39 +1390,53 @@ local function m_create_workspace_of_tag(p_window, p_pane, p_selected_tag_name, 
     --   > tag                    : Solo cuando el source_type es '1'.
     --                              Inicialmente es el nombre del workspace pero puede modificarse.
     local l_workspace_info = {
-        name = p_selected_tag_name,
+        name = l_workspace_name,
         source_type = 1,
-        fullpath = l_tag.fullpath,
+        fullpath = l_real_fullpath,
         domain = p_selected_domain_info.name,
         domain_category = p_selected_domain_info.domain_category,
         tag_name = p_selected_tag_name,
     }
 
-    mm_wezterm.GLOBAL.workspace_infos[p_selected_tag_name] = l_workspace_info
-
-
     -- Crear el workspace selecionado
+    -- > 'window:perform_action()' es síncrono en el sentido de que, al regresar, ya estás en el nuevo workspace.
     local l_spawncommand = {
-	    label = "Workspace: " .. p_selected_tag_name,
+	    --label = "Workspace: " .. p_selected_tag_name,
         domain = { DomainName = p_selected_domain_info.name },
-		cwd = l_tag.fullpath,
+		cwd = l_real_fullpath,
 	}
+
 
 	p_window:perform_action(
 		mm_wezterm.action.SwitchToWorkspace({
-			name = p_selected_tag_name,
+			name = l_workspace_name,
 			spawn = l_spawncommand,
 		}),
 		p_pane
 	)
 
+    -- Validar que el workspace fue creado
+    local l_current_workspace_name = p_window:active_workspace()
+    if l_current_workspace_name ~= l_workspace_name then
+        mm_wezterm.log_error("Can't create the worspace '" .. l_workspace_name .. "'")
+        return
+    end
+
+    mm_wezterm.GLOBAL.workspace_infos[l_workspace_name] = l_workspace_info
+
+
     -- Ejecutar el callback
     if l_tag.callback ~= nil then
+
+        -- Obtener el nuevo pane activo es el recién creado
+        local l_new_pane = p_window:active_pane()
+
         --   > Objeto 'Window'
         --   > Objeto 'Pane'
         --   > Workspace name
-        --   > Workspace_info
-        l_tag.callback(p_window, p_pane, p_selected_tag_name, l_workspace_info)
+        --   > Workspace info
+        l_tag.callback(p_window, l_new_pane, l_workspace_name, l_workspace_info)
+
     end
 
 
@@ -1143,6 +1448,13 @@ end
 -- Crear el workspace asociado al fullpath dominio selecionado.
 local function m_create_workspace_of_fullpath(p_window, p_pane, p_selected_fullpath, p_is_zoxide_folder, p_selected_domain_info, p_current_domain_name)
 
+    -- Obtener el nombre del worspace
+    local l_workspace_name = m_get_unique_workspace_name(p_selected_fullpath, true)
+    if l_workspace_name == nil or l_workspace_name == '' then
+        mm_wezterm.log_error("Can't generate workspace name of '" .. p_selected_fullpath .. '".')
+        return
+    end
+    --mm_wezterm.log_info(l_workspace_name)
 
     -- Crear la informacion del workspace info
     --   > name                   : Nombre del workspace (mismo valor que el key del diccionario)
@@ -1168,7 +1480,7 @@ local function m_create_workspace_of_fullpath(p_window, p_pane, p_selected_fullp
     --   > tag                    : Solo cuando el source_type es '1'.
     --                              Inicialmente es el nombre del workspace pero puede modificarse.
     local l_workspace_info = {
-        name = p_selected_fullpath,
+        name = l_workspace_name,
         source_type = 2,
         fullpath = p_selected_fullpath,
         domain = p_selected_domain_info.name,
@@ -1180,23 +1492,32 @@ local function m_create_workspace_of_fullpath(p_window, p_pane, p_selected_fullp
         l_workspace_info.source_type = 3
     end
 
-    mm_wezterm.GLOBAL.workspace_infos[p_selected_fullpath] = l_workspace_info
-
 
     -- Crear el workspace selecionado
     local l_spawncommand = {
-	    label = "Workspace: " .. p_selected_fullpath,
+	    --label = "Workspace: " .. p_selected_fullpath,
         domain = { DomainName = p_selected_domain_info.name },
 		cwd = p_selected_fullpath,
 	}
 
+
 	p_window:perform_action(
 		mm_wezterm.action.SwitchToWorkspace({
-			name = p_selected_fullpath,
+			name = l_workspace_name,
 			spawn = l_spawncommand,
 		}),
 		p_pane
 	)
+
+    -- Validar que el workspace fue creado
+    local l_current_workspace_name = p_window:active_workspace()
+    if l_current_workspace_name ~= l_workspace_name then
+        mm_wezterm.log_error("Can't create the worspace '" .. l_workspace_name .. "'")
+        return
+    end
+
+    mm_wezterm.GLOBAL.workspace_infos[l_workspace_name] = l_workspace_info
+
 
     -- Determinar la distribucion externa asociado al dominio
     local l_distribution = nil
@@ -1268,12 +1589,55 @@ local function m_cbk_process_selected_item(p_window, p_pane, p_item_id, p_item_l
 end
 
 
+------------------------------------------------------------------------------------
+-- Workspace selector> Procesar el 'input' ingresado
+------------------------------------------------------------------------------------
+
+local function m_cbk_process_enter_input(p_window, p_pane, p_value)
+
+    -- Si se ingreso vacio o se cancelo
+    if p_value == nil or p_value == '' then
+        return
+    end
+
+    -- Obtener un nombre unico basado en lo ingresado
+    local l_new_workspace_name = m_get_unique_workspace_name(p_value, false)
+    if l_new_workspace_name == nil or l_new_workspace_name == '' then
+        mm_wezterm.log_error("Can't generate workspace name of '" .. p_value .. "'")
+        return
+    end
+
+    -- Renombrar el workspace
+    local l_current_workspace_name = p_window:active_workspace()
+    mm_wezterm.mux.rename_workspace(l_current_workspace_name, l_new_workspace_name)
+
+    -- Actualiuzar los datos del cache si esta almacenado dentro del cache
+    local l_workspace_infos = mm_wezterm.GLOBAL.workspace_infos
+
+    local l_workspace_info = l_workspace_infos[l_current_workspace_name]
+    if l_workspace_info ~= nil then
+
+        -- Si estable directamente el valor en 'mm_wezterm.GLOBAL.workspace_infos' este no se serializa correctamente,
+        -- por ello se remplaza todo el objeto para que se serialize correctamente.
+        l_workspace_infos[l_current_workspace_name] = nil
+
+        l_workspace_info.name = l_new_workspace_name
+        l_workspace_infos[l_new_workspace_name] = l_workspace_info
+
+        mm_wezterm.GLOBAL.workspace_infos = l_workspace_infos
+
+    end
+
+    --mm_wezterm.log_info(mm_wezterm.GLOBAL.workspace_infos)
+
+end
+
 
 ------------------------------------------------------------------------------------
 -- Callback usados para los keymappins
 ------------------------------------------------------------------------------------
 
-function mod.cbk_chose_workspace_with_zoxide(p_window, p_pane)
+function mod.cbk_choose_workspace_with_zoxide(p_window, p_pane)
 
     local l_current_domain_name = p_pane:get_domain_name()
     local l_current_workspace_name = p_window:active_workspace()
@@ -1295,7 +1659,7 @@ function mod.cbk_chose_workspace_with_zoxide(p_window, p_pane)
 end
 
 
-function mod.cbk_chose_workspace_with_git(p_window, p_pane)
+function mod.cbk_choose_workspace_with_git(p_window, p_pane)
 
     local l_current_domain_name = p_pane:get_domain_name()
     local l_current_workspace_name = p_window:active_workspace()
@@ -1310,6 +1674,23 @@ function mod.cbk_chose_workspace_with_git(p_window, p_pane)
     		fuzzy_description = "Workspace to switch: ",
     		choices = l_choices,
     		fuzzy = true,
+    	}),
+    	p_pane
+    )
+
+end
+
+
+function mod.cbk_rename_workspace(p_window, p_pane)
+
+    --local l_current_domain_name = p_pane:get_domain_name()
+    local l_current_workspace_name = p_window:active_workspace()
+
+    p_window:perform_action(
+    	mm_wezterm.action.PromptInputLine({
+            description = "Rename workspace: ",
+            initial_value = l_current_workspace_name,
+    		action = mm_wezterm.action_callback(m_cbk_process_enter_input),
     	}),
     	p_pane
     )

@@ -120,19 +120,21 @@ local mod= {
     -- Permite excluidos los 'host' obtenidos del archivo de configuracion '~/.ssh/config' el cual no se creara su respectivo 'ssh domain'.
     -- Solo los dominios que no son filtrados se crearan un 'ssh domain' con 'multiplexion = "None"'.
     -- Por defecto, se crea adiciona 2 entradas host: '.local' y 'machine/.local'
+    -- > Use '%' para escapar carateres especiales: ( ) . % + - * ? [ ^ $
     filter_config_ssh = {
+        '^%.host',
+        '^machine/%.host',
         '^gl-',
         '^gh-',
-        '^$.host',
-        '^machine',
     },
 
     -- De los domonios obtenidos anteriormente, permite filtrar los dominios SHH que se no se vinculara a un 'multiplexer server' externo.
     -- Solo los dominios que no son filtrados se crearan un 'ssh domain' con 'multiplexion = "WezTerm"'.
+    -- > Use '%' para escapar carateres especiales: ( ) . % + - * ? [ ^ $
     filter_config_ssh_mux = {
         '^sw',
-        '^192$.168$.1$.',
-        '^192$.168$.199$.',
+        '^192$.168%.1%.',
+        '^192$.168%.199%.',
     },
 
 
@@ -193,15 +195,11 @@ local mod= {
     --external_root_git_folder = nil,
     --external_root_git_folder = '~/code',
 
-    -- Path equivalentes a la ruta local. Usuado para establecer el 'working dir' de un nuevo tab creado del dominio local/wsl-distrobox actual a
-    -- su equivalente wsl-distrobox/local. Usado cuando se usa workspace asociados a path de dominios.
-    -- > En Windows con WSL, la path usado por montaje de los discos de windows a wsl se incluyen automaticamente (no requiere especificarlos).
-    -- > Se puede usar '~' al inicio para representar el 'home directory' del usuario por defecto de la distribucion WSL/distrobox remota.
-    -- > Se puede usar '@' al inicio para representar el 'home directory' del usuario actual y local.
-    equivalent_paths = {
-        { ['local'] = '~/code', external = '~/code' },
-        { ['local'] = '~/works', external = '~/works' },
-    },
+    -- Cargar los built-in tags para crear worspace usando rutas de carpetas del dominio local.
+    load_local_builtin_tags = true,
+
+    -- Cargar los built-in tags para crear worspace usando rutas de carpetas externas al dominio local.
+    load_external_builtin_tags = true,
 
 
     --------------------------------------------------------------------------------
@@ -230,6 +228,24 @@ local mod= {
 
 }
 
+
+-- Arreglo de tag de workspace, usado para crear worspace basado en ruta de un determinado categoria de dominio o dominio.
+-- > tag              : Nombre unico del tag.
+--                      Debido a que inicialemente es el nombre del workspace, debe ser unico no puede usarse el nombre de workspace
+--                      por defecto.
+-- > fullpath         : Ruta completa del directorio de trabajo.
+-- > domain_category  : Define una forma de agrupar el domino al cual puede pertener un ruta 'fullpath' (working directory).
+--     > local        : Si es el dominio local o un dominio de tipo 'unix' (si esta asociado a un servidor IPC ubicado en
+--                      el mismo host que el emulador de terminal.
+--     > distrobox    : Si es un dominio de tipo 'exec' asociado a un contenedor distrobox.
+--     > wsl          : Si es un dominio de tipo 'wsl'
+-- > domain           : Opcional. Si no se define, la ruta aplica a todos los dominios de la misma categoria
+-- > callback         : Funcion con parametros usado que modifica o crea paneles del workspace. Los parametros de este callback son:
+--   > Objeto 'Window'
+--   > Objeto 'Pane' (nuevo panel creado del tab por defecto del worspace creado)
+--   > Workspace name
+--   > Workspace info
+mod.workspace_tags = nil
 
 
 ------------------------------------------------------------------------------------

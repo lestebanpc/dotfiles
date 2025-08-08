@@ -244,8 +244,11 @@ local function m_is_filtered(p_value, p_filter_patterns)
 
     -- Realizar el filtro
     local l_filtered = false
+    local l_match = nil
     for i = 1, #p_filter_patterns do
-        if string.find(p_value, p_filter_patterns[i]) then
+
+        l_match = p_value:match(p_filter_patterns[i])
+        if l_match ~= nil then
             l_filtered = true
             break
         end
@@ -577,7 +580,7 @@ local function m_make_cbk_distrobox_fixup(p_container_name)
 
     return function(p_spawncommand)
 
-        p_spawncommand.args = mm_ucommon.get_args_to_enter_distrobox(p_container_name)
+        p_spawncommand.args = mm_ucommon.get_args_to_enter_distrobox(p_container_name, p_spawncommand.cwd)
         return p_spawncommand
 
     end
@@ -646,7 +649,7 @@ function mod.get_exec_domains()
             for i = 1, #l_containers do
 
                 l_item = l_containers[i]
-                l_domain_name = 'distrobox:' .. l_item.name
+                l_domain_name = 'dtb:' .. l_item.name
 
                 table.insert(l_domains,
                     mm_wezterm.exec_domain(
@@ -686,7 +689,7 @@ function mod.get_exec_domains()
             for i = 1, #l_containers do
 
                 l_item = l_containers[i]
-                l_domain_name = m_container_runtime .. ':' .. l_item.name
+                l_domain_name = 'crt:' .. l_item.name
 
                 table.insert(l_domains,
                     mm_wezterm.exec_domain(
@@ -1016,7 +1019,7 @@ function mod.get_domain_info(p_domain_name)
             l_domain_info.data = nil
             l_domain_info.weight = l_type_info.weight + l_subtype_info.weight
             l_domain_info.ex_data = l_domain
-            l_domain_info.is_external = l_subtype_info.is_external
+            l_domain_info.is_external = l_domain.is_external
             l_domain_info.domain_category = nil
             if l_domain.type == 'distrobox' then
                 l_domain_info.domain_category = 'distrobox'
@@ -1441,7 +1444,7 @@ local function m_cbk_process_selected_item(p_window, p_pane, p_item_id, p_item_l
 
     local l_mux_domain = mm_wezterm.mux.get_domain(l_selected_domain_name)
     if l_mux_domain == nil then
-        mm_wezterm.log_info('not found MuxDomain "' .. l_selected_domain_name .. '"')
+        mm_wezterm.log_error('not found MuxDomain "' .. l_selected_domain_name .. '"')
         return
     end
 
@@ -1449,7 +1452,7 @@ local function m_cbk_process_selected_item(p_window, p_pane, p_item_id, p_item_l
 
     local l_selected_domain_info = mod.get_domain_info(l_selected_domain_name)
     if l_selected_domain_info == nil then
-        mm_wezterm.log_info('not found info of domain "' .. l_selected_domain_name .. '"')
+        mm_wezterm.log_error('not found info of domain "' .. l_selected_domain_name .. '"')
         return
     end
 

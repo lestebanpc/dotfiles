@@ -581,8 +581,10 @@ function mod.get_key_mappins()
         --2. Gestion de Workspace (sesiones)
         --------------------------------------------------------------------------------
 
-        { key = 's', mods = 'LEADER', action = mm_wezterm.action_callback(lm_uworkspace.cbk_chose_workspace_with_zoxide), },
-        { key = 's', mods = 'LEADER|SHIFT', action = mm_wezterm.action_callback(lm_uworkspace.cbk_chose_workspace_with_git), },
+        { key = 's', mods = 'LEADER', action = mm_wezterm.action_callback(lm_uworkspace.cbk_choose_workspace_with_zoxide), },
+        { key = 's', mods = 'LEADER|SHIFT', action = mm_wezterm.action_callback(lm_uworkspace.cbk_choose_workspace_with_git), },
+
+        { key = '$', mods = 'LEADER|SHIFT', action = mm_wezterm.action_callback(lm_uworkspace.cbk_rename_workspace), },
 
         --------------------------------------------------------------------------------
         --3. Uso de 'Damain' y Gestion del 'Tab' (Window)

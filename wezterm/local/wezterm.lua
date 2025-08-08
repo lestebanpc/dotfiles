@@ -640,9 +640,9 @@ end
 -- Establecer los argumentos que se estabecera a zoxide
 local mm_uworkspace = require('utils.workspace')
 mm_uworkspace.setup(
-    m_custom_config.workspace_tags,
+    m_custom_config.workspace_tags, m_custom_config.load_local_builtin_tags, m_custom_config.load_external_builtin_tags,
     m_custom_config.root_git_folder, m_custom_config.external_root_git_folder,
-    m_custom_config.external_equivalent_paths, nil)
+    nil)
 
 
 

@@ -860,14 +860,35 @@ function mod.list_running_distrobox()
 end
 
 
-function mod.get_args_to_enter_distrobox(p_container_name)
+function mod.get_args_to_enter_distrobox(p_container_name, p_working_dir)
 
-    local l_args = {
-        'distrobox',
-        'enter',
-        '-n',
-        p_container_name,
-    }
+    local l_args = nil
+
+    if p_working_dir ~= nil and p_working_dir ~= '' then
+
+        l_args = {
+            'distrobox',
+            'enter',
+            '-n',
+            p_container_name,
+            '--',
+            'sh',
+            '-c',
+            'cd ' .. p_working_dir .. ' && exec $SHELL',
+        }
+
+    else
+
+        l_args = {
+            'distrobox',
+            'enter',
+            '-n',
+            p_container_name,
+        }
+
+    end
+
+    --mm_wezterm.log_info(l_args)
 
     return l_args
 
@@ -1153,14 +1174,23 @@ function mod.get_custom_config()
         tls_clients = nil,
         exec_domain_datas = nil,
 
-        filter_config_ssh = nil,
+        filter_config_ssh = {
+            '^%.host',
+            '^machine/%.host',
+        },
         filter_config_ssh_mux = nil,
-        load_containers = false,
-        load_current_ns_pod = false,
+        external_unix_domains = nil,
 
-        root_git_folder = '~/code',
-        wsl_root_git_folder = '~/code',
-        wsl_default_running_distribution = nil,
+        external_running_distribution = nil,
+        load_containers = false,
+
+        root_git_folder = nil, --'~/code',
+        external_root_git_folder = nil, --'@/code',
+        load_local_builtin_tags = true,
+        load_external_builtin_tags = true,
+
+        workspace_tags = nil,
+
 
         -- Parametros de inicio de Terminal GUI solo si usa 'wezterm start'
         default_prog = nil,
