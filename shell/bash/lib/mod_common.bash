@@ -208,9 +208,13 @@ function get_linux_type_info() {
     #
 
     #Si es Alpine, Arch y OpenSuse
-    if [ $g_os_subtype_id -eq 1 ] || [ $g_os_subtype_id -eq 50 ] || [ $g_os_subtype_id -eq 60 ]; then
+    if [ $g_os_subtype_id -eq 1 ] || [ $g_os_subtype_id -eq 50 ]; then
         l_tag="VERSION_ID"
         l_expression='s/'"$l_tag"'=\(.*\)/\1/'
+    #Si es OpenSuse
+    if [ $g_os_subtype_id -eq 60 ]; then
+        l_tag="VERSION_ID"
+        l_expression='s/'"$l_tag"'="\(.*\)"/\1/'
     #Si no es Alpine
     else
         l_tag="VERSION"
