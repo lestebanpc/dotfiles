@@ -82,6 +82,8 @@ function get_os_type() {
 #              31 : Ubuntu
 #       > 50 - 59 : Familia Arch
 #              50 : Arch Linux
+#       > 60 - 69 : Familia Suse
+#              60 : OpenSUSE
 #    > 'g_os_subtype_name'           : Nombre de distribucion Linux
 #    > 'g_os_subtype_version'        : Version extendida de la distribucion Linux
 #    > 'g_os_subtype_version_pretty' : Version corta de la distribucion Linux
@@ -126,7 +128,11 @@ function get_linux_type_info() {
     #     NAME="Arch Linux"
     #     PRETTY_NAME="Arch Linux"
     #     ID=arch
-    #
+    # 60> OpenSuse
+    #     NAME="openSUSE Tumbleweed"
+    #     ID="opensuse-tumbleweed"
+    #     ID_LIKE="opensuse suse"
+    #     PRETTY_NAME="openSUSE Tumbleweed"
     local l_tag="NAME"
     local l_expression='s/'"$l_tag"'="\(.*\)"/\1/'
     local l_distro_type=$(echo "$l_info_distro" | grep -e "^${l_tag}=" | sed "$l_expression")
@@ -194,10 +200,12 @@ function get_linux_type_info() {
     # 50> Arch:
     #     BUILD_ID=rolling
     #     VERSION_ID=20250413.0.335299
+    # 60> OpenSuse
+    #     VERSION_ID="20250420"
     #
 
-    #Si es Alpine
-    if [ $g_os_subtype_id -eq 1 ] || [ $g_os_subtype_id -eq 50 ]; then
+    #Si es Alpine, Arch y OpenSuse
+    if [ $g_os_subtype_id -eq 1 ] || [ $g_os_subtype_id -eq 50 ] || [ $g_os_subtype_id -eq 60 ]; then
         l_tag="VERSION_ID"
         l_expression='s/'"$l_tag"'=\(.*\)/\1/'
     #Si no es Alpine
@@ -656,6 +664,9 @@ is_package_installed() {
         #Si es un distribucion de la familia Arch Linux
         elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
             p_package_name_part="^${1} "
+        # Si es una distribucion de la familia OpenSuse
+        elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+            p_package_name_part="| ${1} "
         #Si es Alpine
         elif [ $p_os_subtype_id -eq 1 ]; then
             p_package_name_part="^${1}-[0-9]"
@@ -714,6 +725,18 @@ is_package_installed() {
         if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
             return 1
         fi
+
+    #Si es un distribucion de la familia OpenSuse
+    elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+
+        printf 'Buscando OS packages: %bzypper se -i | grep "%s" 2> /dev/null%b\n' "$g_color_gray1" "$p_package_name_part" "$g_color_reset"
+        l_aux=$(zypper se -i | grep "$p_package_name_part" 2> /dev/null)
+        l_status=$?
+
+        if [ $l_status -ne 0 ] || [ -z "$l_aux" ]; then
+            return 1
+        fi
+
 
 
     #Si es Alpine
@@ -779,6 +802,8 @@ upgrade_os_packages() {
             p_non_interative='-y '
         elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
             p_non_interative='--noconfirm '
+        elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+            p_non_interative='-n '
         fi
 
     fi
@@ -821,6 +846,18 @@ upgrade_os_packages() {
             sudo pacman -Syu $p_non_interative
         fi
         l_status=$?
+
+
+    #Si es un distribucion de la familia OpenSuse
+    elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+
+        if [ $g_runner_id -eq 0 ]; then
+            zypper $p_non_interative update
+        else
+            sudo zypper $p_non_interative update
+        fi
+        l_status=$?
+
 
     #Si es Alpine
     elif [ $p_os_subtype_id -eq 1 ]; then
@@ -878,6 +915,8 @@ install_os_package() {
             p_non_interative='-y '
         elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
             p_non_interative='--noconfirm '
+        elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+            p_non_interative='-n '
         fi
 
     fi
@@ -924,6 +963,19 @@ install_os_package() {
         else
            printf 'Instalando un OS package: %bsudo pacman -S %s %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
            sudo pacman -S $p_non_interative $p_package_name
+        fi
+        l_status=$?
+
+
+    #Si es un distribucion de la familia OpenSuse
+    elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+
+        if [ $g_runner_id -eq 0 ]; then
+           printf 'Instalando un OS package: %bzypper %s install %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
+           zypper $p_non_interative install $p_package_name
+        else
+           printf 'Instalando un OS package: %bsudo zypper %s install %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
+           sudo zypper $p_non_interative install $p_package_name
         fi
         l_status=$?
 
@@ -985,6 +1037,8 @@ uninstall_os_package() {
             p_non_interative='-y '
         elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
             p_non_interative='--noconfirm '
+        elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+            p_non_interative='-n '
         fi
 
     fi
@@ -1033,6 +1087,20 @@ uninstall_os_package() {
            sudo pacman -R $p_non_interative $p_package_name
         fi
         l_status=$?
+
+
+    #Si es un distribucion de la familia OpenSuse
+    elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+
+        if [ $g_runner_id -eq 0 ]; then
+           printf 'Instalando un OS package instalado: %bzypper %s remove %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
+           zypper $p_non_interative remove $p_package_name
+        else
+           printf 'Eliminando un OS package instalado: %bsudo zypper %s remove %s%b\n' "$g_color_gray1" "$p_non_interative" "$p_package_name" "$g_color_reset"
+           sudo zypper $p_non_interative remove $p_package_name
+        fi
+        l_status=$?
+
 
     #Si es Alpine
     elif [ $p_os_subtype_id -eq 1 ]; then
@@ -1086,6 +1154,8 @@ clean_os_cache() {
             p_non_interative='-y '
         elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
             p_non_interative='--noconfirm '
+        elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+            p_non_interative='-n '
         fi
 
     fi
@@ -1128,6 +1198,18 @@ clean_os_cache() {
            sudo pacman -Scc $p_non_interative
         fi
         l_status=$?
+
+
+    #Si es un distribucion de la familia OpenSuse
+    elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+
+        if [ $g_runner_id -eq 0 ]; then
+           zypper $p_non_interative clean --all
+        else
+           sudo zypper $p_non_interative clean --all
+        fi
+        l_status=$?
+
 
     #Si es Alpine
     elif [ $p_os_subtype_id -eq 1 ]; then

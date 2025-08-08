@@ -230,6 +230,7 @@ function mod.windows_path_to_wsl_path(p_win_path)
 
 end
 
+
 function mod.is_windows_path(p_fullpath)
 
     if p_fullpath == nil or p_fullpath ~= '' then
@@ -249,6 +250,38 @@ function mod.is_windows_path(p_fullpath)
     return true
 
 end
+
+
+function mod.is_wsl_subfolder_of_windows_disk(p_wsl_path)
+
+    if p_wsl_path == nil or p_wsl_path == '' then
+        return nil
+    end
+
+    -- Verificar si es una ruta /mnt (unidades montadas de Windows)
+    if p_wsl_path:match("^/mnt/[a-zA-Z]/") then
+        return true
+    end
+
+end
+
+
+function mod.is_subfolder_of_home_dir(p_folder_path)
+
+    if p_folder_path == nil or p_folder_path == '' then
+        return false
+    end
+
+    local l_home_dir = mm_wezterm.home_dir
+
+    if p_folder_path == l_home_dir then
+        return true
+    end
+
+    return p_folder_path:sub(1, #l_home_dir) == l_home_dir
+
+end
+
 
 
 ------------------------------------------------------------------------------------

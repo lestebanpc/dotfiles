@@ -16,19 +16,19 @@ local m_unknown_domain_type_icon = ''
 local m_unknown_domain_type_color = '#565757'
 
 local m_domain_types = {
-  ["local"]   =  { icon = '', color = '#3283D5', weight = 0,  },
-  ["wsl"]     =  { icon = '', color = '#D3832D', weight = 10, },
-  ["serial"]  =  { icon = '󰙜', color = '#41C9C9', weight = 20, },
-  ["ssh"]     =  { icon = '󰣀', color = '#C9C941', weight = 50, },
-  ["unix"]    =  { icon = '', color = '#DB4B4C', weight = 60, },
-  ["tls"]     =  { icon = '󰖟', color = '#217E8C', weight = 70, },
+  ["local"]   =  { icon = '', color = '#2766a6', weight = 0,  },
+  ["wsl"]     =  { icon = '', color = '#d3832d', weight = 10, },
+  ["serial"]  =  { icon = '󰙜', color = '#a8743b', weight = 20, },
+  ["ssh"]     =  { icon = '󰣀', color = '#98983d', weight = 50, },
+  ["unix"]    =  { icon = '', color = '#a84f4f', weight = 60, },
+  ["tls"]     =  { icon = '󰖟', color = '#4b8f99', weight = 70, },
   ["exec"]    =  {
       icon   = '',
       color  = '#41C9C9',
       weight = 40,
       types  = {
-          distrobox = { icon = '', color = '#CA40A9', weight = 1, },
-          container = { icon = '', color = '#CA40A9', weight = 2, },
+          distrobox = { icon = '', color = '#175421', weight = 1, },
+          container = { icon = '', color = '#57356b', weight = 2, },
           --k8s       = { icon = '󱃾', color = '#41C9C9', weight = 3, },
           custom    = { icon = '', color = '#3283D5', weight = 4, },
       }
@@ -99,6 +99,7 @@ local m_tls_clients = nil
 --     > Si el domnio es de tipo 'Local' o 'Exec' su valor es 'nil'.
 --   > ex_data         : Solo para algunos dominios.
 --     > Si es un dominio SSH y se su configuracion se genero del '~/.ssh/config' muestra la informacion del 'host'.
+--     > Si es un dominio Unix en Windows y asociado a una instancia WSL, se almacena la informacion del dominio WSL.
 --     > Si es un dominio es de tipo 'Exec' muestra la data relevanta del proceso a ejecutar.
 --       > type        : Puede ser 'container' o 'k8s' o 'custom'
 --       > icon        : Icono del tipo de 'exec domain'.
@@ -501,10 +502,11 @@ function mod.get_unix_domains()
                     table.insert(l_domains, l_domain)
 
                     l_domain_info =  {
-                        type = "unix", name = l_domain.name, data = l_domain,
+                        type = "unix", name = l_domain.name,
+                        data = l_domain, ex_data = l_item,
                         is_multiplexing = true,
                         icon = l_type_info.icon, color = l_type_info.color, weight = l_type_info.weight,
-                        is_external = true, domain_category = nil,
+                        is_external = true, domain_category = 'wsl',
                     }
                     m_domain_infos[l_domain.name] = l_domain_info
 
@@ -1325,9 +1327,10 @@ local function m_get_choice_label(p_domain_data, p_current_domain_name)
 
     local l_domain_info = p_domain_data.info
 
-    -- New tab of domain
-    -- New tab on server
-    -- Attach tabs of server
+    -- Obtener la accion a realizar
+    --    New tab of domain
+    --    New tab on server
+    --    Attach tabs of server
     local l_action = 'New tab     on domain '
     if l_domain_info.is_multiplexing then
         if p_domain_data.is_attached then
@@ -1337,11 +1340,9 @@ local function m_get_choice_label(p_domain_data, p_current_domain_name)
         end
     end
 
-    local l_aditional_infos, l_icon, l_color = m_get_domain_details(l_domain_info)
-
+    -- Mostrar la accion y el tipo de dominio
     local l_fix_domain_type = mm_ucommon.truncate_string(l_domain_info.type, 8)
 
-    -- Construir el label con la data obtenida
     local l_format_items = {
         { Text = l_action },
         { Foreground = { Color =  m_color_gray1 } },
@@ -1349,11 +1350,27 @@ local function m_get_choice_label(p_domain_data, p_current_domain_name)
         --'ResetAttributes',
     }
 
-    local l_fix_domain_name = mm_ucommon.truncate_string(p_domain_data.name, 25)
+    -- Mostrar el icono asociado al dominio
+    local l_aditional_infos, l_icon, l_color = m_get_domain_details(l_domain_info)
     table.insert(l_format_items, { Foreground = { Color =  l_color } } )
-    table.insert(l_format_items, { Text = ' ' ..l_icon .. ' ' ..  l_fix_domain_name .. '  ' })
-    --table.insert(l_format_items, 'ResetAttributes')
+    table.insert(l_format_items, { Text = ' ' ..l_icon .. ' ' })
+    table.insert(l_format_items, 'ResetAttributes')
 
+    -- Mostar el nombre del dominio
+    local l_is_current_domain = p_current_domain_name == p_domain_data.name
+    local l_fix_domain_name = mm_ucommon.truncate_string(p_domain_data.name, 25)
+
+    if l_is_current_domain then
+        table.insert(l_format_items, { Foreground = { Color =  l_color } } )
+    end
+
+    table.insert(l_format_items, { Text = l_fix_domain_name .. '  ' })
+
+    if l_is_current_domain then
+        table.insert(l_format_items, 'ResetAttributes')
+    end
+
+    -- Mostrar informacion adicional
     if l_aditional_infos ~= nil and #l_aditional_infos > 0 then
 
 
@@ -1457,30 +1474,41 @@ local function m_cbk_process_selected_item(p_window, p_pane, p_item_id, p_item_l
     end
 
 
+    -- Attach los objetos (tab, paneles) de un 'server multiplexor' a la ventana de la terminal
     if l_selected_domain_info.is_multiplexing and not l_is_attached then
 
-        p_window:perform_action(
-            mm_wezterm.action.AttachDomain(l_selected_domain_name),
-            p_pane
-        )
+        --p_window:perform_action(
+        --    mm_wezterm.action.AttachDomain(l_selected_domain_name),
+        --    p_pane
+        --)
 
+        -- Vincula los tab existentes dominio actual, pero si no existe ninguno, no crea uno.
+        -- > La accion 'AttachDomain()' crea el tab, pero no se controla el 'working directory' ni el workspace donde se crea.
+        l_mux_domain:attach()
+
+    -- Crear un tab del dominio seleccionado
     else
 
+        local l_current_workspace_name = p_window:active_workspace()
+
         --local l_current_domain_name = p_pane:get_domain_name()
-        --local l_current_workspace_name = p_window:active_workspace()
         --mm_wezterm.log_info('Curren domain "' .. l_current_domain_name .. '", Selected domain "' .. l_selected_domain_name .. '"')
 
-        local l_fullpath = nil
-        --local lm_uworkspace = require('utils.workspace')
-        --local l_fullpath = lm_uworkspace.get_equivalent_fullpath(l_current_workspace_name, l_domain_info)
+        -- Obtener una ruta del dominio equivalente al la ruta asociada al workspace (siempre que existe)
+        local lm_uworkspace = require('utils.workspace')
+        local l_fullpath = lm_uworkspace.get_equivalent_fullpath(l_current_workspace_name, l_selected_domain_info)
+
+        -- Crear el objeto SpawnCommand
         local l_spawncommand = {
             domain = { DomainName = l_selected_domain_name },
         }
 
         if l_fullpath ~= nil and l_fullpath ~= '' then
             l_spawncommand.cwd = l_fullpath
+            mm_wezterm.log_info('Working directory equivalent: ' .. l_fullpath)
         end
 
+        -- Crear el nuevo tab
         p_window:perform_action(
             mm_wezterm.action.SpawnCommandInNewTab(l_spawncommand),
             p_pane
@@ -1496,7 +1524,7 @@ end
 
 function mod.cbk_new_tab(p_window, p_pane)
 
-    local l_current_domain_name = p_pane.domain_name
+    local l_current_domain_name = p_pane:get_domain_name()
     local l_current_workspace_name = p_window:active_workspace()
 
     local l_choices = m_get_choices(l_current_domain_name, l_current_workspace_name)

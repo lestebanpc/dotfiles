@@ -20,7 +20,7 @@ local m_custom = {
     -- Se adiciona despues del comando a ejecutar : 'zoxide query -l <zoxide_args>'.
     -- Ejemplo de valores:
     --    " | rg -Fxf ~/.projects"
-    zoxide_args = "",
+    zoxide_args = '',
 }
 
 -- Miembros privados de uso interno
@@ -96,17 +96,17 @@ local m_remote_tags = nil
 local m_color_gray1 = '#787878'
 
 local m_tag_icon = ''
-local m_tag_color = '#41C9C9'
+local m_tag_color = '#256629'
 
 local m_git_folder_icon = ''
-local m_git_folder_color = '#41C9C9'
+local m_git_folder_color = '#3d4085'
 
 local m_zoxide_folder_icon = ''
-local m_zoxide_folder_color = '#41C9C9'
+local m_zoxide_folder_color = '#4e3d85'
 
 
 local m_workspace_icon = '󱂬'
-local m_workspace_color = '#41C9C9'
+local m_workspace_color = '#3a8f8f'
 
 
 ---@alias action_callback any
@@ -470,7 +470,7 @@ function mod.get_equivalent_fullpath(p_workspace_name, p_domain_info)
 
     -- Obtener la informacion de workspace
     local l_workspace_info = mm_wezterm.GLOBAL.workspace_infos[p_workspace_name]
-    if l_workspace_info == nil then
+    if l_workspace_info == nil or l_workspace_info.domain == nil or l_workspace_info.domain == '' then
         return nil
     end
 
@@ -480,10 +480,35 @@ function mod.get_equivalent_fullpath(p_workspace_name, p_domain_info)
     end
 
     -- Si tienen la misma categoria
+    local l_is_subfolder = false
     if p_domain_info.domain_category == l_workspace_info.domain_category then
 
         if p_domain_info.domain_category == 'local' then
             return l_workspace_info.fullpath
+        end
+
+        -- En una distribucion distrobox el home del usuario se monta en el mismo lugar dentro del contenedor
+        if p_domain_info.domain_category == 'distrobox' then
+
+            l_is_subfolder = mm_ucommon.is_subfolder_of_home_dir(l_workspace_info.fullpath)
+            if l_is_subfolder then
+                return l_workspace_info.fullpath
+            end
+
+            return nil
+
+        end
+
+        -- En una distribucion WSL siempre se monta los discos del SO Windows en '/mnt/'
+        if p_domain_info.domain_category == 'wsl' then
+
+            l_is_subfolder = mm_ucommon.is_wsl_subfolder_of_windows_disk(l_workspace_info.fullpath)
+            if l_is_subfolder then
+                return l_workspace_info.fullpath
+            end
+
+            return nil
+
         end
 
         return nil
@@ -499,8 +524,14 @@ function mod.get_equivalent_fullpath(p_workspace_name, p_domain_info)
         end
 
         if p_domain_info.domain_category == 'distrobox' then
-            -- Completar
+
+            l_is_subfolder = mm_ucommon.is_subfolder_of_home_dir(l_workspace_info.fullpath)
+            if l_is_subfolder then
+                return l_workspace_info.fullpath
+            end
+
             return nil
+
         end
 
         return nil
@@ -514,6 +545,49 @@ function mod.get_equivalent_fullpath(p_workspace_name, p_domain_info)
             return mm_ucommon.wsl_path_to_windows_path(l_workspace_info.fullpath)
         end
 
+        local l_workspace_domain_info = nil
+        if p_domain_info.type == 'wsl' then
+
+            l_workspace_domain_info = mm_ucommon.get_domain_info(l_workspace_info.domain)
+            if l_workspace_domain_info == nil then
+                return nil
+            end
+
+            if l_workspace_domain_info.type == 'wsl' then
+                return nil
+            end
+
+            -- Si el dominio que solicita crear un tab, esta asociado al dominio de tipo 'unix' del workspace asocido a la misma distribucion,
+            -- enviar la misma ruta
+            if l_workspace_domain_info.type == 'unix' and l_workspace_domain_info.ex_data ~= nil and
+               l_workspace_domain_info.ex_data.distribution == p_domain_info.data.distribution then
+               return l_workspace_info.fullpath
+            end
+
+            return nil
+
+        end
+
+        if p_domain_info.type == 'unix' and p_domain_info.ex_data ~= nil then
+
+            l_workspace_domain_info = mm_ucommon.get_domain_info(l_workspace_info.domain)
+            if l_workspace_domain_info == nil then
+                return nil
+            end
+
+            if l_workspace_domain_info.type == 'unix' then
+                return nil
+            end
+
+            -- Si el dominio que solicita crear el tab, es de tipo 'unix' asoacido a la misma distribucion, enviar la misma ruta.
+            if l_workspace_domain_info.type == 'wsl' and l_workspace_domain_info.data.distribution == p_domain_info.ex_data.distribution then
+                return l_workspace_info.fullpath
+            end
+
+            return nil
+
+        end
+
         return nil
 
     end
@@ -522,8 +596,14 @@ function mod.get_equivalent_fullpath(p_workspace_name, p_domain_info)
     if l_workspace_info.domain_category == 'distrobox' then
 
         if p_domain_info.domain_category == 'local' then
-            -- Completar
+
+            l_is_subfolder = mm_ucommon.is_subfolder_of_home_dir(l_workspace_info.fullpath)
+            if l_is_subfolder then
+                return l_workspace_info.fullpath
+            end
+
             return nil
+
         end
 
         return nil
@@ -740,7 +820,11 @@ local function m_get_zoxide_folders(p_domain_info)
     -- Determinar la distribucion externa asociado al dominio
     local l_distribution = nil
     if p_domain_info.domain_category == 'wsl' then
-        l_distribution = p_domain_info.data.distribution
+        if p_domain_info.type == 'wsl' then
+            l_distribution = p_domain_info.data.distribution
+        elseif p_domain_info.type == 'unix' and p_domain_info.ex_data ~= nil then
+            l_distribution = p_domain_info.ex_data.distribution
+        end
     elseif p_domain_info.domain_category == 'distrobox' then
         l_distribution = p_domain_info.ex_data.name
     end
@@ -803,7 +887,11 @@ local function m_get_git_folders(p_domain_info)
 
     if p_domain_info.domain_category == 'wsl' then
 
-        l_distribution = p_domain_info.data.distribution
+        if p_domain_info.type == 'wsl' then
+            l_distribution = p_domain_info.data.distribution
+        elseif p_domain_info.type == 'unix' and p_domain_info.ex_data ~= nil then
+            l_distribution = p_domain_info.ex_data.distribution
+        end
         l_root_folder = m_custom.external_root_git_folder
 
     elseif p_domain_info.domain_category == 'distrobox' then
@@ -1522,7 +1610,11 @@ local function m_create_workspace_of_fullpath(p_window, p_pane, p_selected_fullp
     -- Determinar la distribucion externa asociado al dominio
     local l_distribution = nil
     if p_selected_domain_info.domain_category == 'wsl' then
-        l_distribution = p_selected_domain_info.data.distribution
+        if p_selected_domain_info.type == 'wsl' then
+            l_distribution = p_selected_domain_info.data.distribution
+        elseif p_selected_domain_info.type == 'unix' and p_selected_domain_info.ex_data ~= nil then
+            l_distribution = p_selected_domain_info.ex_data.distribution
+        end
     elseif p_selected_domain_info.domain_category == 'distrobox' then
         l_distribution = p_selected_domain_info.ex_data.name
     end
