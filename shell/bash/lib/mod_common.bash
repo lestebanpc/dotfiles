@@ -848,8 +848,10 @@ upgrade_os_packages() {
     elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
 
         if [ $g_runner_id -eq 0 ]; then
+            pacman -Syy $p_non_interative
             pacman -Syu $p_non_interative
         else
+            sudo pacman -Syy $p_non_interative
             sudo pacman -Syu $p_non_interative
         fi
         l_status=$?
