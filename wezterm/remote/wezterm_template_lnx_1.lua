@@ -19,6 +19,7 @@ local mod = mm_wezterm.config_builder()
 ------------------------------------------------------------------------------------
 -- Definir el server TLS
 ------------------------------------------------------------------------------------
+--
 -- > Si el cliente realiza el handshake TLS usando una conexion SSH previa, no es obligatorio configurar
 --   certificados para el servidor TLS:
 --   > A nivel del cliente TLS (terminal GUI) debera tener acceso al server SSH y indicado su acceso en

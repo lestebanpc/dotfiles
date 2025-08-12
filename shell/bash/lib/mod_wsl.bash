@@ -3,7 +3,7 @@
 
 # Solo WSL: Folder base, donde se almacena el programas, comando y afines usados por Windows.
 if [ -z "$g_win_base_path" ] || [ ! -d "$g_win_base_path" ]; then
-    g_win_base_path='/mnt/c/cli'
+    g_win_base_path='/mnt/c/apps'
 fi
 
 #Constantes: Colores

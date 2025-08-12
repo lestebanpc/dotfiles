@@ -320,8 +320,8 @@ endif
 
 " Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.
 " Su valor se calculara, segun prioridad, usando:
-"  > Valor definido en la variable de entorno 'MY_PRGS_PATH' (siempre que defina un valor).
-"  > Si no define un valor, se usara la ruta indicada en esta variable global vim 'g:programs_base_path'.
+"  > Valor definido en la variable de entorno 'MY_TOOLS_PATH' (siempre que defina un valor).
+"  > Si no define un valor, se usara la ruta indicada en esta variable global vim 'g:tools_path'.
 "  > Si no se define una variable o es vacia, se usara el valor por defecto es : '/var/opt/tools'
 " Su valor por defecto es : '/var/opt/tools'
 " Dentro de esta ruta se debe encontrar (entre otros) los subfolderes:
@@ -329,10 +329,10 @@ endif
 "   > Ruta base donde estan los DAP Server            : './dap_servers/'
 "   > Ruta base donde estan las extensiones de vscode : './vsc_extensions/'
 " Estableciendo el valor por defecto si no se define antes.
-if $MY_PRGS_PATH != ''
-    let g:programs_base_path = $MY_PRGS_PATH
-elseif !exists("g:programs_base_path")
-    let g:programs_base_path = "/var/opt/tools"
+if $MY_TOOLS_PATH != ''
+    let g:tools_path = $MY_TOOLS_PATH
+elseif !exists("g:tools_path")
+    let g:tools_path = "/var/opt/tools"
 endif
 
 

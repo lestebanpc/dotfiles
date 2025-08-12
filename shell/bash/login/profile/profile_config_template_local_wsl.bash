@@ -17,16 +17,16 @@
 
 # Folder base donde se almacena los subfolderes de los programas.
 # - Si no es un valor valido (no existe o es vacio), su valor sera el valor por defecto "/var/opt/tools".
-# - Si es un directorio valido se Convertira en la variable de entorno 'MY_PRGS_PATH' usado en la configuración
+# - Si es un directorio valido se Convertira en la variable de entorno 'MY_TOOLS_PATH' usado en la configuración
 #   de programas como TMUX.
-#g_programs_path='/var/opt/tools'
+#g_tools_path='/var/opt/tools'
 
 # Folder donde se almacena los binarios de tipo comando.
 # - Si los comandos instalados por el script '~/${g_repo_name}/shell/bash/bin/linuxsetup/01_setup_binaries.bash'
 #   se ha instalado en una ruta personalizado (diferente a '/usr/local/bin' o '~/.local/bin'), es obligatorio
 #   establecer la ruta correcta en dicha variable.
 # - Si no se especifica (es vacio), se considera la ruta estandar '/usr/local/bin'
-#g_bin_cmdpath='/usr/local/bin'
+#g_lnx_bin_path='/usr/local/bin'
 
 # Ruta del tema de 'Oh-My-Posh' usada para establecer el prompt a usar.
 # Si no se establecer (es vacio), se usara '~/${g_repo_name}/etc/oh-my-posh/default_settings.json'
@@ -54,14 +54,14 @@ g_load_wslfunc=0
 #-----------------------------------------------------------------------------------
 
 # Folder base, donde se almacena el programas, comando y afines usados por Windows.
-# - Si no se ingresa un valor valido o no existe, se asignara su valor por defecto "/mnt/c/cli" (es decir "c:\cli").
+# - Si no se ingresa un valor valido o no existe, se asignara su valor por defecto "/mnt/c/tools" (es decir "c:\apps").
 # - En este folder almacena la siguiente estructura de folderes donde estan:
-#     > "${g_win_base_path}/prgs"     : subfolder donde se almacena los subfolder de los programas.
+#     > "${g_win_base_path}/tools"     : subfolder donde se almacena los subfolder de los programas.
 #     > "${g_win_base_path}/cmds/bin" : subfolder donde se almacena los comandos.
 #     > "${g_win_base_path}/cmds/doc" : subfolder donde se almacena documentacion del comando.
 #     > "${g_win_base_path}/cmds/etc" : subfolder donde se almacena archivos adicionales del comando.
 #     > "${g_win_base_path}/fonts" : subfolder donde se almacena los archivos de fuentes tipograficas.
-#$g_win_base_path='/mnt/d/cli'
+#$g_win_base_path='/mnt/d/apps'
 
 
 #-----------------------------------------------------------------------------------

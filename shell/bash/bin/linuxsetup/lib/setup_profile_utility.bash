@@ -78,7 +78,7 @@ declare -A gA_python_pckgs_type=(
 # - El value, es el nombre del paquete a instalar.
 declare -A gA_nodejs_pckgs_name=(
     ['neovim']='neovim'
-    ['tree-sitter-cli']='tree-sitter-cli'
+    #['tree-sitter-cli']='tree-sitter-cli'
     ['prettier']='prettier'
     ['bash-language-server']='bash-language-server'
     ['vim-language-server']='vim-language-server'
@@ -96,7 +96,7 @@ declare -A gA_nodejs_pckgs_name=(
 # (2) Otros paquetes usandos para development (valor por defecto).
 declare -A gA_nodejs_pckgs_group=(
     ['neovim']=0
-    ['tree-sitter-cli']=0
+    #['tree-sitter-cli']=0
     ['prettier']=0
     ['bash-language-server']=1
     ['vim-language-server']=1
@@ -111,7 +111,7 @@ declare -A gA_nodejs_pckgs_group=(
 # Descripcion del paquete que se mostrara en lo logs
 declare -A gA_nodejs_pckgs_description=(
     ['neovim']='CLI para integrar plugin en NodeJS con Python'
-    ['tree-sitter-cli']='CLI para soporte a TreeSitter'
+    #['tree-sitter-cli']='CLI para soporte a TreeSitter'
     ['prettier']='Formatter de varios archivos'
     ['bash-language-server']='LSP server para Bash'
     ['vim-language-server']='LSP server para VimScript'
@@ -160,7 +160,7 @@ declare -A gA_nodejs_pckgs_description=(
 function check_nodejs() {
 
     #Parametros
-    local p_programs_path="$1"
+    local p_tools_path="$1"
 
     local p_show_installed_info=1
     if [ "$2" = "0" ]; then
@@ -177,7 +177,7 @@ function check_nodejs() {
     local l_status
 
     #1. Si no se envio una ruta valida de programas del instalador o no fue instalado por el instalador
-    if [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/nodejs/bin/node" ]; then
+    if [ -z "$p_tools_path" ] || [ ! -f "${p_tools_path}/nodejs/bin/node" ]; then
 
         l_version=$(node --version 2> /dev/null)
         l_status=$?
@@ -198,7 +198,7 @@ function check_nodejs() {
     fi
 
     #2. Si fue instalado por este instalador
-    l_version=$(${p_programs_path}/nodejs/bin/node --version 2> /dev/null)
+    l_version=$(${p_tools_path}/nodejs/bin/node --version 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ]; then
         l_version=''
@@ -210,7 +210,7 @@ function check_nodejs() {
     fi
 
     #Si fue instalado correctamente, validar si esta registrado en el PATH
-    echo "$PATH" | grep "${p_programs_path}/nodejs/bin" &> /dev/null
+    echo "$PATH" | grep "${p_tools_path}/nodejs/bin" &> /dev/null
     l_status=$?
 
     #Si no esta instalado
@@ -221,10 +221,10 @@ function check_nodejs() {
             printf 'NodeJS > %bNodeJS "%b%s%b" esta instalado pero no esta en el $PATH del usuario%b.\n' \
                    "$g_color_red1" "$g_color_gray1" "$l_version" "$g_color_red1" "$g_color_reset"
             printf '         Se recomienda que adicione al PATH de su sesion actual de forma permanente, usando: %bPATH=%s/nodejs/bin:$PATH%b\n' \
-                   "$g_color_gray1" "${p_programs_path}" "$g_color_reset"
+                   "$g_color_gray1" "${p_tools_path}" "$g_color_reset"
         fi
 
-        export PATH=${p_programs_path}/nodejs/bin:$PATH
+        export PATH=${p_tools_path}/nodejs/bin:$PATH
         return 1
 
     fi
@@ -254,7 +254,7 @@ function check_nodejs() {
 function check_neovim() {
 
     #Parametros
-    local p_programs_path="$1"
+    local p_tools_path="$1"
 
     local p_show_installed_info=1
     if [ "$2" = "0" ]; then
@@ -272,7 +272,7 @@ function check_neovim() {
     local l_status
 
     #1. Si no se envio una ruta valida de programas del instalador o no fue instalado por el instalador
-    if  [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/neovim/bin/nvim" ]; then
+    if  [ -z "$p_tools_path" ] || [ ! -f "${p_tools_path}/neovim/bin/nvim" ]; then
 
         l_version=$(nvim --version 2> /dev/null)
         l_status=$?
@@ -301,7 +301,7 @@ function check_neovim() {
     fi
 
     #2. Si fue instalado por este instalador
-    l_version=$(${p_programs_path}/neovim/bin/nvim --version 2> /dev/null)
+    l_version=$(${p_tools_path}/neovim/bin/nvim --version 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ]; then
         l_version=''
@@ -313,7 +313,7 @@ function check_neovim() {
     fi
 
     #Si fue instalado correctamente, validar si esta registrado en el PATH
-    echo "$PATH" | grep "${p_programs_path}/neovim/bin" &> /dev/null
+    echo "$PATH" | grep "${p_tools_path}/neovim/bin" &> /dev/null
     l_status=$?
 
     #Si no esta instalado
@@ -324,10 +324,10 @@ function check_neovim() {
             printf 'NeoVIM > %bNeoVIM "%b%s%b" esta instalado pero no esta en el $PATH del usuario%b.\n' \
                    "$g_color_red1" "$g_color_gray1" "$l_version" "$g_color_red1" "$g_color_reset"
             printf '         Se recomienda que adicione al PATH de su sesion actual de forma permanente, usando: %bPATH=%s/neovim/bin:$PATH%b\n' \
-                   "$g_color_gray1" "${p_programs_path}" "$g_color_reset"
+                   "$g_color_gray1" "${p_tools_path}" "$g_color_reset"
         fi
 
-        export PATH=${p_programs_path}/neovim/bin:$PATH
+        export PATH=${p_tools_path}/neovim/bin:$PATH
         return 1
 
     fi

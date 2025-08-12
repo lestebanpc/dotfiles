@@ -1,8 +1,8 @@
 local M = {}
 
 
-local m_path_jdtls = vim.g.programs_base_path .. '/lsp_servers/jdtls'
-local m_path_vsc_extension = vim.g.programs_base_path .. '/vsc_extensions'
+local m_path_jdtls = vim.g.tools_path .. '/lsp_servers/jdtls'
+local m_path_vsc_extension = vim.g.tools_path .. '/vsc_extensions'
 
 ---@return string|nil
 function M.get_workspace_root()
@@ -420,7 +420,7 @@ local function get_profile_dap_config(profile_event)
         return nil
     end
 
-    local async_profiler_so = vim.g.programs_base_path .. "/async_profiler/lib/libasyncProfiler.so"
+    local async_profiler_so = vim.g.tools_path .. "/async_profiler/lib/libasyncProfiler.so"
     local event = 'event=' .. profile_event
     local vmArgs = "-ea -agentpath:" .. async_profiler_so .. "=start,"
     vmArgs = vmArgs .. event .. ",collapsed,file=/tmp/traces.txt"

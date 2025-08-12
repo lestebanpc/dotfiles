@@ -1,7 +1,7 @@
 {
   "languageserver": {
     "omnisharp": {
-      "command": "${env:MY_PRGS_PATH}/lsp_servers/omnisharp_ls/OmniSharp",
+      "command": "${env:MY_TOOLS_PATH}/lsp_servers/omnisharp_ls/OmniSharp",
       "args": [
         "-z",
         "DotNet:enablePackageRestore=false",

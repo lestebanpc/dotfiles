@@ -468,6 +468,33 @@ if g:use_tmux
 endif
 
 
+"###################################################################################
+" Utilidades
+"###################################################################################
+
+" Generar los tags para el proyecto.
+function! s:GenTagsFunc() abort
+
+    "1. Obtener el texto del clipboard
+    let l:cmd = 'ctags -R .'
+    "let l:cmd = 'ctags -R ' . expand('%:p:h')
+
+    call system(l:cmd)
+
+    if v:shell_error != 0
+        echo "Error to generate tags 'ctags -R .'."
+        return
+    endif
+
+    let l:working_dir = getcwd()
+    echo "The file 'tags' has been generated in '" . l:working_dir . "'."
+
+endfunction
+
+command! GenTags call <SID>GenTagsFunc()
+
+
+
 
 "###################################################################################
 " UI> Configuraciones exclusivas de NeoVim

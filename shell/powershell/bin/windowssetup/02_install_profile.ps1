@@ -720,7 +720,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
     #3. Creando enlaces simbolico dependientes del tipo de distribución Linux
 
     #TODO this variable is null
-    #$g_win_base_path='C:\cli'
+    #$g_win_base_path='C:\apps'
 
     #Si es Linux WSL
     $l_target_link= ""
@@ -997,9 +997,9 @@ function show_menu() {
 
 # Folder base donde se almacena el programas, comando y afines usados por Windows.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
-# - Si no es un valor valido, se asignara "C:\cli"
+# - Si no es un valor valido, se asignara "C:\apps"
 # - En este folder se creara/usara la siguiente estructura de folderes:
-#     > "${g_win_base_path}/prgs"     : subfolder donde se almacena los subfolder de los programas.
+#     > "${g_win_base_path}/tools"    : subfolder donde se almacena los subfolder de los programas.
 #     > "${g_win_base_path}/cmds/bin" : subfolder donde se almacena los comandos.
 #     > "${g_win_base_path}/cmds/man" : subfolder donde se almacena los archivos de ayuda man1 del comando.
 #     > "${g_win_base_path}/cmds/doc" : subfolder donde se almacena documentacion del comando.
@@ -1033,7 +1033,7 @@ if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup
 
 # Valor por defecto del folder base de  programas, comando y afines usados por Windows.
 if((-not ${g_win_base_path}) -and (Test-Path "$g_win_base_path")) {
-    $g_win_base_path='C:\cli'
+    $g_win_base_path='C:\apps'
 }
 
 # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).

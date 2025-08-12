@@ -1,85 +1,3 @@
---
--- Consideraciones a tener en cuenta:
--- > Por todas las instancias de un (emulador de) terminal de un mismo usuario solo crea un proceso 'wezterm-gui'.
--- > Pora cada una instancia de terminal que se crea:
---   > Se ejecuta el archivo de configuracion '~/.config/wezterm/wezterm.lua'.
---   > El archivo de configuracion puede volver a cargarse automaticamete cuando este tiene un cambio.
---   > Se se crea una instancia 'built-in multiplexer' el cual crea un worspace por defecto llamado 'default'.
---     Por tal motivo cada instancia tiene su propio tab independientos de otra instancia de la termina.
--- > Una instancia de (emulador de) terminal es un programa GUI que usualmente se inicia de 2 formas:
---   > 'wezterm start --domain <defualt_domain> -- <default_prog>'
---   > 'wezterm-gui start  --domain <defualt_domain> -- <default_prog>', es usado en los 'launcher' de los diferentes sistemas operativo para
---     iniciar el (emulador de terminal). Internamente invoca a 'wezterm start'.
--- > Otras formas de iniciar una instancia del (emulador de terminal) es usando Los subcomandos:
---     > 'wezterm connect <domian>' o 'wezterm-gui connect <domian>',
---     > 'wezterm ssh <server>'     o 'wezterm-gui ssh <server>'
---     > 'wezterm ssh serial'       o 'wezterm-gui ssh serial'
---   Por defecto estos crean una instancia de (emulador de) terminal, pero algunas usando opciones como '--new-tab' permiten que si es
---   eejcutado dentro de terminal existente (que sea WezTerm) puede ejecutar crear un 'Tab' en el workspace actual asociado al dominio asociado
---   al subcomando.
--- > Si inicia una instancia del (emulador de) terminal usando 'wezterm' o 'wezterm-gui' sin subcomando, se puede modificar el subcomando a usar estableciendo el
---   parametro 'config.default_gui_startup_args' del archivo de configuracion y especificando, por ejemplo:
---   > '{ 'start' }'               si desea usar 'wezterm start'
---   > '{ 'ssh', '<server>' }'     si desea usar 'wezterm ssh <server>'
---   > '{ 'connect', '<domain>' }' si desea usar 'wezterm connect <domain>'
---   > '{ 'serial', '<server>' }'  si desea usar 'wezterm serial <server>'
--- > Un 'multiplexer' tiene un solo 'multiplexing domain' el cual gestiona objetos como 'workspace', sus 'tab domain', sus 'tab' y sus 'pane'.
---   > Estos pueden ser:
---     > 'built-in multiplexer'
---     > 'multiplexer server'
---   > Una instancia de servidor solo gestiona un solo 'multiplexing domain' el cual puede tener varios 'workspace'.
---     > Actualmente el dominio de multiplexacion de un 'multiplexer server' solo puede tener 1 solo worspace, pero esta diseñado para tener varios de estos.
---   > Un 'workspace' tine varios 'tab' y este a su vez varios 'pane'.
---     > Solo el 'workspace' del 'built-in multiplexer' puede tener tab vinculados ('attached') de otros workspace externos (pertenecientes a otrose dominios
---       de multiplexaxion de algun 'multiplexer server' externo a este).
---       > Si realiza un 'detach' del worspace externo en el worspace actual, se desvincula todos los tab asociados a dicho dominio, pero estos objetos
---         no se destruyen y pueden ser vistos nuevamente dentro del workspace si se vuelve a vincular ('attach').
---     > Un 'workspace' del 'multiplexer server' solo puede tener 'tab' asociados proceso locales de ese servidor.
--- > Un cliente de un 'multiplexer' es un proceso 'wezterm-gui' (un mismo usuario y de una maquina) que se conecta a un 'multiplexer'.
--- > Un 'tab domain' es un forma de organizar tab y paneles que tiene un usan proceso locales comunes y tiene características similares.
---   > Los tab y paneles de un 'tab domain' se crea de manera similar usando el mismo proceso, conectandose el mismo servidor remoto, etc.
---   > Un 'tab domain' define parámetros para que se cree un tab y sus paneles.
---   > Los tipos puede ser:
---     > Asociado a proceso locales
---     > 'Local Domain'
---          > Sus paneles solo  proceso locales, usualmente el interprete shell
---          > Usado en 'built-in multiplexer' y 'multiplexer server'.
---     > 'SSH Domain' (si no esta asociado un un 'multiplexer server')
---        > Es considerado un proceso 'ssh' que se ejecuta localmente pero requiere conectarse remotamente por SSH.
---        > Usado en 'built-in multiplexer'.
---     > 'WSL Domain'
---        > Ejecutan un proceso local 'wsl' y no usan un 'multiplexer server'.
---        > Usado en 'built-in multiplexer'.
---     > Asociado a un workspace remoto
---       > Solo puede ser usuyados por 'built-in workspace'.
---       > Pueden iniciar automaticamente el 'multiplexer server' remoto.
---       > Los objetos 'tab' y 'pane' se crea en el 'multiplexer server', este solo lo visualiza
---       > Puede ser:
---         > 'SSH Domain' (si esta asociado un un 'multiplexer server')
---           > Cuando al dominio se define con el atributo 'multiplexing' a 'WezTerm'.
---           > Permite vinculara ('attach') a un workspace de un 'multiplexer server' ubicado en un servidor SSH.
---         > 'Unix Damain'
---           > Se conecta a un 'multiplexer server' localmente usando socket IPC.
--- > Los 'multiplexer' usados por Wezterm son:
---   > 'Multiplexer Server'
---      > Es un multiplexer externo al proceso 'wezterm-gui'.
---      > Se ejecuta en un proceso 'wezterm-mux-server' externa a la terminal y expone su API en TSL/HTTPS (usualmente usando un socket IPC).
---      > Los clientes (procesos 'wezterm-gui') solo se pueden conectar usando:
---        > Localmente usando el socket IPC expuesto por el 'multiplexer' y usando TLS/HTTPS.
---        > Remotamente se accede usando:
---          > TLS
---            > Mediante configuracion del 'multiplexer server' puede exponer el socket IPC en un socket TCP exponiendo el API TLS/HTTPS sobre TPC.
---          > SSH
---            > Require de un proxy creado por 'wezterm cli proxy' que facilite la comunicacion de TLS/HTTPS sobre el tunel SSH.
---      > Actualmente, solo puede tener un solo 'workspace' y solo usa un 'tab domain' local el cual tiene sus propios tabs y sus pane.
---   > 'Built-in multiplexer'
---      > Es un multiplexer que se instancia dentreo del proceso 'wezterm-gui' y uno por instancia.
---      > Cada instancia del (emulador de terminal) inicia su propio 'built-in multiplexer'
---      > Se crea dentro del propio proceso de la instancia de la terminal.
---      > Tiene un dominio de multiplexacion el cual tiene por defecto como workspace llamado 'default', pero permite crear mas de uno.
---      > Los 'tab domain' que se puede usar son de tipo 'local domain', 'ssh domain', 'wls domain'.
---
-
 ------------------------------------------------------------------------------------
 -- My settings variables
 ------------------------------------------------------------------------------------
@@ -425,29 +343,28 @@ mm_wezterm.on('update-status', mm_ugeneralui.callback_update_status)
 -- Setting> Damains
 ------------------------------------------------------------------------------------
 --
--- Un 'tab domain' es un forma de organizar tab y paneles que tiene un usan proceso locales comunes y tiene características similares.
---  > Los tab y paneles de un 'tab domain' se crea de manera similar usando el mismo proceso, conectandose el mismo servidor remoto, etc.
---  > Un 'tab domain' define parámetros para que se cree un tab y sus paneles.
--- Los 'tab domian' asociado a proceso locales puede ser:
---  > 'Local Domain'
---       > Sus paneles solo  proceso locales, usualmente el interprete shell
---       > Usado en 'built-in multiplexer' y 'multiplexer server'.
---  > 'SSH Domain' (si no esta asociado un un 'multiplexer server')
---     > Es considerado un proceso 'ssh' que se ejecuta localmente pero requiere conectarse remotamente por SSH.
---     > Usado en 'built-in multiplexer'.
---  > 'WSL Domain'
---     > Ejecutan un proceso local 'wsl' y no usan un 'multiplexer server'.
---     > Usado en 'built-in multiplexer'.
--- Los 'tab domian' asociado a un workspace remoto se caracteriza por:
---  > Solo puede ser usuyados por 'built-in workspace'.
---  > Pueden iniciar automaticamente el 'multiplexer server' remoto.
---  > Los objetos 'tab' y 'pane' se crea en el 'multiplexer server', este solo lo visualiza
--- Los 'tab domian' asociado a un workspace remoto pueden ser:
---  > 'SSH Domain' (si esta asociado un un 'multiplexer server')
---    > Cuando al dominio se define con el atributo 'multiplexing' a 'WezTerm'.
---    > Permite vinculara ('attach') a un workspace de un 'multiplexer server' ubicado en un servidor SSH.
---  > 'Unix Damain'
---    > Se conecta a un 'multiplexer server' localmente usando socket IPC.
+-- > Un 'Domain' es a nivel emulador de terminal ('wezter-gui') define la forma en que se crearan los paneles de un tab (el proceso local a usar, el
+--   interprete de shell a usar, los parametros que se usaran para crearlo) el cual puede ser complejo cuando este se conecta a shell o procesos
+--   remotos.
+--   > Un 'Domain' esta asociado a un 'MuxDomain' de un multiplexor integraado o remoto.
+--   > Los tipos puede ser:
+--     > 'Local Domain'
+--          > Sus paneles solo  proceso locales, usualmente el interprete shell
+--     > 'SSH Domain'
+--        > Puede asociarse al mulitplexor integrado a un 'multiplexer server'.
+--        > Si esta asociado a 'MuxDomain' del multiplexor integrado, es considerado un proceso 'ssh' que se ejecuta localmente pero requiere
+--          conectarse remotamente por SSH.
+--        > Si esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
+--          decida como crear los 'MuxTab' y sus 'MuxPane'. Se usa SSH para comunicarse con el servidor.
+--     > 'WSL Domain'
+--        > Ejecutan un proceso local 'wsl' y siempre esta asocaido a un 'MuxDomain' del 'built-in multiplexer'.
+--     > 'TSL Domain'
+--        > Siempre esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
+--          decida como crear los 'MuxTab' y sus 'MuxPane'.
+--        > Se usa TLS para comunicarse con este, aunque tambien puede usarse SSH solo para el inicio automatico del 'multiplexer server'.
+--     > 'Unix Damain'
+--        > Siempre esta asociado a 'MuxDomain' de un 'multiplexer server' que usualemtne esta local donde esta la termina.
+--        > Se usa socket IPC para comunicarse con este.
 -- For more details, see: https://wezfurlong.org/wezterm/multiplexing.html
 --
 

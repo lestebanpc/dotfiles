@@ -18,13 +18,13 @@ if((-not ${g_prompt_theme}) -or (Test-Path "$g_prompt_theme")) {
 }
 
 # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
-if((-not ${g_programs_path}) -or (Test-Path "$g_programs_path")) {
-    $g_programs_path= 'C:\cli\prgs'
+if((-not ${g_tools_path}) -or (Test-Path "$g_tools_path")) {
+    $g_tools_path= 'C:\apps\tools'
 }
 
 # Ruta del folder donde se ubican comandos personalizado del usuario.
-if((-not ${g_bin_cmdpath}) -or (Test-Path "$g_bin_cmdpath")) {
-    $g_bin_cmdpath= 'C:\cli\cmds\bin'
+if((-not ${g_bin_path}) -or (Test-Path "$g_bin_path")) {
+    $g_bin_path= 'C:\apps\cmds\bin'
 }
 
 
@@ -33,8 +33,8 @@ if((-not ${g_bin_cmdpath}) -or (Test-Path "$g_bin_cmdpath")) {
 #------------------------------------------------------------------------------------------------
 
 #Si path no contiene la ruta de comandos, adicionarlos.
-if(-not ("$env:PATH" -match ";?$($g_bin_cmdpath.Replace("\", "\\"));?")) {
-    $env:PATH= "${g_bin_cmdpath};${env:PATH}"
+if(-not ("$env:PATH" -match ";?$($g_bin_path.Replace("\", "\\"));?")) {
+    $env:PATH= "${g_bin_path};${env:PATH}"
 }
 
 #Establecer los otros valores ...

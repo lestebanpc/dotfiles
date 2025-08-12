@@ -66,13 +66,13 @@ fi
 [ -z "$g_repo_name" ] && g_repo_name='.files'
 
 # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
-if [ -z "$g_programs_path" ] || [ ! -f "$g_programs_path" ]; then
-    g_programs_path='/var/opt/tools'
+if [ -z "$g_tools_path" ] || [ ! -f "$g_tools_path" ]; then
+    g_tools_path='/var/opt/tools'
 fi
 
 # Ruta del folder donde se ubican comandos personalizado del usuario.
-if [ -z "$g_bin_cmdpath" ] || [ ! -f "$g_bin_cmdpath" ]; then
-    g_bin_cmdpath='/usr/local/bin'
+if [ -z "$g_lnx_bin_path" ] || [ ! -f "$g_lnx_bin_path" ]; then
+    g_lnx_bin_path='/usr/local/bin'
 fi
 
 # Ruta del tema de 'Oh-My-Posh' a usar.
@@ -82,8 +82,8 @@ fi
 
 #Usado por archivo de configuración de programas como TMUX, VIM, NeoVIM y CoC.
 export MY_REPO_PATH="$HOME/$g_repo_name"
-export MY_PRGS_PATH="$g_programs_path"
-unset g_programs_path
+export MY_TOOLS_PATH="$g_tools_path"
+unset g_tools_path
 
 
 #-----------------------------------------------------------------------------------
@@ -91,14 +91,14 @@ unset g_programs_path
 #-----------------------------------------------------------------------------------
 
 # Ruta del folder donde se ubican comandos personalizado del usuario.
-if [ "$g_bin_cmdpath" != "/usr/local/bin" ] && [ "$g_bin_cmdpath" != "$HOME/.local/bin" ]; then
-    PATH="${g_bin_cmdpath}:${PATH}"
+if [ "$g_lnx_bin_path" != "/usr/local/bin" ] && [ "$g_lnx_bin_path" != "$HOME/.local/bin" ]; then
+    PATH="${g_lnx_bin_path}:${PATH}"
 fi
-unset g_bin_cmdpath
+unset g_lnx_bin_path
 
 # Java - GraalVM (RTE y Herramientas de desarrollo para Java y otros)
-if [ -d "${MY_PRGS_PATH}/graalvm" ]; then
-    GRAALVM_HOME="${MY_PRGS_PATH}/graalvm"
+if [ -d "${MY_TOOLS_PATH}/graalvm" ]; then
+    GRAALVM_HOME="${MY_TOOLS_PATH}/graalvm"
     export GRAALVM_HOME
 
     #No adicionar para no perjudicar los programas del SO que corren usando el OpenJDK del SO
@@ -108,40 +108,40 @@ if [ -d "${MY_PRGS_PATH}/graalvm" ]; then
 fi
 
 # Java - Jbang (scripting para java)
-[ -d "${MY_PRGS_PATH}/jbang/bin" ] && PATH="$PATH:${MY_PRGS_PATH}/jbang/bin"
+[ -d "${MY_TOOLS_PATH}/jbang/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/jbang/bin"
 
 # Java - CLI tools creados por Java usando Jbang
 [ -d ~/.jbang/bin ] && PATH="$PATH:${HOME}/.jbang/bin"
 
 # Java - Apache Maven (Builder para Java)
-[ -d "${MY_PRGS_PATH}/maven/bin" ] && PATH="${MY_PRGS_PATH}/maven/bin:$PATH"
+[ -d "${MY_TOOLS_PATH}/maven/bin" ] && PATH="${MY_TOOLS_PATH}/maven/bin:$PATH"
 
 # Neovim path
-[ -d "${MY_PRGS_PATH}/neovim/bin" ] && PATH="$PATH:${MY_PRGS_PATH}/neovim/bin"
+[ -d "${MY_TOOLS_PATH}/neovim/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/neovim/bin"
 
 # CMake - Sistema de contrucción para C/C++ y otros
-[ -d "${MY_PRGS_PATH}/cmake" ] && PATH="$PATH:${MY_PRGS_PATH}/cmake/bin"
+[ -d "${MY_TOOLS_PATH}/cmake" ] && PATH="$PATH:${MY_TOOLS_PATH}/cmake/bin"
 
 # Go - Tools estandar para desarrollo
-[ -d "${MY_PRGS_PATH}/go/bin" ] && PATH="$PATH:${MY_PRGS_PATH}/go/bin"
+[ -d "${MY_TOOLS_PATH}/go/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/go/bin"
 
 # Go - CLI tools creados en Go
 [ -d ~/go/bin ] && PATH="$PATH:${HOME}/go/bin"
 
 # Rust - Tools para desarrollo
-[ -d "${MY_PRGS_PATH}/rust/bin" ] && PATH="$PATH:${MY_PRGS_PATH}/rust/bin"
+[ -d "${MY_TOOLS_PATH}/rust/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/rust/bin"
 
 # Go - CLI tools creados en Rust
 [ -d ~/.cargo/bin ] && PATH="$PATH:${HOME}/.cargo/bin"
 
 # NodeJS - CLI tools creados en NodeJS y usando gestor de paquetes 'npm'
-[ -d "${MY_PRGS_PATH}/nodejs/bin" ] && PATH="${MY_PRGS_PATH}/nodejs/bin:$PATH"
+[ -d "${MY_TOOLS_PATH}/nodejs/bin" ] && PATH="${MY_TOOLS_PATH}/nodejs/bin:$PATH"
 
 # DotNet
-if [ -d "${MY_PRGS_PATH}/dotnet" ]; then
+if [ -d "${MY_TOOLS_PATH}/dotnet" ]; then
 
     # Dotnet Path
-    export DOTNET_ROOT="${MY_PRGS_PATH}/dotnet"
+    export DOTNET_ROOT="${MY_TOOLS_PATH}/dotnet"
     PATH="${DOTNET_ROOT}:$PATH"
 
     # Dotnet - CLI tools creados en .NET (Global .NET tools)
@@ -150,13 +150,13 @@ if [ -d "${MY_PRGS_PATH}/dotnet" ]; then
 fi
 
 # gRPC - Ruta del compilador de ProtoBuffer de gRPC
-[ -d "${MY_PRGS_PATH}/protoc/bin" ] && PATH="${MY_PRGS_PATH}/protoc/bin:$PATH"
+[ -d "${MY_TOOLS_PATH}/protoc/bin" ] && PATH="${MY_TOOLS_PATH}/protoc/bin:$PATH"
 
 # AWS CLI v2
-[ -d "${MY_PRGS_PATH}/aws-cli/v2/current/bin" ] && PATH="${MY_PRGS_PATH}/aws-cli/v2/current/bin:$PATH"
+[ -d "${MY_TOOLS_PATH}/aws-cli/v2/current/bin" ] && PATH="${MY_TOOLS_PATH}/aws-cli/v2/current/bin:$PATH"
 
 # CTags
-[ -d "${MY_PRGS_PATH}/ctags" ] && PATH="${MY_PRGS_PATH}/ctags/bin:$PATH"
+[ -d "${MY_TOOLS_PATH}/ctags" ] && PATH="${MY_TOOLS_PATH}/ctags/bin:$PATH"
 
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH

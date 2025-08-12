@@ -50,11 +50,11 @@
 #                  ........................
 #          ........................
 #          ........................
-#    > Folder "${g_cmd_base_path}" que representado a la ruta base donde se instalarán los comandos, archivos de ayuda y archivos fuentes.
+#    > Folder "${g_lnx_base_path}" que representado a la ruta base donde se instalarán los comandos, archivos de ayuda y archivos fuentes.
 #      - Si este folder esta dentro del "Target Home", los comandos SOLO pueden ser usuados por el usuario OBJETIVO.
 #      - Si este folder esta fuera  del "Target Home", los comandos pueden ser usuados por todos los usuarios del SO pero SOLO el usuario que es
 #        onwer de ese folder podra realizar las configuraciones respectivas.
-#    > Folder "${g_programs_path}" que representado a la ruta base donde se instalarán los programas.
+#    > Folder "${g_tools_path}" que representado a la ruta base donde se instalarán los programas.
 #      - Si este folder esta dentro del "Target Home", los programas SOLO pueden ser usuados por el usuario OBJETIVO.
 #      - Si este folder esta fuera  del "Target Home", los programas pueden ser usuados por todos los usuarios del SO pero SOLO el usuario que es
 #        onwer de ese folder podra realizar las configuraciones respectivas.
@@ -133,13 +133,13 @@
 #     > Si estan fuera del home de los usuarios, los programas instalados pueden ser usuados por todos los usuarios.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
 # - Si el folder no tiene como onwer el usuario objetivo o root, sera condiserado invalido
-# - Si no es un valor valido, la funcion "get_program_path" asignara un sus posibles valores (segun orden de prioridad):
+# - Si no es un valor valido, la funcion "get_tools_path" asignara un sus posibles valores (segun orden de prioridad):
 #     > "/var/opt/tools"
 #     > "~/tools"
 # - Si el folder no existe y no es folder predeterminado, intentara crear con el onwer:
 #     > Si el folder esta dentro del home del usuario objetivo, se creara el folder con el owner del usuario objetivo.
 #     > Si el folder esta fuera del home del usuario objetivo, el owner del folder de 'root'.
-#g_programs_path='/var/opt/tools'
+#g_tools_path='/var/opt/tools'
 
 # Folder base donde se almacena data temporal que sera eliminado automaticamente despues completar la configuración.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
@@ -152,52 +152,51 @@
 # Usado por los script "00_setup_summary.bash", "01_setup_binaries.bash"
 ##############################################################################################
 
-# Folder base donde se almacena el comando y sus archivos afines.
-# - Solo el owner del folder puede realizar instalacion/actualizacion de comandos.
-#     > Si el el folder esta dentro del home de un usuario, los comandos instalados solo podran ser usuados por el usario.
-#     > Si estan fuera del home de los usuarios, los comandos instalados pueden ser usuados por todos los usuarios.
+#Folder base donde se almacena el comando y sus archivos afines.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura), dentro
 #   de este folder se creara/usara la siguiente estructura de folderes:
-#     > "${g_cmd_base_path}/bin"         : subfolder donde se almacena los comandos.
-#     > "${g_cmd_base_path}/man/man1"    : subfolder donde se almacena archivos de ayuda man1.
-#     > "${g_cmd_base_path}/man/man5"    : subfolder donde se almacena archivos de ayuda man5.
-#     > "${g_cmd_base_path}/man/man7"    : subfolder donde se almacena archivos de ayuda man7.
-#     > "${g_cmd_base_path}/share/fonts" : subfolder donde se almacena las fuentes.
-# - Si el folder no tiene como onwer el usuario objetivo o root, sera condiserado invalido
-# - Si no es un valor valido, la funcion "get_command_path" asignara un sus posibles valores (segun orden de prioridad):
+#     > "${g_lnx_base_path}/bin"            : subfolder donde se almacena los comandos.
+#     > "${g_lnx_base_path}/share/man/man1" : subfolder donde se almacena archivos de ayuda man1.
+#     > "${g_lnx_base_path}/share/man/man5" : subfolder donde se almacena archivos de ayuda man5.
+#     > "${g_lnx_base_path}/share/man/man7" : subfolder donde se almacena archivos de ayuda man7.
+#     > "${g_lnx_base_path}/share/fonts"    : subfolder donde se almacena las fuentes.
+#     > "${g_lnx_base_path}/share/icons"    : subfolder donde se almacena los iconos o imagenes usuados por programas GUI.
+# - Si no es un valor valido, la funcion "g_lnx_paths" asignara un sus posibles valores (segun orden de prioridad):
 #     > Si tiene permisos administrativos, usara los folderes predeterminado para todos los usuarios:
-#        - "/usr/local/bin"      : subfolder donde se almacena los comandos.
-#        - "/usr/local/man/man1" : subfolder donde se almacena archivos de ayuda man1.
-#        - "/usr/local/man/man5" : subfolder donde se almacena archivos de ayuda man5.
-#        - "/usr/local/man/man7" : subfolder donde se almacena archivos de ayuda man7.
-#        - "/usr/share/fonts"    : subfolder donde se almacena las fuentes.
+#        - "/usr/local/bin"             : subfolder donde se almacena los comandos.
+#        - "/usr/local/share/man/man1"  : subfolder donde se almacena archivos de ayuda man1.
+#        - "/usr/local/share/man/man5"  : subfolder donde se almacena archivos de ayuda man5.
+#        - "/usr/local/share/man/man7"  : subfolder donde se almacena archivos de ayuda man7.
+#        - "/usr/local/share/fonts"     : subfolder donde se almacena las fuentes.
+#        - "/usr/local/share/icons"     : Subfolder donde se almacena los iconos o imagenes usados por programas GUI.
 #     > Caso contrario, se usara los folderes predeterminado para el usuario:
-#        - "~/.local/bin"         : subfolder donde se almacena los comandos.
-#        - "~/.local/man/man1"    : subfolder donde se almacena archivos de ayuda man1.
-#        - "~/.local/man/man5"    : subfolder donde se almacena archivos de ayuda man5.
-#        - "~/.local/man/man7"    : subfolder donde se almacena archivos de ayuda man7.
-#        - "~/.local/share/fonts" : subfolder donde se almacena las fuentes.
-# - Si el valor es vaciom se usara el los folderes predeterminado para todos los usuarios.
+#        - "~/.local/bin"            : subfolder donde se almacena los comandos.
+#        - "~/.local/share/man/man1" : subfolder donde se almacena archivos de ayuda man1.
+#        - "~/.local/share/man/man5" : subfolder donde se almacena archivos de ayuda man5.
+#        - "~/.local/share/man/man7" : subfolder donde se almacena archivos de ayuda man7.
+#        - "~/.local/share/fonts"    : subfolder donde se almacena las fuentes.
+#        - "~/.local/share/icons"    : Subfolder donde se almacena los iconos o imagenes usados por programas GUI.
+# - Si el valor es vacio, se usara el los folderes predeterminado para todos los usuarios.
 # - Si el folder no existe y no es folder predeterminado, intentara crear con el onwer:
 #     > Si el folder esta dentro del home del usuario objetivo, se creara el folder con el owner del usuario objetivo.
 #     > Si el folder esta fuera del home del usuario objetivo, el owner del folder de 'root'.
-#g_cmd_base_path=''
+#g_lnx_base_path=''
 
 
 ##############################################################################################
 # Usado por los script "01_setup_binaries.bash"
 ##############################################################################################
 
-# Folder base, generados solo para Linux WSL, donde se almacena el programas, comando y afines usados por Windows.
+#Folder base, generados solo para Linux WSL, donde se almacena el programas, comando y afines usados por Windows.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
-# - Si no es un valor valido, se asignara su valor por defecto "/mnt/c/cli" (es decir "c:\cli").
+# - Si no es un valor valido, se asignara su valor por defecto "/mnt/c/apps" (es decir "c:\apps").
 # - En este folder se creara/usara la siguiente estructura de folderes:
-#     > "${g_win_base_path}/prgs"     : subfolder donde se almacena los subfolder de los programas.
+#     > "${g_win_base_path}/tools"     : subfolder donde se almacena los subfolder de los programas.
 #     > "${g_win_base_path}/cmds/bin" : subfolder donde se almacena los comandos.
 #     > "${g_win_base_path}/cmds/doc" : subfolder donde se almacena documentacion del comando.
 #     > "${g_win_base_path}/cmds/etc" : subfolder donde se almacena archivos adicionales del comando.
 #     > "${g_win_base_path}/fonts" : subfolder donde se almacena los archivos de fuentes tipograficas.
-#g_win_base_path='/mnt/d/cli'
+#g_win_base_path='/mnt/d/apps'
 
 
 ##############################################################################################

@@ -259,14 +259,14 @@ function get_targethome_info() {
 #Parametros de entrada > Variables globales:
 #  > 'g_targethome_path'
 #Parametro de salida> Variables globales
-#  > '_g_prg_path_options' que define caracteristicas del folder ingresado. Su valor puede ser 0 o la suma binario
+#  > '_g_tools_options' que define caracteristicas del folder ingresado. Su valor puede ser 0 o la suma binario
 #    de los siguientes flags:
 #       > 00001 (1) - La carpeta de programas tiene como owner al usuario OBJETIVO.
 #       > 00010 (2) - La carpeta de programas tiene como owner a root.
 #       > 00100 (4) - La carpeta de programas esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de programas NO es una ruta estandar  (ruta personalizada ingresada por el usuario)
-#   > '_g_programs_owner' owner del folder de programas ingresado.
-#   > '_g_programs_group' grupo de acceso del folder de programas ingresado.
+#   > '_g_tools_owner' owner del folder de programas ingresado.
+#   > '_g_tools_group' grupo de acceso del folder de programas ingresado.
 #Parametro de salida> Valor de retorno:
 #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de programas para el usuario objetivo):
 #    00 > La carpeta existe y tiene los permisos necesarios.
@@ -279,29 +279,29 @@ function get_targethome_info() {
 #    06 > La carpeta no existe y pero no se tiene los permisos correctos para crearlo.
 #    07 > La carpeta no existe y pero ocurrio un error al crearlo.
 #    99 > Parametro invalidos.
-function _try_fix_program_basepath() {
+function _try_fix_tools_path() {
 
     #1. Argumentos
-    local p_programs_path="$1"
-    if [ -z "$p_programs_path" ]; then
+    local p_tools_path="$1"
+    if [ -z "$p_tools_path" ]; then
         return 99
     fi
 
     #2. Calcular algunas de las opciones del folder ingresado
-    _g_prg_path_options=0
-    _g_programs_owner=''
-    _g_programs_group=''
+    _g_tools_options=0
+    _g_tools_owner=''
+    _g_tools_group=''
 
     #¿La carpeta esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas)?
     local l_folder_is_targethome=1
-    if [[ "$p_programs_path" == ${g_targethome_path}/* ]]; then
-        _g_prg_path_options=4
+    if [[ "$p_tools_path" == ${g_targethome_path}/* ]]; then
+        _g_tools_options=4
         l_folder_is_targethome=0
     fi
 
     #¿La carpeta es ruta estandar o una ruta personalizado (ingresada por el usuario)?
-    if [ "$p_programs_path" != "/var/opt/tools" ] || [ "$p_programs_path" != "/opt/tools" ] || [ "$p_programs_path" != "${g_targethome_path}/tools" ]; then
-        _g_prg_path_options=$(( _g_prg_path_options + 8 ))
+    if [ "$p_tools_path" != "/var/opt/tools" ] || [ "$p_tools_path" != "/opt/tools" ] || [ "$p_tools_path" != "${g_targethome_path}/tools" ]; then
+        _g_tools_options=$(( _g_tools_options + 8 ))
     fi
 
 
@@ -312,10 +312,10 @@ function _try_fix_program_basepath() {
     local l_flag=1
     local la_owners=()
 
-    if [ -d "$p_programs_path" ]; then
+    if [ -d "$p_tools_path" ]; then
 
         #A. Obtener el owner del folder ingresado
-        l_aux=$(get_owner_of_folder "$p_programs_path")
+        l_aux=$(get_owner_of_folder "$p_tools_path")
         if [ -z "$l_aux" ]; then
             printf 'No se pueden obtener el owner del folder "%b%s%b".\n' "$g_color_gray1" "$l_script_path" "$g_color_reset"
             return 99
@@ -326,29 +326,29 @@ function _try_fix_program_basepath() {
             printf 'No se pueden obtener, de manera correcta, el owner del folder "%b%s%b".\n' "$g_color_gray1" "$l_script_path" "$g_color_reset"
             return 99
         fi
-        _g_programs_owner="${la_owners[0]}"
-        _g_programs_group="${la_owners[1]}"
+        _g_tools_owner="${la_owners[0]}"
+        _g_tools_group="${la_owners[1]}"
 
-        if [ "$_g_programs_owner" = "root" ]; then
-            _g_prg_path_options=$(( _g_prg_path_options + 2 ))
+        if [ "$_g_tools_owner" = "root" ]; then
+            _g_tools_options=$(( _g_tools_options + 2 ))
         fi
 
         #B. Si el onwer de la carpeta NO es el usuario objetivo
-        if [ "$_g_programs_owner" != "$g_targethome_owner" ]; then
+        if [ "$_g_tools_owner" != "$g_targethome_owner" ]; then
 
             #B.1. Si el owner de la carpeta NO es root
-            if [ "$_g_programs_owner" != "root" ]; then
+            if [ "$_g_tools_owner" != "root" ]; then
 
                 #Solo intentar reparar, cuando el folder esta dentro de home y el runner es root el modo de suplantacion (del usario objetivo).
                 if [ $g_runner_is_target_user -ne 0 ] && [ $l_folder_is_targethome -eq 0 ]; then
 
-                    chmod 755 "$p_programs_path"
-                    chown "${g_targethome_owner}:${g_targethome_group}" "$p_programs_path"
+                    chmod 755 "$p_tools_path"
+                    chown "${g_targethome_owner}:${g_targethome_group}" "$p_tools_path"
 
                     #Creando subfolderes adicionales, si no existen
-                    [ ! -d "$p_programs_path/sharedkeys" ] &&  mkdir -pm 755 "$p_programs_path/sharedkeys"
-                    [ ! -d "$p_programs_path/sharedkeys/tls" ] &&  mkdir -pm 755 "$p_programs_path/sharedkeys/tls"
-                    [ ! -d "$p_programs_path/sharedkeys/ssh" ] &&  mkdir -pm 755 "$p_programs_path/sharedkeys/ssh"
+                    [ ! -d "$p_tools_path/sharedkeys" ] &&  mkdir -pm 755 "$p_tools_path/sharedkeys"
+                    [ ! -d "$p_tools_path/sharedkeys/tls" ] &&  mkdir -pm 755 "$p_tools_path/sharedkeys/tls"
+                    [ ! -d "$p_tools_path/sharedkeys/ssh" ] &&  mkdir -pm 755 "$p_tools_path/sharedkeys/ssh"
 
                     #Aceptar la carpeta
                     return 1
@@ -376,9 +376,9 @@ function _try_fix_program_basepath() {
             #No arreglar permisos existente, dejar como esta.
 
             #Creando subfolderes adicionales, si no existen
-            [ ! -d "$p_programs_path/sharedkeys" ] &&  mkdir -pm 755 "$p_programs_path/sharedkeys"
-            [ ! -d "$p_programs_path/sharedkeys/tls" ] &&  mkdir -pm 755 "$p_programs_path/sharedkeys/tls"
-            [ ! -d "$p_programs_path/sharedkeys/ssh" ] &&  mkdir -pm 755 "$p_programs_path/sharedkeys/ssh"
+            [ ! -d "$p_tools_path/sharedkeys" ] &&  mkdir -pm 755 "$p_tools_path/sharedkeys"
+            [ ! -d "$p_tools_path/sharedkeys/tls" ] &&  mkdir -pm 755 "$p_tools_path/sharedkeys/tls"
+            [ ! -d "$p_tools_path/sharedkeys/ssh" ] &&  mkdir -pm 755 "$p_tools_path/sharedkeys/ssh"
 
             #Aceptar la carpeta
             return 0
@@ -386,24 +386,24 @@ function _try_fix_program_basepath() {
         fi
 
         #C. Si el onwer de la carpeta es el usuario objetivo
-        _g_prg_path_options=$(( _g_prg_path_options + 1 ))
+        _g_tools_options=$(( _g_tools_options + 1 ))
 
         #C.1. Si el runner es el usuario objetivo
         if [ $g_runner_is_target_user -eq 0 ]; then
 
             #Si no tiene permisos de escritura, intentar repararlo
             l_flag=1
-            if [ ! -w "$p_programs_path" ]; then
-                if ! chmod 755 "$p_programs_path" &> /dev/null; then
+            if [ ! -w "$p_tools_path" ]; then
+                if ! chmod 755 "$p_tools_path" &> /dev/null; then
                     return 4
                 fi
                 l_flag=0
             fi
 
             #Creando subfolderes adicionales, si no existen
-            [ ! -d "$p_programs_path/sharedkeys" ] &&  mkdir -pm 755 "$p_programs_path/sharedkeys"
-            [ ! -d "$p_programs_path/sharedkeys/tls" ] &&  mkdir -pm 755 "$p_programs_path/sharedkeys/tls"
-            [ ! -d "$p_programs_path/sharedkeys/ssh" ] &&  mkdir -pm 755 "$p_programs_path/sharedkeys/ssh"
+            [ ! -d "$p_tools_path/sharedkeys" ] &&  mkdir -pm 755 "$p_tools_path/sharedkeys"
+            [ ! -d "$p_tools_path/sharedkeys/tls" ] &&  mkdir -pm 755 "$p_tools_path/sharedkeys/tls"
+            [ ! -d "$p_tools_path/sharedkeys/ssh" ] &&  mkdir -pm 755 "$p_tools_path/sharedkeys/ssh"
 
             #Aceptar la carpeta enviada
             if [ $l_flag -eq 0 ]; then
@@ -417,23 +417,23 @@ function _try_fix_program_basepath() {
         #C.2. Si el runner es root en modo de suplantacion del usuario objetivo
 
         #No arreglar permisos existente, dejar como esta.
-        #chmod 755 "$p_programs_path"
+        #chmod 755 "$p_tools_path"
         #return 1
 
         #Creando subfolderes adicionales, si no existen
-        if [ ! -d "$p_programs_path/sharedkeys" ]; then
-            mkdir -pm 755 "$p_programs_path/sharedkeys"
-            chown "${g_targethome_owner}:${g_targethome_group}" "$p_programs_path/sharedkeys"
+        if [ ! -d "$p_tools_path/sharedkeys" ]; then
+            mkdir -pm 755 "$p_tools_path/sharedkeys"
+            chown "${g_targethome_owner}:${g_targethome_group}" "$p_tools_path/sharedkeys"
         fi
 
-        if [ ! -d "$p_programs_path/sharedkeys/tls" ]; then
-            mkdir -pm 755 "$p_programs_path/sharedkeys/tls"
-            chown "${g_targethome_owner}:${g_targethome_group}" "$p_programs_path/sharedkeys/tls"
+        if [ ! -d "$p_tools_path/sharedkeys/tls" ]; then
+            mkdir -pm 755 "$p_tools_path/sharedkeys/tls"
+            chown "${g_targethome_owner}:${g_targethome_group}" "$p_tools_path/sharedkeys/tls"
         fi
 
-        if [ ! -d "$p_programs_path/sharedkeys/ssh" ]; then
-            mkdir -pm 755 "$p_programs_path/sharedkeys/ssh"
-            chown "${g_targethome_owner}:${g_targethome_group}" "$p_programs_path/sharedkeys/ssh"
+        if [ ! -d "$p_tools_path/sharedkeys/ssh" ]; then
+            mkdir -pm 755 "$p_tools_path/sharedkeys/ssh"
+            chown "${g_targethome_owner}:${g_targethome_group}" "$p_tools_path/sharedkeys/ssh"
         fi
 
         #Aceptar la carpeta
@@ -454,27 +454,27 @@ function _try_fix_program_basepath() {
     if [ $l_folder_is_targethome -eq 0 ]; then
 
         #El owner es el usuaro efectivo
-        _g_prg_path_options=$(( _g_prg_path_options + 1 ))
+        _g_tools_options=$(( _g_tools_options + 1 ))
         if [ "$g_targethome_owner" = "root" ]; then
-            _g_prg_path_options=$(( _g_prg_path_options + 2 ))
+            _g_tools_options=$(( _g_tools_options + 2 ))
         fi
-        _g_programs_owner="$g_targethome_owner"
-        _g_programs_group="$g_targethome_group"
+        _g_tools_owner="$g_targethome_owner"
+        _g_tools_group="$g_targethome_group"
 
     else
 
         #El owner es el root
         if [ "$g_targethome_owner" = "root" ]; then
-            _g_prg_path_options=$(( _g_prg_path_options + 1 ))
+            _g_tools_options=$(( _g_tools_options + 1 ))
         fi
-        _g_prg_path_options=$(( _g_prg_path_options + 2 ))
-        _g_programs_owner='root'
-        _g_programs_group='root'
+        _g_tools_options=$(( _g_tools_options + 2 ))
+        _g_tools_owner='root'
+        _g_tools_group='root'
 
     fi
 
     #Validar que existe el folder padre
-    l_aux="${p_programs_path%/*}"
+    l_aux="${p_tools_path%/*}"
     if [ ! -z "$l_aux" ] && [ ! -d "$l_aux" ]; then
         return 5
     fi
@@ -483,18 +483,18 @@ function _try_fix_program_basepath() {
     if [ $l_folder_is_targethome -eq 0 ]; then
 
         #Crear el folder
-        if ! mkdir -pm 755 "$p_programs_path" &> /dev/null; then
+        if ! mkdir -pm 755 "$p_tools_path" &> /dev/null; then
             return 7
         fi
 
         #Crear los folderes opcionales
-        mkdir -pm 755 "$p_programs_path/sharedkeys"
-        mkdir -pm 755 "$p_programs_path/sharedkeys/tls"
-        mkdir -pm 755 "$p_programs_path/sharedkeys/ssh"
+        mkdir -pm 755 "$p_tools_path/sharedkeys"
+        mkdir -pm 755 "$p_tools_path/sharedkeys/tls"
+        mkdir -pm 755 "$p_tools_path/sharedkeys/ssh"
 
         #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo
         if [ $g_runner_is_target_user -ne 0 ]; then
-            chown -R "${g_targethome_owner}:${g_targethome_group}" "$p_programs_path"
+            chown -R "${g_targethome_owner}:${g_targethome_group}" "$p_tools_path"
         fi
 
         #Aceptar la carpeta enviada
@@ -517,41 +517,41 @@ function _try_fix_program_basepath() {
     # - Si runner es root (puede estar o no estar en modo suplantacion de usuario objetivo)
     if [ $g_runner_id -eq 0 ]; then
 
-        if ! mkdir -pm 755 "$p_programs_path"; then
+        if ! mkdir -pm 755 "$p_tools_path"; then
             return 7
         fi
 
         #Crear los folderes opcionales
-        mkdir -pm 755 "$p_programs_path/sharedkeys"
-        mkdir -pm 755 "$p_programs_path/sharedkeys/tls"
-        mkdir -pm 755 "$p_programs_path/sharedkeys/ssh"
+        mkdir -pm 755 "$p_tools_path/sharedkeys"
+        mkdir -pm 755 "$p_tools_path/sharedkeys/tls"
+        mkdir -pm 755 "$p_tools_path/sharedkeys/ssh"
 
     # - Si runner NO es root y requiere sudo: sin password
     elif [ $g_runner_sudo_support -eq 1 ]; then
 
-        if ! sudo mkdir -pm 755 "$p_programs_path"; then
+        if ! sudo mkdir -pm 755 "$p_tools_path"; then
             return 7
         fi
 
         #Crear los folderes opcionales
-        sudo mkdir -pm 755 "$p_programs_path/sharedkeys"
-        sudo mkdir -pm 755 "$p_programs_path/sharedkeys/tls"
-        sudo mkdir -pm 755 "$p_programs_path/sharedkeys/ssh"
+        sudo mkdir -pm 755 "$p_tools_path/sharedkeys"
+        sudo mkdir -pm 755 "$p_tools_path/sharedkeys/tls"
+        sudo mkdir -pm 755 "$p_tools_path/sharedkeys/ssh"
 
     # - Si runner NO es root y requiere sudo: con password
     else
 
         printf 'Se requiere crear la carpeta "%b%s%b" de programas con los permisos correctos, para ello se debe usar sudo con root...\n' \
-               "$g_color_gray1" "$p_programs_path" "$g_color_reset"
+               "$g_color_gray1" "$p_tools_path" "$g_color_reset"
 
-        if ! sudo mkdir -pm 755 "$p_programs_path"; then
+        if ! sudo mkdir -pm 755 "$p_tools_path"; then
             return 7
         fi
 
         #Crear los folderes opcionales
-        sudo mkdir -pm 755 "$p_programs_path/sharedkeys"
-        sudo mkdir -pm 755 "$p_programs_path/sharedkeys/tls"
-        sudo mkdir -pm 755 "$p_programs_path/sharedkeys/ssh"
+        sudo mkdir -pm 755 "$p_tools_path/sharedkeys"
+        sudo mkdir -pm 755 "$p_tools_path/sharedkeys/tls"
+        sudo mkdir -pm 755 "$p_tools_path/sharedkeys/ssh"
 
     fi
 
@@ -562,7 +562,8 @@ function _try_fix_program_basepath() {
 
 
 
-#Validar si el foler base de los comandos (y archivos como ayuda y fuente) tiene los permisos correctos, y si no tiene, se intenta arreglarlo/repararlo.
+# Validar si el foler base de los comandos (y archivos como ayuda y fuente) tiene los permisos correctos, y si no tiene, se intenta arreglarlo/repararlo.
+# Solo se necesita reparar folder existentes, pero no crearlos, estos se crearan cuando se requiere (eliminar codifo de creacion).
 #  > El owner del la carpeta define el usuario que DEBE instalar/actualizar los programas.
 #  > El runner (usuario objetivo o usuario root en modo de suplantacion del usuario objetivo) solo puede instalar comandos (y archivos afines como ayuda y las
 #    fuentes) en folderes cuyo owner sea el usuario objetivo o root.
@@ -574,14 +575,14 @@ function _try_fix_program_basepath() {
 #      - No tiene folder base pero el owner siempre es considerado como root.
 #      - Los subfolderes de comandos (, ayuda y fuentes) NO estan dentro de un mismo folder padre, y son rutas reservadas por el SO:
 #        - '/usr/local/bin' para comandos,
-#        - '/usr/local/man/man1' para archivos de ayuda man1 y
-#        - '/usr/share/fonts' para las fuentes.
+#        - '/usr/local/share/man/man1' para archivos de ayuda man1 y
+#        - '/usr/local/share/fonts' para las fuentes.
 #      - El runner debe ser root o un usuario con acceso a sudo con root.
 #      - Los comandos (, ayuda y fuentes) se instalan para todos los usuarios.
 #    > La carpeta que NO son reservada del sistema
 #      - Los subfolderes de comandos (, ayuda y fuentes) estan dentro de un mismo folder padre:
 #        - 'FOLDER_BASE/bin' para comandos,
-#        - 'FOLDER_BASE/man/man1' para archivos de ayuda man1 y
+#        - 'FOLDER_BASE/share/man/man1' para archivos de ayuda man1 y
 #        - 'FOLDER_BASE/share/fonts' para las fuentes.
 #      - El owner de la carpeta puede ser usuario objetivo o el usuario root. El runner puede ser el usuario objetivo o el usuario root de suplantacion.
 #      - La carpeta puede estar dentro del home del usuario objetivo o fuera de este.
@@ -614,14 +615,14 @@ function _try_fix_program_basepath() {
 #Parametros de entrada > Variables globales:
 #  > 'g_targethome_path'
 #Parametro de salida> Variables globales
-#  > '_g_cmd_path_options' que define caracteristicas del folder ingresado. Su valor puede ser 0 o la suma binario
+#  > '_g_lnx_base_options' que define caracteristicas del folder ingresado. Su valor puede ser 0 o la suma binario
 #    de los siguientes flags:
 #       > 00001 (1) - La carpeta de comandos tiene como owner al usuario OBJETIVO.
 #       > 00010 (2) - La carpeta de comandos tiene como owner a root.
 #       > 00100 (4) - La carpeta de comandos esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de comandos NO es del sistema ni '~/.local'.
-#   > '_g_cmd_base_owner' owner del folder base de los comandos ingresado.
-#   > '_g_cmd_base_group' grupo de acceso del folder base de comandos ingresado.
+#   > '_g_lnx_base_owner' owner del folder base de los comandos ingresado.
+#   > '_g_lnx_base_group' grupo de acceso del folder base de comandos ingresado.
 #Parametro de salida> Valor de retorno:
 #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
 #    00 > La carpeta existe y tiene los permisos necesarios.
@@ -634,38 +635,40 @@ function _try_fix_program_basepath() {
 #    06 > La carpeta no existe y pero no se tiene los permisos correctos para crearlo.
 #    07 > La carpeta no existe y pero ocurrio un error al crearlo.
 #    99 > Parametro invalidos.
-function _try_fix_command_basepath() {
+function _try_fix_lnx_base_path() {
+
+    #TODO : Eliminar la creacion, solo reparar los folderes existentes.
 
     #1. Argumentos
-    local p_cmd_base_path="$1"
+    local p_lnx_base_path="$1"
 
     #2. Calcular algunas de las opciones del folder ingresado
-    _g_cmd_path_options=0
-    _g_cmd_base_owner=''
-    _g_cmd_base_group=''
+    _g_lnx_base_options=0
+    _g_lnx_base_owner=''
+    _g_lnx_base_group=''
 
     local l_folder_is_targethome=1
 
     #¿La carpeta esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas)?
-    if [ ! -z "$p_cmd_base_path" ] && [[ "$p_cmd_base_path" == ${g_targethome_path}/* ]]; then
-        _g_cmd_path_options=4
+    if [ ! -z "$p_lnx_base_path" ] && [[ "$p_lnx_base_path" == ${g_targethome_path}/* ]]; then
+        _g_lnx_base_options=4
         l_folder_is_targethome=0
     fi
 
-    if [ ! -z "$p_cmd_base_path" ] && [ "$p_cmd_base_path" != "${g_targethome_path}/.local" ]; then
-        _g_cmd_path_options=$(( _g_cmd_path_options + 8 ))
+    if [ ! -z "$p_lnx_base_path" ] && [ "$p_lnx_base_path" != "${g_targethome_path}/.local" ]; then
+        _g_lnx_base_options=$(( _g_lnx_base_options + 8 ))
     fi
 
     #3. Si la carpeta reservada por el sistema.
     local l_flag=1
-    if [ -z "$p_cmd_base_path" ]; then
+    if [ -z "$p_lnx_base_path" ]; then
 
         #A. El owner del folder siempre es root.
-        _g_cmd_base_owner='root'
-        _g_cmd_base_group='root'
-        _g_cmd_path_options=$(( _g_cmd_path_options + 2 ))
+        _g_lnx_base_owner='root'
+        _g_lnx_base_group='root'
+        _g_lnx_base_options=$(( _g_lnx_base_options + 2 ))
         if [ "$g_targethome_owner" = "root" ]; then
-            _g_cmd_path_options=$(( _g_cmd_path_options + 1 ))
+            _g_lnx_base_options=$(( _g_lnx_base_options + 1 ))
         fi
 
         #B. Si el runner es root
@@ -673,13 +676,13 @@ function _try_fix_command_basepath() {
 
             #Crear los subfolderes si no existen
             l_flag=1
-            if [ ! -d "/usr/local/man" ]; then
-                mkdir -pm 755 /usr/local/man
+            if [ ! -d "/usr/local/share/man" ]; then
+                mkdir -pm 755 /usr/local/share/man
                 l_flag=0
             fi
 
-            if [ ! -d "/usr/share/fonts" ]; then
-                mkdir -pm 755 /usr/share/fonts
+            if [ ! -d "/usr/local/share/fonts" ]; then
+                mkdir -pm 755 /usr/local/share/fonts
                 l_flag=0
             fi
 
@@ -710,13 +713,13 @@ function _try_fix_command_basepath() {
         # - Si es root
         if [ $g_runner_id -eq 0 ]; then
 
-            if [ ! -d "/usr/local/man" ]; then
-                mkdir -pm 755 /usr/local/man
+            if [ ! -d "/usr/local/share/man" ]; then
+                mkdir -pm 755 /usr/local/share/man
                 l_flag=0
             fi
 
-            if [ ! -d "/usr/share/fonts" ]; then
-                mkdir -pm 755 /usr/share/fonts
+            if [ ! -d "/usr/local/share/fonts" ]; then
+                mkdir -pm 755 /usr/local/share/fonts
                 l_flag=0
             fi
 
@@ -724,33 +727,33 @@ function _try_fix_command_basepath() {
         # - Si no es root y requiere sudo: sin password
         elif [ $g_runner_sudo_support -eq 1 ]; then
 
-            if [ ! -d "/usr/local/man" ]; then
-                sudo mkdir -pm 755 /usr/local/man
+            if [ ! -d "/usr/local/share/man" ]; then
+                sudo mkdir -pm 755 /usr/local/share/man
                 l_flag=0
             fi
 
-            if [ ! -d "/usr/share/fonts" ]; then
-                sudo mkdir -pm 755 /usr/share/fonts
+            if [ ! -d "/usr/local/share/fonts" ]; then
+                sudo mkdir -pm 755 /usr/local/share/fonts
                 l_flag=0
             fi
 
         # - Si no es root y requiere sudo: con password
         else
 
-            if [ ! -d "/usr/local/man" ]; then
+            if [ ! -d "/usr/local/share/man" ]; then
                 printf 'Se requiere permisos para crear la carpeta "%b%s%b", para ello se debe usar sudo con root...\n' \
-                       "$g_color_gray1" "/usr/local/man" "$g_color_reset"
-                sudo mkdir -pm 755 /usr/local/man
+                       "$g_color_gray1" "/usr/local/share/man" "$g_color_reset"
+                sudo mkdir -pm 755 /usr/local/share/man
                 l_flag=0
             fi
 
-            if [ ! -d "/usr/share/fonts" ]; then
+            if [ ! -d "/usr/local/share/fonts" ]; then
                 if [ $l_flag -eq 1 ]; then
                     printf 'Se requiere permisos para crear la carpeta "%b%s%b", para ello se debe usar sudo con root...\n' \
-                           "$g_color_gray1" "/usr/share/fonts" "$g_color_reset"
+                           "$g_color_gray1" "/usr/local/share/fonts" "$g_color_reset"
                     l_flag=0
                 fi
-                sudo mkdir -pm 755 /usr/share/fonts
+                sudo mkdir -pm 755 /usr/local/share/fonts
             fi
 
         fi
@@ -767,10 +770,10 @@ function _try_fix_command_basepath() {
     local l_aux=''
     local la_owners=()
     #3.1. Si existe la carpeta no reservada del sistema, intentar corregir permisos...
-    if [ -d "$p_cmd_base_path" ]; then
+    if [ -d "$p_lnx_base_path" ]; then
 
         #A. Obtener el owner del folder ingresado
-        l_aux=$(get_owner_of_folder "$p_cmd_base_path")
+        l_aux=$(get_owner_of_folder "$p_lnx_base_path")
         if [ -z "$l_aux" ]; then
             printf 'No se pueden obtener el owner del folder "%b%s%b".\n' "$g_color_gray1" "$l_script_path" "$g_color_reset"
             return 99
@@ -781,45 +784,45 @@ function _try_fix_command_basepath() {
             printf 'No se pueden obtener, de manera correcta, el owner del folder "%b%s%b".\n' "$g_color_gray1" "$l_script_path" "$g_color_reset"
             return 99
         fi
-        _g_cmd_base_owner="${la_owners[0]}"
-        _g_cmd_base_group="${la_owners[1]}"
+        _g_lnx_base_owner="${la_owners[0]}"
+        _g_lnx_base_group="${la_owners[1]}"
 
-        if [ "$_g_cmd_base_owner" = "root" ]; then
-            _g_cmd_path_options=$(( _g_cmd_path_options + 2 ))
+        if [ "$_g_lnx_base_owner" = "root" ]; then
+            _g_lnx_base_options=$(( _g_lnx_base_options + 2 ))
         fi
 
         #B. Si el onwer de la carpeta NO es el usuario objetivo
-        if [ "$_g_cmd_base_owner" != "$g_targethome_owner" ]; then
+        if [ "$_g_lnx_base_owner" != "$g_targethome_owner" ]; then
 
             #B.1. Si el owner de la carpeta NO es root
-            if [ "$_g_cmd_base_owner" != "root" ]; then
+            if [ "$_g_lnx_base_owner" != "root" ]; then
 
                 #Solo intentar reparar, cuando el folder esta dentro de home y el runner es root el modo de suplantacion (del usario objetivo).
                 if [ $g_runner_is_target_user -ne 0 ] && [ $l_folder_is_targethome -eq 0 ]; then
 
-                    chmod 755 "$p_cmd_base_path"
-                    chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path"
-                    _g_cmd_path_options=$(( _g_cmd_path_options + 1 ))
+                    chmod 755 "$p_lnx_base_path"
+                    chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path"
+                    _g_lnx_base_options=$(( _g_lnx_base_options + 1 ))
 
                     #Creando los subfolderes si no existen
-                    if [ ! -d "${p_cmd_base_path}/bin" ]; then
-                        mkdir -pm 755 "${p_cmd_base_path}/bin"
-                        chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/bin"
+                    if [ ! -d "${p_lnx_base_path}/bin" ]; then
+                        mkdir -pm 755 "${p_lnx_base_path}/bin"
+                        chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/bin"
                     fi
 
-                    if [ ! -d "${p_cmd_base_path}/man" ]; then
-                        mkdir -pm 755 "${p_cmd_base_path}/man"
-                        chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/man"
+                    if [ ! -d "${p_lnx_base_path}/share" ]; then
+                        mkdir -pm 755 "${p_lnx_base_path}/share"
+                        chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share"
                     fi
 
-                    if [ ! -d "${p_cmd_base_path}/share" ]; then
-                        mkdir -pm 755 "${p_cmd_base_path}/share"
-                        chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/share"
+                    if [ ! -d "${p_lnx_base_path}/share/man" ]; then
+                        mkdir -pm 755 "${p_lnx_base_path}/share/man"
+                        chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share/man"
                     fi
 
-                    if [ ! -d "${p_cmd_base_path}/share/fonts" ]; then
-                        mkdir -pm 755 "${p_cmd_base_path}/share/fonts"
-                        chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/share/fonts"
+                    if [ ! -d "${p_lnx_base_path}/share/fonts" ]; then
+                        mkdir -pm 755 "${p_lnx_base_path}/share/fonts"
+                        chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share/fonts"
                     fi
 
                     #Aceptar la carpeta
@@ -834,7 +837,7 @@ function _try_fix_command_basepath() {
 
             #B.2. Si el owner de la carpeta es root
             if [ "$g_targethome_owner" = "root" ]; then
-                _g_cmd_path_options=$(( _g_cmd_path_options + 1 ))
+                _g_lnx_base_options=$(( _g_lnx_base_options + 1 ))
             fi
 
             #Se rechazar la carpeta, si el usuario runner no tiene permisos para ejecutar como root
@@ -850,24 +853,24 @@ function _try_fix_command_basepath() {
             #No arreglar permisos existente, dejar como esta.
 
             #Creando los subfolderes si no existen
-            if [ ! -d "${p_cmd_base_path}/bin" ]; then
-                mkdir -pm 755 "${p_cmd_base_path}/bin"
-                chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/bin"
+            if [ ! -d "${p_lnx_base_path}/bin" ]; then
+                mkdir -pm 755 "${p_lnx_base_path}/bin"
+                chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/bin"
             fi
 
-            if [ ! -d "${p_cmd_base_path}/man" ]; then
-                mkdir -pm 755 "${p_cmd_base_path}/man"
-                chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/man"
+            if [ ! -d "${p_lnx_base_path}/share" ]; then
+                mkdir -pm 755 "${p_lnx_base_path}/share"
+                chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share"
             fi
 
-            if [ ! -d "${p_cmd_base_path}/share" ]; then
-                mkdir -pm 755 "${p_cmd_base_path}/share"
-                chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/share"
+            if [ ! -d "${p_lnx_base_path}/share/man" ]; then
+                mkdir -pm 755 "${p_lnx_base_path}/share/man"
+                chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share/man"
             fi
 
-            if [ ! -d "${p_cmd_base_path}/share/fonts" ]; then
-                mkdir -pm 755 "${p_cmd_base_path}/share/fonts"
-                chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/share/fonts"
+            if [ ! -d "${p_lnx_base_path}/share/fonts" ]; then
+                mkdir -pm 755 "${p_lnx_base_path}/share/fonts"
+                chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share/fonts"
             fi
 
             #Aceptar la carpeta
@@ -876,25 +879,25 @@ function _try_fix_command_basepath() {
         fi
 
         #C. Si el onwer de la carpeta es el usuario objetivo
-        _g_cmd_path_options=$(( _g_cmd_path_options + 1 ))
+        _g_lnx_base_options=$(( _g_lnx_base_options + 1 ))
 
         #C.1. Si el runner es el usuario objetivo
         if [ $g_runner_is_target_user -eq 0 ]; then
 
             #Si no tiene permisos de escritura, intentar repararlo
             l_flag=1
-            if [ ! -w "$p_cmd_base_path" ]; then
-                if ! chmod 755 "$p_cmd_base_path" &> /dev/null; then
+            if [ ! -w "$p_lnx_base_path" ]; then
+                if ! chmod 755 "$p_lnx_base_path" &> /dev/null; then
                     return 4
                 fi
                 l_flag=0
             fi
 
             #Creando los subfolderes si no existen
-            [ ! -d "${p_cmd_base_path}/bin" ] && mkdir -pm 755 "${p_cmd_base_path}/bin"
-            [ ! -d "${p_cmd_base_path}/man" ] && mkdir -pm 755 "${p_cmd_base_path}/man"
-            [ ! -d "${p_cmd_base_path}/share" ] && mkdir -pm 755 "${p_cmd_base_path}/share"
-            [ ! -d "${p_cmd_base_path}/share/fonts" ] && mkdir -pm 755 "${p_cmd_base_path}/share/fonts"
+            [ ! -d "${p_lnx_base_path}/bin" ] && mkdir -pm 755 "${p_lnx_base_path}/bin"
+            [ ! -d "${p_lnx_base_path}/share" ] && mkdir -pm 755 "${p_lnx_base_path}/share"
+            [ ! -d "${p_lnx_base_path}/share/man" ] && mkdir -pm 755 "${p_lnx_base_path}/share/man"
+            [ ! -d "${p_lnx_base_path}/share/fonts" ] && mkdir -pm 755 "${p_lnx_base_path}/share/fonts"
 
             #Aceptar la carpeta enviada
             if [ $l_flag -eq 0 ]; then
@@ -908,28 +911,28 @@ function _try_fix_command_basepath() {
         #C.2. Si el runner es root en modo de suplantacion del usuario objetivo
 
         #No arreglar permisos existente, dejar como esta.
-        #chmod 755 "$p_cmd_base_path"
+        #chmod 755 "$p_lnx_base_path"
         #return 1
 
         #Creando los subfolderes si no existen
-        if [ ! -d "${p_cmd_base_path}/bin" ]; then
-            mkdir -pm 755 "${p_cmd_base_path}/bin"
-            chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/bin"
+        if [ ! -d "${p_lnx_base_path}/bin" ]; then
+            mkdir -pm 755 "${p_lnx_base_path}/bin"
+            chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/bin"
         fi
 
-        if [ ! -d "${p_cmd_base_path}/man" ]; then
-            mkdir -pm 755 "${p_cmd_base_path}/man"
-            chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/man"
+        if [ ! -d "${p_lnx_base_path}/share" ]; then
+            mkdir -pm 755 "${p_lnx_base_path}/share"
+            chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share"
         fi
 
-        if [ ! -d "${p_cmd_base_path}/share" ]; then
-            mkdir -pm 755 "${p_cmd_base_path}/share"
-            chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/share"
+        if [ ! -d "${p_lnx_base_path}/share/man" ]; then
+            mkdir -pm 755 "${p_lnx_base_path}/share/man"
+            chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share/man"
         fi
 
-        if [ ! -d "${p_cmd_base_path}/share/fonts" ]; then
-            mkdir -pm 755 "${p_cmd_base_path}/share/fonts"
-            chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/share/fonts"
+        if [ ! -d "${p_lnx_base_path}/share/fonts" ]; then
+            mkdir -pm 755 "${p_lnx_base_path}/share/fonts"
+            chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share/fonts"
         fi
 
         #Aceptar la carpeta
@@ -945,27 +948,27 @@ function _try_fix_command_basepath() {
     if [ $l_folder_is_targethome -eq 0 ]; then
 
         #El owner es el usuario efectivo
-        _g_cmd_base_owner="$g_targethome_owner"
-        _g_cmd_base_group="$g_targethome_group"
-        _g_cmd_path_options=$(( _g_cmd_path_options + 1 ))
+        _g_lnx_base_owner="$g_targethome_owner"
+        _g_lnx_base_group="$g_targethome_group"
+        _g_lnx_base_options=$(( _g_lnx_base_options + 1 ))
         if [ "$g_targethome_owner" = "root" ]; then
-            _g_cmd_path_options=$(( _g_cmd_path_options + 2 ))
+            _g_lnx_base_options=$(( _g_lnx_base_options + 2 ))
         fi
 
     else
 
         #El owner es el root
-        _g_cmd_base_owner="root"
-        _g_cmd_base_group="root"
+        _g_lnx_base_owner="root"
+        _g_lnx_base_group="root"
         if [ "$g_targethome_owner" = "root" ]; then
-            _g_cmd_path_options=$(( _g_cmd_path_options + 1 ))
+            _g_lnx_base_options=$(( _g_lnx_base_options + 1 ))
         fi
-        _g_cmd_path_options=$(( _g_cmd_path_options + 2 ))
+        _g_lnx_base_options=$(( _g_lnx_base_options + 2 ))
 
     fi
 
     #Validar que existe el folder padre
-    l_aux="${p_cmd_base_path%/*}"
+    l_aux="${p_lnx_base_path%/*}"
     if [ ! -z "$l_aux" ] && [ ! -d "$l_aux" ]; then
         return 5
     fi
@@ -974,33 +977,33 @@ function _try_fix_command_basepath() {
     if [ $l_folder_is_targethome -eq 0 ]; then
 
         #Crear el folder
-        if ! mkdir -pm 755 "$p_cmd_base_path" &> /dev/null; then
+        if ! mkdir -pm 755 "$p_lnx_base_path" &> /dev/null; then
             return 7
         fi
 
         #Creando los subfolderes si no existen
-        if [ ! -d "${p_cmd_base_path}/bin" ]; then
-            mkdir -pm 755 "${p_cmd_base_path}/bin"
+        if [ ! -d "${p_lnx_base_path}/bin" ]; then
+            mkdir -pm 755 "${p_lnx_base_path}/bin"
             #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo
-            chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/bin"
+            chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/bin"
         fi
 
-        if [ ! -d "${p_cmd_base_path}/man" ]; then
-            mkdir -pm 755 "${p_cmd_base_path}/man"
+        if [ ! -d "${p_lnx_base_path}/share" ]; then
+            mkdir -pm 755 "${p_lnx_base_path}/share"
             #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo
-            chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/man"
+            chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share"
         fi
 
-        if [ ! -d "${p_cmd_base_path}/share" ]; then
-            mkdir -pm 755 "${p_cmd_base_path}/share"
+        if [ ! -d "${p_lnx_base_path}/share/man" ]; then
+            mkdir -pm 755 "${p_lnx_base_path}/share/man"
             #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo
-            chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/share"
+            chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share/man"
         fi
 
-        if [ ! -d "${p_cmd_base_path}/share/fonts" ]; then
-            mkdir -pm 755 "${p_cmd_base_path}/share/fonts"
+        if [ ! -d "${p_lnx_base_path}/share/fonts" ]; then
+            mkdir -pm 755 "${p_lnx_base_path}/share/fonts"
             #Si el runner ejecuta con root en modo de suplantacion del usuario objetivo
-            chown "${g_targethome_owner}:${g_targethome_group}" "$p_cmd_base_path/share/fonts"
+            chown "${g_targethome_owner}:${g_targethome_group}" "$p_lnx_base_path/share/fonts"
         fi
 
         #Aceptar la carpeta enviada
@@ -1023,46 +1026,46 @@ function _try_fix_command_basepath() {
     # - Si runner es root (puede estar o no estar en modo suplantacion de usuario objetivo)
     if [ $g_runner_id -eq 0 ]; then
 
-        if ! mkdir -pm 755 "$p_cmd_base_path"; then
+        if ! mkdir -pm 755 "$p_lnx_base_path"; then
             return 7
         fi
 
 
         #Creando los subfolderes si no existen
-        mkdir -pm 755 "${p_cmd_base_path}/bin"
-        mkdir -pm 755 "${p_cmd_base_path}/man"
-        mkdir -pm 755 "${p_cmd_base_path}/share"
-        mkdir -pm 755 "${p_cmd_base_path}/share/fonts"
+        mkdir -pm 755 "${p_lnx_base_path}/bin"
+        mkdir -pm 755 "${p_lnx_base_path}/share"
+        mkdir -pm 755 "${p_lnx_base_path}/share/man"
+        mkdir -pm 755 "${p_lnx_base_path}/share/fonts"
 
     # - Si runner NO es root y requiere sudo: sin password
     elif [ $g_runner_sudo_support -eq 1 ]; then
 
-        if ! sudo mkdir -pm 755 "$p_cmd_base_path"; then
+        if ! sudo mkdir -pm 755 "$p_lnx_base_path"; then
             return 7
         fi
 
 
         #Creando los subfolderes si no existen
-        sudo mkdir -pm 755 "${p_cmd_base_path}/bin"
-        sudo mkdir -pm 755 "${p_cmd_base_path}/man"
-        sudo mkdir -pm 755 "${p_cmd_base_path}/share"
-        sudo mkdir -pm 755 "${p_cmd_base_path}/share/fonts"
+        sudo mkdir -pm 755 "${p_lnx_base_path}/bin"
+        sudo mkdir -pm 755 "${p_lnx_base_path}/share"
+        sudo mkdir -pm 755 "${p_lnx_base_path}/share/man"
+        sudo mkdir -pm 755 "${p_lnx_base_path}/share/fonts"
 
     # - Si runner NO es root y requiere sudo: con password
     else
 
         printf 'Se requiere crear la carpeta "%b%s%b" de los comandos con los permisos correctos, para ello se debe usar sudo con root...\n' \
-               "$g_color_gray1" "$p_cmd_base_path" "$g_color_reset"
+               "$g_color_gray1" "$p_lnx_base_path" "$g_color_reset"
 
-        if ! sudo mkdir -pm 755 "$p_cmd_base_path"; then
+        if ! sudo mkdir -pm 755 "$p_lnx_base_path"; then
             return 7
         fi
 
         #Creando los subfolderes si no existen
-        sudo mkdir -pm 755 "${p_cmd_base_path}/bin"
-        sudo mkdir -pm 755 "${p_cmd_base_path}/man"
-        sudo mkdir -pm 755 "${p_cmd_base_path}/share"
-        sudo mkdir -pm 755 "${p_cmd_base_path}/share/fonts"
+        sudo mkdir -pm 755 "${p_lnx_base_path}/bin"
+        sudo mkdir -pm 755 "${p_lnx_base_path}/share"
+        sudo mkdir -pm 755 "${p_lnx_base_path}/share/man"
+        sudo mkdir -pm 755 "${p_lnx_base_path}/share/fonts"
 
     fi
 
@@ -1074,7 +1077,7 @@ function _try_fix_command_basepath() {
 
 
 #
-#Establece el ruta de los programas (incluyen mas de 1 comando) 'g_programs_path' a instalar.
+#Establece el ruta de los programas (incluyen mas de 1 comando) 'g_tools_path' a instalar.
 #Orden de prioridad:
 #  > La carpeta ingresada como parametro 3, siempre que existe y tenga por lo menos permiso de lectura.
 #  > Si la carpeta esta en el home de usuario, el usuario debera tener permisos de escritura.
@@ -1088,19 +1091,19 @@ function _try_fix_command_basepath() {
 #Parametros de entrada > Variables globales:
 #  > 'g_targethome_path'
 #Parametros de salida> Variables globales:
-# > 'g_programs_path': la ruta del folder establecido
-# > 'g_prg_path_options' que define caracteristicas del folder obtenido. Su valor puede ser 0 o la suma binario
+# > 'g_tools_path': la ruta del folder establecido
+# > 'g_tools_options' que define caracteristicas del folder obtenido. Su valor puede ser 0 o la suma binario
 #    de los siguientes flags:
 #       > 00001 (1) - La carpeta de programas tiene como owner al usuario OBJETIVO.
 #       > 00010 (2) - La carpeta de programas tiene como owner a root.
 #       > 00100 (4) - La carpeta de programas esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de programas NO es una ruta estandar  (ruta personalizada ingresada por el usuario)
-# > 'g_programs_owner' owner del folder de programas ingresado.
-# > 'g_programs_group' grupo de acceso del folder de programas ingresado.
+# > 'g_tools_owner' owner del folder de programas ingresado.
+# > 'g_tools_group' grupo de acceso del folder de programas ingresado.
 #Parametro de salida> Valor de retorno:
 #    0> Se establecio la ruta (el owner del home puede instalar programas en dicho folder).
 #    1> No se establecio los directorio (no se tiene los permisos correctos para crear o modificar el folder para que el owner del home pueda instalar programas).
-function get_program_path() {
+function get_tools_path() {
 
     #1. Argumentos de la funcion
     local p_is_noninteractive=1
@@ -1116,8 +1119,8 @@ function get_program_path() {
                             # 0 - Se uso la carpeta por defecto '~/tools'
     local la_additional_attemps=("${g_targethome_path}/tools" '/opt/tools' '/var/opt/tools')
 
-    local l_programs_path="$2"
-    if  [ -z "$l_programs_path" ]; then
+    local l_tools_path="$2"
+    if  [ -z "$l_tools_path" ]; then
         if [ -d "/var/opt" ]; then
             l_atttemp_id=2
         elif [ -d "/opt" ]; then
@@ -1125,12 +1128,12 @@ function get_program_path() {
         else
             l_atttemp_id=0
         fi
-        l_programs_path="${la_additional_attemps[$l_atttemp_id]}"
+        l_tools_path="${la_additional_attemps[$l_atttemp_id]}"
     fi
 
     #3. Realizar el 1er intento
     local l_status=0
-    _g_prg_path_options=0
+    _g_tools_options=0
 
     #Parametro de salida> Valor de retorno:
     #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
@@ -1143,28 +1146,28 @@ function get_program_path() {
     #    05 > La carpeta no existe pero no se puede crear porque la carpeta padre no existe.
     #    06 > La carpeta no existe y pero no se tiene los permisos correctos para crearlo.
     #    07 > La carpeta no existe y pero ocurrio un error al crearlo.
-    _try_fix_program_basepath "$l_programs_path"
+    _try_fix_tools_path "$l_tools_path"
     l_status=$?
 
     #1er intento: OK> Se tiene los permisos correctos
     if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
-        g_programs_path="$l_programs_path"
-        g_prg_path_options=$_g_prg_path_options
-        g_programs_owner="$_g_programs_owner"
-        g_programs_group="$_g_programs_group"
+        g_tools_path="$l_tools_path"
+        g_tools_options=$_g_tools_options
+        g_tools_owner="$_g_tools_owner"
+        g_tools_group="$_g_tools_group"
         return 0
     fi
 
     local l_aux=''
     #Obtener el identificador del intento, si aun no se ha obtenida (el argumento enviado por el usuario, tambien puede ser una carpeta por defecto)
     if  [ -z "$l_atttemp_id" ]; then
-        if [ $(( _g_prg_path_options & 8 )) -eq 8 ]; then
+        if [ $(( _g_tools_options & 8 )) -eq 8 ]; then
             #Si se realizo el intento en la carpeta personalizada
-            la_additional_attemps[3]="$l_programs_path"
+            la_additional_attemps[3]="$l_tools_path"
             l_atttemp_id=3
-        elif [ "$l_programs_path" = "${la_additional_attemps[2]}" ]; then
+        elif [ "$l_tools_path" = "${la_additional_attemps[2]}" ]; then
             l_atttemp_id=2
-        elif [ "$l_programs_path" = "${la_additional_attemps[1]}" ]; then
+        elif [ "$l_tools_path" = "${la_additional_attemps[1]}" ]; then
             l_atttemp_id=1
         else
             l_atttemp_id=0
@@ -1230,15 +1233,15 @@ function get_program_path() {
         #    05 > La carpeta no existe pero no se puede crear porque la carpeta padre no existe.
         #    06 > La carpeta no existe y pero no se tiene los permisos correctos para crearlo.
         #    07 > La carpeta no existe y pero ocurrio un error al crearlo.
-        _try_fix_program_basepath "${la_additional_attemps[$l_atttemp_id]}"
+        _try_fix_tools_path "${la_additional_attemps[$l_atttemp_id]}"
         l_status=$?
 
         #Intento del folder '/var/opt/tools': OK> Se tiene los permisos correctos
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
-            g_programs_path="${la_additional_attemps[$l_atttemp_id]}"
-            g_prg_path_options=$_g_prg_path_options
-            g_programs_owner="$_g_programs_owner"
-            g_programs_group="$_g_programs_group"
+            g_tools_path="${la_additional_attemps[$l_atttemp_id]}"
+            g_tools_options=$_g_tools_options
+            g_tools_owner="$_g_tools_owner"
+            g_tools_group="$_g_tools_group"
             return 0
         fi
 
@@ -1287,15 +1290,15 @@ function get_program_path() {
     #5. Realizar el intento del folder '/var/tools' (ID=1)
     if [ $l_atttemp_id -eq 1 ]; then
 
-        _try_fix_program_basepath "${la_additional_attemps[$l_atttemp_id]}"
+        _try_fix_tools_path "${la_additional_attemps[$l_atttemp_id]}"
         l_status=$?
 
         #Intento del folder '/var/tools': OK> Se tiene los permisos correctos
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
-            g_programs_path="${la_additional_attemps[$l_atttemp_id]}"
-            g_prg_path_options=$_g_prg_path_options
-            g_programs_owner="$_g_programs_owner"
-            g_programs_group="$_g_programs_group"
+            g_tools_path="${la_additional_attemps[$l_atttemp_id]}"
+            g_tools_options=$_g_tools_options
+            g_tools_owner="$_g_tools_owner"
+            g_tools_group="$_g_tools_group"
             return 0
         fi
 
@@ -1355,15 +1358,15 @@ function get_program_path() {
         #    05 > La carpeta no existe pero no se puede crear porque la carpeta padre no existe.
         #    06 > La carpeta no existe y pero no se tiene los permisos correctos para crearlo.
         #    07 > La carpeta no existe y pero ocurrio un error al crearlo.
-        _try_fix_program_basepath "${la_additional_attemps[$l_atttemp_id]}"
+        _try_fix_tools_path "${la_additional_attemps[$l_atttemp_id]}"
         l_status=$?
 
         #Intento del folder '~/tools': OK> Se tiene los permisos correctos
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
-            g_programs_path="${la_additional_attemps[$l_atttemp_id]}"
-            g_prg_path_options=$_g_prg_path_options
-            g_programs_owner="$_g_programs_owner"
-            g_programs_group="$_g_programs_group"
+            g_tools_path="${la_additional_attemps[$l_atttemp_id]}"
+            g_tools_options=$_g_tools_options
+            g_tools_owner="$_g_tools_owner"
+            g_tools_group="$_g_tools_group"
             return 0
         fi
 
@@ -1413,11 +1416,11 @@ function get_program_path() {
 
 
 #
-#Establece la ruta de los comandos del binario/man/fuente, es decir 'g_bin_cmdpath'/'g_man_cmdpath'/'g_fonts_cmdpath'/'g_cmd_base_path', donde se instalará.
+#Establece la ruta de los comandos del binario/man/fuente, es decir 'g_lnx_bin_path'/'g_lnx_man_path'/'g_lnx_fonts_path'/'g_lnx_base_path', donde se instalará.
 #Orden de prioridad:
 #  > La carpeta ingresada como parametro 3, siempre que existe,
-#  > La carpeta predeterminado del sistema ('/usr/local/bin', '/usr/local/man' y '/usr/share/fonts'), si existe tenga permisos como
-#    root o sudo para root.
+#  > La carpeta predeterminado del sistema ('/usr/local/bin', '/usr/local/share/man', '/usr/local/share/fonts' y '/usr/local/share/icons'), si existe tenga
+#    permisos como root o sudo para root.
 #  > La carpeta predeterminado para el usuario ubicada en '~/.local', si en las carpeta anterior no tiene permisos de root o sudo para root.
 #  > Si la carpeta esta en el home de usuario, el usuario debera tener permisos de escritura.
 #  > Si la carpeta NO esta en el home de usuario, generalmente el owner sera root, el usuario debera tener permiso de lectura y el usuario debera tener
@@ -1425,28 +1428,29 @@ function get_program_path() {
 #Parametros de entrada > Argumentos:
 # 1> Flag '0' si no es interactivo, '1' si es interactivo
 # 2> Ruta base personalizada donde se ubicaran los comandos descargado, las cuales tendran, la siguiente estructura de carpetas:
-#      > Binarios   : PATH_BASE/bin
-#      > Ayuda man  : PATH_BASE/man/man1, PATH_BASE/man/man5, PATH_BASE/man/man7
-#      > Fuentes    : PATH_BASE/share/fonts
+#      > Binarios   : LNX_BASE_PATH/bin
+#      > Ayuda man  : LNX_BASE_PATH/share/man/man1, LNX_BASE_PATH/share/man/man5, LNX_BASE_PATH/share/man/man7
+#      > Fuentes    : LNX_BASE_PATH/share/fonts
+#      > Imagenes   : LNX_BASE_PATH/share/icons
 #    Si es vacio, no se se usara las carpetas predeterminados
 #Parametros de entrada > Variables globales:
 #  > 'g_targethome_path'
 #Parametros de salida > Variables globales:
-#  > 'g_cmd_base_path' siempre es vacio cuando se usa la ruta predeterminado del sistema (para todos los usuario)
-#  > 'g_bin_cmdpath', 'g_man_cmdpath', 'g_fonts_cmdpath'
-#  > 'g_cmd_path_options' que define caracteristicas del folder obtenido. Su valor puede ser 0 o la suma binario
+#  > 'g_lnx_base_path' siempre es vacio cuando se usa la ruta predeterminado del sistema (para todos los usuario)
+#  > 'g_lnx_bin_path', 'g_lnx_man_path', 'g_lnx_fonts_path'
+#  > 'g_lnx_base_options' que define caracteristicas del folder obtenido. Su valor puede ser 0 o la suma binario
 #    de los siguientes flags:
 #       > 00001 (1) - La carpeta de comandos tiene como owner al usuario OBJETIVO.
 #       > 00010 (2) - La carpeta de comandos tiene como owner a root.
 #       > 00100 (4) - La carpeta de comandos esta en el "target home" (home del usuario OBJETIVO).
 #       > 01000 (8) - La carpeta de comandos NO es del sistema ni '~/.local'.
 #    Solo se debe usar cuando se pudo generar una ruta de folder para los programas (valor de retorno 0).
-#  > 'g_cmd_base_owner' owner del folder base de los comandos ingresado.
-#  > 'g_cmd_base_group' grupo de acceso del folder base de comandos ingresado.
+#  > 'g_lnx_base_owner' owner del folder base de los comandos ingresado.
+#  > 'g_lnx_base_group' grupo de acceso del folder base de comandos ingresado.
 #Parametros de salida > Valor de retorno
 #  0> Se establecio la ruta (el owner del home puede instalar programas en dicho folder).
 #  1> No se establecio los directorio (no se tiene los permisos correctos para crear o modificar el folder para que el owner del home pueda instalar programas).
-function get_command_path() {
+function g_lnx_paths() {
 
     #1. Argumentos
     local p_is_noninteractive=1
@@ -1455,17 +1459,17 @@ function get_command_path() {
     fi
 
     #2. Obtener el folder a usar en el primer intento
-    local l_cmd_base_path="$2"
+    local l_lnx_base_path="$2"
     local l_atttemp_id      #Indica el ID del intento para obtener la carpeta donde se instalaran los comandos, fuentes y archivos de ayuda.
                             #Sus valores son:
                             # 2 - Se uso la carpeta personalizado
                             # 1 - Se uso la carpeta por defecto del sistema para todos lo usuaris
                             # 0 - Se uso la carpeta por defecto '~/.local'
-    local la_additional_attemps=("${g_targethome_path}/.local" '/usr/local/bin')
+    local la_additional_attemps=("${g_targethome_path}/.local" '/usr/local')
 
     #3. Realizar el 1er intento
     local l_status=0
-    _g_cmd_path_options=0
+    _g_lnx_base_options=0
 
     #Parametro de salida> Valor de retorno:
     #  > OK (Se establecio o se creo la carpeta existente con los permisos correctos para la instalación de comandos para el usuario objetivo):
@@ -1478,34 +1482,36 @@ function get_command_path() {
     #    05 > La carpeta no existe pero no se puede crear porque la carpeta padre no existe.
     #    06 > La carpeta no existe y pero no se tiene los permisos correctos para crearlo.
     #    07 > La carpeta no existe y pero ocurrio un error al crearlo.
-    _try_fix_command_basepath "$l_cmd_base_path"
+    _try_fix_lnx_base_path "$l_lnx_base_path"
     l_status=$?
 
     #1er intento: OK> Se tiene los permisos correctos
     if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
-        if [ -z "$l_cmd_base_path" ]; then
-            g_cmd_base_path=""
-            g_bin_cmdpath="/usr/local/bin"
-            g_man_cmdpath="/usr/local/man"
-            g_fonts_cmdpath="/usr/share/fonts"
+        if [ -z "$l_lnx_base_path" ]; then
+            g_lnx_base_path=""
+            g_lnx_bin_path="/usr/local/bin"
+            g_lnx_man_path="/usr/local/share/man"
+            g_lnx_fonts_path="/usr/local/share/fonts"
+            g_lnx_icons_path="/usr/local/share/icons"
         else
-            g_cmd_base_path="$l_cmd_base_path"
-            g_bin_cmdpath="${g_cmd_base_path}/bin"
-            g_man_cmdpath="${g_cmd_base_path}/man"
-            g_fonts_cmdpath="${g_cmd_base_path}/share/fonts"
+            g_lnx_base_path="$l_lnx_base_path"
+            g_lnx_bin_path="${g_lnx_base_path}/bin"
+            g_lnx_man_path="${g_lnx_base_path}/share/man"
+            g_lnx_fonts_path="${g_lnx_base_path}/share/fonts"
+            g_lnx_icons_path="${g_lnx_base_path}/share/icons"
         fi
-        g_cmd_path_options=$_g_cmd_path_options
-        g_cmd_base_owner="$_g_cmd_base_owner"
-        g_cmd_base_group="$_g_cmd_base_group"
+        g_lnx_base_options=$_g_lnx_base_options
+        g_lnx_base_owner="$_g_lnx_base_owner"
+        g_lnx_base_group="$_g_lnx_base_group"
         return 0
     fi
 
     #Obtener el identificador del intento, si aun no se ha obtenida (el argumento enviado por el usuario, tambien puede ser una carpeta por defecto)
-    if [ $(( _g_cmd_path_options & 8 )) -eq 8 ]; then
+    if [ $(( _g_lnx_base_options & 8 )) -eq 8 ]; then
         #Si se realizo el intento en la carpeta personalizada
         l_atttemp_id=2
-        la_additional_attemps[2]="$l_cmd_base_path"
-    elif [ -z "$l_cmd_base_path" ]; then
+        la_additional_attemps[2]="$l_lnx_base_path"
+    elif [ -z "$l_lnx_base_path" ]; then
         l_atttemp_id=1
     else
         l_atttemp_id=0
@@ -1571,18 +1577,19 @@ function get_command_path() {
        #    05 > La carpeta no existe pero no se puede crear porque la carpeta padre no existe.
        #    06 > La carpeta no existe y pero no se tiene los permisos correctos para crearlo.
        #    07 > La carpeta no existe y pero ocurrio un error al crearlo.
-        _try_fix_command_basepath ""
+        _try_fix_lnx_base_path ""
         l_status=$?
 
         #Intento del folder del sistema: OK> Se tiene los permisos correctos
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
-            g_cmd_base_path=""
-            g_bin_cmdpath="/usr/local/bin"
-            g_man_cmdpath="/usr/local/man"
-            g_fonts_cmdpath="/usr/share/fonts"
-            g_cmd_path_options=$_g_cmd_path_options
-            g_cmd_base_owner="$_g_cmd_base_owner"
-            g_cmd_base_group="$_g_cmd_base_group"
+            g_lnx_base_path=""
+            g_lnx_bin_path="/usr/local/bin"
+            g_lnx_man_path="/usr/local/share/man"
+            g_lnx_fonts_path="/usr/local/share/fonts"
+            g_lnx_icons_path="/usr/local/share/icons"
+            g_lnx_base_options=$_g_lnx_base_options
+            g_lnx_base_owner="$_g_lnx_base_owner"
+            g_lnx_base_group="$_g_lnx_base_group"
             return 0
         fi
 
@@ -1643,18 +1650,19 @@ function get_command_path() {
        #    05 > La carpeta no existe pero no se puede crear porque la carpeta padre no existe.
        #    06 > La carpeta no existe y pero no se tiene los permisos correctos para crearlo.
        #    07 > La carpeta no existe y pero ocurrio un error al crearlo.
-        _try_fix_command_basepath "${la_additional_attemps[$l_atttemp_id]}"
+        _try_fix_lnx_base_path "${la_additional_attemps[$l_atttemp_id]}"
         l_status=$?
 
         #Intento del folder '~/.local': OK> Se tiene los permisos correctos
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
-            g_cmd_base_path="${la_additional_attemps[$l_atttemp_id]}"
-            g_bin_cmdpath="${g_cmd_base_path}/bin"
-            g_man_cmdpath="${g_cmd_base_path}/man"
-            g_fonts_cmdpath="${g_cmd_base_path}/share/fonts"
-            g_cmd_path_options=$_g_cmd_path_options
-            g_cmd_base_owner="$_g_cmd_base_owner"
-            g_cmd_base_group="$_g_cmd_base_group"
+            g_lnx_base_path="${la_additional_attemps[$l_atttemp_id]}"
+            g_lnx_bin_path="${g_lnx_base_path}/bin"
+            g_lnx_man_path="${g_lnx_base_path}/share/man"
+            g_lnx_fonts_path="${g_lnx_base_path}/share/fonts"
+            g_lnx_icons_path="${g_lnx_base_path}/share/icons"
+            g_lnx_base_options=$_g_lnx_base_options
+            g_lnx_base_owner="$_g_lnx_base_owner"
+            g_lnx_base_group="$_g_lnx_base_group"
             return 0
         fi
 
@@ -1799,12 +1807,12 @@ function fulfill_preconditions() {
     fi
 
     #6. Validar si existe los folderes de Windows sobre WSL
-    if [ $g_os_type -eq 1 ] && [ ! -z "$g_win_programs_path" ] && [ ! -d "$g_win_programs_path" ]; then
-        mkdir -p "$g_win_programs_path"
+    if [ $g_os_type -eq 1 ] && [ ! -z "$g_win_tools_path" ] && [ ! -d "$g_win_tools_path" ]; then
+        mkdir -p "$g_win_tools_path"
         mkdir -p "$g_win_bin_path"
         mkdir -p "$g_win_etc_path"
-        mkdir -p "$g_win_doc_path"
-        mkdir -p "$g_win_font_path"
+        mkdir -p "$g_win_docs_path"
+        mkdir -p "$g_win_fonts_path"
     fi
 
     #7. El programa instalados: ¿Esta 'curl' instalado?
@@ -1866,8 +1874,8 @@ function fulfill_preconditions() {
                    "$g_targethome_group"
         fi
 
-        if [ ! -z "$g_programs_path" ]; then
-            printf 'Program path          : "%s" (Owner= "%s") (Group= "%s")' "$g_programs_path" "$g_programs_owner" "$g_programs_group"
+        if [ ! -z "$g_tools_path" ]; then
+            printf 'Tools path            : "%s" (Owner= "%s") (Group= "%s")' "$g_tools_path" "$g_tools_owner" "$g_tools_group"
 
             if [ "$g_setup_only_last_version" = "0" ]; then
                 printf ' (SetupOnlyLastVersion= "true")'
@@ -1875,17 +1883,17 @@ function fulfill_preconditions() {
                 printf ' (SetupOnlyLastVersion= "false")'
             fi
 
-            if [ $g_os_type -eq 1 ] && [ ! -z "$g_win_programs_path" ]; then
-                printf ' (Windows= "%s")' "$g_win_programs_path"
+            if [ $g_os_type -eq 1 ] && [ ! -z "$g_win_tools_path" ]; then
+                printf ' (Windows= "%s")' "$g_win_tools_path"
             fi
 
             printf '\n'
 
         fi
 
-        if [ ! -z "$g_bin_cmdpath" ]; then
-            printf 'Command path          : "%s" (Bin= "%s") (Owner= "%s") (Group= "%s")' "$g_cmd_base_path" "$g_bin_cmdpath" \
-                   "$g_programs_owner" "$g_programs_group"
+        if [ ! -z "$g_lnx_bin_path" ]; then
+            printf 'Linux base path       : "%s" (Bin= "%s") (Owner= "%s") (Group= "%s")' "$g_lnx_base_path" "$g_lnx_bin_path" \
+                   "$g_tools_owner" "$g_tools_group"
             if [ $g_os_type -eq 1 ] && [ ! -z "$g_win_bin_path" ]; then
                 printf ' (Windows= "%s")\n' "$g_win_bin_path"
             else
@@ -2570,12 +2578,12 @@ function copy_file_on_home() {
 function get_owner_of_nodejs() {
 
     #1. Parametros
-    local p_programs_path="$1"
+    local p_tools_path="$1"
 
     #2. Obtener la ruta donde esta los binarios de nodojs
     local l_nodejs_bin_path=''
 
-    if [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/nodejs/bin/node" ]; then
+    if [ -z "$p_tools_path" ] || [ ! -f "${p_tools_path}/nodejs/bin/node" ]; then
 
         l_nodejs_bin_path=$(which node)
         if [ -z "$l_nodejs_bin_path" ]; then
@@ -2585,7 +2593,7 @@ function get_owner_of_nodejs() {
         l_nodejs_bin_path=${l_nodejs_bin_path%/node}
 
     else
-        l_nodejs_bin_path="${p_programs_path}/nodejs/bin"
+        l_nodejs_bin_path="${p_tools_path}/nodejs/bin"
     fi
 
 
@@ -2617,14 +2625,14 @@ function get_owner_of_nodejs() {
 function get_nodejs_version() {
 
     #Parametros
-    local p_programs_path="$1"
+    local p_tools_path="$1"
 
     #Obtener la version instalada
     local l_version
     local l_status
 
     #1. Si no se envio una ruta valida de programas del instalador o no fue instalado por el instalador
-    if [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/nodejs/bin/node" ]; then
+    if [ -z "$p_tools_path" ] || [ ! -f "${p_tools_path}/nodejs/bin/node" ]; then
 
         l_version=$(node --version 2> /dev/null)
         l_status=$?
@@ -2643,7 +2651,7 @@ function get_nodejs_version() {
     fi
 
     #2. Si fue instalado por este instalador
-    l_version=$(${p_programs_path}/nodejs/bin/node --version 2> /dev/null)
+    l_version=$(${p_tools_path}/nodejs/bin/node --version 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ]; then
         l_version=''
@@ -2659,13 +2667,13 @@ function get_nodejs_version() {
     echo "$l_version"
 
     #Si fue instalado correctamente, validar si esta registrado en el PATH
-    echo "$PATH" | grep "${p_programs_path}/nodejs/bin" &> /dev/null
+    echo "$PATH" | grep "${p_tools_path}/nodejs/bin" &> /dev/null
     l_status=$?
 
     #Si no esta registrado en el PATH
     if [ $l_status -ne 0 ]; then
 
-        export PATH="${p_programs_path}/nodejs/bin:$PATH"
+        export PATH="${p_tools_path}/nodejs/bin:$PATH"
         return 1
 
     fi
@@ -2773,14 +2781,14 @@ function get_vim_version() {
 function get_neovim_version() {
 
     #Parametros
-    local p_programs_path="$1"
+    local p_tools_path="$1"
 
     #Obtener la version instalada
     local l_version
     local l_status
 
     #1. Si no se envio una ruta valida de programas del instalador o no fue instalado por el instalador
-    if  [ -z "$p_programs_path" ] || [ ! -f "${p_programs_path}/neovim/bin/nvim" ]; then
+    if  [ -z "$p_tools_path" ] || [ ! -f "${p_tools_path}/neovim/bin/nvim" ]; then
 
         l_version=$(nvim --version 2> /dev/null)
         l_status=$?
@@ -2807,7 +2815,7 @@ function get_neovim_version() {
     fi
 
     #2. Si fue instalado por este instalador
-    l_version=$(${p_programs_path}/neovim/bin/nvim --version 2> /dev/null)
+    l_version=$(${p_tools_path}/neovim/bin/nvim --version 2> /dev/null)
     l_status=$?
     if [ $l_status -ne 0 ]; then
         l_version=''
@@ -2823,13 +2831,13 @@ function get_neovim_version() {
     echo "$l_version"
 
     #Si fue instalado correctamente, validar si esta registrado en el PATH
-    echo "$PATH" | grep "${p_programs_path}/neovim/bin" &> /dev/null
+    echo "$PATH" | grep "${p_tools_path}/neovim/bin" &> /dev/null
     l_status=$?
 
     #Si no esta en el PATH
     if [ $l_status -ne 0 ]; then
 
-        export PATH="${p_programs_path}/neovim/bin:$PATH"
+        export PATH="${p_tools_path}/neovim/bin:$PATH"
         return 1
 
     fi
@@ -2856,13 +2864,13 @@ install_nodejs() {
         p_show_title=0
     fi
 
-    local p_programs_path="$2"
+    local p_tools_path="$2"
 
     #1. Validar si 'nodejs' esta instado (puede no estar en el PATH)
     local l_version=''
     local l_status
 
-    l_version=$(get_nodejs_version "$p_programs_path")
+    l_version=$(get_nodejs_version "$p_tools_path")
     l_status=$?
 
     #echo "l_version=${l_version}, l_status=${l_status}"
@@ -2904,7 +2912,7 @@ install_nodejs() {
     # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
     #    "/var/opt/tools" o "~/tools".
-    # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+    # 6> Ruta base donde se almacena los comandos ("CMD_LNX_BASE_PATH/bin"), archivos man1 ("CMD_LNX_BASE_PATH/man/man1") y fonts ("CMD_LNX_BASE_PATH/share/fonts").
     # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
     # 8> El estado de la credencial almacenada para el sudo.
     # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
@@ -2934,22 +2942,22 @@ install_nodejs() {
     fi
 
     #Validar si 'node' esta en el PATH
-    local l_programs_path=$(cat /tmp/prgpath.txt | head -n 1)
-    if [ -z "$l_programs_path" ] || [ -d "$l_programs_path/nodejs/bin" ]; then
-        printf 'La ruta de de instalación de programa es "%b%s%b".\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
-        echo "$PATH" | grep "${l_programs_path}/nodejs/bin" &> /dev/null
+    local l_tools_path=$(cat /tmp/prgpath.txt | head -n 1)
+    if [ -z "$l_tools_path" ] || [ -d "$l_tools_path/nodejs/bin" ]; then
+        printf 'La ruta de de instalación de programa es "%b%s%b".\n' "$g_color_gray1" "$l_tools_path" "$g_color_reset"
+        echo "$PATH" | grep "${l_tools_path}/nodejs/bin" &> /dev/null
         l_status=$?
         if [ $l_status -ne 0 ]; then
             printf 'Registrando, de manera temporal, la ruta "%b%s/nodejs/bin%b" de NodeJS en la variable de entorno "%bPATH%b".\n' "$g_color_gray1" \
-                   "$l_programs_path" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-            export PATH="${l_programs_path}/nodejs/bin:$PATH"
+                   "$l_tools_path" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+            export PATH="${l_tools_path}/nodejs/bin:$PATH"
         fi
     else
-        printf 'La ruta de instalación de programa "%b%s%b" obtenida es invalida.\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
+        printf 'La ruta de instalación de programa "%b%s%b" obtenida es invalida.\n' "$g_color_gray1" "$l_tools_path" "$g_color_reset"
     fi
 
     #4. Volver a validar si las componentes fueron instalados
-    l_version=$(get_nodejs_version "$p_programs_path")
+    l_version=$(get_nodejs_version "$p_tools_path")
     l_status=$?
 
     if [ $l_status -ne 0 ]; then
@@ -3244,13 +3252,13 @@ install_neovim() {
         p_show_title=0
     fi
 
-    local p_programs_path="$2"
+    local p_tools_path="$2"
 
     #1. Validar si 'nvim' esta instado (puede no estar en el PATH)
     local l_version=''
     local l_status
 
-    l_version=$(get_neovim_version "$p_programs_path")
+    l_version=$(get_neovim_version "$p_tools_path")
     l_status=$?
 
     if [ ! -z "$l_version" ]; then
@@ -3333,7 +3341,7 @@ install_neovim() {
         # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
         # 5> Ruta donde se descargaran los programas (de repositorios como github). Si se envia vacio o EMPTY se usara el directorio predeterminado
         #    "/var/opt/tools" o "~/tools".
-        # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
+        # 6> Ruta base donde se almacena los comandos ("LNX_BASE_PATH/bin"), archivos man1 ("LNX_BASE_PATH/man/man1") y fonts ("LNX_BASE_PATH/share/fonts").
         # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
         # 8> El estado de la credencial almacenada para el sudo.
         # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
@@ -3364,24 +3372,24 @@ install_neovim() {
         fi
 
         #Validar si 'nvim' esta en el PATH
-        local l_programs_path=$(cat /tmp/prgpath.txt | head -n 1)
-        if [ -z "$l_programs_path" ] || [ -d "$l_programs_path/neovim/bin" ]; then
-            printf 'La ruta de de instalación de programa es "%b%s%b".\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
-            echo "$PATH" | grep "${l_programs_path}/neovim/bin" &> /dev/null
+        local l_tools_path=$(cat /tmp/prgpath.txt | head -n 1)
+        if [ -z "$l_tools_path" ] || [ -d "$l_tools_path/neovim/bin" ]; then
+            printf 'La ruta de de instalación de programa es "%b%s%b".\n' "$g_color_gray1" "$l_tools_path" "$g_color_reset"
+            echo "$PATH" | grep "${l_tools_path}/neovim/bin" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 printf 'Registrando, de manera temporal, la ruta "%b%s/neovim/bin%b" de NeoVIM en la variable de entorno "%bPATH%b".\n' "$g_color_gray1" \
-                       "$l_programs_path" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-                export PATH=${l_programs_path}/neovim/bin:$PATH
+                       "$l_tools_path" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+                export PATH=${l_tools_path}/neovim/bin:$PATH
             fi
         else
-            printf 'La ruta de instalación de programa "%b%s%b" obtenida es invalida.\n' "$g_color_gray1" "$l_programs_path" "$g_color_reset"
+            printf 'La ruta de instalación de programa "%b%s%b" obtenida es invalida.\n' "$g_color_gray1" "$l_tools_path" "$g_color_reset"
         fi
 
     fi
 
     #5. Volver a validar si las componentes fueron instalados
-    l_version=$(get_neovim_version "$p_programs_path")
+    l_version=$(get_neovim_version "$p_tools_path")
     l_status=$?
 
     if [ $l_status -ne 0 ]; then

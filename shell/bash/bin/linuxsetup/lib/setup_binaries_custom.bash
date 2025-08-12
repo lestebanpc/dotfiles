@@ -46,6 +46,7 @@ gA_packages=(
         ['evans']='ktr0731/evans'
         ['protoc']='protocolbuffers/protobuf'
         ['oh-my-posh']='JanDeDobbeleer/oh-my-posh'
+        ['tree-sitter']='tree-sitter/tree-sitter'
         ['neovim']='neovim/neovim'
         ['kubectl']="$g_empty_str"
         ['pgo']='CrunchyData/postgres-operator-client'
@@ -123,6 +124,7 @@ gA_packages=(
         ['flamelens']='YS-L/flamelens'
         ['opencode']='sst/opencode'
         ['powershell_es']='PowerShell/PowerShellEditorServices'
+        ['distrobox']='89luca89/distrobox'
     )
 
 
@@ -154,6 +156,7 @@ ga_menu_options_title=(
     "LSP y otros: Markdown LS, Lua LS, Taplo (Toml LS), Lemmix (XML LS), ..."
     "CTags (indexador de archivos lenguajes de programacion)"
     "AWS CLI v2"
+    "Tools adicionales de Linux"
     )
 
 # WARNING: Un cambio en el orden implica modificar los indices de los eventos:
@@ -169,7 +172,7 @@ ga_menu_options_packages=(
     "tmux-thumbs,tmux-fingers,sesh,grpcurl,websocat,protoc,jwt"
     "rclone,tailspin,qsv,xan,evans,glow,gum,butane,biome,step,yazi,lazygit,rmpc,opencode"
     "nerd-fonts"
-    "neovim"
+    "neovim,tree-sitter"
     "powershell"
     "runc,crun,rootlesskit,slirp4netns,fuse-overlayfs,cni-plugins"
     "containerd,buildkit,nerdctl"
@@ -188,6 +191,7 @@ ga_menu_options_packages=(
     "marksman,luals,taplo,lemminx,flamelens,powershell_es"
     "ctags-win,ctags-nowin"
     "awscli"
+    "distrobox"
     )
 
 # Tipos de archivos (usualmente binarios), que estan en el repositorio, segun el tipo de SO al cual pueden ser usados/ejecutados.
@@ -222,6 +226,7 @@ declare -A gA_repo_config_os_type=(
         ['kubeadm']=6
         ['kubelet']=6
         ['fzf']=7
+        ['distrobox']=12
         ['rust']=14
         ['butane']=14
         ['awscli']=14
@@ -289,10 +294,10 @@ declare -A gA_repo_base_url=(
 #       > Usualmente es un binario ejecutable que es considerado un comandos del sistema.
 #       > Los archivos usan se ubican en rutas predeterminadas del SO:
 #         > Sus binarios ejecutables estan ubicado principalmente en '/usr/local/bin' o '~/.local/bin'.
-#         > Sus archivo de ayuda en '/usr/local/man/man1', '/usr/local/man/man5' y '/usr/local/man/man7'.
-#         > Sus archivos de fuentes que se almacena en '/usr/share/fonts' y '~/.local/share/fonts'.
+#         > Sus archivo de ayuda en '/usr/local/share/man/man1', '/usr/local/share/man/man5' y '/usr/local/share/man/man7'.
+#         > Sus archivos de fuentes que se almacena en '/usr/local/share/fonts' y '~/.local/share/fonts'.
 #       > No requiere configurar su ubicacion para usarse (por ejemplo, no requiere adicionarse en el PATH del usuario).
-# > (1) Un programa del usuario.
+# > (1) Un programa (tools) del usuario.
 #       > Es conjunto de binarios (ejecutables o libreria) junto a otros archivos que NO estan ubicadados en rutas predeterminadas
 #         del SO.
 #       > No usan archivos del sistema (ayuda y fuentes), debido a que intentan ser independendiente de la distribucion Linux o SO.
@@ -301,7 +306,7 @@ declare -A gA_repo_base_url=(
 # > (2) Es un paquete del SO
 #       > Son descargable de un repositorio que no es el del SO y se instala usando el gestor de paquetes.
 # > (3) Archivos de fuente del sistema
-#       > Son archivos que se almacena en rutas predeterminadas del SO '/usr/share/fonts' y '~/.local/share/fonts'.
+#       > Son archivos que se almacena en rutas predeterminadas del SO '/usr/local/share/fonts' y '~/.local/share/fonts'.
 #       > No llegan a tener binarios.
 # > (4) Custom
 #       > Almacena tanto archivos en rutas reservadas del sistema como folderes creados por el usuario.
@@ -553,7 +558,7 @@ function get_extension_info_vscode() {
     fi
 
     #Si no esta instalado 'jq' no continuar
-    if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+    if ! ${g_lnx_bin_path}/jq --version &> /dev/null; then
         return 1
     fi
 
@@ -572,7 +577,7 @@ function get_extension_info_vscode() {
              }],
              \"assetTypes\": [\"Microsoft.VisualStudio.Services.VSIXPackage\"],
              \"flags\": 0x402
-           }" | ${g_bin_cmdpath}/jq -r "$l_filter")
+           }" | ${g_lnx_bin_path}/jq -r "$l_filter")
 
     l_status=$?
     if [ $l_status -ne 0 ]; then
@@ -728,11 +733,11 @@ function get_repo_last_version() {
 
         go)
             #Si no esta instalado 'jq' no continuar
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+            if ! ${g_lnx_bin_path}/jq --version &> /dev/null; then
                 return 1
             fi
 
-            l_aux0=$(curl -Ls -H 'Accept: application/json' "https://go.dev/dl/?mode=json" | ${g_bin_cmdpath}/jq -r '.[0].version')
+            l_aux0=$(curl -Ls -H 'Accept: application/json' "https://go.dev/dl/?mode=json" | ${g_lnx_bin_path}/jq -r '.[0].version')
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 2
@@ -743,11 +748,11 @@ function get_repo_last_version() {
 
         awscli)
             #Si no esta instalado 'jq' no continuar
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+            if ! ${g_lnx_bin_path}/jq --version &> /dev/null; then
                 return 1
             fi
 
-            l_aux0=$(curl -LsH "Accept: application/json" "https://api.github.com/repos/aws/aws-cli/tags" | ${g_bin_cmdpath}/jq -r '.[0].name')
+            l_aux0=$(curl -LsH "Accept: application/json" "https://api.github.com/repos/aws/aws-cli/tags" | ${g_lnx_bin_path}/jq -r '.[0].name')
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 2
@@ -758,12 +763,12 @@ function get_repo_last_version() {
 
         jq)
             #Si no esta instalado 'jq' usar expresiones regulares
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+            if ! ${g_lnx_bin_path}/jq --version &> /dev/null; then
                 l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | \
                                       sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
                 l_status=$?
             else
-                l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_bin_cmdpath}/jq -r '.tag_name')
+                l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_lnx_bin_path}/jq -r '.tag_name')
                 l_status=$?
             fi
 
@@ -774,12 +779,12 @@ function get_repo_last_version() {
 
         neovim)
             #Si no esta instalado 'jq' no continuar
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+            if ! ${g_lnx_bin_path}/jq --version &> /dev/null; then
                 return 1
             fi
 
             #Usando el API completo del repositorio de GitHub (Vease https://docs.github.com/en/rest/releases/releases)
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_bin_cmdpath}/jq -r '.tag_name')
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_lnx_bin_path}/jq -r '.tag_name')
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 2
@@ -788,7 +793,7 @@ function get_repo_last_version() {
 
         nodejs)
             #Si no esta instalado 'jq' no continuar
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+            if ! ${g_lnx_bin_path}/jq --version &> /dev/null; then
                 return 1
             fi
 
@@ -798,7 +803,7 @@ function get_repo_last_version() {
             fi
 
             #Usando JSON para obtener la ultima version
-            l_aux0=$(curl -Ls "${l_base_url_fixed}/index.json" | ${g_bin_cmdpath}/jq -r 'first(.[] | select(.lts != false)) | "\(.version)"' 2> /dev/null)
+            l_aux0=$(curl -Ls "${l_base_url_fixed}/index.json" | ${g_lnx_bin_path}/jq -r 'first(.[] | select(.lts != false)) | "\(.version)"' 2> /dev/null)
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 2
@@ -809,12 +814,12 @@ function get_repo_last_version() {
 
        less)
             #Si no esta instalado 'jq' no continuar
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+            if ! ${g_lnx_bin_path}/jq --version &> /dev/null; then
                 return 1
             fi
 
             #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_bin_cmdpath}/jq -r '.tag_name')
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_lnx_bin_path}/jq -r '.tag_name')
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 2
@@ -1040,7 +1045,7 @@ function get_repo_last_version() {
 
         *)
             #Si no esta instalado 'jq' no continuar
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+            if ! ${g_lnx_bin_path}/jq --version &> /dev/null; then
                 return 1
             fi
 
@@ -1050,7 +1055,7 @@ function get_repo_last_version() {
             fi
 
             #Usando el API resumido del repositorio de GitHub
-            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_bin_cmdpath}/jq -r '.tag_name')
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/${p_repo_name}/releases/latest" | ${g_lnx_bin_path}/jq -r '.tag_name')
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 2
@@ -1272,7 +1277,7 @@ function get_repo_last_subversions() {
         graalvm)
 
             #Si no esta instalado 'jq' no continuar
-            if ! ${g_bin_cmdpath}/jq --version &> /dev/null; then
+            if ! ${g_lnx_bin_path}/jq --version &> /dev/null; then
                 return 1
             fi
 
@@ -1354,12 +1359,12 @@ function is_installed_repo_subversion()
             l_aux1=$(echo "$p_arti_subversion_version" | sed -n 's/^jdk-\([0-9]*\)\..*/\1/p')
 
             #Obtener el folder donde se almacena esta subversion
-            l_aux2="${g_programs_path}/graalvm_${l_aux1}"
+            l_aux2="${g_tools_path}/graalvm_${l_aux1}"
             if [ $p_is_win_binary -eq 0 ]; then
-                l_aux2="${g_win_programs_path}/graalvm_${l_aux1}"
+                l_aux2="${g_win_tools_path}/graalvm_${l_aux1}"
             fi
 
-            if [ -d "${g_win_programs_path}/graalvm_${l_aux1}" ]; then
+            if [ -d "${g_win_tools_path}/graalvm_${l_aux1}" ]; then
 
                 #Obtener la version pretty de la version indicada
                 l_aux2=$(_g_repo_current_pretty_version "graalvm" $p_is_win_binary "${l_aux2}")
@@ -1452,7 +1457,7 @@ function _get_repo_current_pretty_version2() {
 
 
         kubectl|oc|kubeadm)
-            l_result=$(echo "$p_data" | ${g_bin_cmdpath}/jq -r '.clientVersion.gitVersion' 2> /dev/null)
+            l_result=$(echo "$p_data" | ${g_lnx_bin_path}/jq -r '.clientVersion.gitVersion' 2> /dev/null)
             if [ $? -ne 0 ]; then
                 return 5
             fi
@@ -1600,9 +1605,9 @@ function _get_repo_current_pretty_version1() {
 
             #Calcular la ruta de archivo/comando donde se obtiene la version
             if [ $p_is_win_binary -eq 0 ]; then
-               l_path_file="${g_win_programs_path}/lsp_servers/omnisharp_ls/OmniSharp.deps.json"
+               l_path_file="${g_win_tools_path}/lsp_servers/omnisharp_ls/OmniSharp.deps.json"
             else
-               l_path_file="${g_programs_path}/lsp_servers/omnisharp_ls/OmniSharp.deps.json"
+               l_path_file="${g_tools_path}/lsp_servers/omnisharp_ls/OmniSharp.deps.json"
             fi
 
             #Si no se encuentra el archivo, se considera no instalado
@@ -1610,7 +1615,7 @@ function _get_repo_current_pretty_version1() {
                 return 2
             fi
 
-            l_result=$(${g_bin_cmdpath}/jq -r '.targets[][].dependencies."OmniSharp.Stdio"' "${l_path_file}" | grep -v "null" | \
+            l_result=$(${g_lnx_bin_path}/jq -r '.targets[][].dependencies."OmniSharp.Stdio"' "${l_path_file}" | grep -v "null" | \
                        head -n 1 2> /dev/null)
             l_status=$?
             if [ $l_status -ne 0 ]; then
@@ -1630,13 +1635,13 @@ function _get_repo_current_pretty_version1() {
                 if [ -z "$p_executable_base_path" ]; then
 
                     #Si no se encuentra el archivo, se considera no instalado
-                    if [ -f "${g_win_programs_path}/graalvm.info" ]; then
+                    if [ -f "${g_win_tools_path}/graalvm.info" ]; then
                         return 2
                     fi
 
                     #Para binarios windows, el instaaldor no crea el enlace simbolo, asi que debe irse a la carpeta de la ultima version.
-                    l_result=$(cat "${g_win_programs_path}/graalvm.info" | head -n 1)
-                    l_path_file="${g_win_programs_path}/graalvm_${l_result}/bin/java.exe"
+                    l_result=$(cat "${g_win_tools_path}/graalvm.info" | head -n 1)
+                    l_path_file="${g_win_tools_path}/graalvm_${l_result}/bin/java.exe"
 
                 else
                     l_path_file="$p_executable_base_path/java.exe"
@@ -1645,7 +1650,7 @@ function _get_repo_current_pretty_version1() {
             else
 
                 if [ -z "$p_executable_base_path" ]; then
-                    l_path_file="${g_programs_path}/graalvm/bin/java"
+                    l_path_file="${g_tools_path}/graalvm/bin/java"
                 else
                     l_path_file="$p_executable_base_path/java"
                 fi
@@ -1678,13 +1683,13 @@ function _get_repo_current_pretty_version1() {
                 if [ -z "$p_executable_base_path" ]; then
 
                     #Si no se encuentra el archivo, se considera no instalado
-                    if [ -f "${g_win_programs_path}/maven.info" ]; then
+                    if [ -f "${g_win_tools_path}/maven.info" ]; then
                         return 2
                     fi
 
                     #Para binarios windows, el instaaldor no crea el enlace simbolo, asi que debe irse a la carpeta de la ultima version.
-                    l_result=$(cat "${g_win_programs_path}/maven.info" | head -n 1)
-                    l_path_file="${g_win_programs_path}/maven_${l_result}/bin/mvn.cmd"
+                    l_result=$(cat "${g_win_tools_path}/maven.info" | head -n 1)
+                    l_path_file="${g_win_tools_path}/maven_${l_result}/bin/mvn.cmd"
 
                 else
                     l_path_file="$p_executable_base_path/mvn.cmd"
@@ -1693,7 +1698,7 @@ function _get_repo_current_pretty_version1() {
             else
 
                 if [ -z "$p_executable_base_path" ]; then
-                    l_path_file="${g_programs_path}/maven/bin/mvn"
+                    l_path_file="${g_tools_path}/maven/bin/mvn"
                 else
                     l_path_file="$p_executable_base_path/mvn"
                 fi
@@ -2078,6 +2083,60 @@ function get_repo_artifacts() {
                 fi
                 pna_artifact_types=(10)
             fi
+            ;;
+
+
+
+        tree-sitter)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("tree-sitter-windows-arm64.gz")
+                else
+                    pna_artifact_names=("tree-sitter-windows-x64.gz")
+                fi
+                pna_artifact_types=(12)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("tree-sitter-linux-arm64.gz")
+                    else
+                        pna_artifact_names=("tree-sitter-linux-x64.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("tree-sitter-linux-arm64.gz")
+                    else
+                        pna_artifact_names=("tree-sitter-linux-x64.gz")
+                    fi
+                fi
+                pna_artifact_types=(12)
+            fi
+            ;;
+
+
+        distrobox)
+
+            #No soportado para Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 2
+            fi
+
+            #URL base fijo     : https://github.com
+            #URL base variable :
+            l_base_url_variable="${p_repo_name}/archive/refs/tags/${p_repo_last_pretty_version}.tar.gz"
+
+            #Parametro requeridos:
+            l_result=1   #'pnra_artifact_baseurl' incluye el nombre del artecto a descargar
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
+
+            pna_artifact_names=("${p_repo_id}.tar.gz")
+            pna_artifact_types=(10)
             ;;
 
 
@@ -3153,15 +3212,15 @@ function get_repo_artifacts() {
             #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
             if [ $g_os_subtype_id -eq 1 ]; then
                 if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("async-profiler-2.9-linux-arm64.tar.gz" "async-profiler.jar" "jfr-converter.jar")
+                    pna_artifact_names=("async-profiler-${p_repo_last_pretty_version}-linux-arm64.tar.gz" "async-profiler.jar" "jfr-converter.jar")
                 else
-                    pna_artifact_names=("async-profiler-2.9-linux-musl-x64.tar.gz" "async-profiler.jar" "jfr-converter.jar")
+                    pna_artifact_names=("async-profiler-${p_repo_last_pretty_version}-linux-musl-x64.tar.gz" "async-profiler.jar" "jfr-converter.jar")
                 fi
             else
                 if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("async-profiler-2.9-linux-arm64.tar.gz" "async-profiler.jar" "jfr-converter.jar")
+                    pna_artifact_names=("async-profiler-${p_repo_last_pretty_version}-linux-arm64.tar.gz" "async-profiler.jar" "jfr-converter.jar")
                 else
-                    pna_artifact_names=("async-profiler-4.0-linux-x64.tar.gz" "async-profiler.jar" "jfr-converter.jar")
+                    pna_artifact_names=("async-profiler-${p_repo_last_pretty_version}-linux-x64.tar.gz" "async-profiler.jar" "jfr-converter.jar")
                 fi
             fi
             pna_artifact_types=(20 0 0)
@@ -4326,27 +4385,34 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -ne 0 ]; then
 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-                copy_binary_on_command "${l_source_path}" "bat" 0 1
+                copy_binary_file "${l_source_path}" "bat" 0 1
 
                 #Copiar los archivos de ayuda man para comando
                 copy_man_files "${g_temp_path}/${l_source_path}" 1
 
                 #Copiar los archivos de autocompletado
-                echo "Copiando \"autocomplete/bat.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
-                cp "${g_temp_path}/${l_source_path}/autocomplete/bat.bash" ${g_repo_path}/shell/bash/login/autocomplete/bat.bash
-                echo "Copiando \"autocomplete/_bat.ps1\" a \"~/.files/shell/powershell/login/autocomplete/\" ..."
-                cp "${g_temp_path}/${l_source_path}/autocomplete/_bat.ps1" ${g_repo_path}/shell/powershell/login/autocomplete/bat.ps1
+                create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+                create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'others'
 
-                #Si se ejecuta un usuario (es root) y es diferente al usuario owner del home de instalación
-                if [ $g_runner_is_target_user -ne 0 ]; then
-                    chown "${g_targethome_owner}:${g_targethome_group}" "${g_repo_path}/shell/bash/login/autocomplete/bat.bash"
-                    chown "${g_targethome_owner}:${g_targethome_group}" "${g_repo_path}/shell/powershell/login/autocomplete/bat.ps1"
-                fi
+                #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'others'
+
+                copy_file_on_tools "${l_source_path}/autocomplete" "bat.bash" 0 "shell/autocomplete/bash"       "bat.bash" 0
+                copy_file_on_tools "${l_source_path}/autocomplete" "_bat.ps1" 0 "shell/autocomplete/powershell" "bat.ps1"  0
+
 
             else
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "bat.exe" 1 1
+                copy_binary_file "${l_source_path}" "bat.exe" 1 1
 
             fi
             ;;
@@ -4359,27 +4425,33 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -ne 0 ]; then
 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-                copy_binary_on_command "${l_source_path}" "rg" 0 1
+                copy_binary_file "${l_source_path}" "rg" 0 1
 
                 #Copiar los archivos de ayuda man para comando
                 copy_man_files "${g_temp_path}/${l_source_path}/doc" 1
 
-                #Copiar los script de completado
-                echo "Copiando \"complete/rg.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
-                cp "${g_temp_path}/${l_source_path}/complete/rg.bash" ${g_repo_path}/shell/bash/login/autocomplete/rg.bash
-                echo "Copiando \"complete/_rg.ps1\" a \"~/.files/shell/powershell/login/autocomplete/\" ..."
-                cp "${g_temp_path}/${l_source_path}/complete/_rg.ps1" ${g_repo_path}/shell/powershell/login/autocomplete/rg.ps1
+                #Copiar los archivos de autocompletado
+                create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+                create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'others'
 
-                #Si se ejecuta un usuario (es root) y es diferente al usuario owner del home de instalación
-                if [ $g_runner_is_target_user -ne 0 ]; then
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/rg.bash
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/powershell/login/autocomplete/rg.ps1
-                fi
+                #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'others'
+
+                copy_file_on_tools "${l_source_path}/complete" "rg.bash" 0 "shell/autocomplete/bash"       "rg.bash" 0
+                copy_file_on_tools "${l_source_path}/complete" "_rg.ps1" 0 "shell/autocomplete/powershell" "rg.ps1"  0
 
             else
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "rg.exe" 1 1
+                copy_binary_file "${l_source_path}" "rg.exe" 1 1
 
             fi
             ;;
@@ -4394,12 +4466,12 @@ function _copy_artifact_files() {
         #    if [ $p_is_win_binary -ne 0 ]; then
 
         #        #Copiar el comando
-        #        copy_binary_on_command "${l_source_path}" "xsv" 0 1
+        #        copy_binary_file "${l_source_path}" "xsv" 0 1
 
         #    else
 
         #        #Copiar el comando
-        #        copy_binary_on_command "${l_source_path}" "xsv.exe" 1 1
+        #        copy_binary_file "${l_source_path}" "xsv.exe" 1 1
 
         #    fi
         #    ;;
@@ -4415,12 +4487,12 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -ne 0 ]; then
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "tspin" 0 1
+                copy_binary_file "${l_source_path}" "tspin" 0 1
 
             else
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "tspin.exe" 1 1
+                copy_binary_file "${l_source_path}" "tspin.exe" 1 1
 
             fi
             ;;
@@ -4437,12 +4509,12 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -ne 0 ]; then
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "xan" 0 1
+                copy_binary_file "${l_source_path}" "xan" 0 1
 
             else
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "xan.exe" 1 1
+                copy_binary_file "${l_source_path}" "xan.exe" 1 1
 
             fi
             ;;
@@ -4457,12 +4529,12 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -ne 0 ]; then
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "opencode" 0 1
+                copy_binary_file "${l_source_path}" "opencode" 0 1
 
             else
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "opencode.exe" 1 1
+                copy_binary_file "${l_source_path}" "opencode.exe" 1 1
 
             fi
             ;;
@@ -4484,7 +4556,7 @@ function _copy_artifact_files() {
                 mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/biome.exe"
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "biome.exe" 1 1
+                copy_binary_file "${l_source_path}" "biome.exe" 1 1
 
                 return 0
             fi
@@ -4495,7 +4567,7 @@ function _copy_artifact_files() {
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/biome"
 
             #Copiar el comando
-            copy_binary_on_command "${l_source_path}" "biome" 0 1
+            copy_binary_file "${l_source_path}" "biome" 0 1
             return 0
             ;;
 
@@ -4511,12 +4583,12 @@ function _copy_artifact_files() {
 
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "delta" 0 1
+                copy_binary_file "${l_source_path}" "delta" 0 1
 
             else
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "delta.exe" 1 1
+                copy_binary_file "${l_source_path}" "delta.exe" 1 1
 
             fi
             ;;
@@ -4535,8 +4607,8 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "less.exe" 1 1
-            copy_binary_on_command "${l_source_path}" "lesskey.exe" 1 1
+            copy_binary_file "${l_source_path}" "less.exe" 1 1
+            copy_binary_file "${l_source_path}" "lesskey.exe" 1 1
             ;;
 
         butane)
@@ -4556,7 +4628,7 @@ function _copy_artifact_files() {
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/butane"
 
             #Copiar el comando
-            copy_binary_on_command "${l_source_path}" "butane" 0 1
+            copy_binary_file "${l_source_path}" "butane" 0 1
             ;;
 
 
@@ -4569,7 +4641,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "fzf.exe" 1 1
+                copy_binary_file "${l_source_path}" "fzf.exe" 1 1
 
                 return 0
             fi
@@ -4580,7 +4652,7 @@ function _copy_artifact_files() {
             if [ $p_artifact_index -eq 0 ]; then
 
                 #Copiar el comando fzf y dar permiso de ejecucion a todos los usuarios
-                copy_binary_on_command "${l_source_path}" "fzf" 0 1
+                copy_binary_file "${l_source_path}" "fzf" 0 1
 
             #Descargar archivos opcionales del comando fzf desde la ultima version de la rama master de su repositorio 'junegunn/fzf'
             elif [ $p_artifact_index -eq 1 ]; then
@@ -4591,33 +4663,36 @@ function _copy_artifact_files() {
                 #Copiar los archivos de ayuda man para comando fzf y el script fzf-tmux
                 copy_man_files "${g_temp_path}/${l_source_path}/man/man1" 1
 
-                #Copiar los script de completado
-                echo "Copiando el script \"./shell/completion.bash\" como \"~/.files/shell/bash/login/autocomplete/fzf.bash\" ..."
-                cp "${g_temp_path}/${l_source_path}/shell/completion.bash" "${g_repo_path}/shell/bash/login/autocomplete/fzf.bash"
 
-                echo "Copiando el script \"./shell/completion.zsh\" como \"~/.files/shell/zsh/login/autocomplete/fzf.zsh\" ..."
-                cp "${g_temp_path}/${l_source_path}/shell/completion.zsh" "${g_repo_path}/shell/zsh/login/autocomplete/fzf.zsh"
+                #Copiar los archivos de autocompletado
+                create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+                create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'others'
+
+                copy_file_on_tools "${l_source_path}/shell" "completion.bash"  0 "shell/autocomplete/bash" "fzf.bash"  0
+                copy_file_on_tools "${l_source_path}/shell" "completion.zsh"   0 "shell/autocomplete/zsh"  "fzf.zsh"   0
+
 
                 #Copiar los script de keybindings
-                echo "Copiando el script \"./shell/key-bindings.bash\" como \"~/.files/shell/bash/login/keybindings/fzf.bash\" ..."
-                cp "${g_temp_path}/${l_source_path}/shell/key-bindings.bash" "${g_repo_path}/shell/bash/login/keybindings/fzf.bash"
+                create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+                create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+                create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'others'
 
-                echo "Copiando el script \"./shell/key-bindings.fish\" como \"~/.files/shell/fish/login/keybindings/fzf.fish\" ..."
-                cp "${g_temp_path}/${l_source_path}/shell/key-bindings.fish" "${g_repo_path}/shell/fish/login/keybindings/fzf.fish"
+                copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash"  0 "shell/keybindings/bash"  "fzf.bash" 0
+                copy_file_on_tools "${l_source_path}/shell" "key-bindings.zsh"   0 "shell/keybindings/zsh"   "fzf.zsh"  0
+                copy_file_on_tools "${l_source_path}/shell" "key-bindings.fish"  0 "shell/keybindings/fish"  "fzf.fish" 0
 
-                echo "Copiando el script \"./shell/key-bindings.zsh\" como \"~/.files/shell/zsh/login/keybindings/fzf.zsh\" ..."
-                cp "${g_temp_path}/${l_source_path}/shell/key-bindings.zsh" "${g_repo_path}/shell/zsh/login/keybindings/fzf.zsh"
-
+                #Copiar otros script
                 echo "Copiando \"./bin/fzf-preview.sh\" como \"~/.files/shell/bash/bin/cmds/fzf-preview.bash\"..."
                 cp "${g_temp_path}/${l_source_path}/bin/fzf-preview.sh" "${g_repo_path}/shell/bash/bin/cmds/fzf-preview.bash"
 
                 if [ $g_runner_is_target_user -ne 0 ]; then
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/autocomplete/fzf.bash
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/autocomplete/fzf.zsh
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/keybindings/fzf.bash
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/keybindings/fzf.fish
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/login/keybindings/fzf.zsh
-                    #chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/bin/cmds/fzf-tmux.bash
                     chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/bin/cmds/fzf-preview.bash
                 fi
 
@@ -4636,7 +4711,7 @@ function _copy_artifact_files() {
                 mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/jq"
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "jq" 0 1
+                copy_binary_file "${l_source_path}" "jq" 0 1
 
             else
 
@@ -4644,7 +4719,7 @@ function _copy_artifact_files() {
                 mv "${g_temp_path}/${l_source_path}/jq-windows-amd64.exe" "${g_temp_path}/${l_source_path}/jq.exe"
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "jq.exe" 1 1
+                copy_binary_file "${l_source_path}" "jq.exe" 1 1
 
             fi
             ;;
@@ -4666,7 +4741,7 @@ function _copy_artifact_files() {
                 fi
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "yq" 0 1
+                copy_binary_file "${l_source_path}" "yq" 0 1
 
                 #Copiar los archivos de ayuda man para comando
                 copy_man_files "${g_temp_path}/${l_source_path}" 1
@@ -4676,7 +4751,7 @@ function _copy_artifact_files() {
                 mv "${g_temp_path}/${l_source_path}/yq_windows_amd64.exe" "${g_temp_path}/${l_source_path}/yq.exe"
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "yq.exe" 1 1
+                copy_binary_file "${l_source_path}" "yq.exe" 1 1
             fi
             ;;
 
@@ -4689,7 +4764,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -ne 0 ]; then
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "rclone" 0 1
+                copy_binary_file "${l_source_path}" "rclone" 0 1
 
                 #Copiar los archivos de ayuda man para comando
                 copy_man_files "${g_temp_path}/${l_source_path}" 1
@@ -4697,7 +4772,7 @@ function _copy_artifact_files() {
             else
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "rclone.exe" 1 1
+                copy_binary_file "${l_source_path}" "rclone.exe" 1 1
             fi
             ;;
 
@@ -4717,7 +4792,7 @@ function _copy_artifact_files() {
                     mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/oh-my-posh"
 
                     #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-                    copy_binary_on_command "${l_source_path}" "oh-my-posh" 0 1
+                    copy_binary_file "${l_source_path}" "oh-my-posh" 0 1
 
                 #Instalación del tema
                 else
@@ -4741,7 +4816,7 @@ function _copy_artifact_files() {
                     mv "${g_temp_path}/${l_source_path}/posh-windows-amd64.exe" "${g_temp_path}/${l_source_path}/oh-my-posh.exe"
 
                     #Copiar el comando
-                    copy_binary_on_command "${l_source_path}" "oh-my-posh.exe" 1 1
+                    copy_binary_file "${l_source_path}" "oh-my-posh.exe" 1 1
 
                 #Instalación del tema
                 else
@@ -4760,7 +4835,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "zoxide.exe" 1 1
+                copy_binary_file "${l_source_path}" "zoxide.exe" 1 1
                 return 0
 
             fi
@@ -4768,38 +4843,37 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiar el comando
-            copy_binary_on_command "${l_source_path}" "zoxide" 0 1
+            copy_binary_file "${l_source_path}" "zoxide" 0 1
 
             #Copiar los archivos de ayuda man para comando
             copy_man_files "${g_temp_path}/${l_source_path}/man/man1" 1
 
-            #Copiar los script de completado
-            echo "Copiando \"./completions/zoxide.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/zoxide.bash" ${g_repo_path}/shell/bash/login/autocomplete/zoxide.bash
 
-            echo "Copiando \"./completions/zoxide.fish\" a \"~/.files/shell/fish/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/zoxide.fish" ${g_repo_path}/shell/fish/login/autocomplete/zoxide.fish
+            #Copiar los archivos de autocompletado
+            create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'others'
 
-            echo "Copiando \"./completions/_zoxide\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/_zoxide" ${g_repo_path}/shell/zsh/login/autocomplete/zoxide.zsh
+            copy_file_on_tools "${l_source_path}/completions" "zoxide.bash" 0 "shell/autocomplete/bash"       "zoxide.bash" 0
+            copy_file_on_tools "${l_source_path}/completions" "_zoxide"     0 "shell/autocomplete/zsh"        "zoxide.zsh"  0
+            copy_file_on_tools "${l_source_path}/completions" "zoxide.fish" 0 "shell/autocomplete/fish"       "zoxide.fish" 0
+            copy_file_on_tools "${l_source_path}/completions" "zoxide.ps1"  0 "shell/autocomplete/powershell" "zoxide.ps1"  0
+            copy_file_on_tools "${l_source_path}/completions" "zoxide.ts"   0 "shell/autocomplete/others"     "zoxide.ts"   0
+            copy_file_on_tools "${l_source_path}/completions" "_zoxide.elv" 0 "shell/autocomplete/others"     "zoxide.elv"  0
 
-            echo "Copiando \"./completions/zoxide.elv\" a \"~/.files/shell/others/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/zoxide.elv" ${g_repo_path}/shell/others/login/autocomplete/zoxide.elv
 
-            echo "Copiando \"./completions/zoxide.ts\" a \"~/.files/shell/others/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/zoxide.ts" ${g_repo_path}/shell/others/login/autocomplete/zoxide.ts
+            #Copiar los script de keybindings
+            #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'others'
 
-            echo "Copiando \"./completions/_zoxide.ps1\" a \"~/.files/shell/powershell/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/_zoxide.ps1" ${g_repo_path}/shell/powershell/login/autocomplete/zoxide.ps1
-
-            if [ $g_runner_is_target_user -ne 0 ]; then
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/zoxide.bash
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/fish/login/autocomplete/zoxide.fish
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/zsh/login/autocomplete/zoxide.zsh
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/others/login/autocomplete/zoxide.elv
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/others/login/autocomplete/zoxide.ts
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/powershell/login/autocomplete/zoxide.ps1
-            fi
+            #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
             ;;
 
 
@@ -4816,7 +4890,7 @@ function _copy_artifact_files() {
                 if [ $p_artifact_index -eq 0 ]; then
 
                     #Copiar el comando
-                    copy_binary_on_command "${l_source_path}" "eza.exe" 1 1
+                    copy_binary_file "${l_source_path}" "eza.exe" 1 1
 
                 fi
                 return 0
@@ -4828,7 +4902,7 @@ function _copy_artifact_files() {
             if [ $p_artifact_index -eq 0 ]; then
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "eza" 0 1
+                copy_binary_file "${l_source_path}" "eza" 0 1
 
 
             #Copiar los archivos de autocompletado
@@ -4836,24 +4910,29 @@ function _copy_artifact_files() {
 
                 l_source_path="${l_source_path}/target/completions-${p_repo_last_pretty_version}"
 
-                echo "Copiando \"${l_source_path}/eza\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
-                cp "${g_temp_path}/${l_source_path}/eza" ${g_repo_path}/shell/bash/login/autocomplete/eza.bash
+                #Copiar los archivos de autocompletado
+                create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+                create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+                create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+                #create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+                create_folderpath_on_tools 0 'shell/autocomplete' 'others'
 
-                echo "Copiando \"${l_source_path}/_eza\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
-                cp "${g_temp_path}/${l_source_path}/_eza" ${g_repo_path}/shell/zsh/login/autocomplete/eza.zsh
+                copy_file_on_tools "${l_source_path}" "eza"      0 "shell/autocomplete/bash"   "eza.bash" 0
+                copy_file_on_tools "${l_source_path}" "_eza"     0 "shell/autocomplete/zsh"    "eza.zsh"  0
+                copy_file_on_tools "${l_source_path}" "eza.fish" 0 "shell/autocomplete/fish"   "eza.fish" 0
+                copy_file_on_tools "${l_source_path}" "eza.nu"   0 "shell/autocomplete/others" "eza.nu"   0
 
-                echo "Copiando \"${l_source_path}/eza.nu\" a \"~/.files/shell/others/login/autocomplete/\" ..."
-                cp "${g_temp_path}/${l_source_path}/eza.nu" ${g_repo_path}/shell/others/login/autocomplete/eza.nu
 
-                echo "Copiando \"${l_source_path}/eza.fish\" a \"~/.files/shell/fish/login/autocomplete/\" ..."
-                cp "${g_temp_path}/${l_source_path}/eza.fish" ${g_repo_path}/shell/fish/login/autocomplete/eza.fish
+                #Copiar los script de keybindings
+                #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+                #create_folderpath_on_tools 0 'shell/keybindings' 'others'
 
-                if [ $g_runner_is_target_user -ne 0 ]; then
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/eza.bash
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/fish/login/autocomplete/eza.fish
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/zsh/login/autocomplete/eza.zsh
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/others/login/autocomplete/eza.nu
-                fi
+                #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
 
 
             #Copiar los archivos de ayuda (man)
@@ -4882,7 +4961,7 @@ function _copy_artifact_files() {
                 mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/websocat.exe"
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "websocat.exe" 1 1
+                copy_binary_file "${l_source_path}" "websocat.exe" 1 1
 
                 return 0
             fi
@@ -4893,7 +4972,7 @@ function _copy_artifact_files() {
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/websocat"
 
             #Copiar el comando
-            copy_binary_on_command "${l_source_path}" "websocat" 0 1
+            copy_binary_file "${l_source_path}" "websocat" 0 1
             return 0
             ;;
 
@@ -4921,10 +5000,10 @@ function _copy_artifact_files() {
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/tmux-fingers"
 
             #Copiar el comando
-            copy_binary_on_command "${l_source_path}" "tmux-fingers" 0 1
+            copy_binary_file "${l_source_path}" "tmux-fingers" 0 1
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "tmux-fingers.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "tmux-fingers.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -4946,8 +5025,8 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Copiar el comando
-            copy_binary_on_command "${l_source_path}" "tmux-thumbs" 0 1
-            copy_binary_on_command "${l_source_path}" "thumbs" 0 1
+            copy_binary_file "${l_source_path}" "tmux-thumbs" 0 1
+            copy_binary_file "${l_source_path}" "thumbs" 0 1
             ;;
 
 
@@ -4961,8 +5040,8 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows y se copia binarios de windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "yazi.exe" 1 1
-                copy_binary_on_command "${l_source_path}" "ya.exe" 1 1
+                copy_binary_file "${l_source_path}" "yazi.exe" 1 1
+                copy_binary_file "${l_source_path}" "ya.exe" 1 1
                 return 0
 
             fi
@@ -4970,55 +5049,47 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "yazi" 0 1
-            copy_binary_on_command "${l_source_path}" "ya" 0 1
+            copy_binary_file "${l_source_path}" "yazi" 0 1
+            copy_binary_file "${l_source_path}" "ya" 0 1
 
 
             #Copiar los archivos de autocompletado
-            echo "Copiando \"./completions/yazi.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/yazi.bash" ${g_repo_path}/shell/bash/login/autocomplete/yazi.bash
+            create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'others'
 
-            echo "Copiando \"./completions/_yazi\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/_yazi" ${g_repo_path}/shell/zsh/login/autocomplete/yazi.zsh
-
-            echo "Copiando \"./completions/yazi.elv\" a \"~/.files/shell/others/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/yazi.elv" ${g_repo_path}/shell/others/login/autocomplete/yazi.elv
-
-            echo "Copiando \"./completions/yazi.fish\" a \"~/.files/shell/fish/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/yazi.fish" ${g_repo_path}/shell/fish/login/autocomplete/yazi.fish
-
-            echo "Copiando \"./completions/yazi.nu\" a \"~/.files/shell/others/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/yazi.nu" ${g_repo_path}/shell/others/login/autocomplete/yazi.nu
-
-            echo "Copiando \"./completions/yazi.ts\" a \"~/.files/shell/others/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/yazi.ts" ${g_repo_path}/shell/others/login/autocomplete/yazi.ts
-
-            echo "Copiando \"./completions/_yazi.ps1\" a \"~/.files/shell/powershell/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/_yazi.ps1" ${g_repo_path}/shell/powershell/login/autocomplete/yazi.ps1
+            copy_file_on_tools "${l_source_path}/completions" "yazi.bash"   0 "shell/autocomplete/bash"       "yazi.bash"  0
+            copy_file_on_tools "${l_source_path}/completions" "_yazi"       0 "shell/autocomplete/zsh"        "yazi.zsh"   0
+            copy_file_on_tools "${l_source_path}/completions" "yazi.fish"   0 "shell/autocomplete/fish"       "yazi.fish"  0
+            copy_file_on_tools "${l_source_path}/completions" "_yazi.ps1"   0 "shell/autocomplete/powershell" "yazi.ps1"   0
+            copy_file_on_tools "${l_source_path}/completions" "yazi.ts"     0 "shell/autocomplete/others"     "yazi.ts"    0
+            copy_file_on_tools "${l_source_path}/completions" "yazi.elv"    0 "shell/autocomplete/others"     "yazi.elv"   0
+            copy_file_on_tools "${l_source_path}/completions" "yazi.nu"     0 "shell/autocomplete/others"     "yazi.nu"    0
 
 
-            echo "Copiando \"./completions/ya.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/ya.bash" ${g_repo_path}/shell/bash/login/autocomplete/ya.bash
-
-            echo "Copiando \"./completions/_ya\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/_ya" ${g_repo_path}/shell/zsh/login/autocomplete/ya.zsh
-
-            echo "Copiando \"./completions/ya.elv\" a \"~/.files/shell/others/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/ya.elv" ${g_repo_path}/shell/others/login/autocomplete/ya.elv
-
-            echo "Copiando \"./completions/ya.fish\" a \"~/.files/shell/fish/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/ya.fish" ${g_repo_path}/shell/fish/login/autocomplete/ya.fish
-
-            echo "Copiando \"./completions/ya.nu\" a \"~/.files/shell/others/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/ya.nu" ${g_repo_path}/shell/others/login/autocomplete/ya.nu
-
-            echo "Copiando \"./completions/ya.ts\" a \"~/.files/shell/others/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/ya.ts" ${g_repo_path}/shell/others/login/autocomplete/ya.ts
-
-            echo "Copiando \"./completions/_ya.ps1\" a \"~/.files/shell/powershell/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/_ya.ps1" ${g_repo_path}/shell/powershell/login/autocomplete/ya.ps1
+            copy_file_on_tools "${l_source_path}/completions" "ya.bash"   0 "shell/autocomplete/bash"       "ya.bash"   0
+            copy_file_on_tools "${l_source_path}/completions" "_ya"       0 "shell/autocomplete/zsh"        "ya.zsh"    0
+            copy_file_on_tools "${l_source_path}/completions" "ya.fish"   0 "shell/autocomplete/fish"       "ya.fish"   0
+            copy_file_on_tools "${l_source_path}/completions" "_ya.ps1"   0 "shell/autocomplete/powershell" "ya.ps1"    0
+            copy_file_on_tools "${l_source_path}/completions" "ya.ts"     0 "shell/autocomplete/others"     "ya.ts"     0
+            copy_file_on_tools "${l_source_path}/completions" "ya.elv"    0 "shell/autocomplete/others"     "ya.elv"    0
+            copy_file_on_tools "${l_source_path}/completions" "ya.nu"     0 "shell/autocomplete/others"     "ya.nu"     0
 
 
+            #Copiar los script de keybindings
+            #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'others'
+
+            #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
+
+            # Copiando/descargado otros archivos
             printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "flavor.toml" "~/.cofig/yazi/flavors/catppuccin-mocha.yazi/"
             curl -fLo ${g_repo_path}/etc/yazi/catppuccin-mocha/flavor.toml https://raw.githubusercontent.com/yazi-rs/flavors/main/catppuccin-mocha.yazi/flavor.toml
 
@@ -5026,24 +5097,6 @@ function _copy_artifact_files() {
             curl -fLo ${g_repo_path}/etc/yazi/catppuccin-mocha/tmtheme.xml  https://raw.githubusercontent.com/yazi-rs/flavors/main/catppuccin-mocha.yazi/tmtheme.xml
 
             if [ $g_runner_is_target_user -ne 0 ]; then
-
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/yazi.bash
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/fish/login/autocomplete/yazi.fish
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/zsh/login/autocomplete/yazi.zsh
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/others/login/autocomplete/yazi.nu
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/others/login/autocomplete/yazi.elv
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/others/login/autocomplete/yazi.ts
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/powershell/login/autocomplete/yazi.ps1
-
-
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/ya.bash
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/fish/login/autocomplete/ya.fish
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/zsh/login/autocomplete/ya.zsh
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/others/login/autocomplete/ya.nu
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/others/login/autocomplete/ya.elv
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/others/login/autocomplete/ya.ts
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/powershell/login/autocomplete/ya.ps1
-
                 chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/yazi/catppuccin-mocha/flavor.toml
                 chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/yazi/catppuccin-mocha/tmtheme.xml
             fi
@@ -5059,7 +5112,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows y se copia binarios de windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "lazygit.exe" 1 1
+                copy_binary_file "${l_source_path}" "lazygit.exe" 1 1
                 return 0
 
             fi
@@ -5067,7 +5120,7 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "lazygit" 0 1
+            copy_binary_file "${l_source_path}" "lazygit" 0 1
             ;;
 
 
@@ -5089,28 +5142,33 @@ function _copy_artifact_files() {
             #A. Si es Linux (no WSL)
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "rmpc" 0 1
+            copy_binary_file "${l_source_path}" "rmpc" 0 1
 
             #Copiar los archivos de ayuda man para comando
             copy_man_files "${g_temp_path}/${l_source_path}/man" 1
 
             #Copiar los archivos de autocompletado
-            echo "Copiando \"./completions/rmpc.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/rmpc.bash" ${g_repo_path}/shell/bash/login/autocomplete/rmpc.bash
+            create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'others'
 
-            echo "Copiando \"./completions/rmpc.fish\" a \"~/.files/shell/fish/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/rmpc.fish" ${g_repo_path}/shell/fish/login/autocomplete/rmpc.fish
+            copy_file_on_tools "${l_source_path}/completions" "rmpc.bash"     0 "shell/autocomplete/bash"       "rmpc.bash"  0
+            copy_file_on_tools "${l_source_path}/completions" "_rmpc"         0 "shell/autocomplete/zsh"        "rmpc.zsh"   0
+            copy_file_on_tools "${l_source_path}/completions" "rmpc.fish"     0 "shell/autocomplete/fish"       "rmpc.fish"  0
 
-            echo "Copiando \"./completions/_yazi\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/_rmpc" ${g_repo_path}/shell/zsh/login/autocomplete/rmpc.zsh
 
-            if [ $g_runner_is_target_user -ne 0 ]; then
+            #Copiar los script de keybindings
+            #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'others'
 
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/rmpc.bash
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/fish/login/autocomplete/rmpc.fish
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/zsh/login/autocomplete/rmpc.zsh
-
-            fi
+            #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
             ;;
 
 
@@ -5123,7 +5181,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows y se copia binarios de windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "fd.exe" 1 1
+                copy_binary_file "${l_source_path}" "fd.exe" 1 1
                 return 0
 
             fi
@@ -5131,23 +5189,32 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "fd" 0 1
+            copy_binary_file "${l_source_path}" "fd" 0 1
 
             #Copiar los archivos de ayuda man para comando
             copy_man_files "${g_temp_path}/${l_source_path}" 1
 
-            #Copiar los script de completado
-            echo "Copiando \"autocomplete/fd.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/autocomplete/fd.bash" ${g_repo_path}/shell/bash/login/autocomplete/fd.bash
-            echo "Copiando \"autocomplete/fd.ps1\" a \"~/.files/shell/powershell/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/autocomplete/fd.ps1" ${g_repo_path}/shell/powershell/login/autocomplete/fd.ps1
+            #Copiar los archivos de autocompletado
+            create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'others'
 
-            #Fix permisos
-            if [ $g_runner_is_target_user -ne 0 ]; then
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/fd.bash
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/powershell/login/autocomplete/fd.ps1
-            fi
+            copy_file_on_tools "${l_source_path}/completions" "fd.bash"     0 "shell/autocomplete/bash"       "fd.bash"  0
+            copy_file_on_tools "${l_source_path}/completions" "fd.ps1"      0 "shell/autocomplete/powershell" "fd.ps1"   0
 
+
+            #Copiar los script de keybindings
+            #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'others'
+
+            #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
             ;;
 
 
@@ -5160,7 +5227,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows y se copia binarios de windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "jwt.exe" 1 1
+                copy_binary_file "${l_source_path}" "jwt.exe" 1 1
                 return 0
 
             fi
@@ -5168,7 +5235,7 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "jwt" 0 1
+            copy_binary_file "${l_source_path}" "jwt" 0 1
             ;;
 
         grpcurl)
@@ -5179,7 +5246,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "grpcurl.exe" 1 1
+                copy_binary_file "${l_source_path}" "grpcurl.exe" 1 1
                 return 0
 
             fi
@@ -5187,7 +5254,7 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "grpcurl" 0 1
+            copy_binary_file "${l_source_path}" "grpcurl" 0 1
             ;;
 
 
@@ -5200,7 +5267,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows y se copia binarios de windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "evans.exe" 1 1
+                copy_binary_file "${l_source_path}" "evans.exe" 1 1
                 return 0
 
             fi
@@ -5208,7 +5275,7 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "evans" 0 1
+            copy_binary_file "${l_source_path}" "evans" 0 1
             ;;
 
 
@@ -5228,7 +5295,7 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "dive" 0 1
+            copy_binary_file "${l_source_path}" "dive" 0 1
             ;;
 
 
@@ -5251,9 +5318,9 @@ function _copy_artifact_files() {
 
             #Copiando el binario en una ruta del path
             if [ $p_artifact_index -eq 0 ]; then
-                copy_binary_on_command "${l_source_path}" "crictl" 0 1
+                copy_binary_file "${l_source_path}" "crictl" 0 1
             else
-                copy_binary_on_command "${l_source_path}" "critest" 0 1
+                copy_binary_file "${l_source_path}" "critest" 0 1
             fi
             ;;
 
@@ -5266,7 +5333,7 @@ function _copy_artifact_files() {
             #A. Si es binario Windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "flamelens.exe" 1 1
+                copy_binary_file "${l_source_path}" "flamelens.exe" 1 1
                 return 0
 
             fi
@@ -5274,7 +5341,7 @@ function _copy_artifact_files() {
             #B. Si es binario Linux
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}/${p_artifact_filename_woext}" "flamelens" 0 1
+            copy_binary_file "${l_source_path}/${p_artifact_filename_woext}" "flamelens" 0 1
             ;;
 
 
@@ -5288,7 +5355,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "qsv" 2 ""
+                create_or_clean_folder_on_tools 1 "qsv" 2 ""
 
                 #Descomprimir
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "qsv" "" ""
@@ -5304,7 +5371,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "qsv" 2 ""
+            create_or_clean_folder_on_tools 0 "qsv" 2 ""
 
             #Descomprimir
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "qsv" "" ""
@@ -5317,6 +5384,135 @@ function _copy_artifact_files() {
 
 
 
+        tree-sitter)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                echo "Renombrando \"${p_artifact_filename_woext}.exe\" como \"${g_temp_path}/${l_source_path}/tree-sitter.exe\" ..."
+                mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/tree-sitter.exe"
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "tree-sitter.exe" 1 1
+
+                return 0
+
+            fi
+
+            echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/tree-sitter\" ..."
+            mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/tree-sitter"
+
+            #Copiar el comando
+            copy_binary_file "${l_source_path}" "tree-sitter" 0 1
+            ;;
+
+
+
+        distrobox)
+
+            #A. Si es un binario Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
+                return 40
+
+            fi
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}/distrobox-${p_repo_last_pretty_version}"
+
+            #B. Si es binario Linux (no WSL)
+
+            #Copiando el binario en una ruta del path
+            copy_binary_file "${l_source_path}" "distrobox"                0 1
+            copy_binary_file "${l_source_path}" "distrobox-assemble"       0 1
+            copy_binary_file "${l_source_path}" "distrobox-create"         0 1
+            copy_binary_file "${l_source_path}" "distrobox-enter"          0 1
+            copy_binary_file "${l_source_path}" "distrobox-ephemeral"      0 1
+            copy_binary_file "${l_source_path}" "distrobox-export"         0 1
+            copy_binary_file "${l_source_path}" "distrobox-generate-entry" 0 1
+            copy_binary_file "${l_source_path}" "distrobox-host-exec"      0 1
+            copy_binary_file "${l_source_path}" "distrobox-init"           0 1
+            copy_binary_file "${l_source_path}" "distrobox-list"           0 1
+            copy_binary_file "${l_source_path}" "distrobox-rm"             0 1
+            copy_binary_file "${l_source_path}" "distrobox-stop"           0 1
+            copy_binary_file "${l_source_path}" "distrobox-upgrade"        0 1
+
+            #Copiar los archivos de ayuda man para comando
+            copy_man_files "${g_temp_path}/${l_source_path}/man" 1
+
+            #Copiando los iconos de la aplicacion
+            local la_app_icons=(
+                'terminal-distrobox-icon.svg'
+                'hicolor/16x16/apps/terminal-distrobox-icon.png'
+                'hicolor/22x22/apps/terminal-distrobox-icon.png'
+                'hicolor/24x24/apps/terminal-distrobox-icon.png'
+                'hicolor/32x32/apps/terminal-distrobox-icon.png'
+                'hicolor/36x36/apps/terminal-distrobox-icon.png'
+                'hicolor/48x48/apps/terminal-distrobox-icon.png'
+                'hicolor/64x64/apps/terminal-distrobox-icon.png'
+                'hicolor/72x72/apps/terminal-distrobox-icon.png'
+                'hicolor/96x96/apps/terminal-distrobox-icon.png'
+                'hicolor/128x128/apps/terminal-distrobox-icon.png'
+                'hicolor/256x256/apps/terminal-distrobox-icon.png'
+                )
+                copy_app_icon_files "${l_source_path}/icons" "la_app_icons"
+
+            #Copiando los archivos de al folder de tools:
+            #Copiar los archivos de autocompletado
+            create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'others'
+
+
+            copy_file_on_tools "${l_source_path}/completions/bash" "distrobox"                 0 "shell/autocomplete/bash" "distrobox.bash"                 0
+            copy_file_on_tools "${l_source_path}/completions/bash" "distrobox-assemble"        0 "shell/autocomplete/bash" "distrobox-assemble.bash"        0
+            copy_file_on_tools "${l_source_path}/completions/bash" "distrobox-create"          0 "shell/autocomplete/bash" "distrobox-create.bash"          0
+            copy_file_on_tools "${l_source_path}/completions/bash" "distrobox-enter"           0 "shell/autocomplete/bash" "distrobox-enter.bash"           0
+            copy_file_on_tools "${l_source_path}/completions/bash" "distrobox-ephemeral"       0 "shell/autocomplete/bash" "distrobox-ephemeral.bash"       0
+            copy_file_on_tools "${l_source_path}/completions/bash" "distrobox-generate-entry"  0 "shell/autocomplete/bash" "distrobox-generate-entry.bash"  0
+            copy_file_on_tools "${l_source_path}/completions/bash" "distrobox-list"            0 "shell/autocomplete/bash" "distrobox-list.bash"            0
+            copy_file_on_tools "${l_source_path}/completions/bash" "distrobox-rm"              0 "shell/autocomplete/bash" "distrobox-rm.bash"              0
+            copy_file_on_tools "${l_source_path}/completions/bash" "distrobox-stop"            0 "shell/autocomplete/bash" "distrobox-stop.bash"            0
+            copy_file_on_tools "${l_source_path}/completions/bash" "distrobox-upgrade"         0 "shell/autocomplete/bash" "distrobox-upgrade.bash"         0
+
+            copy_file_on_tools "${l_source_path}/completions/zsh"  "_distrobox"                0 "shell/autocomplete/zsh" "distrobox.zsh"                   0
+            copy_file_on_tools "${l_source_path}/completions/zsh"  "_distrobox-assemble"       0 "shell/autocomplete/zsh" "distrobox-assemble.zsh"          0
+            copy_file_on_tools "${l_source_path}/completions/zsh"  "_distrobox-create"         0 "shell/autocomplete/zsh" "distrobox-create.zsh"            0
+            copy_file_on_tools "${l_source_path}/completions/zsh"  "_distrobox-enter"          0 "shell/autocomplete/zsh" "distrobox-enter.zsh"             0
+            copy_file_on_tools "${l_source_path}/completions/zsh"  "_distrobox-ephemeral"      0 "shell/autocomplete/zsh" "distrobox-ephemeral.zsh"         0
+            copy_file_on_tools "${l_source_path}/completions/zsh"  "_distrobox-generate-entry" 0 "shell/autocomplete/zsh" "distrobox-generate-entry.zsh"    0
+            copy_file_on_tools "${l_source_path}/completions/zsh"  "_distrobox-list"           0 "shell/autocomplete/zsh" "distrobox-list.zsh"              0
+            copy_file_on_tools "${l_source_path}/completions/zsh"  "_distrobox-rm"             0 "shell/autocomplete/zsh" "distrobox-rm.zsh"                0
+            copy_file_on_tools "${l_source_path}/completions/zsh"  "_distrobox-stop"           0 "shell/autocomplete/zsh" "distrobox-stop.zsh"              0
+            copy_file_on_tools "${l_source_path}/completions/zsh"  "_distrobox-upgrade"        0 "shell/autocomplete/zsh" "distrobox-upgrade.zsh"           0
+
+            #Copiar los script de keybindings
+            #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'others'
+
+            #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
+
+
+            #Copiar otros archivos
+            create_folderpath_on_tools 0 '' 'distrobox/docs/icons'
+            copy_file_on_tools "${l_source_path}" "uninstall" 0 "distrobox" "uninstall.bash" 0
+            copy_files_on_tools "${l_source_path}/docs/assets/png/distros" "" 0 "distrobox/docs/icons" 0 0
+            ;;
+
+
 
         powershell_es)
 
@@ -5327,7 +5523,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "lsp_servers/powershell_es" 2 ""
+                create_or_clean_folder_on_tools 1 "lsp_servers/powershell_es" 2 ""
 
                 #Descomprimir
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "lsp_servers/powershell_es" "" ""
@@ -5337,7 +5533,7 @@ function _copy_artifact_files() {
                 fi
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "$p_repo_id" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "$p_repo_id" "$p_repo_last_pretty_version" 1
 
                 return 0
             fi
@@ -5346,7 +5542,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "lsp_servers/powershell_es" 2 ""
+            create_or_clean_folder_on_tools 0 "lsp_servers/powershell_es" 2 ""
 
             #Descomprimir
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "lsp_servers/powershell_es" "" ""
@@ -5356,7 +5552,7 @@ function _copy_artifact_files() {
             fi
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "$p_repo_id" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "$p_repo_id" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -5370,29 +5566,29 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "lsp_servers/markdown_ls" 2 ""
+                create_or_clean_folder_on_tools 1 "lsp_servers/markdown_ls" 2 ""
 
                 #Copiar el comando
-                copy_binary_on_program "${l_source_path}" "marksman.exe" 1 "lsp_servers/markdown_ls" 1
+                copy_files_on_tools "${l_source_path}" "marksman.exe" 1 "lsp_servers/markdown_ls" 1 1
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "marksman.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "marksman.info" "$p_repo_last_pretty_version" 1
 
                 return 0
             fi
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "lsp_servers/markdown_ls" 2 ""
+            create_or_clean_folder_on_tools 0 "lsp_servers/markdown_ls" 2 ""
 
 
             echo "Renombrando \"${p_artifact_filename}\" como \"${g_temp_path}/${l_source_path}/marksman\" ..."
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename}" "${g_temp_path}/${l_source_path}/marksman"
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_program "${l_source_path}" "marksman" 0 "lsp_servers/markdown_ls" 1
+            copy_files_on_tools "${l_source_path}" "marksman" 0 "lsp_servers/markdown_ls" 1 1
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "marksman.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "marksman.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -5406,24 +5602,24 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "lsp_servers/toml_ls" 2 ""
+                create_or_clean_folder_on_tools 1 "lsp_servers/toml_ls" 2 ""
 
                 #Copiar el comando
-                copy_binary_on_program "${l_source_path}" "taplo.exe" 1 "lsp_servers/toml_ls" 1
+                copy_files_on_tools "${l_source_path}" "taplo.exe" 1 "lsp_servers/toml_ls" 1 1
 
                 return 0
 
             fi
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "lsp_servers/toml_ls" 2 ""
+            create_or_clean_folder_on_tools 0 "lsp_servers/toml_ls" 2 ""
 
 
             echo "Renombrando \"${p_artifact_filename}\" como \"${g_temp_path}/${l_source_path}/taplo\" ..."
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename}" "${g_temp_path}/${l_source_path}/taplo"
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_program "${l_source_path}" "taplo" 0 "lsp_servers/toml_ls" 1
+            copy_files_on_tools "${l_source_path}" "taplo" 0 "lsp_servers/toml_ls" 1 1
             ;;
 
 
@@ -5437,32 +5633,32 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "lsp_servers/xml_ls" 2 ""
+                create_or_clean_folder_on_tools 1 "lsp_servers/xml_ls" 2 ""
 
                 echo "Renombrando \"${p_artifact_filename_woext}.exe\" como \"${g_temp_path}/${l_source_path}/lemminx.exe\" ..."
                 mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/lemminx.exe"
 
                 #Copiar el comando
-                copy_binary_on_program "${l_source_path}" "lemminx.exe" 1 "lsp_servers/xml_ls" 1
+                copy_files_on_tools "${l_source_path}" "lemminx.exe" 1 "lsp_servers/xml_ls" 1 1
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "lemminx.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "lemminx.info" "$p_repo_last_pretty_version" 1
 
                 return 0
             fi
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "lsp_servers/xml_ls" 2 ""
+            create_or_clean_folder_on_tools 0 "lsp_servers/xml_ls" 2 ""
 
 
             echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/lemminx\" ..."
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/lemminx"
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_program "${l_source_path}" "lemminx" 0 "lsp_servers/xml_ls" 1
+            copy_files_on_tools "${l_source_path}" "lemminx" 0 "lsp_servers/xml_ls" 1 1
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "lemminx.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "lemminx.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -5476,18 +5672,18 @@ function _copy_artifact_files() {
 
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "cilium" 0 1
+                copy_binary_file "${l_source_path}" "cilium" 0 1
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "cilium.info" "$p_repo_last_pretty_version" 0
+                save_prettyversion_on_tools "" "cilium.info" "$p_repo_last_pretty_version" 0
 
             else
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "cilium.exe" 1 1
+                copy_binary_file "${l_source_path}" "cilium.exe" 1 1
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "cilium.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "cilium.info" "$p_repo_last_pretty_version" 1
             fi
             ;;
 
@@ -5509,7 +5705,7 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_command "${l_source_path}" "kubelet" 0 1
+            copy_binary_file "${l_source_path}" "kubelet" 0 1
 
             #Desacargar archivos adicionales para su configuración
             mkdir -p ${g_repo_path}/etc/kubelet/systemd
@@ -5517,7 +5713,7 @@ function _copy_artifact_files() {
             l_status=$?
             if [ $l_status -eq 0 ]; then
                 printf 'Creando el archivo "%b~/.files/etc/kubelet/systemd/kubelet.service%b" ... \n' "$g_color_gray1" "$g_color_reset"
-                echo "$l_aux" | sed "s:/usr/bin:${g_bin_cmdpath}:g" > ${g_repo_path}/etc/kubelet/systemd/kubelet.service
+                echo "$l_aux" | sed "s:/usr/bin:${g_lnx_bin_path}:g" > ${g_repo_path}/etc/kubelet/systemd/kubelet.service
 
                 #Fix permisos
                 if [ $g_runner_is_target_user -ne 0 ]; then
@@ -5544,7 +5740,7 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_command "${l_source_path}" "kubeadm" 0 1
+            copy_binary_file "${l_source_path}" "kubeadm" 0 1
 
             #Desacargar archivos adicionales para su configuración
             mkdir -p ${g_repo_path}/etc/kubeadm
@@ -5552,7 +5748,7 @@ function _copy_artifact_files() {
             l_status=$?
             if [ $l_status -eq 0 ]; then
                 printf 'Creando el archivo "%b~/.files/etc/kubeadm/10-kubeadm.conf%b" ... \n' "$g_color_gray1" "$g_color_reset"
-                echo "$l_aux" | sed "s:/usr/bin:${g_bin_cmdpath}:g" > ${g_repo_path}/etc/kubeadm/10-kubeadm.conf
+                echo "$l_aux" | sed "s:/usr/bin:${g_lnx_bin_path}:g" > ${g_repo_path}/etc/kubeadm/10-kubeadm.conf
 
                 #Fix permisos
                 if [ $g_runner_is_target_user -ne 0 ]; then
@@ -5572,7 +5768,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows y se copia binarios de windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "kubectl.exe" 1 1
+                copy_binary_file "${l_source_path}" "kubectl.exe" 1 1
                 return 0
 
             fi
@@ -5580,7 +5776,7 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_command "${l_source_path}" "kubectl" 0 1
+            copy_binary_file "${l_source_path}" "kubectl" 0 1
             ;;
 
         oc)
@@ -5591,7 +5787,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows y se copia binarios de windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "oc.exe" 1 1
+                copy_binary_file "${l_source_path}" "oc.exe" 1 1
                 return 0
 
             fi
@@ -5599,7 +5795,7 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_command "${l_source_path}" "oc" 0 1
+            copy_binary_file "${l_source_path}" "oc" 0 1
             ;;
 
         pgo)
@@ -5614,10 +5810,10 @@ function _copy_artifact_files() {
                 echo "Renombrando \"${p_artifact_filename_woext}.exe\" en \"${g_temp_path}/${l_source_path}/kubectl-pgo.exe\" ..."
                 mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/kubectl-pgo.exe"
 
-                copy_binary_on_command "${l_source_path}" "kubectl-pgo.exe" 1 1
+                copy_binary_file "${l_source_path}" "kubectl-pgo.exe" 1 1
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "pgo.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "pgo.info" "$p_repo_last_pretty_version" 1
                 return 0
 
             fi
@@ -5628,10 +5824,10 @@ function _copy_artifact_files() {
             echo "Renombrando \"${p_artifact_filename_woext}\" en \"${g_temp_path}/${l_source_path}/kubectl-pgo\" ..."
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/kubectl-pgo"
 
-            copy_binary_on_command "${l_source_path}" "kubectl-pgo" 0 1
+            copy_binary_file "${l_source_path}" "kubectl-pgo" 0 1
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "pgo.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "pgo.info" "$p_repo_last_pretty_version" 0
             ;;
 
         helm)
@@ -5644,7 +5840,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 l_source_path="${l_source_path}/windows-amd64"
-                copy_binary_on_command "${l_source_path}" "helm.exe" 1 1
+                copy_binary_file "${l_source_path}" "helm.exe" 1 1
                 return 0
 
             fi
@@ -5653,7 +5849,7 @@ function _copy_artifact_files() {
 
             #Copiando el binario en una ruta del path
             l_source_path="${l_source_path}/linux-amd64"
-            copy_binary_on_command "${l_source_path}" "helm" 0 1
+            copy_binary_file "${l_source_path}" "helm" 0 1
             ;;
 
         operator-sdk)
@@ -5680,7 +5876,7 @@ function _copy_artifact_files() {
                 echo "Renombrando \"${p_artifact_filename_woext}\" en \"${g_temp_path}/${l_source_path}/operator-sdk\" ..."
                 mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/operator-sdk"
 
-                copy_binary_on_command "${l_source_path}" "operator-sdk" 0 1
+                copy_binary_file "${l_source_path}" "operator-sdk" 0 1
 
             #Instalacion del SDK para construir el operador usando Helm
             else
@@ -5688,7 +5884,7 @@ function _copy_artifact_files() {
                 echo "Renombrando \"${p_artifact_filename_woext}\" en \"${g_temp_path}/${l_source_path}/helm-operator\" ..."
                 mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/helm-operator"
 
-                copy_binary_on_command "${l_source_path}" "helm-operator" 0 1
+                copy_binary_file "${l_source_path}" "helm-operator" 0 1
 
             fi
             ;;
@@ -5704,7 +5900,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}/bin" "step.exe" 1 1
+                copy_binary_file "${l_source_path}/bin" "step.exe" 1 1
                 return 0
 
             fi
@@ -5712,19 +5908,29 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_command "${l_source_path}/bin" "step" 0 1
+            copy_binary_file "${l_source_path}/bin" "step" 0 1
 
-            #Copiando los script para el autocompletado
-            echo "Copiando \"autocomplete/bash_autocomplete\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/autocomplete/bash_autocomplete" ${g_repo_path}/shell/bash/login/autocomplete/step.bash
-            echo "Copiando \"autocomplete/zsh_autocomplete\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/autocomplete/zsh_autocomplete" ${g_repo_path}/shell/zsh/login/autocomplete/step.zsh
+            #Copiar los archivos de autocompletado
+            create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'others'
 
-            #Fix permisos
-            if [ $g_runner_is_target_user -ne 0 ]; then
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/step.bash
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/zsh/login/autocomplete/step.zsh
-            fi
+            copy_file_on_tools "${l_source_path}/autocomplete" "bash_autocomplete"   0 "shell/autocomplete/bash"  "step.bash"   0
+            copy_file_on_tools "${l_source_path}/autocomplete" "zsh_autocomplete"    0 "shell/autocomplete/zsh"   "step.zsh"    0
+
+
+            #Copiar los script de keybindings
+            #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'others'
+
+            #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
 
             ;;
 
@@ -5738,7 +5944,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "ninja.exe" 1 1
+                copy_binary_file "${l_source_path}" "ninja.exe" 1 1
                 return 0
 
             fi
@@ -5746,7 +5952,7 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_command "${l_source_path}" "ninja" 0 1
+            copy_binary_file "${l_source_path}" "ninja" 0 1
             ;;
 
 
@@ -5759,16 +5965,16 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "lsp_servers/rust_ls" 2 ""
+                create_or_clean_folder_on_tools 1 "lsp_servers/rust_ls" 2 ""
 
                 #echo "Renombrando \"${p_artifact_filename_woext}.exe\" como \"${g_temp_path}/${l_source_path}/rust-analyzer.exe\" ..."
                 #mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/rust-analyzer.exe"
 
                 #Copiando el binario en una ruta del path
-                copy_binary_on_program "${l_source_path}" "rust-analyzer.exe" 1 "lsp_servers/rust_ls" 1
+                copy_files_on_tools "${l_source_path}" "rust-analyzer.exe" 1 "lsp_servers/rust_ls" 1 1
 
                 #Debido que el comando y github usan versiones diferentes, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "rust-analyzer.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "rust-analyzer.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -5777,16 +5983,16 @@ function _copy_artifact_files() {
             #B. Si es binario Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "lsp_servers/rust_ls" 2 ""
+            create_or_clean_folder_on_tools 0 "lsp_servers/rust_ls" 2 ""
 
             echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/rust-analyzer\" ..."
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/rust-analyzer"
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_program "${l_source_path}" "rust-analyzer" 0 "lsp_servers/rust_ls" 1
+            copy_files_on_tools "${l_source_path}" "rust-analyzer" 0 "lsp_servers/rust_ls" 1 1
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "rust-analyzer.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "rust-analyzer.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -5798,7 +6004,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "sesh.exe" 1 1
+                copy_binary_file "${l_source_path}" "sesh.exe" 1 1
                 return 0
 
             fi
@@ -5806,7 +6012,7 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_command "${l_source_path}" "sesh" 0 1
+            copy_binary_file "${l_source_path}" "sesh" 0 1
             ;;
 
 
@@ -5819,7 +6025,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "glow.exe" 1 1
+                copy_binary_file "${l_source_path}" "glow.exe" 1 1
                 return 0
 
             fi
@@ -5827,27 +6033,34 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_command "${l_source_path}" "glow" 0 1
+            copy_binary_file "${l_source_path}" "glow" 0 1
 
             #Copiar los archivos de ayuda man para comando
             copy_man_files "${g_temp_path}/${l_source_path}/manpages" 1
 
-            #Copiando los script para el autocompletado
-            echo "Copiando \"completions/gum.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/glow.bash" ${g_repo_path}/shell/bash/login/autocomplete/glow.bash
+            #Copiar los archivos de autocompletado
+            create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'others'
 
-            echo "Copiando \"completions/gum.zsh\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/glow.zsh" ${g_repo_path}/shell/zsh/login/autocomplete/glow.zsh
 
-            echo "Copiando \"completions/gum.fish\" a \"~/.files/shell/fish/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/glow.fish" ${g_repo_path}/shell/fish/login/autocomplete/glow.fish
+            copy_file_on_tools "${l_source_path}/completions" "glow.bash"     0 "shell/autocomplete/bash"       "glow.bash"  0
+            copy_file_on_tools "${l_source_path}/completions" "glow.zsh"      0 "shell/autocomplete/zsh"        "glow.zsh"   0
+            copy_file_on_tools "${l_source_path}/completions" "glow.fish"     0 "shell/autocomplete/fish"       "glow.fish"  0
 
-            #Fix permisos
-            if [ $g_runner_is_target_user -ne 0 ]; then
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/glow.bash
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/zsh/login/autocomplete/glow.zsh
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/fish/login/autocomplete/glow.fish
-            fi
+
+            #Copiar los script de keybindings
+            #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'others'
+
+            #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
             ;;
 
 
@@ -5860,7 +6073,7 @@ function _copy_artifact_files() {
             #A. Si es WSL de Windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_on_command "${l_source_path}" "gum.exe" 1 1
+                copy_binary_file "${l_source_path}" "gum.exe" 1 1
                 return 0
 
             fi
@@ -5868,27 +6081,33 @@ function _copy_artifact_files() {
             #B. Si es Linux (no WSL)
 
             #Copiando el binario en una ruta del path
-            copy_binary_on_command "${l_source_path}" "gum" 0 1
+            copy_binary_file "${l_source_path}" "gum" 0 1
 
             #Copiar los archivos de ayuda man para comando
             copy_man_files "${g_temp_path}/${l_source_path}/manpages" 1
 
-            #Copiando los script para el autocompletado
-            echo "Copiando \"completions/gum.bash\" a \"~/.files/shell/bash/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/gum.bash" ${g_repo_path}/shell/bash/login/autocomplete/gum.bash
+            #Copiar los archivos de autocompletado
+            create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'others'
 
-            echo "Copiando \"completions/gum.zsh\" a \"~/.files/shell/zsh/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/gum.zsh" ${g_repo_path}/shell/zsh/login/autocomplete/gum.zsh
+            copy_file_on_tools "${l_source_path}/completions" "gum.bash"   0 "shell/autocomplete/bash"  "gum.bash"   0
+            copy_file_on_tools "${l_source_path}/completions" "gim.zsh"    0 "shell/autocomplete/zsh"   "gum.zsh"    0
+            copy_file_on_tools "${l_source_path}/completions" "gum.fish"   0 "shell/autocomplete/fish"  "gum.fish"   0
 
-            echo "Copiando \"completions/gum.fish\" a \"~/.files/shell/fish/login/autocomplete/\" ..."
-            cp "${g_temp_path}/${l_source_path}/completions/gum.fish" ${g_repo_path}/shell/fish/login/autocomplete/gum.fish
 
-            #Fix permisos
-            if [ $g_runner_is_target_user -ne 0 ]; then
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/bash/login/autocomplete/gum.bash
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/zsh/login/autocomplete/gum.zsh
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/fish/login/autocomplete/gum.fish
-            fi
+            #Copiar los script de keybindings
+            #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'others'
+
+            #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash"  0
 
             ;;
 
@@ -5916,7 +6135,7 @@ function _copy_artifact_files() {
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/hadolint"
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "hadolint" 0 1
+            copy_binary_file "${l_source_path}" "hadolint" 0 1
             ;;
 
 
@@ -5935,7 +6154,7 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "trivy" 0 1
+            copy_binary_file "${l_source_path}" "trivy" 0 1
 
             mkdir -p ${g_repo_path}/etc/trivy/templates
             echo "Copiando templates de \"contrib/*.tpl\" a \"~/.files/etc/trivy/templates/\" ..."
@@ -5970,8 +6189,8 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" \
-                       "$g_color_red1" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_yellow1" "containerd.io" "$g_color_reset" \
+                       "$g_color_yellow1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
@@ -5986,7 +6205,7 @@ function _copy_artifact_files() {
             echo "Renombrando \"${p_artifact_filename_woext}\" a \"${g_temp_path}/${l_source_path}/runc\""
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/runc"
 
-            copy_binary_on_command "${l_source_path}" "runc" 0 1
+            copy_binary_file "${l_source_path}" "runc" 0 1
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
             if [ $l_status -eq 3 ]; then
@@ -6029,8 +6248,8 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "podman" "$g_color_reset" \
-                       "$g_color_red1" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_yellow1" "podman" "$g_color_reset" \
+                       "$g_color_yellow1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'podman.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
@@ -6045,7 +6264,7 @@ function _copy_artifact_files() {
             echo "Renombrando \"${p_artifact_filename_woext}\" a \"${g_temp_path}/${l_source_path}/crun\""
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/crun"
 
-            copy_binary_on_command "${l_source_path}" "crun" 0 1
+            copy_binary_file "${l_source_path}" "crun" 0 1
 
             #4. Desacargar el archivo de configuracion requerido por podman, el cual algunas instalaciones de podman no se encuentra ...
             mkdir -p ${g_repo_path}/etc/podman
@@ -6100,8 +6319,8 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" \
-                       "$g_color_red1" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_yellow1" "containerd.io" "$g_color_reset" \
+                       "$g_color_yellow1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
@@ -6116,7 +6335,7 @@ function _copy_artifact_files() {
             echo "Renombrando \"${p_artifact_filename_woext}\" a \"${g_temp_path}/${l_source_path}/slirp4netns\""
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/slirp4netns"
 
-            copy_binary_on_command "${l_source_path}" "slirp4netns" 0 1
+            copy_binary_file "${l_source_path}" "slirp4netns" 0 1
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
             if [ $l_status -eq 3 ]; then
@@ -6156,8 +6375,8 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" \
-                       "$g_color_red1" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_yellow1" "containerd.io" "$g_color_reset" \
+                       "$g_color_yellow1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
@@ -6172,7 +6391,7 @@ function _copy_artifact_files() {
             echo "Renombrando \"${p_artifact_filename_woext}\" a \"${g_temp_path}/${l_source_path}/fuse-overlayfs\""
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/fuse-overlayfs"
 
-            copy_binary_on_command "${l_source_path}" "fuse-overlayfs" 0 1
+            copy_binary_file "${l_source_path}" "fuse-overlayfs" 0 1
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
             if [ $l_status -eq 3 ]; then
@@ -6212,8 +6431,8 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" \
-                       "$g_color_red1" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_yellow1" "containerd.io" "$g_color_reset" \
+                       "$g_color_yellow1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
@@ -6225,9 +6444,9 @@ function _copy_artifact_files() {
             fi
 
             #3. Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "rootlesskit-docker-proxy" 0 1
-            copy_binary_on_command "${l_source_path}" "rootlesskit" 0 1
-            copy_binary_on_command "${l_source_path}" "rootlessctl" 0 1
+            copy_binary_file "${l_source_path}" "rootlesskit-docker-proxy" 0 1
+            copy_binary_file "${l_source_path}" "rootlesskit" 0 1
+            copy_binary_file "${l_source_path}" "rootlessctl" 0 1
 
 
             #4. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
@@ -6268,8 +6487,8 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" \
-                       "$g_color_red1" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_yellow1" "containerd.io" "$g_color_reset" \
+                       "$g_color_yellow1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
@@ -6282,12 +6501,12 @@ function _copy_artifact_files() {
 
 
             #3. Configurar: Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            #copy_binary_on_command "${l_source_path}" "containerd-shim" 0 1
-            #copy_binary_on_command "${l_source_path}" "containerd-shim-runc-v1" 0 1
-            copy_binary_on_command "${l_source_path}" "containerd-shim-runc-v2" 0 1
-            copy_binary_on_command "${l_source_path}" "containerd-stress" 0 1
-            copy_binary_on_command "${l_source_path}" "ctr" 0 1
-            copy_binary_on_command "${l_source_path}" "containerd" 0 1
+            #copy_binary_file "${l_source_path}" "containerd-shim" 0 1
+            #copy_binary_file "${l_source_path}" "containerd-shim-runc-v1" 0 1
+            copy_binary_file "${l_source_path}" "containerd-shim-runc-v2" 0 1
+            copy_binary_file "${l_source_path}" "containerd-stress" 0 1
+            copy_binary_file "${l_source_path}" "ctr" 0 1
+            copy_binary_file "${l_source_path}" "containerd" 0 1
 
             #Descargar archivo de configuracion como servicio a nivel system:
             mkdir -p ${g_repo_path}/etc/containerd/systemd_root
@@ -6368,10 +6587,10 @@ function _copy_artifact_files() {
             fi
 
             #3. Configurar: Copiar el comando y dar permiso de ejecucion a todos los usuarios
-            copy_binary_on_command "${l_source_path}" "buildkit-runc" 0 1
-            copy_binary_on_command "${l_source_path}" "buildkitd" 0 1
-            copy_binary_on_command "${l_source_path}" "buildkit-qemu" 0 0
-            copy_binary_on_command "${l_source_path}" "buildctl" 0 1
+            copy_binary_file "${l_source_path}" "buildkit-runc" 0 1
+            copy_binary_file "${l_source_path}" "buildkitd" 0 1
+            copy_binary_file "${l_source_path}" "buildkit-qemu" 0 0
+            copy_binary_file "${l_source_path}" "buildctl" 0 1
 
             #Descargar archivo de configuracion como servicio a nivel system:
             mkdir -p ${g_repo_path}/etc/buildkit/systemd_root
@@ -6440,7 +6659,7 @@ function _copy_artifact_files() {
             if [ $p_artifact_index -eq 0 ]; then
 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-                copy_binary_on_command "${l_source_path}" "nerdctl" 0 1
+                copy_binary_file "${l_source_path}" "nerdctl" 0 1
 
                 #Archivos para instalar 'containerd' de modo rootless
                 echo "Copiando \"${l_source_path}/containerd-rootless.sh\" (tool gestión del ContainerD en modo rootless) a \"~/.files/shell/sh/bin/cmds\" ..."
@@ -6484,8 +6703,8 @@ function _copy_artifact_files() {
                         l_status_stop=$?
 
                         if [ $l_status_stop -eq 0 ]; then
-                            printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" \
-                                   "$g_color_red1" "$g_color_reset"
+                            printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_yellow1" "containerd.io" "$g_color_reset" \
+                                   "$g_color_yellow1" "$g_color_reset"
                         fi
 
                         request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
@@ -6497,8 +6716,8 @@ function _copy_artifact_files() {
 
                         printf 'Instalando el programa "bypass4netns" (acelerador de "Slirp4netns") artefacto[%s] del repositorio %s ...\n' "$p_artifact_index" \
                                "$p_repo_id"
-                        copy_binary_on_command "${l_source_path}" "bypass4netns" 0 1
-                        copy_binary_on_command "${l_source_path}" "bypass4netnsd" 0 1
+                        copy_binary_file "${l_source_path}" "bypass4netns" 0 1
+                        copy_binary_file "${l_source_path}" "bypass4netnsd" 0 1
 
                     else
 
@@ -6557,7 +6776,7 @@ function _copy_artifact_files() {
             echo "Moviendo \"${p_artifact_filename_woext}\" como \"${l_target_path}/k0s\" ..."
             mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/k0s"
 
-            copy_binary_on_command "${l_source_path}" "k0s" 0 1
+            copy_binary_file "${l_source_path}" "k0s" 0 1
 
 
             #4. Si el nodo k0s estaba iniciando y se detuvo, iniciarlo
@@ -6599,19 +6818,19 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Creando el folder si no existe y no limpiarlo si existe
-            create_or_clean_folder_on_program 0 "aws-cli" 0 ""
+            create_or_clean_folder_on_tools 0 "aws-cli" 0 ""
 
             #Instalando
             if [ $p_flag_install -eq 0 ]; then
 
                 #Ejecutando los script de instalación
-                exec_setupscript_to_program "${l_source_path}/aws" "install" "aws-cli" "-i " "-b ${g_programs_path}/aws-cli"
+                exec_script_on_tools "${l_source_path}/aws" "install" "aws-cli" "-i " "-b ${g_tools_path}/aws-cli"
 
             #Actualizando
             else
 
                 #Ejecutando los script de instalación
-                exec_setupscript_to_program "${l_source_path}/aws" "install" "aws-cli" "-i " "-b ${g_programs_path}/aws-cli --update"
+                exec_script_on_tools "${l_source_path}/aws" "install" "aws-cli" "-i " "-b ${g_tools_path}/aws-cli --update"
 
             fi
             ;;
@@ -6628,7 +6847,7 @@ function _copy_artifact_files() {
             fi
 
             #Crear el folder de programa si no existe pero NO Limpiar el contenido si existe (el 'install.sh' puede eliminar versiones anteriores)
-            create_or_clean_folder_on_program 0 "rust" 0 ""
+            create_or_clean_folder_on_tools 0 "rust" 0 ""
 
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
@@ -6639,13 +6858,13 @@ function _copy_artifact_files() {
                 #Ejecutando los script de instalación
                 printf '> Copiando los archivos a la ruta "%b%s%b", usando el instalador "%b%s%b" ...\n' "$g_color_gray1" \
                        "${g_temp_path}/${l_source_path}" "$g_color_reset" "$g_color_gray1" "install.sh" "$g_color_reset"
-                exec_setupscript_to_program "${l_source_path}" "install.sh" "rust" "--prefix=" \
+                exec_script_on_tools "${l_source_path}" "install.sh" "rust" "--prefix=" \
                     "--without='rust-analyzer-preview,llvm-tools-preview' --disable-ldconfig"
 
-                #Registrando las librerias del rust "${g_programs_path}/rust/lib"
+                #Registrando las librerias del rust "${g_tools_path}/rust/lib"
 
                 #Copiando los archivos ayudas a la carpeta de ayuda del sistema
-                copy_man_files "${g_programs_path}/rust/share/man/man1" 1
+                copy_man_files "${g_tools_path}/rust/share/man/man1" 1
 
                 register_dynamiclibrary_to_system "rust/lib" "rust"
 
@@ -6654,19 +6873,19 @@ function _copy_artifact_files() {
             else
 
                 #Ejecutando los script de instalación
-                exec_setupscript_to_program "${l_source_path}" "install.sh" "rust" "--prefix=" "--disable-ldconfig"
+                exec_script_on_tools "${l_source_path}" "install.sh" "rust" "--prefix=" "--disable-ldconfig"
 
             fi
 
             #Validar si 'DotNet' esta en el PATH
-            echo "$PATH" | grep "${g_programs_path}/rust/bin" &> /dev/null
+            echo "$PATH" | grep "${g_tools_path}/rust/bin" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                    "$g_color_red1" "Rust"  "$p_repo_last_pretty_version" "$g_color_reset"
-                printf 'Adicionando a la sesion actual: PATH=%s/rust/bin:$PATH\n' "${g_programs_path}"
+                    "$g_color_yellow1" "Rust"  "$p_repo_last_pretty_version" "$g_color_reset"
+                printf 'Adicionando a la sesion actual: PATH=%s/rust/bin:$PATH\n' "${g_tools_path}"
 
-                PATH="${g_programs_path}/rust/bin:$PATH"
+                PATH="${g_tools_path}/rust/bin:$PATH"
                 export PATH
             fi
             ;;
@@ -6685,10 +6904,10 @@ function _copy_artifact_files() {
                 copy_font_files "$l_source_path" 1 "${p_artifact_filename_woext}" 1
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "nerd-fonts.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "nerd-fonts.info" "$p_repo_last_pretty_version" 1
 
                 printf '%bDeberá instalar (copiar) manualmente los archivos%b de "%s" en "%s".\n' "$g_color_yellow1" \
-                       "$g_color_reset" "$g_win_font_path" "C:/Windows/Fonts"
+                       "$g_color_reset" "$g_win_fonts_path" "C:/Windows/Fonts"
 
                 return 0
 
@@ -6700,7 +6919,7 @@ function _copy_artifact_files() {
             copy_font_files "$l_source_path" 0 "${p_artifact_filename_woext}" $p_artifact_is_last
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "nerd-fonts.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "nerd-fonts.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -6714,11 +6933,11 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "protoc" 1 ""
+                create_or_clean_folder_on_tools 1 "protoc" 1 ""
 
                 #Moviendo el cotenido del folder source al folder de programa
-                move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 1 "protoc" ""
-                #move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 1 "protoc" "-not -name '${p_artifact_filename_woext}.zip'"
+                move_tempfoldercontent_on_tools "${p_repo_id}/${p_artifact_index}" 1 "protoc" ""
+                #move_tempfoldercontent_on_tools "${p_repo_id}/${p_artifact_index}" 1 "protoc" "-not -name '${p_artifact_filename_woext}.zip'"
                 return 0
 
             fi
@@ -6726,21 +6945,21 @@ function _copy_artifact_files() {
             #B. Si es Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "protoc" 1 ""
+            create_or_clean_folder_on_tools 0 "protoc" 1 ""
 
             #Moviendo el cotenido del folder source al folder de programa
-            move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 0 "protoc" ""
-            #move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 0 "protoc" "-not -name '${p_artifact_filename_woext}.tar.gz'"
+            move_tempfoldercontent_on_tools "${p_repo_id}/${p_artifact_index}" 0 "protoc" ""
+            #move_tempfoldercontent_on_tools "${p_repo_id}/${p_artifact_index}" 0 "protoc" "-not -name '${p_artifact_filename_woext}.tar.gz'"
 
 
             #Validar si 'protoc' esta en el PATH
-            echo "$PATH" | grep "${g_programs_path}/protoc/bin" &> /dev/null
+            echo "$PATH" | grep "${g_tools_path}/protoc/bin" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                    "$g_color_red1" "ProtoC"  "$p_repo_last_pretty_version" "$g_color_reset"
-                printf 'Adicionando a la sesion actual: PATH=%s/protoc/bin:$PATH\n' "${g_programs_path}"
-                export PATH=${g_programs_path}/protoc/bin:$PATH
+                    "$g_color_yellow1" "ProtoC"  "$p_repo_last_pretty_version" "$g_color_reset"
+                printf 'Adicionando a la sesion actual: PATH=%s/protoc/bin:$PATH\n' "${g_tools_path}"
+                export PATH=${g_tools_path}/protoc/bin:$PATH
             fi
             ;;
 
@@ -6754,10 +6973,10 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "lsp_servers/omnisharp_ls" 1 ""
+                create_or_clean_folder_on_tools 1 "lsp_servers/omnisharp_ls" 1 ""
 
-                move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 1 "lsp_servers/omnisharp_ls" ""
-                #move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 1 "LSP_Servers/omnisharp_ls" "-not -name '${p_artifact_filename_woext}.zip'"
+                move_tempfoldercontent_on_tools "${p_repo_id}/${p_artifact_index}" 1 "lsp_servers/omnisharp_ls" ""
+                #move_tempfoldercontent_on_tools "${p_repo_id}/${p_artifact_index}" 1 "LSP_Servers/omnisharp_ls" "-not -name '${p_artifact_filename_woext}.zip'"
                 return 0
 
             fi
@@ -6765,11 +6984,11 @@ function _copy_artifact_files() {
             #B. Si es Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "lsp_servers/omnisharp_ls" 1 ""
+            create_or_clean_folder_on_tools 0 "lsp_servers/omnisharp_ls" 1 ""
 
             #Moviendo el contenido del folder source al folder de programa
-            move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 0 "lsp_servers/omnisharp_ls" ""
-            #move_tempfoldercontent_on_program "${p_repo_id}/${p_artifact_index}" 0 "lsp_servers/omnisharp_ls" "-not -name '${p_artifact_filename_woext}.tar.gz'"
+            move_tempfoldercontent_on_tools "${p_repo_id}/${p_artifact_index}" 0 "lsp_servers/omnisharp_ls" ""
+            #move_tempfoldercontent_on_tools "${p_repo_id}/${p_artifact_index}" 0 "lsp_servers/omnisharp_ls" "-not -name '${p_artifact_filename_woext}.tar.gz'"
             ;;
 
 
@@ -6782,10 +7001,10 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "dap_servers/netcoredbg" 1 ""
+                create_or_clean_folder_on_tools 1 "dap_servers/netcoredbg" 1 ""
 
-                move_tempfoldercontent_on_program "$l_source_path" 1 "dap_servers/netcoredbg" ""
-                #move_tempfoldercontent_on_program "$l_source_path" 1 "dap_servers/netcoredbg" "-not -name '${p_artifact_filename_woext}.zip'"
+                move_tempfoldercontent_on_tools "$l_source_path" 1 "dap_servers/netcoredbg" ""
+                #move_tempfoldercontent_on_tools "$l_source_path" 1 "dap_servers/netcoredbg" "-not -name '${p_artifact_filename_woext}.zip'"
                 return 0
 
             fi
@@ -6793,11 +7012,11 @@ function _copy_artifact_files() {
             #B. Si es Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "dap_servers/netcoredbg" 1 ""
+            create_or_clean_folder_on_tools 0 "dap_servers/netcoredbg" 1 ""
 
             #Moviendo el contenido del folder source al folder de programa
-            move_tempfoldercontent_on_program "$l_source_path" 0 "dap_servers/netcoredbg" ""
-            #move_tempfoldercontent_on_program "$l_source_path" 0 "dap_servers/netcoredbg" "-not -name '${p_artifact_filename_woext}.tar.gz'"
+            move_tempfoldercontent_on_tools "$l_source_path" 0 "dap_servers/netcoredbg" ""
+            #move_tempfoldercontent_on_tools "$l_source_path" 0 "dap_servers/netcoredbg" "-not -name '${p_artifact_filename_woext}.tar.gz'"
             ;;
 
 
@@ -6812,9 +7031,9 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "lsp_servers/clangd" 1 ""
+                create_or_clean_folder_on_tools 1 "lsp_servers/clangd" 1 ""
 
-                move_tempfoldercontent_on_program "$l_source_path" 1 "lsp_servers/clangd" ""
+                move_tempfoldercontent_on_tools "$l_source_path" 1 "lsp_servers/clangd" ""
                 return 0
 
             fi
@@ -6822,10 +7041,10 @@ function _copy_artifact_files() {
             #B. Si es Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "lsp_servers/clangd" 1 ""
+            create_or_clean_folder_on_tools 0 "lsp_servers/clangd" 1 ""
 
             #Moviendo el contenido del folder source al folder de programa
-            move_tempfoldercontent_on_program "$l_source_path" 0 "lsp_servers/clangd" ""
+            move_tempfoldercontent_on_tools "$l_source_path" 0 "lsp_servers/clangd" ""
             ;;
 
 
@@ -6840,17 +7059,17 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "lsp_servers/jdtls" 1 ""
+                create_or_clean_folder_on_tools 1 "lsp_servers/jdtls" 1 ""
 
-                move_tempfoldercontent_on_program "$l_source_path" 1 "lsp_servers/jdtls" ""
+                move_tempfoldercontent_on_tools "$l_source_path" 1 "lsp_servers/jdtls" ""
 
 
                 printf 'Descargando el archivo "%s" (para no mostrar errores cuando se usa sus anotaciones) en "%s"\n' "lombok.jar" \
-                       "${g_win_programs_path}/lsp_servers/jdtls"
-                curl -fLo "${g_win_programs_path}/lsp_servers/jdtls/lombok.jar" https://projectlombok.org/downloads/lombok.jar
+                       "${g_win_tools_path}/lsp_servers/jdtls"
+                curl -fLo "${g_win_tools_path}/lsp_servers/jdtls/lombok.jar" https://projectlombok.org/downloads/lombok.jar
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "eclipse_jdtls.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "eclipse_jdtls.info" "$p_repo_last_pretty_version" 1
                 return 0
 
             fi
@@ -6859,22 +7078,22 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "lsp_servers/jdtls" 1 ""
+            create_or_clean_folder_on_tools 0 "lsp_servers/jdtls" 1 ""
 
             #Moviendo el contenido del folder source al folder de programa
-            move_tempfoldercontent_on_program "$l_source_path" 0 "lsp_servers/jdtls" ""
+            move_tempfoldercontent_on_tools "$l_source_path" 0 "lsp_servers/jdtls" ""
 
             printf 'Descargando el archivo "%s" (para no mostrar errores cuando se usa sus anotaciones) en "%s"\n' "lombok.jar" \
-                   "${g_programs_path}/lsp_servers/jdtls"
-            curl -fLo "${g_programs_path}/lsp_servers/jdtls/lombok.jar" https://projectlombok.org/downloads/lombok.jar
+                   "${g_tools_path}/lsp_servers/jdtls"
+            curl -fLo "${g_tools_path}/lsp_servers/jdtls/lombok.jar" https://projectlombok.org/downloads/lombok.jar
 
             #Fix permisos
             if [ $g_runner_is_target_user -ne 0 ]; then
-                chown "${g_targethome_owner}:${g_targethome_group}" "${g_programs_path}/lsp_servers/jdtls/lombok.jar"
+                chown "${g_targethome_owner}:${g_targethome_group}" "${g_tools_path}/lsp_servers/jdtls/lombok.jar"
             fi
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "eclipse_jdtls.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "eclipse_jdtls.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -6888,7 +7107,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "lsp_servers/luals" 2 ""
+                create_or_clean_folder_on_tools 1 "lsp_servers/luals" 2 ""
 
                 #Descomprimir
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "lsp_servers/luals" "" ""
@@ -6904,7 +7123,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "lsp_servers/luals" 2 ""
+            create_or_clean_folder_on_tools 0 "lsp_servers/luals" 2 ""
 
             #Descomprimir
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "lsp_servers/luals" "" ""
@@ -6930,7 +7149,7 @@ function _copy_artifact_files() {
             if [ $p_artifact_index -eq 0 ]; then
 
                 #Limpiarlo si existe
-                clean_folder_on_program 0 "" "async_profiler" 0 ""
+                clean_folder_on_tools 0 "" "async_profiler" 0 ""
 
                 #Descomprimir
                 uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "async_profiler" "$p_artifact_filename_woext"
@@ -6942,15 +7161,15 @@ function _copy_artifact_files() {
             elif [ $p_artifact_index -eq 1 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 0 "async_profiler/tools" 2 ""
+                create_or_clean_folder_on_tools 0 "async_profiler/tools" 2 ""
 
                 #Moviendo el contenido del folder source al folder de programa
-                move_tempfoldercontent_on_program "$l_source_path" 0 "async_profiler/tools" ""
+                move_tempfoldercontent_on_tools "$l_source_path" 0 "async_profiler/tools" ""
 
             else
 
                 #Moviendo el contenido del folder source al folder de programa
-                move_tempfoldercontent_on_program "$l_source_path" 0 "async_profiler/tools" ""
+                move_tempfoldercontent_on_tools "$l_source_path" 0 "async_profiler/tools" ""
 
             fi
             ;;
@@ -6965,7 +7184,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "jbang" 2 ""
+                create_or_clean_folder_on_tools 1 "jbang" 2 ""
 
                 #Descomprimir
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "jbang" "jbang-"
@@ -6975,7 +7194,7 @@ function _copy_artifact_files() {
                 fi
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "jbang.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "jbang.info" "$p_repo_last_pretty_version" 1
                 return 0
             fi
 
@@ -6983,7 +7202,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "jbang" 2 ""
+            create_or_clean_folder_on_tools 0 "jbang" 2 ""
 
             #Descomprimir
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "jbang" "jbang-"
@@ -6993,7 +7212,7 @@ function _copy_artifact_files() {
             fi
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "jbang.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "jbang.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7013,7 +7232,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "" "$l_target_path" 0 ""
+                clean_folder_on_tools 1 "" "$l_target_path" 0 ""
 
                 #Descomprimir
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "$l_target_path" "apache-maven-"
@@ -7026,7 +7245,7 @@ function _copy_artifact_files() {
                     "$g_color_yellow1" "./maven/"  "./${l_target_path}/" "$g_color_reset"
 
                 #Debido no es practivo crear un enlace simbolo en Windows desde linux, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "maven.info" "${p_repo_current_pretty_version%%.*}" 1
+                save_prettyversion_on_tools "" "maven.info" "${p_repo_current_pretty_version%%.*}" 1
 
                 return 0
             fi
@@ -7035,7 +7254,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "" "$l_target_path" 0 ""
+            clean_folder_on_tools 0 "" "$l_target_path" 0 ""
 
             #Descomprimir
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "$l_target_path" "apache-maven-"
@@ -7045,7 +7264,7 @@ function _copy_artifact_files() {
             fi
 
             #Crear el enlace simbolico del la ultima version
-            create_folderlink_on_program "$l_target_path" "" "maven" ""
+            create_folderlink_on_tools "$l_target_path" "" "maven" ""
 
             ;;
 
@@ -7060,13 +7279,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "rh_java" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "rh_java" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/rh_java"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/rh_java"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7076,13 +7295,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "rh_java" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "rh_java" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/rh_java"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/rh_java"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7097,13 +7316,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "ms_java_test" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "ms_java_test" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_test"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_test"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7113,13 +7332,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "ms_java_test" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "ms_java_test" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_test"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_test"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7134,13 +7353,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "ms_java_debug" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "ms_java_debug" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_debug"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_debug"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7150,13 +7369,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "ms_java_debug" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "ms_java_debug" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_debug"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_debug"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7170,13 +7389,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "ms_java_maven" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "ms_java_maven" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_maven"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_maven"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7186,13 +7405,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "ms_java_maven" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "ms_java_maven" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_maven"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_maven"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7208,13 +7427,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "ms_java_gradle" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "ms_java_gradle" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_gradle"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/ms_java_gradle"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7224,13 +7443,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "ms_java_gradle" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "ms_java_gradle" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_gradle"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/ms_java_gradle"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7244,13 +7463,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "m4_java_microprofile" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "m4_java_microprofile" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/m4_java_microprofile"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/m4_java_microprofile"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7260,13 +7479,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "m4_java_microprofile" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "m4_java_microprofile" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/m4_java_microprofile"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/m4_java_microprofile"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7283,13 +7502,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "rh_java_quarkus" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "rh_java_quarkus" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/rh_java_quarkus"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/rh_java_quarkus"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7299,13 +7518,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "rh_java_quarkus" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "rh_java_quarkus" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/rh_java_quarkus"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/rh_java_quarkus"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7321,13 +7540,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "dg_java_decompiler" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "dg_java_decompiler" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/dg_java_decompiler"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/dg_java_decompiler"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7337,13 +7556,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "dg_java_decompiler" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "dg_java_decompiler" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/dg_java_decompiler"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/dg_java_decompiler"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7358,13 +7577,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "vm_spring_boot" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "vm_spring_boot" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/vm_spring_boot"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/vm_spring_boot"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7374,13 +7593,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "vm_spring_boot" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "vm_spring_boot" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/vm_spring_boot"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/vm_spring_boot"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7397,13 +7616,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "codelldb" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "codelldb" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/codelldb"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/codelldb"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7413,13 +7632,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "codelldb" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "codelldb" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/codelldb"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/codelldb"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7433,13 +7652,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "ms_cpptools" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "ms_cpptools" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/ms_cpptools"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/ms_cpptools"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7449,28 +7668,28 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "ms_cpptools" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "ms_cpptools" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/ms_cpptools"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/ms_cpptools"
 
             #Estableciendo el permiso de ejecución del dap adapter
             printf 'Se establecera permiso de ejecucion del archivo "%b%s%b" de la carpeta "%b%s%b" ...\n' "$g_color_gray1" "OpenDebugAD7"  \
-                   "$g_color_reset" "$g_color_gray1" "${g_programs_path}/vsc_extensions/ms_cpptools/debugAdapters/bin" "$g_color_reset"
+                   "$g_color_reset" "$g_color_gray1" "${g_tools_path}/vsc_extensions/ms_cpptools/debugAdapters/bin" "$g_color_reset"
 
             l_runner_is_program_owner=1
-            if [ $(( g_prg_path_options & 1 )) -eq 1 ]; then
+            if [ $(( g_tools_options & 1 )) -eq 1 ]; then
                 l_runner_is_program_owner=0
             fi
 
             if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_program_owner -eq 0 ]; then
-                chmod +x "${g_programs_path}/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7"
+                chmod +x "${g_tools_path}/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7"
             else
-                sudo chmod +x "${g_programs_path}/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7"
+                sudo chmod +x "${g_tools_path}/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7"
             fi
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7484,13 +7703,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "go_tools" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "go_tools" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/go_tools"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/go_tools"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7500,13 +7719,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "go_tools" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "go_tools" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/go_tools"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/go_tools"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7520,13 +7739,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "tf_eclipse_pde" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "tf_eclipse_pde" 0 ""
 
                 #Mover la extension en su carpeta
-                move_tempfolder_on_program "${l_source_path}" "extension" 1 "vsc_extensions/tf_eclipse_pde"
+                move_tempfolder_on_tools "${l_source_path}" "extension" 1 "vsc_extensions/tf_eclipse_pde"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7536,13 +7755,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "tf_eclipse_pde" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "tf_eclipse_pde" 0 ""
 
             #Mover la extension en su carpeta
-            move_tempfolder_on_program "${l_source_path}" "extension" 0 "vsc_extensions/tf_eclipse_pde"
+            move_tempfolder_on_tools "${l_source_path}" "extension" 0 "vsc_extensions/tf_eclipse_pde"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7556,13 +7775,13 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (si no existe la ruta base lo crea)
-                clean_folder_on_program 1 "vsc_extensions" "ms_js_debug" 0 ""
+                clean_folder_on_tools 1 "vsc_extensions" "ms_js_debug" 0 ""
 
                 #Descomprimir
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "vsc_extensions" "ms_js_debug" "js-debug"
 
                 #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-                save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
+                save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 1
 
                 return 0
 
@@ -7572,13 +7791,13 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "vsc_extensions" "ms_js_debug" 0 ""
+            clean_folder_on_tools 0 "vsc_extensions" "ms_js_debug" 0 ""
 
             #Descomprimir
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "vsc_extensions" "ms_js_debug" "js-debug"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "${p_repo_id}.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7598,7 +7817,7 @@ function _copy_artifact_files() {
 
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 0 "lsp_servers" "roslyn_ls" 0 ""
+            clean_folder_on_tools 0 "lsp_servers" "roslyn_ls" 0 ""
 
             #Mover la extension en su carpeta
             l_aux=''
@@ -7630,10 +7849,10 @@ function _copy_artifact_files() {
                 return 41
             fi
 
-            move_tempfolder_on_program "${l_source_path}" "content/LanguageServer/${l_aux}" 0 "lsp_servers/roslyn_ls"
+            move_tempfolder_on_tools "${l_source_path}" "content/LanguageServer/${l_aux}" 0 "lsp_servers/roslyn_ls"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "roslyn_ls.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "roslyn_ls.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7654,7 +7873,7 @@ function _copy_artifact_files() {
 
 
             #Limpiando el folder si existe (si no existe la ruta base lo crea)
-            clean_folder_on_program 1 "lsp_servers" "roslyn_ls" 0 ""
+            clean_folder_on_tools 1 "lsp_servers" "roslyn_ls" 0 ""
 
             #Mover la extension en su carpeta
             l_aux=''
@@ -7676,10 +7895,10 @@ function _copy_artifact_files() {
                 return 41
             fi
 
-            move_tempfolder_on_program "${l_source_path}" "content/LanguageServer/${l_aux}" 1 "lsp_servers/roslyn_ls"
+            move_tempfolder_on_tools "${l_source_path}" "content/LanguageServer/${l_aux}" 1 "lsp_servers/roslyn_ls"
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "roslyn_ls.info" "$p_repo_last_pretty_version" 1
+            save_prettyversion_on_tools "" "roslyn_ls.info" "$p_repo_last_pretty_version" 1
             ;;
 
 
@@ -7700,8 +7919,8 @@ function _copy_artifact_files() {
             l_status=$?
 
             if [ $l_status -eq 0 ]; then
-                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_red1" "containerd.io" "$g_color_reset" \
-                       "$g_color_red1" "$g_color_reset"
+                printf 'El paquete "%b%s%b" ya %besta instalado%b en el sistema operativo.\n' "$g_color_yellow1" "containerd.io" "$g_color_reset" \
+                       "$g_color_yellow1" "$g_color_reset"
             fi
 
             request_stop_systemd_unit 'containerd.service' 1 $l_is_noninteractive "$p_repo_id" "$p_artifact_index"
@@ -7716,13 +7935,13 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "cni_plugins" 1 ""
+            create_or_clean_folder_on_tools 0 "cni_plugins" 1 ""
 
             #Moviendo el contenido del folder source al folder de programa
-            move_tempfoldercontent_on_program "$l_source_path" 0 "cni_plugins" ""
+            move_tempfoldercontent_on_tools "$l_source_path" 0 "cni_plugins" ""
 
             #Debido que no existe forma determinar la version actual, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "cni-plugins.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "cni-plugins.info" "$p_repo_last_pretty_version" 0
 
             #3. Si la unidad servicio 'containerd' estaba iniciando y se detuvo, iniciarlo
             if [ $l_status -eq 3 ]; then
@@ -7760,12 +7979,12 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "ctags/bin" 1 ""
+            create_or_clean_folder_on_tools 0 "ctags/bin" 1 ""
 
             #Copiando los binarios
-            copy_binary_on_program "${l_source_path}/bin" "ctags" 0 "ctags/bin" 1
-            copy_binary_on_program "${l_source_path}/bin" "optscript" 0 "ctags/bin" 1
-            copy_binary_on_program "${l_source_path}/bin" "readtags" 0 "ctags/bin" 1
+            copy_files_on_tools "${l_source_path}/bin" "ctags" 0 "ctags/bin" 1 1
+            copy_files_on_tools "${l_source_path}/bin" "optscript" 0 "ctags/bin" 1 1
+            copy_files_on_tools "${l_source_path}/bin" "readtags" 0 "ctags/bin" 1 1
 
             #Adicionar los archivos ayudas a la carpeta de ayuda del sistema
             copy_man_files "${g_temp_path}/${l_source_path}/man/man1" 1
@@ -7773,7 +7992,7 @@ function _copy_artifact_files() {
             copy_man_files "${g_temp_path}/${l_source_path}/man/man7" 7
 
             #Debido que no existe relacion entre la version actual y la version de github, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "ctags.info" "$p_repo_last_pretty_version" 0
+            save_prettyversion_on_tools "" "ctags.info" "$p_repo_last_pretty_version" 0
             ;;
 
 
@@ -7791,18 +8010,18 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 1 "ctags/bin" 1 ""
+            create_or_clean_folder_on_tools 1 "ctags/bin" 1 ""
 
             #Copiando los binarios
-            copy_binary_on_program "${l_source_path}" "ctags.exe" 1 "ctags/bin" 1
-            copy_binary_on_program "${l_source_path}" "readtags.exe" 1 "ctags/bin" 1
+            copy_files_on_tools "${l_source_path}" "ctags.exe" 1 "ctags/bin" 1 1
+            copy_files_on_tools "${l_source_path}" "readtags.exe" 1 "ctags/bin" 1 1
 
             #Mover folderes a la carpeta del programa
-            move_tempfolder_on_program "${l_source_path}" "man" 1 "ctags"
-            move_tempfolder_on_program "${l_source_path}" "docs" 1 "ctags"
+            move_tempfolder_on_tools "${l_source_path}" "man" 1 "ctags"
+            move_tempfolder_on_tools "${l_source_path}" "docs" 1 "ctags"
 
             #Debido que no existe relacion entre la version actual y la version de github, se almacenara la version github que se esta instalando
-            save_prettyversion_on_program "" "ctags.info" "$p_repo_last_pretty_version" 1
+            save_prettyversion_on_tools "" "ctags.info" "$p_repo_last_pretty_version" 1
             ;;
 
 
@@ -7817,7 +8036,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y limpiarlo si existe
-                create_or_clean_folder_on_program 1 "powershell" 2 ""
+                create_or_clean_folder_on_tools 1 "powershell" 2 ""
 
                 #Descomprimir
                 #TODO
@@ -7834,7 +8053,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 0 "powershell" 2 ""
+            create_or_clean_folder_on_tools 0 "powershell" 2 ""
 
             #Descomprimir
             #TODO
@@ -7845,7 +8064,7 @@ function _copy_artifact_files() {
             fi
 
             #Creando los enlaces simbolicos
-            create_binarylink_to_command "powershell" "pwsh" "pwsh"
+            create_link_binary_file "powershell" "pwsh" "pwsh"
             ;;
 
 
@@ -7860,7 +8079,7 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_program 1 "wezterm" 2 ""
+            create_or_clean_folder_on_tools 1 "wezterm" 2 ""
 
             #Descomprimir
             #TODO
@@ -7883,7 +8102,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (crear la ruta base si no existe)
-                clean_folder_on_program 1 "" "neovim" 0 ""
+                clean_folder_on_tools 1 "" "neovim" 0 ""
 
                 #Descomprimir
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "neovim" "$p_artifact_filename_woext"
@@ -7899,7 +8118,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (crear la ruta base si no existe)
-            clean_folder_on_program 0 "" "neovim" 0 ""
+            clean_folder_on_tools 0 "" "neovim" 0 ""
 
             #Descomprimir
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "neovim" "$p_artifact_filename_woext"
@@ -7909,13 +8128,13 @@ function _copy_artifact_files() {
             fi
 
             #Validar si 'nvim' esta en el PATH
-            echo "$PATH" | grep "${g_programs_path}/neovim/bin" &> /dev/null
+            echo "$PATH" | grep "${g_tools_path}/neovim/bin" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                    "$g_color_red1" "NeoVIM"  "$p_repo_last_pretty_version" "$g_color_reset"
-                printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_programs_path}"
-                export PATH=${g_programs_path}/neovim/bin:$PATH
+                    "$g_color_yellow1" "NeoVIM"  "$p_repo_last_pretty_version" "$g_color_reset"
+                printf 'Adicionando a la sesion actual: PATH=%s/neovim/bin:$PATH\n' "${g_tools_path}"
+                export PATH=${g_tools_path}/neovim/bin:$PATH
             fi
 
             ;;
@@ -7935,7 +8154,7 @@ function _copy_artifact_files() {
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
             #Limpiando el folder si existe (crear la ruta base si no existe)
-            clean_folder_on_program 0 "" "llvm" 0 ""
+            clean_folder_on_tools 0 "" "llvm" 0 ""
 
             #Descomprimir
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "llvm" "clang+llvm"
@@ -7945,13 +8164,13 @@ function _copy_artifact_files() {
             fi
 
             #Validar si 'LLVM' esta en el PATH
-            echo "$PATH" | grep "${g_programs_path}/llvm/bin" &> /dev/null
+            echo "$PATH" | grep "${g_tools_path}/llvm/bin" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                    "$g_color_red1" "Go"  "$p_repo_last_pretty_version" "$g_color_reset"
-                printf 'Adicionando a la sesion actual: PATH=%s/llvm/bin:$PATH\n' "${g_programs_path}"
-                export PATH=${g_programs_path}/llvm/bin:$PATH
+                    "$g_color_yellow1" "Go"  "$p_repo_last_pretty_version" "$g_color_reset"
+                printf 'Adicionando a la sesion actual: PATH=%s/llvm/bin:$PATH\n' "${g_tools_path}"
+                export PATH=${g_tools_path}/llvm/bin:$PATH
             fi
             ;;
 
@@ -7965,7 +8184,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Creando el folder si no existe y no limpiarlo si existe
-                create_or_clean_folder_on_program 1 "dotnet" 0 ""
+                create_or_clean_folder_on_tools 1 "dotnet" 0 ""
 
                 #Si se instala (no existe version anterior instalado del respositorio)
                 if [ $p_flag_install -eq 0  ]; then
@@ -7996,7 +8215,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Creando el folder si no existe y NO limpiarlo si existe
-            create_or_clean_folder_on_program 0 "dotnet" 0 ""
+            create_or_clean_folder_on_tools 0 "dotnet" 0 ""
 
             #Si se instala (no existe version anterior instalado del respositorio)
             if [ $p_flag_install -eq 0  ]; then
@@ -8022,17 +8241,17 @@ function _copy_artifact_files() {
             fi
 
             #Validando si dotnet esta registrado en el PATH del usuario
-            echo "$PATH" | grep "${g_programs_path}/dotnet" &> /dev/null
+            echo "$PATH" | grep "${g_tools_path}/dotnet" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                    "$g_color_red1" "DotNet"  "$p_repo_last_pretty_version" "$g_color_reset"
-                printf 'Adicionando a la sesion actual: PATH=%s/dotnet:$PATH\n' "${g_programs_path}"
+                    "$g_color_yellow1" "DotNet"  "$p_repo_last_pretty_version" "$g_color_reset"
+                printf 'Adicionando a la sesion actual: PATH=%s/dotnet:$PATH\n' "${g_tools_path}"
 
-                export DOTNET_ROOT=${g_programs_path}/dotnet
-                PATH=${g_programs_path}/dotnet:$PATH
+                export DOTNET_ROOT=${g_tools_path}/dotnet
+                PATH=${g_tools_path}/dotnet:$PATH
                 if [ "$p_repo_id" = "net-sdk" ]; then
-                    PATH=${g_programs_path}/dotnet/tools:$PATH
+                    PATH=${g_tools_path}/dotnet/tools:$PATH
                 fi
                 export PATH
             fi
@@ -8050,7 +8269,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (crear la ruta base si no existe)
-                clean_folder_on_program 1 "" "go" 0 ""
+                clean_folder_on_tools 1 "" "go" 0 ""
 
                 #Descomprimiendo el archivo
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "" ""
@@ -8070,7 +8289,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (crear la ruta base si no existe)
-            clean_folder_on_program 0 "" "go" 0 ""
+            clean_folder_on_tools 0 "" "go" 0 ""
 
             #Descomprimiendo el archivo
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "" ""
@@ -8080,13 +8299,13 @@ function _copy_artifact_files() {
             fi
 
             #Validar si 'Go' esta en el PATH
-            echo "$PATH" | grep "${g_programs_path}/go/bin" &> /dev/null
+            echo "$PATH" | grep "${g_tools_path}/go/bin" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                    "$g_color_red1" "Go"  "$p_repo_last_pretty_version" "$g_color_reset"
-                printf 'Adicionando a la sesion actual: PATH=%s/go/bin:$PATH\n' "${g_programs_path}"
-                PATH=${g_programs_path}/go/bin:$PATH
+                    "$g_color_yellow1" "Go"  "$p_repo_last_pretty_version" "$g_color_reset"
+                printf 'Adicionando a la sesion actual: PATH=%s/go/bin:$PATH\n' "${g_tools_path}"
+                PATH=${g_tools_path}/go/bin:$PATH
                 export PATH=$PATH:~/go/bin
             fi
 
@@ -8130,7 +8349,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (crear la ruta base si no existe)
-                clean_folder_on_program 1 "" "nodejs" 0 ""
+                clean_folder_on_tools 1 "" "nodejs" 0 ""
 
                 #Descomprimiendo el archivo
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "nodejs" "${p_artifact_filename_woext}"
@@ -8147,7 +8366,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (crear la ruta base si no existe)
-            clean_folder_on_program 0 "" "nodejs" 0 ""
+            clean_folder_on_tools 0 "" "nodejs" 0 ""
 
             #Descomprimiendo el archivo
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "nodejs" "${p_artifact_filename_woext}"
@@ -8158,13 +8377,13 @@ function _copy_artifact_files() {
 
 
             #Validar si 'Node.JS' esta en el PATH
-            echo "$PATH" | grep "${g_programs_path}/nodejs/bin" &> /dev/null
+            echo "$PATH" | grep "${g_tools_path}/nodejs/bin" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                    "$g_color_red1" "Node.JS"  "$p_repo_last_pretty_version" "$g_color_reset"
-                printf 'Adicionando a la sesion actual: PATH=%s/nodejs/bin:$PATH\n' "${g_programs_path}"
-                export PATH=${g_programs_path}/nodejs/bin:$PATH
+                    "$g_color_yellow1" "Node.JS"  "$p_repo_last_pretty_version" "$g_color_reset"
+                printf 'Adicionando a la sesion actual: PATH=%s/nodejs/bin:$PATH\n' "${g_tools_path}"
+                export PATH=${g_tools_path}/nodejs/bin:$PATH
             fi
             ;;
 
@@ -8179,7 +8398,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (crear la ruta base si no existe)
-                clean_folder_on_program 1 "" "cmake" 0 ""
+                clean_folder_on_tools 1 "" "cmake" 0 ""
 
                 #Descomprimiendo el archivo
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "cmake" "${p_artifact_filename_woext}"
@@ -8196,7 +8415,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (crear la ruta base si no existe)
-            clean_folder_on_program 0 "" "cmake" 0 ""
+            clean_folder_on_tools 0 "" "cmake" 0 ""
 
             #Descomprimiendo el archivo
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "cmake" "${p_artifact_filename_woext}"
@@ -8206,13 +8425,13 @@ function _copy_artifact_files() {
             fi
 
             #Validar si 'CMake' esta en el PATH
-            echo "$PATH" | grep "${g_programs_path}/cmake/bin" &> /dev/null
+            echo "$PATH" | grep "${g_tools_path}/cmake/bin" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
-                    "$g_color_red1" "CMake"  "$p_repo_last_pretty_version" "$g_color_reset"
-                printf 'Adicionando a la sesion actual: PATH=%s/cmake/bin:$PATH\n' "${g_programs_path}"
-                export PATH=${g_programs_path}/cmake/bin:$PATH
+                    "$g_color_yellow1" "CMake"  "$p_repo_last_pretty_version" "$g_color_reset"
+                printf 'Adicionando a la sesion actual: PATH=%s/cmake/bin:$PATH\n' "${g_tools_path}"
+                export PATH=${g_tools_path}/cmake/bin:$PATH
             fi
             ;;
 
@@ -8250,7 +8469,7 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -eq 0 ]; then
 
                 #Limpiando el folder si existe (crear la ruta base si no existe)
-                clean_folder_on_program 1 "" "$l_target_path" 0 ""
+                clean_folder_on_tools 1 "" "$l_target_path" 0 ""
 
                 #Descomprimiendo el archivo
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "$l_target_path" "graalvm-community-"
@@ -8265,7 +8484,7 @@ function _copy_artifact_files() {
                         "$g_color_yellow1" "./graalvm/"  "./${l_target_path}/" "$g_color_reset"
 
                     #Debido no es practivo crear un enlace simbolo en Windows desde linux, se almacenara la version github que se esta instalando
-                    save_prettyversion_on_program "" "graalvm.info" "$l_aux" 1
+                    save_prettyversion_on_tools "" "graalvm.info" "$l_aux" 1
                 fi
 
                 return 0
@@ -8276,7 +8495,7 @@ function _copy_artifact_files() {
             #B. Si son binarios Linux
 
             #Limpiando el folder si existe (crear la ruta base si no existe)
-            clean_folder_on_program 0 "" "$l_target_path" 0 ""
+            clean_folder_on_tools 0 "" "$l_target_path" 0 ""
 
             #Descomprimiendo el archivo
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "$l_target_path" "graalvm-community-"
@@ -8288,17 +8507,17 @@ function _copy_artifact_files() {
             if [ $p_arti_subversion_index -eq 0 ]; then
 
                 #Crear el enlace simbolico del la ultima version
-                create_folderlink_on_program "$l_target_path" "" "graalvm" ""
+                create_folderlink_on_tools "$l_target_path" "" "graalvm" ""
 
                 #Validar si 'GraalVM' esta en el PATH
-                echo "$PATH" | grep "${g_programs_path}/graalvm/bin" &> /dev/null
+                echo "$PATH" | grep "${g_tools_path}/graalvm/bin" &> /dev/null
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
                     printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
                         "$g_color_yellow1" "GraalVM"  "$p_repo_last_pretty_version" "$g_color_reset"
-                    #printf 'Adicionando a la sesion actual: PATH=%s/graalvm/bin:$PATH\n' "${g_programs_path}"
-                    #export PATH=${g_programs_path}/graalvm/bin:$PATH
-                    #GRAALVM_HOME=${g_programs_path}/graalvm
+                    #printf 'Adicionando a la sesion actual: PATH=%s/graalvm/bin:$PATH\n' "${g_tools_path}"
+                    #export PATH=${g_tools_path}/graalvm/bin:$PATH
+                    #GRAALVM_HOME=${g_tools_path}/graalvm
                     #JAVA_HOME=${GRAALVM_HOME}
                     #export GRAALVM_HOME JAVA_HOME
                 fi
@@ -8315,14 +8534,14 @@ function _copy_artifact_files() {
             if [ $p_is_win_binary -ne 0 ]; then
 
                 #Copiar el comando y dar permiso de ejecucion a todos los usuarios
-                copy_binary_on_command "${l_source_path}" "uv" 0 1
-                copy_binary_on_command "${l_source_path}" "uvx" 0 1
+                copy_binary_file "${l_source_path}" "uv" 0 1
+                copy_binary_file "${l_source_path}" "uvx" 0 1
 
             else
 
                 #Copiar el comando
-                copy_binary_on_command "${l_source_path}" "uv.exe" 1 1
-                copy_binary_on_command "${l_source_path}" "uvx.exe" 1 1
+                copy_binary_file "${l_source_path}" "uv.exe" 1 1
+                copy_binary_file "${l_source_path}" "uvx.exe" 1 1
 
             fi
             ;;
@@ -8542,7 +8761,7 @@ uninstall_initialize_menu_option() {
     printf '%b\n' "$l_repo_names"
 
     if [ $l_is_noninteractive -ne 0 ]; then
-        printf "%b¿Desea continuar con la desinstalación de estos repositorios?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_red1" "$g_color_gray1" "$g_color_reset"
+        printf "%b¿Desea continuar con la desinstalación de estos repositorios?%b (ingrese 's' para 'si' y 'n' para 'no')%b [s]" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
         read -rei 's' -p ': ' l_option
         if [ "$l_option" != "s" ]; then
             printf 'Se cancela la desinstalación de los repositorios\n'
@@ -8695,7 +8914,7 @@ _uninstall_repository() {
     local l_source_path=""
     local l_target_path=""
     if [ $p_is_win_binary -ne 0 ]; then
-        l_target_path="$g_bin_cmdpath"
+        l_target_path="$g_lnx_bin_path"
     else
         l_target_path="$g_win_bin_path"
     fi
@@ -8798,7 +9017,7 @@ _uninstall_repository() {
         cni-plugins)
 
             #1. Ruta local de los artefactos
-            l_target_path="${g_programs_path}/cni_plugins"
+            l_target_path="${g_tools_path}/cni_plugins"
 
             if [ $p_is_win_binary -eq 0 ]; then
                 echo "ERROR: El artefacto[${p_artifact_index}] del repositorio \"${p_repo_id}\" solo esta habilitado para Linux."
@@ -8819,7 +9038,7 @@ _uninstall_repository() {
             fi
 
             #3. Eliminado el archivo para determinar la version actual
-            rm "${g_programs_path}/cni-plugins.info"
+            rm "${g_tools_path}/cni-plugins.info"
             ;;
 
 

@@ -7,7 +7,7 @@
 # Opciones generales
 [core]
     # Editor (colocar la ruta completa si este no esta en el 'PATH'.
-	editor = C:/Tools/Vim/vim91/vim.exe
+	editor = C:/apps/vim/vim91/vim.exe
 
 
 # Incluir los temas del comando 'delta'

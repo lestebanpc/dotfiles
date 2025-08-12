@@ -149,17 +149,17 @@ let g:completion_filetypes = {
 
 " Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.
 " Su valor se calculara, segun prioridad, usando:
-"  > Valor definido en la variable de entorno 'MY_PRGS_PATH' (siempre que defina un valor).
-"  > Si no define un valor, se usara la ruta indicada en esta variable global vim 'g:programs_base_path'.
+"  > Valor definido en la variable de entorno 'MY_TOOLS_PATH' (siempre que defina un valor).
+"  > Si no define un valor, se usara la ruta indicada en esta variable global vim 'g:tools_path'.
 "  > Si no se define una variable o es vacia, se usara el valor por defecto es : '/var/opt/tools'.
 " Dentro de esta ruta se debe encontrar (entre otros) los subfolderes:
 "   > Ruta base donde estan los LSP Server            : './lsp_servers/'
 "   > Ruta base donde estan los DAP Server            : './dap_servers/'
 "   > Ruta base donde estan las extensiones de vscode : './vsc_extensions/'
 " Modiquelo si desea cambiar ese valor el valor por defecto.
-"let g:programs_base_path = 'C:/cli/prgs'
-"let g:programs_base_path = 'D:/cli/prgs'
-"let g:programs_base_path = $HOME .. '/tools'
+"let g:tools_path = 'C:/apps/tools'
+"let g:tools_path = 'D:/apps/tools'
+"let g:tools_path = $HOME .. '/tools'
 
 
 " Adaptadores LSP en modo IDE Vim/NeoVim cuando se usa CoC :

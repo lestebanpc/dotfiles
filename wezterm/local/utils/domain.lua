@@ -65,9 +65,14 @@ local m_custom = {
 }
 
 -- Miembros privados
-local m_ssh_domains = nil
 local m_ssh_infos = nil
+
+-- Cache de los dominios usados por Wezterm
+local m_ssh_domains = nil
 local m_wsl_domains = nil
+local m_unix_domains = nil
+local m_exec_domains = nil
+local m_tls_clients = nil
 
 -- Distribucion WSL/Distrobox que esta ejecutandose cuando se inicia Wezterm (usuado para cargar los dominios exec).
 local m_external_running_distribution = nil
@@ -75,12 +80,8 @@ local m_external_running_distribution = nil
 -- Si esta instalado WSL/Distrobox a nivel local
 local m_is_installed_external_distribution = false
 
-local m_unix_domains = nil
-
-local m_exec_domains = nil
 local m_exec_infos = nil
 
-local m_tls_clients = nil
 
 -- Cache de la informacion de los dominios (calculada automaticamente cuando se usa 'mod.get_domain_info()').
 -- > Tabla tipo diccionario cuyo key es el nombre del dominio
@@ -216,7 +217,13 @@ function mod.setup(
     end
     --mm_wezterm.log_info(m_is_installed_external_distribution)
 
-    -- Limpiar el cache
+    -- Limpiar las variables globales del modulo que deben ser recalculadas
+    m_ssh_domains = nil
+    m_wsl_domains = nil
+    m_unix_domains = nil
+    m_exec_domains = nil
+    m_tls_clients = nil
+
     m_domain_infos = {}
     m_domain_home_dirs = {}
 

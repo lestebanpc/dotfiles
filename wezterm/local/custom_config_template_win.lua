@@ -1,38 +1,93 @@
 --
 -- Consideraciones a tener en cuenta:
--- > Por todas las instancias de un (emulador de) terminal de un mismo usuario solo crea un proceso 'wezterm-gui'.
--- > Pora cada una instancia de terminal que se crea:
---   > Se ejecuta el archivo de configuracion '~/.config/wezterm/wezterm.lua'.
---   > El archivo de configuracion puede volver a cargarse automaticamete cuando este tiene un cambio.
---   > Se se crea una instancia 'built-in multiplexer' el cual crea un worspace por defecto llamado 'default'.
---     Por tal motivo cada instancia tiene su propio tab independientos de otra instancia de la termina.
--- > Una instancia de (emulador de) terminal es un programa GUI que usualmente se inicia de 2 formas:
---   > 'wezterm start --domain <defualt_domain> -- <default_prog>'
---   > 'wezterm-gui start  --domain <defualt_domain> -- <default_prog>', es usado en los 'launcher' de los diferentes sistemas operativo para
---     iniciar el (emulador de terminal). Internamente invoca a 'wezterm start'.
--- > Otras formas de iniciar una instancia del (emulador de terminal) es usando Los subcomandos:
---     > 'wezterm connect <domian>' o 'wezterm-gui connect <domian>',
---     > 'wezterm ssh <server>'     o 'wezterm-gui ssh <server>'
---     > 'wezterm ssh serial'       o 'wezterm-gui ssh serial'
---   Por defecto estos crean una instancia de (emulador de) terminal, pero algunas usando opciones como '--new-tab' permiten que si es
---   eejcutado dentro de terminal existente (que sea WezTerm) puede ejecutar crear un 'Tab' en el workspace actual asociado al dominio asociado
---   al subcomando.
--- > Si inicia una instancia del (emulador de) terminal usando 'wezterm' o 'wezterm-gui' sin subcomando, se puede modificar el subcomando a usar estableciendo el
---   parametro 'config.default_gui_startup_args' del archivo de configuracion y especificando, por ejemplo:
---   > '{ 'start' }'               si desea usar 'wezterm start'
---   > '{ 'ssh', '<server>' }'     si desea usar 'wezterm ssh <server>'
---   > '{ 'connect', '<domain>' }' si desea usar 'wezterm connect <domain>'
---   > '{ 'serial', '<server>' }'  si desea usar 'wezterm serial <server>'
--- > Un 'multiplexer' tiene un solo 'multiplexing domain' el cual gestiona objetos como 'workspace', sus 'tab domain', sus 'tab' y sus 'pane'.
---   > Estos pueden ser:
---     > 'built-in multiplexer'
---     > 'multiplexer server'
---   > Una instancia de servidor solo gestiona un solo 'multiplexing domain' el cual puede tener varios 'workspace'.
---     > Actualmente el dominio de multiplexacion de un 'multiplexer server' solo puede tener 1 solo worspace, pero esta diseñado para tener varios de estos.
---   > Un 'workspace' tine varios 'tab' y este a su vez varios 'pane'-      > Cada instancia del (emulador de terminal) inicia su propio 'built-in multiplexer'
+--
+-- > Un proceso 'wezterm-gui' representa una instancia del emulador de terminal wezterm con su propio 'built-in multiplexor'.
+--   > Una (instancia del) emulador (proceso 'wezterm-gui') tiene su propia instancia de 'built-in multiplexor'. El emulador de terminal siempre depende
+--     de su multiplexor integrado y se encarga de visualizar y mostrar sus objetos: el workspace seleccionado y presenta cada 'MuxWindow' creando su
+--     objeto 'Window', su tabs y su panel.
+--   > El multiplexor es el encargado de gestionar los objetos:
+--     > 'Workspace' que es un conjunto de 'MuxWindow' exclusivos (no pueden ser compartido con otros workspace). Por defecto el multiplexor siempre
+--       tiene un workspace llamado 'default' con una solo 'MuxWindow' y con un solo tab 'MuxTab' con un solo panel 'MuxPane'.
+--     > 'MuxWindow' que tiene un conjunto de 'MuxTab' y este a su vez un conjunto de 'MuxPane'.
+--     > 'MuxDamain' es objeto que define una determina forma de crear 'MuxPane' (la shell que usara, el proceso que ejecutara y sus argumentos, etc.)
+--     > Un 'MuxTab' esta vinculado a un solo objeto 'MuxDomain', por lo que los 'MuxPane' de un 'MuxTab' solo se pueden crear de un sola forma definida
+--       por el 'MuxDomain'.
+--   > Una objeto 'Window' (ventana GUI) es gestionado por el gestor de ventanas del SO (por ejemplo, Wayland) y tiene su 'title bar', 'tab bar' y su
+--     'status bar', y muestran un conjunto de tab (objeto 'TabInformation') y paneles (objeto 'Pane').
+--   > Por cada objeto 'Workspace' (del built-in multiplexer) selecionado en el emulador de terminal, segun la 'MuxDomain' existentes, se creara/mostrara
+--     el un objeto 'Window' mostrando los tab y paneles presentes en este.
+--
+-- > El comando 'wezterm start/connect/ssh/serial', si no encuentra un instancia de emulador de terminal iniciado, siempre inicia uno proceso 'wezterm-gui'.
+--   > Una instancia de (emulador de) terminal se puede crear usando:
+--     > 'wezterm start --domain <defualt_domain> -- <default_prog>'
+--     > 'wezterm-gui start  --domain <defualt_domain> -- <default_prog>'
+--       Es usado en los 'launcher' de los diferentes sistemas operativo para iniciar el (emulador de terminal). Internamente invoca a 'wezterm start'.
+--     > Otras formas de iniciar una instancia del (emulador de terminal) es usando Los subcomandos:
+--       > 'wezterm connect <domian>' o 'wezterm-gui connect <domian>',
+--       > 'wezterm ssh <server>'     o 'wezterm-gui ssh <server>'
+--       > 'wezterm ssh serial'       o 'wezterm-gui ssh serial'
+--   > Si ya existe un proceso 'wezterm-gui', la forma de crear otra instancia es usando 'wezterm start --always-new-process'.
+--   > Pora cada una instancia de terminal que se ejecuta el archivo de configuracion '~/.config/wezterm/wezterm.lua'.
+--     > El archivo de configuracion puede volver a cargarse automaticamete cuando este tiene un cambio.
+--   > Si inicia una instancia del (emulador de) terminal usando 'wezterm' o 'wezterm-gui' sin especificar el subcomando, se considera:
+--     > El comando por defecto es 'start'.
+--     > Este valor por defecto se puede modificar, estableciendo el parametro 'config.default_gui_startup_args' del archivo de configuracion y especificando,
+--       por ejemplo:
+--       > '{ 'start' }'               si desea usar 'wezterm start'
+--       > '{ 'ssh', '<server>' }'     si desea usar 'wezterm ssh <server>'
+--       > '{ 'connect', '<domain>' }' si desea usar 'wezterm connect <domain>'
+--       > '{ 'serial', '<server>' }'  si desea usar 'wezterm serial <server>'
+--
+-- > Los 'multiplexer' usados por Wezterm son:
+--   > 'Multiplexer Server'
+--      > Es un multiplexer externo al proceso 'wezterm-gui'.
+--      > Se ejecuta en un proceso 'wezterm-mux-server' externa a la terminal y expone su API en TSL/HTTPS (usualmente usando un socket IPC).
+--      > Los clientes (procesos 'wezterm-gui') solo se pueden conectar usando:
+--        > Localmente usando el socket IPC expuesto por el 'multiplexer' (actual de IPC server).
+--        > Remotamente se accede usando:
+--          > TLS
+--            > Mediante configuracion del 'multiplexer server' puede exponer el socket IPC en un socket TCP exponiendo el API TLS/HTTPS sobre TPC.
+--          > SSH
+--            > Require de un proxy creado por 'wezterm cli proxy' que facilite la comunicacion de TLS/HTTPS sobre el tunel SSH.
+--      > Actualmente, tiene las siguiente restricciones:
+--        > Solo cuanta con i solo 'MuxDomain' llamado 'local'.
+--        > Solo puede tener 1 solo 'Workspace' llamado 'default' que solo tiene tener 'MuxWindow' locales a este (no existe un 'attach' a 'MuxWindow'
+--          remotos).
+--        > El workspace puede tener multiples 'MuxWindow' con sus 'MuxTab' y sus 'MuxPane' el cual solo puede estar asociado al unico 'MuxDomain'
+--          existente.
+--   > 'Built-in multiplexer'
+--      > Es un multiplexer que se instancia dentreo del proceso 'wezterm-gui'.
 --      > Se crea dentro del propio proceso de la instancia de la terminal.
---      > Tiene un dominio de multiplexacion el cual tiene por defecto como workspace llamado 'default', pero permite crear mas de uno.
---      > Los 'tab domain' que se puede usar son de tipo 'local domain', 'ssh domain', 'wls domain'.
+--      > Puede tener multiples 'workspace', las cuales son creados desde el emulador de terminal.
+--      > Tiene diferentes 'MuxDomains'.
+--      > A un workspace se puede tener vincular (attach) tanto 'MuxWindow' multiplexor integrado o del multiplexor remoto usando IPC/TLS/SSH.
+--        Cuando se vincula a un multiplexor remoto y no existe workspace, se creara automaticamente con un 'MuxWindow' y su respectivo 'Muxtab'
+--        y 'MuxPane'.
+--
+-- > Un cliente de un 'multiplexer' es un proceso 'wezterm-gui' (un mismo usuario y de una maquina) que se conecta a un 'multiplexer'.
+--
+-- > Un 'Domain' es a nivel emulador de terminal ('wezter-gui') define la forma en que se crearan los paneles de un tab (el proceso local a usar, el
+--   interprete de shell a usar, los parametros que se usaran para crearlo) el cual puede ser complejo cuando este se conecta a shell o procesos
+--   remotos.
+--   > Un 'Domain' esta asociado a un 'MuxDomain' de un multiplexor integraado o remoto.
+--   > Los tipos puede ser:
+--     > 'Local Domain'
+--          > Sus paneles solo  proceso locales, usualmente el interprete shell
+--     > 'SSH Domain'
+--        > Puede asociarse al mulitplexor integrado a un 'multiplexer server'.
+--        > Si esta asociado a 'MuxDomain' del multiplexor integrado, es considerado un proceso 'ssh' que se ejecuta localmente pero requiere
+--          conectarse remotamente por SSH.
+--        > Si esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
+--          decida como crear los 'MuxTab' y sus 'MuxPane'. Se usa SSH para comunicarse con el servidor.
+--     > 'WSL Domain'
+--        > Ejecutan un proceso local 'wsl' y siempre esta asocaido a un 'MuxDomain' del 'built-in multiplexer'.
+--     > 'TSL Domain'
+--        > Siempre esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
+--          decida como crear los 'MuxTab' y sus 'MuxPane'.
+--        > Se usa TLS para comunicarse con este, aunque tambien puede usarse SSH solo para el inicio automatico del 'multiplexer server'.
+--     > 'Unix Damain'
+--        > Siempre esta asociado a 'MuxDomain' de un 'multiplexer server' que usualemtne esta local donde esta la termina.
+--        > Se usa socket IPC para comunicarse con este.
 --
 
 
@@ -41,6 +96,14 @@ local mod= {
     --------------------------------------------------------------------------------
     -- Settings> Campos Generales
     --------------------------------------------------------------------------------
+
+    -- Solo valido para Linux. Si es 'true' se conectara a un compositor Wayland, caso contrario se considera un server X11.
+    -- > Si usa X11 en una distribucion que solo usa Wayland, revise que el compositor 'Xwayland' para X11 este activo:
+    --   'ps -fea | grep Xwayland'
+    -- > Limitaciones de usar 'Wayland' en 2024.07.07:
+    --   > No funciona correctamente el sopotte a OSC 52 para manejo del clipboard.
+    --   > El estilo de ventanas funciona peor que el de X11.
+    enable_wayland = false,
 
     -- Si establece en false la navegacion solo lo puede hacer usando teclas para ingresa`r al modo copia, busqueda, copia rapida.
     enable_scrollbar = false,
@@ -59,47 +122,94 @@ local mod= {
     --  3 > Solo muestra el 'tab bar' el cual incluyen los botones cerrar, maximizar, minimizar (estilo 'INTEGRATED_BUTTONS|RESIZE')
     windows_style = 2,
 
+
+    --------------------------------------------------------------------------------
+    -- Setting> Campos para personalizar Dominios
+    --------------------------------------------------------------------------------
+
     -- Permite excluidos los 'host' obtenidos del archivo de configuracion '~/.ssh/config' el cual no se creara su respectivo 'ssh domain'.
     -- Solo los dominios que no son filtrados se crearan un 'ssh domain' con 'multiplexion = "None"'.
     -- Por defecto, se crea adiciona 2 entradas host: '.local' y 'machine/.local'
+    -- > Use '%' para escapar carateres especiales: ( ) . % + - * ? [ ^ $
     filter_config_ssh = {
+        '^%.host',
+        '^machine/%.host',
         '^gl-',
         '^gh-',
-        '^$.host',
-        '^machine',
     },
 
     -- De los domonios obtenidos anteriormente, permite filtrar los dominios SHH que se no se vinculara a un 'multiplexer server' externo.
     -- Solo los dominios que no son filtrados se crearan un 'ssh domain' con 'multiplexion = "WezTerm"'.
+    -- > Use '%' para escapar carateres especiales: ( ) . % + - * ? [ ^ $
     filter_config_ssh_mux = {
         '^sw',
-        '^192$.168$.1$.',
-        '^192$.168$.199$.',
+        '^192$.168%.1%.',
+        '^192$.168%.199%.',
     },
 
-    -- Permite adicionar 'exec domains' que permite ingresar a shell de los contenedores que estan ejecutando localmente.
-    -- No aplica para Windows.
+
+    -- Dominios Unix/IPC que se conectan a servidor IPC externo al host al que se ejecuta el emulador de terminal. Usualmente estos casos se
+    -- genera cuando usa tecnicas de redireccion de socket IPC a servidor IPC ubicado en equipos remotos.
+    -- En Windows, los dominios sockets registrados se consideran que siempre son a servicios externos, por tal motivo no necesita incluirlo
+    -- en esta lista.
+    external_unix_domains = nil,
+    --external_unix_domains = {
+    --    'ipc:mysocket1',
+    --    'ipc:mysocket2',
+    --},
+
+
+    --------------------------------------------------------------------------------
+    -- Setting> Campos para personalizar Dominios de tipo 'exec'
+    --------------------------------------------------------------------------------
+
+    -- Identificador de la distribucion linux Distrobox/WSL diferente al local y que que esta ejecutandose, el cual es usado para cargar dominios de tipo 'exec'
+    -- asociados a sus procesos que ejecutan dentro de esta distribucion.
+    -- > El valor puede variar en el sistema operativo:
+    --   > En Windows: es el nombre de la distribucion WSL (este siempre esta asociado a un dominios WSL que se carga automaticamente).
+    --   > En Linux  : es el nombre de la distribucion distrobox (este es un contenedor especial gestionado por distrobox y esta asociado a u
+    --     dominio 'exec' cargado cuando 'load_containers' es 'true').
+    -- > El valor real es calculado automaticamente usando los siguientes criterios:
+    --   > Si no se tiene distribuciones WSL/distrobox en ejecucion, su valor se establecera a 'nil'.
+    --   > Si su valor es por defecto ('nil') y existe distribuciones WSL/distrobox en ejecucion, su valor siempre sera el primera distribucion
+    --     WSL/distrobox en ejecucion encontrada.
+    --   > Si se establece un valor y no es encontrado en una distribucion WSL en ejecucion, su valor se establece en la primera encontrada.
+    -- > El valor real es calculado en 2 escenarios:
+    --   > Durante el primer inicio del emulador de terminal 'wezterm' y es usado para calcular los dominios 'exec' generados automaticamente.
+    --   > Cuando se desea crear o ir a un workspace, donde muestra los 'path' o 'tag' asociados es esta distribucion.
+    external_running_distribution = nil,
+
+    -- Permite adicionar 'exec domains' que permite ingresar a shell de los contenedores, que estan ejecutando localmente y/o en la distribucion WSL
+    -- definido por 'external_running_distribution', pero no esta gestionados por distrobox (en caso de Linux).
     load_containers = false,
 
-    -- Permite adicionar 'exec domains' que permite ingresar a shell de los pod que estan ejecutando en el namespace por defecto.
-    -- No aplica para Windows.
-    load_current_ns_pod = false,
 
-    -- Ruta del folder donde buscar los repositorios git usados para crear un workspace.
+    --------------------------------------------------------------------------------
+    -- Setting> Campos para configurar worskpace
+    --------------------------------------------------------------------------------
+
+    -- Ruta del folder donde buscar los repositorios git, donde se encuentra diferentes proyectos 'git', usados para crear un workspace asociado
+    -- a path del dominio local y dominios tipos unix (asociados servidor IPC locales).
+    -- > Se puede usar '~' al inicio para representar el 'home directory' del usuario actual y local.
+    --root_git_folder = nil,
     root_git_folder = '~/code',
 
-    -- Ruta del folder donde buscar los repositorios git usados para crear un workspace en una instancia WSL (solo Windows).
-    wsl_root_git_folder = '~/code',
+    -- Ruta del folder donde buscar los repositorios git, donde se encuentra diferentes proyectos 'git', usados para crear un workspace asociado
+    -- a path del dominio externo al local:
+    -- > En Windows: el directorio donde se encuentra en cualquier distribucion WSL (actualmente aplica a todos los dominios WSL).
+    -- > En Linux  : el directorio donde se encuentra en cualquier contenedor distrobox (un tipo de dominio 'exec' y actualmente aplica a todos
+    --   estos dominios existentes)
+    -- > Se puede usar '~' al inicio para representar el 'home directory' del usuario por defecto de la distribucion WSL/distrobox remota.
+    -- > Se puede usar '@' al inicio para representar el 'home directory' del usuario actual y local.
+    external_root_git_folder = '@/code',
+    --external_root_git_folder = nil,
+    --external_root_git_folder = '~/code',
 
+    -- Cargar los built-in tags para crear worspace usando rutas de carpetas del dominio local.
+    load_local_builtin_tags = true,
 
-    -- Nombrew de la distribucion WSL que esta ejecutandose y usado por defecto usando para cargar algunos 'exec_domains',
-    -- Solo para Windows y su valor puede ser modificado cuando:
-    -- > Si no se tiene distribuciones WSL en ejecucion, se establecera a nil
-    -- > Si se establece a 'nil' y tiene distribuciones WSL en ejecucion, su valor siempre sera el primera distribucion WSL en ejecucion
-    --   encontrada.
-    -- > Si se establece un valor y no es encontrado en una distribucion WSL en ejecucion, su valor se establece en la primera encontrada.
-    wsl_default_running_distribution = nil,
-    --wsl_default_running_distribution = "Ubuntu",
+    -- Cargar los built-in tags para crear worspace usando rutas de carpetas externas al dominio local.
+    load_external_builtin_tags = true,
 
 
     --------------------------------------------------------------------------------
@@ -128,27 +238,32 @@ local mod= {
 
 }
 
-
-
 ------------------------------------------------------------------------------------
--- Setting> Tab Damains asociado a worspace remoto
+-- Setting> Damains
 ------------------------------------------------------------------------------------
 --
--- Un 'tab domain' es un forma de organizar tab y paneles que tiene un usan proceso locales comunes y tiene características similares.
---  > Los tab y paneles de un 'tab domain' se crea de manera similar usando el mismo proceso, conectandose el mismo servidor remoto, etc.
---  > Un 'tab domain' define parámetros para que se cree un tab y sus paneles.
--- Los 'tab domian' asociado a un workspace remoto se caracteriza por:
---  > Solo puede ser usuyados por 'built-in workspace'.
---  > Pueden iniciar automaticamente el 'multiplexer server' remoto.
---  > Los objetos 'tab' y 'pane' se crea en el 'multiplexer server', este solo lo visualiza
--- Los 'tab domian' asociado a un workspace remoto pueden ser:
---  > 'SSH Domain' (si esta asociado un un 'multiplexer server')
---    > Cuando al dominio se define con el atributo 'multiplexing' a 'WezTerm'.
---    > Permite vinculara ('attach') a un workspace de un 'multiplexer server' ubicado en un servidor SSH.
---  > 'Unix Damain'
---    > Se conecta a un 'multiplexer server' localmente usando socket IPC.
--- For more details, see: https://wezfurlong.org/wezterm/multiplexing.html
---
+-- > Un 'Domain' es a nivel emulador de terminal ('wezter-gui') define la forma en que se crearan los paneles de un tab (el proceso local a usar, el
+--   interprete de shell a usar, los parametros que se usaran para crearlo) el cual puede ser complejo cuando este se conecta a shell o procesos
+--   remotos.
+--   > Un 'Domain' esta asociado a un 'MuxDomain' de un multiplexor integraado o remoto.
+--   > Los tipos puede ser:
+--     > 'Local Domain'
+--          > Sus paneles solo  proceso locales, usualmente el interprete shell
+--     > 'SSH Domain'
+--        > Puede asociarse al mulitplexor integrado a un 'multiplexer server'.
+--        > Si esta asociado a 'MuxDomain' del multiplexor integrado, es considerado un proceso 'ssh' que se ejecuta localmente pero requiere
+--          conectarse remotamente por SSH.
+--        > Si esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
+--          decida como crear los 'MuxTab' y sus 'MuxPane'. Se usa SSH para comunicarse con el servidor.
+--     > 'WSL Domain'
+--        > Ejecutan un proceso local 'wsl' y siempre esta asocaido a un 'MuxDomain' del 'built-in multiplexer'.
+--     > 'TSL Domain'
+--        > Siempre esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
+--          decida como crear los 'MuxTab' y sus 'MuxPane'.
+--        > Se usa TLS para comunicarse con este, aunque tambien puede usarse SSH solo para el inicio automatico del 'multiplexer server'.
+--     > 'Unix Damain'
+--        > Siempre esta asociado a 'MuxDomain' de un 'multiplexer server' que usualemtne esta local donde esta la termina.
+--        > Se usa socket IPC para comunicarse con este.
 
 
 -- Definir el 'IPC client' y/o 'IPC server':
@@ -271,38 +386,6 @@ mod.tls_clients = nil
 --}
 
 
-
-------------------------------------------------------------------------------------
--- Setting> Tab Damains asociado a proceso locales o worspace remotos
-------------------------------------------------------------------------------------
---
--- Un 'tab domain' es un forma de organizar tab y paneles que tiene un usan proceso locales comunes y tiene características similares.
---  > Los tab y paneles de un 'tab domain' se crea de manera similar usando el mismo proceso, conectandose el mismo servidor remoto, etc.
---  > Un 'tab domain' define parámetros para que se cree un tab y sus paneles.
--- Los 'tab domian' asociado a proceso locales puede ser:
---  > 'Local Domain'
---       > Sus paneles solo  proceso locales, usualmente el interprete shell
---       > Usado en 'built-in multiplexer' y 'multiplexer server'.
---  > 'SSH Domain' (si no esta asociado un un 'multiplexer server')
---     > Es considerado un proceso 'ssh' que se ejecuta localmente pero requiere conectarse remotamente por SSH.
---     > Usado en 'built-in multiplexer'.
---  > 'WSL Domain'
---     > Ejecutan un proceso local 'wsl' y no usan un 'multiplexer server'.
---     > Usado en 'built-in multiplexer'.
--- Los 'tab domian' asociado a un workspace remoto se caracteriza por:
---  > Solo puede ser usuyados por 'built-in workspace'.
---  > Pueden iniciar automaticamente el 'multiplexer server' remoto.
---  > Los objetos 'tab' y 'pane' se crea en el 'multiplexer server', este solo lo visualiza
--- Los 'tab domian' asociado a un workspace remoto pueden ser:
---  > 'SSH Domain' (si esta asociado un un 'multiplexer server')
---    > Cuando al dominio se define con el atributo 'multiplexing' a 'WezTerm'.
---    > Permite vinculara ('attach') a un workspace de un 'multiplexer server' ubicado en un servidor SSH.
---  > 'Unix Damain'
---    > Se conecta a un 'multiplexer server' localmente usando socket IPC.
--- For more details, see: https://wezfurlong.org/wezterm/multiplexing.html
---
-
-
 -- Definir el cliente SSH para conectarse a un un servidor
 -- > Si 'multiplexing' es 'Wezterm', el cliente (terminal) intentara de iniciar automaticamente el 'multiplexer server' luego del
 --   haber iniciado la session SSH. En este caso el cliente se conecta a un 'multiplexing domain' (con sus propios worskpace
@@ -369,51 +452,92 @@ mod.ssh_domains = nil
 --}
 
 
+------------------------------------------------------------------------------------
+-- Setting> Data para crear mis Exec Domains
+------------------------------------------------------------------------------------
+--
+-- Data usada para definir un 'ExecDomain' (parametros que se usa la funcion 'wezterm.exec_domain()' para definir este dominio).
+-- URL: https://wezterm.org/config/lua/ExecDomain.html
+mod.exec_domain_datas = nil
+--mod.exec_domain_datas = {
+--    {
+--        -- Nombre del dominio
+--        name = 'exec:name1',
+--
+--        -- Callback que tiene como argumento el objeto 'SpawnCommand' el cual modifica y devuelve el mismo objeto modificiado.
+--        -- URL: https://wezterm.org/config/lua/SpawnCommand.html
+--        callback_fixup = nil,
+--
+--        -- Callback usado para generar el label usado para mostrar el los 'InputSelector' de 'Launcher Menu'.
+--        -- Se envia un solo argumento que es el nombre del dominio.
+--        -- Opcional.
+--        callback_label = nil,
+--
+--        -- Informacion adicional usado para pintar informacion adicional en el 'InputSelector'
+--        -- Opcional.
+--        data = nil,
+--
+--        -- Si esta asociado a un proceso remoto externo al equipo local donde se ejecuta el emulador de terminal.
+--        -- Siempre tiene un filesystem diferente al equipo local, por los contenedores son considerados external.
+--        -- Por defecto es 'true'.
+--        is_external = true,
+--    },
+--}
+
+
+
+------------------------------------------------------------------------------------
+-- Setting> Workspace tag (permite crear workspace asociado a full-path)
+------------------------------------------------------------------------------------
+--
+-- Arreglo de tag de workspace, usado para crear worspace basado en ruta de un determinado categoria de dominio o dominio.
+-- > name             : Nombre unico del tag.
+--                      Debido a que inicialemente es el nombre del workspace, debe ser unico no puede usarse el nombre de workspace
+--                      por defecto.
+-- > fullpath         : Ruta completa del directorio de trabajo.
+-- > domain_category  : Define una forma de agrupar el domino al cual puede pertener un ruta 'fullpath' (working directory).
+--     > local        : Si es el dominio local o un dominio de tipo 'unix' (si esta asociado a un servidor IPC ubicado en
+--                      el mismo host que el emulador de terminal.
+--     > distrobox    : Si es un dominio de tipo 'exec' asociado a un contenedor distrobox.
+--     > wsl          : Si es un dominio de tipo 'wsl'
+-- > domain           : Opcional. Si no se define, la ruta aplica a todos los dominios de la misma categoria
+-- > callback         : Funcion con parametros usado que modifica o crea paneles del workspace. Los parametros de este callback son:
+--   > Objeto 'Window'
+--   > Objeto 'Pane' (nuevo panel creado del tab por defecto del worspace creado)
+--   > Workspace name
+--   > Workspace info
+--mod.workspace_tags = nil
+mod.workspace_tags = {
+    {
+        name = 'download',
+        fullpath = '/tempo/download',
+        domain_category = 'local',
+    },
+}
+
+
 
 ------------------------------------------------------------------------------------
 -- Setting> Launching Programs
 ------------------------------------------------------------------------------------
---
--- The launcher menu is accessed from the new tab button in the tab bar UI; the + button to the right of the tabs. Left clicking on the button will spawn a new tab,
--- but right clicking on it will open the launcher menu. You may also bind a key to the ShowLauncher or ShowLauncherArgs action to trigger the menu.
--- The launcher menu by default lists the various non-lolcal multiplexer domains and offers the option of connecting and spawning tabs/windows in those domains.
---
 
---mod.launch_menu = nil
 mod.launch_menu = {
    {
        -- Optional label to show in the launcher. If omitted, a label is derived from the `args`.
-       label = " Windows PowerShell",
+       label = " PowerShell Core",
        -- Command to run into new tab. The argument array to spawn.
-       args = { "powershell" },
+       args =  { "pwsh", "-l" },
        -- You can specify an alternative current working directory; if you don't specify one then a default based on the OSC 7
        -- escape sequence will be used (see the Shell Integration docs), falling back to the home directory.
        --cwd = "/some/path",
        -- You can override environment variables just for this command by setting this here.
        --set_environment_variables = { FOO = "bar" },
    },
-   {
-       -- Optional label to show in the launcher. If omitted, a label is derived from the `args`.
-       label = "󰨊 PowerShell Core",
-       -- Command to run into new tab. The argument array to spawn.
-       args = { "pwsh" },
-       -- You can specify an alternative current working directory; if you don't specify one then a default based on the OSC 7
-       -- escape sequence will be used (see the Shell Integration docs), falling back to the home directory.
-       --cwd = "/some/path",
-       -- You can override environment variables just for this command by setting this here.
-       --set_environment_variables = { FOO = "bar" },
-   },
-   {
-       -- Optional label to show in the launcher. If omitted, a label is derived from the `args`.
-       label = " Cmd",
-       -- Command to run into new tab. The argument array to spawn.
-       args = { "cmd" },
-       -- You can specify an alternative current working directory; if you don't specify one then a default based on the OSC 7
-       -- escape sequence will be used (see the Shell Integration docs), falling back to the home directory.
-       --cwd = "/some/path",
-       -- You can override environment variables just for this command by setting this here.
-       --set_environment_variables = { FOO = "bar" },
-   },
+   { label = " Bash", args = { "bash", "-l" }, },
+   { label = " Btop", args = { "btop" }, },
+   --{ label = " Fish", args = { "/opt/homebrew/bin/fish" }, },
+   --{ label = " Nushell", args = { "/opt/homebrew/bin/nu" }, },
+   --{ label = " Zsh", args = { "zsh" } },
  }
 
 

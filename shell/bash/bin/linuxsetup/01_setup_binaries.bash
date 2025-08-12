@@ -931,20 +931,20 @@ function get_repo_current_pretty_version() {
 
         if [ $p_is_win_binary -eq 0 ]; then
 
-            if [ ! -f "${g_win_programs_path}/${l_param1}" ]; then
+            if [ ! -f "${g_win_tools_path}/${l_param1}" ]; then
                 return 2
             fi
 
-            l_repo_current_version=$(cat "${g_win_programs_path}/${l_param1}" | head -n 1)
+            l_repo_current_version=$(cat "${g_win_tools_path}/${l_param1}" | head -n 1)
             l_status=$?
 
         else
 
-            if [ ! -f "${g_programs_path}/${l_param1}" ]; then
+            if [ ! -f "${g_tools_path}/${l_param1}" ]; then
                 return 2
             fi
 
-            l_repo_current_version=$(cat "${g_programs_path}/${l_param1}" | head -n 1)
+            l_repo_current_version=$(cat "${g_tools_path}/${l_param1}" | head -n 1)
             l_status=$?
 
         fi
@@ -991,9 +991,9 @@ function get_repo_current_pretty_version() {
             l_executable="$p_executable_base_path/${l_param1}"
         else
             if [ $p_is_win_binary -eq 0 ]; then
-                l_executable="${g_win_programs_path}/${l_param4}/${l_param1}"
+                l_executable="${g_win_tools_path}/${l_param4}/${l_param1}"
             else
-                l_executable="${g_programs_path}/${l_param4}/${l_param1}"
+                l_executable="${g_tools_path}/${l_param4}/${l_param1}"
             fi
         fi
 
@@ -1010,7 +1010,7 @@ function get_repo_current_pretty_version() {
             if [ $p_is_win_binary -eq 0 ]; then
                 l_executable="${g_win_bin_path}/${l_param1}"
             else
-                l_executable="${g_bin_cmdpath}/${l_param1}"
+                l_executable="${g_lnx_bin_path}/${l_param1}"
             fi
         fi
 
@@ -4083,34 +4083,37 @@ g_repo_name=''
 
 #Folder base donde se almacena los subfolderes de los programas.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
-# - Si no es un valor valido, la funcion "get_program_path" asignara un sus posibles valores (segun orden de prioridad):
+# - Si no es un valor valido, la funcion "get_tools_path" asignara un sus posibles valores (segun orden de prioridad):
 #     > "/var/opt/tools"
 #     > "~/tools"
-g_programs_path=''
+g_tools_path=''
 
 #Folder base donde se almacena el comando y sus archivos afines.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura), dentro
 #   de este folder se creara/usara la siguiente estructura de folderes:
-#     > "${g_cmd_base_path}/bin"         : subfolder donde se almacena los comandos.
-#     > "${g_cmd_base_path}/man/man1"    : subfolder donde se almacena archivos de ayuda man1.
-#     > "${g_cmd_base_path}/man/man5"    : subfolder donde se almacena archivos de ayuda man5.
-#     > "${g_cmd_base_path}/man/man7"    : subfolder donde se almacena archivos de ayuda man7.
-#     > "${g_cmd_base_path}/share/fonts" : subfolder donde se almacena las fuentes.
-# - Si no es un valor valido, la funcion "get_command_path" asignara un sus posibles valores (segun orden de prioridad):
+#     > "${g_lnx_base_path}/bin"            : subfolder donde se almacena los comandos.
+#     > "${g_lnx_base_path}/share/man/man1" : subfolder donde se almacena archivos de ayuda man1.
+#     > "${g_lnx_base_path}/share/man/man5" : subfolder donde se almacena archivos de ayuda man5.
+#     > "${g_lnx_base_path}/share/man/man7" : subfolder donde se almacena archivos de ayuda man7.
+#     > "${g_lnx_base_path}/share/fonts"    : subfolder donde se almacena las fuentes.
+#     > "${g_lnx_base_path}/share/icons"    : subfolder donde se almacena los iconos o imagenes usuados por programas GUI.
+# - Si no es un valor valido, la funcion "g_lnx_paths" asignara un sus posibles valores (segun orden de prioridad):
 #     > Si tiene permisos administrativos, usara los folderes predeterminado para todos los usuarios:
-#        - "/usr/local/bin"      : subfolder donde se almacena los comandos.
-#        - "/usr/local/man/man1" : subfolder donde se almacena archivos de ayuda man1.
-#        - "/usr/local/man/man5" : subfolder donde se almacena archivos de ayuda man5.
-#        - "/usr/local/man/man7" : subfolder donde se almacena archivos de ayuda man7.
-#        - "/usr/share/fonts"    : subfolder donde se almacena las fuentes.
+#        - "/usr/local/bin"            : subfolder donde se almacena los comandos.
+#        - "/usr/local/share/man/man1" : subfolder donde se almacena archivos de ayuda man1.
+#        - "/usr/local/share/man/man5" : subfolder donde se almacena archivos de ayuda man5.
+#        - "/usr/local/share/man/man7" : subfolder donde se almacena archivos de ayuda man7.
+#        - "/usr/local/share/fonts"    : subfolder donde se almacena las fuentes.
+#        - "/usr/local/share/icons"    : Subfolder donde se almacena los iconos o imagenes usados por programas GUI.
 #     > Caso contrario, se usara los folderes predeterminado para el usuario:
-#        - "~/.local/bin"         : subfolder donde se almacena los comandos.
-#        - "~/.local/man/man1"    : subfolder donde se almacena archivos de ayuda man1.
-#        - "~/.local/man/man5"    : subfolder donde se almacena archivos de ayuda man5.
-#        - "~/.local/man/man7"    : subfolder donde se almacena archivos de ayuda man7.
-#        - "~/.local/share/fonts" : subfolder donde se almacena las fuentes.
-# - Si el valor es vaciom se usara el los folderes predeterminado para todos los usuarios.
-g_cmd_base_path=''
+#        - "~/.local/bin"              : subfolder donde se almacena los comandos.
+#        - "~/.local/share/man/man1"   : subfolder donde se almacena archivos de ayuda man1.
+#        - "~/.local/share/man/man5"   : subfolder donde se almacena archivos de ayuda man5.
+#        - "~/.local/share/man/man7"   : subfolder donde se almacena archivos de ayuda man7.
+#        - "~/.local/share/fonts"      : subfolder donde se almacena las fuentes.
+#        - "~/.local/share/icons"      : Subfolder donde se almacena los iconos o imagenes usados por programas GUI.
+# - Si el valor es vacio, se usara el los folderes predeterminado para todos los usuarios.
+g_lnx_base_path=''
 
 #Folder base donde se almacena data temporal que sera eliminado automaticamente despues completar la configuración.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
@@ -4120,9 +4123,9 @@ g_temp_path=''
 
 #Folder base, generados solo para Linux WSL, donde se almacena el programas, comando y afines usados por Windows.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
-# - Si no es un valor valido, se asignara su valor por defecto "/mnt/c/cli" (es decir "c:\cli").
+# - Si no es un valor valido, se asignara su valor por defecto "/mnt/c/apps" (es decir "c:\apps").
 # - En este folder se creara/usara la siguiente estructura de folderes:
-#     > "${g_win_base_path}/prgs"     : subfolder donde se almacena los subfolder de los programas.
+#     > "${g_win_base_path}/tools"     : subfolder donde se almacena los subfolder de los programas.
 #     > "${g_win_base_path}/cmds/bin" : subfolder donde se almacena los comandos.
 #     > "${g_win_base_path}/cmds/doc" : subfolder donde se almacena documentacion del comando.
 #     > "${g_win_base_path}/cmds/etc" : subfolder donde se almacena archivos adicionales del comando.
@@ -4150,7 +4153,7 @@ fi
 
 #Establecer el valor por defecto 'g_win_bin_path', si no se especifo una valor valido (no existe y no tiene permisos de escritura).
 if [ $g_os_type -eq 1 ] && { [ -z "$g_win_base_path" ] || [ ! -w "$g_win_base_path" ]; }; then
-    g_win_base_path='/mnt/c/cli'
+    g_win_base_path='/mnt/c/apps'
 fi
 
 
@@ -4166,16 +4169,16 @@ g_targethome_group=''
 g_repo_path=''
 
 #Usuario del owner del folder base de programa.
-g_programs_owner=''
+g_tools_owner=''
 
 #Grupo de acceso del folder base de programa
-g_programs_group=''
+g_tools_group=''
 
 #Usuario del owner del folder base de comandos
-g_cmd_base_owner=''
+g_lnx_base_owner=''
 
 #Grupo de acceso del folder base de comandos
-g_cmd_base_group=''
+g_lnx_base_group=''
 
 #Flag que determina si el usuario runner (el usuario que ejecuta este script de instalación) es el usuario objetivo o no.
 #Su valor es calculado por 'get_targethome_info'.
@@ -4185,38 +4188,44 @@ g_cmd_base_group=''
 g_runner_is_target_user=0
 
 #Validar los requisitos que debe cumplir el script de instalación:
-#Folder donde se almacena los binarios. Su valor es autogenerado por "get_command_path" y puede ser:
-# - "${g_cmd_base_path}/bin"
+#Folder donde se almacena los binarios. Su valor es autogenerado por "g_lnx_paths" y puede ser:
+# - "${g_lnx_base_path}/bin"
 # - "/usr/local/bin"
 # - "~/.local/bin"
-g_bin_cmdpath=''
+g_lnx_bin_path=''
 
 #Folder donde se almacena los subfolderes './man1/', './man5/' y './man7/' donde estan los archivos de ayuda man1, man5 y man7.
-#Su valor es autogenerado por "get_command_path" y puede ser:
-# - "${g_cmd_base_path}/man/man1"  "${g_cmd_base_path}/man/man5" "${g_cmd_base_path}/man/man7"
-# - "/usr/local/man/man1"          "/usr/local/man/man5"         "/usr/local/man/man7"
-# - "~/.local/man/man1"            "~/.local/man/man1"           "~/.local/man/man1"
-g_man_cmdpath=''
+#Su valor es autogenerado por "g_lnx_paths" y puede ser:
+# - "${g_lnx_base_path}/man/man1"  "${g_lnx_base_path}/man/man5"  "${g_lnx_base_path}/man/man7"
+# - "/usr/local/share/man/man1"    "/usr/local/share/man/man5"    "/usr/local/share/man/man7"
+# - "~/.local/share/man/man1"      "~/.local/share/man/man1"      "~/.local/share/man/man1"
+g_lnx_man_path=''
 
-#Folder donde se almacena los archivos fuentes. Su valor es autogenerado por "get_command_path" y puede ser:
-# - "${g_cmd_base_path}/share/fonts"
-# - "/usr/share/fonts"
+#Folder donde se almacena los archivos fuentes. Su valor es autogenerado por "g_lnx_paths" y puede ser:
+# - "${g_lnx_base_path}/share/fonts"
+# - "/usr/local/share/fonts"
+# - "~/.local/local/share/fonts"
+g_lnx_fonts_path=''
+
+#Folder donde se almacena los archivos fuentes. Su valor es autogenerado por "g_lnx_paths" y puede ser:
+# - "${g_lnx_base_path}/share/icons"
+# - "/usr/local/share/icons"
 # - "~/.local/share/fonts"
-g_fonts_cmdpath=''
+g_lnx_icons_path=''
 
-#Define el tipo de ruta escogido para los comandos. Su valor, es CALCULADO por "get_command_path". Su valor puede ser 0 o la suma binario
+#Define el tipo de ruta escogido para los comandos. Su valor, es CALCULADO por "g_lnx_paths". Su valor puede ser 0 o la suma binario
 #de las siguientes flags:
 # 00001 (1) - La carpeta de comandos esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
 # 00010 (2) - La carpeta de comandos tiene como owner al usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
 # 00100 (4) - La carpeta de comandos es una ruta personalizado (ingresada por el usuario)
-g_cmd_path_options=1
+g_lnx_base_options=1
 
-#Define el tipo de ruta escogido para los programas. Su valor, es CALCULADO por "get_program_path". Su valor puede ser 0 o la suma binaria
+#Define el tipo de ruta escogido para los programas. Su valor, es CALCULADO por "get_tools_path". Su valor puede ser 0 o la suma binaria
 #de las siguientes flags:
 # 00001 (1) - La carpeta de programas esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
 # 00010 (2) - La carpeta de programas tiene como owner al usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
 # 00100 (4) - La carpeta de programas es una ruta ruta personalizado (ingresada por el usuario)
-g_prg_path_options=1
+g_tools_options=1
 
 
 #Estado del almacenado temporalmente de las credenciales para sudo
@@ -4248,11 +4257,11 @@ g_offset_option_index_menu_uninstall=0
 #Variables de la rutas usadas para almacenar binarios en el Windows asociado a un WSL2
 if [ $g_os_type -eq 1 ]; then
 
-    g_win_programs_path="${g_win_base_path}/prgs"
+    g_win_tools_path="${g_win_base_path}/tools"
     g_win_bin_path="${g_win_base_path}/cmds/bin"
-    g_win_doc_path="${g_win_base_path}/cmds/doc"
     g_win_etc_path="${g_win_base_path}/cmds/etc"
-    g_win_font_path="${g_win_base_path}/fonts"
+    g_win_docs_path="${g_win_base_path}/cmds/docs"
+    g_win_fonts_path="${g_win_base_path}/fonts"
 
 fi
 
@@ -4279,11 +4288,12 @@ if [ $gp_uninstall -eq 0 ]; then
     #    "/var/opt/tools" o "~/tools".
     # 5> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1, man5 y man7 ("CMD_PATH_BASE/man/...") y fonts ("CMD_PATH_BASE/share/fonts").
     #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
-    #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
-    #       > Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)
-    #       > Archivos man5 : "/usr/local/man/man5" (para todos los usuarios) y "~/.local/man/man5"    (solo para el usuario actual)
-    #       > Archivos man7 : "/usr/local/man/man7" (para todos los usuarios) y "~/.local/man/man7"    (solo para el usuario actual)
-    #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
+    #       > Comandos         : "/usr/local/bin"            (para todos los usuarios) y "~/.local/bin"            (solo para el usuario actual)
+    #       > Archivos man1    : "/usr/local/share/man/man1" (para todos los usuarios) y "~/.local/share/man/man1" (solo para el usuario actual)
+    #       > Archivos man5    : "/usr/local/share/man/man5" (para todos los usuarios) y "~/.local/share/man/man5" (solo para el usuario actual)
+    #       > Archivos man7    : "/usr/local/share/man/man7" (para todos los usuarios) y "~/.local/share/man/man7" (solo para el usuario actual)
+    #       > Archivo fuentes  : "/usr/local/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts"    (solo para el usuario actual)
+    #       > Archivo imagenes : "/usr/local/share/icons"    (para todos los usuarios) y "~/.local/share/icons"    (solo para el usuario actual)
     # 6> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
 
     #Calcular el valor efectivo de 'g_repo_name'.
@@ -4309,14 +4319,14 @@ if [ $gp_uninstall -eq 0 ]; then
     fi
 
 
-    #Obtener la ruta real del folder donde se alamacena los de programas 'g_programs_path'
+    #Obtener la ruta real del folder donde se alamacena los de programas 'g_tools_path'
     if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
         #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-        g_programs_path="$4"
+        g_tools_path="$4"
     fi
 
     _g_is_noninteractive=1
-    get_program_path $_g_is_noninteractive "$g_programs_path"
+    get_tools_path $_g_is_noninteractive "$g_tools_path"
     _g_status=$?
     if [ $_g_status -ne 0 ]; then
         printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
@@ -4324,13 +4334,13 @@ if [ $gp_uninstall -eq 0 ]; then
     fi
 
 
-    #Obtener la ruta real del folder de comandos 'g_bin_cmdpath', archivos de ayuda 'g_man_cmdpath' y fuentes de letras 'g_fonts_cmdpath'
+    #Obtener la ruta real del folder de comandos 'g_lnx_bin_path', archivos de ayuda 'g_lnx_man_path' y fuentes de letras 'g_lnx_fonts_path'
     if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
         #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-        g_cmd_base_path="$5"
+        g_lnx_base_path="$5"
     fi
 
-    get_command_path $_g_is_noninteractive "$g_cmd_base_path"
+    g_lnx_paths $_g_is_noninteractive "$g_lnx_base_path"
     _g_status=$?
     if [ $_g_status -ne 0 ]; then
         printf 'No se pede establecer la ruta base donde se instalarán los comandos.\n'
@@ -4383,11 +4393,12 @@ else
         #    "/var/opt/tools" o "~/tools".
         # 5> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
         #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
-        #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
-        #       > Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)
-        #       > Archivos man5 : "/usr/local/man/man5" (para todos los usuarios) y "~/.local/man/man5"    (solo para el usuario actual)
-        #       > Archivos man7 : "/usr/local/man/man7" (para todos los usuarios) y "~/.local/man/man7"    (solo para el usuario actual)
-        #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
+        #       > Comandos         : "/usr/local/bin"            (para todos los usuarios) y "~/.local/bin"            (solo para el usuario actual)
+        #       > Archivos man1    : "/usr/local/share/man/man1" (para todos los usuarios) y "~/.local/share/man/man1" (solo para el usuario actual)
+        #       > Archivos man5    : "/usr/local/share/man/man5" (para todos los usuarios) y "~/.local/share/man/man5" (solo para el usuario actual)
+        #       > Archivos man7    : "/usr/local/share/man/man7" (para todos los usuarios) y "~/.local/share/man/man7" (solo para el usuario actual)
+        #       > Archivo fuentes  : "/usr/local/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts"    (solo para el usuario actual)
+        #       > Archivo imagenes : "/usr/local/share/icons"    (para todos los usuarios) y "~/.local/share/icons"    (solo para el usuario actual)
         # 6> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
         # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
         # 8> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
@@ -4416,14 +4427,14 @@ else
         fi
 
 
-        #Obtener la ruta real del folder donde se alamacena los de programas 'g_programs_path'
+        #Obtener la ruta real del folder donde se alamacena los de programas 'g_tools_path'
         if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
             #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_programs_path="$4"
+            g_tools_path="$4"
         fi
 
         _g_is_noninteractive=1
-        get_program_path $_g_is_noninteractive "$g_programs_path"
+        get_tools_path $_g_is_noninteractive "$g_tools_path"
         _g_status=$?
         if [ $_g_status -ne 0 ]; then
             printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
@@ -4431,13 +4442,13 @@ else
         fi
 
 
-        #Obtener la ruta real del folder de comandos 'g_bin_cmdpath', archivos de ayuda 'g_man_cmdpath' y fuentes de letras 'g_fonts_cmdpath'
+        #Obtener la ruta real del folder de comandos 'g_lnx_bin_path', archivos de ayuda 'g_lnx_man_path' y fuentes de letras 'g_lnx_fonts_path'
         if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
             #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_cmd_base_path="$5"
+            g_lnx_base_path="$5"
         fi
 
-        get_command_path $_g_is_noninteractive "$g_cmd_base_path"
+        g_lnx_paths $_g_is_noninteractive "$g_lnx_base_path"
         _g_status=$?
         if [ $_g_status -ne 0 ]; then
             printf 'No se pede establecer la ruta base donde se instalarán los comandos.\n'
@@ -4460,7 +4471,7 @@ else
         fi
 
         if [ "$8" = "0" ]; then
-            echo "$g_programs_path" > /tmp/prgpath.txt
+            echo "$g_tools_path" > /tmp/prgpath.txt
         fi
 
         #Validar los requisitos
@@ -4497,11 +4508,12 @@ else
         #    "/var/opt/tools" o "~/tools".
         # 6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
         #    Si se envia vacio o EMPTY se usara el directorio predeterminado.
-        #       > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
-        #       > Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)
-        #       > Archivos man5 : "/usr/local/man/man5" (para todos los usuarios) y "~/.local/man/man5"    (solo para el usuario actual)
-        #       > Archivos man7 : "/usr/local/man/man7" (para todos los usuarios) y "~/.local/man/man7"    (solo para el usuario actual)
-        #       > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
+        #       > Comandos         : "/usr/local/bin"            (para todos los usuarios) y "~/.local/bin"            (solo para el usuario actual)
+        #       > Archivos man1    : "/usr/local/share/man/man1" (para todos los usuarios) y "~/.local/share/man/man1" (solo para el usuario actual)
+        #       > Archivos man5    : "/usr/local/share/man/man5" (para todos los usuarios) y "~/.local/share/man/man5" (solo para el usuario actual)
+        #       > Archivos man7    : "/usr/local/share/man/man7" (para todos los usuarios) y "~/.local/share/man/man7" (solo para el usuario actual)
+        #       > Archivo fuentes  : "/usr/local/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts"    (solo para el usuario actual)
+        #       > Archivo imagenes : "/usr/local/share/icons"    (para todos los usuarios) y "~/.local/share/icons"    (solo para el usuario actual)
         # 7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
         # 8> El estado de la credencial almacenada para el sudo.
         # 9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
@@ -4557,17 +4569,17 @@ else
         fi
 
 
-        #Obtener la ruta real del folder donde se alamacena los de programas 'g_programs_path'
+        #Obtener la ruta real del folder donde se alamacena los de programas 'g_tools_path'
         if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
             #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_programs_path="$5"
+            g_tools_path="$5"
         fi
 
         _g_is_noninteractive=0
         if [ $gp_type_calling -eq 1 ]; then
             _g_is_noninteractive=1
         fi
-        get_program_path $_g_is_noninteractive "$g_programs_path"
+        get_tools_path $_g_is_noninteractive "$g_tools_path"
         _g_status=$?
         if [ $_g_status -ne 0 ]; then
             printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
@@ -4575,13 +4587,13 @@ else
         fi
 
 
-        #Obtener la ruta real del folder de comandos 'g_bin_cmdpath', archivos de ayuda 'g_man_cmdpath' y fuentes de letras 'g_fonts_cmdpath'
+        #Obtener la ruta real del folder de comandos 'g_lnx_bin_path', archivos de ayuda 'g_lnx_man_path' y fuentes de letras 'g_lnx_fonts_path'
         if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
             #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_cmd_base_path="$6"
+            g_lnx_base_path="$6"
         fi
 
-        get_command_path $_g_is_noninteractive "$g_cmd_base_path"
+        g_lnx_paths $_g_is_noninteractive "$g_lnx_base_path"
         _g_status=$?
         if [ $_g_status -ne 0 ]; then
             printf 'No se pede establecer la ruta base donde se instalarán los comandos.\n'
@@ -4600,7 +4612,7 @@ else
 
 
         if [ "${10}" = "0" ]; then
-            echo "$g_programs_path" > /tmp/prgpath.txt
+            echo "$g_tools_path" > /tmp/prgpath.txt
         fi
 
         #Validar los requisitos
@@ -4648,9 +4660,12 @@ else
         #      "/var/opt/tools" o "~/tools".
         #  6> Ruta base donde se almacena los comandos ("CMD_PATH_BASE/bin"), archivos man1 ("CMD_PATH_BASE/man/man1") y fonts ("CMD_PATH_BASE/share/fonts").
         #     Si se envia vacio o EMPTY se usara el directorio predeterminado.
-        #        > Comandos      : "/usr/local/bin"      (para todos los usuarios) y "~/.local/bin"         (solo para el usuario actual)
-        #        > Archivos man1 : "/usr/local/man/man1" (para todos los usuarios) y "~/.local/man/man1"    (solo para el usuario actual)
-        #        > Archivo fuente: "/usr/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts" (solo para el usuario actual)
+        #       > Comandos         : "/usr/local/bin"            (para todos los usuarios) y "~/.local/bin"            (solo para el usuario actual)
+        #       > Archivos man1    : "/usr/local/share/man/man1" (para todos los usuarios) y "~/.local/share/man/man1" (solo para el usuario actual)
+        #       > Archivos man5    : "/usr/local/share/man/man5" (para todos los usuarios) y "~/.local/share/man/man5" (solo para el usuario actual)
+        #       > Archivos man7    : "/usr/local/share/man/man7" (para todos los usuarios) y "~/.local/share/man/man7" (solo para el usuario actual)
+        #       > Archivo fuentes  : "/usr/local/share/fonts"    (para todos los usuarios) y "~/.local/share/fonts"    (solo para el usuario actual)
+        #       > Archivo imagenes : "/usr/local/share/icons"    (para todos los usuarios) y "~/.local/share/icons"    (solo para el usuario actual)
         #  7> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
         #  8> El estado de la credencial almacenada para el sudo.
         #  9> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
@@ -4711,16 +4726,16 @@ else
         fi
 
 
-        #Obtener la ruta real del folder donde se alamacena los de programas 'g_programs_path'
+        #Obtener la ruta real del folder donde se alamacena los de programas 'g_tools_path'
         if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-            g_programs_path="$5"
+            g_tools_path="$5"
         fi
 
         _g_is_noninteractive=0
         if [ $gp_type_calling -eq 2 ]; then
             _g_is_noninteractive=1
         fi
-        get_program_path $_g_is_noninteractive "$g_programs_path"
+        get_tools_path $_g_is_noninteractive "$g_tools_path"
         _g_status=$?
         if [ $_g_status -ne 0 ]; then
             printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
@@ -4728,12 +4743,12 @@ else
         fi
 
 
-        #Obtener la ruta real del folder de comandos 'g_bin_cmdpath', archivos de ayuda 'g_man_cmdpath' y fuentes de letras 'g_fonts_cmdpath'
+        #Obtener la ruta real del folder de comandos 'g_lnx_bin_path', archivos de ayuda 'g_lnx_man_path' y fuentes de letras 'g_lnx_fonts_path'
         if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
-            g_cmd_base_path="$6"
+            g_lnx_base_path="$6"
         fi
 
-        get_command_path $_g_is_noninteractive "$g_cmd_base_path"
+        g_lnx_paths $_g_is_noninteractive "$g_lnx_base_path"
         _g_status=$?
         if [ $_g_status -ne 0 ]; then
             printf 'No se pede establecer la ruta base donde se instalarán los comandos.\n'
@@ -4750,7 +4765,7 @@ else
 
 
         if [ "${11}" = "0" ]; then
-            echo "$g_programs_path" > /tmp/prgpath.txt
+            echo "$g_tools_path" > /tmp/prgpath.txt
         fi
 
         #Validar los requisitos

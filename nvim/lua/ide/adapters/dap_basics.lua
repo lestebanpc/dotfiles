@@ -59,11 +59,11 @@ local detached = true
 
 if (vim.g.os_type == 0) then
     --Si es Windows
-    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7.cmd'
+    dap_server_path = vim.g.tools_path .. '/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7.cmd'
     detached = false
 else
     --Otros casos
-    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7'
+    dap_server_path = vim.g.tools_path .. '/vsc_extensions/ms_cpptools/debugAdapters/bin/OpenDebugAD7'
 end
 
 local use_adapter = vim.g.use_dap_adapters['cpp_vscode']
@@ -224,11 +224,11 @@ detached = true
 
 if (vim.g.os_type == 0) then
     --Si es Windows
-    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions/codelldb/adapter/codelldb.exe'
+    dap_server_path = vim.g.tools_path .. '/vsc_extensions/codelldb/adapter/codelldb.exe'
     detached = false
 else
     --Otros casos
-    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions/codelldb/adapter/codelldb'
+    dap_server_path = vim.g.tools_path .. '/vsc_extensions/codelldb/adapter/codelldb'
 end
 
 use_adapter = vim.g.use_dap_adapters['cpp_lldb_code']
@@ -352,10 +352,10 @@ use_adapter = vim.g.use_dap_adapters['go_vscode']
 
 if (vim.g.os_type == 0) then
     --Si es Windows
-    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions/go_tools/dist/debugAdapter.js'
+    dap_server_path = vim.g.tools_path .. '/vsc_extensions/go_tools/dist/debugAdapter.js'
 else
     --Otros casos
-    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions/go_tools/dist/debugAdapter.js'
+    dap_server_path = vim.g.tools_path .. '/vsc_extensions/go_tools/dist/debugAdapter.js'
 end
 
 if use_adapter ~= nil and use_adapter == true then
@@ -472,10 +472,10 @@ if use_adapter ~= nil and use_adapter == true then
     -- Configuracion del cliente DAP y/o su adapador.
     if (vim.g.os_type == 0) then
         --Si es Windows
-        dap_server_path = vim.g.programs_base_path .. '/dap_servers/netcoredbg/netcoredbg.exe'
+        dap_server_path = vim.g.tools_path .. '/dap_servers/netcoredbg/netcoredbg.exe'
     else
         --Otros casos
-        dap_server_path = vim.g.programs_base_path .. '/dap_servers/netcoredbg/netcoredbg'
+        dap_server_path = vim.g.tools_path .. '/dap_servers/netcoredbg/netcoredbg'
     end
 
     dap.adapters.netcoredbg = {
@@ -664,10 +664,10 @@ end
 --
 if (vim.g.os_type == 0) then
     --Si es Windows
-    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions/ms_js_debug/src/go_tools/dist/dapDebugServer.js'
+    dap_server_path = vim.g.tools_path .. '/vsc_extensions/ms_js_debug/src/go_tools/dist/dapDebugServer.js'
 else
     --Otros casos
-    dap_server_path = vim.g.programs_base_path .. '/vsc_extensions/ms_js_debug/src/go_tools/dist/dapDebugServer.js'
+    dap_server_path = vim.g.tools_path .. '/vsc_extensions/ms_js_debug/src/go_tools/dist/dapDebugServer.js'
 end
 
 use_adapter = vim.g.use_dap_adapters['typescript']

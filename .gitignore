@@ -38,49 +38,10 @@ etc/oh-my-posh/default_settings.json.bak
 etc/oh-my-posh/default/*
 etc/trivy/templates/*
 
-shell/bash/login/autocomplete/*
-shell/bash/login/keybindings/*
-
-shell/fish/login/autocomplete/*
-shell/fish/login/keybindings/*
-
-shell/zsh/login/autocomplete/*
-shell/zsh/login/keybindings/*
-
-shell/others/login/autocomplete/*
-shell/others/login/keybindings/*
-
-shell/powershell/login/autocomplete/*
-shell/powershell/login/keybindings/*
-
 # Adicionar archivos en las carpetas excluidas
-!shell/bash/login/autocomplete/README.md
-!shell/bash/login/keybindings/README.md
-
-!shell/fish/login/autocomplete/README.md
-!shell/fish/login/keybindings/README.md
-
-!shell/zsh/login/autocomplete/README.md
-!shell/zsh/login/keybindings/README.md
-
-!shell/others/login/autocomplete/README.md
-!shell/others/login/keybindings/README.md
-
-!shell/powershell/login/autocomplete/README.md
-!shell/powershell/login/keybindings/README.md
+#!shell/bash/login/autocomplete/README.md
+#!shell/bash/login/keybindings/README.md
 
 # Adicionar subcarpetas en las carpetas excluidas
 #!shell/bash/login/autocomplete/myfolder/
 #!shell/bash/login/keybindings/myfolder/
-
-#!shell/fish/login/autocomplete/myfolder/
-#!shell/fish/login/keybindings/myfolder/
-
-#!shell/zsh/login/autocomplete/myfolder/
-#!shell/zsh/login/keybindings/myfolder/
-
-#!shell/others/login/autocomplete/myfolder/
-#!shell/others/login/keybindings/myfolder/
-
-#!shell/powershell/login/autocomplete/myfolder/
-#!shell/powershell/login/keybindings/myfolder/

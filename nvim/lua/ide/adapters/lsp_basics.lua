@@ -45,10 +45,10 @@ if use_adapter ~= nil and use_adapter == true then
 
    if (vim.g.os_type == 0) then
        --Si es Windows
-       lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/clangd/bin/clangd.exe'
+       lsp_server_path = vim.g.tools_path .. '/lsp_servers/clangd/bin/clangd.exe'
    else
        --Si es Linux
-       lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/clangd/bin/clangd'
+       lsp_server_path = vim.g.tools_path .. '/lsp_servers/clangd/bin/clangd'
    end
 
     vim.lsp.config(adapter_name, {
@@ -104,9 +104,9 @@ if use_adapter ~= nil and use_adapter == true then
 
     if (vim.g.os_type == 0) then
         --Si es Windows
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/rust_ls/rust-analyzer.exe'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/rust_ls/rust-analyzer.exe'
     else
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/rust_ls/rust-analyzer'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/rust_ls/rust-analyzer'
     end
 
     vim.lsp.config(adapter_name, {
@@ -266,9 +266,9 @@ if use_adapter ~= nil and use_adapter == true then
 
     if (vim.g.os_type == 0) then
         --Si es Windows
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/roslyn_ls/Microsoft.CodeAnalysis.LanguageServer.dll'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/roslyn_ls/Microsoft.CodeAnalysis.LanguageServer.dll'
     else
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/roslyn_ls/Microsoft.CodeAnalysis.LanguageServer.dll'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/roslyn_ls/Microsoft.CodeAnalysis.LanguageServer.dll'
     end
 
     --local roslyn_cfg = require('roslyn')
@@ -374,10 +374,10 @@ if use_adapter ~= nil and use_adapter == true then
 
         if (vim.g.os_type == 0) then
             --Si es Windows
-            lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/omnisharp_ls/OmniSharp.exe'
+            lsp_server_path = vim.g.tools_path .. '/lsp_servers/omnisharp_ls/OmniSharp.exe'
         else
             --Si es un WSL, no se usara LSP de Windows (debe instalar OmniSharp en propio WSL)
-            lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/omnisharp_ls/OmniSharp'
+            lsp_server_path = vim.g.tools_path .. '/lsp_servers/omnisharp_ls/OmniSharp'
         end
 
         --local pid = vim.fn.getpid()
@@ -597,7 +597,7 @@ if use_adapter ~= nil and use_adapter == true then
 
     vim.lsp.config(adapter_name, {
 
-        bundle_path = vim.g.programs_base_path .. '/lsp_servers/powershell_es',
+        bundle_path = vim.g.tools_path .. '/lsp_servers/powershell_es',
         shell = 'pwsh',
 
     })
@@ -662,10 +662,10 @@ if use_adapter ~= nil and use_adapter == true then
 
     if (vim.g.os_type == 0) then
         --Si es Windows
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/luals/bin/lua-language-server.exe'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/luals/bin/lua-language-server.exe'
     else
         --Si es Linux
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/luals/bin/lua-language-server'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/luals/bin/lua-language-server'
     end
 
     -- Callback de inicializacion usara por LuaLs este configurada para NeoVIM
@@ -876,9 +876,9 @@ if use_adapter ~= nil and use_adapter == true then
 
     if (vim.g.os_type == 0) then
         --Si es Windows
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/toml_ls/taplo.exe'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/toml_ls/taplo.exe'
     else
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/toml_ls/taplo'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/toml_ls/taplo'
     end
 
     vim.lsp.config(adapter_name, {
@@ -1047,9 +1047,9 @@ if use_adapter ~= nil and use_adapter == true then
 
     if (vim.g.os_type == 0) then
         --Si es Windows
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/xml_ls/lemminx.exe'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/xml_ls/lemminx.exe'
     else
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/xml_ls/lemminx'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/xml_ls/lemminx'
     end
 
     vim.lsp.config(adapter_name, {
@@ -1083,9 +1083,9 @@ if use_adapter ~= nil and use_adapter == true then
 
     if (vim.g.os_type == 0) then
         --Si es Windows
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/markdown_ls/marksman.exe'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/markdown_ls/marksman.exe'
     else
-        lsp_server_path = vim.g.programs_base_path .. '/lsp_servers/markdown_ls/marksman'
+        lsp_server_path = vim.g.tools_path .. '/lsp_servers/markdown_ls/marksman'
     end
 
     vim.lsp.config(adapter_name, {
@@ -1120,9 +1120,9 @@ if use_adapter ~= nil and use_adapter == true then
 
     if (vim.g.os_type == 0) then
         --Si es Windows
-        lsp_server_path = vim.g.programs_base_path .. '/vsc_extensions/ms_java_gradle/lib/gradle-server.cmd'
+        lsp_server_path = vim.g.tools_path .. '/vsc_extensions/ms_java_gradle/lib/gradle-server.cmd'
     else
-        lsp_server_path = vim.g.programs_base_path .. '/vsc_extensions/ms_java_gradle/lib/gradle-server'
+        lsp_server_path = vim.g.tools_path .. '/vsc_extensions/ms_java_gradle/lib/gradle-server'
     end
 
     vim.lsp.config(adapter_name, {

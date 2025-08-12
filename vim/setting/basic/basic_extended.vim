@@ -70,6 +70,7 @@ let s:vim_suggest.cmd = {
     \ 'trigger': 't',
     \ 'reverse': v:false,
     \ 'prefixlen': 2,
+    \ 'complete_sg': v:false,
 \ }
 
 " Search Completion Configuration

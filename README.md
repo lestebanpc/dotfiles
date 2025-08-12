@@ -77,11 +77,11 @@ Para la configuracion se puede usar una de las siguientes script de configuraci�
     - Si tiene la opcion 'sudo' habilitada, creara `/usr/local/bin`.
     - Si no lo tiene, lo instalará en `~/.local/bin`.
   - Las fuentes Nerd-Fonts lo instalar en:
-    - Si tiene la opcion 'sudo' habilitada, creara `/usr/share/fonts`.
+    - Si tiene la opcion 'sudo' habilitada, creara `/usr/local/share/fonts`.
     - Si no lo tiene, lo instalará en `~/.local/share/fonts`.
   - Si usa WSL, este descarga los binarios/programas para Windows en las sigueente rutas:
-    - Los programas los descargará en `C:\cli\prgs`.
-    - Los comandos los descargará en `C:\cli\cmds\bin`.
+    - Los programas los descargará en `C:\apps\tools`.
+    - Los comandos los descargará en `C:\apps\cmds\bin`.
 
 - Script `./shell/bash/bin/linuxsetup/04_install_profile.bash` permite configurar los archivos mas usados del profile del usuario y configurar VIM/NeoVIM.
 
@@ -305,17 +305,17 @@ Si desea instalar VIM como IDE de desarrollo debera tener instalado NodeJS y Pyt
 
 Si cuenta con WSL, 'NodeJS', '. Net' y 'Powershell Core'y lo podra instalar usando la opcion el menu mostrado al ejecutar el script `~/.files/shell/bash/bin/linuxsetup/01_setup_binaries.bash`
 
-- Usando la opcion '1048576' del menu para instalar la ultima version de 'NodeJS' en 'D:\CLI\Programs\NodeJS'.
-  En las variables de entorno del sistema debe registrar la la ruta 'D:\CLI\Programs\NodeJS'.
-- Usando la opcion '32768' del menu para instalar las 3 ultimas versiones del SDK de .NET en 'D:\CLI\Programs\DotNet'.
-  En las variables de entorno del sistema debe registrar la la ruta 'D:\CLI\Programs\NodeJS'.
-- Usando la opcion '128' del menu para instalar la ultima version de Powershell Core en 'D:\CLI\Programs\PowerShell'.
-  En las variables de entorno del sistema debe registrar la la ruta 'D:\CLI\Programs\PowerShell'.
+- Usando la opcion '1048576' del menu para instalar la ultima version de 'NodeJS' en 'D:\app\tools\nodeJS'.
+  En las variables de entorno del sistema debe registrar la la ruta 'D:\app\tools\nodejs'.
+- Usando la opcion '32768' del menu para instalar las 3 ultimas versiones del SDK de .NET en 'D:\app\tools\dotnet'.
+  En las variables de entorno del sistema debe registrar la la ruta 'D:\app\tools\nodejs'.
+- Usando la opcion '128' del menu para instalar la ultima version de Powershell Core en 'D:\app\tools\powershell'.
+  En las variables de entorno del sistema debe registrar la la ruta 'D:\app\tools\poweshell'.
   Si usa Windows Terminal, debera configurar adicionar un nuevo perfil para la terminal 'Powershell':
   - Nombre: Powershell
-  - Linea de comandos: `D:\CLI\Programs\PowerShell\pwsh.exe`
+  - Linea de comandos: `D:\app\tools\powershell\pwsh.exe`
   - Directorio de Inicio: `%USERPROFILE%`
-  - Icono: `D:\CLI\Programs\PowerShell\assets\StoreLogo.png`
+  - Icono: `D:\app\tools\powershell\assets\StoreLogo.png`
 
 Se recomienda tener estos programas instalados y configurados antes de continuar
 

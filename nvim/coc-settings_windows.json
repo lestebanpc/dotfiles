@@ -9,7 +9,7 @@
   "codeLens.enable": true,
   "python.pythonPath": "python3",
   "python.analysis.extraPaths": ["src"],
-  "rust-analyzer.server.path": "${env:MY_PRGS_PATH}/lsp_servers/rust_ls/rust-analyzer.exe",
+  "rust-analyzer.server.path": "${env:MY_TOOLS_PATH}/lsp_servers/rust_ls/rust-analyzer.exe",
   "yaml.schemas": {
     "kubernetes": "/*.k8s.yaml"
   },

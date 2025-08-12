@@ -204,7 +204,7 @@ let g:use_ide = v:false
 let g:use_coc = v:true
 let g:use_typing_plugins = {}
 let g:use_ai_plugins = v:false
-let g:programs_base_path = ''
+let g:tools_path = ''
 let g:use_lsp_adapters = {}
 let g:use_dap_adapters = {}
 

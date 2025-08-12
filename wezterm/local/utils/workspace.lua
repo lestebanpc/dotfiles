@@ -70,7 +70,7 @@ if mm_wezterm.GLOBAL.workspace_infos == nil then
 end
 
 -- Arreglo de tag de workspace, usado para crear worspace basado en la configuracion (no en rutas de de folderes git o zoxide).
--- > tag              : Nombre unico del tag.
+-- > name             : Nombre unico del tag.
 --                      Debido a que inicialemente es el nombre del workspace, debe ser unico no puede usarse el nombre de workspace
 --                      por defecto.
 -- > fullpath         : Ruta completa del directorio de trabajo.
