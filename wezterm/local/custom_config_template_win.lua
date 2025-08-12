@@ -506,14 +506,14 @@ mod.exec_domain_datas = nil
 --   > Objeto 'Pane' (nuevo panel creado del tab por defecto del worspace creado)
 --   > Workspace name
 --   > Workspace info
---mod.workspace_tags = nil
-mod.workspace_tags = {
-    {
-        name = 'download',
-        fullpath = '/tempo/download',
-        domain_category = 'local',
-    },
-}
+mod.workspace_tags = nil
+--mod.workspace_tags = {
+--    {
+--        name = 'download',
+--        fullpath = '/tempo/download',
+--        domain_category = 'local',
+--    },
+--}
 
 
 
