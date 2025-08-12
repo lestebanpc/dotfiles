@@ -147,43 +147,82 @@ get_package_name() {
             #Si es un distribucion de la familia Debian
             if [ $p_os_subtype_id -ge 30 ] && [ $p_os_subtype_id -lt 50 ]; then
 
-                #Si es Ubuntu
                 l_package_name_custom="vim"
                 l_search_type=1
 
             #Si es un distribucion de la familia Suse
             elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
 
-                #Si es Ubuntu
                 l_package_name_custom="vim"
                 l_search_type=1
 
             #Si es un distribucion de la familia Arch
             elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
 
-                #Si es Ubuntu
                 l_package_name_custom="vim"
                 l_search_type=1
 
             #Si es Alpine
             elif [ $p_os_subtype_id -eq 1 ]; then
+
                 l_package_name_custom="vim"
                 l_search_type=1
+
             fi
             ;;
 
+
         python-pip)
+
             l_search_type=1
 
             #Si es Alpine
             if [ $p_os_subtype_id -eq 1 ]; then
+
                 l_package_name_custom="py3-pip"
                 l_search_type=1
+
+            #Si es un distribucion de la familia Suse
+            elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+
+                l_package_name_custom="python-pip"
+                l_search_type=1
+
+            #Si es un distribucion de la familia Arch
+            elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+
+                l_package_name_custom="python-pip"
+                l_search_type=1
+
             elif [ $p_os_subtype_id -eq 19 ]; then
+
                 l_package_name_custom="python3-pip"
                 l_search_type=1
+
             fi
             ;;
+
+
+        python-pipx)
+
+            l_search_type=1
+
+            #Si es un distribucion de la familia Suse
+            if [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
+
+                l_package_name_custom="python-pipx"
+                l_search_type=1
+
+            #Si es un distribucion de la familia Arch
+            elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
+
+                l_package_name_custom="python-pipx"
+                l_search_type=1
+
+            fi
+            ;;
+
+
 
         xvfb)
 

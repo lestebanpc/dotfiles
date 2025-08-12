@@ -1488,7 +1488,7 @@ function g_lnx_paths() {
     #1er intento: OK> Se tiene los permisos correctos
     if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
         if [ -z "$l_lnx_base_path" ]; then
-            g_lnx_base_path=""
+            g_lnx_base_path="/usr/local"
             g_lnx_bin_path="/usr/local/bin"
             g_lnx_man_path="/usr/local/share/man"
             g_lnx_fonts_path="/usr/local/share/fonts"
@@ -1582,7 +1582,7 @@ function g_lnx_paths() {
 
         #Intento del folder del sistema: OK> Se tiene los permisos correctos
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
-            g_lnx_base_path=""
+            g_lnx_base_path="/usr/local"
             g_lnx_bin_path="/usr/local/bin"
             g_lnx_man_path="/usr/local/share/man"
             g_lnx_fonts_path="/usr/local/share/fonts"
@@ -3075,7 +3075,7 @@ install_python() {
         print_line '-' $g_max_length_line  "$g_color_gray1"
     fi
 
-    printf 'Python > %Instalando%b %b\n' "$g_color_cian1" "$g_color_reset" "$l_aux"
+    printf 'Python > %bInstalando%b %b\n' "$g_color_cian1" "$g_color_reset" "$l_aux"
 
     if [ $p_show_title -eq 0 ]; then
         print_line '-' $g_max_length_line  "$g_color_gray1"
