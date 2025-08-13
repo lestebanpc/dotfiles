@@ -1023,27 +1023,41 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
 
-    #Para WSL copiar el archivo de configuracion del profile
-    if [ $g_profile_type -eq 0 ]; then
+    # Para WSL copiar el archivo de configuracion del profile
+    if [ $g_os_type -eq 1 ]; then
 
-        if [ $g_os_type -eq 1 ]; then
-            copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_local_wsl.bash" "" ".profile_config.bash" $l_flag_overwrite_file "        > "
-            l_status=$?
-            printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-                  "$g_color_yellow1" "~/.profile_config.bash" "$g_color_reset"
-        else
-            printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/profile_config_template_local_nonwsl.bash %b~/.profile_config.bash%b"\n' \
-                  "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
-        fi
-
-    else
-
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_remote.bash" "" ".profile_config.bash" $l_flag_overwrite_file "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_wsl.bash" "" ".profile_config.bash" $l_flag_overwrite_file "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
               "$g_color_yellow1" "~/.profile_config.bash" "$g_color_reset"
 
+    # Si es contenedor distrobox
+    elif [ ! -z "$CONTAINER_ID" ]; then
+
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_distrobox.bash" "" ".profile_config.bash" $l_flag_overwrite_file "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
+              "$g_color_yellow1" "~/.profile_config.bash" "$g_color_reset"
+
+    else
+
+        # Si el distro tiene acceos a los dispositivos como GPU, ...
+        if [ $g_profile_type -eq 0 ]; then
+
+            printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/profile_config_template_basic_local.bash %b~/.profile_config.bash%b"\n' \
+                  "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
+
+        else
+
+            copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_basic_remote.bash" "" ".profile_config.bash" $l_flag_overwrite_file "        > "
+            l_status=$?
+            printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
+                  "$g_color_yellow1" "~/.profile_config.bash" "$g_color_reset"
+
+        fi
+
     fi
+
 
     #5. Creando enlaces simbolico independiente del tipo de distribución Linux
 
@@ -1110,10 +1124,11 @@ function _setup_user_profile() {
 
 
     #Archivo de configuración para el emulador de terminal wezterm
-    create_folderpath_on_home ".config" "wezterm"
 
     # Es WSL (es un local espacial: diseñado para ser accedido solo desde el windows local)
     if [ $g_os_type -eq 1 ]; then
+
+        create_folderpath_on_home ".config" "wezterm"
 
         #l_target_path=".config/wezterm"
         #l_target_link="utils"
@@ -1125,8 +1140,15 @@ function _setup_user_profile() {
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
                "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
 
+    # Si es contenedor distrobox
+    elif [ ! -z "$CONTAINER_ID" ]; then
+
+        printf 'Profile > No se realizara configuraciones para Wezterm.\n'
+
     # Linux clasico (No es WSL)
     else
+
+        create_folderpath_on_home ".config" "wezterm"
 
         if [ $g_profile_type -eq 0 ]; then
 
@@ -1164,14 +1186,21 @@ function _setup_user_profile() {
     fi
 
     #Archivo de configuración para el emulador de terminal foot
-    l_target_path=".config/foot"
-    create_folderpath_on_home ".config" "foot"
-    l_target_link="foot.ini"
-    l_source_path="${g_repo_name}/etc/foot"
-    l_source_filename='foot_default.ini'
+    if [ -z "$CONTAINER_ID" ] && [ $g_os_type -ne 1 ]; then
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
-    l_status=$?
+        l_target_path=".config/foot"
+        create_folderpath_on_home ".config" "foot"
+        l_target_link="foot.ini"
+        l_source_path="${g_repo_name}/etc/foot"
+        l_source_filename='foot_default.ini'
+
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        l_status=$?
+
+    else
+        printf 'Profile > No se realizara configuraciones para Foot.\n'
+    fi
+
 
     #Archivo de configuración para Lazygit
     l_target_path=".config/lazygit"
@@ -1217,25 +1246,30 @@ function _setup_user_profile() {
 
 
     #Archivo de configuración para cliente MDP 'rmpc'
-    l_target_path=".config/rmpc"
-    create_folderpath_on_home ".config" "rmpc"
+    if [ -z "$CONTAINER_ID" ] && [ $g_os_type -ne 1 ]; then
 
-    l_target_link="config.ron"
-    l_source_path="${g_repo_name}/rmpc"
-    l_source_filename='config_default.ron'
+        l_target_path=".config/rmpc"
+        create_folderpath_on_home ".config" "rmpc"
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
-    l_status=$?
+        l_target_link="config.ron"
+        l_source_path="${g_repo_name}/rmpc"
+        l_source_filename='config_default.ron'
 
-    create_folderpath_on_home ".config/rmpc" "themes"
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        l_status=$?
 
-    l_target_path=".config/rmpc/themes"
-    l_target_link="theme_default.ron"
-    l_source_path="${g_repo_name}/rmpc/themes"
-    l_source_filename='theme_default.ron'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrite_link
-    l_status=$?
+        create_folderpath_on_home ".config/rmpc" "themes"
 
+        l_target_path=".config/rmpc/themes"
+        l_target_link="theme_default.ron"
+        l_source_path="${g_repo_name}/rmpc/themes"
+        l_source_filename='theme_default.ron'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrite_link
+        l_status=$?
+
+    else
+        printf 'Profile > No se realizara configuraciones para rmpc.\n'
+    fi
 
     #Crear el enlace simbolico de comandos basicos
     create_folderpath_on_home "" ".local/bin"
@@ -1256,21 +1290,34 @@ function _setup_user_profile() {
 
 
     #Crear el enlace simbolico de comandos basicos
-    l_target_path=".local/bin"
-    l_target_link="sync_vault"
-    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-    l_source_filename='sync_vault.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
-    l_status=$?
+    if [ -z "$CONTAINER_ID" ] && [ $g_os_type -ne 1 ]; then
+
+        l_target_path=".local/bin"
+        l_target_link="sync_vault"
+        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+        l_source_filename='sync_vault.bash'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        l_status=$?
+
+    else
+        printf 'Profile > No se establece en enlace simbolico asociado al comando "%bsync_vault%b".\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
 
 
     #Crear el enlace simbolico de comandos basicos
-    l_target_path=".local/bin"
-    l_target_link="mymusic"
-    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-    l_source_filename='mymusic.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
-    l_status=$?
+    if [ -z "$CONTAINER_ID" ] && [ $g_os_type -ne 1 ]; then
+
+        l_target_path=".local/bin"
+        l_target_link="mymusic"
+        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+        l_source_filename='mymusic.bash'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        l_status=$?
+
+    else
+        printf 'Profile > No se establece en enlace simbolico asociado al comando "%bmymusic%b".\n' "$g_color_gray1" "$g_color_reset"
+    fi
 
 
     #Archivo de configuración de Git y sus archivo de connfiguracion personalzida.
@@ -1297,6 +1344,17 @@ function _setup_user_profile() {
 
     # Es WSL (es un local espacial: diseñado para ser accedido solo desde el windows local)
     if [ $g_os_type -eq 1 ]; then
+
+        # Si el que instala es el usuario root
+        if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
+            l_source_filename='lepc-montys-orange1.json'
+        # Si el que instala es el usuario no-root
+        else
+            l_source_filename='lepc-montys-blue1.json'
+        fi
+
+    # Si es contenedor distrobox
+    elif [ ! -z "$CONTAINER_ID" ]; then
 
         # Si el que instala es el usuario root
         if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
@@ -2569,7 +2627,7 @@ function _show_menu_core() {
            "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "6656" "$g_color_reset"
     printf " (%bc%b) %bModo basico%b > Instalar y configurar %bVIM%b y %bNeoVIM%b como editor basico %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "6760" "$g_color_reset"
-    printf " (%bd%b) %bModo basico%b > Configurar todo el profile en modo basico %b(Profile, VIM, NoeVIM)%b %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" \
+    printf " (%bd%b) %bModo basico%b > Configurar todo el profile en modo basico %b(Profile, VIM, NeoVIM)%b %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" \
            "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "6761" "$g_color_reset"
 
     printf " (%be%b) %bModo developer%b > Descargar plugins de %bVIM%b y %bNeoVIM%b como IDE e indexar su documentación %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
@@ -2584,7 +2642,7 @@ function _show_menu_core() {
            "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "7680" "$g_color_reset"
     printf " (%bj%b) %bModo developer%b > Instalar y configurar %bVIM%b y %bNeoVIM%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "7800" "$g_color_reset"
-    printf " (%bk%b) %bModo developer%b > Configurar todo el profile en modo developer %b(Profile, VIM, NoeVIM)%b %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
+    printf " (%bk%b) %bModo developer%b > Configurar todo el profile en modo developer %b(Profile, VIM, NeoVIM)%b %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
            "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "7801" "$g_color_reset"
 
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
@@ -2780,7 +2838,7 @@ function g_main() {
                 _setup 7800
                 ;;
 
-            # Modo developer > Configurar todo el profile en modo basico (Profile, NodeJS, Python, VIM, NoeVIM)
+            # Modo developer > Configurar todo el profile en modo basico (Profile, NodeJS, Python, VIM, NeoVIM)
             k)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"

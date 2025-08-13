@@ -220,7 +220,9 @@
 #      recursos como: clipboard, dispostivos de hardware como tarjeta de video, tarjeta de sonido, etc.
 #      Puede ser:
 #      > Un equipo local con GUI Desktop.
-#      > Un equipo remoto pero que se accede usando su GUI Desktop.
+#      > Un contenedor (usualmente 'distrobox' o 'toolbox') que tiene acceso al GUI Desktop
+#        > Estos contenedores usualmente crean un 'binding mount' que montan el '/dev' del host dentro del contenedor
+#          teniendo acceso a dispositivos '/dev/kfd' y '/dev/dri'.
 #      > Una distribucion WSL2 es una VM linux especial que esta diseñada para acceso local desde su Windows, que se
 #        integra con el emulador de terminal GUI de Windows como local y con acceso al clipboard de Windows.
 #  > 1 (Profile de un shell remoto donde se es owner)
