@@ -2850,7 +2850,6 @@ function get_neovim_version() {
 
 
 # Instalar RTE Node.JS
-# > Si se usa NeoVIM en modo 'Developer', se instalara paquetes adicionales.
 # Parametro de salida:
 # > Valor de retorno:
 #      00> Si NodeJS esta instalado o si se instaló correctamente.
@@ -2941,29 +2940,25 @@ install_nodejs() {
        g_status_crendential_storage=0
     fi
 
-    #Validar si 'node' esta en el PATH
-    local l_tools_path=$(cat /tmp/prgpath.txt | head -n 1)
-    if [ -z "$l_tools_path" ] || [ -d "$l_tools_path/nodejs/bin" ]; then
-        printf 'La ruta de de instalación de programa es "%b%s%b".\n' "$g_color_gray1" "$l_tools_path" "$g_color_reset"
-        echo "$PATH" | grep "${l_tools_path}/nodejs/bin" &> /dev/null
-        l_status=$?
-        if [ $l_status -ne 0 ]; then
-            printf 'Registrando, de manera temporal, la ruta "%b%s/nodejs/bin%b" de NodeJS en la variable de entorno "%bPATH%b".\n' "$g_color_gray1" \
-                   "$l_tools_path" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
-            export PATH="${l_tools_path}/nodejs/bin:$PATH"
-        fi
-    else
-        printf 'La ruta de instalación de programa "%b%s%b" obtenida es invalida.\n' "$g_color_gray1" "$l_tools_path" "$g_color_reset"
-    fi
 
     #4. Volver a validar si las componentes fueron instalados
+    #  > Valores de retorno:
+    #     0 > Esta instalado (usando este instalador) y registrado en el PATH
+    #     1 > Esta instalado (usando este instalador) pero NO estaba registrado en el PATH
+    #     2 > Esta instalado pero fue instalado usando el gestor de paquetes (no requiere registro)
+    #     3 > No esta instalado
     l_version=$(get_nodejs_version "$p_tools_path")
     l_status=$?
 
-    if [ $l_status -ne 0 ]; then
+    if [ $l_status -ge 3 ]; then
         return 1
     fi
 
+    if [ $l_status -eq 1 ]; then
+        printf 'Registrando, de manera temporal, la ruta "%b%s/nodejs/bin%b" de NodeJS en la variable de entorno "%bPATH%b".\n' "$g_color_gray1" \
+               "$l_tools_path" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
+        export PATH="${l_tools_path}/nodejs/bin:$PATH"
+    fi
     return 0
 
 }
