@@ -141,7 +141,7 @@ local function m_get_external_running_distribution(p_dafult_external_distributio
     if m_os_type == 1 then
         l_distros = mm_ucommon.list_running_wsl_distributions()
     else
-        l_distros = mm_ucommon.list_running_distrobox()
+        l_distros = mm_ucommon.list_distrobox(false)
     end
 
     --mm_wezterm.log_info(l_distros)
@@ -649,7 +649,7 @@ function mod.get_exec_domains()
     if m_os_type == 0 and  m_is_installed_external_distribution then
 
         l_subtype_info = l_type_info.types['distrobox']
-        local l_containers = mm_ucommon.list_running_distrobox()
+        local l_containers = mm_ucommon.list_distrobox(true)
 
         if l_containers ~= nil then
 
@@ -675,6 +675,7 @@ function mod.get_exec_domains()
                     is_external = true,
                     id = l_item.id,
                     name = l_item.name,
+                    initial_running = l_item.is_running,
                 }
 
                 table.insert(l_excluded_container_ids, l_item.id)
@@ -1198,6 +1199,14 @@ local function m_get_domain_details(p_domain_info)
                 if l_value ~= nil and l_value ~= '' then
                     table.insert(l_infos, { key = l_key , value = l_value, })
                 end
+
+                l_key = 'Initial running'
+                if p_domain_info.ex_data.initial_running then
+                    l_value = 'true'
+                else
+                    l_value = 'false'
+                end
+                table.insert(l_infos, { key = l_key , value = l_value, })
 
                 l_icon = p_domain_info.ex_data.icon
                 l_color = p_domain_info.ex_data.color

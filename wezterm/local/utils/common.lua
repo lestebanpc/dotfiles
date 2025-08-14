@@ -347,12 +347,13 @@ function mod.exist_command(p_command_name, p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wsl', '-d', p_distribution_name, '--',
-                'which', p_command_name,
+                'cmd.exe', '/c',
+                string.format('wsl -d %s -- which %s', p_distribution_name, p_command_name),
             }
         else
             l_args = {
-                'where', p_command_name,
+                'cmd.exe', '/c',
+                string.format('where %s', p_command_name),
             }
         end
 
@@ -399,12 +400,13 @@ function mod.run_script(p_script, p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wsl', '-d', p_distribution_name, '--',
-                'sh', '-c', p_script,
+                'cmd.exe', '/c',
+                string.format("wsl -d %s -- sh -c '%s'", p_distribution_name, p_script),
             }
         else
             l_args = {
-                'cmd', '/c', p_script,
+                'cmd.exe', '/c',
+                p_script,
             }
         end
 
@@ -455,10 +457,8 @@ function mod.get_home_dir(p_os_type, p_distribution_name)
     if p_os_type == 1 then
 
         l_args = {
-            'wsl', '-d', p_distribution_name, '--',
-            'bash',
-            '-c',
-            'echo $HOME',
+            'cmd.exe', '/c',
+            string.format("wsl -d %s -- bash -c 'echo $HOME'", p_distribution_name),
         }
 
     elseif p_os_type == 0 then
@@ -498,7 +498,10 @@ end
 ---@return string[]?
 function mod.list_running_wsl_distributions()
 
-    local l_args = { "wsl", "--list", "--running", }
+    local l_args = {
+        'cmd.exe', '/c',
+        'wsl --list --running',
+    }
 
     ---@type boolean, string?, string?
 	local l_success, l_stdout, l_stderr = mm_wezterm.run_child_process(l_args)
@@ -548,26 +551,13 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wsl', '-d', p_distribution_name, '--',
-                "fd",
-                "-Hs",
-                "^.git$",
-                "-td",
-                "--max-depth=" .. l_max_depth,
-                "--prune",
-                "--format",
-                l_format,
+                'cmd.exe', '/c',
+                string.format("wsl -d %s -- fd -Hs '^.git$' -td --max-depth=%d --prune --format '%s'", p_distribution_name, l_max_depth, l_format),
             }
         else
             l_args = {
-                "fd",
-                "-Hs",
-                "^.git$",
-                "-td",
-                "--max-depth=" .. l_max_depth,
-                "--prune",
-                "--format",
-                l_format,
+                'cmd.exe', '/c',
+                string.format("fd -Hs '^.git$' -td --max-depth=%d --prune --format '%s'", l_max_depth, l_format),
             }
         end
 
@@ -703,16 +693,13 @@ function mod.get_zoxide_folders(p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wsl', '-d', p_distribution_name, '--',
-                'zoxide',
-                'query',
-                '-l',
+                'cmd.exe', '/c',
+                string.format("wsl -d %s -- zoxide query -l", p_distribution_name),
             }
         else
             l_args = {
-                'zoxide',
-                'query',
-                '-l',
+                'cmd.exe', '/c',
+                'zoxide query -l',
             }
         end
 
@@ -789,16 +776,13 @@ function mod.register_zoxide_folder(p_folder_path, p_os_type, p_distribution_nam
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wsl', '-d', p_distribution_name, '--',
-                'zoxide',
-                'add',
-                p_folder_path,
+                'cmd.exe', '/c',
+                string.format("wsl -d %s -- zoxide add '%s'", p_distribution_name, p_folder_path),
             }
         else
             l_args = {
-                'zoxide',
-                'add',
-                p_folder_path,
+                'cmd.exe', '/c',
+                string.format("zoxide add '%s'", p_folder_path),
             }
         end
 
@@ -842,7 +826,7 @@ function mod.register_zoxide_folder(p_folder_path, p_os_type, p_distribution_nam
 end
 
 
-function mod.list_running_distrobox()
+function mod.list_distrobox(p_show_stopped_distro)
 
     local l_args = {
         'distrobox-list',
@@ -882,8 +866,12 @@ function mod.list_running_distrobox()
             l_is_running = true
         end
 
-        if l_id and l_name and l_is_running then
-            table.insert(l_containers, { id = l_id, name = l_name, status = l_is_running })
+        if l_id and l_name then
+            if l_is_running then
+                table.insert(l_containers, { id = l_id, name = l_name, is_running = l_is_running })
+            elseif p_show_stopped_distro then
+                table.insert(l_containers, { id = l_id, name = l_name, is_running = l_is_running })
+            end
         end
 
     end
@@ -938,20 +926,13 @@ function mod.list_running_containers(p_container_runtime, p_excluded_ids, p_is_w
     if p_is_windows then
         if l_is_wsl_domain then
             l_args = {
-                "wsl", "-d", p_wsl_distribution_name, "--",
-                p_container_runtime,
-                'container',
-                'ls',
-                '--format',
-                '{{.ID}}:{{.Names}}',
+                'cmd.exe', '/c',
+                string.format("wsl -d %s -- %s container ls --format '{{.ID}}:{{.Names}}'", p_distribution_name, p_container_runtime),
             }
         else
             l_args = {
-                p_container_runtime,
-                'container',
-                'ls',
-                '--format',
-                '{{.ID}}:{{.Names}}',
+                'cmd.exe', '/c',
+                string.format("%s container ls --format '{{.ID}}:{{.Names}}'", p_container_runtime),
             }
         end
     else
@@ -1013,22 +994,13 @@ function mod.get_args_to_enter_container(p_container_runtime, p_container_id, p_
 
         if l_is_wsl_domain then
             l_args = {
-                "wsl", "-d", p_wsl_distribution_name, "--",
-                p_container_runtime,
-                'exec',
-                '-it',
-                p_container_id,
-                l_container_shell,
+                'cmd.exe', '/c',
+                string.format("wsl -d %s -- %s exec -it %s %s", p_distribution_name, p_container_runtime, p_container_id, l_container_shell),
             }
         else
             l_args = {
-                'cmd',
-                '/c',
-                p_container_runtime,
-                'exec',
-                '-it',
-                p_container_id,
-                l_container_shell,
+                'cmd.exe', '/c',
+                string.format("%s exec -it %s %s", p_container_runtime, p_container_id, l_container_shell),
             }
         end
 
@@ -1060,22 +1032,13 @@ function mod.list_pod_of_current_ns(p_is_windows, p_wsl_distribution_name)
     if p_is_windows then
         if l_is_wsl_domain then
             l_args = {
-                "wsl", "-d", p_wsl_distribution_name, "--",
-                'kubectl',
-                'get',
-                'pods',
-                '--no-headers',
-                '--output',
-                'custom-columns=ID:.metadata.uid,Name:.metadata.name',
+                'cmd.exe', '/c',
+                string.format("wsl -d %s -- kubectl get pods --no-headers --output 'custom-columns=ID:.metadata.uid,Name:.metadata.name'", p_distribution_name),
             }
         else
             l_args = {
-                'kubectl',
-                'get',
-                'pods',
-                '--no-headers',
-                '--output',
-                'custom-columns=ID:.metadata.uid,Name:.metadata.name',
+                'cmd.exe', '/c',
+                "kubectl get pods --no-headers --output 'custom-columns=ID:.metadata.uid,Name:.metadata.name'",
             }
         end
     else
@@ -1127,24 +1090,13 @@ function mod.get_args_to_enter_pod(p_pod_name, p_container_shell, p_is_windows, 
 
         if l_is_wsl_domain then
             l_args = {
-                "wsl", "-d", p_wsl_distribution_name, "--",
-                'kubectl',
-                'exec',
-                '-it',
-                p_pod_name,
-                '--',
-                l_container_shell,
+                'cmd.exe', '/c',
+                string.format("wsl -d %s -- kubectl exec -it %s -- %s", p_distribution_name, p_pod_name, l_container_shell),
             }
         else
             l_args = {
-                'cmd',
-                '/c',
-                'kubectl',
-                'exec',
-                '-it',
-                p_pod_name,
-                '--',
-                l_container_shell,
+                'cmd.exe', '/c',
+                string.format("kubectl exec -it %s -- %s", p_distribution_name, p_pod_name, l_container_shell),
             }
         end
 
