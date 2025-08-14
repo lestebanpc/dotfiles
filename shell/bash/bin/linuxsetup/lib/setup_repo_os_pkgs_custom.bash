@@ -201,15 +201,16 @@ get_package_name() {
             #Si es un distribucion de la familia Suse
             elif [ $p_os_subtype_id -ge 60 ] && [ $p_os_subtype_id -lt 70 ]; then
 
-                l_package_name_custom="python-pip"
+                #TODO Obtener dinamicamente el ultimo paquete python disponible
+                l_package_name_custom="python313-pip"
                 l_search_type=1
 
             #Si es un distribucion de la familia Arch
             elif [ $p_os_subtype_id -ge 50 ] && [ $p_os_subtype_id -lt 60 ]; then
 
-                #TODO Obtener dinamicamente el ultimo paquete python disponible
-                l_package_name_custom="python313-pip"
+                l_package_name_custom="python-pip"
                 l_search_type=1
+
 
             elif [ $p_os_subtype_id -eq 19 ]; then
 
