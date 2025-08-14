@@ -420,9 +420,9 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 
 
         #4.2 Obtener la ruta base donde se clonara el paquete (todos los paquetes son opcionale, se inicia bajo configuracion)
-        l_group_folder= $null
+        $l_group_folder= $null
         if ($l_repo_type -ge 0 -and $l_repo_type -lt $ga_group_plugin_folder.Count) {
-            l_group_folder=$ga_group_plugin_folder[$l_repo_type]
+            $l_group_folder=$ga_group_plugin_folder[$l_repo_type]
         }
 
         if($null -eq $l_group_folder) {
@@ -1191,6 +1191,38 @@ function m_setup($p_input_options) {
 
     if($p_input_options -eq "d") {
 
+        $l_overwrite_ln_flag = $true
+
+	    #Instalar VIM como Developer
+	    m_config_vim $true $l_overwrite_ln_flag
+	    Write-Host ""
+        return
+    }
+
+
+    if($p_input_options -eq "e") {
+
+        $l_overwrite_ln_flag = $false
+
+	    #Instalar NeoVIM como Developer
+	    m_config_nvim $true $l_overwrite_ln_flag
+	    Write-Host ""
+
+        return
+    }
+
+
+    if($p_input_options -eq "f") {
+
+        $l_overwrite_ln_flag = $false
+
+	    #Configurar el profile
+	    m_setup_profile $l_overwrite_ln_flag
+        return
+    }
+
+    if($p_input_options -eq "g") {
+
         $l_overwrite_ln_flag = $false
 
 	    #Instalar VIM como Developer
@@ -1207,7 +1239,7 @@ function m_setup($p_input_options) {
     }
 
 
-    if($p_input_options -eq "e") {
+    if($p_input_options -eq "h") {
 
         $l_overwrite_ln_flag = $true
 
@@ -1236,8 +1268,11 @@ function m_show_menu_core() {
 	Write-Host " (a) Crear folder requeridos"
 	Write-Host " (b) Crear   enlaces simbolicos e instalar plugin PSFzf (usar administrador)"
 	Write-Host " (c) Recrear enlaces simbolicos e instalar plugin PSFzf (usar administrador)"
-	Write-Host " (d) Configurar VIM, NeoVIM y Profile como developer"
-	Write-Host " (e) Configurar VIM, NeoVIM y Profile como developer (re-crear enlaces simbolicos si existen)"
+	Write-Host " (d) Configurar VIM como developer"
+	Write-Host " (e) Configurar NeoVIM como developer"
+	Write-Host " (f) Configurar Profile como developer"
+	Write-Host " (g) Configurar VIM, NeoVIM y Profile como developer"
+	Write-Host " (h) Configurar VIM, NeoVIM y Profile como developer (re-crear enlaces simbolicos si existen)"
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 }
 
@@ -1290,6 +1325,28 @@ function show_menu() {
 					Write-Host ""
 					m_setup $l_read_option
 				}
+
+				'f' {
+					$l_continue= $false
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
+					Write-Host ""
+					m_setup $l_read_option
+				}
+
+				'g' {
+					$l_continue= $false
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
+					Write-Host ""
+					m_setup $l_read_option
+				}
+
+				'h' {
+					$l_continue= $false
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
+					Write-Host ""
+					m_setup $l_read_option
+				}
+
 
 
 
