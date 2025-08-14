@@ -2655,9 +2655,9 @@ function _show_menu_core() {
            "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "7680" "$g_color_reset"
     printf " (%bn%b) %bModo developer%b > Instalar y configurar %bVIM%b y %bNeoVIM%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "7800" "$g_color_reset"
-    printf " (%bo%b) %bModo developer%b > Setup %bVIM%b, %bNeoVIM%b, %bProfile%b como editor %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
+    printf " (%bo%b) %bModo developer%b > Setup %bVIM%b, %bNeoVIM%b, %bProfile%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
            "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "7801" "$g_color_reset"
-    printf " (%bp%b) %bModo developer%b > Setup %bPython%b, %bNodeJS%b, %bVIM%b, %bNeoVIM%b y %bProfile%b como editor %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
+    printf " (%bp%b) %bModo developer%b > Setup %bPython%b, %bNodeJS%b, %bVIM%b, %bNeoVIM%b y %bProfile%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
            "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "8363641" "$g_color_reset"
 
