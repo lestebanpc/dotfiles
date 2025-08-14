@@ -2509,6 +2509,11 @@ function _setup_vim_environment() {
         return 0
     fi
 
+    # Si solo se indexa los plugin existentes, no mostrar el reporte
+    if [ $l_flag_setup_4 -eq 0 ] && [ $l_flag_setup_1 -ne 0 ] && [ $l_flag_setup_2 -ne 0 ] && [ $l_flag_setup_3 -ne 0 ]; then
+        return 0
+    fi
+
     # En otros casps mostrar el reporte
     if [ $p_is_vim -eq 0 ]; then
         show_vim_config_report 1 $l_flag_developer
@@ -2621,29 +2626,40 @@ function _show_menu_core() {
     print_line '-' $g_max_length_line  "$g_color_gray1"
     printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
 
-    printf " (%ba%b) %bModo basico%b > Instalar y configurar %bVIM%b como editor basico %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
+    printf " (%ba%b) Indexar la documentación de los plugins de %bVIM%b y %bNeoVIM%b existentes %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
+           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "16640" "$g_color_reset"
+    printf " (%bb%b) %bModo basico%b > Descargar plugins de %bVIM%b y %bNeoVIM%b como editor %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
+           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "8320" "$g_color_reset"
+    printf " (%bc%b) %bModo basico%b > Descargar plugins de %bVIM%b y %bNeoVIM%b e indexar su documentación %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
+           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "4160" "$g_color_reset"
+    printf " (%bd%b) %bModo basico%b > Instalar y configurar %bVIM%b como editor basico %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "104" "$g_color_reset"
-    printf " (%bb%b) %bModo basico%b > Instalar y configurar %bNeoVIM%b como editor basico %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
+    printf " (%be%b) %bModo basico%b > Instalar y configurar %bNeoVIM%b como editor basico %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "6656" "$g_color_reset"
-    printf " (%bc%b) %bModo basico%b > Instalar y configurar %bVIM%b y %bNeoVIM%b como editor basico %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" \
+    printf " (%bf%b) %bModo basico%b > Instalar y configurar %bVIM%b y %bNeoVIM%b como editor basico %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" \
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "6760" "$g_color_reset"
-    printf " (%bd%b) %bModo basico%b > Configurar todo el profile en modo basico %b(Profile, VIM, NeoVIM)%b %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" \
-           "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "6761" "$g_color_reset"
+    printf " (%bg%b) %bModo basico%b > Setup %bVIM%b, %bNeoVIM%b y %bProfile%b como editor %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "6761" "$g_color_reset"
 
-    printf " (%be%b) %bModo developer%b > Descargar plugins de %bVIM%b y %bNeoVIM%b como IDE e indexar su documentación %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
+    printf " (%bh%b) %bModo developer%b > Descargar plugins de %bVIM%b y %bNeoVIM%b para development %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
+           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "9360" "$g_color_reset"
+    printf " (%bi%b) %bModo developer%b > Descargar plugins de %bVIM%b y %bNeoVIM%b e indexar su documentación %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
            "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "5200" "$g_color_reset"
-    printf " (%bf%b) %bModo developer%b > Instalar y configurar %bNodeJS%b para development %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
-           "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "491520" "$g_color_reset"
-    printf " (%bg%b) %bModo developer%b > Instalar y configurar %bPython%b para development %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
+    printf " (%bj%b) %bModo developer%b > Instalar y configurar %bPython%b para development %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "7864320" "$g_color_reset"
-    printf " (%bh%b) %bModo developer%b > Instalar y configurar %bVIM%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
+    printf " (%bk%b) %bModo developer%b > Instalar y configurar %bNodeJS%b para development %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
+           "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "491520" "$g_color_reset"
+    printf " (%bl%b) %bModo developer%b > Instalar y configurar %bVIM%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "120" "$g_color_reset"
-    printf " (%bi%b) %bModo developer%b > Instalar y configurar %bNeoVIM%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
+    printf " (%bm%b) %bModo developer%b > Instalar y configurar %bNeoVIM%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "7680" "$g_color_reset"
-    printf " (%bj%b) %bModo developer%b > Instalar y configurar %bVIM%b y %bNeoVIM%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
+    printf " (%bn%b) %bModo developer%b > Instalar y configurar %bVIM%b y %bNeoVIM%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" \
            "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "7800" "$g_color_reset"
-    printf " (%bk%b) %bModo developer%b > Configurar todo el profile en modo developer %b(Profile, VIM, NeoVIM)%b %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
-           "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "7801" "$g_color_reset"
+    printf " (%bo%b) %bModo developer%b > Setup %bVIM%b, %bNeoVIM%b, %bProfile%b como editor %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
+           "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "7801" "$g_color_reset"
+    printf " (%bp%b) %bModo developer%b > Setup %bPython%b, %bNodeJS%b, %bVIM%b, %bNeoVIM%b y %bProfile%b como editor %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
+           "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" \
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "8363641" "$g_color_reset"
 
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
@@ -2724,8 +2740,41 @@ function g_main() {
 
         case "$l_options" in
 
-            # Modo basico > Instalar y configurar VIM como editor basico
+            # Indexar la documentación de los plugins de VIM y NeoVIM existentes
             a)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_green1"
+
+                #(    256) VIM    > Indexar la documentación de los plugins existentes
+                #(  16384) NeoVIM > Indexar la documentación de los plugins existentes
+                _setup 16640
+                ;;
+
+
+            # Modo developer > Descargar plugins de VIM y NeoVIM para development
+            b)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_green1"
+
+                #(    128) VIM    > Configuración: Descargar los plugins sin indexar su documentación
+                #(   8192) NeoVIM > Configuración: Descargar los plugins sin indexar su documentación
+                _setup 8320
+                ;;
+
+
+            # Modo developer > Descargar plugin de VIM y NeoVIM como IDE e indexar su documentación
+            c)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_green1"
+
+                #(     64) VIM    > Configuración: Descargar los plugins e indexar su documentación
+                #(   4096) NeoVIM > Configuración: Descargar los plugins e indexar su documentación
+                _setup 4160
+                ;;
+
+
+            # Modo basico > Instalar y configurar VIM como editor basico
+            d)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"
 
@@ -2737,7 +2786,7 @@ function g_main() {
 
 
             # Modo basico > Instalar y configurar NeoVIM como editor basico
-            b)
+            e)
                 l_flag_continue=1
 
                 #(    512) NeoVIM > Instalar el programa 'nvim'
@@ -2748,28 +2797,41 @@ function g_main() {
                 ;;
 
             # Modo basico > Instalar y configurar VIM y NeoVIM como editor basico
-            c)
+            f)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"
 
-                # Opcion (a)
-                # Opcion (b)
+                # Opcion (d)
+                # Opcion (e)
                 _setup 6760
                 ;;
 
             # Modo basico > Configurar todo el profile en modo basico
-            d)
+            g)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"
 
                 #(      1) Configurar archivos del profile del usuario actual
-                # Opcion (c)
+                # Opcion (f)
                 _setup 6761
                 ;;
 
 
+            # Modo developer > Descargar plugins de VIM y NeoVIM para development
+            h)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_green1"
+
+                #(     16) VIM    > Flag para configurar el modo developer (si no se usa, se configura el modo basico)
+                #(    128) VIM    > Configuración: Descargar los plugins sin indexar su documentación
+                #(   1024) NeoVIM > Flag para configurar el modo developer (si no se usa, se configura el modo basico)
+                #(   8192) NeoVIM > Configuración: Descargar los plugins sin indexar su documentación
+                _setup 9360
+                ;;
+
+
             # Modo developer > Descargar plugin de VIM y NeoVIM como IDE e indexar su documentación
-            e)
+            i)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"
 
@@ -2780,20 +2842,8 @@ function g_main() {
                 _setup 5200
                 ;;
 
-            # Modo developer > Instalar y configurar NodeJS para development
-            f)
-                l_flag_continue=1
-                print_line '─' $g_max_length_line "$g_color_green1"
-
-                #(  32768) NodeJS > Instalar NodeJS
-                #(  65536) NodeJS > Instalar paquetes globales basicos:
-                #( 131072) NodeJS > Instalar paquetes globales sobre LSP/DAP:
-                #( 262144) NodeJS > Instalar paquetes globales otros:
-                _setup 491520
-                ;;
-
             # Modo developer > Instalar y configurar Python para development
-            g)
+            j)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"
 
@@ -2804,8 +2854,20 @@ function g_main() {
                 _setup 7864320
                 ;;
 
+            # Modo developer > Instalar y configurar NodeJS para development
+            k)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_green1"
+
+                #(  32768) NodeJS > Instalar NodeJS
+                #(  65536) NodeJS > Instalar paquetes globales basicos:
+                #( 131072) NodeJS > Instalar paquetes globales sobre LSP/DAP:
+                #( 262144) NodeJS > Instalar paquetes globales otros:
+                _setup 491520
+                ;;
+
             # Modo developer > Instalar y configurar VIM como IDE
-            h)
+            l)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"
 
@@ -2817,7 +2879,7 @@ function g_main() {
                 ;;
 
             # Modo developer > Instalar y configurar NeoVIM como IDE
-            i)
+            m)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"
 
@@ -2829,30 +2891,44 @@ function g_main() {
                 ;;
 
             # Modo developer > Instalar y configurar VIM y NeoVIM como IDE
-            j)
+            n)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"
 
-                # Opcion (h)
-                # Opcion (i)
+                # Opcion (m)
+                # Opcion (n)
                 _setup 7800
                 ;;
 
-            # Modo developer > Configurar todo el profile en modo basico (Profile, NodeJS, Python, VIM, NeoVIM)
-            k)
+            # Modo developer > Configurar todo el profile en modo basico (VIM, NeoVIM, Profile)
+            o)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"
 
                 #(      1) Configurar archivos del profile del usuario actual
-                # Opcion (j)
+                # Opcion (o)
                 _setup 7801
                 ;;
+
+
+            # Modo developer > Configurar todo el profile en modo basico (Python, NodeJS, VIM, NeoVIM, Profile)
+            p)
+                l_flag_continue=1
+                print_line '─' $g_max_length_line "$g_color_green1"
+
+                # Opcion (k)
+                # Opcion (l)
+                # Opcion (p)
+                _setup 8363641
+                ;;
+
 
 
             q)
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"
                 ;;
+
 
             [1-9]*)
                 if [[ "$l_options" =~ ^[0-9]+$ ]]; then
