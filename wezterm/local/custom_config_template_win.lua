@@ -120,7 +120,7 @@ local mod= {
     --  1 > Muestra el 'title bar' ocultando el 'tab bar' si existe solo 1 tab (estilo 'TITLE|RESIZE')
     --  2 > Muestra el 'title bar' y siempre muestra el 'tab bar' (estilo 'TITLE|RESIZE')
     --  3 > Solo muestra el 'tab bar' el cual incluyen los botones cerrar, maximizar, minimizar (estilo 'INTEGRATED_BUTTONS|RESIZE')
-    windows_style = 2,
+    windows_style = 3,
 
 
     --------------------------------------------------------------------------------
@@ -191,8 +191,8 @@ local mod= {
     -- Ruta del folder donde buscar los repositorios git, donde se encuentra diferentes proyectos 'git', usados para crear un workspace asociado
     -- a path del dominio local y dominios tipos unix (asociados servidor IPC locales).
     -- > Se puede usar '~' al inicio para representar el 'home directory' del usuario actual y local.
-    --root_git_folder = nil,
-    root_git_folder = '~/code',
+    root_git_folder = nil,
+    --root_git_folder = '~/code',
 
     -- Ruta del folder donde buscar los repositorios git, donde se encuentra diferentes proyectos 'git', usados para crear un workspace asociado
     -- a path del dominio externo al local:
@@ -201,8 +201,8 @@ local mod= {
     --   estos dominios existentes)
     -- > Se puede usar '~' al inicio para representar el 'home directory' del usuario por defecto de la distribucion WSL/distrobox remota.
     -- > Se puede usar '@' al inicio para representar el 'home directory' del usuario actual y local.
-    external_root_git_folder = '@/code',
-    --external_root_git_folder = nil,
+    external_root_git_folder = nil,
+    --external_root_git_folder = '@/code',
     --external_root_git_folder = '~/code',
 
     -- Cargar los built-in tags para crear worspace usando rutas de carpetas del dominio local.

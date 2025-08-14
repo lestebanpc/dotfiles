@@ -867,7 +867,6 @@ function m_setup_profile($l_overwrite_ln_flag) {
 	$l_source_filename='legacy_x64.ps1'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
-    #Creando archivo de configuracion para Wezterm
 
     # Configuracion de 'oh-my-posh'
     if(! (Test-Path "${env:USERPROFILE}\.files\etc\default_settings.json" )) {
@@ -883,7 +882,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
     # Configuracion de wezterm
     $l_target_link="${env:USERPROFILE}\.config\wezterm\wezterm.lua"
-    $l_source_path="${env:USERPROFILE}\.files\wezterm"
+    $l_source_path="${env:USERPROFILE}\.files\wezterm\local"
 	$l_source_filename='wezterm.lua'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
@@ -1123,7 +1122,7 @@ function m_create_all_links($p_overwrite_ln_flag) {
         },
         [PSCustomObject]@{
             target_link     = "${env:USERPROFILE}\.config\wezterm\wezterm.lua"
-            source_path     = "${env:USERPROFILE}\.files\wezterm"
+            source_path     = "${env:USERPROFILE}\.files\wezterm\local"
             source_filename = "wezterm.lua"
         },
         [PSCustomObject]@{
