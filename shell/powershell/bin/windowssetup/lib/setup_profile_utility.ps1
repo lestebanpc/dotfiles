@@ -229,7 +229,7 @@ function show_vim_config_report($p_is_neovim, $p_flag_developer) {
     }
 
 
-    local l_flag_developer=-1
+    $l_flag_developer=-1
     if ( $p_flag_developer -eq 0 ) {
         $l_flag_developer=0
     } elseif ( $p_flag_developer -eq 1 ) {

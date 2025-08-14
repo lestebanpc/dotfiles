@@ -285,7 +285,7 @@ function m_update_vim_packages($p_is_neovim)
         $l_repo_path = Split-Path -Parent $folder.FullName
 		$l_repo_name = Split-Path "$l_repo_path" -Leaf
         $l_status= m_update_repository $l_repo_path $l_repo_name $p_is_neovim
-		if(($l_status -eq 1) || ($l_status -eq 2))
+		if(($l_status -eq 1) -or ($l_status -eq 2))
 		{
 			if(Test-Path "${l_repo_path}/doc") {
 				$la_doc_paths.Add("${l_repo_path}/doc")
