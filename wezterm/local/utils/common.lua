@@ -357,6 +357,8 @@ function mod.exist_command(p_command_name, p_os_type, p_distribution_name)
             }
         end
 
+        mm_wezterm.log_info(l_args)
+
     elseif p_os_type == 0 then
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
@@ -379,7 +381,7 @@ function mod.exist_command(p_command_name, p_os_type, p_distribution_name)
     ---@type boolean, string?, string?
     local l_success, _, l_stderr = mm_wezterm.run_child_process(l_args)
 
-    if p_is_windows and not l_is_wsl_domain and l_stderr ~= nil then
+    if p_os_type == 1 and not p_distribution_name and l_stderr ~= nil then
         return l_success and not l_stderr:find("INFO: Could not find files")
     end
 
@@ -918,9 +920,9 @@ end
 
 
 
-function mod.list_running_containers(p_container_runtime, p_excluded_ids, p_is_windows, p_wsl_distribution_name)
+function mod.list_running_containers(p_container_runtime, p_excluded_ids, p_is_windows, p_distribution_name)
 
-    local l_is_wsl_domain = p_wsl_distribution_name ~= nil and p_wsl_distribution_name ~= ''
+    local l_is_wsl_domain = p_distribution_name ~= nil and p_distribution_name ~= ''
 
     local l_args = nil
     if p_is_windows then
@@ -983,10 +985,10 @@ end
 
 
 
-function mod.get_args_to_enter_container(p_container_runtime, p_container_id, p_container_shell, p_is_windows, p_wsl_distribution_name)
+function mod.get_args_to_enter_container(p_container_runtime, p_container_id, p_container_shell, p_is_windows, p_distribution_name)
 
     local l_container_shell = p_container_shell or '/usr/bin/bash'
-    local l_is_wsl_domain = p_wsl_distribution_name ~= nil and p_wsl_distribution_name ~= ''
+    local l_is_wsl_domain = p_distribution_name ~= nil and p_distribution_name ~= ''
 
     local l_args = nil
 
@@ -1024,9 +1026,9 @@ end
 
 
 
-function mod.list_pod_of_current_ns(p_is_windows, p_wsl_distribution_name)
+function mod.list_pod_of_current_ns(p_is_windows, p_distribution_name)
 
-    local l_is_wsl_domain = p_wsl_distribution_name ~= nil and p_wsl_distribution_name ~= ''
+    local l_is_wsl_domain = p_distribution_name ~= nil and p_distribution_name ~= ''
 
     local l_args = nil
     if p_is_windows then
@@ -1079,10 +1081,10 @@ function mod.list_pod_of_current_ns(p_is_windows, p_wsl_distribution_name)
 end
 
 
-function mod.get_args_to_enter_pod(p_pod_name, p_container_shell, p_is_windows, p_wsl_distribution_name)
+function mod.get_args_to_enter_pod(p_pod_name, p_container_shell, p_is_windows, p_distribution_name)
 
     local l_container_shell = p_container_shell or '/usr/bin/bash'
-    local l_is_wsl_domain = p_wsl_distribution_name ~= nil and p_wsl_distribution_name ~= ''
+    local l_is_wsl_domain = p_distribution_name ~= nil and p_distribution_name ~= ''
 
     local l_args = nil
 

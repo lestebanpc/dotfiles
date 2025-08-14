@@ -370,18 +370,25 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
     for ($i=0; $i -lt $ga_group_plugin_folder.Count; $i++) {
 
         $l_group_folder= $ga_group_plugin_folder[$i]
-        if (!$l_group_folder) {
+        if (-not $l_group_folder) {
             continue
         }
 
-        if (!$p_flag_developer && $i -ge 3) {
+        if (-not $p_flag_developer -and $i -ge 3) {
             #Si no es developer, no se crean los grupos de plugins de IDE
             break
         }
 
         # Crear la carpeta base del grupo de plugins
-        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\${l_group_folder}\opt"
-        $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\${l_group_folder}\start"
+	    if(! (Test-Path "${l_base_plugins}\${l_group_folder}\opt")) {
+            Write-Host "Creando el folder '${l_base_plugins}\${l_group_folder}\opt'."
+            $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\${l_group_folder}\opt"
+        }
+
+	    if(! (Test-Path "${l_base_plugins}\${l_group_folder}\start")) {
+            Write-Host "Creando el folder '${l_base_plugins}\${l_group_folder}\start'."
+            $l_tmp= New-Item -ItemType Directory -Force -Path "${l_base_plugins}\${l_group_folder}\start"
+        }
     }
 
 
