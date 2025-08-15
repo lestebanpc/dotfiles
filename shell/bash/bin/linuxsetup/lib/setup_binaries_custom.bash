@@ -438,7 +438,7 @@ declare -A gA_current_version_method_type=(
     ['cilium']=2
     ['marksman']=2
     ['tmux-fingers']=2
-    ['wezterm']=1
+    ['wezterm']=2
     ['powershell_es']=2
     )
 
@@ -8233,6 +8233,9 @@ function _copy_artifact_files() {
             if [ $l_status -ne 0 ]; then
                 return 40
             fi
+
+            #Debido que no existe relacion entre la version actual y la version de github, se almacenara la version github que se esta instalando
+            save_prettyversion_on_tools "" "wezterm.info" "$p_repo_last_pretty_version" 1
             ;;
 
 
