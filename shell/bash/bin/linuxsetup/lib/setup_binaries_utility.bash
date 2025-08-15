@@ -383,7 +383,7 @@ function create_folderpath_on_tools() {
 #     No puede ser vacio (un programa siempre se almacena dentro de un subfolder dentro de la ruta base de programas)
 #  3> Tipo de operacion de limpieza (si el subfolder existe). Valor por defecto es 0
 #     0 - No realizar ninguna limpieza (no eliminar ningun contenido del subfolder)
-#     1 - Eliminar todos los archivos existentes antes del copiado
+#     1 - Eliminar todos los archivos existentes del subfolder (no elimina el subfolder) antes del copiado
 #     2 - Eliminar todo el subfolder y crearlo nuevamente antes del copiado
 #     3 - Renombrar la carpeta con el nombre indicado en el paremetro 5
 #  4> Solo si el parametro 4 es 3. Sufijo adicionar a la nombre del subfolder existenten

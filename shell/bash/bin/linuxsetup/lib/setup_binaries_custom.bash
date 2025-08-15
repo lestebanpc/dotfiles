@@ -521,6 +521,7 @@ declare -A gA_current_version_parameter4=(
     ['net-rt-core']='dotnet'
     ['net-rt-aspnet']='dotnet'
     ['llvm']='llvm/bin'
+    ['wezterm']='wezterm'
     ['clangd']='lsp_servers/clangd/bin'
     ['cmake']='cmake/bin'
     ['powershell']='powershell'
@@ -4336,6 +4337,14 @@ function get_repo_artifacts() {
 
 
         wezterm)
+
+            #URL base fijo     :  "https://github.com"
+            #l_base_url_fixed="${gA_repo_base_url[${p_repo_id}]:-https://github.com}"
+            #URL base variable :
+            l_base_url_variable="${p_repo_name}/releases/download/nightly"
+
+            #URL base para un repositorio GitHub
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
 
             #No soportado para Linux
             if [ $p_is_win_binary -ne 0 ]; then
@@ -8215,12 +8224,11 @@ function _copy_artifact_files() {
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            #Creando el folder si no existe y limpiarlo si existe
-            create_or_clean_folder_on_tools 1 "wezterm" 2 ""
+            #Eliminar el folder si existe
+            clean_folder_on_tools 1 "" "wezterm" 1 ""
 
-            #Descomprimir
-            #TODO
-            uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "wezterm" "" ""
+            #Descomprimir en un subfolder 'wezterm' durante la descromprension
+            uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "wezterm" "WezTerm-windows-"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
