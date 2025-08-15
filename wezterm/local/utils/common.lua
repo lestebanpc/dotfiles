@@ -357,7 +357,7 @@ function mod.exist_command(p_command_name, p_os_type, p_distribution_name)
             }
         end
 
-        mm_wezterm.log_info(l_args)
+        --mm_wezterm.log_info(l_args)
 
     elseif p_os_type == 0 then
 
@@ -920,12 +920,12 @@ end
 
 
 
-function mod.list_running_containers(p_container_runtime, p_excluded_ids, p_is_windows, p_distribution_name)
+function mod.list_running_containers(p_container_runtime, p_excluded_ids, p_os_type, p_distribution_name)
 
     local l_is_wsl_domain = p_distribution_name ~= nil and p_distribution_name ~= ''
 
     local l_args = nil
-    if p_is_windows then
+    if p_os_type == 1 then
         if l_is_wsl_domain then
             l_args = {
                 'cmd.exe', '/c',
@@ -985,14 +985,14 @@ end
 
 
 
-function mod.get_args_to_enter_container(p_container_runtime, p_container_id, p_container_shell, p_is_windows, p_distribution_name)
+function mod.get_args_to_enter_container(p_container_runtime, p_container_id, p_container_shell, p_os_type, p_distribution_name)
 
     local l_container_shell = p_container_shell or '/usr/bin/bash'
     local l_is_wsl_domain = p_distribution_name ~= nil and p_distribution_name ~= ''
 
     local l_args = nil
 
-    if p_is_windows then
+    if p_os_type == 1 then
 
         if l_is_wsl_domain then
             l_args = {

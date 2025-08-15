@@ -211,9 +211,9 @@ function mod.setup(
 
     -- Validar si esta instalado distribucion Distrobox/WSL
     if m_os_type == 0 then
-        m_is_installed_external_distribution = mm_ucommon.exist_command('distrobox', false, nil)
+        m_is_installed_external_distribution = mm_ucommon.exist_command('distrobox', m_os_type, nil)
     elseif m_os_type == 1 then
-        m_is_installed_external_distribution = mm_ucommon.exist_command('wsl', true, nil)
+        m_is_installed_external_distribution = mm_ucommon.exist_command('wsl', m_os_type, nil)
     end
     --mm_wezterm.log_info(m_is_installed_external_distribution)
 
@@ -615,7 +615,7 @@ local function m_make_cbk_container_fixup(p_container_id)
 
     return function(p_spawncommand)
 
-        p_spawncommand.args = mm_ucommon.get_args_to_enter_container(m_container_runtime, p_container_id, m_custom.container_shell, m_os_type == 1, m_external_running_distribution)
+        p_spawncommand.args = mm_ucommon.get_args_to_enter_container(m_container_runtime, p_container_id, m_custom.container_shell, m_os_type, m_external_running_distribution)
         return p_spawncommand
 
     end
@@ -687,12 +687,10 @@ function mod.get_exec_domains()
     end
 
     -- Obtener los dominios de asociados a los contenedores en ejecucion
-    local l_is_windows = m_os_type == 1
-
-    if m_custom.load_containers and mm_ucommon.exist_command(m_container_runtime, l_is_windows, m_external_running_distribution) then
+    if m_custom.load_containers and mm_ucommon.exist_command(m_container_runtime, m_os_type, m_external_running_distribution) then
 
         l_subtype_info = l_type_info.types['container']
-        local l_containers = mm_ucommon.list_running_containers(m_container_runtime, l_excluded_container_ids, l_is_windows, m_external_running_distribution)
+        local l_containers = mm_ucommon.list_running_containers(m_container_runtime, l_excluded_container_ids, m_os_type, m_external_running_distribution)
 
         if l_containers ~= nil then
 
