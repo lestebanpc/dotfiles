@@ -196,43 +196,56 @@ local function m_add_local_builtin_tags()
     --   > Workspace name
     --   > Workspace info
 
-    -- TODO La ruta de windows se usa / o \\?
 
     -- Ruta de configuracion de los archivo dotfiles
     local l_tag = {
         name = 'dotfiles',
-        fullpath = mm_wezterm.home_dir .. '/.files',
         domain_category = 'local',
         domain = nil,
         callback = nil,
     }
 
+    if m_os_type == 1 then
+        l_tag.fullpath = mm_wezterm.home_dir .. '\\.files',
+    else
+        l_tag.fullpath = mm_wezterm.home_dir .. '/.files',
+    end
+
+    table.insert(m_local_tags, l_tag)
+
+
     -- Ruta de configuracion de wezterm
     l_tag = {
         name = 'config wezterm',
-        fullpath = mm_wezterm.home_dir .. '/.config/wezterm',
         domain_category = 'local',
         domain = nil,
         callback = nil,
     }
+
+    if m_os_type == 1 then
+        l_tag.fullpath = mm_wezterm.home_dir .. '\\.config\\wezterm',
+    else
+        l_tag.fullpath = mm_wezterm.home_dir .. '/.config/wezterm',
+    end
 
     table.insert(m_local_tags, l_tag)
 
 
     -- Ruta de configuracion de los archivo ssh
-    if m_os_type ~= 1 then
+    l_tag = {
+        name = 'config ssh',
+        domain_category = 'local',
+        domain = nil,
+        callback = nil,
+    }
 
-        l_tag = {
-            name = 'config ssh',
-            fullpath = mm_wezterm.home_dir .. '/.ssh',
-            domain_category = 'local',
-            domain = nil,
-            callback = nil,
-        }
-
-        table.insert(m_local_tags, l_tag)
-
+    if m_os_type == 1 then
+        l_tag.fullpath = mm_wezterm.home_dir .. '\\.ssh',
+    else
+        l_tag.fullpath = mm_wezterm.home_dir .. '/.ssh',
     end
+
+    table.insert(m_local_tags, l_tag)
 
 
     -- Ruta de configuracion de los archivo tmux
@@ -254,11 +267,71 @@ local function m_add_local_builtin_tags()
     -- Ruta de configuracion de los archivo git
     l_tag = {
         name = 'config git',
-        fullpath = mm_wezterm.home_dir .. '/.config/git',
         domain_category = 'local',
         domain = nil,
         callback = nil,
     }
+
+    if m_os_type == 1 then
+        l_tag.fullpath = mm_wezterm.home_dir .. '\\.config\\git'
+    else
+        l_tag.fullpath = mm_wezterm.home_dir .. '/.config/git'
+    end
+
+    table.insert(m_local_tags, l_tag)
+
+
+    -- Ruta de configuracion de vim
+    l_tag = {
+        name = 'vim files',
+        domain_category = 'local',
+        domain = nil,
+        callback = nil,
+    }
+
+    if m_os_type == 1 then
+        l_tag.fullpath = mm_wezterm.home_dir .. '\\vimfiles'
+    else
+        l_tag.fullpath = mm_wezterm.home_dir .. '/.vim'
+    end
+
+    table.insert(m_local_tags, l_tag)
+
+
+    -- Ruta de configuracion de vim
+    l_tag = {
+        name = 'nvim config',
+        domain_category = 'local',
+        domain = nil,
+        callback = nil,
+    }
+
+    local l_appdata_path = nil
+
+    if m_os_type == 1 then
+        l_appdata_path = os.getenv("LOCALAPPDATA")
+        --l_appdata_path = os.getenv("APPDATA")
+        l_tag.fullpath = l_appdata_path .. '\\nvim'
+    else
+        l_tag.fullpath = mm_wezterm.home_dir .. '/.config/nvim'
+    end
+
+    table.insert(m_local_tags, l_tag)
+
+
+    -- Ruta de configuracion de vim
+    l_tag = {
+        name = 'nvim data',
+        domain_category = 'local',
+        domain = nil,
+        callback = nil,
+    }
+
+    if m_os_type == 1 then
+        l_tag.fullpath = l_appdata_path .. '\\nvim-data'
+    else
+        l_tag.fullpath = mm_wezterm.home_dir .. '/.local/nvim'
+    end
 
     table.insert(m_local_tags, l_tag)
 

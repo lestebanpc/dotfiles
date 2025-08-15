@@ -24,6 +24,18 @@ path = "~/.config/git"
 startup_command = "vim ~/.gitconfig user_*.toml"
 
 [[session]]
+name = "vim files"
+path = "~/.vim"
+
+[[session]]
+name = "nvim config"
+path = "~/.config/nvim"
+
+[[session]]
+name = "nvim data"
+path = "~/.local/share/nvim"
+
+[[session]]
 name = "config wezterm"
 path = "~/.config/wezterm"
 startup_command = "vim wezterm.lua custom_config.lua"

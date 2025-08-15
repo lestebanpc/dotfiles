@@ -59,6 +59,8 @@ gA_packages=(
         ['omnisharp-ls']='OmniSharp/omnisharp-roslyn'
         ['netcoredbg']='Samsung/netcoredbg'
         ['go']='golang'
+        ['shfmt']='mvdan/sh'
+        ['shellcheck']='koalaman/shellcheck'
         ['cmake']='Kitware/CMake'
         ['ninja']='ninja-build/ninja'
         ['llvm']='llvm/llvm-project'
@@ -153,7 +155,7 @@ ga_menu_options_title=(
     "Rust  ${g_color_reset}>${g_color_green1} Compiler, LSP server"
     "Go    ${g_color_reset}>${g_color_green1} RTE"
     "Python${g_color_reset}>${g_color_green1} Tools"
-    "LSP y otros: Markdown LS, Lua LS, Taplo (Toml LS), Lemmix (XML LS), ..."
+    "Formatter, Linter y LSP: Bash linter, Markdown LS, Lua LS, Taplo (Toml LS), Lemmix (XML LS), ..."
     "CTags (indexador de archivos lenguajes de programacion)"
     "AWS CLI v2"
     "Tools adicionales de Linux"
@@ -188,7 +190,7 @@ ga_menu_options_packages=(
     "rust,rust-analyzer"
     "go"
     "uv"
-    "marksman,luals,taplo,lemminx,flamelens,powershell_es"
+    "shellcheck,shfmt,marksman,luals,taplo,lemminx,flamelens,powershell_es"
     "ctags-win,ctags-nowin"
     "awscli"
     "distrobox"
@@ -395,6 +397,7 @@ declare -A gA_current_version_method_type=(
     ['kubectl']=1
     ['oc']=1
     ['kubeadm']=1
+    ['shellcheck']=1
     ['pgo']=2
     ['k0s']=1
     ['omnisharp-ls']=3
@@ -1035,13 +1038,17 @@ function get_repo_last_version() {
             ;;
 
 
-        #wezterm)
+        wezterm)
 
-            #No se obtiene la version de la metadata. Solo el hash, el cual no tiene comparacion > o <, solo =
             #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/tags"
             #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/tags" | jq '.[] | select(.name == "nightly")'
             #curl -LsH "Accept: application/json" "https://api.github.com/repos/wez/wezterm/commits/c53ca64c33d1658602b9a3aaa412eca9c6544294"
-            #;;
+            l_repo_last_version=$(curl -Ls -H "Accept: application/vnd.github+json" https://api.github.com/repos/wezterm/wezterm/releases/tags/nightly | jq -r '.updated_at')
+
+            #Obtener el dia, por ejemplo de '2025-08-15T04:18:28Z' a '20250815'
+            l_repo_last_version=$(date -u -d "$l_repo_last_version" +"%Y%m%d")
+
+            ;;
 
         *)
             #Si no esta instalado 'jq' no continuar
@@ -1152,7 +1159,7 @@ function get_repo_last_pretty_version() {
             #  p6.1.20240630.0
             #  p6.1.20240623.0
             #Obteniendo los 3 primeros enteros.
-            l_aux=$(echo $p_version | sed -E 's/[vp]([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+            l_aux=$(echo "$p_version" | sed -E 's/[vp]([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 1
@@ -1168,7 +1175,7 @@ function get_repo_last_pretty_version() {
             #  2024.07.11+e79e67dc64805a616725c3668ad7ec284de053ed
             #  2024.07.10+ac6c14ca616048b5b137e08ed60bee47b563305c
             #Obteniendo los 3 primeros enteros.
-            l_aux=$(echo $p_version | sed -E 's/([0-9]+\.[0-9]+\.[0-9]+)\+.*/\1/')
+            l_aux=$(echo "$p_version" | sed -E 's/([0-9]+\.[0-9]+\.[0-9]+)\+.*/\1/')
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 1
@@ -1181,7 +1188,7 @@ function get_repo_last_pretty_version() {
 
             #Ejemplo de versiones: solo obtener la fecha
             #   wezterm 20240805_014059_9d285fa6
-            l_aux=$(echo $p_version | sed -e 's/[^0-9]*\([0-9]\+\).*/\1/')
+            l_aux=$(echo "$p_version" | sed -E 's/.* ([0-9]+)_.*/\1/')
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 1
@@ -1437,6 +1444,13 @@ function _get_repo_current_pretty_version2() {
             ;;
 
 
+        shellcheck)
+            l_result=$(echo "$p_data" | head -n 2 | tail -n 1)
+            l_result=$(echo "$l_result" | sed "$g_regexp_sust_version1")
+            l_status=0
+            ;;
+
+
         eza)
             l_result=$(echo "$p_data" | tail -n 2 | head -n 1)
             l_result=$(echo "$l_result" | sed "$g_regexp_sust_version1")
@@ -1544,7 +1558,8 @@ function _get_repo_current_pretty_version2() {
 
 
        wezterm)
-            l_result=$(echo "$p_data" | sed -e 's/[^0-9]*\([0-9]\+\).*/\1/')
+            #   wezterm 20240805_014059_9d285fa6
+            l_result=$(echo "$p_data" | sed -E 's/.* ([0-9]+)_.*/\1/')
             l_status=0
             ;;
 
@@ -2082,6 +2097,70 @@ function get_repo_artifacts() {
                     pna_artifact_names=("lazygit_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
                 fi
                 pna_artifact_types=(10)
+            fi
+            ;;
+
+
+
+        shfmt)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("shfmt_v${p_repo_last_pretty_version}_windows_amd64.exe")
+                else
+                    pna_artifact_names=("shfmt_v${p_repo_last_pretty_version}_windows_amd64.exe")
+                fi
+                pna_artifact_types=(0)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("shfmt_v${p_repo_last_pretty_version}_linux_arm64")
+                    else
+                        pna_artifact_names=("shfmt_v${p_repo_last_pretty_version}_linux_amd64")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("shfmt_v${p_repo_last_pretty_version}_linux_arm64")
+                    else
+                        pna_artifact_names=("shfmt_v${p_repo_last_pretty_version}_linux_amd64")
+                    fi
+                fi
+                pna_artifact_types=(0)
+            fi
+            ;;
+
+
+
+        shellcheck)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("shellcheck-v${p_repo_last_pretty_version}.zip")
+                else
+                    pna_artifact_names=("shellcheck-v${p_repo_last_pretty_version}.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("shellcheck-v${p_repo_last_pretty_version}.linux.aarch64.tar.xz")
+                    else
+                        pna_artifact_names=("shellcheck-v${p_repo_last_pretty_version}.linux.x86_64.tar.xz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("shellcheck-v${p_repo_last_pretty_version}.linux.aarch64.tar.xz")
+                    else
+                        pna_artifact_names=("shellcheck-v${p_repo_last_pretty_version}.linux.x86_64.tar.xz")
+                    fi
+                fi
+                pna_artifact_types=(14)
             fi
             ;;
 
@@ -4266,7 +4345,7 @@ function get_repo_artifacts() {
             fi
 
             #Generar los datos de artefactado requeridos para su configuración:
-            pna_artifact_names=("WezTerm-windows-${p_repo_last_version}.zip")
+            pna_artifact_names=("WezTerm-windows-nightly.zip")
             pna_artifact_types=(21)
             ;;
 
@@ -4946,6 +5025,64 @@ function _copy_artifact_files() {
 
             fi
             ;;
+
+
+
+        shfmt)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                echo "Renombrando \"${p_artifact_filename_woext}.exe\" como \"${g_temp_path}/${l_source_path}/shfmt.exe\" ..."
+                mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/shfmt.exe"
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "shfmt.exe" 1 1
+
+                return 0
+
+            fi
+
+            #Si es Linux non-WSL
+            echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/shfmt\" ..."
+            mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/shfmt"
+
+            #Copiar el comando
+            copy_binary_file "${l_source_path}" "shfmt" 0 1
+
+            ;;
+
+
+
+
+        shellcheck)
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                #Ruta local de los artefactos
+                l_source_path="${p_repo_id}/${p_artifact_index}"
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "shellcheck.exe" 1 1
+
+                return 0
+
+            fi
+
+            #Si es Linux non-WSL
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}/shellcheck-v${p_repo_last_pretty_version}"
+
+            #Copiar el comando
+            copy_binary_file "${l_source_path}" "shellcheck" 0 1
+
+            ;;
+
 
 
         websocat)
