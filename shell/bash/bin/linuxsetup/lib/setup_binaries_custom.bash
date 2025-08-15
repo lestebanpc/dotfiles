@@ -5392,8 +5392,8 @@ function _copy_artifact_files() {
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $p_is_win_binary -eq 0 ]; then
 
-                echo "Renombrando \"${p_artifact_filename_woext}.exe\" como \"${g_temp_path}/${l_source_path}/tree-sitter.exe\" ..."
-                mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/tree-sitter.exe"
+                echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/tree-sitter.exe\" ..."
+                mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/tree-sitter.exe"
 
                 #Copiar el comando
                 copy_binary_file "${l_source_path}" "tree-sitter.exe" 1 1
