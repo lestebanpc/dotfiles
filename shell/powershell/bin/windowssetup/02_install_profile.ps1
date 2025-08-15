@@ -347,7 +347,7 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
 
 
 
-function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
+function m_setup_vim_packages($p_is_neovim, $p_flag_developer, $p_index_documentation) {
 
     #1. Argumentos
 
@@ -510,7 +510,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 
     #4. Actualizar la documentación de VIM (Los plugins VIM que no tiene documentación, no requieren indexar)
 	$l_n= $la_doc_paths.Count
-	if( $l_n -gt 0 )
+	if( $l_n -gt 0 -and $p_index_documentation )
 	{
 		Write-Host ""
 	    Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
@@ -561,7 +561,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer) {
 
 # Parametros:
 #  1> Flag configurar como Developer (si es '0')
-function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
+function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag, $p_index_documentation) {
 
     #1. Argumentos
 
@@ -670,7 +670,7 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
     }
 
     #6. Instalando paquetes
-    $l_status= m_setup_vim_packages $true $p_flag_developer
+    $l_status= m_setup_vim_packages $true $p_flag_developer $p_index_documentation
 
 
 }
@@ -679,7 +679,7 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag ) {
 # Parametros:
 #  1> Flag configurar como Developer (si es '0')
 #  2> Sobrescribir los enlaces simbolicos
-function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
+function m_config_vim($p_flag_developer, $p_overwrite_ln_flag, $p_index_documentation) {
 
     #1. Argumentos
 
@@ -759,7 +759,7 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag) {
     }
 
     #Instalar los plugins
-    $l_status= m_setup_vim_packages $false $p_flag_developer
+    $l_status= m_setup_vim_packages $false $p_flag_developer $p_index_documentation
 
 }
 
@@ -1200,7 +1200,7 @@ function m_setup($p_input_options) {
         $l_overwrite_ln_flag = $true
 
 	    #Instalar VIM como Developer
-	    m_config_vim $true $l_overwrite_ln_flag
+	    m_config_vim $true $l_overwrite_ln_flag $true
 	    Write-Host ""
         return
     }
@@ -1211,7 +1211,7 @@ function m_setup($p_input_options) {
         $l_overwrite_ln_flag = $false
 
 	    #Instalar NeoVIM como Developer
-	    m_config_nvim $true $l_overwrite_ln_flag
+	    m_config_nvim $true $l_overwrite_ln_flag $true
 	    Write-Host ""
 
         return
@@ -1232,11 +1232,11 @@ function m_setup($p_input_options) {
         $l_overwrite_ln_flag = $false
 
 	    #Instalar VIM como Developer
-	    m_config_vim $true $l_overwrite_ln_flag
+	    m_config_vim $true $l_overwrite_ln_flag $true
 	    Write-Host ""
 
 	    #Instalar NeoVIM como Developer
-	    m_config_nvim $true $l_overwrite_ln_flag
+	    m_config_nvim $true $l_overwrite_ln_flag $true
 	    Write-Host ""
 
 	    #Configurar el profile
@@ -1250,11 +1250,47 @@ function m_setup($p_input_options) {
         $l_overwrite_ln_flag = $true
 
 	    #Instalar VIM como Developer
-	    m_config_vim $true $l_overwrite_ln_flag
+	    m_config_vim $true $l_overwrite_ln_flag $true
 	    Write-Host ""
 
 	    #Instalar NeoVIM como Developer
-	    m_config_nvim $true $l_overwrite_ln_flag
+	    m_config_nvim $true $l_overwrite_ln_flag $true
+	    Write-Host ""
+
+	    #Configurar el profile
+	    m_setup_profile $l_overwrite_ln_flag
+        return
+    }
+
+
+    if($p_input_options -eq "i") {
+
+        $l_overwrite_ln_flag = $false
+
+	    #Instalar VIM como Developer
+	    m_config_vim $true $l_overwrite_ln_flag $false
+	    Write-Host ""
+
+	    #Instalar NeoVIM como Developer
+	    m_config_nvim $true $l_overwrite_ln_flag $false
+	    Write-Host ""
+
+	    #Configurar el profile
+	    m_setup_profile $l_overwrite_ln_flag
+        return
+    }
+
+
+    if($p_input_options -eq "j") {
+
+        $l_overwrite_ln_flag = $true
+
+	    #Instalar VIM como Developer
+	    m_config_vim $true $l_overwrite_ln_flag $false
+	    Write-Host ""
+
+	    #Instalar NeoVIM como Developer
+	    m_config_nvim $true $l_overwrite_ln_flag $false
 	    Write-Host ""
 
 	    #Configurar el profile
@@ -1277,8 +1313,10 @@ function m_show_menu_core() {
 	Write-Host " (d) Configurar VIM como developer"
 	Write-Host " (e) Configurar NeoVIM como developer"
 	Write-Host " (f) Configurar Profile como developer"
-	Write-Host " (g) Configurar VIM, NeoVIM y Profile como developer"
-	Write-Host " (h) Configurar VIM, NeoVIM y Profile como developer (re-crear enlaces simbolicos si existen)"
+	Write-Host " (g) Setup VIM/NeoVIM y Profile como developer"
+	Write-Host " (h) Setup VIM/NeoVIM y Profile como developer (re-crear enlaces simbolicos si existen)"
+	Write-Host " (i) Setup VIM/NeoVIM (sin indexar documentación) y Profile como developer"
+	Write-Host " (j) Setup VIM/NeoVIM (sin indexar documentación) y Profile como developer (re-crear enlaces)"
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 }
 
@@ -1352,6 +1390,22 @@ function show_menu() {
 					Write-Host ""
 					m_setup $l_read_option
 				}
+
+				'i' {
+					$l_continue= $false
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
+					Write-Host ""
+					m_setup $l_read_option
+				}
+
+				'j' {
+					$l_continue= $false
+	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
+					Write-Host ""
+					m_setup $l_read_option
+				}
+
+
 
 
 
