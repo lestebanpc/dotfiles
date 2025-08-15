@@ -436,7 +436,10 @@ function mod.run_script(p_script, p_os_type, p_distribution_name)
 	local l_success, l_stdout, l_stderr = mm_wezterm.run_child_process(l_args)
 
 	if not l_success then
-		mm_wezterm.log_error("Script '" .. p_script .. "' failed with stderr: '" .. l_stderr .. "'")
+        if l_stderr ~= nil and l_stderr ~= '' then
+		    mm_wezterm.log_error("Script '" .. p_script .. "' failed with stderr: '" .. l_stderr .. "'")
+        end
+        return nil
 	end
 
     local l_lines = mm_wezterm.split_by_newlines(l_stdout)
@@ -483,6 +486,9 @@ function mod.get_home_dir(p_os_type, p_distribution_name)
     local l_success, l_stdout, l_stderr = mm_wezterm.run_child_process(l_args)
 
     if not l_success then
+        if l_stderr ~= nil and l_stderr ~= '' then
+		    mm_wezterm.log_error("Error on get home path: " .. l_stderr)
+        end
         return nil
     end
 
@@ -509,7 +515,9 @@ function mod.list_running_wsl_distributions()
 	local l_success, l_stdout, l_stderr = mm_wezterm.run_child_process(l_args)
 
 	if not l_success then
-		mm_wezterm.log_error("Error on executing 'wsl --list --running': " .. l_stderr)
+        if l_stderr ~= nil and l_stderr ~= '' then
+		    mm_wezterm.log_error("Error on executing 'wsl --list --running': " .. l_stderr)
+        end
         return nil
 	end
 
@@ -646,8 +654,10 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name)
 	local l_success, l_stdout, l_stderr = mm_wezterm.run_child_process(l_args)
 
     if not l_success then
-        mm_wezterm.log_error("Command failed: ", l_args)
-        mm_wezterm.log_error("stderr: ", l_stderr)
+        if l_stderr ~= nil and l_stderr ~= '' then
+            mm_wezterm.log_error("Command failed: ", l_args)
+            mm_wezterm.log_error("stderr: ", l_stderr)
+        end
         return {}
     end
 
@@ -736,7 +746,9 @@ function mod.get_zoxide_folders(p_os_type, p_distribution_name)
     local l_success, l_stdout, l_stderr = mm_wezterm.run_child_process(l_args)
 
     if not l_success then
-        mm_wezterm.log_error("Failed to run 'zoxide query -l': " .. (l_stderr or "unknown error"))
+        if l_stderr ~= nil and l_stderr ~= '' then
+            mm_wezterm.log_error("Failed to run 'zoxide query -l': " .. (l_stderr or "unknown error"))
+        end
         return nil
     end
 
@@ -819,7 +831,9 @@ function mod.register_zoxide_folder(p_folder_path, p_os_type, p_distribution_nam
     local l_success, _ , l_stderr = mm_wezterm.run_child_process(l_args)
 
     if not l_success then
-        mm_wezterm.log_error("Failed to run 'zoxide query -l': " .. (l_stderr or "unknown error"))
+        if l_stderr ~= nil and l_stderr ~= '' then
+            mm_wezterm.log_error("Failed to run 'zoxide query -l': " .. (l_stderr or "unknown error"))
+        end
         return false
     end
 
@@ -839,7 +853,9 @@ function mod.list_distrobox(p_show_stopped_distro)
     local l_success, l_stdout, l_stderr = mm_wezterm.run_child_process(l_args)
 
     if not l_success then
-        mm_wezterm.log_error("Failed to list distrobox container: " .. (l_stderr or "unknown error"))
+        if l_stderr ~= nil and l_stderr ~= '' then
+            mm_wezterm.log_error("Failed to list distrobox container: " .. (l_stderr or "unknown error"))
+        end
         return nil
     end
 
@@ -951,7 +967,9 @@ function mod.list_running_containers(p_container_runtime, p_excluded_ids, p_os_t
     local l_success, l_stdout, l_stderr = mm_wezterm.run_child_process(l_args)
 
     if not l_success then
-        mm_wezterm.log_error("Failed to run '" .. p_container_runtime .. "': " .. (l_stderr or "unknown error"))
+        if l_stderr ~= nil and l_stderr ~= '' then
+            mm_wezterm.log_error("Failed to run '" .. p_container_runtime .. "': " .. (l_stderr or "unknown error"))
+        end
         return nil
     end
 
@@ -1058,7 +1076,9 @@ function mod.list_pod_of_current_ns(p_is_windows, p_distribution_name)
     local l_success, l_stdout, l_stderr = mm_wezterm.run_child_process(l_args)
 
     if not l_success then
-        mm_wezterm.log_error("Failed to run 'kubectl': " .. (l_stderr or "unknown error"))
+        if l_stderr ~= nil and l_stderr ~= '' then
+            mm_wezterm.log_error("Failed to run 'kubectl': " .. (l_stderr or "unknown error"))
+        end
         return nil
     end
 
