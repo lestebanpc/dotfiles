@@ -2465,7 +2465,7 @@ function g_install_repository() {
     l_flag_install=1
 
     #Si esta permitido configurarse en este sistema operativo, iniciar el proceso
-    if [ $l_what_can_it_does -eq 2 ]; then
+    if [ $l_what_can_it_does -eq 0 ] || [ $l_what_can_it_does -eq 2 ]; then
 
 
         if [ $l_status_process_lnx -ge 3 ]; then

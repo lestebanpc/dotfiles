@@ -1892,8 +1892,8 @@ function fulfill_preconditions() {
         fi
 
         if [ ! -z "$g_lnx_bin_path" ]; then
-            printf 'Linux base path       : "%s" (Bin= "%s") (Owner= "%s") (Group= "%s")' "$g_lnx_base_path" "$g_lnx_bin_path" \
-                   "$g_tools_owner" "$g_tools_group"
+            printf 'OS base path          : "%s" (Bin= "%s") (Owner= "%s") (Group= "%s")' "$g_lnx_base_path" "$g_lnx_bin_path" \
+                   "$g_lnx_base_owner" "$g_lnx_base_group"
             if [ $g_os_type -eq 1 ] && [ ! -z "$g_win_bin_path" ]; then
                 printf ' (Windows= "%s")\n' "$g_win_bin_path"
             else
