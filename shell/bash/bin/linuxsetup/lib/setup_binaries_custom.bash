@@ -8217,7 +8217,7 @@ function _copy_artifact_files() {
         wezterm)
 
             #A. Si son binarios Linux
-            if [ $p_is_win_binary -eq 0 ]; then
+            if [ $p_is_win_binary -ne 0 ]; then
                 return 0
             fi
 
