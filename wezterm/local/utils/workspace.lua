@@ -206,9 +206,9 @@ local function m_add_local_builtin_tags()
     }
 
     if m_os_type == 1 then
-        l_tag.fullpath = mm_wezterm.home_dir .. '\\.files',
+        l_tag.fullpath = mm_wezterm.home_dir .. '\\.files'
     else
-        l_tag.fullpath = mm_wezterm.home_dir .. '/.files',
+        l_tag.fullpath = mm_wezterm.home_dir .. '/.files'
     end
 
     table.insert(m_local_tags, l_tag)
@@ -223,9 +223,9 @@ local function m_add_local_builtin_tags()
     }
 
     if m_os_type == 1 then
-        l_tag.fullpath = mm_wezterm.home_dir .. '\\.config\\wezterm',
+        l_tag.fullpath = mm_wezterm.home_dir .. '\\.config\\wezterm'
     else
-        l_tag.fullpath = mm_wezterm.home_dir .. '/.config/wezterm',
+        l_tag.fullpath = mm_wezterm.home_dir .. '/.config/wezterm'
     end
 
     table.insert(m_local_tags, l_tag)
@@ -240,9 +240,9 @@ local function m_add_local_builtin_tags()
     }
 
     if m_os_type == 1 then
-        l_tag.fullpath = mm_wezterm.home_dir .. '\\.ssh',
+        l_tag.fullpath = mm_wezterm.home_dir .. '\\.ssh'
     else
-        l_tag.fullpath = mm_wezterm.home_dir .. '/.ssh',
+        l_tag.fullpath = mm_wezterm.home_dir .. '/.ssh'
     end
 
     table.insert(m_local_tags, l_tag)
