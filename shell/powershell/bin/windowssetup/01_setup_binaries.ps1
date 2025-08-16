@@ -95,13 +95,22 @@ function m_get_current_version() {
 
     try {
 
-        $versionInfo = "$(wezterm --version 2>$null)"
-        if ($LASTEXITCODE -eq 0 -and $versionInfo) {
-            # Extraer la versión del formato "wezterm 20230712-072601-f4abf8fd"
-            if ($versionInfo -match '.* ([0-9]+)_.*') {
-                return $matches[1]
-            }
-        }
+        #$versionInfo = "$(wezterm --version 2>$null)"
+        #if ($LASTEXITCODE -eq 0 -and $versionInfo) {
+        #    # Extraer la versión del formato "wezterm 20230712-072601-f4abf8fd"
+        #    if ($versionInfo -match '.* ([0-9]+)_.*') {
+        #        return $matches[1]
+        #    }
+        #}
+
+		if (-not (Test-Path "${g_win_base_path}\wezterm.info")) {
+			return $null
+	    }
+
+		$l_version = Get-Content -Path "${g_win_base_path}\wezterm.info" -TotalCount 1
+        return $l_version
+
+
 
     }
     catch {
@@ -117,7 +126,7 @@ function m_get_latest_version() {
 
     try {
 
-        Write-Host "Obteniendo información de la última versión nightly..." -ForegroundColor Cyan
+        Write-Host "Obteniendo información de la última versión nightly..."
 
         $l_repo_last_version="$(curl -Ls -H 'Accept: application/vnd.github+json' 'https://api.github.com/repos/wezterm/wezterm/releases/tags/nightly' | jq -r '.updated_at')"
         if($null -eq $l_repo_last_version) {
@@ -138,18 +147,20 @@ function m_get_latest_version() {
 
 function m_setup_wezterm() {
 
+	$g_win_base_path = 'C:\apps'
+
     # Obtener versiones
-    Write-Host "Verificando versiones..." -ForegroundColor Cyan
-    $l_current_version = m_get_current_version()
-    $l_latest_version_info = m_get_latest_version()
+    Write-Host "Verificando versiones..."
+    $l_current_version = m_get_current_version
+    $l_latest_version_info = m_get_latest_version
 
     if (!$l_latest_version_info) {
         Write-Error "No se pudo obtener la información de la última versión"
         return 3
     }
 
-    Write-Host "Versión actual instalada: $($l_current_version)" -ForegroundColor Cyan
-    Write-Host "Última versión nightly  : $($l_latest_version_info)" -ForegroundColor Cyan
+    Write-Host "Versión actual instalada: $($l_current_version)"
+    Write-Host "Última versión nightly  : $($l_latest_version_info)"
 
     # Verificar si es necesario actualizar
     $l_should_download = $false
@@ -157,9 +168,10 @@ function m_setup_wezterm() {
     if ($null -eq $l_current_version) {
         Write-Host "No se encontró una versión instalada previamente. Se procederá a descargar." -ForegroundColor Yellow
         $l_should_download = $true
+	}
     else {
 
-        $l_status = m_compare_versions1 "$l_current_version" "$l_latest_version_info"
+        $l_status = m_compare_versions1 "${l_current_version}.0" "${l_latest_version_info}.0"
         if($l_status -lt 0) {
             $l_should_download = $true
         }
@@ -173,8 +185,9 @@ function m_setup_wezterm() {
     }
 
     $l_url = 'https://github.com/wezterm/wezterm/releases/download/nightly/WezTerm-windows-nightly.zip'
-    $l_download_path = 'C:\Temp\wezterm.zip'
+    $l_download_path = 'C:\Windows\Temp\wezterm.zip'
     $l_install_path = "${g_win_base_path}\wezterm"
+
     try {
 
         Write-Host "Descargando la última versión nightly..." -ForegroundColor Cyan
@@ -216,8 +229,11 @@ function m_setup_wezterm() {
             Write-Host "Archivo temporal eliminado." -ForegroundColor Green
         }
 
-        Write-Host "¡Actualización completada exitosamente!" -ForegroundColor Green
-        Write-Host "WezTerm ha sido instalado en: $l_install_path" -ForegroundColor Green
+        # Crea o sobrescribe el archivo de version
+        Set-Content -Path "${g_win_base_path}\wezterm.info" -Value "$l_latest_version_info"
+
+        Write-Host "¡Actualización completada exitosamente!"
+        Write-Host "WezTerm ha sido instalado en: $l_install_path"
 
     }
     catch {
@@ -241,9 +257,9 @@ function m_setup_wezterm() {
 
 function m_setup($p_options) {
 
-    if($p_input_options -eq "a") {
+    if($p_options -eq "a") {
 
-        m_setup_wezterm()
+        $l_status = m_setup_wezterm
         return
     }
 
@@ -354,12 +370,12 @@ if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup
 }
 
 # Valor por defecto del folder base de  programas, comando y afines usados por Windows.
-if((-not ${g_win_base_path}) -and (Test-Path "$g_win_base_path")) {
+if((-not ${g_win_base_path}) -and -not (Test-Path "$g_win_base_path")) {
     $g_win_base_path='C:\apps'
 }
 
 # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
-if((-not ${g_temp_path}) -and (Test-Path "$g_temp_path")) {
+if((-not ${g_temp_path}) -and -not (Test-Path "$g_temp_path")) {
     $g_temp_path= 'C:\Windows\Temp'
 }
 

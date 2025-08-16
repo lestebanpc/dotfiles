@@ -1481,12 +1481,12 @@ if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup
 }
 
 # Valor por defecto del folder base de  programas, comando y afines usados por Windows.
-if((-not ${g_win_base_path}) -and (Test-Path "$g_win_base_path")) {
+if((-not ${g_win_base_path}) -and -not (Test-Path "$g_win_base_path")) {
     $g_win_base_path='C:\apps'
 }
 
 # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
-if((-not ${g_temp_path}) -and (Test-Path "$g_temp_path")) {
+if((-not ${g_temp_path}) -and -not (Test-Path "$g_temp_path")) {
     $g_temp_path= 'C:\Windows\Temp'
 }
 
