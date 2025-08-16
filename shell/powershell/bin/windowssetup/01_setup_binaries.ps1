@@ -140,80 +140,92 @@ function m_setup_wezterm() {
 
     # Obtener versiones
     Write-Host "Verificando versiones..." -ForegroundColor Cyan
-    $currentVersion = m_get_current_version()
-    $latestVersionInfo = m_get_latest_version()
+    $l_current_version = m_get_current_version()
+    $l_latest_version_info = m_get_latest_version()
 
-    if (!$latestVersionInfo) {
+    if (!$l_latest_version_info) {
         Write-Error "No se pudo obtener la información de la última versión"
         return 3
     }
 
-    Write-Host "Versión actual instalada: $($currentVersion)" -ForegroundColor Cyan
-    Write-Host "Última versión nightly  : $($latestVersionInfo)" -ForegroundColor Cyan
+    Write-Host "Versión actual instalada: $($l_current_version)" -ForegroundColor Cyan
+    Write-Host "Última versión nightly  : $($l_latest_version_info)" -ForegroundColor Cyan
 
     # Verificar si es necesario actualizar
-    $shouldDownload = $false
+    $l_should_download = $false
 
-    if ($null -eq $currentVersion) {
+    if ($null -eq $l_current_version) {
         Write-Host "No se encontró una versión instalada previamente. Se procederá a descargar." -ForegroundColor Yellow
-        $shouldDownload = $true
+        $l_should_download = $true
     else {
 
-        $l_status = m_compare_versions1 "$currentVersion" "$latestVersionInfo"
+        $l_status = m_compare_versions1 "$l_current_version" "$l_latest_version_info"
         if($l_status -lt 0) {
-            $shouldDownload = $true
+            $l_should_download = $true
         }
 
     }
 
     # Descargar si es necesario
-    if (-not $shouldDownload) {
+    if (-not $l_should_download) {
         Write-Host "No es necesario actualizar. El proceso ha finalizado." -ForegroundColor Green
         return 1
     }
 
-    $url = 'https://github.com/wezterm/wezterm/releases/download/nightly/WezTerm-windows-nightly.zip'
-    $downloadPath = 'C:\Temp\wezterm.zip'
-    $installPath = "${g_win_base_path}\wezterm"
+    $l_url = 'https://github.com/wezterm/wezterm/releases/download/nightly/WezTerm-windows-nightly.zip'
+    $l_download_path = 'C:\Temp\wezterm.zip'
+    $l_install_path = "${g_win_base_path}\wezterm"
     try {
 
         Write-Host "Descargando la última versión nightly..." -ForegroundColor Cyan
-        Write-Host "URL: ${url}" -ForegroundColor Gray
-        Write-Host "Destino: $downloadPath" -ForegroundColor Gray
+        Write-Host "URL: ${l_url}" -ForegroundColor Gray
+        Write-Host "Destino: $l_download_path" -ForegroundColor Gray
 
         # Descargar el archivo
-        Invoke-WebRequest -Uri $latestVersionInfo.Url -OutFile $downloadPath -ErrorAction Stop
-
+        Invoke-WebRequest -Uri $l_url -OutFile $l_download_path -ErrorAction Stop
         Write-Host "Descarga completada exitosamente." -ForegroundColor Green
 
         # Eliminar contenido anterior si existe
-        if ($null -ne $currentVersion) {
+        if (Test-Path "$l_install_path") {
             Write-Host "Eliminando contenido anterior..." -ForegroundColor Cyan
-            Get-ChildItem -Path $installPath -Force | Remove-Item -Recurse -Force -ErrorAction Stop
+            Remove-Item $l_install_path -Recurse -Force
             Write-Host "Contenido anterior eliminado." -ForegroundColor Green
         }
 
         # Descomprimir el archivo
         Write-Host "Descomprimiendo archivo..." -ForegroundColor Cyan
-        Expand-Archive -Path $downloadPath -DestinationPath $installPath -Force -ErrorAction Stop
+        Expand-Archive -Path $l_download_path -DestinationPath $g_win_base_path -Force -ErrorAction Stop
         Write-Host "Descompresión completada." -ForegroundColor Green
 
+        # Buscar el primer subfolder que cumpla la condición
+        $l_folder = Get-ChildItem -Path $g_win_base_path -Directory |
+            Where-Object { $_.Name -like 'WezTerm-windows-*' } | Select-Object -First 1
+
+        # Si se encontró, renombrar
+        if ($l_folder) {
+            Rename-Item -Path $l_folder.FullName -NewName 'wezterm'
+            Write-Host "Renombrado '$($l_folder.Name)' a 'wezterm'"
+        }
+        else {
+            Write-Host "No se encontró carpeta que empiece con 'WezTerm-windows-'"
+        }
+
         # Limpiar archivo temporal
-        if (Test-Path $downloadPath) {
-            Remove-Item $downloadPath -Force
+        if (Test-Path $l_download_path) {
+            Remove-Item $l_download_path -Force
             Write-Host "Archivo temporal eliminado." -ForegroundColor Green
         }
 
         Write-Host "¡Actualización completada exitosamente!" -ForegroundColor Green
-        Write-Host "WezTerm ha sido instalado en: $installPath" -ForegroundColor Green
+        Write-Host "WezTerm ha sido instalado en: $l_install_path" -ForegroundColor Green
 
     }
     catch {
 
         Write-Error "Error durante el proceso de actualización: $($_.Exception.Message)"
         # Limpiar archivo temporal en caso de error
-        if (Test-Path $downloadPath) {
-            Remove-Item $downloadPath -Force -ErrorAction SilentlyContinue
+        if (Test-Path $l_download_path) {
+            Remove-Item $l_download_path -Force -ErrorAction SilentlyContinue
         }
         return 2
     }
