@@ -7,4 +7,4 @@ if(-not ${g_repo_name}) {
 #Funciones Generales
 #------------------------------------------------------------------------------------------------
 
-. "${env:HOME}/${g_repo_name}/shell/powershell/lib/linux/mod_general.ps1"
+. "${HOME}/${g_repo_name}/shell/powershell/lib/linux/mod_general.ps1"

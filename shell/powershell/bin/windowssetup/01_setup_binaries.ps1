@@ -184,6 +184,11 @@ function m_setup_wezterm() {
         return 1
     }
 
+    if ("${env:TERM_PROGRAM}" -eq "WezTerm") {
+        Write-Host "No puede realizar la instalación/upgrade desde una terminal WezTerm." -ForegroundColor Red
+        return 1
+    }
+
     $l_url = 'https://github.com/wezterm/wezterm/releases/download/nightly/WezTerm-windows-nightly.zip'
     $l_download_path = 'C:\Windows\Temp\wezterm.zip'
     $l_install_path = "${g_win_base_path}\wezterm"
@@ -370,12 +375,12 @@ if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup
 }
 
 # Valor por defecto del folder base de  programas, comando y afines usados por Windows.
-if((-not ${g_win_base_path}) -and -not (Test-Path "$g_win_base_path")) {
+if((-not ${g_win_base_path}) -or -not (Test-Path "$g_win_base_path")) {
     $g_win_base_path='C:\apps'
 }
 
 # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
-if((-not ${g_temp_path}) -and -not (Test-Path "$g_temp_path")) {
+if((-not ${g_temp_path}) -or -not (Test-Path "$g_temp_path")) {
     $g_temp_path= 'C:\Windows\Temp'
 }
 

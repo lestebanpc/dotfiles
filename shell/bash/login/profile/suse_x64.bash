@@ -79,25 +79,28 @@ shopt -s checkwinsize
 # directories and subdirectories.
 #shopt -s globstar
 
+
 #-----------------------------------------------------------------------------------
 # Variables globales obtenidos del archivo de configuración '~/.profile_config.bash'
 #-----------------------------------------------------------------------------------
 
 # Obtener los parametros del archivos de configuración
-if [ -f ~/.profile_config.bash ]; then
-    . ~/.profile_config.bash
+if [ -f "${HOME}/.profile_config.bash" ]; then
+    # shellcheck source=/home/lucianoepc/.profile_config.bash
+    . "${HOME}/.profile_config.bash"
 fi
+
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT
 [ -z "$g_repo_name" ] && g_repo_name='.files'
 
 # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
-if [ -z "$g_tools_path" ] || [ ! -d "$g_tools_path" ]; then
+if [ -z "$g_tools_path" ] || [ ! -f "$g_tools_path" ]; then
     g_tools_path='/var/opt/tools'
 fi
 
 # Ruta del folder donde se ubican comandos personalizado del usuario.
-if [ -z "$g_lnx_bin_path" ] || [ ! -d "$g_lnx_bin_path" ]; then
+if [ -z "$g_lnx_bin_path" ] || [ ! -f "$g_lnx_bin_path" ]; then
     g_lnx_bin_path='/usr/local/bin'
 fi
 
@@ -113,7 +116,7 @@ unset g_tools_path
 
 
 #-----------------------------------------------------------------------------------
-# Variable de entorno> PATH y de otros programas
+# Variable de entorno> PATH y similares
 #-----------------------------------------------------------------------------------
 
 # Ruta del folder donde se ubican comandos personalizado del usuario.
@@ -137,7 +140,7 @@ fi
 [ -d "${MY_TOOLS_PATH}/jbang/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/jbang/bin"
 
 # Java - CLI tools creados por Java usando Jbang
-[ -d ~/.jbang/bin ] && PATH="$PATH:${HOME}/.jbang/bin"
+[ -d "${HOME}/.jbang/bin" ] && PATH="$PATH:${HOME}/.jbang/bin"
 
 # Java - Apache Maven (Builder para Java)
 [ -d "${MY_TOOLS_PATH}/maven/bin" ] && PATH="${MY_TOOLS_PATH}/maven/bin:$PATH"
@@ -152,13 +155,13 @@ fi
 [ -d "${MY_TOOLS_PATH}/go/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/go/bin"
 
 # Go - CLI tools creados en Go
-[ -d ~/go/bin ] && PATH="$PATH:${HOME}/go/bin"
+[ -d "${HOME}/go/bin" ] && PATH="$PATH:${HOME}/go/bin"
 
 # Rust - Tools para desarrollo
 [ -d "${MY_TOOLS_PATH}/rust/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/rust/bin"
 
 # Go - CLI tools creados en Rust
-[ -d ~/.cargo/bin ] && PATH="$PATH:${HOME}/.cargo/bin"
+[ -d "${HOME}/.cargo/bin" ] && PATH="$PATH:${HOME}/.cargo/bin"
 
 # NodeJS - CLI tools creados en NodeJS y usando gestor de paquetes 'npm'
 [ -d "${MY_TOOLS_PATH}/nodejs/bin" ] && PATH="${MY_TOOLS_PATH}/nodejs/bin:$PATH"
@@ -172,6 +175,9 @@ if [ -d "${MY_TOOLS_PATH}/dotnet" ]; then
 
     # Dotnet - CLI tools creados en .NET (Global .NET tools)
     [ -d "$DOTNET_ROOT/tools" ] && PATH="${DOTNET_ROOT}/tools:$PATH"
+
+    # Para algunas distros en arm64, debe limitar la maxima de la memoria de heap GC: https://github.com/dotnet/runtime/issues/79612
+    #export DOTNET_GCHeapHardLimit=1C0000000
 
 fi
 
@@ -188,7 +194,6 @@ fi
 export PATH
 
 
-
 #-----------------------------------------------------------------------------------
 # Comando> FZF
 #-----------------------------------------------------------------------------------
@@ -201,7 +206,6 @@ export FZF_DEFAULT_OPTS="--height=80% --tmux=center,100%,80%
     --layout=reverse --walker-skip=.git,node_modules
     --info=inline --border
     --color=bg+:#293739,bg:#0F0F0F,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"
-#export FZF_DEFAULT_OPTS="--height=80% --layout=reverse --walker-skip=.git,node_modules --info=inline --border --color fg:242,bg:233,hl:65,fg+:15,bg+:234,hl+:108 --color info:108,prompt:109,spinner:108,pointer:168,marker:168"
 
 export FZF_CTRL_R_OPTS="--prompt 'History> '
     --preview 'echo {2..} | bat --color=always -pl sh'
@@ -213,13 +217,10 @@ export FZF_CTRL_R_OPTS="--prompt 'History> '
     --color header:italic"
 
 export FZF_CTRL_T_OPTS="--prompt 'Select> '
-    --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 5 {} | head -n 300; else bat --color=always --style=numbers,header-filename,grid --line-range :500 {}; fi'"
-#export FZF_CTRL_T_COMMAND="fd -H -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
+    --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 4 {} | head -n 300; else bat --color=always --style=numbers,header-filename,grid --line-range :500 {}; fi'"
 
 export FZF_ALT_C_OPTS="--prompt 'Go to Folder> '
-    --preview 'eza --tree --color=always --icons always -L 5 {} | head -n 300'"
-#export FZF_ALT_C_COMMAND="fd -H -t d -E '.git' -E 'node_modules'"
-
+    --preview 'eza --tree --color=always --icons always -L 4 {} | head -n 300'"
 
 # FZF> El script "key bindings" y "fuzzy completion" (no puede ser modificado)
 eval "$(fzf --bash)"
@@ -237,15 +238,20 @@ eval "$(fzf --bash)"
 eval "$(oh-my-posh --init --shell bash --config ${g_prompt_theme})"
 unset g_prompt_theme
 
-# Oh-my-tmux> Opciones
-export EDITOR=vim
-
 # Zoxide> Ejecutar el script de inicializacion
-export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {2} | head -n 300' --preview-window=down,70%"
+export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 4 {2} | head -n 300' --preview-window=down,70%"
 eval "$(zoxide init bash)"
+
+
+#-----------------------------------------------------------------------------------
+# Variable de entorno> Otros
+#-----------------------------------------------------------------------------------
 
 # MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC
 export MPD_HOST=/run/mpd/socket
+
+# Editor por defecto
+export EDITOR=vim
 
 # Editor por defecto para "systemctl edit"
 export SYSTEMD_EDITOR=vim
@@ -266,4 +272,5 @@ alias step-jwt='step crypto jwt'
 #-----------------------------------------------------------------------------------
 
 # Funciones basicas
-source ~/${g_repo_name}/shell/bash/login/profile/custom_modules.bash
+# shellcheck source=/home/lucianoepc/.files/shell/bash/login/profile/custom_modules.bash
+source "${HOME}/${g_repo_name}/shell/bash/login/profile/custom_modules.bash"

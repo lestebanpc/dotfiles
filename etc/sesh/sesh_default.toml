@@ -1,3 +1,7 @@
+#
+# Consideraciones:
+# > Use 'startup_command' para 'session' y 'startup_script' para 'window'.
+#
 import = [
   "~/.config/sesh/custom_config.toml",
 ]
@@ -15,7 +19,7 @@ windows = [ "shell" ]
 [[session]]
 name = "config tmux"
 path = "~/.config/tmux"
-startup_command = "vim tmux.conf tmux_custom.conf"
+startup_command = "vim tmux.conf custom_config.conf"
 windows = [ "sesh" ]
 
 [[session]]

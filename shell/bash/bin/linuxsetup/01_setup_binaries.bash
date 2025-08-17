@@ -87,6 +87,7 @@ fi
 
 
 #Funciones generales, determinar el tipo del SO y si es root
+# shellcheck source=/home/lucianoepc/.files/shell/bash/lib/mod_common.bash
 . ${g_shell_path}/bash/lib/mod_common.bash
 
 #Obtener informacion basica del SO
@@ -158,12 +159,15 @@ fi
 declare -r g_version_none='0.0.0'
 
 #Funciones de utilidad generales para los instaladores:
+# shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/common_utility.bash
 . ${g_shell_path}/bash/bin/linuxsetup/lib/common_utility.bash
 
 #Funcions de utilidad solo para el configurador de comandos:
+# shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/setup_binaries_utility.bash
 . ${g_shell_path}/bash/bin/linuxsetup/lib/setup_binaries_utility.bash
 
 #Funciones de utilidad a modificar cuando se adiciona un nuevo comando al configurador de comandos.
+# shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/setup_binaries_custom.bash
 . ${g_shell_path}/bash/bin/linuxsetup/lib/setup_binaries_custom.bash
 
 

@@ -87,6 +87,7 @@ fi
 
 
 #Funciones generales, determinar el tipo del SO y si es root
+# shellcheck source=/home/lucianoepc/.files/shell/bash/lib/mod_common.bash
 . ${g_shell_path}/bash/lib/mod_common.bash
 
 #Obtener informacion basica del SO
@@ -159,9 +160,11 @@ fi
 declare -r g_version_none='0.0.0'
 
 #Funciones de utilidad generalees para los instaladores:
+# shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/common_utility.bash
 . ${g_shell_path}/bash/bin/linuxsetup/lib/common_utility.bash
 
 #Funciones de utilidad usados cuando se configura el profile:
+# shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/setup_profile_utility.bash
 . ${g_shell_path}/bash/bin/linuxsetup/lib/setup_profile_utility.bash
 
 
@@ -1114,13 +1117,13 @@ function _setup_user_profile() {
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
            "$g_color_yellow1" "~/.config/sesh/custom_config.toml" "$g_color_reset"
 
-    l_target_path=".config/sesh/shell"
-    l_target_link="tmx_upload_movies.bash"
-    l_source_path="${g_repo_name}/shell/bash/bin/tmux_layout"
-    l_source_filename='tmx_upload_movies.bash'
+    #l_target_path=".config/sesh/shell"
+    #l_target_link="tmx_upload_movies.bash"
+    #l_source_path="${g_repo_name}/shell/bash/bin/tmux_layout"
+    #l_source_filename='tmx_upload_movies.bash'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrite_link
-    l_status=$?
+    #create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrite_link
+    #l_status=$?
 
 
     #Archivo de configuración para el emulador de terminal wezterm

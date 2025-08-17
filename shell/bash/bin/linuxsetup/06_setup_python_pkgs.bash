@@ -86,6 +86,7 @@ fi
 
 
 #Funciones generales, determinar el tipo del SO y si es root
+# shellcheck source=/home/lucianoepc/.files/shell/bash/lib/mod_common.bash
 . ${g_shell_path}/bash/lib/mod_common.bash
 
 #Obtener informacion basica del SO
@@ -155,11 +156,13 @@ fi
 
 
 #Funciones de utilidad generalees para los instaladores:
+# shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/common_utility.bash
 . ${g_shell_path}/bash/bin/linuxsetup/lib/common_utility.bash
 
 
 
 #Funciones modificables para el instalador.
+# shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/setup_python_pkgs_custom.bash
 . ${g_shell_path}/bash/bin/linuxsetup/lib/setup_python_pkgs_custom.bash
 
 

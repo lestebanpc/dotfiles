@@ -12,7 +12,7 @@ if [ -f /etc/bashrc ]; then
 fi
 
 # User specific environment
-if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]
+if ! [[ "$PATH" =~ $HOME/.local/bin:$HOME/bin: ]]
 then
     PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 fi
@@ -58,9 +58,11 @@ shopt -s histappend
 #-----------------------------------------------------------------------------------
 
 # Obtener los parametros del archivos de configuración
-if [ -f ~/.profile_config.bash ]; then
-    . ~/.profile_config.bash
+if [ -f "${HOME}/.profile_config.bash" ]; then
+    # shellcheck source=/home/lucianoepc/.profile_config.bash
+    . "${HOME}/.profile_config.bash"
 fi
+
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT
 [ -z "$g_repo_name" ] && g_repo_name='.files'
@@ -87,7 +89,7 @@ unset g_tools_path
 
 
 #-----------------------------------------------------------------------------------
-# Variable de entorno> PATH y de otros programas
+# Variable de entorno> PATH y similares
 #-----------------------------------------------------------------------------------
 
 # Ruta del folder donde se ubican comandos personalizado del usuario.
@@ -111,7 +113,7 @@ fi
 [ -d "${MY_TOOLS_PATH}/jbang/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/jbang/bin"
 
 # Java - CLI tools creados por Java usando Jbang
-[ -d ~/.jbang/bin ] && PATH="$PATH:${HOME}/.jbang/bin"
+[ -d "${HOME}/.jbang/bin" ] && PATH="$PATH:${HOME}/.jbang/bin"
 
 # Java - Apache Maven (Builder para Java)
 [ -d "${MY_TOOLS_PATH}/maven/bin" ] && PATH="${MY_TOOLS_PATH}/maven/bin:$PATH"
@@ -126,13 +128,13 @@ fi
 [ -d "${MY_TOOLS_PATH}/go/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/go/bin"
 
 # Go - CLI tools creados en Go
-[ -d ~/go/bin ] && PATH="$PATH:${HOME}/go/bin"
+[ -d "${HOME}/go/bin" ] && PATH="$PATH:${HOME}/go/bin"
 
 # Rust - Tools para desarrollo
 [ -d "${MY_TOOLS_PATH}/rust/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/rust/bin"
 
 # Go - CLI tools creados en Rust
-[ -d ~/.cargo/bin ] && PATH="$PATH:${HOME}/.cargo/bin"
+[ -d "${HOME}/.cargo/bin" ] && PATH="$PATH:${HOME}/.cargo/bin"
 
 # NodeJS - CLI tools creados en NodeJS y usando gestor de paquetes 'npm'
 [ -d "${MY_TOOLS_PATH}/nodejs/bin" ] && PATH="${MY_TOOLS_PATH}/nodejs/bin:$PATH"
@@ -147,8 +149,9 @@ if [ -d "${MY_TOOLS_PATH}/dotnet" ]; then
     # Dotnet - CLI tools creados en .NET (Global .NET tools)
     [ -d "$DOTNET_ROOT/tools" ] && PATH="${DOTNET_ROOT}/tools:$PATH"
 
-    # Limitar la maxima de la memoria de heap GC: https://github.com/dotnet/runtime/issues/79612
+    # Para algunas distros en arm64, debe limitar la maxima de la memoria de heap GC: https://github.com/dotnet/runtime/issues/79612
     export DOTNET_GCHeapHardLimit=1C0000000
+
 fi
 
 # gRPC - Ruta del compilador de ProtoBuffer de gRPC
@@ -162,7 +165,6 @@ fi
 
 # Rutas por defecto: Exportar la variable de rutas por defecto para el usuario
 export PATH
-
 
 
 #-----------------------------------------------------------------------------------
@@ -188,13 +190,10 @@ export FZF_CTRL_R_OPTS="--prompt 'History> '
     --color header:italic"
 
 export FZF_CTRL_T_OPTS="--prompt 'Select> '
-    --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 5 {} | head -n 300; else bat --color=always --style=numbers,header-filename,grid --line-range :500 {}; fi'"
-#export FZF_CTRL_T_COMMAND="fd -H -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
+    --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 4 {} | head -n 300; else bat --color=always --style=numbers,header-filename,grid --line-range :500 {}; fi'"
 
 export FZF_ALT_C_OPTS="--prompt 'Go to Folder> '
-    --preview 'eza --tree --color=always --icons always -L 5 {} | head -n 300'"
-#export FZF_ALT_C_COMMAND="fd -H -t d -E '.git' -E 'node_modules'"
-
+    --preview 'eza --tree --color=always --icons always -L 4 {} | head -n 300'"
 
 # FZF> El script "key bindings" y "fuzzy completion" (no puede ser modificado)
 eval "$(fzf --bash)"
@@ -212,15 +211,20 @@ eval "$(fzf --bash)"
 eval "$(oh-my-posh --init --shell bash --config ${g_prompt_theme})"
 unset g_prompt_theme
 
-# Oh-my-tmux> Opciones
-export EDITOR=vim
-
 # Zoxide> Ejecutar el script de inicializacion
-export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {2} | head -n 300' --preview-window=down,70%"
+export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 4 {2} | head -n 300' --preview-window=down,70%"
 eval "$(zoxide init bash)"
+
+
+#-----------------------------------------------------------------------------------
+# Variable de entorno> Otros
+#-----------------------------------------------------------------------------------
 
 # MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC
 export MPD_HOST=/run/mpd/socket
+
+# Editor por defecto
+export EDITOR=vim
 
 # Editor por defecto para "systemctl edit"
 export SYSTEMD_EDITOR=vim
@@ -241,4 +245,5 @@ alias step-jwt='step crypto jwt'
 #-----------------------------------------------------------------------------------
 
 # Funciones basicas
-source ~/${g_repo_name}/shell/bash/login/profile/custom_modules.bash
+# shellcheck source=/home/lucianoepc/.files/shell/bash/login/profile/custom_modules.bash
+source "{HOME}/${g_repo_name}/shell/bash/login/profile/custom_modules.bash"

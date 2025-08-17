@@ -48,8 +48,8 @@ _make_tmux_layout() {
     #4. Finalizacion
 
     # Limpiar la ventana actual y listar su contenido
-    #tmux send-keys 'clear' Enter
-    #tmux send-keys 'ls -l' Enter
+    tmux send-keys 'clear' Enter
+    tmux send-keys 'ls' Enter
 
 }
 

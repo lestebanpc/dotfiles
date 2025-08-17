@@ -165,7 +165,7 @@ function mod.truncate_string(p_string, p_target_length)
     local l_n_final = l_n_available - l_n_start
 
     local l_part1 = string.sub(p_string, 1, l_n_start)
-    local l_part2 = string.sub(p_string, -l_n_final + 1)
+    local l_part2 = string.sub(p_string, -l_n_final)
     return l_part1 .. "..." .. l_part2
 
 end

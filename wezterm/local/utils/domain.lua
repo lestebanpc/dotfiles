@@ -19,18 +19,24 @@ local m_domain_types = {
   ["local"]   =  { icon = '', color = '#2766a6', weight = 0,  },
   ["wsl"]     =  { icon = '', color = '#d3832d', weight = 10, },
   ["serial"]  =  { icon = '󰙜', color = '#a8743b', weight = 20, },
-  ["ssh"]     =  { icon = '󰣀', color = '#98983d', weight = 50, },
-  ["unix"]    =  { icon = '', color = '#a84f4f', weight = 60, },
-  ["tls"]     =  { icon = '󰖟', color = '#4b8f99', weight = 70, },
+  ["ssh"]     =  { icon = '󰣀', color = '#98983d', weight = 30, },
+  ["unix"]    =  { icon = '', color = '#a84f4f', weight = 40, },
+  ["tls"]     =  { icon = '󰖟', color = '#4b8f99', weight = 50, },
   ["exec"]    =  {
       icon   = '',
       color  = '#41C9C9',
-      weight = 40,
+      weight = 0,
       types  = {
-          distrobox = { icon = '', color = '#175421', weight = 1, },
-          container = { icon = '', color = '#57356b', weight = 2, },
-          --k8s       = { icon = '󱃾', color = '#41C9C9', weight = 3, },
-          custom    = { icon = '', color = '#3283D5', weight = 4, },
+          bash       = { icon = '', color = '#41CA4C', weight = 1,  },
+          zsh        = { icon = '', color = '#CA40A7', weight = 2,  },
+          pwsh       = { icon = '', color = '#41CA4C', weight = 3,  },
+          powershell = { icon = '', color = '#3F40C8', weight = 4,  },
+          cmd        = { icon = '', color = '#CA40A7', weight = 5,  },
+          fish       = { icon = '󰈺', color = '#CA40A7', weight = 6,  },
+          distrobox  = { icon = '', color = '#175421', weight = 11, },
+          container  = { icon = '', color = '#57356b', weight = 60, },
+          --k8s        = { icon = '󱃾', color = '#41C9C9', weight = 63, },
+          custom     = { icon = '', color = '#3283D5', weight = 61, },
       }
   },
   -- Wizard popup usado para que el usuario ingresa parametros requeridos para conectarse a un dominio asociado a 'multiplexer server'
@@ -625,6 +631,21 @@ end
 
 
 ------------------------------------------------------------------------------------
+-- Dominios de tipo Exec > Shell no predeterminados
+------------------------------------------------------------------------------------
+
+function m_cbk_powershell_core(p_spawncommand)
+
+        p_spawncommand.args = {
+            'pwsh',
+        }
+        return p_spawncommand
+
+end
+
+
+
+------------------------------------------------------------------------------------
 -- Dominios de tipo Exec
 ------------------------------------------------------------------------------------
 
@@ -640,13 +661,70 @@ function mod.get_exec_domains()
     local l_domains = {}
     local l_type_info = m_domain_types['exec']
     local l_subtype_info = nil
+    local l_domain_name = nil
+
+    -- Registrar shell 'bash'
+    --if m_os_type ~= 1 and mm_ucommon.exist_command('bash', m_os_type, nil) then
+
+    --    l_subtype_info = l_type_info.types['bash']
+
+    --    table.insert(l_domains,
+    --        mm_wezterm.exec_domain(
+    --            'bash',
+    --            m_make_cbk_distrobox_fixup(l_item.name),
+    --            m_cbk_distrobox_label
+    --        )
+    --    )
+
+    --    m_exec_infos[l_domain_name] = {
+    --        type = 'bash',
+    --        icon = l_subtype_info.icon,
+    --        color = l_subtype_info.color,
+    --        is_external = false,
+    --    }
+
+
+    --end
+
+
+    -- Registrar shell 'pwsh'
+    if mm_ucommon.exist_command('pwsh', m_os_type, nil) then
+
+        l_subtype_info = l_type_info.types['pwsh']
+        l_domain_name = 'pwsh'
+
+        table.insert(l_domains,
+            mm_wezterm.exec_domain(
+                l_domain_name,
+                m_cbk_powershell_core,
+                'Powershell Core'
+            )
+        )
+
+        m_exec_infos[l_domain_name] = {
+            type = 'pwsh',
+            icon = l_subtype_info.icon,
+            color = l_subtype_info.color,
+            is_external = false,
+        }
+
+    end
+
+
+    ---- Registrar shell 'cmd' y 'powershell'
+    --if m_os_type == 1 then
+    --end
+
+
+    -- Registrar shell 'pwsh'
+    --if mm_ucommon.exist_command('pwsh', m_os_type, nil) then
+    --end
 
     -- Obtener los dominios de asociados a los contenedores distrobox
     local l_excluded_container_ids = nil
     local l_item = nil
-    local l_domain_name = nil
 
-    if m_os_type == 0 and  m_is_installed_external_distribution then
+    if m_os_type == 0 and m_is_installed_external_distribution then
 
         l_subtype_info = l_type_info.types['distrobox']
         local l_containers = mm_ucommon.list_distrobox(true)
@@ -711,7 +789,6 @@ function mod.get_exec_domains()
                     type = 'container',
                     icon = l_subtype_info.icon,
                     color = l_subtype_info.color,
-                    -- si es de una instancia WSL colocar false
                     is_external = true,
                     id = l_item.id,
                     name = l_item.name,
@@ -1184,7 +1261,12 @@ local function m_get_domain_details(p_domain_info)
 
         if p_domain_info.ex_data ~= nil then
 
-            if p_domain_info.ex_data.type == 'distrobox' then
+            if p_domain_info.ex_data.type == 'pwsh' then
+
+                l_icon = p_domain_info.ex_data.icon
+                l_color = p_domain_info.ex_data.color
+
+            elseif p_domain_info.ex_data.type == 'distrobox' then
 
                 l_key = 'Id'
                 l_value = p_domain_info.ex_data.id
