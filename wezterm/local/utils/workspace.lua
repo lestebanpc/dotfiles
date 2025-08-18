@@ -369,8 +369,6 @@ local function m_add_external_builtin_tags()
     --   > Workspace name
     --   > Workspace info
 
-    -- TODO La ruta de windows se usa / o \\?
-
     local l_prefix = 'dtb:'
     local l_domain_category = 'distrobox'
 
@@ -389,6 +387,9 @@ local function m_add_external_builtin_tags()
         domain = nil,
         callback = nil,
     }
+
+    table.insert(m_remote_tags, l_tag)
+
 
     -- Ruta de configuracion de wezterm
     l_tag = {
