@@ -223,7 +223,8 @@ local mod= {
 
     -- Establecer el dominio por defecto a usar.
     -- Si no se define el domonio por defecto sera 'local'.
-    default_domain = nil,
+    default_domain = "pwsh",
+    --default_domain = nil,
     --default_domain = "local",
     --default_domain = "WSL:ubuntu",
 

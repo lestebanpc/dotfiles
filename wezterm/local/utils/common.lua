@@ -508,7 +508,7 @@ function mod.list_running_wsl_distributions()
 
     local l_args = {
         'cmd.exe', '/c',
-        'wsl --list --running',
+        'wsl --list --running -q',
     }
 
     ---@type boolean, string?, string?
@@ -521,7 +521,18 @@ function mod.list_running_wsl_distributions()
         return nil
 	end
 
+    --
+    -- Usando la opcion '-v', se tiene el Output:
+    --   NAME      STATE           VERSION
+    -- * Ubuntu    Running         2
+    --
+    -- Usando la opcion '-q', solo se muestra el nombres de la distribucion:
+    --
+
     local l_lines = mm_wezterm.split_by_newlines(l_stdout)
+    --if l_lines == nil or #l_lines < 2 then
+    --    return nil
+    --end
 
     local l_distributions = {}
     local l_line = nil
