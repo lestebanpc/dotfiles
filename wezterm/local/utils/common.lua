@@ -347,7 +347,7 @@ function mod.exist_command(p_command_name, p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wls.exe', '-d', p_distribution_name, '--',
+                'wsl.exe', '-d', p_distribution_name, '--',
                 'which', p_command_name,
             }
         else
@@ -401,7 +401,7 @@ function mod.run_script(p_script, p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wls.exe', '-d', p_distribution_name, '--',
+                'wsl.exe', '-d', p_distribution_name, '--',
                 'sh', '-c', p_script,
             }
         else
@@ -461,7 +461,7 @@ function mod.get_home_dir(p_os_type, p_distribution_name)
     if p_os_type == 1 then
 
         l_args = {
-            'wls.exe', '-d', p_distribution_name, '--',
+            'wsl.exe', '-d', p_distribution_name, '--',
             'bash', '-c', 'echo $HOME',
         }
 
@@ -506,7 +506,7 @@ end
 function mod.list_running_wsl_distributions()
 
     local l_args = {
-        'wls.exe', '--list', '--running', '-q',
+        'wsl.exe', '--list', '--running', '-q',
     }
 
     ---@type boolean, string?, string?
@@ -570,7 +570,7 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wls.exe', '-d', p_distribution_name, '--',
+                'wsl.exe', '-d', p_distribution_name, '--',
                 'fd',
                 '-Hs',
                 '^.git$',
@@ -727,7 +727,7 @@ function mod.get_zoxide_folders(p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wls.exe', '-d', p_distribution_name, '--',
+                'wsl.exe', '-d', p_distribution_name, '--',
                 'zoxide', 'query', '-l',
             }
         else
@@ -811,7 +811,7 @@ function mod.register_zoxide_folder(p_folder_path, p_os_type, p_distribution_nam
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wls.exe', '-d', p_distribution_name, '--',
+                'wsl.exe', '-d', p_distribution_name, '--',
                 'zoxide', 'add', p_folder_path,
             }
         else
@@ -964,7 +964,7 @@ function mod.list_running_containers(p_container_runtime, p_excluded_ids, p_os_t
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wls.exe', '-d', p_distribution_name, '--',
+                'wsl.exe', '-d', p_distribution_name, '--',
                 p_container_runtime, 'container', 'ls', '--format', '{{.ID}}:{{.Names}}',
             }
         else
@@ -1033,7 +1033,7 @@ function mod.get_args_to_enter_container(p_container_runtime, p_container_id, p_
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wls.exe', '-d', p_distribution_name, '--',
+                'wsl.exe', '-d', p_distribution_name, '--',
                 p_container_runtime, 'exec', '-it', p_container_id, l_container_shell,
             }
         else
@@ -1070,7 +1070,7 @@ function mod.list_pod_of_current_ns(p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wls.exe', '-d', p_distribution_name, '--',
+                'wsl.exe', '-d', p_distribution_name, '--',
                 'kubectl',
                 'get',
                 'pods',
@@ -1138,7 +1138,7 @@ function mod.get_args_to_enter_pod(p_pod_name, p_container_shell, p_os_type, p_d
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'wls.exe', '-d', p_distribution_name, '--',
+                'wsl.exe', '-d', p_distribution_name, '--',
                 'kubectl',
                 'exec',
                 '-it',
