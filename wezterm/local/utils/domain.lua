@@ -49,6 +49,9 @@ local m_container_runtime = 'podman'
 
 -- Miembros privados del modulo que ser modificado por el usario del modulo
 local m_custom = {
+
+    default_domain = nil,
+
     ssh_domains = nil,
     filter_config_ssh = nil,
     filter_config_ssh_mux = nil,
@@ -203,12 +206,19 @@ end
 
 
 function mod.setup(
+    p_default_domain,
     p_ssh_domains, p_filter_config_ssh, p_filter_config_ssh_mux,
     p_unix_domains, p_external_unix_domains,
     p_tls_clients,
     p_exec_domain_datas, p_load_containers, p_external_running_distribution)
 
     -- Establecer los valores
+    if p_default_domain == nil or p_default_domain == '' then
+        m_custom.default_domain = ""
+    else
+        m_custom.default_domain = p_default_domain
+    end
+
     m_custom.ssh_domains = p_ssh_domains
     m_custom.filter_config_ssh = p_filter_config_ssh
     m_custom.filter_config_ssh_mux = p_filter_config_ssh_mux
@@ -1691,6 +1701,56 @@ end
 -- Domain selector> Logica cuando la opcion fue seleccionado
 ------------------------------------------------------------------------------------
 
+local function m_new_tab_of_domain2(p_domain_info, p_window, p_pane)
+
+    if p_domain_info == nil then
+        return
+    end
+
+    local l_current_workspace_name = p_window:active_workspace()
+
+    -- Obtener una ruta del dominio equivalente al la ruta asociada al workspace (siempre que existe)
+    local lm_uworkspace = require('utils.workspace')
+    local l_fullpath = lm_uworkspace.get_equivalent_fullpath(l_current_workspace_name, p_domain_info)
+
+    -- Crear el objeto SpawnCommand
+    local l_spawncommand = {
+        domain = { DomainName = p_domain_info.name },
+    }
+
+    if l_fullpath ~= nil and l_fullpath ~= '' then
+        l_spawncommand.cwd = l_fullpath
+        mm_wezterm.log_info('Working directory equivalent: ' .. l_fullpath)
+    end
+
+    -- Crear el nuevo tab
+    p_window:perform_action(
+        mm_wezterm.action.SpawnCommandInNewTab(l_spawncommand),
+        p_pane
+    )
+
+end
+
+
+local function m_new_tab_of_domain1(p_domain_name, p_window, p_pane)
+
+    if p_domain_name == nil or p_domain_name == '' then
+        return
+    end
+
+    -- Obtener la informacion del dominio
+    local l_domain_info = mod.get_domain_info(p_domain_name)
+    if l_domain_info == nil then
+        mm_wezterm.log_error('not found info of domain "' .. p_domain_name .. '"')
+        return
+    end
+
+    -- Crear el tab
+    m_new_tab_of_domain2(l_domain_info, p_window, p_pane)
+
+end
+
+
 local function m_cbk_process_selected_item(p_window, p_pane, p_item_id, p_item_label)
 
     if p_item_id == nil or p_item_id == '' then
@@ -1730,34 +1790,13 @@ local function m_cbk_process_selected_item(p_window, p_pane, p_item_id, p_item_l
     -- Crear un tab del dominio seleccionado
     else
 
-        local l_current_workspace_name = p_window:active_workspace()
-
-        --local l_current_domain_name = p_pane:get_domain_name()
-        --mm_wezterm.log_info('Curren domain "' .. l_current_domain_name .. '", Selected domain "' .. l_selected_domain_name .. '"')
-
-        -- Obtener una ruta del dominio equivalente al la ruta asociada al workspace (siempre que existe)
-        local lm_uworkspace = require('utils.workspace')
-        local l_fullpath = lm_uworkspace.get_equivalent_fullpath(l_current_workspace_name, l_selected_domain_info)
-
-        -- Crear el objeto SpawnCommand
-        local l_spawncommand = {
-            domain = { DomainName = l_selected_domain_name },
-        }
-
-        if l_fullpath ~= nil and l_fullpath ~= '' then
-            l_spawncommand.cwd = l_fullpath
-            mm_wezterm.log_info('Working directory equivalent: ' .. l_fullpath)
-        end
-
-        -- Crear el nuevo tab
-        p_window:perform_action(
-            mm_wezterm.action.SpawnCommandInNewTab(l_spawncommand),
-            p_pane
-        )
+        m_new_tab_of_domain2(l_selected_domain_info, p_window, p_pane)
 
     end
 
 end
+
+
 
 ------------------------------------------------------------------------------------
 -- Callbacks usados para los keymappins
@@ -1783,6 +1822,22 @@ function mod.cbk_new_tab(p_window, p_pane)
     )
 
 end
+
+
+function mod.cbk_new_tab_of_current_domain(p_window, p_pane)
+
+    local l_current_domain_name = p_pane:get_domain_name()
+    m_new_tab_of_domain1(l_current_domain_name, p_window, p_pane)
+
+end
+
+
+function mod.cbk_new_tab_of_default_domain(p_window, p_pane)
+
+    m_new_tab_of_domain1(m_custom.default_domain, p_window, p_pane)
+
+end
+
 
 
 

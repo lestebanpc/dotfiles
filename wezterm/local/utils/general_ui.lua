@@ -591,10 +591,12 @@ function mod.get_key_mappins()
         --------------------------------------------------------------------------------
 
         -- Creation> Crear (create) un tab en usando el dominio usado por el panel actual
-        { key = 'c', mods = 'LEADER', action = m_waction.SpawnTab('CurrentPaneDomain') },
+        { key = 'c', mods = 'LEADER', action = mm_wezterm.action_callback(mm_udomain.cbk_new_tab_of_current_domain), },
+        --{ key = 'c', mods = 'LEADER', action = m_waction.SpawnTab('CurrentPaneDomain') },
 
         -- Creation> Crear (create) una tab en el dominio por defecto
-        { key = 'c', mods = 'LEADER|SHIFT', action = m_waction.SpawnTab('DefaultDomain') },
+        { key = 'c', mods = 'LEADER|SHIFT', action = mm_wezterm.action_callback(mm_udomain.cbk_new_tab_of_default_domain), },
+        --{ key = 'c', mods = 'LEADER|SHIFT', action = m_waction.SpawnTab('DefaultDomain') },
 
         -- Creation (interactive)> Crear un tab usando un dominio existente (usa el 'Domains Fuzzy Laucher')
         --{ key = 'w', mods = 'LEADER', action = m_waction.ShowLauncherArgs({ flags =  'FUZZY|DOMAINS' }) },

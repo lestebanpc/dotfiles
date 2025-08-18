@@ -370,6 +370,7 @@ mm_wezterm.on('update-status', mm_ugeneralui.callback_update_status)
 
 local mm_udomain = require("utils.domain")
 mm_udomain.setup(
+    m_custom_config.default_domain,
     m_custom_config.ssh_domains, m_custom_config.filter_config_ssh, m_custom_config.filter_config_ssh_mux,
     m_custom_config.unix_domains, m_custom_config.external_unix_domains,
     m_custom_config.tls_clients,
