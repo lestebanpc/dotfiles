@@ -647,7 +647,7 @@ end
 -- Dominios de tipo Exec > Shell no predeterminados
 ------------------------------------------------------------------------------------
 
-function m_cbk_bash(p_spawncommand)
+local function m_cbk_bash(p_spawncommand)
 
         p_spawncommand.args = {
             'bash',
@@ -656,7 +656,8 @@ function m_cbk_bash(p_spawncommand)
 
 end
 
-function m_cbk_powershell_core(p_spawncommand)
+
+local function m_cbk_powershell_core(p_spawncommand)
 
         p_spawncommand.args = {
             'pwsh',
@@ -666,7 +667,7 @@ function m_cbk_powershell_core(p_spawncommand)
 end
 
 
-function m_cbk_windows_cmd(p_spawncommand)
+local function m_cbk_windows_cmd(p_spawncommand)
 
         p_spawncommand.args = {
             'cmd',
@@ -676,7 +677,7 @@ function m_cbk_windows_cmd(p_spawncommand)
 end
 
 
-function m_cbk_windows_powershell(p_spawncommand)
+local function m_cbk_windows_powershell(p_spawncommand)
 
         p_spawncommand.args = {
             'powershell',
@@ -1340,13 +1341,23 @@ local function m_get_domain_details(p_domain_info)
     local l_color =p_domain_info.color
 
     -- Si es un dominio no tiene data adicional
-    if p_domain_info.type == 'unknown' or p_domain_info.type == 'local' then
+    if p_domain_info.type == 'unknown' then
         return l_infos, l_icon, l_color
     end
 
-    -- Si el dominio es un exec domain
     local l_key = nil
     local l_value = nil
+    if p_domain_info.type == 'local' then
+
+        l_key = ''
+        l_value = 'Default Shell'
+        table.insert(l_infos, { key = l_key , value = l_value, })
+
+        return l_infos, l_icon, l_color
+
+    end
+
+    -- Si el dominio es un exec domain
     if p_domain_info.type == "exec" then
 
         if p_domain_info.ex_data ~= nil then
@@ -1390,6 +1401,33 @@ local function m_get_domain_details(p_domain_info)
                 if l_value ~= nil and l_value ~= '' then
                     table.insert(l_infos, { key = l_key , value = l_value, })
                 end
+
+            elseif p_domain_info.ex_data.type == 'bash' then
+
+                l_key = ''
+                l_value = 'Bash Shell'
+                table.insert(l_infos, { key = l_key , value = l_value, })
+
+
+            elseif p_domain_info.ex_data.type == 'pwsh' then
+
+                l_key = ''
+                l_value = 'Powershell Core'
+                table.insert(l_infos, { key = l_key , value = l_value, })
+
+
+            elseif p_domain_info.ex_data.type == 'powershell' then
+
+                l_key = ''
+                l_value = 'Windows Powershell'
+                table.insert(l_infos, { key = l_key , value = l_value, })
+
+            elseif p_domain_info.ex_data.type == 'cmd' then
+
+                l_key = ''
+                l_value = 'Command Prompt (CMD)'
+                table.insert(l_infos, { key = l_key , value = l_value, })
+
 
             end
 
@@ -1561,11 +1599,25 @@ local function m_get_choice_label(p_domain_data, p_current_domain_name)
 
             l_item = l_aditional_infos[i]
             if l_item ~= nil and l_item.value ~= nil and l_item.value ~= '' then
+
                 if i == 1 then
-                    table.insert(l_format_items, { Text = l_item.key .. ": '" .. l_item.value .. "'" })
+
+                    if l_item.key == '' then
+                        table.insert(l_format_items, { Text = l_item.value })
+                    else
+                        table.insert(l_format_items, { Text = l_item.key .. ": '" .. l_item.value .. "'" })
+                    end
+
                 else
-                    table.insert(l_format_items, { Text = ', ' .. l_item.key .. ": '" .. l_item.value .. "'" })
+
+                    if l_item.key == '' then
+                        table.insert(l_format_items, { Text = ', ' .. l_item.value })
+                    else
+                        table.insert(l_format_items, { Text = ', ' .. l_item.key .. ": '" .. l_item.value .. "'" })
+                    end
+
                 end
+
             end
 
         end
