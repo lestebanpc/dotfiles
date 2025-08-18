@@ -533,9 +533,9 @@ function mod.run_script(p_script, p_os_type, p_distribution_name)
         if l_stderr ~= nil and l_stderr ~= '' then
 
             -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-            if l_use_wsl then
-                l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
-            end
+            --if l_use_wsl then
+            --    l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
+            --end
 
 		    mm_wezterm.log_error("Script '" .. p_script .. "' failed with stderr: '" .. l_stderr .. "'")
 
@@ -544,9 +544,9 @@ function mod.run_script(p_script, p_os_type, p_distribution_name)
 	end
 
     -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-    if l_use_wsl then
-        l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
-    end
+    --if l_use_wsl then
+    --    l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
+    --end
 
     -- Procesar las lineas
     local l_lines = mm_wezterm.split_by_newlines(l_stdout)
@@ -600,9 +600,9 @@ function mod.get_home_dir(p_os_type, p_distribution_name)
         if l_stderr ~= nil and l_stderr ~= '' then
 
             -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-            if l_use_wsl then
-                l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
-            end
+            --if l_use_wsl then
+            --    l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
+            --end
 
 		    mm_wezterm.log_error("Error on get home path: " .. l_stderr)
 
@@ -611,9 +611,9 @@ function mod.get_home_dir(p_os_type, p_distribution_name)
     end
 
     -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-    if l_use_wsl then
-        l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
-    end
+    --if l_use_wsl then
+    --    l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
+    --end
 
     -- Procesar las lineas
     local l_lines = mm_wezterm.split_by_newlines(l_stdout)
@@ -817,9 +817,9 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name)
         if l_stderr ~= nil and l_stderr ~= '' then
 
             -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-            if l_use_wsl then
-                l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
-            end
+            --if l_use_wsl then
+            --    l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
+            --end
 
             mm_wezterm.log_error("Command failed: ", l_args)
             mm_wezterm.log_error("stderr: ", l_stderr)
@@ -834,9 +834,9 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name)
     end
 
     -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-    if l_use_wsl then
-        l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
-    end
+    --if l_use_wsl then
+    --    l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
+    --end
 
     -- Procesar las lineas
     local l_paths = mm_wezterm.split_by_newlines(l_stdout)
@@ -925,9 +925,9 @@ function mod.get_zoxide_folders(p_os_type, p_distribution_name)
         if l_stderr ~= nil and l_stderr ~= '' then
 
             -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-            if l_use_wsl then
-                l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
-            end
+            --if l_use_wsl then
+            --    l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
+            --end
 
             mm_wezterm.log_error("Failed to run 'zoxide query -l': " .. (l_stderr or "unknown error"))
 
@@ -936,9 +936,9 @@ function mod.get_zoxide_folders(p_os_type, p_distribution_name)
     end
 
     -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-    if l_use_wsl then
-        l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
-    end
+    --if l_use_wsl then
+    --    l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
+    --end
 
     -- Procesar las lineas
     local l_folders = mm_wezterm.split_by_newlines(l_stdout)
@@ -1026,9 +1026,9 @@ function mod.register_zoxide_folder(p_folder_path, p_os_type, p_distribution_nam
         if l_stderr ~= nil and l_stderr ~= '' then
 
             -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-            if l_use_wsl then
-                l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
-            end
+            --if l_use_wsl then
+            --    l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
+            --end
 
             mm_wezterm.log_error("Failed to run 'zoxide query -l': " .. (l_stderr or "unknown error"))
         end
@@ -1172,9 +1172,9 @@ function mod.list_running_containers(p_container_runtime, p_excluded_ids, p_os_t
         if l_stderr ~= nil and l_stderr ~= '' then
 
             -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-            if l_use_wsl then
-                l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
-            end
+            --if l_use_wsl then
+            --    l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
+            --end
 
             mm_wezterm.log_error("Failed to run '" .. p_container_runtime .. "': " .. (l_stderr or "unknown error"))
         end
@@ -1182,9 +1182,9 @@ function mod.list_running_containers(p_container_runtime, p_excluded_ids, p_os_t
     end
 
     -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-    if l_use_wsl then
-        l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
-    end
+    --if l_use_wsl then
+    --    l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
+    --end
 
     -- Procesar las lineas
     local l_lines = mm_wezterm.split_by_newlines(l_stdout)
@@ -1306,9 +1306,9 @@ function mod.list_pod_of_current_ns(p_os_type, p_distribution_name)
         if l_stderr ~= nil and l_stderr ~= '' then
 
             -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-            if l_use_wsl then
-                l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
-            end
+            --if l_use_wsl then
+            --    l_stderr = mm_wezterm.utf16_to_utf8(l_stderr)
+            --end
 
             mm_wezterm.log_error("Failed to run 'kubectl': " .. (l_stderr or "unknown error"))
         end
@@ -1316,9 +1316,9 @@ function mod.list_pod_of_current_ns(p_os_type, p_distribution_name)
     end
 
     -- Si no se usa la variable de entorno 'WSL_UTF8=1' en windows y se ejecuta 'wsl.exe' directamente, este siempre devolvera texto en UTF-16LE
-    if l_use_wsl then
-        l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
-    end
+    --if l_use_wsl then
+    --    l_stdout = mm_wezterm.utf16_to_utf8(l_stdout)
+    --end
 
     -- Procesar las lineas
     local l_lines = mm_wezterm.split_by_newlines(l_stdout)
