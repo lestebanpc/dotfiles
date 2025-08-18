@@ -892,6 +892,10 @@ function m_setup_profile($l_overwrite_ln_flag) {
     m_create_folder_link "$l_source_path" "$l_target_link" "            > " $l_overwrite_ln_flag
 
 
+	if(! (Test-Path "${env:USERPROFILE}\.local\share\wezterm")) {
+		New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\.local\share\wezterm"
+    }
+
 	#if(! (Test-Path "${g_win_base_path}\prgs\wezterm\wezterm_modules")) {
 	#	New-Item -ItemType Directory -Force -Path "${g_win_base_path}\prgs\wezterm\wezterm_modules"
     #}

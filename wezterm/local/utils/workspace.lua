@@ -443,6 +443,45 @@ local function m_add_external_builtin_tags()
     table.insert(m_remote_tags, l_tag)
 
 
+    -- Ruta de configuracion de vim
+    l_tag = {
+        name = l_prefix .. 'vim files',
+        fullpath = '~/.vim',
+        realpath = {},
+        domain_category = l_domain_category,
+        domain = nil,
+        callback = nil,
+    }
+
+    table.insert(m_local_tags, l_tag)
+
+
+    -- Ruta de configuracion de vim
+    l_tag = {
+        name = l_prefix .. 'nvim config',
+        fullpath = '~/.config/nvim',
+        realpath = {},
+        domain_category = l_domain_category,
+        domain = nil,
+        callback = nil,
+    }
+
+    table.insert(m_local_tags, l_tag)
+
+
+    -- Ruta de configuracion de vim
+    l_tag = {
+        name = l_prefix .. 'nvim data',
+        fullpath = '~/.local/nvim',
+        realpath = {},
+        domain_category = l_domain_category,
+        domain = nil,
+        callback = nil,
+    }
+
+    table.insert(m_local_tags, l_tag)
+
+
 end
 
 

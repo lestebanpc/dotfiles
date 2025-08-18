@@ -1483,7 +1483,17 @@ local function m_get_domain_details(p_domain_info)
     -- Si es un dominio Socket IPC
     if p_domain_info.type == "unix" then
 
-        l_key = 'Alias'
+        if p_domain_info.name == "unix" then
+
+            l_key = ''
+            l_value = 'Default wezterm socket'
+            table.insert(l_infos, { key = l_key , value = l_value, })
+
+            return l_infos, l_icon, l_color
+
+        end
+
+        l_key = 'Socket'
         l_value = p_domain_info.data.socket_path
         if l_value ~= nil and l_value ~= '' then
             table.insert(l_infos, { key = l_key , value = l_value, })
