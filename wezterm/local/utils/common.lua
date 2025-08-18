@@ -347,13 +347,12 @@ function mod.exist_command(p_command_name, p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'cmd.exe', '/c',
-                string.format('wsl -d %s -- which %s', p_distribution_name, p_command_name),
+                'wls.exe', '-d', p_distribution_name, '--',
+                'which', p_command_name,
             }
         else
             l_args = {
-                'cmd.exe', '/c',
-                string.format('where %s', p_command_name),
+                'where.exe', p_command_name,
             }
         end
 
@@ -402,8 +401,8 @@ function mod.run_script(p_script, p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'cmd.exe', '/c',
-                string.format("wsl -d %s -- sh -c '%s'", p_distribution_name, p_script),
+                'wls.exe', '-d', p_distribution_name, '--',
+                'sh', '-c', p_script,
             }
         else
             l_args = {
@@ -462,8 +461,8 @@ function mod.get_home_dir(p_os_type, p_distribution_name)
     if p_os_type == 1 then
 
         l_args = {
-            'cmd.exe', '/c',
-            string.format("wsl -d %s -- bash -c 'echo $HOME'", p_distribution_name),
+            'wls.exe', '-d', p_distribution_name, '--',
+            'bash', '-c', 'echo $HOME',
         }
 
     elseif p_os_type == 0 then
@@ -507,8 +506,7 @@ end
 function mod.list_running_wsl_distributions()
 
     local l_args = {
-        'cmd.exe', '/c',
-        'wsl --list --running -q',
+        'wls.exe', '--list', '--running', '-q',
     }
 
     ---@type boolean, string?, string?
@@ -572,13 +570,26 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'cmd.exe', '/c',
-                string.format("wsl -d %s -- fd -Hs '^.git$' -td --max-depth=%d --prune --format '%s'", p_distribution_name, l_max_depth, l_format),
+                'wls.exe', '-d', p_distribution_name, '--',
+                'fd',
+                '-Hs',
+                '^.git$',
+                '-td',
+                '--max-depth=' .. l_max_depth,
+                '--prune',
+                '--format',
+                l_format,
             }
         else
             l_args = {
-                'cmd.exe', '/c',
-                string.format("fd -Hs '^.git$' -td --max-depth=%d --prune --format '%s'", l_max_depth, l_format),
+                'fd.exe',
+                '-Hs',
+                '^.git$',
+                '-td',
+                '--max-depth=' .. l_max_depth,
+                '--prune',
+                '--format',
+                l_format,
             }
         end
 
@@ -716,13 +727,12 @@ function mod.get_zoxide_folders(p_os_type, p_distribution_name)
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'cmd.exe', '/c',
-                string.format("wsl -d %s -- zoxide query -l", p_distribution_name),
+                'wls.exe', '-d', p_distribution_name, '--',
+                'zoxide', 'query', '-l',
             }
         else
             l_args = {
-                'cmd.exe', '/c',
-                'zoxide query -l',
+                'zoxide.exe', 'query', '-l',
             }
         end
 
@@ -801,13 +811,12 @@ function mod.register_zoxide_folder(p_folder_path, p_os_type, p_distribution_nam
 
         if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'cmd.exe', '/c',
-                string.format("wsl -d %s -- zoxide add '%s'", p_distribution_name, p_folder_path),
+                'wls.exe', '-d', p_distribution_name, '--',
+                'zoxide', 'add', p_folder_path,
             }
         else
             l_args = {
-                'cmd.exe', '/c',
-                string.format("zoxide add '%s'", p_folder_path),
+                'zoxide.exe', 'add', p_folder_path,
             }
         end
 
@@ -949,21 +958,21 @@ end
 
 function mod.list_running_containers(p_container_runtime, p_excluded_ids, p_os_type, p_distribution_name)
 
-    local l_is_wsl_domain = p_distribution_name ~= nil and p_distribution_name ~= ''
-
     local l_args = nil
+
     if p_os_type == 1 then
-        if l_is_wsl_domain then
+
+        if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'cmd.exe', '/c',
-                string.format("wsl -d %s -- %s container ls --format '{{.ID}}:{{.Names}}'", p_distribution_name, p_container_runtime),
+                'wls.exe', '-d', p_distribution_name, '--',
+                p_container_runtime, 'container', 'ls', '--format', '{{.ID}}:{{.Names}}',
             }
         else
             l_args = {
-                'cmd.exe', '/c',
-                string.format("%s container ls --format '{{.ID}}:{{.Names}}'", p_container_runtime),
+                p_container_runtime .. '.exe', 'container', 'ls', '--format', '{{.ID}}:{{.Names}}',
             }
         end
+
     else
         l_args = {
             p_container_runtime,
@@ -1017,21 +1026,19 @@ end
 function mod.get_args_to_enter_container(p_container_runtime, p_container_id, p_container_shell, p_os_type, p_distribution_name)
 
     local l_container_shell = p_container_shell or '/usr/bin/bash'
-    local l_is_wsl_domain = p_distribution_name ~= nil and p_distribution_name ~= ''
 
     local l_args = nil
 
     if p_os_type == 1 then
 
-        if l_is_wsl_domain then
+        if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'cmd.exe', '/c',
-                string.format("wsl -d %s -- %s exec -it %s %s", p_distribution_name, p_container_runtime, p_container_id, l_container_shell),
+                'wls.exe', '-d', p_distribution_name, '--',
+                p_container_runtime, 'exec', '-it', p_container_id, l_container_shell,
             }
         else
             l_args = {
-                'cmd.exe', '/c',
-                string.format("%s exec -it %s %s", p_container_runtime, p_container_id, l_container_shell),
+                p_container_runtime .. '.exe', 'exec', '-it', p_container_id, l_container_shell,
             }
         end
 
@@ -1055,23 +1062,33 @@ end
 
 
 
-function mod.list_pod_of_current_ns(p_is_windows, p_distribution_name)
-
-    local l_is_wsl_domain = p_distribution_name ~= nil and p_distribution_name ~= ''
+function mod.list_pod_of_current_ns(p_os_type, p_distribution_name)
 
     local l_args = nil
-    if p_is_windows then
-        if l_is_wsl_domain then
+
+    if p_os_type == 1 then
+
+        if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'cmd.exe', '/c',
-                string.format("wsl -d %s -- kubectl get pods --no-headers --output 'custom-columns=ID:.metadata.uid,Name:.metadata.name'", p_distribution_name),
+                'wls.exe', '-d', p_distribution_name, '--',
+                'kubectl',
+                'get',
+                'pods',
+                '--no-headers',
+                '--output',
+                'custom-columns=ID:.metadata.uid,Name:.metadata.name',
             }
         else
             l_args = {
-                'cmd.exe', '/c',
-                "kubectl get pods --no-headers --output 'custom-columns=ID:.metadata.uid,Name:.metadata.name'",
+                'kubectl.exe',
+                'get',
+                'pods',
+                '--no-headers',
+                '--output',
+                'custom-columns=ID:.metadata.uid,Name:.metadata.name',
             }
         end
+
     else
         l_args = {
             'kubectl',
@@ -1112,24 +1129,31 @@ function mod.list_pod_of_current_ns(p_is_windows, p_distribution_name)
 end
 
 
-function mod.get_args_to_enter_pod(p_pod_name, p_container_shell, p_is_windows, p_distribution_name)
+function mod.get_args_to_enter_pod(p_pod_name, p_container_shell, p_os_type, p_distribution_name)
 
     local l_container_shell = p_container_shell or '/usr/bin/bash'
-    local l_is_wsl_domain = p_distribution_name ~= nil and p_distribution_name ~= ''
-
     local l_args = nil
 
-    if p_is_windows then
+    if p_os_type == 1 then
 
-        if l_is_wsl_domain then
+        if p_distribution_name ~= nil and p_distribution_name ~= '' then
             l_args = {
-                'cmd.exe', '/c',
-                string.format("wsl -d %s -- kubectl exec -it %s -- %s", p_distribution_name, p_pod_name, l_container_shell),
+                'wls.exe', '-d', p_distribution_name, '--',
+                'kubectl',
+                'exec',
+                '-it',
+                p_pod_name,
+                '--',
+                l_container_shell,
             }
         else
             l_args = {
-                'cmd.exe', '/c',
-                string.format("kubectl exec -it %s -- %s", p_distribution_name, p_pod_name, l_container_shell),
+                'kubectl.exe',
+                'exec',
+                '-it',
+                p_pod_name,
+                '--',
+                l_container_shell,
             }
         end
 
