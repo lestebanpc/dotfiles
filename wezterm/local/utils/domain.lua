@@ -27,12 +27,12 @@ local m_domain_types = {
       color  = '#41C9C9',
       weight = 0,
       types  = {
-          bash       = { icon = '', color = '#41CA4C', weight = 1,  },
-          zsh        = { icon = '', color = '#CA40A7', weight = 2,  },
-          pwsh       = { icon = '', color = '#41CA4C', weight = 3,  },
-          powershell = { icon = '', color = '#3F40C8', weight = 4,  },
-          cmd        = { icon = '', color = '#CA40A7', weight = 5,  },
-          fish       = { icon = '󰈺', color = '#CA40A7', weight = 6,  },
+          bash       = { icon = '', color = '#2766a6', weight = 1,  },
+          zsh        = { icon = '', color = '#2766a6', weight = 2,  },
+          pwsh       = { icon = '', color = '#2766a6', weight = 3,  },
+          powershell = { icon = '', color = '#2766a6', weight = 4,  },
+          cmd        = { icon = '', color = '#2766a6', weight = 5,  },
+          fish       = { icon = '󰈺', color = '#2766a6', weight = 6,  },
           distrobox  = { icon = '', color = '#175421', weight = 11, },
           container  = { icon = '', color = '#57356b', weight = 60, },
           --k8s        = { icon = '󱃾', color = '#41C9C9', weight = 63, },
@@ -86,6 +86,18 @@ local m_external_running_distribution = nil
 -- Si esta instalado WSL/Distrobox a nivel local
 local m_is_installed_external_distribution = false
 
+-- Informacion relevante de Un dominio de tipo 'Exec Domain'.
+--   > type            : Puede ser 'container' o 'k8s' o 'custom'
+--   > icon            : Icono del tipo de 'exec domain'.
+--   > color           : Color usado por el icono del tipo de 'exec domain'.
+--   > is_local_fs     : Si esta asociado a un proceso local del equipo local que usan el mismo fs donde se ejecuta el emulador de terminal.
+--   > domain_category : Similar a 'type', pero usada para agrupar segun soporte a crear los workspace desde su tag y fullpath.
+--   > Si 'container', se adiciona los siguientes campos:
+--     > id            : ID del container
+--     > name          : Name del container
+--   > Si es 'k8s', se adiciona los siguientes campos:
+--     > id            : ID del pod
+--     > name          : Name del pod
 local m_exec_infos = nil
 
 
@@ -95,9 +107,10 @@ local m_exec_infos = nil
 --   > name            : Nombre del dominio (mismo valor que el key del diccionario)
 --   > type            : Tipo de dominio.
 --   > is_multiplexing : El dominio es una vinculacion a un servidor de multiplexacion externo.
---   > is_external     : Si esta asociado a un proceso remoto externo al equipo local donde se ejecuta el emulador de terminal.
---                       Si el dominio es 'local' y es de tipo 'unix' (que no estan en 'external_unix_domains') siempre es false.
---                       Siempre tiene un filesystem diferente al equipo local, por los contenedores son considerados external.
+--   > is_local_fs     : Si esta asociado a un proceso local del equipo local donde se ejecuta el emulador de terminal, las cuales
+--                       usan un mismo 'filesystem' (comparten los mismas rutas). Por ejemplo, el dominio es 'local' y dominios de
+--                       tipo 'unix' (que no estan en 'external_unix_domains') y algunos dominios de tipo 'exec domain' siempre son
+--                       'true'.
 --   > domain_category : Similar a 'type', pero usada para agrupar segun soporte a crear los workspace desde su tag y fullpath.
 --   > icon            : Icono usado para el dominio
 --   > color           : Color usado para el icono usado para el dominio
@@ -107,11 +120,11 @@ local m_exec_infos = nil
 --   > ex_data         : Solo para algunos dominios.
 --     > Si es un dominio SSH y se su configuracion se genero del '~/.ssh/config' muestra la informacion del 'host'.
 --     > Si es un dominio Unix en Windows y asociado a una instancia WSL, se almacena la informacion del dominio WSL.
---     > Si es un dominio es de tipo 'Exec' muestra la data relevanta del proceso a ejecutar.
+--     > Si es un dominio es de tipo 'Exec' muestra la data relevanta del proceso a ejecutar (exec info).
 --       > type        : Puede ser 'container' o 'k8s' o 'custom'
 --       > icon        : Icono del tipo de 'exec domain'.
 --       > color       : Color usado por el icono del tipo de 'exec domain'.
---       > is_external : Si esta asociado a un proceso remoto externo al equipo local donde se ejecuta el emulador de terminal.
+--       > is_local_fs : Si esta asociado a un proceso local del equipo local que usan el mismo fs donde se ejecuta el emulador de terminal.
 --       > Si 'container', se adiciona los siguientes campos:
 --         > id        : ID del container
 --         > name      : Name del container
@@ -484,7 +497,7 @@ function mod.get_unix_domains()
             type = "unix", name = l_domain.name, data = l_domain,
             is_multiplexing = true,
             icon = l_type_info.icon, color = l_type_info.color, weight = l_type_info.weight,
-            is_external = false, domain_category = 'local',
+            is_local_fs = true, domain_category = 'local',
         }
         m_domain_infos[l_domain.name] = l_domain_info
 
@@ -519,7 +532,7 @@ function mod.get_unix_domains()
                         data = l_domain, ex_data = l_item,
                         is_multiplexing = true,
                         icon = l_type_info.icon, color = l_type_info.color, weight = l_type_info.weight,
-                        is_external = true, domain_category = 'wsl',
+                        is_local_fs = false, domain_category = 'wsl',
                     }
                     m_domain_infos[l_domain.name] = l_domain_info
 
@@ -634,10 +647,39 @@ end
 -- Dominios de tipo Exec > Shell no predeterminados
 ------------------------------------------------------------------------------------
 
+function m_cbk_bash(p_spawncommand)
+
+        p_spawncommand.args = {
+            'bash',
+        }
+        return p_spawncommand
+
+end
+
 function m_cbk_powershell_core(p_spawncommand)
 
         p_spawncommand.args = {
             'pwsh',
+        }
+        return p_spawncommand
+
+end
+
+
+function m_cbk_windows_cmd(p_spawncommand)
+
+        p_spawncommand.args = {
+            'cmd',
+        }
+        return p_spawncommand
+
+end
+
+
+function m_cbk_windows_powershell(p_spawncommand)
+
+        p_spawncommand.args = {
+            'powershell',
         }
         return p_spawncommand
 
@@ -664,27 +706,29 @@ function mod.get_exec_domains()
     local l_domain_name = nil
 
     -- Registrar shell 'bash'
-    --if m_os_type ~= 1 and mm_ucommon.exist_command('bash', m_os_type, nil) then
+    if m_os_type ~= 1 and mm_ucommon.exist_command('bash', m_os_type, nil) then
 
-    --    l_subtype_info = l_type_info.types['bash']
+        l_subtype_info = l_type_info.types['bash']
+        l_domain_name = 'bash'
 
-    --    table.insert(l_domains,
-    --        mm_wezterm.exec_domain(
-    --            'bash',
-    --            m_make_cbk_distrobox_fixup(l_item.name),
-    --            m_cbk_distrobox_label
-    --        )
-    --    )
+        table.insert(l_domains,
+            mm_wezterm.exec_domain(
+                l_domain_name,
+                m_cbk_bash,
+                'Bash'
+            )
+        )
 
-    --    m_exec_infos[l_domain_name] = {
-    --        type = 'bash',
-    --        icon = l_subtype_info.icon,
-    --        color = l_subtype_info.color,
-    --        is_external = false,
-    --    }
+        m_exec_infos[l_domain_name] = {
+            type = 'bash',
+            icon = l_subtype_info.icon,
+            color = l_subtype_info.color,
+            is_local_fs = true,
+            domain_category = 'local',
+        }
 
+    end
 
-    --end
 
 
     -- Registrar shell 'pwsh'
@@ -705,20 +749,59 @@ function mod.get_exec_domains()
             type = 'pwsh',
             icon = l_subtype_info.icon,
             color = l_subtype_info.color,
-            is_external = false,
+            is_local_fs = true,
+            domain_category = 'local',
         }
 
     end
 
 
-    ---- Registrar shell 'cmd' y 'powershell'
-    --if m_os_type == 1 then
-    --end
+    -- Registrar shell 'cmd' y 'powershell'
+    if m_os_type == 1 then
+
+        -- Shel 'cmd'
+        l_subtype_info = l_type_info.types['cmd']
+        l_domain_name = 'cmd'
+
+        table.insert(l_domains,
+            mm_wezterm.exec_domain(
+                l_domain_name,
+                m_cbk_windows_cmd,
+                'Cmd'
+            )
+        )
+
+        m_exec_infos[l_domain_name] = {
+            type = 'cmd',
+            icon = l_subtype_info.icon,
+            color = l_subtype_info.color,
+            is_local_fs = true,
+            domain_category = 'local',
+        }
 
 
-    -- Registrar shell 'pwsh'
-    --if mm_ucommon.exist_command('pwsh', m_os_type, nil) then
-    --end
+        -- Shel 'powershell'
+        l_subtype_info = l_type_info.types['powershell']
+        l_domain_name = 'powershell'
+
+        table.insert(l_domains,
+            mm_wezterm.exec_domain(
+                l_domain_name,
+                m_cbk_windows_powershell,
+                'Windows Powershell'
+            )
+        )
+
+        m_exec_infos[l_domain_name] = {
+            type = 'powershell',
+            icon = l_subtype_info.icon,
+            color = l_subtype_info.color,
+            is_local_fs = true,
+            domain_category = 'local',
+        }
+
+    end
+
 
     -- Obtener los dominios de asociados a los contenedores distrobox
     local l_excluded_container_ids = nil
@@ -750,7 +833,8 @@ function mod.get_exec_domains()
                     type = 'distrobox',
                     icon = l_subtype_info.icon,
                     color = l_subtype_info.color,
-                    is_external = true,
+                    is_local_fs = false,
+                    domain_category = 'distrobox',
                     id = l_item.id,
                     name = l_item.name,
                     initial_running = l_item.is_running,
@@ -789,7 +873,8 @@ function mod.get_exec_domains()
                     type = 'container',
                     icon = l_subtype_info.icon,
                     color = l_subtype_info.color,
-                    is_external = true,
+                    is_local_fs = false,
+                    domain_category = nil,
                     id = l_item.id,
                     name = l_item.name,
                 }
@@ -826,8 +911,12 @@ function mod.get_exec_domains()
                 type = 'custom',
                 icon = l_subtype_info.icon,
                 color = l_subtype_info.color,
-                is_external = l_item.is_external ~= nil and l_item.is_external == true,
+                is_local_fs = l_item.is_local_fs ~= nil and l_item.is_local_fs == true,
             }
+
+            if l_info.is_local_fs then
+                domain_category = 'local'
+            end
 
             -- TODO: Adicionar los campos definios en l_item.data a l_info
             m_exec_infos[l_item.name] = l_info
@@ -932,7 +1021,7 @@ function mod.get_domain_info(p_domain_name)
             type = "unknown", name = p_domain_name, data = nil, is_multiplexing = false,
             icon = m_unknown_domain_type_icon, color = m_unknown_domain_type_color,
             weight = 999,
-            is_external = true,
+            is_local_fs = false,
             domain_category = nil,
         }
     end
@@ -946,7 +1035,7 @@ function mod.get_domain_info(p_domain_name)
             type = "local", name = p_domain_name, data = nil, is_multiplexing = false,
             icon = l_type_info.icon, color = l_type_info.color,
             weight = l_type_info.weight,
-            is_external = false,
+            is_local_fs = true,
             domain_category = 'local',
         }
 
@@ -960,7 +1049,7 @@ function mod.get_domain_info(p_domain_name)
             type = "TermWizTerminalDomain", name = p_domain_name, data = nil, is_multiplexing = false,
             icon = l_type_info.icon, color = l_type_info.color,
             weight = l_type_info.weight,
-            is_external = false,
+            is_local_fs = true,
             domain_category = nil,
         }
 
@@ -978,7 +1067,7 @@ function mod.get_domain_info(p_domain_name)
         type = "unknown", name = p_domain_name, data = nil, is_multiplexing = false,
         icon = m_unknown_domain_type_icon, color = m_unknown_domain_type_color,
         weight = 998,
-        is_external = true,
+        is_local_fs = false,
         domain_category = nil,
     }
 
@@ -997,7 +1086,7 @@ function mod.get_domain_info(p_domain_name)
             l_domain_info.color = l_type_info.color
             l_domain_info.weight = l_type_info.weight
             l_domain_info.data = l_domain
-            l_domain_info.is_external = true
+            l_domain_info.is_local_fs = false
             l_domain_info.domain_category = 'wsl'
 
             m_domain_infos[p_domain_name] = l_domain_info
@@ -1022,11 +1111,12 @@ function mod.get_domain_info(p_domain_name)
         l_domain_info.color = l_type_info.color
         l_domain_info.weight = l_type_info.weight
         l_domain_info.data = l_domain
-        l_domain_info.is_external = false
+        l_domain_info.is_local_fs = true
         if m_custom.external_unix_domains ~= nil then
 
-            l_domain_info.is_external = mm_ucommon.exist_in_string_array(m_custom.external_unix_domains, p_domain_name)
-            if not l_domain_info.is_external then
+            local l_is_external = mm_ucommon.exist_in_string_array(m_custom.external_unix_domains, p_domain_name)
+            l_domain_info.is_local_fs = not l_is_external
+            if l_domain_info.is_local_fs then
                 l_domain_info.domain_category = 'local'
             end
 
@@ -1049,7 +1139,7 @@ function mod.get_domain_info(p_domain_name)
         l_domain_info.color = l_type_info.color
         l_domain_info.weight = l_type_info.weight
         l_domain_info.data = l_domain
-        l_domain_info.is_external = true
+        l_domain_info.is_local_fs = false
         l_domain_info.domain_category = nil
 
         m_domain_infos[p_domain_name] = l_domain_info
@@ -1080,7 +1170,7 @@ function mod.get_domain_info(p_domain_name)
         l_domain_info.icon = l_type_info.icon
         l_domain_info.color = l_type_info.color
         l_domain_info.data = l_domain
-        l_domain_info.is_external = true
+        l_domain_info.is_local_fs = false
         l_domain_info.domain_category = nil
 
         m_domain_infos[p_domain_name] = l_domain_info
@@ -1104,10 +1194,10 @@ function mod.get_domain_info(p_domain_name)
             l_domain_info.data = nil
             l_domain_info.weight = l_type_info.weight + l_subtype_info.weight
             l_domain_info.ex_data = l_domain
-            l_domain_info.is_external = l_domain.is_external
+            l_domain_info.is_local_fs = l_domain.is_local_fs
             l_domain_info.domain_category = nil
-            if l_domain.type == 'distrobox' then
-                l_domain_info.domain_category = 'distrobox'
+            if l_domain.domain_category ~= nil  then
+                l_domain_info.domain_category = l_domain.domain_category
             end
 
             m_domain_infos[p_domain_name] = l_domain_info
@@ -1261,12 +1351,10 @@ local function m_get_domain_details(p_domain_info)
 
         if p_domain_info.ex_data ~= nil then
 
-            if p_domain_info.ex_data.type == 'pwsh' then
+            l_icon = p_domain_info.ex_data.icon
+            l_color = p_domain_info.ex_data.color
 
-                l_icon = p_domain_info.ex_data.icon
-                l_color = p_domain_info.ex_data.color
-
-            elseif p_domain_info.ex_data.type == 'distrobox' then
+            if p_domain_info.ex_data.type == 'distrobox' then
 
                 l_key = 'Id'
                 l_value = p_domain_info.ex_data.id
@@ -1288,8 +1376,6 @@ local function m_get_domain_details(p_domain_info)
                 end
                 table.insert(l_infos, { key = l_key , value = l_value, })
 
-                l_icon = p_domain_info.ex_data.icon
-                l_color = p_domain_info.ex_data.color
 
             elseif p_domain_info.ex_data.type == 'container' then
 
@@ -1304,9 +1390,6 @@ local function m_get_domain_details(p_domain_info)
                 if l_value ~= nil and l_value ~= '' then
                     table.insert(l_infos, { key = l_key , value = l_value, })
                 end
-
-                l_icon = p_domain_info.ex_data.icon
-                l_color = p_domain_info.ex_data.color
 
             end
 
@@ -1460,7 +1543,7 @@ local function m_get_choice_label(p_domain_data, p_current_domain_name)
         table.insert(l_format_items, { Foreground = { Color =  l_color } } )
     end
 
-    table.insert(l_format_items, { Text = l_fix_domain_name .. '  ' })
+    table.insert(l_format_items, { Text = ' ' .. l_fix_domain_name .. '  ' })
 
     if l_is_current_domain then
         table.insert(l_format_items, 'ResetAttributes')

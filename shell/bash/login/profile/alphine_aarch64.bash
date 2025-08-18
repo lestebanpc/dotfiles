@@ -246,4 +246,4 @@ alias step-jwt='step crypto jwt'
 
 # Funciones basicas
 # shellcheck source=/home/lucianoepc/.files/shell/bash/login/profile/custom_modules.bash
-source "{HOME}/${g_repo_name}/shell/bash/login/profile/custom_modules.bash"
+source "${HOME}/${g_repo_name}/shell/bash/login/profile/custom_modules.bash"

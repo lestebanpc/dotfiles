@@ -1392,7 +1392,7 @@ local function m_get_choices(p_current_domain_name, p_current_workspace_name, p_
     -- 3. Si es un dominio de categoria local, determinar existe un dominio alternativo al actual donde se debe mostrar sus tag y fullpath.
     local l_alternative_domain_info = nil
 
-    if not l_current_domain_info.is_external then
+    if l_current_domain_info.is_local_fs then
 
         if m_os_type == 1 then
 
