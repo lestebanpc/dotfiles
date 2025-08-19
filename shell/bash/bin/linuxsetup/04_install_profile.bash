@@ -1029,33 +1029,33 @@ function _setup_user_profile() {
     # Para WSL copiar el archivo de configuracion del profile
     if [ $g_os_type -eq 1 ]; then
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_wsl.bash" "" ".profile_config.bash" $l_flag_overwrite_file "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_wsl.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-              "$g_color_yellow1" "~/.profile_config.bash" "$g_color_reset"
+              "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
 
     # Si es contenedor distrobox
     elif [ ! -z "$CONTAINER_ID" ]; then
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_distrobox.bash" "" ".profile_config.bash" $l_flag_overwrite_file "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_distrobox.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-              "$g_color_yellow1" "~/.profile_config.bash" "$g_color_reset"
+              "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
 
     else
 
         # Si el distro tiene acceos a los dispositivos como GPU, ...
         if [ $g_profile_type -eq 0 ]; then
 
-            printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/profile_config_template_basic_local.bash %b~/.profile_config.bash%b"\n' \
+            printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/profile_config_template_basic_local.bash %b~/.custom_profile.bash%b"\n' \
                   "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
 
         else
 
-            copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_basic_remote.bash" "" ".profile_config.bash" $l_flag_overwrite_file "        > "
+            copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_basic_remote.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
             l_status=$?
             printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-                  "$g_color_yellow1" "~/.profile_config.bash" "$g_color_reset"
+                  "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
 
         fi
 

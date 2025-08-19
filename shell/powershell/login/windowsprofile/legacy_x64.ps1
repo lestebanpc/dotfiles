@@ -3,8 +3,8 @@
 #------------------------------------------------------------------------------------------------
 
 # Cargar la información:
-if(Test-Path "${env:USERPROFILE}/.profile_config.ps1") {
-    . "${env:USERPROFILE}/.profile_config.ps1"
+if(Test-Path "${env:USERPROFILE}/custom_profile.ps1") {
+    . "${env:USERPROFILE}/custom_profile.ps1"
 }
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT

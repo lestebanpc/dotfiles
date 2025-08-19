@@ -1,3 +1,8 @@
+#
+# Para habilitar su uso genere el arcivo '${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1':
+#  cp ~/.files/shell/powershell/bin/windowssetup/lib/setup_config_template.ps1 "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1"
+#  vim "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1"
+#
 
 # Folder base, donde se almacena el programas, comando y afines usados por Windows.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).

@@ -1097,9 +1097,6 @@ function m_create_all_links($p_overwrite_ln_flag) {
             source_filename = "coc-settings_windows.json"
         },
         [PSCustomObject]@{
-            source_filename = ""
-        },
-        [PSCustomObject]@{
             target_link     = "${env:USERPROFILE}\.vimrc"
             source_path     = "${env:USERPROFILE}\.files\vim"
             source_filename = "vimrc_ide.vim"

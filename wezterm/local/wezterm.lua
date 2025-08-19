@@ -531,10 +531,7 @@ end
 -- del usuario actual que usa la terminal GUI.
 -- > En otros dominios su valor se especifica cuando se define el dominio. Excepto cuando es un 'multiplexing domain' el shell a usar
 --   siempre es el shell predterminado donde se ejecuta el 'multiplexer domain'.
-if m_custom_config.default_prog ~= nil then
-    mod.default_prog = m_custom_config.default_prog
-	--print(mod.default_prog)
-end
+--mod.default_prog = nil
 
 
 

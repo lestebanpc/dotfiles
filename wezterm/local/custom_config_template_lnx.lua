@@ -227,14 +227,6 @@ local mod= {
     --default_domain = "local",
     --default_domain = "WSL:ubuntu",
 
-    -- Programa por defecto a ejecutar cuando se crea un nuevo tab del dominio 'local'. Si no se especifica se usara el shell predeterminado
-    -- del usuario actual que usa la terminal GUI.
-    -- > En otros dominios su valor se especifica cuando se define el dominio. Excepto cuando es un 'multiplexing domain' el shell a usar
-    --   siempre es el shell predterminado donde se ejecuta el 'multiplexer domain'.
-    default_prog = nil,
-    --default_prog = { "pwsh" },
-    --default_prog = { "/usr/bin/bash", "-l" },
-    --default_prog = { "/usr/bin/zsh", "-l" },
 
 }
 

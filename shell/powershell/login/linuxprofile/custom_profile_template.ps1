@@ -1,6 +1,6 @@
 #
-# Para habilitar su uso genere el arcivo '~/.custom_profile.bash':
-#  cp ~/.files/powershell/login/linuxprofile/custom_profile_template.ps1 ~/.config/powershell/custom_profile.ps1
+# Para habilitar su uso genere el arcivo '~/.config/powershell/custom_profile.ps1':
+#  cp ~/.files/shell/powershell/login/linuxprofile/custom_profile_template.ps1 ~/.config/powershell/custom_profile.ps1
 #  vim ~/.config/powershell/custom_profile.ps1
 #
 

@@ -68,15 +68,14 @@ shopt -s histappend
 
 
 #-----------------------------------------------------------------------------------
-# Variables globales obtenidos del archivo de configuración '~/.profile_config.bash'
+# Variables globales obtenidos del archivo de configuración '~/.custom_profile.bash'
 #-----------------------------------------------------------------------------------
 
 # Obtener los parametros del archivos de configuración
-if [ -f "${HOME}/.profile_config.bash" ]; then
-    # shellcheck source=/home/lucianoepc/.profile_config.bash
-    . "${HOME}/.profile_config.bash"
+if [ -f "${HOME}/.custom_profile.bash" ]; then
+    # shellcheck source=/home/lucianoepc/.custom_profile.bash
+    . "${HOME}/.custom_profile.bash"
 fi
-
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT
 [ -z "$g_repo_name" ] && g_repo_name='.files'
