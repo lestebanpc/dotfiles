@@ -421,7 +421,11 @@ mod.exec_domains = mm_udomain.get_exec_domains()
 --mod.ssh_backend = "Libssh"
 
 -- When set to true (the default), wezterm will configure the SSH_AUTH_SOCK environment variable for panes spawned in the local domain.
---mod.mux_enable_ssh_agent = false
+if m_os_type == 1 then
+    -- En Windows y usando la implementacion de OpenSSH de Windows, no usa el valor existente de SSH_AUTH_SOCK, para generar uno nuevo
+    -- Vease: https://github.com/wezterm/wezterm/issues/5817
+    mod.mux_enable_ssh_agent = false
+end
 
 
 

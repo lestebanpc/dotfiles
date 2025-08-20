@@ -809,7 +809,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
 		New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\.config\git"
     }
 
-    if(! (Test-Path "${env:USERPROFILE}\.config\git\main.toml" )) {
+    if(! (Test-Path "${env:USERPROFILE}\.config\git\user_main.toml" )) {
 		Write-Host "            > Creando el archivo '~\.config\git\user_main.toml' ..."
         Copy-Item -Path "${env:USERPROFILE}\.files\etc\git\user_main_template_win.toml" -Destination "${env:USERPROFILE}\.config\git\user_main.toml"
         Write-Host "            > Creando el archivo '~\.config\git\user_mywork.toml' ..."
