@@ -10,7 +10,7 @@
 	editor = C:/apps/vim/vim91/vim.exe
 
     # Usar la implementacion SSH de 'Open SSH for Windows'
-    sshCommand = "C:/Program Files/OpenSSH/ssh.exe"
+    sshCommand = "\"C:/Program Files/OpenSSH/ssh.exe\""
 
 # Incluir los temas del comando 'delta'
 #[include]
