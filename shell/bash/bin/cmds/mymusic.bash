@@ -32,7 +32,7 @@ start_music() {
     #1. Argumentos
     local p_card_id='D50s'
     if [ ! -z "$1" ]; then
-        p_card_id='$1'
+        p_card_id="$1"
     fi
 
     local p_device_index=0

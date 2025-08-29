@@ -180,26 +180,6 @@ fi
 
 
 
-#Un diccionario que muestra el estado actual de los paquetes hasta el momento procesados (instalados o desinstalados) en un menú.
-#Un arreglo de asociativo cuyo key es el ID del paquete hasta el momento procesados en el menu.
-#El valor almacenado para un paquete es 'X|Y', donde:
-# > 'X' es el estado de la primera configuración y sus valores son:
-#     > -1 > El paquete aun no se ha se ha analizado (ni iniciado su proceso).
-#     >  n > Si es durante la instalación los valores puede ser:
-#             0 > Se inicio la instalación y termino existosamente
-#             1 > Se inicio la instalación y termino con errores
-#             2 > No se inicio la instalación: El paquete ya esta instalado
-#             3 > No se inicio la instalación: Parametros invalidos (impiden que se inicie su analisis/procesamiento).
-#     >  m > Si es durante la instalación los valores puede ser:
-#             0 > Se inicio la desinstalación y termino existosamente
-#             1 > Se inicio la desinstalación y termino con errores
-#             2 > No se inicio la desinstalación: El paquete no esta instalado
-#             3 > No se inicio la desinstalación: Parametros invalidos (impiden que se inicie su analisis/procesamiento).
-# > 'Y' es un listado de indice relativo (de las opcion de menú) separados por espacios ' ' donde (hasta el momento) se usa el paquete.
-#     El primer indice es de la primera opción del menu que instala los artefactos. Los demas opciones no vuelven a instalar el artefacto
-declare -A _gA_processed_repo=()
-
-
 #Parametros de entrada (argumentos de entrada son):
 #  1 > Opciones de menu ingresada por el usuario
 #  2 > Indice relativo de la opcion en el menú de opciones (inicia con 0 y solo considera el indice del menu dinamico).
@@ -214,8 +194,24 @@ declare -A _gA_processed_repo=()
 #   99 > Argumentos ingresados son invalidos
 #
 #Parametros de salida (variables globales):
-#    > '_gA_processed_repo' retona el estado de procesamiento de todos los paquetes hasta el momento procesados por el usuario.
-#
+# > 'rA_processed_repo' retona el estado de procesamiento de todos los paquetes hasta el momento procesados por el usuario.
+#    > Un diccionario que muestra el estado actual de los paquetes hasta el momento procesados (instalados o desinstalados) en un menú.
+#    > Un arreglo de asociativo cuyo key es el ID del paquete hasta el momento procesados en el menu.
+#    > El valor almacenado para un paquete es 'X|Y', donde:
+#      > 'X' es el estado de la primera configuración y sus valores son:
+#          > -1 > El paquete aun no se ha se ha analizado (ni iniciado su proceso).
+#          >  n > Si es durante la instalación los valores puede ser:
+#                  0 > Se inicio la instalación y termino existosamente
+#                  1 > Se inicio la instalación y termino con errores
+#                  2 > No se inicio la instalación: El paquete ya esta instalado
+#                  3 > No se inicio la instalación: Parametros invalidos (impiden que se inicie su analisis/procesamiento).
+#          >  m > Si es durante la instalación los valores puede ser:
+#                  0 > Se inicio la desinstalación y termino existosamente
+#                  1 > Se inicio la desinstalación y termino con errores
+#                  2 > No se inicio la desinstalación: El paquete no esta instalado
+#                  3 > No se inicio la desinstalación: Parametros invalidos (impiden que se inicie su analisis/procesamiento).
+#      > 'Y' es un listado de indice relativo (de las opcion de menú) separados por espacios ' ' donde (hasta el momento) se usa el paquete.
+#          El primer indice es de la primera opción del menu que instala los artefactos. Los demas opciones no vuelven a instalar el artefacto
 function _install_menu_options() {
 
     #1. Argumentos
@@ -228,6 +224,8 @@ function _install_menu_options() {
     if [[ "$2" =~ ^[0-9]+$ ]]; then
         p_option_relative_idx=$2
     fi
+
+    local -n rA_processed_repo="$3"
 
 
     if [ $p_input_options -le 0 ] || [ $p_option_relative_idx -lt 0 ]; then
@@ -304,7 +302,7 @@ function _install_menu_options() {
     fi
 
 
-    #4. Recorriendo los los paquetes, opcionalmente procesarlo, y almacenando el estado en la variable '_gA_processed_repo'
+    #4. Recorriendo los los paquetes, opcionalmente procesarlo, y almacenando el estado en la variable 'rA_processed_repo'
     local l_status
     local l_repo_id
     local l_j
@@ -337,7 +335,7 @@ function _install_menu_options() {
 
 
         #4.1. Obtener el estado del paquete antes de su instalación.
-        l_aux="${_gA_processed_repo[$l_repo_id]:--1|}"
+        l_aux="${rA_processed_repo[$l_repo_id]:--1|}"
 
         IFS='|'
         la_aux=(${l_aux})
@@ -360,8 +358,8 @@ function _install_menu_options() {
 
             #4.2.1. Almacenar la información del procesamiento.
             la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
-            #echo "A > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            rA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
+            #echo "A > rA_processed_repo['${l_repo_id}']=\"${rA_processed_repo[$l_repo_id]}\""
 
             #4.2.2. Si ya no se debe procesar mas paquetes de la opción del menú.
             if [ $l_flag_process_next_repo -ne 0 ]; then
@@ -446,7 +444,7 @@ function _install_menu_options() {
         #Si no se debe procesar mas paquetes de la opción del menú.
         if [ $l_flag_process_next_repo -ne 0 ]; then
             la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
+            rA_processed_repo["$l_repo_id"]="${l_status_first_setup}|${la_previous_options_idx[@]}"
             continue
         fi
 
@@ -490,13 +488,13 @@ function _install_menu_options() {
             l_exits_error=0
 
             la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
+            rA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido no se establecio el nombre real de paquete a instalar.\n' \
                    "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con configuración de los demas paquetes de la opción del menú.\n'
 
-            #echo "C > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            #echo "C > rA_processed_repo['${l_repo_id}']=\"${rA_processed_repo[$l_repo_id]}\""
             continue
         fi
 
@@ -508,13 +506,13 @@ function _install_menu_options() {
             l_exits_error=0
 
             la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
+            rA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido no se pudo obtener informacion del paquete en el SO.\n' \
                           "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con configuración de los demas packages de la opción del menú.\n'
 
-            #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            #echo "B > rA_processed_repo['${l_repo_id}']=\"${rA_processed_repo[$l_repo_id]}\""
             continue
 
         fi
@@ -527,13 +525,13 @@ function _install_menu_options() {
             l_exits_error=0
 
             la_previous_options_idx+=(${p_option_relative_idx})
-            _gA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
+            rA_processed_repo["$l_repo_id"]="0|${la_previous_options_idx[@]}"
 
             printf '%bNo se pudo iniciar el procesamiento del paquete "%s"%b debido parametros invalidos del paquete en el SO.\n' \
                           "$g_color_red1" "$l_repo_id" "$g_color_reset"
             printf 'Corrija el error para continuar con configuración de los demas packages de la opción del menú.\n'
 
-            #echo "B > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+            #echo "B > rA_processed_repo['${l_repo_id}']=\"${rA_processed_repo[$l_repo_id]}\""
             continue
 
         fi
@@ -547,8 +545,8 @@ function _install_menu_options() {
 
         #4.5.2. Almacenar la información del procesamiento
         la_previous_options_idx+=(${p_option_relative_idx})
-        _gA_processed_repo["$l_repo_id"]="${l_processed_repo}|${la_previous_options_idx[@]}"
-        #echo "F > _gA_processed_repo['${l_repo_id}']=\"${_gA_processed_repo[$l_repo_id]}\""
+        rA_processed_repo["$l_repo_id"]="${l_processed_repo}|${la_previous_options_idx[@]}"
+        #echo "F > rA_processed_repo['${l_repo_id}']=\"${rA_processed_repo[$l_repo_id]}\""
 
         #4.5.3. Mostrar información adicional
 
@@ -803,12 +801,13 @@ function g_install_packages_byopc() {
     #5. Instalar los paquetes selecionados por las opciones de menú dinamico.
     local l_x=0
     local l_status
+
     #Limpiar los resultados anteriores
-    _gA_processed_repo=()
+    local -A lA_processed_repo=()
 
     for((l_x=0; l_x < ${#ga_menu_options_packages[@]}; l_x++)); do
 
-        _install_menu_options $p_input_options $l_x
+        _install_menu_options $p_input_options $l_x 'lA_processed_repo'
         l_status=$?
 
         #Se requiere almacenar las credenciales para realizar cambios con sudo.
@@ -1041,56 +1040,6 @@ function g_install_packages_byid() {
 }
 
 
-#
-#Parametros de entrada (Argumentos):
-#  1 > Opciones relacionados con los paquetes que se se instalaran (entero que es suma de opciones de tipo 2^n).
-#
-function g_uninstall_packages() {
-
-    #1. Argumentos
-    local p_input_options=-1
-    if [[ "$1" =~ ^[0-9]+$ ]]; then
-        p_input_options=$1
-    fi
-
-    if [ $p_input_options -le 0 ]; then
-        echo "ERROR: Argumento de opciones \"${p_input_options}\" es incorrecta"
-        return 99
-    fi
-
-    #3. Inicializaciones cuando se muestra el menú
-    #local l_flag=0
-    #if [ $gp_type_calling -eq 0 ]; then
-
-    #fi
-
-    #5. Instalar los paquetes selecionados por las opciones de menú dinamico.
-    local l_x=0
-    local l_status
-    #Limpiar los resultados anteriores
-    _gA_processed_repo=()
-
-    for((l_x=0; l_x < ${#ga_menu_options_packages[@]}; l_x++)); do
-
-        _uninstall_menu_options $p_input_options $l_x
-        l_status=$?
-
-        #Se requiere almacenar las credenciales para realizar cambios con sudo.
-        if [ $l_status -eq 120 ]; then
-            return 120
-        fi
-
-    done
-
-
-    #6. Si se invoco interactivamente y se almaceno las credenciales, caducarlo.
-    #   Si no se invoca usando el menú y se almaceno las credencial en este script, será el script caller el que sea el encargado de caducarlo
-    if [ $g_status_crendential_storage -eq 0 ] && [ $gp_type_calling -eq 0 ]; then
-    #if [ $g_status_crendential_storage -eq 0 ] && [ $g_is_credential_storage_externally -ne 0 ]; then
-        clean_sudo_credencial
-    fi
-
-}
 
 
 function g_install_main() {
