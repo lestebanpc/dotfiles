@@ -8,21 +8,18 @@
 # Log generados por: TMUX, ..
 *.log
 
-# Archivos internos de GIT
-.git/*
-
 # Archivos de tag generado por Universal CTags
 tags
 tags.lock
 
 # Paquetes locales de NodeJS (binarios de NodeJs)
-node_modules/*
+node_modules/
 
 # Las claves secretas del usuario
-keys/secret/*
+keys/secret/
 
 # Las claves compartidas o publicas del usuario
-keys/shared/*
+keys/shared/
 
 # Archivo de configuracion para los archivos de setup del SO y el profile del usuario
 shell/bash/bin/linuxsetup/.setup_config.bash
@@ -35,8 +32,8 @@ etc/oh-my-posh/default_settings.json
 etc/oh-my-posh/default_settings.json.bak
 
 # Archivos autogenerado cuando se instalan los programas
-etc/oh-my-posh/default/*
-etc/trivy/templates/*
+etc/oh-my-posh/default/
+etc/trivy/templates/
 
 # Adicionar archivos en las carpetas excluidas
 #!shell/bash/login/autocomplete/README.md
@@ -45,3 +42,6 @@ etc/trivy/templates/*
 # Adicionar subcarpetas en las carpetas excluidas
 #!shell/bash/login/autocomplete/myfolder/
 #!shell/bash/login/keybindings/myfolder/
+
+# Excluir archivos generados por AI
+.gemini/

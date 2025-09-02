@@ -1,0 +1,8 @@
+# Ignorar la metadata de git
+.git/
+
+# Informacion innecesaria para la generacion de codigo
+etc/
+docs/
+rmpc/
+.ctags.d/

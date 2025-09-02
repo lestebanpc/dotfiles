@@ -1255,7 +1255,7 @@ function _setup_user_profile() {
         create_folderpath_on_home ".config" "rmpc"
 
         l_target_link="config.ron"
-        l_source_path="${g_repo_name}/rmpc"
+        l_source_path="${g_repo_name}/etc/rmpc"
         l_source_filename='config_default.ron'
 
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
@@ -1265,7 +1265,7 @@ function _setup_user_profile() {
 
         l_target_path=".config/rmpc/themes"
         l_target_link="theme_default.ron"
-        l_source_path="${g_repo_name}/rmpc/themes"
+        l_source_path="${g_repo_name}/etc/rmpc/themes"
         l_source_filename='theme_default.ron'
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrite_link
         l_status=$?
