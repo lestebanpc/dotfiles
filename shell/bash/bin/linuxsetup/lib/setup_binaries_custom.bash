@@ -127,6 +127,7 @@ gA_packages=(
         ['opencode']='sst/opencode'
         ['powershell_es']='PowerShell/PowerShellEditorServices'
         ['distrobox']='89luca89/distrobox'
+        ['llama-swap']='mostlygeek/llama-swap'
     )
 
 
@@ -157,7 +158,7 @@ ga_menu_options_title=(
     "Python${g_color_reset}>${g_color_green1} Tools"
     "Formatter, Linter y LSP: Bash linter, Markdown LS, Lua LS, Taplo (Toml LS), Lemmix (XML LS), ..."
     "CTags (indexador de archivos lenguajes de programacion)"
-    "AWS CLI v2"
+    "Tools de IA para Linux"
     "Tools adicionales de Linux"
     )
 
@@ -192,8 +193,8 @@ ga_menu_options_packages=(
     "uv"
     "shellcheck,shfmt,marksman,luals,taplo,lemminx,flamelens,powershell_es"
     "ctags-win,ctags-nowin"
-    "awscli"
-    "distrobox"
+    "llama-swap"
+    "awscli,distrobox"
     )
 
 # Tipos de archivos (usualmente binarios), que estan en el repositorio, segun el tipo de SO al cual pueden ser usados/ejecutados.
@@ -440,6 +441,7 @@ declare -A gA_current_version_method_type=(
     ['tmux-fingers']=2
     ['wezterm']=2
     ['powershell_es']=2
+    ['llama-swap']=1
     )
 
 
@@ -1199,6 +1201,18 @@ function get_repo_last_pretty_version() {
             ;;
 
 
+        llama-swap)
+
+            l_aux=$(echo "$p_version" | sed -e 's/[^0-9]*\([0-9][0-9.]\+\).*/\1/')
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 1
+            fi
+
+            l_version="$l_aux"
+            ;;
+
+
         #neovim)
 
             #l_version=$(echo "$p_version" | sed -e "$g_regexp_sust_version1")
@@ -1557,6 +1571,10 @@ function _get_repo_current_pretty_version2() {
             l_status=0
             ;;
 
+       llama-swap)
+            l_result=$(echo "$p_data" | sed -e 's/[^0-9]*\([0-9][0-9.]\+\).*/\1/')
+            l_status=0
+            ;;
 
        wezterm)
             #   wezterm 20240805_014059_9d285fa6
@@ -2248,6 +2266,37 @@ function get_repo_artifacts() {
             fi
             ;;
 
+
+
+        llama-swap)
+
+            #Si es un binario para Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                pna_artifact_names=("llama-swap_${p_repo_last_pretty_version}_windows_amd64.zip")
+                pna_artifact_types=(11)
+
+            else
+
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        rna_artifact_names=("llama-swap_${p_repo_last_pretty_version}_linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("llama-swap_${p_repo_last_pretty_version}_linux_amd64.tar.gz")
+                    fi
+                    pna_artifact_types=(10)
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("llama-swap_${p_repo_last_pretty_version}_linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("llama-swap_${p_repo_last_pretty_version}_linux_amd64.tar.gz")
+                    fi
+                    pna_artifact_types=(10)
+                fi
+
+            fi
+            ;;
 
 
 
@@ -5471,6 +5520,27 @@ function _copy_artifact_files() {
             ;;
 
 
+        llama-swap)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si es binario Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                copy_binary_file "${l_source_path}" "llama-swap.exe" 1 1
+                return 0
+
+            fi
+
+            #B. Si es binario Linux
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            copy_binary_file "${l_source_path}" "llama-swap" 0 1
+            ;;
+
+
+
         flamelens)
 
             #Ruta local de los artefactos
@@ -6694,9 +6764,9 @@ function _copy_artifact_files() {
                 printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "containerd.service" \
                        "$g_color_yellow1" "$g_color_reset"
                 printf '%b   export PATH="$PATH:$HOME/.files/shell/sh/cmds"%b\n' "$g_color_yellow1" "$g_color_reset"
-                printf '%b   ~/.files/shell/sh/bin/containerd/containerd-rootless-setuptool.sh install%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   ~/.files/shell/sh/bin/cmds/containerd-rootless-setuptool.sh install%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   Opcional:%b\n' "$g_color_gray1" "$g_color_reset"
-                printf '%b      > Para ingresar al user-namespace creado use:%b ~/.files/shell/sh/bin/containerd/containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" \
+                printf '%b      > Para ingresar al user-namespace creado use:%b ~/.files/shell/sh/bin/cmds/containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" \
                        "$g_color_yellow1" "$g_color_reset"
                 printf '%b      > Establezca el servicio containerd para inicio manual:%b systemctl --user disable containerd.service%b\n' "$g_color_gray1" \
                        "$g_color_yellow1" "$g_color_reset"
@@ -6769,9 +6839,9 @@ function _copy_artifact_files() {
                 printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "buildkit.service" \
                        "$g_color_yellow1" "$g_color_reset"
                 printf '%b   export PATH="$PATH:$HOME/.files/shell/sh/bin/cmds"%b\n' "$g_color_yellow1" "$g_color_reset"
-                printf '%b   ~/.files/shell/sh/bin/containerd/containerd-rootless-setuptool.sh install-buildkit%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   ~/.files/shell/sh/bin/cmds/containerd-rootless-setuptool.sh install-buildkit%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   Opcional:%b\n' "$g_color_gray1" "$g_color_reset"
-                printf '%b      > Para ingresar al user-namespace creado use:%b ~/.files/shell/sh/bin/containerd/containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" "$g_color_yellow1" \
+                printf '%b      > Para ingresar al user-namespace creado use:%b ~/.files/shell/sh/bin/cmds/containerd-rootless-setuptool.sh nsenter bash%b\n' "$g_color_gray1" "$g_color_yellow1" \
                        "$g_color_reset"
                 printf '%b      > Establezca el servicio buildkit para inicio manual:%b systemctl --user disable buildkit.service%b\n' "$g_color_gray1" \
                        "$g_color_yellow1" "$g_color_reset"
@@ -6812,13 +6882,12 @@ function _copy_artifact_files() {
                 cp "${g_temp_path}/${l_source_path}/containerd-rootless.sh" ${g_repo_path}/shell/sh/bin/cmds/
                 chmod u+x ${g_repo_path}/shell/sh/bin/cmds/containerd-rootless.sh
 
-                echo "Copiando \"${l_source_path}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/shell/sh/bin/containerd\" ..."
-                cp "${g_temp_path}/${l_source_path}/containerd-rootless-setuptool.sh" ${g_repo_path}/shell/sh/bin/containerd/
-                chmod u+x ${g_repo_path}/shell/sh/bin/containerd/containerd-rootless-setuptool.sh
+                echo "Copiando \"${l_source_path}/containerd-rootless-setuptool.sh\" (instalador de ContainerD en modo rootless)  a \"~/.files/shell/sh/bin/cmds\" ..."
+                cp "${g_temp_path}/${l_source_path}/containerd-rootless-setuptool.sh" ${g_repo_path}/shell/sh/bin/cmds/
+                chmod u+x ${g_repo_path}/shell/sh/bin/cmds/containerd-rootless-setuptool.sh
 
                 #Fix permisos
                 if [ $g_runner_is_target_user -ne 0 ]; then
-                    chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/sh/bin/containerd/
                     chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/shell/sh/bin/cmds/
                 fi
 

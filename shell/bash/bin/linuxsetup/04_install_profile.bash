@@ -2667,7 +2667,7 @@ function _show_menu_core() {
            "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "8363641" "$g_color_reset"
     printf " (%bs%b) %bModo developer%b > Setup %bPython%b, %bNodeJS%b, %bVIM%b/%bNeoVIM%b (sin indexar la documentación) y %bProfile%b como IDE %b(opcion %s)%b\n" "$g_color_green1" "$g_color_reset" \
            "$g_color_gray1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" \
-           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "8367800" "$g_color_reset"
+           "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "8367801" "$g_color_reset"
 
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
@@ -2957,10 +2957,11 @@ function g_main() {
                 l_flag_continue=1
                 print_line '─' $g_max_length_line "$g_color_green1"
 
+                #(      1) Configurar archivos del profile del usuario actual
                 # Opcion (j)
                 # Opcion (k)
                 # Opcion (o)
-                _setup 8367800
+                _setup 8367801
                 ;;
 
 
