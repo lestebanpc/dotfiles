@@ -3,6 +3,16 @@
 "#########################################################################################
 "
 
+" Determina si habilita el completado a nivel linea de comandos (modo editor o ide) incluyendo ':' y las
+" busquedas '/' y '?'. Su valores pueden ser:
+"  > '1' o 'v:true', si se habilita el completado en la linea de comandos.
+"  > '0' o 'v:false', si se desabilita el completado en la linea de comandos.
+"  >  Si no se define o es 'v:null', se considera que se habilita el completado.
+"let g:cmdline_completion = v:false
+"let g:cmdline_completion = v:true
+"let g:cmdline_completion = v:null
+
+
 " Establecer un mecanismo de escritura (copy) al clipboard para VIM/NeoVim, lo cual incluye:
 "  > Acciones de escritura al clipboard usanbdo el valor de los registros VIM.
 "  > EScritura automatica al clipboard despues de realizar el yank (si esta habilitado 'g:yank_to_clipboard').
@@ -62,6 +72,32 @@
 "    > v:false (o '0') si se realiza un yank este no se copiara al clipboard.
 "    > Si no se especifica, se considera no definido
 "let g:yank_to_clipboard = v:true
+
+
+" Por defecto el comando para escribir al clipboard siempre es calculado automaticamente cuando la variable
+" 'g:clipboard_writer_mode' o 'CLIPBOARD' es 2
+" > Este busca si existe comandos 'wl-copy', 'xclip' o 'xsel' en ese orden.
+" > El comando a usarse se debera indicar las opciones/argumentos requeridos de usar el texto desde STDIN.
+" En algunos casos, puede elegir otro comando o no usar el orden preestablecido, modifique esta variable.
+" Si no se define, se calculara automaticamente.
+"let g:clipboard_writer_cmd = 'wl-copy'
+"let g:clipboard_writer_cmd = 'xclip -i -selection clipboard'
+"let g:clipboard_writer_cmd = 'xsel -i -b'
+"let g:clipboard_writer_cmd = '/mnt/c/windows/system32/clip.exe'
+"let g:clipboard_writer_cmd = 'clip.exe'
+"let g:clipboard_writer_cmd = 'pbcopy'
+"let g:clipboard_writer_cmd = v:null
+
+
+" Por defecto el comando para escribir al clipboard siempre es calculado automaticamente.
+" En algunos casos, puede elegir otro comando o no usar el orden preestablecido, modifique esta variable.
+" Si no se define, se calculara automaticamente.
+"let g:clipboard_reader_cmd = 'wl-paste'
+"let g:clipboard_reader_cmd = 'xclip -o -selection clipboard'
+"let g:clipboard_reader_cmd = 'xsel --clipboard --output'
+"let g:clipboard_reader_cmd = 'pwsh.exe -NoProfile -Command "Get-Clipboard"'
+"let g:clipboard_reader_cmd = 'pbpaste'
+"let g:clipboard_reader_cmd = v:null
 
 
 

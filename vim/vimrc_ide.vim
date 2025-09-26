@@ -76,6 +76,24 @@
 runtime custom_config.vim
 
 
+" Determina si habilita el completado a nivel linea de comandos (modo editor o ide) incluyendo ':' y las
+" busquedas '/' y '?'. Su valores pueden ser:
+"  > '1' o 'v:true', si se habilita el completado en la linea de comandos.
+"  > '0' o 'v:false', si se desabilita el completado en la linea de comandos.
+"  >  Si no se define o es 'v:null', se considera que se habilita el completado.
+if exists("g:cmdline_completion")
+
+    if empty(g:cmdline_completion)
+        let g:cmdline_completion = v:false
+    else
+        let g:cmdline_completion = v:true
+    endif
+
+else
+    let g:cmdline_completion = v:true
+endif
+
+
 " Establecer un mecanismo de escritura (copy) al clipboard para VIM/NeoVim, lo cual incluye:
 "  > Acciones de escritura al clipboard usanbdo el valor de los registros VIM.
 "  > Escritura automatica al clipboard despues de realizar el yank (si esta habilitado 'g:yank_to_clipboard').

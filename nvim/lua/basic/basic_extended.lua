@@ -200,42 +200,46 @@ vim.keymap.set({ "n", "x", "o" }, '\\', ts_repeat_move.repeat_last_move_previous
 -- Completion> Auto-completado del 'command line'
 --------------------------------------------------------------------------------------------------
 
---1. Configuración de las fuentes de completado
---   Se usara los valores pore defecto.
+if vim.g.cmdline_completion then
 
---2. Autocompletion for '/' and '?'
---   > If you enabled `native_menu`, this won't work anymore).
---   > Source : buffer
-local cmp = require('cmp')
+    --1. Configuración de las fuentes de completado
+    --   Se usara los valores pore defecto.
 
-cmp.setup.cmdline({ '/', '?' }, {
+    --2. Autocompletion for '/' and '?'
+    --   > If you enabled `native_menu`, this won't work anymore).
+    --   > Source : buffer
+    local cmp = require('cmp')
 
-    mapping = cmp.mapping.preset.cmdline(),
+    cmp.setup.cmdline({ '/', '?' }, {
 
-    -- Lista de source del modo insert
-    -- > keyword_length     : cantidad de caracteres necesarios realizar la busqueda en la fuente y mostrar el popup.
-    -- > trigger_characters : si no se tiene la cantidad de caracteres necesarios, es decir lenght(keyword) = 0,
-    --   pero esta antes de un caracter especial de la lista, se muestra el popup de completado
-    -- > group_index        : 'nvim-cmp' solo muestra los elementos de un 'group_index', el grupo source con menor
-    --   valor y que tenga elementos. Si el grupo no general elementos, se va con el siguiente grupo.
-    --   Por defecto su valor es 1.
-    -- > prioirity          : orden que asigna un peso mayor para aparecer en la lista de autocompletado dentro de
-    --   un mismo grupo 'group_index'. Valor entero que inicia desde 1, cuanto mayor es valor, mayor peso se tendra.
-    sources = {
-        { name = 'buffer', keyword_length = 3, },
-    },
+        mapping = cmp.mapping.preset.cmdline(),
 
-})
+        -- Lista de source del modo insert
+        -- > keyword_length     : cantidad de caracteres necesarios realizar la busqueda en la fuente y mostrar el popup.
+        -- > trigger_characters : si no se tiene la cantidad de caracteres necesarios, es decir lenght(keyword) = 0,
+        --   pero esta antes de un caracter especial de la lista, se muestra el popup de completado
+        -- > group_index        : 'nvim-cmp' solo muestra los elementos de un 'group_index', el grupo source con menor
+        --   valor y que tenga elementos. Si el grupo no general elementos, se va con el siguiente grupo.
+        --   Por defecto su valor es 1.
+        -- > prioirity          : orden que asigna un peso mayor para aparecer en la lista de autocompletado dentro de
+        --   un mismo grupo 'group_index'. Valor entero que inicia desde 1, cuanto mayor es valor, mayor peso se tendra.
+        sources = {
+            { name = 'buffer', keyword_length = 3, },
+        },
+
+    })
 
 
---3. Autocompletion for ':'
---   > If you enabled `native_menu`, this won't work anymore).
---   > Source : cmdline, path
-cmp.setup.cmdline(':', {
-    mapping = cmp.mapping.preset.cmdline(),
-    sources = {
-        { name = 'cmdline'        , group_index = 1, keyword_length = 2, },
-        { name = 'path'           , group_index = 2, keyword_length = 2, },
-    },
-    matching = { disallow_symbol_nonprefix_matching = false },
-})
+    --3. Autocompletion for ':'
+    --   > If you enabled `native_menu`, this won't work anymore).
+    --   > Source : cmdline, path
+    cmp.setup.cmdline(':', {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = {
+            { name = 'cmdline'        , group_index = 1, keyword_length = 2, },
+            { name = 'path'           , group_index = 2, keyword_length = 2, },
+        },
+        matching = { disallow_symbol_nonprefix_matching = false },
+    })
+
+end

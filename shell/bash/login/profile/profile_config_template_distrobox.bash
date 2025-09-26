@@ -103,7 +103,7 @@
 # Eliminar variables (incluido de entorno) predefinidas
 #-----------------------------------------------------------------------------------
 
-# Establecdr el directorio de datos de tmux. No usar el default '/tmux' debido a que es usado por host.
+# Establecer el directorio de datos de tmux. No usar el default ('/tmp') debido a que es usado por host.
 export TMUX_TMPDIR="/var/tmp"
 
 # Variables autogeneradas por tmux

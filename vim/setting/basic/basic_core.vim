@@ -338,9 +338,9 @@ if g:use_tmux
 
     " Funcion que obtiene el texto de un tmux buffer y lo pega al buffer actual
     " Parameters :
+    " > 'use_insert_mode' : true si se usa en insert mode
     " > 'tmux_buffer_pos' : posicion en la pila del tmux buffer a escribir (inicia desde 1).
     " > 'record_type' : 'c' (carácter), 'l' (línea), 'b' (bloque).
-    " > 'insert_mode' : true si se usa en insert mode
     function! s:PasteTmuxAfterCursor(use_insert_mode, tmux_buffer_pos, record_type)
 
         if empty(a:record_type)
@@ -397,25 +397,17 @@ if g:use_tmux
             call setreg('x', l:txt)
         else
 
-            " TODO: No funciona 'l' ni 'b'
             " Obtener un arreglo con las lineas (requerido para un pegado en 'line' y 'block')
             let l:lines = split(l:txt, '\n')
             if a:record_type == "l"
                 call setreg('x', l:lines, 'V')
             else
 
-                " Calcular el ancho máximo del bloque (columna más ancha)
+                " Calcular el ancho máximo de la lineas del bloque (columna más ancha)
                 let l:width = max(map(copy(l:lines), {_, v -> len(v)}))
 
-                " Crear diccionario para el bloque visual
-                let l:block = {
-                    \ 'type': "\<C-V>",
-                    \ 'lines': l:lines,
-                    \ 'width': l:width
-                \ }
-
                 " Guardar en el registro
-                call setreg('x', l:block)
+                call setreg('x', l:lines, "\<C-v>" . l:width)
 
             endif
 
@@ -436,32 +428,32 @@ if g:use_tmux
     endfunction
 
 
-    " Normal mode: insertar contenido de buffer tmux despues del cursor actual
+    " Normal mode: Pegar el contenido de buffer tmux en un buffer vim despues del cursor actual
     nnoremap <C-F1>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,1,"c")<CR>
     nnoremap <C-F2>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,2,"c")<CR>
     nnoremap <C-F3>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,3,"c")<CR>
     nnoremap <C-F4>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,4,"c")<CR>
     nnoremap <C-F5>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,5,"c")<CR>
 
-    "nnoremap <C-F6>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,1,"b")<CR>
-    "nnoremap <C-F7>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,2,"b")<CR>
-    "nnoremap <C-F8>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,3,"b")<CR>
-    "nnoremap <C-F9>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,4,"b")<CR>
-    "nnoremap <C-F10> :<C-u>call <SID>PasteTmuxAfterCursor(v:false,5,"b")<CR>
+    nnoremap <C-F6>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,1,"b")<CR>
+    nnoremap <C-F7>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,2,"b")<CR>
+    nnoremap <C-F8>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,3,"b")<CR>
+    nnoremap <C-F9>  :<C-u>call <SID>PasteTmuxAfterCursor(v:false,4,"b")<CR>
+    nnoremap <C-F10> :<C-u>call <SID>PasteTmuxAfterCursor(v:false,5,"b")<CR>
 
 
-    " Insert mode: insertar contenido de buffer tmux despues del cursor actual
+    " Insert mode: Pegar contenido de buffer tmux en un buffer vim despues del cursor actual
     inoremap <expr> <C-F1>  <SID>PasteTmuxAfterCursor(v:true,1,"c")
     inoremap <expr> <C-F2>  <SID>PasteTmuxAfterCursor(v:true,2,"c")
     inoremap <expr> <C-F3>  <SID>PasteTmuxAfterCursor(v:true,3,"c")
     inoremap <expr> <C-F4>  <SID>PasteTmuxAfterCursor(v:true,4,"c")
     inoremap <expr> <C-F5>  <SID>PasteTmuxAfterCursor(v:true,5,"c")
 
-    "inoremap <expr> <C-F6>  <SID>PasteTmuxAfterCursor(v:true,1,"b")
-    "inoremap <expr> <C-F7>  <SID>PasteTmuxAfterCursor(v:true,2,"b")
-    "inoremap <expr> <C-F8>  <SID>PasteTmuxAfterCursor(v:true,3,"b")
-    "inoremap <expr> <C-F9>  <SID>PasteTmuxAfterCursor(v:true,4,"b")
-    "inoremap <expr> <C-F10> <SID>PasteTmuxAfterCursor(v:true,5,"b")
+    inoremap <expr> <C-F6>  <SID>PasteTmuxAfterCursor(v:true,1,"b")
+    inoremap <expr> <C-F7>  <SID>PasteTmuxAfterCursor(v:true,2,"b")
+    inoremap <expr> <C-F8>  <SID>PasteTmuxAfterCursor(v:true,3,"b")
+    inoremap <expr> <C-F9>  <SID>PasteTmuxAfterCursor(v:true,4,"b")
+    inoremap <expr> <C-F10> <SID>PasteTmuxAfterCursor(v:true,5,"b")
 
 
 

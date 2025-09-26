@@ -562,6 +562,7 @@ if g:clipboard_writer_mode != 1 && g:clipboard_writer_mode != 2
         "Si usa el archivo de configuracion './tmux/tmux.conf', se establece la variable de entorno 'TMUX_SET_CLIPBOARD'
         "con valor 1 o 2, si se configurado tmux con soporte a OSC 52
         if ($TMUX_SET_CLIPBOARD == 1) || ($TMUX_SET_CLIPBOARD == 2)
+        "if $TMUX_SET_CLIPBOARD == 1
             let s:terminal_use_osc54 = v:true
         endif
 
@@ -627,111 +628,120 @@ if g:clipboard_writer_mode != 1 && g:clipboard_writer_mode != 2
 endif
 
 "Determinar si existe el backend para escribir en el clipboard
-let g:clipboard_writer_cmd = ''
+if !exists("g:clipboard_writer_cmd")
 
-if g:clipboard_writer_mode == 2
+    let g:clipboard_writer_cmd = ''
 
-    "Si es Linux no-WSL
+    if g:clipboard_writer_mode == 2
+
+        "Si es Linux no-WSL
+        if g:os_type == 2
+
+            if exists('$WAYLAND_DISPLAY')
+
+                if executable('wl-copy')
+                    let g:clipboard_writer_cmd='wl-copy'
+                endif
+
+            elseif exists('$DISPLAY')
+
+                if executable('xclip')
+
+                    let g:clipboard_writer_cmd='xclip -i -selection clipboard'
+
+                elseif executable('xclip')
+
+                    let g:clipboard_writer_cmd='xsel -i -b'
+
+                endif
+
+            endif
+
+        "Si es Linux WSL (sobre Windows). Siempre debe usarse el clipboard de Windows, debido a que el emulador de terminal
+        "siempre sera un programa windows que accedera a dicho clipboard y WSL2 no implementa un clipboard.
+        elseif g:os_type == 3
+
+            if executable('/mnt/c/windows/system32/clip.exe')
+                let g:clipboard_writer_cmd='/mnt/c/windows/system32/clip.exe'
+            endif
+
+        "Si es Windows
+        elseif g:os_type == 0
+
+            if executable('clip.exe')
+                let g:clipboard_writer_cmd='clip.exe'
+            endif
+
+        "Si es MacOS
+        elseif g:os_type == 1
+
+            if executable('pbcopy')
+                let g:clipboard_writer_cmd='pbcopy'
+            endif
+
+        endif
+
+        "Si no existe el comando: ¿forzar el uso de OSC-52?
+        if g:clipboard_writer_cmd == ''
+            "let g:clipboard_writer_mode = 1
+            let g:clipboard_writer_mode = 9
+        endif
+
+    endif
+
+endif
+
+"Determinar si existe el backend para escribir en el clipboard
+if !exists("g:clipboard_reader_cmd")
+
+    let g:clipboard_reader_cmd = ''
+
     if g:os_type == 2
 
+        "Si es Linux no-WSL
         if exists('$WAYLAND_DISPLAY')
 
-            if executable('wl-copy')
-                let g:clipboard_writer_cmd='wl-copy'
+            if executable('wl-paste')
+                let g:clipboard_reader_cmd='wl-paste'
             endif
 
         elseif exists('$DISPLAY')
 
             if executable('xclip')
 
-                let g:clipboard_writer_cmd='xclip -i -selection clipboard'
+                let g:clipboard_reader_cmd='xclip -o -selection clipboard'
 
             elseif executable('xclip')
 
-                let g:clipboard_writer_cmd='xsel -i -b'
+                let g:clipboard_reader_cmd='xsel --clipboard --output'
 
             endif
 
         endif
 
-    "Si es Linux WSL (sobre Windows). Siempre debe usarse el clipboard de Windows, debido a que el emulador de terminal
-    "siempre sera un programa windows que accedera a dicho clipboard y WSL2 no implementa un clipboard.
     elseif g:os_type == 3
 
-        if executable('/mnt/c/windows/system32/clip.exe')
-            let g:clipboard_writer_cmd='/mnt/c/windows/system32/clip.exe'
+        "Si es Linux WSL (sobre Windows). Siempre debe usarse el clipboard de Windows, debido a que el emulador de terminal
+        "siempre sera un programa windows que accedera a dicho clipboard y WSL2 no implementa un clipboard.
+        "/mnt/c/Program Files/PowerShell/7/pwsh.exe.
+        if executable('pwsh.exe')
+            let g:clipboard_reader_cmd='pwsh.exe -NoProfile -Command "Get-Clipboard"'
         endif
 
-    "Si es Windows
     elseif g:os_type == 0
 
-        if executable('clip.exe')
-            let g:clipboard_writer_cmd='clip.exe'
+        "Si es Windows
+        if executable('pwsh.exe')
+            let g:clipboard_reader_cmd='pwsh.exe -NoProfile -Command "Get-Clipboard"'
         endif
 
-    "Si es MacOS
     elseif g:os_type == 1
 
-        if executable('pbcopy')
-            let g:clipboard_writer_cmd='pbcopy'
+        "Si es MacOS
+        if executable('pbpaste')
+            let g:clipboard_reader_cmd='pbpaste'
         endif
 
-    endif
-
-    "Si no existe el comando: ¿forzar el uso de OSC-52?
-    if g:clipboard_writer_cmd == ''
-        "let g:clipboard_writer_mode = 1
-        let g:clipboard_writer_mode = 9
-    endif
-
-endif
-
-"Determinar si existe el backend para escribir en el clipboard
-let g:clipboard_reader_cmd = ''
-
-if g:os_type == 2
-
-    "Si es Linux no-WSL
-    if exists('$WAYLAND_DISPLAY')
-
-        if executable('wl-paste')
-            let g:clipboard_reader_cmd='wl-paste'
-        endif
-
-    elseif exists('$DISPLAY')
-
-        if executable('xclip')
-
-            let g:clipboard_reader_cmd='xclip -o -selection clipboard'
-
-        elseif executable('xclip')
-
-            let g:clipboard_reader_cmd='xsel --clipboard --output'
-
-        endif
-
-    endif
-
-elseif g:os_type == 3
-
-    "Si es Linux WSL (sobre Windows). Siempre debe usarse el clipboard de Windows, debido a que el emulador de terminal
-    "siempre sera un programa windows que accedera a dicho clipboard y WSL2 no implementa un clipboard.
-    if executable('pwsh.exe')
-        let g:clipboard_reader_cmd='pwsh.exe -NoProfile -Command "Get-Clipboard"'
-    endif
-
-elseif g:os_type == 0
-
-    "Si es Windows
-    if executable('pwsh.exe')
-        let g:clipboard_reader_cmd='pwsh.exe -NoProfile -Command "Get-Clipboard"'
-    endif
-
-elseif g:os_type == 1
-
-    "Si es MacOS
-    if executable('pbpaste')
-        let g:clipboard_reader_cmd='pbpaste'
     endif
 
 endif
@@ -1023,9 +1033,9 @@ endif
 if g:clipboard_reader_cmd != ''
 
     " Parameters :
+    " > 'use_insert_mode' : true si se usa en insert mode
     " > 'record_type' : 'c' (carácter), 'l' (línea), 'b' (bloque).
-    " > 'insert_mode' : true si se usa en insert mode
-    function! s:PasteClipboardAfterCursor(insert_mode, record_type) abort
+    function! s:PasteClipboardAfterCursor(use_insert_mode, record_type) abort
 
         if empty(a:record_type)
             let a:record_type = "c"
@@ -1059,7 +1069,6 @@ if g:clipboard_reader_cmd != ''
             call setreg('y', l:txt)
         else
 
-            " TODO: No funciona 'l' ni 'b'
             " Obtener un arreglo con las lineas (requerido para un pegado en 'line' y 'block')
             let l:lines = split(l:txt, '\n')
             if a:record_type == "l"
@@ -1069,15 +1078,8 @@ if g:clipboard_reader_cmd != ''
                 " Calcular el ancho máximo del bloque (columna más ancha)
                 let l:width = max(map(copy(l:lines), {_, v -> len(v)}))
 
-                " Crear diccionario para el bloque visual
-                let l:block = {
-                    \ 'type': "\<C-V>",
-                    \ 'lines': l:lines,
-                    \ 'width': l:width
-                \ }
-
                 " Guardar en el registro
-                call setreg('y', l:block)
+                call setreg('y', l:lines, "\<C-v>" . l:width)
 
             endif
 
@@ -1087,7 +1089,7 @@ if g:clipboard_reader_cmd != ''
         "5. Pegar justo después del cursor
         if a:use_insert_mode
         "if mode() =~ 'i'
-            "call feedkeys("\<C-o>\"xp", 'n')
+            "call feedkeys("\<C-o>\"yp", 'n')
             "return ''
             return "\<C-o>\"yp"
         endif
@@ -1098,12 +1100,12 @@ if g:clipboard_reader_cmd != ''
     endfunction
 
     " Normal mode: insertar contenido de buffer tmux despues del cursor actual
-    "nnoremap <C-F11> :<C-u>call <SID>PasteClipboardAfterCursor(v:false,"b")<CR>
-    "nnoremap <C-F12> :<C-u>call <SID>PasteClipboardAfterCursor(v:false,"l")<CR>
+    nnoremap <C-F11> :<C-u>call <SID>PasteClipboardAfterCursor(v:false,"b")<CR>
+    nnoremap <C-F12> :<C-u>call <SID>PasteClipboardAfterCursor(v:false,"l")<CR>
 
     " Normal insert: insertar contenido de buffer tmux despues del cursor actual
-    "inoremap <expr> <C-F11> <SID>PasteClipboardAfterCursor(v:true,"b")
-    "inoremap <expr> <C-F12> <SID>PasteClipboardAfterCursor(v:true,"l")
+    inoremap <expr> <C-F11> <SID>PasteClipboardAfterCursor(v:true,"b")
+    inoremap <expr> <C-F12> <SID>PasteClipboardAfterCursor(v:true,"l")
 
 endif
 

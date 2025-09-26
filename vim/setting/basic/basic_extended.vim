@@ -54,43 +54,47 @@ endif
 "       https://github.com/girishji/vimsuggest/blob/main/doc/vimsuggest.txt
 "
 
-packadd vimsuggest
+if g:cmdline_completion
 
-" Command Completion Configuration
-let s:vim_suggest = {}
-let s:vim_suggest.cmd = {
-    \ 'enable': v:true,
-    \ 'pum': v:true,
-    \ 'exclude': [],
-    \ 'onspace': ['b\%[uffer]','colo\%[rscheme]'],
-    \ 'alwayson': v:true,
-    \ 'popupattrs': {},
-    \ 'wildignore': v:true,
-    \ 'addons': v:true,
-    \ 'trigger': 't',
-    \ 'reverse': v:false,
-    \ 'prefixlen': 2,
-    \ 'complete_sg': v:false,
-\ }
+    packadd vimsuggest
 
-" Search Completion Configuration
-let s:vim_suggest.search = {
-    \ 'enable': v:true,
-    \ 'pum': v:true,
-    \ 'fuzzy': v:false,
-    \ 'alwayson': v:true,
-    \ 'popupattrs': {
-    \   'maxheight': 12
-    \ },
-    \ 'range': 100,
-    \ 'timeout': 200,
-    \ 'async': v:true,
-    \ 'async_timeout': 3000,
-    \ 'async_minlines': 1000,
-    \ 'highlight': v:true,
-    \ 'trigger': 't',
-    \ 'prefixlen': 3,
-\ }
+    " Command Completion Configuration
+    let s:vim_suggest = {}
+    let s:vim_suggest.cmd = {
+        \ 'enable': v:true,
+        \ 'pum': v:true,
+        \ 'exclude': [],
+        \ 'onspace': ['b\%[uffer]','colo\%[rscheme]'],
+        \ 'alwayson': v:true,
+        \ 'popupattrs': {},
+        \ 'wildignore': v:true,
+        \ 'addons': v:true,
+        \ 'trigger': 't',
+        \ 'reverse': v:false,
+        \ 'prefixlen': 2,
+        \ 'complete_sg': v:false,
+    \ }
 
-" To apply your configuration
-call g:VimSuggestSetOptions(s:vim_suggest)
+    " Search Completion Configuration
+    let s:vim_suggest.search = {
+        \ 'enable': v:true,
+        \ 'pum': v:true,
+        \ 'fuzzy': v:false,
+        \ 'alwayson': v:true,
+        \ 'popupattrs': {
+        \   'maxheight': 12
+        \ },
+        \ 'range': 100,
+        \ 'timeout': 200,
+        \ 'async': v:true,
+        \ 'async_timeout': 3000,
+        \ 'async_minlines': 1000,
+        \ 'highlight': v:true,
+        \ 'trigger': 't',
+        \ 'prefixlen': 3,
+    \ }
+
+    " To apply your configuration
+    call g:VimSuggestSetOptions(s:vim_suggest)
+
+endif
