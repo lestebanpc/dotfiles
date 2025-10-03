@@ -106,6 +106,23 @@ mod.check_for_updates = false
 -- Setting> Font
 ------------------------------------------------------------------------------------
 
+-- Ruta de los folderes de directorios personalizados (diferentes a la rutas reservadas del sistema) donde estan los archivos de fuentes.
+-- Usado cuando no tiene acceso a colocar archivos de fuentes en las rutas reservadas para el sistema o el usuario actual.
+if m_custom_config.font_dirs ~= nil then
+
+    mod.font_dirs = m_custom_config.font_dirs
+
+end
+
+-- Si es 'ConfigDirsOnly' solo se usaran las fuentes integradas y las fuentes especificadas en los folderes 'font_dirs' (descarta las fuentes
+-- del sistema).
+if m_custom_config.font_locator ~= nil then
+
+    --font_locator = "ConfigDirsOnly",
+    mod.font_locator = m_custom_config.font_locator
+
+end
+
 -- Specifying an ordered list of fonts.
 -- when resolving text into glyphs the first font in the list is consulted, and if the glyph isn't present in that font, WezTerm proceeds to the next font in the fallback list.
 mod.font = mm_wezterm.font_with_fallback({
@@ -122,7 +139,6 @@ mod.font = mm_wezterm.font_with_fallback({
 -- Specifies the size of the font, measured in points. You may use fractional point sizes, such as 13.3, to fine tune the size.
 -- The default font size is 12.0
 mod.font_size = m_custom_config.font_size
---mod.font_size = 11
 
 --config.bold_brightens_ansi_colors = true
 mod.warn_about_missing_glyphs = true

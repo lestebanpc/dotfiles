@@ -254,7 +254,6 @@ Consideraciones:
         - Para representar teclas que requieren que ambas las teclas se apretar ambos en forma conjunta para activar una acción.
              - Usualmente, se presiona la 1ra tecla y manteniendo apretado esta, se presiona la segundo, este genera el evento que dispara la acción.
 	- `key1, key2`
-	    -
 	    - Un caso especial son cuando ambos letras representan caracteres imprimibles donde se puede omitir el  separador `,`.
              - Por ejemplo `a, b` se puede representar como `ab`.
     - Si la tecla es un letra imprimible y representa una letra del alfabeto se usara:

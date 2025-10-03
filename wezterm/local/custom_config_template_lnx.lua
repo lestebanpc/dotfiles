@@ -122,6 +122,18 @@ local mod= {
     --  3 > Solo muestra el 'tab bar' el cual incluyen los botones cerrar, maximizar, minimizar (estilo 'INTEGRATED_BUTTONS|RESIZE')
     windows_style = 2,
 
+    -- Ruta de los folderes de directorios personalizados (diferentes a la rutas reservadas del sistema) donde estan los archivos de fuentes.
+    -- Usado cuando no tiene acceso a colocar archivos de fuentes en las rutas reservadas para el sistema o el usuario actual.
+    font_dirs = nil,
+    --font_dirs = {
+    --    '/var/opt/tools/'
+    --},
+
+    -- Si es 'ConfigDirsOnly' solo se usaran las fuentes integradas y las fuentes especificadas en los folderes 'font_dirs' (descarta las fuentes
+    -- del sistema).
+    --font_locator = "ConfigDirsOnly",
+    font_locator = nil,
+
 
     --------------------------------------------------------------------------------
     -- Setting> Campos para personalizar Dominios

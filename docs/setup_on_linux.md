@@ -44,7 +44,7 @@ cd ~/.files
 git pull main origin
 
 # Opc2: Actualizacion completa
-git fetch main origin
+git fetch origin main
 git merge FETCH_HEAD
 
 # Opc3: Actualizacion superficial (solo el ultimo commit)
@@ -192,7 +192,7 @@ cd ~/.files
 git pull main origin
 
 # Opc2: Actualizacion completa
-git fetch main origin
+git fetch origin main
 git merge FETCH_HEAD
 
 # Opc3: Actualizacion superficial (solo el ultimo commit)

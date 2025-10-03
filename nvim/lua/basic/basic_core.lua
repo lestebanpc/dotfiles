@@ -257,7 +257,8 @@ local bufferline_cfg = {
 if not use_cs_tokyonight then
 
     local mocha = require("catppuccin.palettes").get_palette("mocha")
-    bufferline_cfg.highlights = require("catppuccin.groups.integrations.bufferline").get_theme({
+    --bufferline_cfg.highlights = require("catppuccin.groups.integrations.bufferline").get_theme({
+    bufferline_cfg.highlights = require("catppuccin.special.bufferline").get_theme({
         styles = { "italic", "bold" },
         custom = {
             all = {
