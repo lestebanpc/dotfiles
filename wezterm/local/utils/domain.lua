@@ -71,6 +71,8 @@ local m_custom = {
     --  > Durante el primer inicio del emulador de terminal 'wezterm' y es usado para calcular los dominios 'exec' generados automaticamente.
     --  > Cuando se desea crear o ir a un workspace, donde muestra los 'path' o 'tag' asociados es esta distribucion.
     external_running_distribution = nil,
+
+    pwsh_path = nil,
 }
 
 -- Miembros privados
@@ -210,7 +212,8 @@ function mod.setup(
     p_ssh_domains, p_filter_config_ssh, p_filter_config_ssh_mux,
     p_unix_domains, p_external_unix_domains,
     p_tls_clients,
-    p_exec_domain_datas, p_load_containers, p_external_running_distribution)
+    p_exec_domain_datas, p_load_containers, p_external_running_distribution,
+    p_pwsh_path)
 
     -- Establecer los valores
     if p_default_domain == nil or p_default_domain == '' then
@@ -227,6 +230,7 @@ function mod.setup(
     m_custom.external_unix_domains = p_external_unix_domains
 
     m_custom.tls_clients = p_tls_clients
+    m_custom.pwsh_path = p_pwsh_path
 
     m_custom.exec_domain_datas = p_exec_domain_datas
 
@@ -659,40 +663,60 @@ end
 
 local function m_cbk_bash(p_spawncommand)
 
-        p_spawncommand.args = {
-            'bash',
-        }
-        return p_spawncommand
+    p_spawncommand.args = {
+        'bash',
+    }
+    return p_spawncommand
 
 end
 
 
 local function m_cbk_powershell_core(p_spawncommand)
 
-        p_spawncommand.args = {
-            'pwsh',
-        }
-        return p_spawncommand
+    local pwsh_path = 'pwsh'
+    if m_custom.pwsh_path ~= nil then
+        pwsh_path = m_custom.pwsh_path .. '/pwsh'
+    end
+
+    p_spawncommand.args = {
+        pwsh_path,
+    }
+    return p_spawncommand
+
+end
+
+
+local function m_cbk_powershell_core_over_win(p_spawncommand)
+
+    local pwsh_cmd = 'pwsh.exe -l'
+    if m_custom.pwsh_path ~= nil then
+        pwsh_cmd = m_custom.pwsh_path .. '/pwsh.exe -l'
+    end
+
+    p_spawncommand.args = {
+        'powershell', '-NoLogo', '-NoProfile', '-Command', pwsh_cmd,
+    }
+    return p_spawncommand
 
 end
 
 
 local function m_cbk_windows_cmd(p_spawncommand)
 
-        p_spawncommand.args = {
-            'cmd',
-        }
-        return p_spawncommand
+    p_spawncommand.args = {
+        'cmd',
+    }
+    return p_spawncommand
 
 end
 
 
 local function m_cbk_windows_powershell(p_spawncommand)
 
-        p_spawncommand.args = {
-            'powershell',
-        }
-        return p_spawncommand
+    p_spawncommand.args = {
+        'powershell',
+    }
+    return p_spawncommand
 
 end
 
@@ -805,6 +829,26 @@ function mod.get_exec_domains()
 
         m_exec_infos[l_domain_name] = {
             type = 'powershell',
+            icon = l_subtype_info.icon,
+            color = l_subtype_info.color,
+            is_local_fs = true,
+            domain_category = 'local',
+        }
+
+        -- Shel 'powershell'
+        l_subtype_info = l_type_info.types['pwsh']
+        l_domain_name = 'pwsh2'
+
+        table.insert(l_domains,
+            mm_wezterm.exec_domain(
+                l_domain_name,
+                m_cbk_powershell_core_over_win,
+                'Powershell Core over Windows Powershell'
+            )
+        )
+
+        m_exec_infos[l_domain_name] = {
+            type = 'pwsh',
             icon = l_subtype_info.icon,
             color = l_subtype_info.color,
             is_local_fs = true,

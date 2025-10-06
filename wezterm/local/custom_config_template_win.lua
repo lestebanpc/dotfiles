@@ -134,6 +134,10 @@ local mod= {
     --font_locator = "ConfigDirsOnly",
     font_locator = nil,
 
+    -- Ruta donde se encuentra 'pwsh' (si no se especifica, lo buscara dentro del PATH)
+    pwsh_path = nil,
+    --pwsh_path = 'D:/app/powerShell',
+
 
     --------------------------------------------------------------------------------
     -- Setting> Campos para personalizar Dominios
@@ -228,20 +232,38 @@ local mod= {
     -- Setting> Parametros de inicio de Terminal GUI (usando subcomando 'start')
     --------------------------------------------------------------------------------
     --
-    -- No aplica si se inicia sin subcomandos ('wezterm-gui' o 'wezterm') y se configura el parametro 'config.default_gui_startup_args'
+    -- No aplica si se inicia sin subcomandos (de 'wezterm-gui' o 'wezterm') y se configura el parametro 'config.default_gui_startup_args'
     -- que no sea '{"start"}'.
     -- Es decir, no aplica si la terminal se crea usando 'wezterm connect', 'wezterm ssh' o 'wezterm serial'.
     --
 
-    -- Establecer el dominio por defecto a usar.
-    -- Si no se define el domonio por defecto sera 'local'.
-    default_domain = "pwsh",
-    --default_domain = nil,
+    -- Establecer el dominio por defecto a usar. Si no se define el domonio por defecto sera 'local'.
+    -- > Los dominios built-in de Wezterm:
+    --   > local            : Dominio local. Inicia un interprete shell por defecto del sistema operativo (en Windows es 'cmd').
+    --   > unix             : Dominio de tipo unix (solo para Linux). Ruta de socket IPC para acceder al multiplexor local de wezterm).
+    --   > WSL:<distro-wsl> : Dominio de tipo wsl (solo Windows).
+    -- > Los dominios 'exec' creados por defecto por el archivos de configuración:
+    --   > bash             : Inicia un interprete shell bash (solo Linux y MacOS).
+    --   > pwsh             : Inicia un interprete shell Powershell Core.
+    --   > pwsh2            : Inicia un interprete shell Powershell Core sobre Windows Powershell (solo en Windows).
+    --                        Uselo cuando solo tiene acceso a iniciar shell 'Windows Powershell'
+    --   > powershell       : Inicia un interprete shell Windows Powershell (solo Windows).
+    default_domain = nil,
+    --default_domain = "pwsh",
+    --default_domain = "pwsh2",
     --default_domain = "local",
     --default_domain = "WSL:ubuntu",
 
 
+    -- Si el dominio por defecto esta asociado a un interpre shell, puede ejecutar un determinado comando dentro del interprete cuando este
+    -- se inicia.
+    -- Esto es util en windows, cuando esta bloquedo el acceso a 'cmd' y tiene acceso a otro interprete shell.
+    default_prog = nil,
+    --default_prog = { 'D:/app/powerShell/pwsh.exe', '-l' },
+    --default_prog = { 'C:/app/powerShell/pwsh.exe', '-l' },
+
 }
+
 
 
 ------------------------------------------------------------------------------------

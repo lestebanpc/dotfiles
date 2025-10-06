@@ -390,8 +390,8 @@ mm_udomain.setup(
     m_custom_config.ssh_domains, m_custom_config.filter_config_ssh, m_custom_config.filter_config_ssh_mux,
     m_custom_config.unix_domains, m_custom_config.external_unix_domains,
     m_custom_config.tls_clients,
-    m_custom_config.exec_domain_datas, m_custom_config.load_containers,
-    m_custom_config.external_running_distribution)
+    m_custom_config.exec_domain_datas, m_custom_config.load_containers, m_custom_config.pwsh_path,
+    m_custom_config.external_running_distribution, m_custom_config.pwsh_path)
 
 -- Cargar los dominios WSL
 -- > URLs:
@@ -551,7 +551,9 @@ end
 -- del usuario actual que usa la terminal GUI.
 -- > En otros dominios su valor se especifica cuando se define el dominio. Excepto cuando es un 'multiplexing domain' el shell a usar
 --   siempre es el shell predterminado donde se ejecuta el 'multiplexer domain'.
---mod.default_prog = nil
+if m_custom_config.default_prog ~= nil then
+    mod.default_prog = m_custom.default_prog
+end
 
 
 
