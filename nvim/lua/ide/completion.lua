@@ -98,9 +98,15 @@ require('cmp_luasnip_choice').setup({
     auto_open = true,
 });
 
--- Fuente de completado para Copilot
-if vim.g.use_ai_plugins == true then
-    require("copilot_cmp").setup()
+
+-- Si se usa como fuente de completado a un LLM (local o externo) o un broker LLM
+if vim.g.use_ai_completion ~= vim.NIL then
+
+    -- Si para el completado se usa el broker LLM 'GitHub Copilot'
+    if vim.g.use_ai_completion == 0 then
+        require("copilot_cmp").setup()
+    end
+
 end
 
 -- Fuentes de completado: Otros
@@ -155,25 +161,31 @@ local comparators_list = {
 
 }
 
-if vim.g.use_ai_plugins == true then
+-- Si se usa como fuente de completado a un LLM (local o externo) o un broker LLM
+if vim.g.use_ai_completion ~= vim.NIL then
 
-    comparators_list = {
+    -- Si para el completado se usa el broker LLM 'GitHub Copilot'
+    if vim.g.use_ai_completion == 0 then
 
-        require("copilot_cmp.comparators").prioritize,
+        comparators_list = {
 
-        -- Lista de funciones comparadores por defecto de 'nvim-cmp'
-        cmp.config.compare.offset,
-        -- cmp.config.compare.scopes, --this is commented in nvim-cmp too
-        cmp.config.compare.exact,
-        cmp.config.compare.score,
-        cmp.config.compare.recently_used,
-        cmp.config.compare.locality,
-        cmp.config.compare.kind,
-        cmp.config.compare.sort_text,
-        cmp.config.compare.length,
-        cmp.config.compare.order,
+            require("copilot_cmp.comparators").prioritize,
 
-    }
+            -- Lista de funciones comparadores por defecto de 'nvim-cmp'
+            cmp.config.compare.offset,
+            -- cmp.config.compare.scopes, --this is commented in nvim-cmp too
+            cmp.config.compare.exact,
+            cmp.config.compare.score,
+            cmp.config.compare.recently_used,
+            cmp.config.compare.locality,
+            cmp.config.compare.kind,
+            cmp.config.compare.sort_text,
+            cmp.config.compare.length,
+            cmp.config.compare.order,
+
+        }
+
+    end
 
 end
 
@@ -195,18 +207,37 @@ local insert_sources = {
 }
 
 
-if vim.g.use_ai_plugins == true then
+-- Si se usa como fuente de completado a un LLM (local o externo) o un broker LLM
+if vim.g.use_ai_completion ~= vim.NIL then
 
-    insert_sources = {
-        { name = "copilot"        , group_index = 1, priority = 40, },
-        { name = 'nvim_lsp'       , group_index = 1, priority = 30, keyword_length = 1, trigger_characters = { '.', '[' }, },
-        { name = 'luasnip'        , group_index = 1, priority = 29, },
-        { name = 'luasnip_choice' , group_index = 1, priority = 28, },
-        { name = 'path'           , group_index = 1, priority = 21, },
-        { name = 'buffer'         , group_index = 1, priority = 20, keyword_length = 3, },
-    }
+    -- Si para el completado se usa el broker LLM 'GitHub Copilot'
+    if vim.g.use_ai_completion == 0 then
+
+        insert_sources = {
+            { name = "copilot"        , group_index = 1, priority = 40, },
+            { name = 'nvim_lsp'       , group_index = 1, priority = 30, keyword_length = 1, trigger_characters = { '.', '[' }, },
+            { name = 'luasnip'        , group_index = 1, priority = 29, },
+            { name = 'luasnip_choice' , group_index = 1, priority = 28, },
+            { name = 'path'           , group_index = 1, priority = 21, },
+            { name = 'buffer'         , group_index = 1, priority = 20, keyword_length = 3, },
+        }
+
+    -- Si para el completado se usa el LLM (local y externo) y/o broker LLM
+    elseif vim.g.use_ai_completion == 1 then
+
+        insert_sources = {
+            { name = "minuet"         , group_index = 1, priority = 40, },
+            { name = 'nvim_lsp'       , group_index = 1, priority = 30, keyword_length = 1, trigger_characters = { '.', '[' }, },
+            { name = 'luasnip'        , group_index = 1, priority = 29, },
+            { name = 'luasnip_choice' , group_index = 1, priority = 28, },
+            { name = 'path'           , group_index = 1, priority = 21, },
+            { name = 'buffer'         , group_index = 1, priority = 20, keyword_length = 3, },
+        }
+
+    end
 
 end
+
 
 --2. Configuración de autocompletado del modo insert
 cmp.setup({
@@ -255,6 +286,10 @@ cmp.setup({
     --    comparators = comparators_list,
     --},
 
+    --performance = {
+    --    fetching_timeout = 2000,
+    --},
+
     -- Controla la apariencia de la ventana donde se muestra la documentación: usar bordes
     window = {
         documentation = cmp.config.window.bordered(),
@@ -296,7 +331,8 @@ cmp.setup({
                      Event = " ",
                      Operator = "󰆕 ",
                      TypeParameter = "󰅲 ",
-                     Copilot = "",
+                     Copilot = " ",
+                     Minuet = " ",
                }
 
                 --Mostrar tipo de elemento con su icono antepuesto (concetenadolo)
@@ -310,6 +346,7 @@ cmp.setup({
                     path = '',
                     nvim_lsp_signature_help = '⋗',
                     copilot = "",
+                    minuet = "",
                 }
 
                 --Mostrar solo el icono (no se concatena el icono con el nombre)

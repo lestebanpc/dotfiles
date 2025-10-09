@@ -141,25 +141,20 @@
 "\}
 
 
-" Habilitar el plugin de AI.
-" > Para 'AI Autocompletion' se usara la capacidade de autocompletado de 'GitHub Copilot' y estara por
-"   defecto desabilitado.
-"   > Para habilitarlo use ':Copilot enable'
-"   > Para CoC (VIM/NeoVIM), se usara 'github/copilot.vim' y el plugin de CoC '@hexuhua/coc-copilot'.
-"   > Para NeoVIM y no usas CoC, se usara 'zbirenbaum/copilot.lua'.
-" > Para 'AI Agent' se usara Avente, usando la API ofrecido por 'GitHub Copilot'.
-"   > Puede usar avante con el 'AI Autocompletion' desactivado.
-" El valor real, se obtendra segun orden de prioridad:
-"  > El valor definido por la variable de entorno 'USE_AI=0'
-"    > 0 si es 'true'
-"    > 1 si es false.
-"    > Cualquiere otro valor se considera no definido.
-"  > El valor definido por esta variable VIM.
-"    > v:true (o diferente a '0 ') si es 'true'
-"    > v:false (o '0') si es false.
-"    > Si no se especifica, se considera no definido
-" Si no se define, su valor por defecto es 'v:false' (valor 0).
-"let g:use_ai_plugins = v:false
+" Habilitar el plugin de 'AI Autocompletion' (solo NeoVIM).
+" > Para 'AI Autocompletion' se configurara como una fuente de completado de NeoVIM.
+" > El valor real, se obtendra segun orden de prioridad:
+"   > El valor definido por la variable de entorno 'AI_COMPLETION'
+"     > 0 si usara el broker LLM de 'GitHub Copilot' usando el plugin 'zbirenbaum/copilot.lua'.
+"     > 1 si usara un LLM (local o externo) o un broker LLM soportado por el plugin 'milanglacier/minuet-ai.nvim'.
+"     > Cualquier otro valor se considera no definido.
+"  > El valor definido por esta variable VIM 'g:use_ai_completion'.
+"     > 0 si usara el broker LLM de 'GitHub Copilot' usando el plugin 'zbirenbaum/copilot.lua'.
+"     > 1 si usara el LLM (local o externo) o ub broker LLM soportado por el plugin 'milanglacier/minuet-ai.nvim'.
+"     > Cualquier otro valor se considera no definido.
+" Si no esta definido, no se usara ningun plugin de 'AI autocompletion'.
+"let g:use_ai_completion = 0
+"let g:use_ai_completion = v:null
 
 
 " Si esta habilitado el 'AI Autocompletion', a que archivos se habiltara el autocompletado por AI,
@@ -180,6 +175,26 @@ let g:completion_filetypes = {
 \   'javascript'  : v:true,
 \   'typescript'  : v:true,
 \}
+
+
+" Habilitar el plugin de 'AI Agent' (solo NeoVIM).
+" > Para 'AI Agent' se puede usar un agente integrado dentro del editor y integrarse a un agente externo usualmente
+"   de tipo CLI.
+" > El valor real, se obtendra segun orden de prioridad:
+"   > El valor definido por la variable de entorno 'AI_AGENT'.
+"     > 0 Si usara un 'AI agent' integrado con NeoVIM usando el plugin 'yetone/avante.nvim'.
+"       > Siempre estara desactivado su capacidad de 'AI autocomplete' debido a que no se integra como fuente de autocompletado.
+"     > 1 Si integra con 'AI agent' externo en este caso un 'CLI AI agent' conocido como 'OpenCode'
+"       > Se usara el plugin 'NickvanDyke/opencode.nvim'.
+"     > Cualquier otro valor se considera no definido.
+"  > El valor definido por esta variable VIM 'g:use_ai_agent'.
+"     > 0 Si usara un 'AI agent' integrado con NeoVIM usando el plugin 'yetone/avante.nvim'.
+"       > Siempre estara desactivado su capacidad de 'AI autocomplete' debido a que no se integra como fuente de autocompletado.
+"     > 1 Si integra con 'AI agent' externo en este caso un 'CLI AI agent' conocido como 'OpenCode'
+"       > Se usara el plugin 'NickvanDyke/opencode.nvim'.
+"     > Cualquier otro valor se considera no definido.
+" Si no esta definido, no se usara ningun plugin de agente AI.
+"let g:use_ai_agent = 1
 
 
 " Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.

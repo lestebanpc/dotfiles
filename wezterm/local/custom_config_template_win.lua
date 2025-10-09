@@ -136,7 +136,7 @@ local mod= {
 
     -- Ruta donde se encuentra 'pwsh' (si no se especifica, lo buscara dentro del PATH)
     pwsh_path = nil,
-    --pwsh_path = 'D:/app/powerShell',
+    --pwsh_path = 'D:/apps/powershell',
 
 
     --------------------------------------------------------------------------------
@@ -246,9 +246,10 @@ local mod= {
     --   > bash             : Inicia un interprete shell bash (solo Linux y MacOS).
     --   > pwsh             : Inicia un interprete shell Powershell Core.
     --   > pwsh2            : Inicia un interprete shell Powershell Core sobre Windows Powershell (solo en Windows).
-    --                        Uselo cuando solo tiene acceso a iniciar shell 'Windows Powershell'
+    --                        Uselo cuando solo tiene acceso a iniciar shell 'Windows Powershell'.
     --   > powershell       : Inicia un interprete shell Windows Powershell (solo Windows).
     default_domain = nil,
+    --default_domain = "powershell",
     --default_domain = "pwsh",
     --default_domain = "pwsh2",
     --default_domain = "local",
@@ -259,8 +260,8 @@ local mod= {
     -- se inicia.
     -- Esto es util en windows, cuando esta bloquedo el acceso a 'cmd' y tiene acceso a otro interprete shell.
     default_prog = nil,
-    --default_prog = { 'D:/app/powerShell/pwsh.exe', '-l' },
-    --default_prog = { 'C:/app/powerShell/pwsh.exe', '-l' },
+    --default_prog = { 'D:/apps/powershell/pwsh.exe', '-l' },
+    --default_prog = { 'C:/apps/powershell/pwsh.exe', '-l' },
 
 }
 

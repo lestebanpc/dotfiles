@@ -390,7 +390,7 @@ mm_udomain.setup(
     m_custom_config.ssh_domains, m_custom_config.filter_config_ssh, m_custom_config.filter_config_ssh_mux,
     m_custom_config.unix_domains, m_custom_config.external_unix_domains,
     m_custom_config.tls_clients,
-    m_custom_config.exec_domain_datas, m_custom_config.load_containers, m_custom_config.pwsh_path,
+    m_custom_config.exec_domain_datas, m_custom_config.load_containers,
     m_custom_config.external_running_distribution, m_custom_config.pwsh_path)
 
 -- Cargar los dominios WSL

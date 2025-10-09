@@ -295,47 +295,6 @@ endif
 "echom 'Completion Filetypes: ' .. string(g:completion_filetypes)
 
 
-" Habilitar el plugin de AI.
-" > Para 'AI Autocompletion' se usara la capacidade de autocompletado de 'GitHub Copilot' y estara por
-"   defecto desabilitado.
-"   > Para habilitarlo use ':Copilot enable'
-"   > Para CoC (VIM/NeoVIM), se usara 'github/copilot.vim' y el plugin de CoC '@hexuhua/coc-copilot'.
-"   > Para NeoVIM y no usas CoC, se usara 'zbirenbaum/copilot.lua'.
-" > Para 'AI Agent' se usara Avente, usando la API ofrecido por 'GitHub Copilot'.
-"   > Puede usar avante con el 'AI Autocompletion' desactivado.
-" El valor real, se obtendra segun orden de prioridad:
-"  > El valor definido por la variable de entorno 'USE_AI=0'
-"    > 0 si es 'true'
-"    > 1 si es false.
-"    > Cualquiere otro valor se considera no definido.
-"  > El valor definido por esta variable VIM.
-"    > v:true (o diferente a '0 ') si es 'true'
-"    > v:false (o '0') si es false.
-"    > Si no se especifica, se considera no definido
-" Si no se define, su valor por defecto es 'v:false' (valor 0).
-if $USE_AI != ''
-
-    if $USE_AI == 0
-        let g:use_ai_plugins = v:true
-    elseif $USE_AI == 1
-        let g:use_ai_plugins = v:false
-    else
-        let g:use_ai_plugins = v:false
-    endif
-
-elseif exists("g:use_ai_plugins")
-
-    if empty(g:use_ai_plugins)
-        let g:use_ai_plugins = v:false
-    else
-        let g:use_ai_plugins = v:true
-    endif
-
-else
-    let g:use_ai_plugins = v:false
-endif
-
-
 " Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.
 " Su valor se calculara, segun prioridad, usando:
 "  > Valor definido en la variable de entorno 'MY_TOOLS_PATH' (siempre que defina un valor).

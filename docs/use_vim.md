@@ -385,6 +385,60 @@ VIM permite cambiar cambiar esta variable usando la variable de entorno y/o lka 
 
 
 
+## Integración con AI tools
+
+
+- `AI_COMPLETION`
+    - Por el momento solo soportado para NeoVIM y usando el LSP nativo.
+    - Para 'AI Autocompletion' se configurara como una fuente de completado de NeoVIM.
+    - Según el valor definido por la variable de entorno `AI_COMPLETION` y la variable VIM `g:use_ai_completion`.
+        - `0`
+            - Si usara el broker LLM de 'GitHub Copilot' usando el plugin `zbirenbaum/copilot.lua`.
+        - `1`
+            - Si usara un LLM (local o externo) o un broker LLM soportado por el plugin `milanglacier/minuet-ai.nvim`.
+        - Cualquier otro valor se considera no definido. Si se no se definide, no se usara ningun plugin de 'AI autocompletion'.
+    - Si usa como fuente de completado al broker LLM 'GitHub Copilot':
+        - Por defecto esta desabilitado.
+        - Para habilitarlo use `:Copilot enable`
+        - Se usara el plugin `zbirenbaum/copilot.lua`.
+    - En los archivos se habiltara el autocompletado por AI, se definira los valores por defecto si no han sido definidos.
+
+```bash
+    let g:completion_filetypes = {
+    \   '*'           : v:false,
+    \   'c'           : v:true,
+    \   'cpp'         : v:true,
+    \   'go'          : v:true,
+    \   'rust'        : v:true,
+    \   'java'        : v:true,
+    \   'cs'          : v:true,
+    \   'python'      : v:true,
+    \   'sh'          : v:false,
+    \   'ps1'         : v:false,
+    \   'lua'         : v:false,
+    \   'vim'         : v:false,
+    \   'javascript'  : v:true,
+    \   'typescript'  : v:true,
+    \}
+```
+
+
+- `AI_AGENT`
+    - Actualmente solo se habilitará el plugin de 'AI Agent' para NeoVIM si usa LSP nativo.
+    - Se puede usar un agente integrado dentro del editor y integrarse a un agente externo usualmente de tipo CLI.
+    - El tipo de agente, que se se usara se obtendrá según orden de prioridad:
+    - El valor definido por la variable de entorno `AI_AGENT` y la variable VIM `g:use_ai_agent`:
+        - `0`
+            - Si usara un 'AI agent' integrado con NeoVIM usando el plugin `yetone/avante.nvim`.
+            - Siempre estara desactivado su capacidad de 'AI autocomplete' debido a que no se integra como fuente de autocompletado.
+            - Por el momento, la configuración actual de este plugin esta configurado para usar el broker '*GitHub Copilot*'.
+        - `1`
+            - Si integra con 'AI agent' externo en este caso un 'CLI AI agent' conocido como '*OpenCode*'
+            - Se usara el plugin `NickvanDyke/opencode.nvim`.
+        - Cualquier otro valor se considera no definido. Si se no esta definido, no se usara ningún plugin de agente AI.
+
+
+
 
 # Uso comunes
 
@@ -1034,7 +1088,7 @@ Definido a que no se usa el *leader*, se esta anulando algunas *keymappings* pre
     - Si es variable donde se muestra donde se declara, si es una clase va a definición de la clase.
     - ¿vim defaults of `gt` (tabnext) and `gT` (tabprev)?
 
-- gy`   (normal)
+- `gy`   (normal)
     - Location 'type definition'
     - Si es una variable, va a da definicion de la clase de la variable.
 

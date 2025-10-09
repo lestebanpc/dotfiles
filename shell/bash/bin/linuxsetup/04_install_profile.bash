@@ -239,12 +239,13 @@ declare -A gA_repos_type=(
         ['sindrets/diffview.nvim']=8
         ['zbirenbaum/copilot.lua']=9
         ['zbirenbaum/copilot-cmp']=9
+        ['milanglacier/minuet-ai.nvim']=9
         ['stevearc/dressing.nvim']=9
         ['MunifTanjim/nui.nvim']=9
         ['MeanderingProgrammer/render-markdown.nvim']=9
         ['HakonHarnes/img-clip.nvim']=9
         ['yetone/avante.nvim']=9
-        ['github/copilot.vim']=10
+        ['NickvanDyke/opencode.nvim']=9
     )
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
@@ -295,11 +296,13 @@ declare -A gA_repos_scope=(
         ['mfussenegger/nvim-jdtls']=2
         ['zbirenbaum/copilot.lua']=2
         ['zbirenbaum/copilot-cmp']=2
+        ['milanglacier/minuet-ai.nvim']=2
         ['stevearc/dressing.nvim']=2
         ['MunifTanjim/nui.nvim']=2
         ['MeanderingProgrammer/render-markdown.nvim']=2
         ['HakonHarnes/img-clip.nvim']=2
         ['yetone/avante.nvim']=2
+        ['NickvanDyke/opencode.nvim']=2
     )
 
 

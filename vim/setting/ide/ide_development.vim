@@ -60,8 +60,13 @@ if g:is_neovim
         endif
 
         "Package IDE> Fuente de completado de 'nvim-cmp'
-        if g:use_ai_plugins == v:true
-            packadd copilot-cmp
+        if g:use_ai_completion isnot v:null
+
+            " Se usa el broker LLM 'GitHub Copilot' (se usa el plugin 'zbirenbaum/copilot.lua')
+            if g:use_ai_completion == 0
+                packadd copilot-cmp
+            endif
+
         endif
 
     endif
