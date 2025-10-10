@@ -22,7 +22,7 @@
           "properties": {
             "cache_duration": "none"
           },
-          "template": " {{ .Icon }} {{ .HostName }} ",
+          "template": " {{ .Icon }} {{ $parts := splitList \".\" .HostName }}{{ first $parts }} ",
           "foreground": "#b1b1b1",
           "powerline_symbol": "\ue0b0",
           "background": "#626262"
