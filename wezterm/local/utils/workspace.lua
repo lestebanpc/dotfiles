@@ -964,7 +964,7 @@ local function m_get_zoxide_folders(p_domain_info)
     end
 
     -- Obtener los folderes de zoxide
-    local l_folders = mm_ucommon.get_zoxide_folders(m_os_type, l_distribution)
+    local l_folders = mm_ucommon.get_zoxide_folders(m_os_type, l_distribution, m_custom.zoxide_path)
 
     local l_is_available = false
     local l_filtered_folders = nil
@@ -1064,7 +1064,7 @@ local function m_get_git_folders(p_domain_info)
     end
 
     -- Obtener los folderes de git
-    local l_folders = mm_ucommon.get_git_folders({ path = l_root_folder, }, m_os_type, l_distribution)
+    local l_folders = mm_ucommon.get_git_folders({ path = l_root_folder, }, m_os_type, l_distribution, m_custom.fd_path)
     --mm_wezterm.log_info(l_folders)
 
     local l_is_available = false
@@ -1739,7 +1739,7 @@ local function m_create_workspace_of_fullpath(p_window, p_pane, p_selected_fullp
     end
 
 	-- Increment zoxide path score
-    mm_ucommon.register_zoxide_folder(p_selected_fullpath, m_os_type, l_distribution)
+    mm_ucommon.register_zoxide_folder(p_selected_fullpath, m_os_type, l_distribution, m_custom.zoxide_path)
 
 end
 

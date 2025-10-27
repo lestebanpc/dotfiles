@@ -1026,13 +1026,13 @@ end
 
 
 
-function mod.add_zoxide_folders_to(p_folders, p_os_type, p_distribution_name)
+function mod.add_zoxide_folders_to(p_folders, p_os_type, p_distribution_name, p_zoxide_path)
 
     if p_folders == nil then
         return  nil
     end
 
-    local l_paths = mod.get_zoxide_folders(p_os_type, p_distribution_name)
+    local l_paths = mod.get_zoxide_folders(p_os_type, p_distribution_name, p_zoxide_path)
     if l_paths == nil then
         return nil
     end
