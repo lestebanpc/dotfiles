@@ -551,50 +551,19 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer, $p_index_document
 
     Write-Host "Se ha instalado los plugin/paquetes de ${l_tag} como Developer."
 
-    #6. Mostrar la informacion de lo instalado
-    show_vim_config_report $p_is_neovim $p_flag_developer
-
     return 0
 
 }
 
 
-# Parametros:
-#  1> Flag configurar como Developer (si es '0')
-function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag, $p_index_documentation) {
+function m_setup_nvim_files($p_flag_developer) {
 
-    #1. Argumentos
-
-
-    #2. Crear el subtitulo
-    $l_title= ">> Configurando NeoVIM ("
-    if($p_flag_developer) {
-        $l_title= "${l_title} Modo developer"
-    }
-    else {
-        $l_title= "${l_title} Modo editor"
-    }
-
-    if($p_overwrite_ln_flag) {
-        $l_title= "${l_title}, Sobrescribiendo los enlaces simbolicos)"
-    }
-    else {
-        $l_title= "${l_title}, Solo crando enlaces simbolicos si no existen)"
-    }
-
-    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
-    Write-Host "$l_title" -ForegroundColor Blue
-    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
-
-    #Creando el directorio hijos si no existen
-	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:LOCALAPPDATA}\nvim"
-
-    #2. Creando los enalces simbolicos
+    # Creando los enalces simbolicos
     $l_target_link= ""
     $l_source_path= ""
     $l_source_filename= ""
 
-    #Configurar NeoVIM como IDE (Developer)
+    # Configurar NeoVIM como IDE (Developer)
     if ($p_flag_developer) {
 
 
@@ -643,7 +612,7 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag, $p_index_documen
 
 
 	}
-    #Configurar NeoVIM como Editor
+    # Configurar NeoVIM como Editor
     else {
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\init.vim"
@@ -669,8 +638,107 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag, $p_index_documen
 
     }
 
-    #6. Instalando paquetes
+    return 0
+
+
+}
+
+
+# Parametros:
+#  1> Flag configurar como Developer (si es '0')
+function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag, $p_index_documentation) {
+
+    #1. Argumentos
+
+
+    #2. Crear el subtitulo
+    $l_title= ">> Configurando NeoVIM ("
+    if($p_flag_developer) {
+        $l_title= "${l_title} Modo developer"
+    }
+    else {
+        $l_title= "${l_title} Modo editor"
+    }
+
+    if($p_overwrite_ln_flag) {
+        $l_title= "${l_title}, Sobrescribiendo los enlaces simbolicos)"
+    }
+    else {
+        $l_title= "${l_title}, Solo crando enlaces simbolicos si no existen)"
+    }
+
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
+    Write-Host "$l_title" -ForegroundColor Blue
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
+
+    #3. Creando el directorio hijos si no existen
+	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:LOCALAPPDATA}\nvim"
+
+    #4. Instalando paquetes
     $l_status= m_setup_vim_packages $true $p_flag_developer $p_index_documentation
+
+    #5. Creando los archivos y folderes requeridos por NeoVIM
+    $l_status= m_setup_nvim_files $p_flag_developer
+
+    #6. Mostrar la informacion de lo instalado
+    show_vim_config_report $p_is_neovim $p_flag_developer
+
+
+}
+
+
+function m_setup_vim_files($p_flag_developer) {
+
+    # Crear los enlaces simbolicos de VIM
+    $l_target_link= ""
+    $l_source_path= ""
+    $l_source_filename= ""
+
+
+    # Configurar VIM como IDE (Developer)
+    if ($p_flag_developer) {
+
+        #Creando enlaces simbolicos
+        $l_target_link="${env:USERPROFILE}\.vimrc"
+        $l_source_path="${env:USERPROFILE}\.files\vim"
+        $l_source_filename="vimrc_ide.vim"
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
+
+        $l_target_link="${env:USERPROFILE}\vimfiles\coc-settings.json"
+        $l_source_path="${env:USERPROFILE}\.files\vim"
+        $l_source_filename="coc-settings_windows.json"
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
+
+        $l_target_link="${env:USERPROFILE}\vimfiles\setting"
+        $l_source_path="${env:USERPROFILE}\.files\vim\setting"
+        m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
+
+
+        $l_target_link="${env:USERPROFILE}\vimfiles\ftplugin"
+        $l_source_path="${env:USERPROFILE}\.files\vim\ftplugin\cocide"
+        m_create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
+
+
+	}
+    # Configurar VIM como Editor basico
+    else {
+
+        $l_target_link="${env:USERPROFILE}\.vimrc"
+        $l_source_path="${env:USERPROFILE}\.files\vim"
+        $l_source_filename="vimrc_editor.vim"
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
+
+        $l_target_link="${env:USERPROFILE}\vimfiles\setting"
+        $l_source_path="${env:USERPROFILE}\.files\vim\setting"
+        m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
+
+
+        $l_target_link="${env:USERPROFILE}\vimfiles\ftplugin"
+        $l_source_path="${env:USERPROFILE}\.files\vim\ftplugin\editor"
+        m_create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
+
+
+    }
 
 
 }
@@ -704,62 +772,17 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag, $p_index_document
     Write-Host "$l_title" -ForegroundColor Blue
     Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
 
-    #Creando el directorio hijos si no existen
+    #3. Creando el directorio hijos si no existen
 	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\vimfiles"
 
-    #3. Crear los enlaces simbolicos de VIM
-    $l_target_link= ""
-    $l_source_path= ""
-    $l_source_filename= ""
-
-
-    #Configurar VIM como IDE (Developer)
-    if ($p_flag_developer) {
-
-        #Creando enlaces simbolicos
-        $l_target_link="${env:USERPROFILE}\.vimrc"
-        $l_source_path="${env:USERPROFILE}\.files\vim"
-        $l_source_filename="vimrc_ide.vim"
-        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
-
-        $l_target_link="${env:USERPROFILE}\vimfiles\coc-settings.json"
-        $l_source_path="${env:USERPROFILE}\.files\vim"
-        $l_source_filename="coc-settings_windows.json"
-        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
-
-        $l_target_link="${env:USERPROFILE}\vimfiles\setting"
-        $l_source_path="${env:USERPROFILE}\.files\vim\setting"
-        m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
-
-
-        $l_target_link="${env:USERPROFILE}\vimfiles\ftplugin"
-        $l_source_path="${env:USERPROFILE}\.files\vim\ftplugin\cocide"
-        m_create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
-
-
-	}
-    #Configurar VIM como Editor basico
-    else {
-
-        $l_target_link="${env:USERPROFILE}\.vimrc"
-        $l_source_path="${env:USERPROFILE}\.files\vim"
-        $l_source_filename="vimrc_editor.vim"
-        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
-
-        $l_target_link="${env:USERPROFILE}\vimfiles\setting"
-        $l_source_path="${env:USERPROFILE}\.files\vim\setting"
-        m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $l_overwrite_ln_flag
-
-
-        $l_target_link="${env:USERPROFILE}\vimfiles\ftplugin"
-        $l_source_path="${env:USERPROFILE}\.files\vim\ftplugin\editor"
-        m_create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $l_overwrite_ln_flag
-
-
-    }
-
-    #Instalar los plugins
+    #4. Instalando paquetes
     $l_status= m_setup_vim_packages $false $p_flag_developer $p_index_documentation
+
+    #5. Creando los archivos y folderes requeridos por NeoVIM
+    $l_status= m_setup_vim_files $p_flag_developer
+
+    #6. Mostrar la informacion de lo instalado
+    show_vim_config_report $p_is_neovim $p_flag_developer
 
 }
 
@@ -913,7 +936,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
     #Configuracion por Lazygit
     $l_target_link="${env:LOCALAPPDATA}\lazygit\config.yml"
-    $l_source_path="${env:USERPROFILE}\.files\lazygit"
+    $l_source_path="${env:USERPROFILE}\.files\etc\lazygit"
     $l_source_filename='config_default.yaml'
 
 	if(! (Test-Path "${env:LOCALAPPDATA}\lazygit")) {

@@ -98,6 +98,12 @@
 "let g:clipboard_reader_cmd = 'pbpaste'
 "let g:clipboard_reader_cmd = v:null
 
+" Para NeoVIM, deshabilitar el treesitter (en caso de no tener un compilador C/C++) requirido por nvim-treesitter.
+" Por defecto, si no se define su valor es 'v:true' (se habilita la compilacion de tree-sitter).
+"let g:enable_compile_treesitter = v:true
+"let g:enable_compile_treesitter = v:false
+"let g:enable_compile_treesitter = v:null
+
 
 
 "#########################################################################################

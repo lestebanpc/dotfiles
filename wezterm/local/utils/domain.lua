@@ -244,9 +244,9 @@ function mod.setup(
 
     -- Validar si esta instalado distribucion Distrobox/WSL
     if m_os_type == 0 then
-        m_is_installed_external_distribution = mm_ucommon.exist_command('distrobox', m_os_type, nil)
+        m_is_installed_external_distribution = mm_ucommon.exist_command('distrobox', m_os_type, nil, nil)
     elseif m_os_type == 1 then
-        m_is_installed_external_distribution = mm_ucommon.exist_command('wsl', m_os_type, nil)
+        m_is_installed_external_distribution = mm_ucommon.exist_command('wsl', m_os_type, nil, nil)
     end
     --mm_wezterm.log_info(m_is_installed_external_distribution)
 
@@ -741,7 +741,7 @@ function mod.get_exec_domains()
     local l_domain_name = nil
 
     -- Registrar shell 'bash'
-    if m_os_type ~= 1 and mm_ucommon.exist_command('bash', m_os_type, nil) then
+    if m_os_type ~= 1 and mm_ucommon.exist_command('bash', m_os_type, nil, nil) then
 
         l_subtype_info = l_type_info.types['bash']
         l_domain_name = 'bash'
@@ -767,28 +767,25 @@ function mod.get_exec_domains()
 
 
     -- Registrar shell 'pwsh'
-    if mm_ucommon.exist_command('pwsh', m_os_type, nil) then
+    l_subtype_info = l_type_info.types['pwsh']
+    l_domain_name = 'pwsh'
 
-        l_subtype_info = l_type_info.types['pwsh']
-        l_domain_name = 'pwsh'
-
-        table.insert(l_domains,
-            mm_wezterm.exec_domain(
-                l_domain_name,
-                m_cbk_powershell_core,
-                'Powershell Core'
-            )
+    table.insert(l_domains,
+        mm_wezterm.exec_domain(
+            l_domain_name,
+            m_cbk_powershell_core,
+            'Powershell Core'
         )
+    )
 
-        m_exec_infos[l_domain_name] = {
-            type = 'pwsh',
-            icon = l_subtype_info.icon,
-            color = l_subtype_info.color,
-            is_local_fs = true,
-            domain_category = 'local',
-        }
+    m_exec_infos[l_domain_name] = {
+        type = 'pwsh',
+        icon = l_subtype_info.icon,
+        color = l_subtype_info.color,
+        is_local_fs = true,
+        domain_category = 'local',
+    }
 
-    end
 
 
     -- Registrar shell 'cmd' y 'powershell'
@@ -843,7 +840,7 @@ function mod.get_exec_domains()
             mm_wezterm.exec_domain(
                 l_domain_name,
                 m_cbk_powershell_core_over_win,
-                'Powershell Core over Windows Powershell'
+                'Powershell over Windows Powershell'
             )
         )
 
@@ -904,7 +901,7 @@ function mod.get_exec_domains()
     end
 
     -- Obtener los dominios de asociados a los contenedores en ejecucion
-    if m_custom.load_containers and mm_ucommon.exist_command(m_container_runtime, m_os_type, m_external_running_distribution) then
+    if m_custom.load_containers and mm_ucommon.exist_command(m_container_runtime, m_os_type, m_external_running_distribution, nil) then
 
         l_subtype_info = l_type_info.types['container']
         local l_containers = mm_ucommon.list_running_containers(m_container_runtime, l_excluded_container_ids, m_os_type, m_external_running_distribution)

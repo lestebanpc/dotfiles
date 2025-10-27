@@ -361,7 +361,17 @@ function mod.is_subfolder_of_home_dir(p_folder_path)
 
 end
 
+function mod.exist_file(p_file_path)
 
+  local l_file = io.open(p_file_path, "r")
+  if l_file ~= nil then
+    io.close(l_file)
+    return true
+  end
+
+  return false
+
+end
 
 ------------------------------------------------------------------------------------
 -- Funciones obtener informacion de ctes
@@ -418,8 +428,30 @@ end
 ---@param p_command_name string
 ---@param p_os_type integer
 ---@param p_distribution_name string?
-function mod.exist_command(p_command_name, p_os_type, p_distribution_name)
+function mod.exist_command(p_command_name, p_os_type, p_distribution_name, p_cmd_path)
 
+    -- Si se envia la ruta del comando (y no se esta en una distribucion)
+    if p_cmd_path ~= nil and p_cmd_path ~= '' and (p_distribution_name == nil or p_distribution_name == '') then
+
+        local l_cmd_fullpath =  nil
+        if p_os_type == 1 then
+            l_cmd_fullpath = p_cmd_path .. '/' .. p_command_name .. '.exe'
+        elseif p_os_type == 0 then
+            l_cmd_fullpath = p_cmd_path .. '/' .. p_command_name
+        else
+            l_cmd_fullpath = p_cmd_path .. '/' .. p_command_name
+        end
+
+        if mod.exist_file(l_cmd_fullpath) then
+            return true
+        end
+
+        return false
+
+    end
+
+    -- Si no se envia la ruta
+    local l_cmd_fullpath = p_cmd_path
     local l_args = nil
     local l_use_wsl = false
 
@@ -434,6 +466,7 @@ function mod.exist_command(p_command_name, p_os_type, p_distribution_name)
             l_use_wsl = true
 
         else
+
             l_args = {
                 'where.exe', p_command_name,
             }
@@ -684,11 +717,12 @@ function mod.list_running_wsl_distributions()
 end
 
 
-function mod.get_git_folders(p_options, p_os_type, p_distribution_name)
+function mod.get_git_folders(p_options, p_os_type, p_distribution_name, p_fd_path)
 
     local l_options = p_options or {}
 
     -- Argumentos usados
+    local l_fd_fullpath = 'fd'
     local l_path = l_options.path
     local l_include_submodules = l_options.include_submodules or false
     local l_max_depth = l_options.max_depth or 16
@@ -718,8 +752,15 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name)
             l_use_wsl = true
 
         else
+
+            if p_fd_path == nil or p_fd_path == '' then
+                l_fd_fullpath = 'fd.exe'
+            else
+                l_fd_fullpath =  p_fd_path .. '/fd.exe'
+            end
+
             l_args = {
-                'fd.exe',
+                l_fd_fullpath,
                 '-Hs',
                 '^.git$',
                 '-td',
@@ -745,8 +786,15 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name)
                 l_format,
             }
         else
+
+            if p_fd_path == nil or p_fd_path == '' then
+                l_fd_fullpath = 'fd'
+            else
+                l_fd_fullpath =  p_fd_path .. '/fd'
+            end
+
             l_args = {
-                "fd",
+                l_fd_fullpath,
                 "-Hs",
                 "^.git$",
                 "-td",
@@ -759,8 +807,15 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name)
 
     else
 
+
+        if p_fd_path == nil or p_fd_path == '' then
+            l_fd_fullpath = 'fd'
+        else
+            l_fd_fullpath =  p_fd_path .. '/fd'
+        end
+
         l_args = {
-            "fd",
+            l_fd_fullpath,
             "-Hs",
             "^.git$",
             "-td",
@@ -870,8 +925,9 @@ end
 
 
 
-function mod.get_zoxide_folders(p_os_type, p_distribution_name)
+function mod.get_zoxide_folders(p_os_type, p_distribution_name, p_zoxide_path)
 
+    local l_zoxide_fullpath = 'zoxide'
     local l_args = nil
     local l_use_wsl = false
 
@@ -886,9 +942,17 @@ function mod.get_zoxide_folders(p_os_type, p_distribution_name)
             l_use_wsl = true
 
         else
+
+            if p_zoxide_path == nil or p_zoxide_path == '' then
+                l_zoxide_fullpath = 'zoxide.exe'
+            else
+                l_zoxide_fullpath =  p_zoxide_path .. '/zoxide.exe'
+            end
+
             l_args = {
-                'zoxide.exe', 'query', '-l',
+                l_zoxide_fullpath, 'query', '-l',
             }
+
         end
 
     elseif p_os_type == 0 then
@@ -901,17 +965,31 @@ function mod.get_zoxide_folders(p_os_type, p_distribution_name)
                 '-l',
             }
         else
+
+            if p_zoxide_path == nil or p_zoxide_path == '' then
+                l_zoxide_fullpath = 'zoxide'
+            else
+                l_zoxide_fullpath =  p_zoxide_path .. '/zoxide'
+            end
+
             l_args = {
-                'zoxide',
+                l_zoxide_fullpath,
                 'query',
                 '-l',
             }
+
         end
 
     else
 
+        if p_zoxide_path == nil or p_zoxide_path == '' then
+            l_zoxide_fullpath = 'zoxide'
+        else
+            l_zoxide_fullpath =  p_zoxide_path .. '/zoxide'
+        end
+
         l_args = {
-            'zoxide',
+            l_zoxide_fullpath,
             'query',
             '-l',
         }
@@ -971,8 +1049,9 @@ end
 
 
 
-function mod.register_zoxide_folder(p_folder_path, p_os_type, p_distribution_name)
+function mod.register_zoxide_folder(p_folder_path, p_os_type, p_distribution_name, p_zoxide_path)
 
+    local l_zoxide_fullpath = 'zoxide'
     local l_args = nil
     local l_use_wsl = false
 
@@ -987,9 +1066,17 @@ function mod.register_zoxide_folder(p_folder_path, p_os_type, p_distribution_nam
             l_use_wsl = true
 
         else
+
+            if p_zoxide_path == nil or p_zoxide_path == '' then
+                l_zoxide_fullpath = 'zoxide.exe'
+            else
+                l_zoxide_fullpath =  p_zoxide_path .. '/zoxide.exe'
+            end
+
             l_args = {
-                'zoxide.exe', 'add', p_folder_path,
+                l_zoxide_fullpath, 'add', p_folder_path,
             }
+
         end
 
     elseif p_os_type == 0 then
@@ -1002,17 +1089,31 @@ function mod.register_zoxide_folder(p_folder_path, p_os_type, p_distribution_nam
                 p_folder_path,
             }
         else
+
+            if p_zoxide_path == nil or p_zoxide_path == '' then
+                l_zoxide_fullpath = 'zoxide'
+            else
+                l_zoxide_fullpath =  p_zoxide_path .. '/zoxide'
+            end
+
             l_args = {
-                'zoxide',
+                l_zoxide_fullpath,
                 'add',
                 p_folder_path,
             }
+
         end
 
     else
 
+        if p_zoxide_path == nil or p_zoxide_path == '' then
+            l_zoxide_fullpath = 'zoxide'
+        else
+            l_zoxide_fullpath =  p_zoxide_path .. '/zoxide'
+        end
+
         l_args = {
-            'zoxide',
+            l_zoxide_fullpath,
             'add',
             p_folder_path,
         }
@@ -1422,6 +1523,15 @@ function mod.get_custom_config()
 
         launch_menu = nil,
         windows_style = 0,
+
+        font_dirs = nil,
+        font_locator = nil,
+        program_paths = {
+            pwsh = nil,
+            fd = nil,
+            zoxide = nil,
+        },
+
 
         ssh_domains = nil,
         unix_domains = nil,

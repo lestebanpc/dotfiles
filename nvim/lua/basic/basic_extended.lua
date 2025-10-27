@@ -13,33 +13,8 @@
 --  - Folding basado en estructura sintáctica.
 --
 
-local treesitter_cfg = require("nvim-treesitter.configs")
-local parsers =  {
-        "html", "css", "javascript", "jq", "json", "yaml", "xml",
-        "toml", "typescript", "proto", "make", "sql",
-        "vim", "vimdoc", "markdown", "markdown_inline",
-        "bash", "c", "cpp", "lua", "java", "kotlin", " rust",
-        "go", "c_sharp"
-    }
-
-
-if vim.g.use_ide then
-
-    parsers =  {
-        "html", "css", "javascript", "jq", "json", "yaml", "xml",
-        "toml", "typescript", "latex", "proto", "make", "sql",
-        "vim", "vimdoc", "markdown", "markdown_inline",
-        "bash", "c", "cpp", "lua", "java", "kotlin", " rust",
-        "swift", "go", "c_sharp"
-    }
-
-end
-
-
-treesitter_cfg.setup({
-
-    -- A list of parser names (the listed parsers MUST always be installed)
-    ensure_installed = parsers,
+-- Data usado para configurar el treesitter
+local treesitter_data= {
 
     -- Install parsers synchronously (only applied to `ensure_installed`)
     sync_install = false,
@@ -179,7 +154,37 @@ treesitter_cfg.setup({
             },
         },
     },
-})
+}
+
+-- Definir la lista de parser tree-sitter que debera ser compilados/instalados (se valida durante el inicio)
+if vim.g.enable_compile_treesitter then
+
+    local parsers =  {
+        "html", "css", "javascript", "jq", "json", "yaml", "xml",
+        "toml", "typescript", "proto", "make", "sql",
+        "vim", "vimdoc", "markdown", "markdown_inline",
+        "bash", "c", "cpp", "lua", "java", "kotlin", " rust",
+        "go", "c_sharp"
+    }
+
+
+    if vim.g.use_ide then
+        parsers =  {
+            "html", "css", "javascript", "jq", "json", "yaml", "xml",
+            "toml", "typescript", "latex", "proto", "make", "sql",
+            "vim", "vimdoc", "markdown", "markdown_inline",
+            "bash", "c", "cpp", "lua", "java", "kotlin", " rust",
+            "swift", "go", "c_sharp"
+        }
+    end
+
+    treesitter_data.ensure_installed = parsers
+
+end
+
+-- Configurar treesitter
+local treesitter_cfg = require("nvim-treesitter.configs")
+treesitter_cfg.setup(treesitter_data)
 
 -- Permitir repitir el ultimo moviento de objeto realizado
 local ts_repeat_move = require("nvim-treesitter.textobjects.repeatable_move")

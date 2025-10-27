@@ -58,51 +58,6 @@ function m_get_nodejs_version() {
 }
 
 
-#Parametros de salida (valores de retorno):
-#  0 > Si es esta configurado en modo editor
-#  1 > Si es esta configurado en modo developer
-#  2 > Si NO esta configurado
-function m_is_developer_vim_profile($p_is_neovim) {
-
-    #1. Argumentos
-
-    #2. Ruta base donde se instala el plugins/paquete
-    $l_real_path
-    $l_profile_path="${env:USERPROFILE}\.vimrc"
-    if ($p_is_neovim) {
-        $l_profile_path="${env:LOCALAPPDATA}\nvim\init.vim"
-    }
-
-    #'vimrc_ide_linux_xxxx.vim'
-    #'vimrc_basic_linux.vim'
-    #'init_ide_linux_xxxx.vim'
-    #'init_basic_linux.vim'
-	if(! (Test-Path "$l_profile_path")) {
-		return 2
-	}
-
-	$l_info= Get-Item "$l_profile_path" | Select-Object LinkType, LinkTarget
-    if ( $l_info.LinkType -ne "SymbolicLink" ) {
-        return 2
-    }
-
-    $l_real_filename = Split-Path $l_info.LinkTarget -Leaf
-
-    #Si es NeoVIM
-    if ($p_is_neovim) {
-        if ($l_real_filename -match '^init_ide_.*$') {
-            return 1
-        }
-        return 0
-    }
-
-    #Si es VIM
-    if ($l_real_filename -match '^vimrc_ide_.*$') {
-        return 1
-    }
-    return 0
-
-}
 
 
 function m_update_repository($p_path, $p_repo_name, $p_is_neovim)

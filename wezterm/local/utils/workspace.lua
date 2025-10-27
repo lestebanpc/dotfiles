@@ -16,6 +16,9 @@ local m_custom = {
     load_local_builtin_tags = false,
     load_external_builtin_tags = false,
 
+    zoxide_path = nil,
+    fd_path = nil,
+
     -- Usados para filtrar opciones de la consulta de zoxide
     -- Se adiciona despues del comando a ejecutar : 'zoxide query -l <zoxide_args>'.
     -- Ejemplo de valores:
@@ -490,7 +493,8 @@ end
 -- Funciones inicializacion
 ------------------------------------------------------------------------------------
 
-function mod.setup(p_tags, p_load_local_builtin_tags, p_load_external_builtin_tags, p_root_git_folder, p_external_root_git_folder, p_zoxide_args)
+function mod.setup(p_tags, p_load_local_builtin_tags, p_load_external_builtin_tags, p_root_git_folder, p_external_root_git_folder, p_zoxide_args,
+    p_fd_path, p_zoxide_path)
 
     -- Establecer valores
     if p_root_git_folder ~= nil and p_root_git_folder ~= '' then
@@ -503,6 +507,8 @@ function mod.setup(p_tags, p_load_local_builtin_tags, p_load_external_builtin_ta
         m_custom.root_git_folder = nil
     end
     m_custom.external_root_git_folder = p_external_root_git_folder
+    m_custom.fd_path = p_fd_path
+    m_custom.zoxide_path = p_zoxide_path
     m_custom.zoxide_args = p_zoxide_args
 
     -- Registrar los tag de workspace built-in
@@ -943,7 +949,7 @@ local function m_get_zoxide_folders(p_domain_info)
     end
 
     -- Validar si tiene instalado 'zoxide'
-    local l_exist_commnad = mm_ucommon.exist_command('zoxide', m_os_type, l_distribution)
+    local l_exist_commnad = mm_ucommon.exist_command('zoxide', m_os_type, l_distribution, m_custom.zoxide_path)
 
     if not l_exist_commnad then
 
@@ -1043,7 +1049,7 @@ local function m_get_git_folders(p_domain_info)
     --mm_wezterm.log_info(l_root_folder)
 
     -- Validar si tiene instalado 'zoxide'
-    local l_exist_commnad = mm_ucommon.exist_command('fd', m_os_type, l_distribution)
+    local l_exist_commnad = mm_ucommon.exist_command('fd', m_os_type, l_distribution, m_custom.fd_path)
 
     if not l_exist_commnad then
 

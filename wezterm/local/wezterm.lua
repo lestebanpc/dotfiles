@@ -391,7 +391,7 @@ mm_udomain.setup(
     m_custom_config.unix_domains, m_custom_config.external_unix_domains,
     m_custom_config.tls_clients,
     m_custom_config.exec_domain_datas, m_custom_config.load_containers,
-    m_custom_config.external_running_distribution, m_custom_config.pwsh_path)
+    m_custom_config.external_running_distribution, m_custom_config.program_paths.pwsh)
 
 -- Cargar los dominios WSL
 -- > URLs:
@@ -579,7 +579,7 @@ local mm_uworkspace = require('utils.workspace')
 mm_uworkspace.setup(
     m_custom_config.workspace_tags, m_custom_config.load_local_builtin_tags, m_custom_config.load_external_builtin_tags,
     m_custom_config.root_git_folder, m_custom_config.external_root_git_folder,
-    nil)
+    nil, m_custom_config.program_paths.fd, m_custom_config.program_paths.zoxide)
 
 
 

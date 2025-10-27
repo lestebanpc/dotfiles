@@ -134,9 +134,23 @@ local mod= {
     --font_locator = "ConfigDirsOnly",
     font_locator = nil,
 
-    -- Ruta donde se encuentra 'pwsh' (si no se especifica, lo buscara dentro del PATH)
-    pwsh_path = nil,
-    --pwsh_path = 'D:/apps/powershell',
+    -- Ruta donde se encuentra ubica los programas basicos usados para crear workspace y dominios (si no se especifica, lo buscara dentro del PATH)
+    -- Esta ruta siempre para el SO donde ejecuta la terminal, no para la distribucion WSL o Distrobox (este siempre buscara en el PATH).
+    program_paths = {
+
+        -- Ruta de Powershell Core
+        pwsh = nil,
+        --pwsh = 'D:/apps/powershell',
+
+        -- Ruta de 'fd' usada para buscar directorios especiales para crear workspaces
+        fd = nil,
+        --fd = 'D:/apps/cmds/bin',
+
+        -- Ruta de 'zoxide' usada para buscar rutas de directorios mas usados para crear workspace
+        zoxide = nil,
+        --zoxide = 'D:/apps/cmds/bin',
+
+    },
 
 
     --------------------------------------------------------------------------------

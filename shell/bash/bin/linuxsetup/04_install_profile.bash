@@ -2375,39 +2375,7 @@ function _setup_vim_environment() {
     fi
 
 
-    #4. Configuración: Crear los archivos de configuración (No requiere que VIM/NeoVIM este instalado)
-    if [ $l_flag_setup_1 -eq 0 ]; then
-
-        # Flag de sobrescribir un symbolic link existente
-        local l_flag_overwrite_link=1
-
-        l_option=2
-        if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-            l_flag_overwrite_link=0
-        fi
-
-        # Flag de sobrescribir un file existente
-        #local l_flag_overwrite_file=1
-
-        #l_option=4
-        #if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-        #    l_flag_overwrite_file=0
-        #fi
-
-        # Crear los archivos de configuracion requiridos
-        if [ $p_is_vim -eq 0 ]; then
-            _setup_vim_files $l_flag_developer $l_flag_overwrite_link
-            #_setup_vim_files $l_flag_developer $l_flag_overwrite_link $l_flag_overwrite_file
-            l_status=$?
-        else
-            _setup_nvim_files $l_flag_developer $l_flag_overwrite_link
-            #_setup_nvim_files $l_flag_developer $l_flag_overwrite_link $l_flag_overwrite_file
-            l_status=$?
-        fi
-
-    fi
-
-    #5. Validar si VIM/NeoVIM esta instalado
+    #4. Validar si VIM/NeoVIM esta instalado
     local l_version=''
     if [ $l_is_vim_installed -eq -1 ]; then
 
@@ -2425,7 +2393,7 @@ function _setup_vim_environment() {
 
     fi
 
-    #6. Configuración: Descargar plugins
+    #5. Configuración: Descargar plugins
 
     # Determinar si se indexa la documentacion considerando
     # > Si se indica que indexar la documentacion y no indexarlo, 'indexar' tiene mayor prioridad.
@@ -2474,7 +2442,7 @@ function _setup_vim_environment() {
     fi
 
 
-    #7. Indexar la documentación de los plugins existentes
+    #6. Indexar la documentación de los plugins existentes
     l_status=1
 
     if [ $l_flag_setup_4 -eq 0 ]; then
@@ -2507,6 +2475,38 @@ function _setup_vim_environment() {
 
     fi
 
+
+    #7. Configuración: Crear los archivos de configuración (No requiere que VIM/NeoVIM este instalado)
+    if [ $l_flag_setup_1 -eq 0 ]; then
+
+        # Flag de sobrescribir un symbolic link existente
+        local l_flag_overwrite_link=1
+
+        l_option=2
+        if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
+            l_flag_overwrite_link=0
+        fi
+
+        # Flag de sobrescribir un file existente
+        #local l_flag_overwrite_file=1
+
+        #l_option=4
+        #if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
+        #    l_flag_overwrite_file=0
+        #fi
+
+        # Crear los archivos de configuracion requiridos
+        if [ $p_is_vim -eq 0 ]; then
+            _setup_vim_files $l_flag_developer $l_flag_overwrite_link
+            #_setup_vim_files $l_flag_developer $l_flag_overwrite_link $l_flag_overwrite_file
+            l_status=$?
+        else
+            _setup_nvim_files $l_flag_developer $l_flag_overwrite_link
+            #_setup_nvim_files $l_flag_developer $l_flag_overwrite_link $l_flag_overwrite_file
+            l_status=$?
+        fi
+
+    fi
 
     #8. Mostrar informacion y recomendaciones de la configuracion de VIM
 

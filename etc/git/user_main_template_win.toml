@@ -7,10 +7,12 @@
 # Opciones generales
 [core]
     # Editor (colocar la ruta completa si este no esta en el 'PATH'.
-	editor = C:/apps/vim/vim91/vim.exe
+	editor = C:/apps/tools/vim/vim.exe
+	#editor = D:/apps/tools/vim/vim.exe
 
     # Usar la implementacion SSH de 'Open SSH for Windows'
     sshCommand = "\"C:/Program Files/OpenSSH/ssh.exe\""
+    #sshCommand = "\"C:/Windows/System32/OpenSSH/ssh.exe\""
 
 # Incluir los temas del comando 'delta'
 #[include]
@@ -41,4 +43,3 @@
 # Usuario de trabajo 'mywork'
 #[includeIf "gitdir/i:c:/code/work1/"]
 #    path = user_work1.toml
-# Usuario de work 'mywork'

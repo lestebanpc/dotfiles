@@ -117,32 +117,15 @@ cp ~/.files/shell/bash/login/profile/profile_config_template_nonwsl.bash ~/.cust
 cp ~/.files/shell/bash/login/profile/profile_config_template_wsl.bash ~/.custom_profile.bash
 ```
 
+3. Configurar/actualizar el perfil modo developer, usa la opción el cual permitirá configurar VIM/NeoVIM:
+    - Instalar los plugins
+    - Indexar la documentación.
+        - Esto inicia VIM pero debido a que los archivos de configuración son los ultimo que se instala, si es la primera vez que instala:
+            - No se auto-instale las extension `CoC`.
+            - Iniciar NeoVIM para se compile e instale los AST `tree-sitter`.
+    - Crear los archivos y carpetas requeridas por VIM/NeoVIM
 
-3. Si configura **por primera vez** el modo developer no indexe la documentación de VIM durante la actualización:
-    - Instalar todo sin indexar la documentación.
-    - Iniciar VIM para que se auto-instale las extension `CoC`.
-    - Iniciar NeoVIM para se compile e instale los AST `tree-sitter`.
-    - Indexar la documentación existente
-
-```bash
-#1. Iniciar el instalador
-~/.files/shell/bash/bin/linuxsetup/04_install_profile.bash
-#Escoga la opcion 's'
-
-#2. Iniciar VIM para que se autoinstale las extension `CoC`.
-vim
-
-#3. Iniciar NeoVIM para se compile e instale los AST `tree-sitter`.
-nvim
-
-#4. Indexar la documentacion existente
-~/.files/shell/bash/bin/linuxsetup/04_install_profile.bash
-#Escoga la opcion 'a'
-```
-
-4. Si esta configurado el modo developer y desea *actualizar o re-configurar* (se puede indexar la documentación de VIM durante la actualización), escoge la opción que mas desee
-
-```bash
+```shell
 #1. Iniciar el instalador
 ~/.files/shell/bash/bin/linuxsetup/04_install_profile.bash
 
@@ -150,7 +133,7 @@ nvim
 ```
 
 
-5. Personalizar configuración del *profile* (opcional):
+4. Personalizar configuración del *profile* (opcional):
     - Si se instala en *WSL* o *Distrobox*, el instalador copia un archivo `~/.custom_profile.bash` con parámetros iniciales el cual puede modificar si lo desea.
     - Si el equipo es para uso personal y tiene acceso a la red local, establezca:
 
