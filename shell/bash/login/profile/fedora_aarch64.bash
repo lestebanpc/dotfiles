@@ -81,12 +81,12 @@ fi
 [ -z "$g_repo_name" ] && g_repo_name='.files'
 
 # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
-if [ -z "$g_tools_path" ] || [ ! -f "$g_tools_path" ]; then
+if [ -z "$g_tools_path" ] || [ ! -d "$g_tools_path" ]; then
     g_tools_path='/var/opt/tools'
 fi
 
 # Ruta del folder donde se ubican comandos personalizado del usuario.
-if [ -z "$g_lnx_bin_path" ] || [ ! -f "$g_lnx_bin_path" ]; then
+if [ -z "$g_lnx_bin_path" ] || [ ! -d "$g_lnx_bin_path" ]; then
     g_lnx_bin_path='/usr/local/bin'
 fi
 

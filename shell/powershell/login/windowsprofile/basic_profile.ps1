@@ -7,11 +7,11 @@ $g_repo_name= '.files'
 
 # Folder base donde se almacena los subfolderes de los programas.
 $g_tools_path= 'D:\apps\tools'
-#g_tools_path= 'C:\apps\tools'
+#$g_tools_path= 'C:\apps\tools'
 
 # Folder donde se almacena los binarios de tipo comando.
 $g_bin_path='D:\apps\cmds\bin'
-#g_bin_path='C:\apps\cmds\bin'
+#$g_bin_path='C:\apps\cmds\bin'
 
 # Ruta del tema de 'Oh-My-Posh' usada para establecer el prompt a usar.
 $g_prompt_theme= "${env:USERPROFILE}\${g_repo_name}\etc\oh-my-posh\default_settings.json"

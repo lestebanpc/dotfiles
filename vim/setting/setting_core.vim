@@ -1193,7 +1193,7 @@ endif
 "   escape generados
 " > Los emuladores de terminal, como 'foot', no definir por defecto la variable 'TERM_PROGRAM', por lo que debera
 "   definir manualmente este valor en su archivo de configuracion.
-if !g:is_neovim && ($TERM_PROGRAM == 'foot' || $TERM_PROGRAM == 'WezTerm')
-    let &t_TI = "\<Esc>[>4;2m"
-    let &t_TE = "\<Esc>[>4;m"
-endif
+"if !g:is_neovim && ($TERM_PROGRAM == 'foot' || $TERM_PROGRAM == 'WezTerm')
+"    let &t_TI = "\<Esc>[>4;2m"
+"    let &t_TE = "\<Esc>[>4;m"
+"endif
