@@ -1299,14 +1299,14 @@ function _setup_user_profile() {
     if [ -z "$CONTAINER_ID" ] && [ $g_os_type -ne 1 ]; then
 
         l_target_path=".local/bin"
-        l_target_link="sync_vault"
+        l_target_link="sync_folder"
         l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-        l_source_filename='sync_vault.bash'
+        l_source_filename='sync_folder.bash'
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
         l_status=$?
 
     else
-        printf 'Profile > No se establece en enlace simbolico asociado al comando "%bsync_vault%b".\n' "$g_color_gray1" "$g_color_reset"
+        printf 'Profile > No se establece en enlace simbolico asociado al comando "%bsync_folder%b".\n' "$g_color_gray1" "$g_color_reset"
     fi
 
 
