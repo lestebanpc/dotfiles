@@ -72,6 +72,11 @@ if(Test-Path "${g_tools_path}\mingw64\bin") {
     $env:PATH= "${env:PATH};${g_tools_path}\mingw64\bin"
 }
 
+# Binario de DevToys CLI
+if(Test-Path "${g_tools_path}\devtoys\cli") {
+    $env:PATH= "${env:PATH};${g_tools_path}\devtoys\cli"
+}
+
 # Binario de LLVM y Clang
 #if(Test-Path "${g_tools_path}\llvm\bin") {
 #    $env:PATH= "${g_tools_path}\llvm\bin;${env:PATH}"

@@ -84,14 +84,18 @@ function! s:rawecho (str)
         " En Windows, solo se puede escribir directamente a la terminal/consola.
         " Ello provoca que en Windows este no respetará la redirección (siempre escribira en la terminal,
         " por mas que se haga redireccion como 'vim script.vim > salida.txt').
-        if filewritable('CON')
-            call writefile([a:str], 'CON', 'b')
-        else
-            " This will cause a flicker to occur due to a new shell actually
-            " appearing, requiring a redraw of vim, but we will use as fallback.
-            " En windows, siempre adiciona una nueva linea al texto
-            exec("silent! !echo " . shellescape(a:str))
-            redraw!
+        if has('nvim')
+            call chansend(v:stderr, a:str)
+		else
+            if filewritable('CON')
+                call writefile([a:str], 'CON', 'b')
+            else
+                " This will cause a flicker to occur due to a new shell actually
+                " appearing, requiring a redraw of vim, but we will use as fallback.
+                " En windows, siempre adiciona una nueva linea al texto
+                exec("silent! !echo " . shellescape(a:str))
+                redraw!
+            endif
         endif
 
     else
