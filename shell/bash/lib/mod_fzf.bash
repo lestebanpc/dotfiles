@@ -367,7 +367,7 @@ gi_hashes() {
     fi
 
 
-    echo "data1: ${_g_fzf_data1}"
+    #echo "data1: ${_g_fzf_data1}"
 
 
     if [ $l_status -ne 0 ]; then

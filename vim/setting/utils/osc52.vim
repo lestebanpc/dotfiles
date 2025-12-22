@@ -78,19 +78,40 @@ endfunction
 
 " Echo a string to the terminal without munging the escape sequences.
 function! s:rawecho (str)
-  " We have to use some way to send this message to stdout.
-  " Vim's built-in echo does not write to stdout and only displays on the
-  " command line in the vim interface.
-    if filewritable('/dev/stdout')
-      " Write directly to stdout. This will prevent a flicker from occurring
-      " since no redraw is required.
-      call writefile([a:str], '/dev/stdout', 'b')
+
+    if has('win32') || has('win64')
+
+        " En Windows, solo se puede escribir directamente a la terminal/consola.
+        " Ello provoca que en Windows este no respetará la redirección (siempre escribira en la terminal,
+        " por mas que se haga redireccion como 'vim script.vim > salida.txt').
+        if filewritable('CON')
+            call writefile([a:str], 'CON', 'b')
+        else
+            " This will cause a flicker to occur due to a new shell actually
+            " appearing, requiring a redraw of vim, but we will use as fallback.
+            " En windows, siempre adiciona una nueva linea al texto
+            exec("silent! !echo " . shellescape(a:str))
+            redraw!
+        endif
+
     else
-      " This will cause a flicker to occur due to a new shell actually
-      " appearing, requiring a redraw of vim, but we will use as fallback.
-      exec("silent! !echo " . shellescape(a:str))
-      redraw!
+
+        " We have to use some way to send this message to stdout.
+        " Vim's built-in echo does not write to stdout and only displays on the
+        " command line in the vim interface.
+        if filewritable('/dev/stdout')
+            " Write directly to stdout. This will prevent a flicker from occurring
+            " since no redraw is required.
+            call writefile([a:str], '/dev/stdout', 'b')
+        else
+            " This will cause a flicker to occur due to a new shell actually
+            " appearing, requiring a redraw of vim, but we will use as fallback.
+            exec("silent! !echo " . shellescape(a:str))
+            redraw!
+        endif
+
     endif
+
 endfunction
 
 " Lookup table for s:b64encode.
@@ -134,6 +155,7 @@ function! s:b64encode(str, size)
   endwhile
   return chunked
 endfunction
+
 function! s:str2bytes(str)
   return map(range(len(a:str)), 'char2nr(a:str[v:val])')
 endfunction
@@ -289,4 +311,3 @@ endfunction
 "
 "nnoremap <expr> <Plug>OSCYankOperator OSCYankOperator()
 "vnoremap <Plug>OSCYankVisual :OSCYankVisual<CR>
-

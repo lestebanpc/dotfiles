@@ -1761,6 +1761,43 @@ function g_uninstall_main() {
 }
 
 
+g_get_repo_infos() {
+
+    #5. Instalar los paquetes indicados
+    local l_x=0
+    local l_repo_infos=""
+
+    local l_repo_id
+    local l_repo_name
+    local l_repo_name_aux
+
+    for l_repo_id in "${!gA_packages[@]}"; do
+
+        #Nombre a mostrar del paquete
+        l_repo_name="${gA_packages[${l_repo_id}]}"
+
+        if [ -z "$l_repo_infos" ]; then
+            if [ "$l_repo_name" = "$g_empty_str" ]; then
+                printf -v l_repo_infos "'%b%s%b'" "$g_color_yellow1" "$l_repo_id" "$g_color_reset"
+            else
+                printf -v l_repo_infos "'%b%s%b' ('%b%s%b')" "$g_color_yellow1" "$l_repo_id" "$g_color_reset" "$g_color_gray1" "$l_repo_name" "$g_color_reset"
+            fi
+        else
+            if [ "$l_repo_name" = "$g_empty_str" ]; then
+                printf -v l_repo_infos "%b, '%b%s%b'" "$l_repo_infos" "$g_color_yellow1" "$l_repo_id" "$g_color_reset"
+            else
+                printf -v l_repo_infos "%b, '%b%s%b' ('%b%s%b')" "$l_repo_infos" "$g_color_yellow1" "$l_repo_id" "$g_color_reset" "$g_color_gray1" "$l_repo_name" "$g_color_reset"
+            fi
+        fi
+
+    done
+
+    echo "$l_repo_infos"
+
+}
+
+
+
 g_usage() {
 
     printf 'Usage:\n'
@@ -1796,8 +1833,13 @@ g_usage() {
     printf '     %b> Si ninguno de los anteriores se establece, se usara el valor ".files".%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n\n' \
+    printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"
+
+
+    printf '\nAdicionalmente:\n'
+    local l_repo_infos=$(g_get_repo_infos)
+    printf '  > %bEl ID de un repositorio pueden ser: %b%b\n\n' "$g_color_gray1" "$l_repo_infos" "$g_color_reset"
 
 
 }
@@ -1828,15 +1870,22 @@ gp_type_calling=0       #(0) Ejecución mostrando el menu del opciones (siempre 
 
 
 #Argumento 1: ¿instalar/actualizar o desintalar?
-if [ "$1" = "uninstall" ]; then
+if [ -z "$1" ]; then
     gp_type_calling=0
-    gp_uninstall=0
-elif [[ "$1" =~ ^[0-9]+$ ]]; then
-    gp_type_calling=$1
-elif [ ! -z "$1" ]; then
-    printf 'Argumentos invalidos.\n\n'
-    g_usage
-    exit 110
+else
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        g_usage
+        exit 0
+    elif [ "$1" = "uninstall" ]; then
+        gp_type_calling=0
+        gp_uninstall=0
+    elif [[ "$1" =~ ^[0-9]+$ ]]; then
+        gp_type_calling=$1
+    else
+        printf 'Argumentos invalidos.\n\n'
+        g_usage
+        exit 110
+    fi
 fi
 
 if [ $gp_type_calling -lt 0 ] || [ $gp_type_calling -gt 4 ]; then

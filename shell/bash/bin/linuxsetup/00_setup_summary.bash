@@ -1623,12 +1623,17 @@ gp_type_calling=0       #(0) Ejecución mostrando el menu del opciones (siempre 
 #Argumento 1: Indica el tipo de invocación
 if [ -z "$1" ]; then
     gp_type_calling=0
-elif [[ "$1" =~ ^[0-9]+$ ]]; then
-    gp_type_calling=$1
 else
-    printf 'Argumentos invalidos.\n\n'
-    g_usage
-    exit 110
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        g_usage
+        exit 0
+    elif [[ "$1" =~ ^[0-9]+$ ]]; then
+        gp_type_calling=$1
+    else
+        printf 'Argumentos invalidos.\n\n'
+        g_usage
+        exit 110
+    fi
 fi
 
 if [ $gp_type_calling -lt 0 ] || [ $gp_type_calling -gt 2 ]; then

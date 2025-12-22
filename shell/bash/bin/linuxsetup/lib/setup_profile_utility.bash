@@ -383,52 +383,6 @@ function check_vim_plugins() {
 
 }
 
-# TODO Por ahora no se usara esta funcion. En un Windows sin privilegios no hay enlace simbolico, se copia el contenido
-#Parametros de salida (valores de retorno):
-#  0 > Si es esta configurado en modo editor
-#  1 > Si es esta configurado en modo developer
-#  2 > Si NO esta configurado
-function is_developer_vim_profile($p_is_neovim) {
-
-    #1. Argumentos
-
-    #2. Ruta base donde se instala el plugins/paquete
-    $l_real_path
-    $l_profile_path="${env:USERPROFILE}\.vimrc"
-    if($p_is_neovim) {
-        $l_profile_path="${env:LOCALAPPDATA}\nvim\init.vim"
-    }
-
-    #'vimrc_ide_linux_xxxx.vim'
-    #'vimrc_basic_linux.vim'
-    #'init_ide_linux_xxxx.vim'
-    #'init_basic_linux.vim'
-	if(! (Test-Path "$l_profile_path")) {
-		return 2
-	}
-
-	$l_info= Get-Item "$l_profile_path" | Select-Object LinkType, LinkTarget
-    if ( $l_info.LinkType -ne "SymbolicLink" ) {
-        return 2
-    }
-
-    $l_real_filename = Split-Path $l_info.LinkTarget -Leaf
-
-    #Si es NeoVIM
-    if ($p_is_neovim) {
-        if ($l_real_filename -match '^init_ide_.*$') {
-            return 1
-        }
-        return 0
-    }
-
-    #Si es VIM
-    if ($l_real_filename -match '^vimrc_ide_.*$') {
-        return 1
-    }
-    return 0
-
-}
 
 #Revisa el profile de VIM/NeoVIM y segun ello determina si VIM/NeoVIM esta configurado en modo Editor/IDE
 #Parametro de entrada:

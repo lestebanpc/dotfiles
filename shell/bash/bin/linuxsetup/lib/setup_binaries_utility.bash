@@ -3,6 +3,42 @@
 
 #Funciones de Utilidad {{{
 
+g_get_repo_infos() {
+
+    #5. Instalar los paquetes indicados
+    local l_x=0
+    local l_repo_infos=""
+
+    local l_repo_id
+    local l_repo_name
+    local l_repo_name_aux
+
+    for l_repo_id in "${!gA_packages[@]}"; do
+
+        #Nombre a mostrar del paquete
+        l_repo_name="${gA_packages[${l_repo_id}]}"
+
+        if [ -z "$l_repo_infos" ]; then
+            if [ "$l_repo_name" = "$g_empty_str" ]; then
+                printf -v l_repo_infos "'%b%s%b'" "$g_color_yellow1" "$l_repo_id" "$g_color_reset"
+            else
+                printf -v l_repo_infos "'%b%s%b' ('%b%s%b')" "$g_color_yellow1" "$l_repo_id" "$g_color_reset" "$g_color_gray1" "$l_repo_name" "$g_color_reset"
+            fi
+        else
+            if [ "$l_repo_name" = "$g_empty_str" ]; then
+                printf -v l_repo_infos "%b, '%b%s%b'" "$l_repo_infos" "$g_color_yellow1" "$l_repo_id" "$g_color_reset"
+            else
+                printf -v l_repo_infos "%b, '%b%s%b' ('%b%s%b')" "$l_repo_infos" "$g_color_yellow1" "$l_repo_id" "$g_color_reset" "$g_color_gray1" "$l_repo_name" "$g_color_reset"
+            fi
+        fi
+
+    done
+
+    echo "$l_repo_infos"
+
+}
+
+
 
 g_usage() {
 
@@ -32,7 +68,8 @@ g_usage() {
            "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
     printf '    %bDonde:%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    > %bCALLING_TYPE%b (para este escenario) es 2 si es interactivo y 4 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '    > %bLIST_REPO_ID%b lista de ID repositorios separados por coma. Si no %b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    > %bLIST_REPO_ID%b lista de ID repositorios separados por coma.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
     printf '    > %bSHOW_TITLE_1REPO%b Es 0, si muestra el titulo cuando solo se instala 1 repositorio. Por defecto es 1.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    > %bFLAG_FILTER_PRGS%b indica el filtro de programas en LIST_REPO_ID. Si es 0 solo se considera programas de usuarios, Si es 1 considera todos excepto los programas del usuario, otro valor no se realiza filtro.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '\nDonde:\n'
@@ -62,7 +99,11 @@ g_usage() {
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %bSi es root por lo que no se requiere almacenar la credenciales, use 2. Caso contrario, use 0 si se almaceno la credencial y 1 si no se pudo almacenar las credenciales.%b\n' \
            "$g_color_gray1" "$g_color_reset"
-    printf '  > %bSETUP_ONLYLAST_VERSION %bpor defecto es 1 (false). Solo si ingresa 0 se instala/actualiza la ultima versión.%b\n\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %bSETUP_ONLYLAST_VERSION %bpor defecto es 1 (false). Solo si ingresa 0 se instala/actualiza la ultima versión.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nAdicionalmente:\n'
+    local l_repo_infos=$(g_get_repo_infos)
+    printf '  > %bEl ID de un repositorio pueden ser: %b%b\n\n' "$g_color_gray1" "$l_repo_infos" "$g_color_reset"
 
 }
 

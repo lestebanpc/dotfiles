@@ -128,6 +128,8 @@ gA_packages=(
         ['powershell_es']='PowerShell/PowerShellEditorServices'
         ['distrobox']='89luca89/distrobox'
         ['llama-swap']='mostlygeek/llama-swap'
+        #['devtoys-cli']='DevToys-app/DevToys'
+        ['github-cli']='cli/cli'
     )
 
 
@@ -194,7 +196,7 @@ ga_menu_options_packages=(
     "shellcheck,shfmt,marksman,luals,taplo,lemminx,flamelens,powershell_es"
     "ctags-win,ctags-nowin"
     "llama-swap"
-    "awscli,distrobox"
+    "awscli,distrobox,devtoys-cli,github-cli"
     )
 
 # Tipos de archivos (usualmente binarios), que estan en el repositorio, segun el tipo de SO al cual pueden ser usados/ejecutados.
@@ -475,6 +477,7 @@ declare -A gA_current_version_parameter1=(
     ['ctags-win']='ctags.info'
     ['ctags-nowin']='ctags.info'
     ['tailspin']='tspin'
+    ['github-cli']='gh'
     )
 
 
@@ -2881,6 +2884,39 @@ function get_repo_artifacts() {
 
 
 
+        github-cli)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("gh_${p_repo_last_pretty_version}_windows_arm64.tar.zip")
+                else
+                    pna_artifact_names=("gh_${p_repo_last_pretty_version}_windows_amd64.tar.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("gh_${p_repo_last_pretty_version}_linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("gh_${p_repo_last_pretty_version}_linux_amd64.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("gh_${p_repo_last_pretty_version}_linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("gh_${p_repo_last_pretty_version}_linux_amd64.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
+
+
+
         nodejs)
             #URL base fijo     : "https://nodejs.org/dist"
             if [ $g_os_subtype_id -eq 1 ]; then
@@ -5084,6 +5120,27 @@ function _copy_artifact_files() {
             fi
             ;;
 
+
+        github-cli)
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
+
+            #Renombrar el binario antes de copiarlo
+            if [ $p_is_win_binary -ne 0 ]; then
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}/bin" "gh" 0 1
+
+                #Copiar los archivos de ayuda man para comando
+                copy_man_files "${g_temp_path}/${l_source_path}/share/man/man1" 1
+
+            else
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}/bin" "gh.exe" 1 1
+
+            fi
+            ;;
 
 
         shfmt)
