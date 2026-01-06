@@ -1,0 +1,27 @@
+# Default values: 'https://github.com/sxyazi/yazi/blob/shipped/yazi-config/preset/keymap-default.toml'
+# Path:
+#    ~/.config/yazi/keymap.toml        (Unix-like systems)
+#    %AppData%\yazi\config\keymap.toml (Windows)
+#
+# A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
+"$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
+
+[mgr]
+prepend_keymap = [
+
+    # --------------------------------------------------------------------------
+    # Nuevos keymappings
+    # --------------------------------------------------------------------------
+
+    # El comando custom 'fzf_fd' se registra en el plugin fzf-utils
+    { on =  [ "g", "s" ], run = "plugin fzf-utils:find", desc = "Search subfolder by name via fd" },
+    #{ on = [ "g", "s" ], run = "search --via=fd --args='-f d'", desc = "Search subfolder by name via fd" },
+
+
+    # --------------------------------------------------------------------------
+    # Redefiniendo keymappings predeterminados
+    # --------------------------------------------------------------------------
+
+    # Toggle: Modificar 'Ctrl + a' por 'Shift + a' para compatibilidad con el prefijo de tmux
+	{ on = "<S-a>",   run = "toggle_all --state=on", desc = "Select all files" },
+]

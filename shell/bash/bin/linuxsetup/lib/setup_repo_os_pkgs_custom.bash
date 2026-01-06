@@ -10,7 +10,7 @@
 #    ['internal-id']='external-id'
 #  - Por ejemplo para el repositorio GitHub 'stedolan/jq', el item se tendria:
 #    ['jq']='stedolan/jq'
-gA_packages=(
+declare -A gA_packages=(
         ['curl']='curl'
         ['tmux']='tmux'
         ['unzip']='unzip'
@@ -36,7 +36,7 @@ gA_packages=(
 #         'install_initialize_menu_option', 'install_finalize_menu_option', 'uninstall_initialize_menu_option' y 'uninstall_finalize_menu_option'
 #Menu dinamico: Titulos de las opciones del menú
 #  - Cada entrada define un opcion de menú. Su valor define el titulo.
-ga_menu_options_title=(
+declare -a ga_menuoption_title=(
     "Basicos"
     "Editor VIM"
     "Editor NeoVIM"
@@ -56,7 +56,7 @@ ga_menu_options_title=(
 #Notas:
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
-ga_menu_options_packages=(
+declare -a ga_menuoption_packages=(
     "curl,openssl,unzip,git,tmux,rsync"
     "vim"
     "nvim"
@@ -276,7 +276,7 @@ get_package_name() {
 #La inicialización del menú opcion de instalación (codigo que se ejecuta antes de instalar el paquete)
 #
 #Los argumentos de entrada son:
-#  1 > Index (inicia en 0) de la opcion de menu elegista para instalar (ver el arreglo 'ga_menu_options_title').
+#  1 > Index (inicia en 0) de la opcion de menu elegista para instalar (ver el arreglo 'ga_menuoption_title').
 #
 #El valor de retorno puede ser:
 #  0 > Si inicializo con exito.
@@ -292,7 +292,7 @@ install_initialize_menu_option() {
     local l_status
     local l_repo_id
     local l_artifact_index
-    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_name="${ga_menuoption_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
 
 
@@ -568,7 +568,7 @@ install_custom_packages() {
 #La finalización del menú opcion de instalación (codigo que se ejecuta despues de instalar todos los paquetes de la opcion de menú)
 #
 #Los argumentos de entrada son:
-#  1 > Index de la opcion de menu elegista para instalar (ver el arreglo 'ga_menu_options_title').
+#  1 > Index de la opcion de menu elegista para instalar (ver el arreglo 'ga_menuoption_title').
 #
 #El valor de retorno puede ser:
 #  0 > Si finalizo con exito.
@@ -580,7 +580,7 @@ install_finalize_menu_option() {
     #Argumentos
     local p_option_relative_idx=$1
 
-    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_name="${ga_menuoption_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
 
 
@@ -610,7 +610,7 @@ install_finalize_menu_option() {
 #Codigo que se ejecuta cuando se inicializa la opcion de menu de desinstalación.
 #
 #Los argumentos de entrada son:
-#  1 > Index de la opcion de menu elegista para desinstalar (ver el arreglo 'ga_menu_options_title').
+#  1 > Index de la opcion de menu elegista para desinstalar (ver el arreglo 'ga_menuoption_title').
 #
 #El valor de retorno puede ser:
 #  0 > Si inicializo con exito.
@@ -625,14 +625,14 @@ uninstall_initialize_menu_option() {
     #2. Inicialización
     local l_status
     #local l_artifact_index
-    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_name="${ga_menuoption_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
 
     #3. Preguntar antes de eliminar los archivos
     printf 'Se va ha iniciar con la desinstalación de los siguientes packages: '
 
     #Obtener los repositorios a configurar
-    local l_aux="${ga_menu_options_packages[$l_i]}"
+    local l_aux="${ga_menuoption_packages[$l_i]}"
     local IFS=','
     local la_repos=(${l_aux})
     IFS=$' \t\n'
@@ -693,7 +693,7 @@ uninstall_initialize_menu_option() {
 #Codigo que se ejecuta cuando se finaliza la opcion de menu de desinstalación.
 #
 #Los argumentos de entrada son:
-#  1 > Index de la opcion de menu elegista para desinstalar (ver el arreglo 'ga_menu_options_title').
+#  1 > Index de la opcion de menu elegista para desinstalar (ver el arreglo 'ga_menuoption_title').
 #
 #El valor de retorno puede ser:
 #  0 > Si finalizo con exito.
@@ -705,7 +705,7 @@ uninstall_finalize_menu_option() {
     #Argumentos
     local p_option_relative_idx=$1
 
-    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_name="${ga_menuoption_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
 
 

@@ -39,7 +39,7 @@ if(Test-Path "${g_tools_path}\ctags\bin") {
 
 # Binarios de compresor 7zip
 if(Test-Path "C:\Program Files\7-Zip") {
-    $env:PATH= "C:\Program Files\7-Zip;${env:PATH}"
+    $env:PATH= "C:\Program Files\7-Zip;${env:PATH}"
 }
 
 # Binarios de Git

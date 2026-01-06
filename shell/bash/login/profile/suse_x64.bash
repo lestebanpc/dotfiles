@@ -216,9 +216,13 @@ export FZF_CTRL_R_OPTS="--prompt 'History> '
     --color header:italic"
 
 export FZF_CTRL_T_OPTS="--prompt 'Select> '
+    --bind 'ctrl-y:execute-silent(echo -n {} | wl-copy)+abort'
+    --header '(Ctrl+y) Copy file/folder path'
     --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 4 {} | head -n 300; else bat --color=always --style=numbers,header-filename,grid --line-range :500 {}; fi'"
 
 export FZF_ALT_C_OPTS="--prompt 'Go to Folder> '
+    --bind 'ctrl-y:execute-silent(echo -n {} | wl-copy)+abort'
+    --header '(Ctrl+y) Copy folder path'
     --preview 'eza --tree --color=always --icons always -L 4 {} | head -n 300'"
 
 # FZF> El script "key bindings" y "fuzzy completion" (no puede ser modificado)

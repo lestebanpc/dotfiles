@@ -137,7 +137,7 @@ get_pane_id_of_current_windows() {
 
         # Usar el ID del 1er panel que no es actual/activo
         if [ ! -z "$l_data" ]; then
-for l_pane_info in $l_data; do
+            for l_pane_info in $l_data; do
                 # El panel activo siempre inicia con tiene el formato '1:%<pane_id>'
                 if [[ "$l_pane_info" == 0:* ]]; then
                     l_pane_id=${l_pane_info#0:%}

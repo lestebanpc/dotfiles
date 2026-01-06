@@ -234,7 +234,7 @@ function _install_menu_options() {
 
 
     #1. Obtener los paquetes a configurar
-    local l_aux="${ga_menu_options_packages[$p_option_relative_idx]}"
+    local l_aux="${ga_menuoption_packages[$p_option_relative_idx]}"
     #echo "Input: ${p_input_options} , Repos[${p_option_relative_idx}]: ${l_aux}"
 
     if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
@@ -279,9 +279,9 @@ function _install_menu_options() {
             printf '\n'
             print_line '─' $g_max_length_line  "$g_color_gray1"
             if [ $gp_type_calling -eq 0 ]; then
-                printf -v l_title_template 'Package Group (%b%s%b) > %b%s%b' "$g_color_gray1" "$l_option_value" "$g_color_reset" "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+                printf -v l_title_template 'Package Group (%b%s%b) > %b%s%b' "$g_color_gray1" "$l_option_value" "$g_color_reset" "$g_color_cian1" "${ga_menuoption_title[${p_option_relative_idx}]}" "$g_color_reset"
             else
-                printf -v l_title_template 'Package Group > %b%s%b' "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+                printf -v l_title_template 'Package Group > %b%s%b' "$g_color_cian1" "${ga_menuoption_title[${p_option_relative_idx}]}" "$g_color_reset"
             fi
             printf "${l_title_template}\n"
             print_line '─' $g_max_length_line "$g_color_gray1"
@@ -402,7 +402,7 @@ function _install_menu_options() {
                 printf "${l_title_template}\n" "no procesado"
                 print_line '-' $g_max_length_line "$g_color_gray1"
 
-                printf 'El package "%s" tiene parametros invalido que impiden su analisis. Se analizó al procesar la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+                printf 'El package "%s" tiene parametros invalido que impiden su analisis. Se analizó al procesar la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menuoption_title[$l_k]}"
 
             #  2 > El package ya esta instalado.
             elif [ $l_status_first_setup -eq 2 ]; then
@@ -411,7 +411,7 @@ function _install_menu_options() {
                 printf "${l_title_template}\n" "no procesado"
                 print_line '-' $g_max_length_line "$g_color_gray1"
 
-                printf 'El package "%s" ya esta instalado. Se analizó al procesar la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+                printf 'El package "%s" ya esta instalado. Se analizó al procesar la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menuoption_title[$l_k]}"
 
             #Estados de un proceso iniciado:
             #  0 > El paquete inicio la instalación y lo termino con exito.
@@ -421,7 +421,7 @@ function _install_menu_options() {
                 printf "${l_title_template}\n" "se acaba de instalar"
                 print_line '-' $g_max_length_line "$g_color_gray1"
 
-                printf 'El package "%s" se acaba de instalar cuando se proceso la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+                printf 'El package "%s" se acaba de instalar cuando se proceso la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menuoption_title[$l_k]}"
 
             #  1 > El paquete inicio la instalación y lo termino con error.
             elif [ $l_status_first_setup -eq 1 ]; then
@@ -430,7 +430,7 @@ function _install_menu_options() {
                 printf "${l_title_template}\n" "se acaba de instalar con error"
                 print_line '-' $g_max_length_line "$g_color_gray1"
 
-                printf 'El package "%s" se acaba de instalar con error cuando se proceso la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+                printf 'El package "%s" se acaba de instalar con error cuando se proceso la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menuoption_title[$l_k]}"
 
             fi
 
@@ -651,7 +651,7 @@ function _uninstall_menu_options() {
 
 
     #1. Obtener los paquetes a configurar
-    local l_aux="${ga_menu_options_packages[$p_option_relative_idx]}"
+    local l_aux="${ga_menuoption_packages[$p_option_relative_idx]}"
 
     if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
         return 98
@@ -700,10 +700,10 @@ function _uninstall_menu_options() {
 
             #Si se ejecuta usando el menu
             if [ $gp_type_calling -eq 0 ]; then
-                printf -v l_title_template "Package Group (%s%s%s) > '%s%s%s'" "$g_color_gray1" "$l_option_value" "$g_color_reset" "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+                printf -v l_title_template "Package Group (%s%s%s) > '%s%s%s'" "$g_color_gray1" "$l_option_value" "$g_color_reset" "$g_color_cian1" "${ga_menuoption_title[${p_option_relative_idx}]}" "$g_color_reset"
             #Si se ejecuta sin usar el menu
             else
-                printf -v l_title_template "Package Group > '%s%s%s'" "$g_color_cian1" "${ga_menu_options_title[${p_option_relative_idx}]}" "$g_color_reset"
+                printf -v l_title_template "Package Group > '%s%s%s'" "$g_color_cian1" "${ga_menuoption_title[${p_option_relative_idx}]}" "$g_color_reset"
             fi
 
             printf "${l_title_template}\n"
@@ -821,7 +821,7 @@ function _uninstall_menu_options() {
                 printf "${l_title_template}\n" "no procesado"
                 print_line '-' $g_max_length_line "$g_color_gray1"
 
-                printf 'El paquete "%s" tiene parametros invalidos que impiden su procesamiento. Se analizó con la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+                printf 'El paquete "%s" tiene parametros invalidos que impiden su procesamiento. Se analizó con la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menuoption_title[$l_k]}"
 
             #  2 > El paquete no esta instalado.
             elif [ $l_status_first_setup -eq 2 ]; then
@@ -831,7 +831,7 @@ function _uninstall_menu_options() {
                 printf "${l_title_template}\n" "no procesado"
                 print_line '-' $g_max_length_line "$g_color_gray1"
 
-                printf 'El paquete "%s" ya esta instalado. Se analizó con la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+                printf 'El paquete "%s" ya esta instalado. Se analizó con la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menuoption_title[$l_k]}"
 
             #Estados de un proceso iniciado:
             #  0 > El paquete inicio la desinstalación y lo termino con exito.
@@ -842,7 +842,7 @@ function _uninstall_menu_options() {
                 printf "${l_title_template}\n" "se acaba de instalar"
                 print_line '-' $g_max_length_line "$g_color_gray1"
 
-                printf 'El paquete "%s" se acaba de desinstalar en la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+                printf 'El paquete "%s" se acaba de desinstalar en la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menuoption_title[$l_k]}"
 
 
             #  1 > El paquete inicio la desinstalación y lo termino con error.
@@ -853,7 +853,7 @@ function _uninstall_menu_options() {
                 printf "${l_title_template}\n" "se acaba de instalar con error"
                 print_line '-' $g_max_length_line "$g_color_gray1"
 
-                printf 'El paquete "%s" se acaba de desinstalar con error en la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menu_options_title[$l_k]}"
+                printf 'El paquete "%s" se acaba de desinstalar con error en la opción del menu %s ("%s")\n' "$l_repo_id" "$l_aux" "${ga_menuoption_title[$l_k]}"
 
 
             fi
@@ -1336,7 +1336,7 @@ function g_install_packages_byopc() {
     #Limpiar los resultados anteriores
     local lA_processed_repo=()
 
-    for((l_x=0; l_x < ${#ga_menu_options_packages[@]}; l_x++)); do
+    for((l_x=0; l_x < ${#ga_menuoption_packages[@]}; l_x++)); do
 
         _install_menu_options $p_input_options $l_x 'lA_processed_repo'
         l_status=$?
@@ -1601,7 +1601,7 @@ function g_uninstall_packages() {
     #Limpiar los resultados anteriores
     local lA_processed_repo=()
 
-    for((l_x=0; l_x < ${#ga_menu_options_packages[@]}; l_x++)); do
+    for((l_x=0; l_x < ${#ga_menuoption_packages[@]}; l_x++)); do
 
         _uninstall_menu_options $p_input_options $l_x 'lA_processed_repo'
         l_status=$?
@@ -1636,12 +1636,12 @@ function g_install_main() {
     printf " (%ba%b) Actualizar los paquetes existentes del SO y los binarios de los paquetes existentes\n" "$g_color_green1" "$g_color_reset"
     printf " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:\n"
 
-    get_length_menu_option $g_offset_option_index_menu_install
+    get_length_menu_option $g_offset_option_index_menu_install "ga_menuoption_title"
     local l_max_digits=$?
 
     printf "     (%b%${l_max_digits}d%b) Actualizar los paquetes existentes del sistema operativo\n" "$g_color_green1" "$g_opt_update_installed_pckg" "$g_color_reset"
 
-    show_dynamic_menu 'Instalar' $g_offset_option_index_menu_install $l_max_digits
+    show_dynamic_menu 'Instalar' $g_offset_option_index_menu_install $l_max_digits "gA_packages" "ga_menuoption_packages" "ga_menuoption_title"
     print_line '-' $g_max_length_line "$g_color_gray1"
 
     #3. Mostrar la ultima parte del menu y capturar la opcion elegida
@@ -1707,10 +1707,10 @@ function g_uninstall_main() {
     printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
     printf " ( ) Para desintalar ingrese un opción o la suma de las opciones que desea configurar:\n"
 
-    get_length_menu_option $g_offset_option_index_menu_uninstall
+    get_length_menu_option $g_offset_option_index_menu_uninstall "ga_menuoption_title"
     local l_max_digits=$?
 
-    show_dynamic_menu 'Desinstalar' $g_offset_option_index_menu_uninstall $l_max_digits
+    show_dynamic_menu 'Desinstalar' $g_offset_option_index_menu_uninstall $l_max_digits "gA_packages" "ga_menuoption_packages" "ga_menuoption_title"
     print_line '-' $g_max_length_line "$g_color_gray1"
 
     #Capturar la opcion de menu y completar el menu

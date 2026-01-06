@@ -500,9 +500,12 @@ runtime setting/ide/ide_development.vim
 "   - Muestra reportes de la ejecucion e indicadores del estado en buffer de las pruebas ejecutadas.
 runtime setting/ide/ide_testing.vim
 
-" Capacidades adicionales de IDE
+" Tools adicionales del IDE
 " > Client REST
 " > Tools for GIT
-" > IA Chat
-" > AI Agent
-runtime setting/ide/ide_extended.vim
+runtime setting/ide/ide_additional_tools.vim
+
+" Tools de AI del IDE
+" > IA Completion
+" > IA Chatbot and AI Agent
+runtime setting/ide/ide_ai_tools.vim

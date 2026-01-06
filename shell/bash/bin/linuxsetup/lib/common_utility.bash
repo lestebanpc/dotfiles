@@ -47,25 +47,123 @@ declare -r g_max_length_line=130
 declare -r g_empty_str='EMPTY'
 
 
+#}}}
+
+
+
+
+#------------------------------------------------------------------------------------------------------------------
+#> Funciones para mostrar el menu {{{
+#------------------------------------------------------------------------------------------------------------------
+#
+
+#Parametros:
+# 1 > Offset del indice donde inicia el menu dinamico (usualmente, el menu dinamico no inicia desde la primera opcion del dinamico menú).
+# 2 > Nombre del arreglo del menu de opciones donde se muestra el listado de repositorios/paquetes a instalar (se accede usando 'NameRefs')
+get_length_menu_option() {
+
+    local p_offset_option_index=$1
+    local -n ra_menuoption_packages="$2"
+
+
+
+    local l_nbr_options=${#ra_menuoption_packages[@]}
+    local l_max_digits_aux="$((1 << (p_offset_option_index + l_nbr_options)))"
+
+    return ${#l_max_digits_aux}
+}
+
+
 #Menu dinamico: Listado de repositorios que son instalados por las opcion de menu dinamicas
-#  - Cada repositorio tiene un ID interno del un repositorios y un identifificador realizar:
-#    ['internal-id']='external-id'
-#  - Por ejemplo para el repositorio GitHub 'stedolan/jq', el item se tendria:
-#    ['jq']='stedolan/jq'
-declare -A gA_packages=(
-    )
+#El menu dinamico muestra una opción de menú que es:
+#   ([Correlativo]) [Etiquete del opción de menu] [Titulo de la opción de menu]: [Listado de los repositorio que se configurará]
+#Parametros de entrada:
+#  1> Etiqueta de la opción de menú.
+#     Texto que aparece al costado del opción ('Instalar o actualizar' o 'Desintalar')
+#  2> Offset del indice donde inicia el menu dinamico (usualmente, el menu dinamico no inicia desde la primera opcion del dinamico menú).
+#  3> Numero maximo de digitos de una opción del menu personalizado.
+#  4> Nombre del diccionario donde estan los repositorios o paquetes (se accede usando 'NameRefs')
+#  5> Nombre del arreglo del menu de opciones donde se muestra el listado de repositorios/paquetes a instalar (se accede usando 'NameRefs')
+#  6> Nombre del arreglo del menu de opciones donde se muestra el titulo (se accede usando 'NameRefs')
+show_dynamic_menu() {
 
-#Menu dinamico: Titulos de las opciones del menú
-#  - Cada entrada define un opcion de menú. Su valor define el titulo.
-declare -a ga_menu_options_title=(
-    )
+    #Argumentos
+    local p_option_tag=$1
+    local p_offset_option_index=$2
+    local p_max_digits=$3
+    local -n rA_packages="$4"
+    local -n ra_menuoption_packages="$5"
+    local -n ra_menuoption_title="$6"
 
-#Menu dinamico: Repositorios de programas asociados asociados a una opciones del menu.
-#  - Cada entrada define un opcion de menú.
-#  - Su valor es un cadena con ID de repositorios separados por comas.
-declare -a ga_menu_options_packages=(
-    )
 
+    #Espacios vacios al inicio del menu
+    local l_empty_space
+    local l_aux=$((8 + p_max_digits))
+    printf -v l_empty_space ' %.0s' $(seq $l_aux)
+
+    #Recorreger las opciones dinamicas del menu personalizado
+    local l_i=0
+    local l_j=0
+    local IFS=','
+    local la_repos
+    local l_option_value
+    local l_n
+    local l_repo_names
+    local l_repo_id
+
+
+
+    for((l_i=0; l_i < ${#ra_menuoption_packages[@]}; l_i++)); do
+
+        #Si no tiene repositorios a instalar, omitirlos
+        l_option_value=$((1 << (p_offset_option_index + l_i)))
+
+        l_aux="${ra_menuoption_packages[$l_i]}"
+        #if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
+        #    printf "     (%b%0${p_max_digits}d%b) %s\n" "$g_color_green1" "$l_option_value" "$g_color_reset" "${ra_menuoption_title[$l_i]}"
+        #    continue
+        #fi
+
+        #Obtener los repositorios a configurar
+        IFS=','
+        la_repos=(${l_aux})
+        IFS=$' \t\n'
+
+        printf "     (%b%${p_max_digits}d%b) %s %b%b%b> " "$g_color_green1" "$l_option_value" "$g_color_reset" \
+               "$p_option_tag" "$g_color_green1" "${ra_menuoption_title[$l_i]}" "$g_color_reset"
+
+        l_n=${#la_repos[@]}
+        if [ $l_n -gt 3 ]; then
+            printf "\n${l_empty_space}"
+        fi
+
+        l_repo_names=''
+        for((l_j=0; l_j < ${l_n}; l_j++)); do
+
+            l_repo_id="${la_repos[${l_j}]}"
+            l_aux="${rA_packages[${l_repo_id}]}"
+            if [ -z "$l_aux" ] || [ "$l_aux" = "$g_empty_str" ]; then
+                l_aux="$l_repo_id"
+            fi
+
+            if [ $l_j -eq 0 ]; then
+                l_repo_names="'${g_color_gray1}${l_aux}${g_color_reset}'"
+            else
+                if [ $l_j -eq 6 ]; then
+                    l_repo_names="${l_repo_names},\n${l_empty_space}'${g_color_gray1}${l_aux}${g_color_reset}'"
+                else
+                    l_repo_names="${l_repo_names}, '${g_color_gray1}${l_aux}${g_color_reset}'"
+                fi
+            fi
+
+        done
+
+        printf '%b\n' "$l_repo_names"
+
+    done
+
+
+}
 
 #}}}
 
@@ -2134,108 +2232,6 @@ function request_stop_systemd_unit() {
 
 }
 
-
-#Parametros:
-# 1 > Offset del indice donde inicia el menu dinamico (usualmente, el menu dinamico no inicia desde la primera opcion del dinamico menú).
-get_length_menu_option() {
-
-    local p_offset_option_index=$1
-
-    local l_nbr_options=${#ga_menu_options_packages[@]}
-    local l_max_digits_aux="$((1 << (p_offset_option_index + l_nbr_options)))"
-
-    return ${#l_max_digits_aux}
-}
-
-
-#Menu dinamico: Listado de repositorios que son instalados por las opcion de menu dinamicas
-#El menu dinamico muestra una opción de menú que es:
-#   ([Correlativo]) [Etiquete del opción de menu] [Titulo de la opción de menu]: [Listado de los repositorio que se configurará]
-#Parametros de entrada:
-#  1> Etiqueta de la opción de menú.
-#     Texto que aparece al costado del opción ('Instalar o actualizar' o 'Desintalar')
-#  2> Offset del indice donde inicia el menu dinamico (usualmente, el menu dinamico no inicia desde la primera opcion del dinamico menú).
-#  3> Numero maximo de digitos de una opción del menu personalizado.
-#Variables de entrada
-#  ga_menu_options_title > Listado titulos de una opción de menú.
-#  ga_menu_options_packages > Listado de ID de repositorios configurados por una opción de menú.
-#  gA_packages       > Diccionario de identificadores de repositorios configurados por una opción de menú.
-show_dynamic_menu() {
-
-    #Argumentos
-    local p_option_tag=$1
-    local p_offset_option_index=$2
-    local p_max_digits=$3
-
-
-    #Espacios vacios al inicio del menu
-    local l_empty_space
-    local l_aux=$((8 + p_max_digits))
-    printf -v l_empty_space ' %.0s' $(seq $l_aux)
-
-    #Recorreger las opciones dinamicas del menu personalizado
-    local l_i=0
-    local l_j=0
-    local IFS=','
-    local la_repos
-    local l_option_value
-    local l_n
-    local l_repo_names
-    local l_repo_id
-
-
-
-    for((l_i=0; l_i < ${#ga_menu_options_packages[@]}; l_i++)); do
-
-        #Si no tiene repositorios a instalar, omitirlos
-        l_option_value=$((1 << (p_offset_option_index + l_i)))
-
-        l_aux="${ga_menu_options_packages[$l_i]}"
-        #if [ -z "$l_aux" ] || [ "$l_aux" = "-" ]; then
-        #    printf "     (%b%0${p_max_digits}d%b) %s\n" "$g_color_green1" "$l_option_value" "$g_color_reset" "${ga_menu_options_title[$l_i]}"
-        #    continue
-        #fi
-
-        #Obtener los repositorios a configurar
-        IFS=','
-        la_repos=(${l_aux})
-        IFS=$' \t\n'
-
-        printf "     (%b%${p_max_digits}d%b) %s %b%b%b> " "$g_color_green1" "$l_option_value" "$g_color_reset" \
-               "$p_option_tag" "$g_color_green1" "${ga_menu_options_title[$l_i]}" "$g_color_reset"
-
-        l_n=${#la_repos[@]}
-        if [ $l_n -gt 3 ]; then
-            printf "\n${l_empty_space}"
-        fi
-
-        l_repo_names=''
-        for((l_j=0; l_j < ${l_n}; l_j++)); do
-
-            l_repo_id="${la_repos[${l_j}]}"
-            l_aux="${gA_packages[${l_repo_id}]}"
-            if [ -z "$l_aux" ] || [ "$l_aux" = "$g_empty_str" ]; then
-                l_aux="$l_repo_id"
-            fi
-
-            if [ $l_j -eq 0 ]; then
-                l_repo_names="'${g_color_gray1}${l_aux}${g_color_reset}'"
-            else
-                if [ $l_j -eq 6 ]; then
-                    l_repo_names="${l_repo_names},\n${l_empty_space}'${g_color_gray1}${l_aux}${g_color_reset}'"
-                else
-                    l_repo_names="${l_repo_names}, '${g_color_gray1}${l_aux}${g_color_reset}'"
-                fi
-            fi
-
-        done
-
-        printf '%b\n' "$l_repo_names"
-
-    done
-
-
-}
 
 #La funcion considerara la ruta de un folder como: "${g_targethome_path}/PATH_THAT_MUST_EXIST/PATH_THAT_MAYNOT_EXIST", donde
 #  > 'PATH_THAT_MUST_EXIST' es parte de la ruta del folder que debe existir y tener permisos de escritura, si no lo esta, arroajara el error 2.

@@ -3,7 +3,7 @@
 ################################################################################################
 
 #01. Search for commit with FZF preview and copy hash
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 #    > [CTRL + y]    - Ver el detalle de commit y navegar en sus paginas
 #    > [ENTER]       - Copiar el hash del commit en portapapeles de windows
 #    > [SHIFT + ↓/↑] - Cambio de pagina en la vista de preview
@@ -44,4 +44,28 @@ function glog()
 
 
 
+################################################################################################
+# Others Functions
+################################################################################################
 
+# Wrapper que abre yazi y se mueve al ultimo directorio navegado
+function y {
+
+    # Crea un un archivo temporal creeado y luego lo almacena su ruta en la variable 'l_tmp'
+    $tmp = (New-TemporaryFile).FullName
+
+    # Ejecuta el comando yazi, ignorando cualquier alias o función que también se llame yazi.
+    # > '--cwd-file' cuando cierra yazi, escribe el 'working directory' actual de yazi en este archivo temporal ($tmp).
+    yazi.exe $args --cwd-file="$tmp"
+
+    # Leer el contenido de archivo temporal y lo almacena en '$cwd'
+    $cwd = Get-Content -Path $tmp -Encoding UTF8
+
+    # Si el 'working directory' no es vacio y no es diferente del actual, ejecuta el comando interno 'cd' (omite alias y funciones)
+    if (-not [String]::IsNullOrEmpty($cwd) -and $cwd -ne $PWD.Path) {
+        Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
+    }
+
+    # Elimina el archivo temporal
+    Remove-Item -Path $tmp
+}

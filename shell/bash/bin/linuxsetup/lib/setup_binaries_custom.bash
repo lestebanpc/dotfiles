@@ -9,17 +9,36 @@
 #------------------------------------------------------------------------------------------------------------------
 #> Variables globales de inicialización y constantes {{{
 #------------------------------------------------------------------------------------------------------------------
-
-#TODO > Si se incluye .net runtime con el SDK podria actualizarse un runtime independientemente de su SDK.
+#
+# TODO > Si se incluye .net runtime con el SDK podria actualizarse un runtime independientemente de su SDK.
 #       por ello se esta desabilitando la instalacion de runtime por aqui
 
-# ID de los repositorios y sus rutas bases
-# Menu dinamico: Listado de repositorios que son instalados por las opcion de menu dinamicas
-#  - Cada repositorio tiene un ID interno del un repositorios y un identifificador realizar:
-#    ['internal-id']='external-id'
-#  - Por ejemplo para el repositorio GitHub 'stedolan/jq', el item se tendria:
-#    ['jq']='stedolan/jq'
-gA_packages=(
+# Tipo de repositorio que se puede usar
+# > Define la URL base del repositorio y puede ser, entre otros en:
+#   'github'      : Representa al github publico 'https://github.com' (valor por defecto).
+#   'gitlab'      : Representa al gitlab publico 'https://gitlab.com'.
+declare -A gA_repotypes=(
+        ['github']='https://github.com'
+        ['gitlab']='https://gitlab.com'
+        ['k8s']='https://dl.k8s.io/release'
+        ['dotnetcli']='https://dotnetcli.azureedge.net'
+        ['googleapis']='https://storage.googleapis.com'
+        ['eclipse']='https://download.eclipse.org'
+        ['nodejs']='https://nodejs.org/dist'
+        ['rust-lang']='https://static.rust-lang.org/dist'
+        ['openshift']='https://mirror.openshift.com/pub/openshift-v4'
+        ['helm']='https://get.helm.sh'
+        ['awscli']='https://awscli.amazonaws.com'
+        ['rclone']='https://downloads.rclone.org'
+        ['apache']='https://dlcdn.apache.org'
+    )
+
+# Diccionario de todos los repositorios y su respecto identificadores del repositorio de artefactos
+# > Cada elemento tiene como key un ID interno del repositorios y cuyo valor es un identificador del repositorio de artefactos.
+# > El repositorio de artefactos es el repositorio de donde se descargan sus artefactos.
+# > El repositorio de versiones el repositorio de donde se obtienen las versiones (tag) publicadas.
+# > Por ejemplo para el repositorio 'jq' esta asociado a un repositorio GitHub 'stedolan/jq' donde se descargaran sus artefactos.
+declare -A gA_repos_artifact=(
         ['bat']='sharkdp/bat'
         ['ripgrep']='BurntSushi/ripgrep'
         ['delta']='dandavison/delta'
@@ -128,16 +147,65 @@ gA_packages=(
         ['powershell_es']='PowerShell/PowerShellEditorServices'
         ['distrobox']='89luca89/distrobox'
         ['llama-swap']='mostlygeek/llama-swap'
-        #['devtoys-cli']='DevToys-app/DevToys'
         ['github-cli']='cli/cli'
+        ['gitlab-cli']='gitlab-org/cli'
+        ['resvg']='linebender/resvg'
     )
 
+# Diccionario de los repositorios que tiene un repositorio de versiones diferente al repositorio de artefactos.
+# > Cada elemento tiene como key un ID interno del repositorios y cuyo valor es un identificador del repositorio de versiones.
+# > El repositorio de artefactos es el repositorio de donde se descargan sus artefactos.
+# > El repositorio de versiones el repositorio de donde se obtienen las versiones (tag) publicadas.
+# > Por ejemplo para el repositorio 'helm' esta asociado a un repositorio GitHub 'helm/heml' donde se obtendra las versiones (tag) publicados.
+declare -A gA_repos_version=(
+        ['helm']='helm/helm'
+    )
+
+# Tipo de repositorio usado por descargar los artefactos de un repositorio
+# > Valores solo pueden ser los definidos por 'gA_repotypes'.
+declare -A gA_repo_artifact_repotype=(
+        ['kubectl']='k8s'
+        ['kubelet']='k8s'
+        ['kubeadm']='k8s'
+        ['net-sdk']='dotnetcli'
+        ['net-rt-core']='dotnetcli'
+        ['net-rt-aspnet']='dotnetcli'
+        ['go']='googleapis'
+        ['jdtls']='eclipse'
+        ['nodejs']='nodejs'
+        ['rust']='rust-lang'
+        ['oc']='openshift'
+        ['helm']='helm'
+        ['awscli']='awscli'
+        ['rclone']='rclone'
+        ['maven']='apache'
+        ['vscode-java']='vscode-marketplace'
+        ['vscode-java-test']='vscode-marketplace'
+        ['vscode-java-debug']='vscode-marketplace'
+        ['vscode-maven']='vscode-marketplace'
+        ['vscode-gradle']='vscode-marketplace'
+        ['vscode-microprofile']='vscode-marketplace'
+        ['vscode-quarkus']='vscode-marketplace'
+        ['vscode-jdecompiler']='vscode-marketplace'
+        ['vscode-springboot']='vscode-marketplace'
+        ['gitlab-cli']='gitlab'
+    )
+
+
+# Tipo de repositorio usado para obtener la ultima version del repositorio.
+# > Valores solo pueden ser los definidos por 'gA_repotypes'.
+# > Si no se define se considera el valor definido por 'gA_repo_artifact_repotype'.
+# > Casos de uso:
+#   > Helm los realeasas lo tiene dentro de su propio site, pero la version del ultimo releasae esta en github.
+declare -A gA_repo_version_repotype=(
+        ['helm']='github'
+)
 
 # WARNING: Un cambio en el orden implica modificar los indices de los eventos:
 #         'install_initialize_menu_option', 'install_finalize_menu_option', 'uninstall_initialize_menu_option' y 'uninstall_finalize_menu_option'
 # Menu dinamico: Titulos de las opciones del menú
 #  - Cada entrada define un opcion de menú. Su valor define el titulo.
-ga_menu_options_title=(
+declare -a ga_menuoption_title=(
     "Comandos del sistema basicos"
     "Comandos del sistema alternativos 1"
     "Comandos del sistema alternativos 2"
@@ -164,6 +232,7 @@ ga_menu_options_title=(
     "Tools adicionales de Linux"
     )
 
+
 # WARNING: Un cambio en el orden implica modificar los indices de los eventos:
 #         'install_initialize_menu_option', 'install_finalize_menu_option', 'uninstall_initialize_menu_option' y 'uninstall_finalize_menu_option'
 # Menu dinamico: Repositorios de programas asociados asociados a una opciones del menu.
@@ -172,10 +241,10 @@ ga_menu_options_title=(
 # Notas:
 #  > En la opción de 'ContainerD', se deberia incluir opcionalmente 'bypass4netns' pero su repo no presenta el binario.
 #    El binario se puede encontrar en nerdctl-full.
-ga_menu_options_packages=(
+declare -a ga_menuoption_repos=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
     "tmux-thumbs,tmux-fingers,sesh,grpcurl,websocat,protoc,jwt"
-    "rclone,tailspin,qsv,xan,evans,glow,gum,butane,biome,step,yazi,lazygit,rmpc,opencode"
+    "rclone,tailspin,qsv,xan,evans,glow,gum,butane,biome,step,yazi,lazygit,rmpc,resvg"
     "nerd-fonts"
     "neovim,tree-sitter"
     "powershell"
@@ -196,7 +265,7 @@ ga_menu_options_packages=(
     "shellcheck,shfmt,marksman,luals,taplo,lemminx,flamelens,powershell_es"
     "ctags-win,ctags-nowin"
     "llama-swap"
-    "awscli,distrobox,devtoys-cli,github-cli"
+    "awscli,distrobox,github-cli,gitlab-cli,opencode"
     )
 
 # Tipos de archivos (usualmente binarios), que estan en el repositorio, segun el tipo de SO al cual pueden ser usados/ejecutados.
@@ -260,36 +329,6 @@ declare -A gA_repo_config_proc_type=(
         ['tmux-thumbs']=1
         ['wezterm']=1
     )
-
-# URL base del repositorio por defecto es 'https://github.com'.
-# Si no usan el repositorio por defecto, se debe especificarlo en este diccionario:
-declare -A gA_repo_base_url=(
-        ['kubectl']='https://dl.k8s.io/release'
-        ['kubelet']='https://dl.k8s.io/release'
-        ['kubeadm']='https://dl.k8s.io/release'
-        ['net-sdk']='https://dotnetcli.azureedge.net'
-        ['net-rt-core']='https://dotnetcli.azureedge.net'
-        ['net-rt-aspnet']='https://dotnetcli.azureedge.net'
-        ['go']='https://storage.googleapis.com'
-        ['jdtls']='https://download.eclipse.org'
-        ['nodejs']='https://nodejs.org/dist'
-        ['rust']='https://static.rust-lang.org/dist'
-        ['oc']='https://mirror.openshift.com/pub/openshift-v4'
-        ['helm']='https://get.helm.sh'
-        ['awscli']='https://awscli.amazonaws.com'
-        ['rclone']='https://downloads.rclone.org'
-        ['maven']='https://dlcdn.apache.org'
-        ['vscode-java']='https://marketplace.visualstudio.com'
-        ['vscode-java-test']='https://marketplace.visualstudio.com'
-        ['vscode-java-debug']='https://marketplace.visualstudio.com'
-        ['vscode-maven']='https://marketplace.visualstudio.com'
-        ['vscode-gradle']='https://marketplace.visualstudio.com'
-        ['vscode-microprofile']='https://marketplace.visualstudio.com'
-        ['vscode-quarkus']='https://marketplace.visualstudio.com'
-        ['vscode-jdecompiler']='https://marketplace.visualstudio.com'
-        ['vscode-springboot']='htps://marketplace.visualstudio.com'
-    )
-
 
 # Rempresenta el tipo de artefacto principal asociado al repositorio.
 # > Un repositorio tiene un artefacto principal y otros artecfactos adicionales (archivos comprimidos de documentacion, ...)
@@ -608,15 +647,50 @@ function get_extension_info_vscode() {
 #   0    - OK
 #   1    - Se requiere tener habilitado el comando jq
 #   2    - Ocurrio un error al obtener la version.
-#   3    - No esta definido la logica de obtener la version para el repostorio
+#   3    - No esta definido la logica de obtener la version para el repositorio
+#   4    - No esta configurado correctamente el repositorio
 function get_repo_last_version() {
 
     #1. Argumentos
     local p_repo_id="$1"
     local p_repo_name="$2"
 
-    #2. Obtener la version
-    local l_base_url_fixed="${gA_repo_base_url[${p_repo_id}]:-https://github.com}"
+    #2. Obtener la informacion del repositorio de versiones
+    local l_repotype="${gA_repo_version_repotype[${p_repo_id}]}"
+    local l_repodata="${gA_repos_version[${p_repo_id}]}"
+
+    # Si el repositorio de artefactos es el mismo que el repositorio de versiones
+    if [ -z "$l_repotype" ]; then
+
+        if [ ! -z "$l_repodata" ]; then
+            return 4
+        fi
+
+        l_repodata="${gA_repos_artifact[${p_repo_id}]}"
+        if [ "$l_repodata" = "$g_empty_str" ]; then
+            l_repodata=""
+        fi
+
+        l_repotype="${gA_repo_artifact_repotype[${p_repo_id}]:-github}"
+
+    # Si el repositorio de artefactos es diferente al del repositorio de versiones.
+    else
+
+        if [ -z "$l_repodata" ]; then
+            return 4
+        fi
+
+        if [ "$l_repodata" = "$g_empty_str" ]; then
+            l_repodata=""
+        fi
+
+    fi
+
+    # Obtener la URl base del repositorio de versiones
+    local l_base_url_fixed="${gA_repotypes[${l_repotype}]:-https://github.com}"
+
+
+    #3. Obtener la version
     local l_repo_last_version=""
     local l_aux0=""
     local l_aux1=""
@@ -1259,15 +1333,51 @@ function get_repo_last_pretty_version() {
 #Parametros salida> Valor de retorno:
 #   0 - Tiene subversiones.
 #   1 - No tiene subversiones
+#   4 - No esta configurado correctamente el repositorio
 function get_repo_last_subversions() {
 
+    #1. Leer los argumentos
     local p_repo_id="$1"
     local p_repo_name="$2"
     local p_repo_last_version="$3"
     local p_repo_last_pretty_version="$4"
 
-    #Calcular la parte comparable de la version
-    local l_base_url_fixed="${gA_repo_base_url[${p_repo_id}]:-https://github.com}"
+    #2. Obtener la informacion del repositorio de versiones
+    local l_repotype="${gA_repo_version_repotype[${p_repo_id}]}"
+    local l_repodata="${gA_repos_version[${p_repo_id}]}"
+
+    # Si el repositorio de artefactos es el mismo que el repositorio de versiones
+    if [ -z "$l_repotype" ]; then
+
+        if [ ! -z "$l_repodata" ]; then
+            return 4
+        fi
+
+        l_repodata="${gA_repos_artifact[${p_repo_id}]}"
+        if [ "$l_repodata" = "$g_empty_str" ]; then
+            l_repodata=""
+        fi
+
+        l_repotype="${gA_repo_artifact_repotype[${p_repo_id}]:-github}"
+
+    # Si el repositorio de artefactos es diferente al del repositorio de versiones.
+    else
+
+        if [ -z "$l_repodata" ]; then
+            return 4
+        fi
+
+        if [ "$l_repodata" = "$g_empty_str" ]; then
+            l_repodata=""
+        fi
+
+    fi
+
+    # Obtener la URl base del repositorio de versiones
+    local l_base_url_fixed="${gA_repotypes[${l_repotype}]:-https://github.com}"
+
+
+    #3. Calcular la parte comparable de la version
     local l_status
     local l_arti_subversions=""
     local l_aux=''
@@ -1851,7 +1961,8 @@ function get_repo_artifacts() {
     #1. Obtener la URL base por defecto (se considera que el repositorio es de GitHub)
 
     #URL base fijo     :  Usualmente "https://github.com"
-    local l_base_url_fixed="${gA_repo_base_url[${p_repo_id}]:-https://github.com}"
+    local l_repotype="${gA_repo_artifact_repotype[${p_repo_id}]:-github}"
+    local l_base_url_fixed="${gA_repotypes[${l_repotype}]:-https://github.com}"
 
     #URL base variable :
     local l_base_url_variable="${p_repo_name}/releases/download/${p_repo_last_version}"
@@ -2316,18 +2427,18 @@ function get_repo_artifacts() {
                 #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
                 if [ $g_os_subtype_id -eq 1 ]; then
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        rna_artifact_names=("opencode-linux-arm64.zip")
+                        rna_artifact_names=("opencode-linux-arm64-musl.tar.gz")
                     else
-                        pna_artifact_names=("opencode-linux-x64.zip")
+                        pna_artifact_names=("opencode-linux-x64-musl.tar.gz")
                     fi
-                    pna_artifact_types=(11)
+                    pna_artifact_types=(10)
                 else
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("opencode-linux-arm64.zip")
+                        pna_artifact_names=("opencode-linux-arm64.tar.gz")
                     else
-                        pna_artifact_names=("opencode-linux-x64.zip")
+                        pna_artifact_names=("opencode-linux-x64.tar.gz")
                     fi
-                    pna_artifact_types=(11)
+                    pna_artifact_types=(10)
                 fi
 
             fi
@@ -2702,7 +2813,7 @@ function get_repo_artifacts() {
         biome)
 
             #URL base fijo     :  "https://github.com"
-            #l_base_url_fixed="${gA_repo_base_url[${p_repo_id}]:-https://github.com}"
+            #l_base_url_fixed="${gA_repotypes[${l_repotype}]:-https://github.com}"
             #URL base variable :
             l_base_url_variable="${p_repo_name}/releases/download/%40biomejs%2Fbiome%40${p_repo_last_pretty_version}"
 
@@ -4424,7 +4535,7 @@ function get_repo_artifacts() {
         wezterm)
 
             #URL base fijo     :  "https://github.com"
-            #l_base_url_fixed="${gA_repo_base_url[${p_repo_id}]:-https://github.com}"
+            #l_base_url_fixed="${gA_repotypes[${l_repotype}]:-https://github.com}"
             #URL base variable :
             l_base_url_variable="${p_repo_name}/releases/download/nightly"
 
@@ -8848,7 +8959,7 @@ function _copy_artifact_files() {
 #Solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
 #
 #Los argumentos de entrada son:
-#  1 > Index (inicia en 0) de la opcion de menu elegista para instalar (ver el arreglo 'ga_menu_options_title').
+#  1 > Index (inicia en 0) de la opcion de menu elegista para instalar (ver el arreglo 'ga_menuoption_title').
 #
 #El valor de retorno puede ser:
 #  0 > Si inicializo con exito.
@@ -8871,7 +8982,7 @@ install_initialize_menu_option() {
     fi
 
     #local l_aux
-    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_name="${ga_menuoption_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
 
     #3. Realizar validaciones segun la opcion de menu escogida
@@ -8947,7 +9058,7 @@ install_initialize_menu_option() {
 #Solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
 #
 #Los argumentos de entrada son:
-#  1 > Index de la opcion de menu elegista para instalar (ver el arreglo 'ga_menu_options_title').
+#  1 > Index de la opcion de menu elegista para instalar (ver el arreglo 'ga_menuoption_title').
 #
 #El valor de retorno puede ser:
 #  0 > Si finalizo con exito.
@@ -8959,7 +9070,7 @@ install_finalize_menu_option() {
     #Argumentos
     local p_option_relative_idx=$1
 
-    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_name="${ga_menuoption_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
 
 
@@ -8982,7 +9093,7 @@ install_finalize_menu_option() {
 #La inicialización solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
 #
 #Los argumentos de entrada son:
-#  1 > Index de la opcion de menu elegista para desinstalar (ver el arreglo 'ga_menu_options_title').
+#  1 > Index de la opcion de menu elegista para desinstalar (ver el arreglo 'ga_menuoption_title').
 #
 #El valor de retorno puede ser:
 #  0 > Si inicializo con exito.
@@ -8997,7 +9108,7 @@ uninstall_initialize_menu_option() {
     #2. Inicialización
     local l_status
     #local l_artifact_index
-    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_name="${ga_menuoption_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
 
     local l_is_noninteractive=1
@@ -9009,7 +9120,7 @@ uninstall_initialize_menu_option() {
     printf 'Se va ha iniciar con la desinstalación de los siguientes repositorios: '
 
     #Obtener los repositorios a configurar
-    local l_aux="${ga_menu_options_packages[$l_i]}"
+    local l_aux="${ga_menuoption_repos[$l_i]}"
     local IFS=','
     local la_repos=(${l_aux})
     IFS=$' \t\n'
@@ -9020,7 +9131,7 @@ uninstall_initialize_menu_option() {
     for((l_j=0; l_j < ${l_n}; l_j++)); do
 
         l_repo_id="${la_repos[${l_j}]}"
-        l_aux="${gA_packages[${l_repo_id}]}"
+        l_aux="${gA_repos_artifact[${l_repo_id}]}"
         if [ -z "$l_aux" ] || [ "$l_aux" = "$g_empty_str" ]; then
             l_aux="$l_repo_id"
         fi
@@ -9111,7 +9222,7 @@ uninstall_initialize_menu_option() {
 #La finalización solo se hara en Linux (en Windows la configuración es basica que no lo requiere y solo se copia los binarios)
 #
 #Los argumentos de entrada son:
-#  1 > Index de la opcion de menu elegista para desinstalar (ver el arreglo 'ga_menu_options_title').
+#  1 > Index de la opcion de menu elegista para desinstalar (ver el arreglo 'ga_menuoption_title').
 #
 #El valor de retorno puede ser:
 #  0 > Si finalizo con exito.
@@ -9123,7 +9234,7 @@ uninstall_finalize_menu_option() {
     #Argumentos
     local p_option_relative_idx=$1
 
-    #local l_option_name="${ga_menu_options_title[${p_option_idx}]}"
+    #local l_option_name="${ga_menuoption_title[${p_option_idx}]}"
     #local l_option_value=$((1 << p_option_idx))
 
 
@@ -9149,7 +9260,7 @@ _uninstall_repository2() {
     fi
 
     #2. Inicialización de variables
-    local l_repo_name="${gA_packages[$p_repo_id]}"
+    local l_repo_name="${gA_repos_artifact[$p_repo_id]}"
     #local l_repo_name_aux="${l_repo_name:-$p_repo_id}"
     if [ "$l_repo_name" = "$g_empty_str" ]; then
         l_repo_name=''
@@ -9178,7 +9289,7 @@ _uninstall_repository() {
     fi
 
     #2. Inicialización de variables
-    local l_repo_name="${gA_packages[$p_repo_id]}"
+    local l_repo_name="${gA_repos_artifact[$p_repo_id]}"
     if [ "$l_repo_name" = "$g_empty_str" ]; then
         l_repo_name=''
     fi

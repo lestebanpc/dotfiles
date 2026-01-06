@@ -297,7 +297,7 @@ endif
 "     > Cualquier otro valor se considera no definido.
 "  > El valor definido por esta variable VIM 'g:use_ai_completion'.
 "     > 0 si usara el broker LLM de 'GitHub Copilot' usando el plugin 'zbirenbaum/copilot.lua'.
-"     > 1 si usara el LLM (local o externo) o ub broker LLM soportado por el plugin 'milanglacier/minuet-ai.nvim'.
+"     > 1 si usara el LLM (local o externo) o un broker LLM soportado por el plugin 'milanglacier/minuet-ai.nvim'.
 "     > Cualquier otro valor se considera no definido.
 " Si no esta definido, no se usara ningun plugin de 'AI autocompletion'.
 if $AI_COMPLETION != ''
@@ -353,16 +353,18 @@ endif
 "   de tipo CLI.
 " > El valor real, se obtendra segun orden de prioridad:
 "   > El valor definido por la variable de entorno 'AI_AGENT'.
-"     > 0 Si usara un 'AI agent' integrado con NeoVIM usando el plugin 'yetone/avante.nvim'.
+"     > 0 Si usara un 'AI agent' integrado con NeoVIM (usa el plugin 'yetone/avante.nvim').
 "       > Siempre estara desactivado su capacidad de 'AI autocomplete' debido a que no se integra como fuente de autocompletado.
-"     > 1 Si integra con 'AI agent' externo en este caso un 'CLI AI agent' conocido como 'OpenCode'
-"       > Se usara el plugin 'NickvanDyke/opencode.nvim'.
+"     > 1 Si integra con 'AI agent' externo (de tipo 'CLI AI agent') conocido como 'OpenCode CLI' (usa el plugin 'NickvanDyke/opencode.nvim').
+"     > 2 Si integra con 'AI agent' externo (de tipo 'CLI AI agent') conocido como 'Gemini CLI'.
+"     > 3 Si integra con 'AI agent' externo (de tipo 'CLI AI agent') conocido como 'Qwen CLI'.
 "     > Cualquier otro valor se considera no definido.
 "  > El valor definido por esta variable VIM 'g:use_ai_agent'.
-"     > 0 Si usara un 'AI agent' integrado con NeoVIM usando el plugin 'yetone/avante.nvim'.
+"     > 0 Si usara un 'AI agent' integrado con NeoVIM (usa el plugin 'yetone/avante.nvim').
 "       > Siempre estara desactivado su capacidad de 'AI autocomplete' debido a que no se integra como fuente de autocompletado.
-"     > 1 Si integra con 'AI agent' externo en este caso un 'CLI AI agent' conocido como 'OpenCode'
-"       > Se usara el plugin 'NickvanDyke/opencode.nvim'.
+"     > 1 Si integra con 'AI agent' externo (de tipo 'CLI AI agent') conocido como 'OpenCode CLI' (usa el plugin 'NickvanDyke/opencode.nvim').
+"     > 2 Si integra con 'AI agent' externo (de tipo 'CLI AI agent') conocido como 'Gemini CLI'.
+"     > 3 Si integra con 'AI agent' externo (de tipo 'CLI AI agent') conocido como 'Qwen CLI'.
 "     > Cualquier otro valor se considera no definido.
 " Si no esta definido, no se usara ningun plugin de agente AI.
 if $AI_AGENT != ''
@@ -388,6 +390,9 @@ elseif exists("g:use_ai_agent")
 else
     let g:use_ai_agent = v:null
 endif
+
+
+
 
 
 " Ruta base donde se encuentra los programas requeridos por VIM/NeoVIM.
@@ -729,9 +734,12 @@ runtime setting/ide/ide_development.vim
 "   - Muestra reportes de la ejecucion e indicadores del estado en buffer de las pruebas ejecutadas.
 runtime setting/ide/ide_testing.vim
 
-" Capacidades adicionales de IDE
+" Tools adicionales del IDE
 " > Client REST
 " > Tools for GIT
-" > IA Chat
-" > AI Agent
-runtime setting/ide/ide_extended.vim
+runtime setting/ide/ide_additional_tools.vim
+
+" Tools de AI del IDE
+" > IA Completion
+" > IA Chatbot and AI Agent
+runtime setting/ide/ide_ai_tools.vim

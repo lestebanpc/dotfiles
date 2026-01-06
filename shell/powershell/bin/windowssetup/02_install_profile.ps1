@@ -15,9 +15,15 @@ $g_use_sudo= $false
 # (05) Grupo IDE > Development > Native - LSP, Snippets, Compeletion  ... usando la implementacion nativa.
 # (06) Grupo IDE > Development > CoC    - LSP, Snippets, Completion ... usando CoC.
 # (07) Grupo IDE > Testing              - Unit Testing y Debugging.
-# (08) Grupo IDE > Extended > Common    - Plugin de tools independiente del tipo de LSP usado (nativa o CoC).
-# (09) Grupo IDE > Extended > Native    - Tools: Git, Rest Client, AI Completion/Chatbot, AI Agent, etc.
-# (10) Grupo IDE > Extended > CoC       - Tools: Git, Rest Client, AI Completin/Chatbot, AI Agent, etc.
+# (08) Grupo IDE > Basic Tools > Common - Plugin de tools independiente del tipo de LSP usado (nativa o CoC).
+# (09) Grupo IDE > Basic Tools > Native - Tools: Git, Rest Client, etc.
+# (10) Grupo IDE > Basic Tools > CoC    - Tools: Git, Rest Client, etc.
+# (11) Grupo IDE > AI Tools    > Native - Tools: AI Completion
+# (12) Grupo IDE > AI Tools    > Native - Tools: AI Chatbot y AI Agent interno del IDE
+# (13) Grupo IDE > AI Tools    > Native - Tools: AI Chatbot y AI Agent externo al IDE (Solo se integra CLI externo como OpenCode-CLI, Gemini-CLI, etc).
+# (14) Grupo IDE > AI Tools    > CoC    - Tools: AI Completion
+# (15) Grupo IDE > AI Tools    > CoC    - Tools: AI Chatbot y AI Agent interno del IDE
+# (16) Grupo IDE > AI Tools    > CoC    - Tools: AI Chatbot y AI Agent externo al IDE (Solo se integra CLI externo como OpenCode-CLI, Gemini-CLI, etc).
 $gd_repos_type= @{
         'morhetz/gruvbox' = 0
         'joshdick/onedark.vim' = 0
@@ -75,14 +81,15 @@ $gd_repos_type= @{
         'mistweaverco/kulala.nvim' = 8
         'lewis6991/gitsigns.nvim' = 8
         'sindrets/diffview.nvim' = 8
-        'zbirenbaum/copilot.lua' = 9
-        'zbirenbaum/copilot-cmp' = 9
-        'stevearc/dressing.nvim' = 9
-        'MunifTanjim/nui.nvim' = 9
-        'MeanderingProgrammer/render-markdown.nvim' = 9
-        'HakonHarnes/img-clip.nvim' = 9
-        'yetone/avante.nvim' = 9
-        'github/copilot.vim' = 10
+        'zbirenbaum/copilot.lua' = 11
+        'zbirenbaum/copilot-cmp' = 11
+        'milanglacier/minuet-ai.nvim'= 11
+        'stevearc/dressing.nvim' = 12
+        'MunifTanjim/nui.nvim' = 12
+        'MeanderingProgrammer/render-markdown.nvim' = 12
+        'HakonHarnes/img-clip.nvim' = 12
+        'yetone/avante.nvim' = 12
+        'NickvanDyke/opencode.nvim'= 13
     }
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
@@ -133,11 +140,13 @@ $gd_repos_scope= @{
         'mfussenegger/nvim-jdtls' = 2
         'zbirenbaum/copilot.lua' = 2
         'zbirenbaum/copilot-cmp' = 2
+        'milanglacier/minuet-ai.nvim'= 2
         'stevearc/dressing.nvim' = 2
         'MunifTanjim/nui.nvim' = 2
         'MeanderingProgrammer/render-markdown.nvim' = 2
         'HakonHarnes/img-clip.nvim' = 2
         'yetone/avante.nvim' = 2
+        'NickvanDyke/opencode.nvim'= 2
     }
 
 
@@ -171,6 +180,12 @@ $ga_group_plugin_folder= @(
     "ide_ext_common"
     "ide_ext_native"
     "ide_ext_coc"
+    "ide_ai_native"
+    "ide_ai_native"
+    "ide_ai_native"
+    "ide_ai_coc"
+    "ide_ai_coc"
+    "ide_ai_coc"
     )
 
 
@@ -445,6 +460,8 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer, $p_index_document
 			continue
         }
 		#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
+
+        #Si es un plugin de AI
 
 
         #4.3 Validar si el paquete ya esta instalando
@@ -948,7 +965,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
     #Configuracion por Yazi
     $l_target_link="${env:APPDATA}\yazi\config\yazi.toml"
     $l_source_path="${env:USERPROFILE}\.files\etc\yazi"
-    $l_source_filename='yazi_default.toml'
+    $l_source_filename='yazi_win.toml'
 
 	if(! (Test-Path "${env:APPDATA}\yazi\config")) {
 		New-Item -ItemType Directory -Force -Path "${env:APPDATA}\yazi\config"
@@ -957,7 +974,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
     $l_target_link="${env:APPDATA}\yazi\config\keymap.toml"
     $l_source_path="${env:USERPROFILE}\.files\etc\yazi"
-    $l_source_filename='keymap_default.toml'
+    $l_source_filename='keymap_win.toml'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
     $l_target_link="${env:APPDATA}\yazi\config\theme.toml"
@@ -977,6 +994,10 @@ function m_setup_profile($l_overwrite_ln_flag) {
     $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\tmtheme.xml"
     $l_source_path="${env:USERPROFILE}\.files\etc\yazi\catppuccin-mocha\tmtheme.xml"
     Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
+
+    $l_target_link="${env:LOCALAPPDATA}\.config\yazi\plugins"
+    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\plugins"
+    m_create_folder_link "$l_source_path" "$l_target_link" "            > " $l_overwrite_ln_flag
 
 
 

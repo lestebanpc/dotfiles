@@ -177,9 +177,15 @@ declare -r g_version_none='0.0.0'
 # (05) Grupo IDE > Development > Native - LSP, Snippets, Compeletion  ... usando la implementacion nativa.
 # (06) Grupo IDE > Development > CoC    - LSP, Snippets, Completion ... usando CoC.
 # (07) Grupo IDE > Testing              - Unit Testing y Debugging.
-# (08) Grupo IDE > Extended > Common    - Plugin de tools independiente del tipo de LSP usado (nativa o CoC).
-# (09) Grupo IDE > Extended > Native    - Tools: Git, Rest Client, AI Completion/Chatbot, AI Agent, etc.
-# (10) Grupo IDE > Extended > CoC       - Tools: Git, Rest Client, AI Completin/Chatbot, AI Agent, etc.
+# (08) Grupo IDE > Basic Tools > Common - Plugin de tools independiente del tipo de LSP usado (nativa o CoC).
+# (09) Grupo IDE > Basic Tools > Native - Tools: Git, Rest Client, etc.
+# (10) Grupo IDE > Basic Tools > CoC    - Tools: Git, Rest Client, etc.
+# (11) Grupo IDE > AI Tools    > Native - Tools: AI Completion
+# (12) Grupo IDE > AI Tools    > Native - Tools: AI Chatbot y AI Agent interno del IDE
+# (13) Grupo IDE > AI Tools    > Native - Tools: AI Chatbot y AI Agent externo al IDE (Solo se integra CLI externo como OpenCode-CLI, Gemini-CLI, etc).
+# (14) Grupo IDE > AI Tools    > CoC    - Tools: AI Completion
+# (15) Grupo IDE > AI Tools    > CoC    - Tools: AI Chatbot y AI Agent interno del IDE
+# (16) Grupo IDE > AI Tools    > CoC    - Tools: AI Chatbot y AI Agent externo al IDE (Solo se integra CLI externo como OpenCode-CLI, Gemini-CLI, etc).
 declare -A gA_repos_type=(
         ['morhetz/gruvbox']=0
         ['joshdick/onedark.vim']=0
@@ -237,15 +243,15 @@ declare -A gA_repos_type=(
         ['mistweaverco/kulala.nvim']=8
         ['lewis6991/gitsigns.nvim']=8
         ['sindrets/diffview.nvim']=8
-        ['zbirenbaum/copilot.lua']=9
-        ['zbirenbaum/copilot-cmp']=9
-        ['milanglacier/minuet-ai.nvim']=9
-        ['stevearc/dressing.nvim']=9
-        ['MunifTanjim/nui.nvim']=9
-        ['MeanderingProgrammer/render-markdown.nvim']=9
-        ['HakonHarnes/img-clip.nvim']=9
-        ['yetone/avante.nvim']=9
-        ['NickvanDyke/opencode.nvim']=9
+        ['zbirenbaum/copilot.lua']=11
+        ['zbirenbaum/copilot-cmp']=11
+        ['milanglacier/minuet-ai.nvim']=11
+        ['stevearc/dressing.nvim']=12
+        ['MunifTanjim/nui.nvim']=12
+        ['MeanderingProgrammer/render-markdown.nvim']=12
+        ['HakonHarnes/img-clip.nvim']=12
+        ['yetone/avante.nvim']=12
+        ['NickvanDyke/opencode.nvim']=13
     )
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
@@ -336,6 +342,12 @@ declare -a ga_group_plugin_folder=(
     "ide_ext_common"
     "ide_ext_native"
     "ide_ext_coc"
+    "ide_ai_native"
+    "ide_ai_native"
+    "ide_ai_native"
+    "ide_ai_coc"
+    "ide_ai_coc"
+    "ide_ai_coc"
     )
 
 
@@ -518,6 +530,7 @@ function _download_vim_packages() {
     local l_repo_scope
     local l_aux
     local l_submodules_types
+    local l_enable_ai_plugin=1
 
     local la_doc_paths=()
     local la_doc_repos=()
@@ -538,7 +551,7 @@ function _download_vim_packages() {
         l_foldername="${ga_group_plugin_folder[${l_repo_type}]}"
 
         if [ -z "$l_foldername" ]; then
-            printf '%s > Paquete (%s) "%s": No tiene tipo valido\n' "$l_tag" "${l_repo_type}" "${l_repo_git}"
+            printf '%s > Paquete (%s) "%b%s%b": No tiene tipo valido\n' "$l_tag" "${l_repo_type}" "$g_color_gray1" "${l_repo_git}" "$g_color_reset"
             continue
         fi
 
@@ -547,6 +560,49 @@ function _download_vim_packages() {
         #Si es un repositorio para developer no debe instalarse en el perfil basico
         if [ $p_flag_developer -ne 0 ] && [ $l_repo_type -ge 3 ]; then
             continue
+        fi
+
+        #Si es un plugin de AI
+        if [ $l_repo_type -ge 11 ] && [ $l_repo_type -le 16 ]; then
+
+            # Si se excluye todos los plugin de AI
+            if [ $g_setup_vim_ai_plugins -eq 0 ]; then
+                printf '%s > Paquete (%s) "%b%s%b": Ha sigo excluido para su descarga (%bg_setup_vim_ai_plugins%b es %s)\n' "$l_tag" "${l_repo_type}" \
+                       "$g_color_gray1" "${l_repo_git}" "$g_color_reset"  "$g_color_gray1" "$g_color_reset" "$g_setup_vim_ai_plugins"
+                continue
+            fi
+
+            l_enable_ai_plugin=1
+
+            # Validar si se excluye los plugins de AI completion
+            if [ $(( g_setup_vim_ai_plugins & 1 )) -eq 1 ]; then
+                if [ $l_repo_type -eq 11 ] || [ $l_repo_type -eq 14 ]; then
+                    l_enable_ai_plugin=0
+                fi
+            fi
+
+            # Validar si se excluye los plugins de AI Chatbot y AI Agent internos
+            if [ $(( g_setup_vim_ai_plugins & 2 )) -eq 2 ]; then
+                if [ $l_repo_type -eq 12 ] || [ $l_repo_type -eq 15 ]; then
+                    l_enable_ai_plugin=0
+                fi
+            fi
+
+            # Validar si se excluye los plugins de integracion con AI Chatbot y AI Agent externos (OpenCode CLI, Gemini CLI, etc)
+            if [ $(( g_setup_vim_ai_plugins & 3 )) -eq 3 ]; then
+                if [ $l_repo_type -eq 13 ] || [ $l_repo_type -eq 16 ]; then
+                    l_enable_ai_plugin=0
+                fi
+            fi
+
+            # Si se excluye
+            if [ $l_enable_ai_plugin -eq 1 ]; then
+                printf '%s > Paquete (%s) "%b%s%b": Ha sigo excluido para su descarga (%bg_setup_vim_ai_plugins%b es %s)\n' "$l_tag" "${l_repo_type}" \
+                       "$g_color_gray1" "${l_repo_git}" "$g_color_reset"  "$g_color_gray1" "$g_color_reset" "$g_setup_vim_ai_plugins"
+                continue
+            fi
+
+
         fi
 
         #echo "${l_path_base}/${l_repo_name}/.git"
@@ -1225,14 +1281,14 @@ function _setup_user_profile() {
 
     l_target_link="yazi.toml"
     l_source_path="${g_repo_name}/etc/yazi"
-    l_source_filename='yazi_default.toml'
+    l_source_filename='yazi_lnx.toml'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
 
     l_target_link="keymap.toml"
     l_source_path="${g_repo_name}/etc/yazi"
-    l_source_filename='keymap_default.toml'
+    l_source_filename='keymap_lnx.toml'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
@@ -1249,6 +1305,11 @@ function _setup_user_profile() {
     l_status=$?
     copy_file_on_home "${g_repo_path}/etc/yazi/catppuccin-mocha" "tmtheme.xml" ".config/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" $l_flag_overwrite_file "        > "
     l_status=$?
+
+    l_target_path=".config/yazi"
+    l_target_link="plugins"
+    l_source_path="${g_repo_name}/etc/yazi/plugins"
+    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
 
 
     #Archivo de configuración para cliente MDP 'rmpc'
@@ -1291,6 +1352,14 @@ function _setup_user_profile() {
     l_target_link="tmux_run_cmd"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='tmux_run_cmd.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="wezterm_run_cmd"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='wezterm_run_cmd.bash'
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
 
@@ -3117,6 +3186,16 @@ g_repo_name=''
 #  > El tema usado por 'oh-my-posh': '~/.files/etc/oh-my-posh/default_settings.json'
 #  > El archivo de parametros usados por el profile del usuario: '~/.profile.config'
 g_profile_type=0
+
+# Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
+# Sus valores puede ser:
+# > 0 No instala ningun plugin de AI.
+# > Puede ser la suma de los siguientes valores:
+#   > 1 Instala plugin de AI Completion.
+#   > 2 Instala plugin de AI Chatbot y AI Agent interno (por ejemplo Avante)
+#   > 4 Instala plugin de integracion de AI Chatbot y AI Agent externo (por ejemplo integracion con OpenCode-CLI o Gemini-CLI)
+# Si no se define el valor por defecto es '0' (no se instala ningun plugin de AI).
+g_setup_vim_ai_plugins=0
 
 #Obtener los parametros del archivos de configuración
 if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
