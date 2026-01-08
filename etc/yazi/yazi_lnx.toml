@@ -76,6 +76,7 @@ reveal = [
 
     # Para Linux y Unix
 	{ run = 'xdg-open "$1"', desc = "Reveal by default", for = "linux" },
+	{ run = '${HOME}/.local/bin/open_new_termtab "$1"', desc = "Open ParentFolder in TermTab", for = "linux" },
 	{ run = 'clear; exiftool "$1"; echo "Press enter to exit"; read _', desc = "Show EXIF", for = "unix", block = true },
 ]
 
@@ -93,9 +94,11 @@ download = [
 [open]
 rules = [
 
-	# Folder
-	#{ url = "*/", use = [ "open_folder" ] },
+	# Folder en Unix (Linux)
 	{ mime = "inode/directory", use = [ "open_folder" ] },
+
+	# Folder en Windows
+	{ mime = "folder/local", use = [ "open_folder" ] },
 
 	# Text
 	{ mime = "text/*", use = [ "edit", "reveal" ] },
