@@ -406,7 +406,7 @@ function m_rollback_changes_plugins_fzf()
 	Write-Host "   Comparando la ultima version (plugin de VIM) vs la fuente (${env:USERPROFILE}\.files\vim\templates\fixes\)" -ForegroundColor DarkGray
 	Write-Host "   No cambie la lineas comentado con el comentario `"CHANGE ..." -ForegroundColor DarkGray
 	Write-Host "   > Inicie la comparacion de '.\fzf.vim\autoload\fzf\vim.vim':" -ForegroundColor DarkGray
-	Write-Host "     vim -d `${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\vim.vim `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim"
+	Write-Host "     vim -d `${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\vim.vim `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim"
 	Write-Host "     - Use 'diffput' para subir cambios a la fuente." -ForegroundColor DarkGray
 	Write-Host "     - Use '[c' y ']c' para navegar en las diferencias de un split." -ForegroundColor DarkGray
 	Write-Host "     - Use 'windo diffoff' para ingresar al modo normal." -ForegroundColor DarkGray
@@ -417,17 +417,17 @@ function m_rollback_changes_plugins_fzf()
     Write-Host ""
     Write-Host "2> Si la fuente tiene cambios (fue corregido), copie y remplaze los archivos desde la fuente (corregido) a los plugins" -ForegroundColor Green
 	Write-Host "   > Reparando VIM:" -ForegroundColor DarkGray
-    Write-Host "     cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim `${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\"
-	Write-Host "     cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\bin\preview.ps1 `${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\bin\"
+    Write-Host "     cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim `${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\"
+	Write-Host "     cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\bin\preview.ps1 `${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\bin\"
 
     Write-Host "   > Reparando NeoVIM:" -ForegroundColor DarkGray
-    Write-Host "     cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\autoload\fzf\"
-	Write-Host "     cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\bin\preview.ps1 `${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\bin\"
+    Write-Host "     cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\autoload\fzf\"
+	Write-Host "     cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\bin\preview.ps1 `${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\bin\"
 
 	Write-Host ""
     Write-Host "3> Opcional: subir los cambios de la fuentes corregida al repositorio remoto" -ForegroundColor Green
 	Write-Host "   cd `${env:USERPROFILE}\.files"
-	Write-Host "   git add vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim"
+	Write-Host "   git add vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim"
 	Write-Host "   git push origin main"
 	Write-Host ""
 
@@ -444,17 +444,17 @@ function m_changes_plugins_fzf()
 
 	Write-Host ""
     Write-Host ">   VIM> Copiando los archivos de la fuente corregida al plugin 'fzf.vim': "
-    Write-Host "cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim `${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\" -ForegroundColor DarkGray
-    cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\
-	Write-Host "cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\bin\preview.ps1 `${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\bin\" -ForegroundColor DarkGray
-	cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\bin\preview.ps1 ${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\bin\
+    Write-Host "cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim `${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\" -ForegroundColor DarkGray
+    cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim ${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\
+	Write-Host "cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\bin\preview.ps1 `${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\bin\" -ForegroundColor DarkGray
+	cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\bin\preview.ps1 ${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\bin\
 
 	#Write-Host ""
     Write-Host ">NeoVIM> Copiando los archivos de la fuente corregida al plugin 'fzf.vim': "
-    Write-Host "cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\autoload\fzf\" -ForegroundColor DarkGray
-    cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\autoload\fzf\
-	Write-Host "cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\bin\preview.ps1 `${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\bin\" -ForegroundColor DarkGray
-	cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\bin\preview.ps1 ${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\bin\
+    Write-Host "cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim `${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\autoload\fzf\" -ForegroundColor DarkGray
+    cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\autoload\fzf\
+	Write-Host "cp `${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\bin\preview.ps1 `${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\bin\" -ForegroundColor DarkGray
+	cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\bin\preview.ps1 ${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\bin\
 
 	Write-Host ""
 	Write-Host ""
@@ -464,7 +464,7 @@ function m_changes_plugins_fzf()
 	Write-Host ""
     Write-Host "1> Opcional: Si ha realizado cambios, subir estos cambios de la fuentes corregida al repositorio remoto" -ForegroundColor Green
 	Write-Host "   cd `${env:USERPROFILE}\.files"
-	Write-Host "   git add vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim"
+	Write-Host "   git add vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim"
 	Write-Host "   git push origin main"
 	Write-Host ""
 

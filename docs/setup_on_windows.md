@@ -746,7 +746,7 @@ cd ${env:USERPROFILE} 
 
 
 ```powershell
-vim -d ${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim
+vim -d ${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim
 ```
 
 
@@ -766,14 +766,14 @@ Manualmente:
 
 ```powershell
 #VIM> Copiando los archivos de la fuente corregida al plugin 'fzf.vim':
-cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim ${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\
+cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim ${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\autoload\fzf\
 
-cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\bin\preview.ps1 ${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\bin\
+cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\bin\preview.ps1 ${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\bin\
 
 #NeoVIM> Copiando los archivos de la fuente corregida al plugin 'fzf.vim':
-cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\autoload\fzf\vim.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\autoload\fzf\
+cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\autoload\fzf\vim.vim ${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\autoload\fzf\
 
-cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\bin\preview.ps1 ${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\bin\
+cp ${env:USERPROFILE}\.files\vim\templates\fixes\fzf.vim\pwsh\bin\preview.ps1 ${env:LOCALAPPDATA}\nvim-data\site\pack\basic_core\opt\fzf.vim\bin\
 
 #3. Validar
 cd ${env:USERPROFILE}\vimfiles\pack\basic_core\opt\fzf.vim\

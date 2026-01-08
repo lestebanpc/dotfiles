@@ -17,7 +17,7 @@ g_color_blue1="\x1b[34m"
 _usage() {
 
     cat <<EOF
-Usage: tmux_new_tabterm [options] folder_or_file
+Usage: tmux_new_termtab [options] folder_or_file
 
 > Crea una nueva ventana/ta en la terminar actual donde el directorio de trabajo es el folder enviado como argumento (si el arugmento es un archivo se considera folder donde esta el archivo).
 > Actualmente solo esta soportoadp para los emuladores de terminal:
@@ -27,14 +27,14 @@ Usage: tmux_new_tabterm [options] folder_or_file
 
 Ejemplos:
 
-  $ tmux_new_tabterm ../
-  $ tmux_new_tabterm /home/lucianoepc/code
-  $ tmux_new_tabterm /home/lucianoepc/code/mynote.txt
+  $ tmux_new_termtab ../
+  $ tmux_new_termtab /home/lucianoepc/code
+  $ tmux_new_termtab /home/lucianoepc/code/mynote.txt
+  $ tmux_new_termtab -e /home/lucianoepc/code/mynote.txt
 
 Options:
- -c           Limpiar el contenido de la ventana despues de ser creado.
- -d           La ventana/tab creada se estable en el activo. Si no se especifica la ventana creada/tab no es el activo.
- -o           Si es un archivo abre el archivo con el editor \$EDITOR.
+ -d     La ventana/tab creada se estable en el activo. Si no se especifica la ventana creada/tab no es el activo.
+ -e     Si es un archivo abre el archivo con el editor \$EDITOR.
 
 Arguments
  <file_or_folder> Ruta del folder.
@@ -59,7 +59,6 @@ main() {
 
     #1. Procesar las opciones (siempre deben estar anstes de los argumentos)
     local p_flag_set_active=1
-    local p_flag_clean=1
     local p_flag_openfile_on_editor=1
     #echo "Init ${@}" >> /tmp/remove.txt
 
@@ -72,38 +71,14 @@ main() {
                 return 0
                 ;;
 
-            #-h)
-            #    if ! [[ "$2" =~ ^[0-9]+$ ]]; then
-            #        printf '[%bERROR%b] Valor de la opción "%b%s%b" es invalida: %b%s%b\n\n' "$g_color_red1" "$g_color_reset" \
-            #               "$g_color_gray1" "-h" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
-            #        _usage
-            #        return 1
-            #    fi
-
-            #    if [ $2 -le 10 ] && [ $2 -ge 90 ]; then
-            #        printf '[%bERROR%b] Valor de la opción "%b%s%b" debe esta [10, 90]: %b%s%b\n\n' "$g_color_red1" "$g_color_reset" \
-            #               "$g_color_gray1" "-h" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
-            #        _usage
-            #        return 1
-            #    fi
-
-            #    p_hight=$2
-            #    shift 2
-            #    ;;
-
             -d)
                 p_flag_set_active=0
                 shift
                 ;;
 
 
-            -o)
+            -e)
                 p_flag_openfile_on_editor=0
-                shift
-                ;;
-
-            -c)
-                p_flag_clean=0
                 shift
                 ;;
 
@@ -155,19 +130,56 @@ main() {
     fi
 
 
-    #4. Determinar el working dir
+    #4. Determinar datos requeridos para los archivos
     local l_working_dir="$p_full_path"
+    local l_filename=""
+    local l_is_text_file=1
+    local l_data=""
+
     if [ $l_is_folder -ne 0 ]; then
+
         l_working_dir="${p_full_path%/*}"
+        l_filename="${p_full_path##*/}"
+
+        # Determinar si el archivos es un archivo de texto o empty
+        if [ $p_flag_openfile_on_editor -eq 0 ]; then
+
+            # Determinar el tipo MIME del archivo
+            l_data=$(file -i "$p_full_path")
+            if [[ "$l_data" == *"text/plain"* ]]; then
+                l_is_text_file=0
+            elif [[ "$l_data" == *"inode/x-empty"* ]]; then
+                l_is_text_file=0
+            fi
+
+        fi
+
     fi
     #echo "Step 2 ${p_full_path}" >> /tmp/remove.txt
 
 
     #5. Si esta dentro del multiplexor tmux
+    local l_position=''
     if [ ! -z "$TMUX" ]; then
 
         # Crear una ventana en la sesion actual
-        tmux new-window -c "$l_working_dir"
+        l_position=$(tmux new-window -c "$l_working_dir" -PF "#{window_id}.#{pane_id}")
+        if [ -z "$l_position" ]; then
+            return 2
+        fi
+
+        # Si es un archivo de texto
+        if [ $l_is_folder -ne 0 ] && [ $l_is_text_file -eq 0 ]; then
+
+            # Limpiar la pantalla
+            tmux send-keys -t "${l_position}" 'clear' Enter
+
+            # Enviar comandos ingesados al script al panel del DAP
+            tmux send-keys -lt "${l_position}" "${EDITOR:-vim} \"$l_filename\""
+            tmux send-keys -t "${l_position}" Enter
+
+        fi
+
         return 0
 
     fi
@@ -177,7 +189,16 @@ main() {
     if [ ! -z "$WEZTERM_UNIX_SOCKET" ] && [ "$TERM_PROGRAM" = "WezTerm" ]; then
 
         # Crear un nuevo tab en el workspace actual del domunio actual
-        wezterm cli spawn --cwd "$l_working_dir"
+        l_position=$(wezterm cli spawn --cwd "$l_working_dir" 2>/dev/null)
+
+        # Si es un archivo de texto
+        if [ $l_is_folder -ne 0 ] && [ $l_is_text_file -eq 0 ]; then
+
+            # Al final se escribe un fin de linea para ejecutar el comando
+            wezterm cli send-text --pane-id "$l_position" --no-paste "${EDITOR:-vim} \"$l_filename\""$'\n'
+
+        fi
+
         return 0
 
     fi

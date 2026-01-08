@@ -17,21 +17,23 @@ open_folder = [
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = '${HOME}/.local/bin/open_new_termtab "$1"', desc = "Open in Terminal Tab", for = "linux" },
+	{ run = '${HOME}/.local/bin/open_new_termtab "$1"', desc = "Open in TermTab", for = "linux" },
 	{ run = 'code "$1"', desc = "Open with VSCode", for = "unix", orphan = true },
 ]
 
 edit = [
     # Para Windows
-	{ run = '%EDITOR% %*', desc = "Edit with NeoVim", for = "windows", block = true },
+	{ run = '%EDITOR% %*', desc = "Edit with %EDITOR%", for = "windows", block = true },
 	{ run = 'code %*', desc = "Edit wtih VSCode", for = "windows", orphan = true },
 	#{ run = 'code -w %*', desc = "Edit wtih VSCode (block)", for = "windows", block = true },
+	{ run = 'cmd /c "%USERPROFILE%\shell\cmd\bin\cmds\open_new_termtab.cmd" -e %1', desc = "Edit with %EDITOR% in WezTerm Tab", for = "windows" },
 
     # Para Android (Termux)
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = '${EDITOR:-vi} "$@"', desc = "Edit with $EDITOR", for = "unix", block = true },
+	{ run = '${EDITOR:-vim} "$@"', desc = "Edit with $EDITOR", for = "unix", block = true },
+	{ run = '${HOME}/.local/bin/open_new_termtab -e "$1"', desc = "Edit with $EDITOR in TermTab", for = "linux" },
 ]
 
 play = [
@@ -103,6 +105,13 @@ rules = [
 	# Text
 	{ mime = "text/*", use = [ "edit", "reveal" ] },
 
+	# Empty file (new file create, for example, with 'touch')
+	{ mime = "inode/empty", use = [ "edit", "reveal" ] },
+
+	# JSON
+	{ mime = "application/{json,ndjson}", use = [ "edit", "reveal" ] },
+	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
+
 	# Image
 	{ mime = "image/*", use = [ "open", "reveal" ] },
 
@@ -117,13 +126,6 @@ rules = [
 	{ mime = "application/openxmlformats-officedocument.wordprocessingml.document", use = [ "open", "reveal" ] },
 	{ mime = "application/openxmlformats-officedocument.spreadsheetml.sheet", use = [ "open", "reveal" ] },
 	{ mime = "application/openxmlformats-officedocument.presentationml.presentation", use = [ "open", "reveal" ] },
-
-	# JSON
-	{ mime = "application/{json,ndjson}", use = [ "edit", "reveal" ] },
-	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
-
-	# Empty file
-	{ mime = "inode/empty", use = [ "edit", "reveal" ] },
 
 	# Virtual file system
 	{ mime = "vfs/{absent,stale}", use = "download" },
