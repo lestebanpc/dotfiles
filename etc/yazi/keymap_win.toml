@@ -14,8 +14,11 @@ prepend_keymap = [
     # --------------------------------------------------------------------------
 
     # El comando custom 'fzf_fd' se registra en el plugin fzf-utils
-    { on =  [ "g", "s" ], run = "plugin fzf-utils:find", desc = "Search subfolder by name via fd" },
+    #{ on = [ "g", "s" ], run = "plugin fzf-utils:find", desc = "Search subfolder by name via fd" },
     #{ on = [ "g", "s" ], run = "search --via=fd --args='-f d'", desc = "Search subfolder by name via fd" },
+	#{ on = [ "g", "t" ], run = '''shell -- wezterm cli spawn --cwd "%s1"''', desc = "Open current subfolder in wezterm tab" },
+	#{ on = [ "g", "p" ], run = '''shell -- wezterm cli spawn --cwd "%d1"''', desc = "Open parent folder in wezterm tab" },
+    #{ on = [ "g", "x" ], run = '''shell -- explorer.exe "%s1"''', orphan = true, block = false,  desc = "Open current subfolder in Explorer" },
 
 
     # --------------------------------------------------------------------------
@@ -24,4 +27,5 @@ prepend_keymap = [
 
     # Toggle: Modificar 'Ctrl + a' por 'Shift + a' para compatibilidad con el prefijo de tmux
 	{ on = "<S-a>",   run = "toggle_all --state=on", desc = "Select all files" },
+
 ]

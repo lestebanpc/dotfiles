@@ -339,193 +339,207 @@ EOF
 # Main code
 # -------------------------------------------------------------------------------------
 
-# Validar si esta en un panel tmux
-if [ -z "$TMUX" ]; then
+# Funcion principal de entrada
+main() {
 
-    printf '[%bERROR%b] Debe ejecutarse dentro de panel de tmux.\n' "$g_color_red1" "$g_color_reset"
-    exit 1
-fi
+    # Validar si esta en un panel tmux
+    if [ -z "$TMUX" ]; then
 
-# Variable por defecto
-g_working_dir=''
-g_flag_set_active=1
-g_flag_clean=1
-g_flag_zoom=1
-g_flag_use_next_windows=1
-g_hight=20
-g_flag_nearest_pane=1
-g_suggested_pane_id=''
+        printf '[%bERROR%b] Debe ejecutarse dentro de panel de tmux.\n' "$g_color_red1" "$g_color_reset"
+        return 1
+    fi
 
-# Procesar las opciones (antes del '--')
-while [ $# -gt 0 ]; do
+    # Variable por defecto
+    local p_working_dir=''
+    local p_flag_set_active=1
+    local p_flag_clean=1
+    local p_flag_zoom=1
+    local p_flag_use_next_windows=1
+    local p_hight=20
+    local p_flap_nearest_pane=1
+    local p_suggested_pane_id=''
 
-    case "$1" in
+    # Procesar las opciones (antes del '--')
+    while [ $# -gt 0 ]; do
 
-        -w)
-            g_working_dir="$2"
-            shift 2
-            ;;
+        case "$1" in
+
+            -w)
+                p_working_dir="$2"
+                shift 2
+                ;;
 
 
-        -h)
-            if ! [[ "$2" =~ ^[0-9]+$ ]]; then
-                printf '[%bERROR%b] Valor de la opción "%b%s%b" es invalida: %b%s%b\n\n' "$g_color_red1" "$g_color_reset" \
-                       "$g_color_gray1" "-h" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
+            -h)
+                if ! [[ "$2" =~ ^[0-9]+$ ]]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" es invalida: %b%s%b\n\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-h" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
+                    _usage
+                    return 1
+                fi
+
+                if [ $2 -le 10 ] && [ $2 -ge 90 ]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" debe esta [10, 90]: %b%s%b\n\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-h" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
+                    _usage
+                    return 1
+                fi
+
+                p_hight=$2
+                shift 2
+                ;;
+
+
+            -p)
+                if ! [[ "$2" =~ ^%[0-9]+$ ]]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" es invalida: %b%s%b\n\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-p" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
+                    _usage
+                    return 1
+                fi
+
+                p_suggested_pane_id="$2"
+                shift 2
+                ;;
+
+
+            -d)
+                p_flag_set_active=0
+                shift
+                ;;
+
+
+            -n)
+                p_flag_nearest_pane=0
+                shift
+                ;;
+
+            -c)
+                p_flag_clean=0
+                shift
+                ;;
+
+            -z)
+                p_flag_set_active=0
+                p_flag_zoom=0
+                shift
+                ;;
+
+            -s)
+                p_flag_use_next_windows=0
+                shift
+                ;;
+
+            --)
+                shift
+
+                # Solo continuar si se encuentra la opcion '--'
+                break
+                ;;
+
+
+            -*)
+                printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$1" "$g_color_reset"
                 _usage
-                exit 1
-            fi
+                return 1
+                ;;
 
-            if [ $2 -le 10 ] && [ $2 -ge 90 ]; then
-                printf '[%bERROR%b] Valor de la opción "%b%s%b" debe esta [10, 90]: %b%s%b\n\n' "$g_color_red1" "$g_color_reset" \
-                       "$g_color_gray1" "-h" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
+            *)
+                printf '[%bERROR%b] Argumento "%b%s%b" no es esperado antes de opcion --.\n\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$1" "$g_color_reset"
                 _usage
-                exit 1
-            fi
+                return 1
+                ;;
 
-            g_hight=$2
-            shift 2
-            ;;
-
-
-        -p)
-            if ! [[ "$2" =~ ^%[0-9]+$ ]]; then
-                printf '[%bERROR%b] Valor de la opción "%b%s%b" es invalida: %b%s%b\n\n' "$g_color_red1" "$g_color_reset" \
-                       "$g_color_gray1" "-p" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
-                _usage
-                exit 1
-            fi
-
-            g_suggested_pane_id="$2"
-            shift 2
-            ;;
-
-
-        -d)
-            g_flag_set_active=0
-            shift
-            ;;
-
-
-        -n)
-            g_flag_nearest_pane=0
-            shift
-            ;;
-
-        -c)
-            g_flag_clean=0
-            shift
-            ;;
-
-        -z)
-            g_flag_set_active=0
-            g_flag_zoom=0
-            shift
-            ;;
-
-        -s)
-            g_flag_use_next_windows=0
-            shift
-            ;;
-
-        --)
-            shift
-
-            # Solo continuar si se encuentra la opcion '--'
-            break
-            ;;
-
-
-        -*)
-            printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
-                   "$g_color_gray1" "$1" "$g_color_reset"
-            _usage
-            exit 1
-            ;;
-
-        *)
-            printf '[%bERROR%b] Argumento "%b%s%b" no es esperado antes de opcion --.\n\n' "$g_color_red1" "$g_color_reset" \
-                   "$g_color_gray1" "$1" "$g_color_reset"
-            _usage
-            exit 1
-            ;;
-
-    esac
-
-done
-
-# Argumentos restantes después de "--" (comando a ejecutar)
-g_command_args=("$@")
-
-if [ ${#g_command_args[@]} -le 0 ]; then
-    printf '[%bERROR%b] Debe especificar un comando a ejecutar.\n\n' "$g_color_red1" "$g_color_reset"
-    _usage
-    exit 1
-fi
-
-# Obtener el comando a scribir y ejecutar en el panel tmux
-g_tmux_command=''
-
-if [ ${#g_command_args[@]} -gt 1 ]; then
-
-    # Adicionar el entrecomillado/¿caracteres de escape? removido
-    # > Adicionar 1 espacio inicial a todos los argumentos menos el primero.
-    #   Tmux escribirara cada argumento colocado en 'send-keys' consecutivos y sin espacio.
-    # > Cuando se pasan argumentos con espacios, dentro de script/funcion se elimina el entrecomillado.
-    # > ¿Adicionar los caracteres de escape removidos?
-    g_i=0
-    g_item=''
-
-    for (( g_i = 0; g_i < ${#g_command_args[@]}; g_i++ )); do
-
-        g_item="${g_command_args[$g_i]}"
-
-        if [ $g_i -eq 0 ]; then
-
-            if [[ "${g_item}" == *" "* ]]; then
-                g_tmux_command="\"${g_item}\""
-                #g_tmux_command="\\\"${g_item}\\\""
-            else
-                g_tmux_command="${g_item}"
-            fi
-
-        else
-
-            if [[ "${g_item}" == *" "* ]]; then
-                g_tmux_command+=" \"${g_item}\""
-                #g_tmux_command+=" \\\"${g_item}\\\""
-            else
-                g_tmux_command+=" ${g_item}"
-            fi
-
-        fi
+        esac
 
     done
 
-else
+    # Argumentos restantes después de "--" (comando a ejecutar)
+    local l_command_args=("$@")
 
-    # Si solo tiene un argumento se tratara como un solo argumento en 'send-keys' de tmux
-    g_tmux_command="${g_command_args[0]}"
+    if [ ${#l_command_args[@]} -le 0 ]; then
+        printf '[%bERROR%b] Debe especificar un comando a ejecutar.\n\n' "$g_color_red1" "$g_color_reset"
+        _usage
+        return 1
+    fi
 
-fi
+    # Obtener el comando a scribir y ejecutar en el panel tmux
+    local g_tmux_command=''
 
-# Crear u obtener el panel para ejecutar comandos
-#set -x
-g_pane_position=$(get_pane_position "$g_working_dir" $g_hight $g_flag_nearest_pane "$g_suggested_pane_id" $g_flag_use_next_windows)
-#set +x
+    if [ ${#l_command_args[@]} -gt 1 ]; then
 
-# Limpiar la pantalla
-if [ $g_flag_clean -eq 0 ]; then
-    tmux send-keys -t "${g_pane_position}" 'clear' Enter
-fi
+        # Adicionar el entrecomillado/¿caracteres de escape? removido
+        # > Adicionar 1 espacio inicial a todos los argumentos menos el primero.
+        #   Tmux escribirara cada argumento colocado en 'send-keys' consecutivos y sin espacio.
+        # > Cuando se pasan argumentos con espacios, dentro de script/funcion se elimina el entrecomillado.
+        # > ¿Adicionar los caracteres de escape removidos?
+        g_i=0
+        g_item=''
 
-# Enviar comandos ingesados al script al panel del DAP
-tmux send-keys -lt "${g_pane_position}" "$g_tmux_command"
-tmux send-keys -t "${g_pane_position}" Enter
+        for (( g_i = 0; g_i < ${#l_command_args[@]}; g_i++ )); do
 
-if [ $g_flag_set_active -eq 0 ] || [ $g_flag_zoom -eq 0 ]; then
-    tmux select-pane -t "${g_pane_position}"
-fi
+            g_item="${l_command_args[$g_i]}"
 
-if [ $g_flag_zoom -eq 0 ]; then
-    tmux resize-pane -t "${g_pane_position}" -Z
-fi
+            if [ $g_i -eq 0 ]; then
+
+                if [[ "${g_item}" == *" "* ]]; then
+                    g_tmux_command="\"${g_item}\""
+                    #g_tmux_command="\\\"${g_item}\\\""
+                else
+                    g_tmux_command="${g_item}"
+                fi
+
+            else
+
+                if [[ "${g_item}" == *" "* ]]; then
+                    g_tmux_command+=" \"${g_item}\""
+                    #g_tmux_command+=" \\\"${g_item}\\\""
+                else
+                    g_tmux_command+=" ${g_item}"
+                fi
+
+            fi
+
+        done
+
+    else
+
+        # Si solo tiene un argumento se tratara como un solo argumento en 'send-keys' de tmux
+        g_tmux_command="${l_command_args[0]}"
+
+    fi
+
+    # Crear u obtener el panel para ejecutar comandos
+    local l_pane_position
+    #set -x
+    l_pane_position=$(get_pane_position "$p_working_dir" $p_hight $p_flag_nearest_pane "$p_suggested_pane_id" $p_flag_use_next_windows)
+    #set +x
+
+    # Limpiar la pantalla
+    if [ $p_flag_clean -eq 0 ]; then
+        tmux send-keys -t "${l_pane_position}" 'clear' Enter
+    fi
+
+    # Enviar comandos ingesados al script al panel del DAP
+    tmux send-keys -lt "${l_pane_position}" "$g_tmux_command"
+    tmux send-keys -t "${l_pane_position}" Enter
+
+    if [ $p_flag_set_active -eq 0 ] || [ $p_flag_zoom -eq 0 ]; then
+        tmux select-pane -t "${l_pane_position}"
+    fi
+
+    if [ $p_flag_zoom -eq 0 ]; then
+        tmux resize-pane -t "${l_pane_position}" -Z
+    fi
+
+    return 0
+
+}
+
+
+# Ejecutar la funcion principal
+main "$@"
+_g_result=$?
+exit $g_result

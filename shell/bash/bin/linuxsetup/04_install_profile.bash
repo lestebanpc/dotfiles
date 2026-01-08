@@ -1301,9 +1301,9 @@ function _setup_user_profile() {
     l_status=$?
 
     create_folderpath_on_home ".config" "yazi/flavors/catppuccin-mocha.yazi"
-    copy_file_on_home "${g_repo_path}/etc/yazi/catppuccin-mocha" "flavor.toml" ".config/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/etc/yazi/catppuccin-mocha.yazi" "flavor.toml" ".config/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" $l_flag_overwrite_file "        > "
     l_status=$?
-    copy_file_on_home "${g_repo_path}/etc/yazi/catppuccin-mocha" "tmtheme.xml" ".config/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/etc/yazi/catppuccin-mocha.yazi" "tmtheme.xml" ".config/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" $l_flag_overwrite_file "        > "
     l_status=$?
 
     l_target_path=".config/yazi"
@@ -1360,6 +1360,14 @@ function _setup_user_profile() {
     l_target_link="wezterm_run_cmd"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='wezterm_run_cmd.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="open_new_termtab"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='open_new_termtab.bash'
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
 

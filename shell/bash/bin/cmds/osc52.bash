@@ -151,6 +151,7 @@ EOF
 }
 
 
+# Funcion principal de entrada
 main() {
 
     #1. Opciones y Argumentos
@@ -230,6 +231,7 @@ main() {
 }
 
 
+# Ejecutar la funcion principal
 #_main "$@"
 main "$@"
 _g_result=$?

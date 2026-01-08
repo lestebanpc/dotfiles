@@ -988,11 +988,11 @@ function m_setup_profile($l_overwrite_ln_flag) {
     }
 
     $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\flavor.toml"
-    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\catppuccin-mocha\flavor.toml"
+    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\catppuccin-mocha.yazi\flavor.toml"
     Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
 
     $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\tmtheme.xml"
-    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\catppuccin-mocha\tmtheme.xml"
+    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\catppuccin-mocha.yazi\tmtheme.xml"
     Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
 
     $l_target_link="${env:LOCALAPPDATA}\.config\yazi\plugins"
