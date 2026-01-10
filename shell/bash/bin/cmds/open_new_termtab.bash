@@ -17,24 +17,30 @@ g_color_blue1="\x1b[34m"
 _usage() {
 
     cat <<EOF
-Usage: tmux_new_termtab [options] folder_or_file
+Usage: open_new_termtab [options] folder_or_file
 
-> Crea una nueva ventana/ta en la terminar actual donde el directorio de trabajo es el folder enviado como argumento (si el arugmento es un archivo se considera folder donde esta el archivo).
-> Actualmente solo esta soportoadp para los emuladores de terminal:
+> Crea una nueva ventana/tab en la terminar actual
+  > El directorio de trabajo usado por la nueva ventana/panel es:
+    > Si el argumento es un folder, el directorio de trabajo siempre es este folder.
+    > Si el argumento es un archivo:
+      > Si se especifica la opcion '-w', es el diferectorio de trabajo sera el folder donde esta el archivo.
+      > Si no se especifca la opcion '-w', se usara el directorio por defecto del proceso padre actual.
+> Los emuladores de terminal soportados son:
   > Si usa el multiplexor tmux, independendiente del emulador de terminal donde lo ejecute
   > Si no usa un multiplexor de terminal, solo se soporta las siguientes emuladores de terminal:
     > WezTerm
 
 Ejemplos:
 
-  $ tmux_new_termtab ../
-  $ tmux_new_termtab /home/lucianoepc/code
-  $ tmux_new_termtab /home/lucianoepc/code/mynote.txt
-  $ tmux_new_termtab -e /home/lucianoepc/code/mynote.txt
+  $ open_new_termtab ../
+  $ epen_new_termtab /home/lucianoepc/code
+  $ open_new_termtab /home/lucianoepc/code/mynote.txt
+  $ open_new_termtab -e /home/lucianoepc/code/mynote.txt
 
 Options:
- -d     La ventana/tab creada se estable en el activo. Si no se especifica la ventana creada/tab no es el activo.
- -e     Si es un archivo abre el archivo con el editor \$EDITOR.
+ -e     Si es un archivo, si es un archivo de texto lo abre con el editor \$EDITOR, si es binario muestra la informacion del archivo.
+ -w     Si es un archivo, el nuevo tab se usara como directorio de trabajo el directorio por defecto.
+        Si no se especifica (y es un archivo) se usara como diferectorio de trabajo el folder padre donde se ubica el archivo.
 
 Arguments
  <file_or_folder> Ruta del folder.
@@ -58,8 +64,8 @@ main() {
     fi
 
     #1. Procesar las opciones (siempre deben estar anstes de los argumentos)
-    local p_flag_set_active=1
-    local p_flag_openfile_on_editor=1
+    local p_flag_use_default_working_dir=1
+    local p_flag_show_infofile=1
     #echo "Init ${@}" >> /tmp/remove.txt
 
     while [ $# -gt 0 ]; do
@@ -71,14 +77,14 @@ main() {
                 return 0
                 ;;
 
-            -d)
-                p_flag_set_active=0
+            -w)
+                p_flag_use_default_working_dir=0
                 shift
                 ;;
 
 
             -e)
-                p_flag_openfile_on_editor=0
+                p_flag_show_infofile=0
                 shift
                 ;;
 
@@ -131,25 +137,39 @@ main() {
 
 
     #4. Determinar datos requeridos para los archivos
-    local l_working_dir="$p_full_path"
-    local l_filename=""
+    local l_parent_dir="$p_full_path"
+    local l_file_path=''
     local l_is_text_file=1
     local l_data=""
 
     if [ $l_is_folder -ne 0 ]; then
 
-        l_working_dir="${p_full_path%/*}"
-        l_filename="${p_full_path##*/}"
+        l_parent_dir="${p_full_path%/*}"
 
         # Determinar si el archivos es un archivo de texto o empty
-        if [ $p_flag_openfile_on_editor -eq 0 ]; then
+        if [ $p_flag_show_infofile -eq 0 ]; then
 
             # Determinar el tipo MIME del archivo
             l_data=$(file -i "$p_full_path")
-            if [[ "$l_data" == *"text/plain"* ]]; then
+            if [[ "$l_data" == *"text/"* ]]; then
+                l_is_text_file=0
+            elif [[ "$l_data" == *"application/json"* ]]; then
                 l_is_text_file=0
             elif [[ "$l_data" == *"inode/x-empty"* ]]; then
                 l_is_text_file=0
+            fi
+
+            # Obtener el nombre y/o ruta del archivo a usar
+            if [ $p_flag_use_default_working_dir -ne 0 ]; then
+
+                # Usar solo el nombre del archivo
+                l_file_path="${p_full_path##*/}"
+
+            else
+
+                # Usar la ruta completa del archivo
+                l_file_path="$p_full_path"
+
             fi
 
         fi
@@ -162,20 +182,32 @@ main() {
     local l_position=''
     if [ ! -z "$TMUX" ]; then
 
+        # Obtener el directorio de trabajo del panel actual
+        if [ $p_flag_use_default_working_dir -eq 0 ]; then
+            l_parent_dir=$(tmux display-message -p "#{pane_current_path}")
+        fi
+
         # Crear una ventana en la sesion actual
-        l_position=$(tmux new-window -c "$l_working_dir" -PF "#{window_id}.#{pane_id}")
+        l_position=$(tmux new-window -c "$l_parent_dir"  -PF "#{window_id}.#{pane_id}")
         if [ -z "$l_position" ]; then
             return 2
         fi
 
-        # Si es un archivo de texto
-        if [ $l_is_folder -ne 0 ] && [ $l_is_text_file -eq 0 ]; then
+        # Si es un archivo
+        if [ $l_is_folder -ne 0 ]; then
+
 
             # Limpiar la pantalla
             tmux send-keys -t "${l_position}" 'clear' Enter
 
-            # Enviar comandos ingesados al script al panel del DAP
-            tmux send-keys -lt "${l_position}" "${EDITOR:-vim} \"$l_filename\""
+            # Solo escribir el comandos en el prompt de panel creado
+            if [ $l_is_text_file -eq 0 ]; then
+                tmux send-keys -lt "${l_position}" "${EDITOR:-vim} \"$l_file_path\""
+            else
+                tmux send-keys -lt "${l_position}" "file \"$l_file_path\""
+            fi
+
+            # Ejecutar el comando enviado
             tmux send-keys -t "${l_position}" Enter
 
         fi
@@ -188,14 +220,33 @@ main() {
     #6. Si es un emulador de terminal Wezterm
     if [ ! -z "$WEZTERM_UNIX_SOCKET" ] && [ "$TERM_PROGRAM" = "WezTerm" ]; then
 
+        # Obtener el directorio de trabajo del panel actual
+        if [ $p_flag_use_default_working_dir -eq 0 ]; then
+
+            l_data=$(wezterm cli list --format json | jq -r --arg pid "$WEZTERM_PANE" '.[] | select(.pane_id == ($pid | tonumber)) | .cwd')
+            if [ -z "$l_data" ]; then
+                return 2
+            fi
+
+            l_parent_dir=$(echo "$l_data" | sed -E 's|^[^:]+://[^/]+||')
+
+        fi
+
         # Crear un nuevo tab en el workspace actual del domunio actual
-        l_position=$(wezterm cli spawn --cwd "$l_working_dir" 2>/dev/null)
+        l_position=$(wezterm cli spawn --cwd "$l_parent_dir" 2>/dev/null)
+        if [ -z "$l_position" ]; then
+            return 2
+        fi
 
-        # Si es un archivo de texto
-        if [ $l_is_folder -ne 0 ] && [ $l_is_text_file -eq 0 ]; then
+        # Si es un archivo
+        if [ $l_is_folder -ne 0 ]; then
 
-            # Al final se escribe un fin de linea para ejecutar el comando
-            wezterm cli send-text --pane-id "$l_position" --no-paste "${EDITOR:-vim} \"$l_filename\""$'\n'
+            # Escribir el comandos en el prompt de panel creado y ejecutar escribiendo el finde linea
+            if [ $l_is_text_file -eq 0 ]; then
+                wezterm cli send-text --pane-id "$l_position" --no-paste "${EDITOR:-vim} \"$l_file_path\""$'\n'
+            else
+                wezterm cli send-text --pane-id "$l_position" --no-paste "file \"$l_file_path\""$'\n'
+            fi
 
         fi
 

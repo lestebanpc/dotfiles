@@ -6,7 +6,9 @@
     FunctionsToExport = @(
         'Sync-Folder',
         'Get-SyncFolderHelp',
-        'Invoke-WezTermCommand'
+        'Invoke-WezTermCommand',
+        'Open-NewTerminalTab',
+        'Test-WezTerm',
     )
 
     VariablesToExport = @()
