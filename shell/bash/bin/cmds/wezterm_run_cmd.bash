@@ -9,6 +9,21 @@ g_color_yellow1="\x1b[33m"
 g_color_red1="\x1b[31m"
 g_color_blue1="\x1b[34m"
 
+
+# Un tab_id es similar a una ventana tmux
+# Una ventaan wezterm, es simular a una instancia ventaan dentro de un misma ventana fisica del emulador de terminal
+
+# ID del tab y el workspace del panel actual
+# workspace
+#wezterm cli list --format json | jq -r --arg pane_id "$WEZTERM_PANE" '.[] | select(.pane_id == ($pane_id|tonumber)) | .tab_id'
+
+# Arrrglo de paneles disponibles en el mismo workspace y solo representan a fs local  (dominio local o socket unix o exec domian)
+# "cwd": "file://fenix/home/lucianoepc/.ssh/"i (local domain),
+# "cwd": "file:///home/lucianoepc/.ssh/" (exec domain pwsh)
+# ssh domain no genera un tty_name (uno local)
+# un workspace diferente tiene su ventana id diferentes por mas que fisicamente sean un emulador de terminal
+#wezterm cli list --format json | jq '[ .[] | select((.title | contains("bash")) and (.tty_name != null)) | { window_id, tab_id, pane_id } ]'
+
 # Verifica si un panel está disponible (no ejecutando programas como btop, htop, etc.)
 is_pane_available() {
     local pane_id="$1"

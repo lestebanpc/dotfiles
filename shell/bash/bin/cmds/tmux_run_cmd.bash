@@ -12,22 +12,22 @@ g_color_red1="\x1b[31m"
 g_color_blue1="\x1b[34m"
 
 
-# Retorna el ID de la ventana y el ID del panel escogida de la ventana.
+# Obtener el ID window y el ID del panel disponible de la ventana siguiente a la actual.
 get_pane_id_of_next_windows() {
 
-    #2. Obtener el indice (a diferencia de ID, el indice siempre es ordenado e inicia con 0)  de la ventana actual
+    #1. Obtener el indice (a diferencia de ID, el indice siempre es ordenado e inicia con 0)  de la ventana actual
     local l_current_win_index
     l_current_win_index=$(tmux display-message -p '#{window_index}')
     l_current_win_index="${l_current_win_index#@}"
 
-    #3. Obtener la ventana siguiente a la actual
+    #2. Obtener los ID de las ventanas siguiente a la ventana actual
+    local l_data1
+    l_data1=$(tmux list-windows -F '#{window_id}' -f "#{>:#{window_index},${l_current_win_index}}" 2> /dev/null)
+
+    #3. Obtener los ID de los paneles disponibles (que ejecutan 'bash')
     local l_next_window_id
     local l_pane_id
     local l_current_cmd='bash'
-
-    # Obtener las ventanas siguiente a la actual
-    local l_data1
-    l_data1=$(tmux list-windows -F '#{window_id}' -f "#{>:#{window_index},${l_current_win_index}}" 2> /dev/null)
 
     if [ ! -z "$l_data1" ]; then
 
@@ -57,17 +57,19 @@ get_pane_id_of_next_windows() {
     fi
 
 
-    # Si no se encontro el panel disponible de la ventana siguiente
+    # Si no se encontra el panel disponible en la ventana siguiente a la actual.
     if [ -z "$l_pane_id" ] || [ -z "$l_next_window_id" ]; then
         return 1
     fi
 
+    #4. Devolver el ID del windows y ID de su panel disponible
     echo "${l_next_window_id} ${l_pane_id}"
     return 0
 
 }
 
 
+# Obtener o crear el ID window y el ID del panel disponible de la ventana siguiente a la actual.
 get_or_create_pane_next_window() {
 
     #1. Parametros
@@ -104,13 +106,14 @@ get_or_create_pane_next_window() {
     local l_pane_id="${la_data[1]}"
     l_pane_id="${l_pane_id#%}"
 
+    #4. Devolver el ID del windows y ID su panel disponible
     echo "${l_window_id} ${l_pane_id}"
     return 0
 
 }
 
 
-# Obtiene el ID (sin el '%') del panel ID donde se muestra la psuedo-terminal usada para ejecutar comandos.
+# Obtiene el ID (sin el '%') del panel disponible de la ventana actual.
 # El del ID del panel a usar se obtendra segun orden de prioridad:
 #  > Si se especifica la opcion '-n' (nearest panel), buscara el primer panel diferente al actual que exista en la ventana tmux.
 #  > Si se especifica la opcion '-p <pane_id>', si el '<pane_id>' es un ID de panel valido, se usara este panel.
@@ -221,6 +224,7 @@ get_pane_id_of_current_windows() {
 }
 
 
+# Obtiene o crea el ID (sin el '%') del panel disponible de la ventana actual.
 get_or_create_pane_current_window() {
 
     # Parametros
@@ -256,6 +260,7 @@ get_or_create_pane_current_window() {
 }
 
 
+# Obtiene el identificador de panel disponible creado o existe de la ventana actual o de la ventana siguiente.
 get_pane_position() {
 
     # Parametros
@@ -359,7 +364,7 @@ main() {
     local p_flap_nearest_pane=1
     local p_suggested_pane_id=''
 
-    # Procesar las opciones (antes del '--')
+    # Procesar los argumentos (opciones) antes del '--'
     while [ $# -gt 0 ]; do
 
         case "$1" in
@@ -456,7 +461,7 @@ main() {
 
     done
 
-    # Argumentos restantes después de "--" (comando a ejecutar)
+    # Procesar los argumentos restantes después de "--" (comando a ejecutar)
     local l_command_args=("$@")
 
     if [ ${#l_command_args[@]} -le 0 ]; then
