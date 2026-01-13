@@ -60,8 +60,13 @@ mod.color_scheme = 'lepc-schema'
 --mod.color_scheme = 'Ayu Dark (Gogh)'
 
 
--- Sets the default current working directory used by the initial window.
+-- Establece el 'default current working directory' a ser usando durante la creacion de un panel (cuando API 'SpawnCommand' no especifica
+-- la opcion '.cwd'). Tiene limitaciones respecto si el Domain del panel a crear esta asociado a 'MuxDomain' remoto.
 -- The value is a string specifying the absolute path that should be used for the home directory (no use relative path or '~').
+-- Vease: https://wezterm.org/config/lua/config/default_cwd.html
+if m_custom_config.default_cwd ~= nil then
+    mod.default_cwd = m_custom_config.default_cwd
+end
 --mod.default_cwd = "$HOME"
 
 -- Specifies the name of the default workspace. The default is "default".
@@ -362,25 +367,47 @@ mm_wezterm.on('update-status', mm_ugeneralui.callback_update_status)
 -- > Un 'Domain' es a nivel emulador de terminal ('wezter-gui') define la forma en que se crearan los paneles de un tab (el proceso local a usar, el
 --   interprete de shell a usar, los parametros que se usaran para crearlo) el cual puede ser complejo cuando este se conecta a shell o procesos
 --   remotos.
---   > Un 'Domain' esta asociado a un 'MuxDomain' de un multiplexor integraado o remoto.
---   > Los tipos puede ser:
---     > 'Local Domain'
---          > Sus paneles solo  proceso locales, usualmente el interprete shell
---     > 'SSH Domain'
---        > Puede asociarse al mulitplexor integrado a un 'multiplexer server'.
---        > Si esta asociado a 'MuxDomain' del multiplexor integrado, es considerado un proceso 'ssh' que se ejecuta localmente pero requiere
---          conectarse remotamente por SSH.
---        > Si esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
---          decida como crear los 'MuxTab' y sus 'MuxPane'. Se usa SSH para comunicarse con el servidor.
---     > 'WSL Domain'
---        > Ejecutan un proceso local 'wsl' y siempre esta asocaido a un 'MuxDomain' del 'built-in multiplexer'.
---     > 'TSL Domain'
---        > Siempre esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
---          decida como crear los 'MuxTab' y sus 'MuxPane'.
---        > Se usa TLS para comunicarse con este, aunque tambien puede usarse SSH solo para el inicio automatico del 'multiplexer server'.
---     > 'Unix Damain'
---        > Siempre esta asociado a 'MuxDomain' de un 'multiplexer server' que usualemtne esta local donde esta la termina.
---        > Se usa socket IPC para comunicarse con este.
+--   > Un 'Domain' esta asociado a un 'MuxDomain' de un multiplexor (local o remoto).
+--   > Se organiza según como se conecta al su `MuxDomain` de un multiplexor (local o remoto):
+--
+--     > Asociados a `MuxDomain` **local built-in** (si es un objeto de un multiplexor es el builtin o el externo pero en el mismo servidor y usando IPC)
+--       - Siempre esta asociado un proceso locales ejecutado sobre un interprete shell del sistema
+--       - Siempre crean un pseudo-terminal `tty` (local).
+--       - Pueden ser:
+--         > 'Local Domain'
+--           - Sus paneles solo  proceso locales, usualmente el interprete shell
+--         > 'Exec Domain'
+--           - Sus paneles solo ejecutan proceso locales interactivos que están asociado al interprete shell del sistema.
+--           - Usualmente estos procesos interactivos y locales esta asociado a:
+--             - A un proceso local que crea pseudo-terminal local dentro del mismo namespace de procesos principal.
+--             - A un proceso local que crea pseudo-terminal local pero esta en otro namespace de procesos (contenedores docker o similares como distrobox).
+--             - A un proceso local que crea pseudo-terminal local pero que redirige a otro pseudo-terminal remota: kubernates, wsl, etc.
+--	       > 'WSL Domain'
+--           - Ejecutan un proceso local `wsl` y siempre esta asocaido a un `MuxDomain` del `built-in multiplexer`.
+--           - Es un tipo especial de *Exec Domain*
+--         > 'SSH Domain' built-in
+--           - Si el 'SSH Domain' esta asociado al mulitplexor integrado a un 'multiplexer server'.
+--           - Internamente es considerado un proceso 'ssh' que se ejecuta localmente pero requiere conectarse remotamente por SSH.
+--
+--     > Asociados a `MuxDomain` local IPC (si es un objeto de un multiplexor externo pero en el mismo servidor)
+--       - Siempre esta asociado un proceso locales ejecutado sobre un interprete shell del sistema
+--       - Siempre crean un pseudo-terminal `tty` (local).
+--       - Pueden ser:
+--         > 'Unix Damain'
+--           - Siempre esta asociado a `MuxDomain` de un `multiplexer server` que esta local donde esta el emulador de terminal.
+--           - Se usa socket IPC para comunicarse con este.
+--
+--     > Asociados a `MuxDomain` *remoto* (si es un objeto de un multiplexor externo que esta en otro servidor)
+--       - Nunca crean un pseudo-terminal `tty` local (siempre crean uno remoto no asociado a este).
+--       - Pueden ser:
+--         > 'SSH Domain' remoto
+--           - Si el 'SSH Domain' esta asociado a un 'MuxDomain' de un 'multiplexer server'.
+--           - En su configuracion indica como conectarse al 'multiplexer server', y sera este el que decida como crear los 'MuxTab' y sus 'MuxPane'.
+--           - Se usa SSH para comunicarse con el servidor.
+--         > 'TSL Domain'
+--           - Siempre esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
+--             decida como crear los 'MuxTab' y sus 'MuxPane'.
+--           - Se usa TLS para comunicarse con este, aunque tambien puede usarse SSH solo para el inicio automatico del 'multiplexer server'.
 -- For more details, see: https://wezfurlong.org/wezterm/multiplexing.html
 --
 

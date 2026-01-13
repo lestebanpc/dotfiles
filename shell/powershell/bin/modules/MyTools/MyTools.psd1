@@ -8,7 +8,7 @@
         'Get-SyncFolderHelp',
         'Invoke-WezTermCommand',
         'Open-NewTerminalTab',
-        'Test-WezTerm',
+        'Test-WezTerm'
     )
 
     VariablesToExport = @()

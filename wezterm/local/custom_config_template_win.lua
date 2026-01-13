@@ -1,21 +1,34 @@
 --
 -- Consideraciones a tener en cuenta:
 --
+-- > El multiplexor es un servidor que gestiona objetos requieridos por un cliente (proceso 'wezterm-gui' o instancia de emulador de terminal)
+--   > El multiplexor es el encargado de gestionar los siguientes objetos:
+--     > 'Workspace' que es un conjunto de 'MuxWindow' exclusivos (no pueden ser compartido con otros workspace). Por defecto el multiplexor siempre
+--       tiene un workspace llamado 'default' con una solo 'MuxWindow' y con un solo tab 'MuxTab' con un solo panel 'MuxPane'.
+--     > 'MuxWindow' que tiene un conjunto de 'MuxTab' y este a su vez un conjunto de 'MuxPane'.
+--       > Un 'MuxWindow' se puede vincular a 0 o 1 Window GUI. 1 Window GUI puede tener 1 o muchos 'MuxWindow' asociados.
+--       > Un 'MuxTab' se puede vincular a o o 1 Tab GUI. 1 Tab GUI puede tener 1 o mchos 'NuxTab' asociados.
+--     > 'MuxDamain' es objeto que define una determina forma de crear 'MuxPane' (la shell que usara, el proceso que ejecutara y sus argumentos, etc.)
+--       > Un 'MuxTab' esta vinculado a un solo objeto 'MuxDomain', por lo que los 'MuxPane' de un 'MuxTab' solo se pueden crear de un sola forma definida
+--         por el 'MuxDomain'.
+--   > Objetos de nivel superior son `Workspace` y `MuxDomain`
+--   > Todo objeto 'Workspace' tiene sus objetos 'MuxWindow' exclusivos (por mas que estos compartan la misma ventana GUI, siempre son objetos diferentes).
+--   > El identificador de 'MuxWindow', 'MuxTab' y 'MuxPane' es un identificador correlativo único a nivel de todo el proceso `wezterm-gui`.
+--   > Por cada objeto 'Workspace' (del built-in multiplexer) selecionado en el emulador de terminal, segun la 'MuxDomain' existentes, se creara/mostrara
+--     el un objeto 'Window' mostrando los tab y paneles presentes en este.
+--
 -- > Un proceso 'wezterm-gui' representa una instancia del emulador de terminal wezterm con su propio 'built-in multiplexor'.
 --   > Una (instancia del) emulador (proceso 'wezterm-gui') tiene su propia instancia de 'built-in multiplexor'. El emulador de terminal siempre depende
 --     de su multiplexor integrado y se encarga de visualizar y mostrar sus objetos: el workspace seleccionado y presenta cada 'MuxWindow' creando su
 --     objeto 'Window', su tabs y su panel.
---   > El multiplexor es el encargado de gestionar los objetos:
---     > 'Workspace' que es un conjunto de 'MuxWindow' exclusivos (no pueden ser compartido con otros workspace). Por defecto el multiplexor siempre
---       tiene un workspace llamado 'default' con una solo 'MuxWindow' y con un solo tab 'MuxTab' con un solo panel 'MuxPane'.
---     > 'MuxWindow' que tiene un conjunto de 'MuxTab' y este a su vez un conjunto de 'MuxPane'.
---     > 'MuxDamain' es objeto que define una determina forma de crear 'MuxPane' (la shell que usara, el proceso que ejecutara y sus argumentos, etc.)
---     > Un 'MuxTab' esta vinculado a un solo objeto 'MuxDomain', por lo que los 'MuxPane' de un 'MuxTab' solo se pueden crear de un sola forma definida
---       por el 'MuxDomain'.
---   > Una objeto 'Window' (ventana GUI) es gestionado por el gestor de ventanas del SO (por ejemplo, Wayland) y tiene su 'title bar', 'tab bar' y su
+--   > Una objeto 'Window GUI' es gestionado por el gestor de ventanas del SO (por ejemplo, Wayland) y tiene su 'title bar', 'tab bar' y su
 --     'status bar', y muestran un conjunto de tab (objeto 'TabInformation') y paneles (objeto 'Pane').
---   > Por cada objeto 'Workspace' (del built-in multiplexer) selecionado en el emulador de terminal, segun la 'MuxDomain' existentes, se creara/mostrara
---     el un objeto 'Window' mostrando los tab y paneles presentes en este.
+--     > Un ventana GUI puede tener multiples objeto 'MuxWindow', pero en un instante de tiempo solo muestra un 'MuxWindow' especifico..
+--     > Siempre se crea un objeto 'MuxWindow' por cada workspace por mas que siempre representen a la misma ventana GUI.
+--     > Se puede crear una nueva ventana dentro de un workspace especifico (por ejemplo 'config git') usando.
+--       wezterm cli spawn --cwd ~/.files/etc/ --new-window --workspace "config git"
+--
+-- > Un cliente de un 'multiplexer' es un proceso 'wezterm-gui' (un mismo usuario y de una maquina) que se conecta a un 'multiplexer'.
 --
 -- > El comando 'wezterm start/connect/ssh/serial', si no encuentra un instancia de emulador de terminal iniciado, siempre inicia uno proceso 'wezterm-gui'.
 --   > Una instancia de (emulador de) terminal se puede crear usando:
@@ -39,24 +52,26 @@
 --       > '{ 'serial', '<server>' }'  si desea usar 'wezterm serial <server>'
 --
 -- > Los 'multiplexer' usados por Wezterm son:
---   > 'Multiplexer Server'
+--   > 'Multiplexer Server' (External Multiplexer)
 --      > Es un multiplexer externo al proceso 'wezterm-gui'.
 --      > Se ejecuta en un proceso 'wezterm-mux-server' externa a la terminal y expone su API en TSL/HTTPS (usualmente usando un socket IPC).
 --      > Los clientes (procesos 'wezterm-gui') solo se pueden conectar usando:
---        > Localmente usando el socket IPC expuesto por el 'multiplexer' (actual de IPC server).
+--        > Localmente (pero externo al proceso del emulador de terminal)
+--          > Usando el socket IPC expuesto por el 'multiplexer' (actual de IPC server).
 --        > Remotamente se accede usando:
 --          > TLS
 --            > Mediante configuracion del 'multiplexer server' puede exponer el socket IPC en un socket TCP exponiendo el API TLS/HTTPS sobre TPC.
 --          > SSH
 --            > Require de un proxy creado por 'wezterm cli proxy' que facilite la comunicacion de TLS/HTTPS sobre el tunel SSH.
 --      > Actualmente, tiene las siguiente restricciones:
---        > Solo cuanta con i solo 'MuxDomain' llamado 'local'.
+--        > Solo cuanta con 1 solo 'MuxDomain' llamado 'local'.
 --        > Solo puede tener 1 solo 'Workspace' llamado 'default' que solo tiene tener 'MuxWindow' locales a este (no existe un 'attach' a 'MuxWindow'
 --          remotos).
 --        > El workspace puede tener multiples 'MuxWindow' con sus 'MuxTab' y sus 'MuxPane' el cual solo puede estar asociado al unico 'MuxDomain'
 --          existente.
 --   > 'Built-in multiplexer'
---      > Es un multiplexer que se instancia dentreo del proceso 'wezterm-gui'.
+--      > Es un multiplexer que se instancia dentreo del proceso 'wezterm-gui', por lo que siempre es un multiplexor local debido a que esta en el
+--        mismo servidor y se ejecuta en el mismo proceso del emulador de terminal.
 --      > Se crea dentro del propio proceso de la instancia de la terminal.
 --      > Puede tener multiples 'workspace', las cuales son creados desde el emulador de terminal.
 --      > Tiene diferentes 'MuxDomains'.
@@ -64,30 +79,51 @@
 --        Cuando se vincula a un multiplexor remoto y no existe workspace, se creara automaticamente con un 'MuxWindow' y su respectivo 'Muxtab'
 --        y 'MuxPane'.
 --
--- > Un cliente de un 'multiplexer' es un proceso 'wezterm-gui' (un mismo usuario y de una maquina) que se conecta a un 'multiplexer'.
---
 -- > Un 'Domain' es a nivel emulador de terminal ('wezter-gui') define la forma en que se crearan los paneles de un tab (el proceso local a usar, el
 --   interprete de shell a usar, los parametros que se usaran para crearlo) el cual puede ser complejo cuando este se conecta a shell o procesos
 --   remotos.
---   > Un 'Domain' esta asociado a un 'MuxDomain' de un multiplexor integraado o remoto.
---   > Los tipos puede ser:
---     > 'Local Domain'
---          > Sus paneles solo  proceso locales, usualmente el interprete shell
---     > 'SSH Domain'
---        > Puede asociarse al mulitplexor integrado a un 'multiplexer server'.
---        > Si esta asociado a 'MuxDomain' del multiplexor integrado, es considerado un proceso 'ssh' que se ejecuta localmente pero requiere
---          conectarse remotamente por SSH.
---        > Si esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
---          decida como crear los 'MuxTab' y sus 'MuxPane'. Se usa SSH para comunicarse con el servidor.
---     > 'WSL Domain'
---        > Ejecutan un proceso local 'wsl' y siempre esta asocaido a un 'MuxDomain' del 'built-in multiplexer'.
---     > 'TSL Domain'
---        > Siempre esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
---          decida como crear los 'MuxTab' y sus 'MuxPane'.
---        > Se usa TLS para comunicarse con este, aunque tambien puede usarse SSH solo para el inicio automatico del 'multiplexer server'.
---     > 'Unix Damain'
---        > Siempre esta asociado a 'MuxDomain' de un 'multiplexer server' que usualemtne esta local donde esta la termina.
---        > Se usa socket IPC para comunicarse con este.
+--   > Un 'Domain' esta asociado a un 'MuxDomain' de un multiplexor (local o remoto).
+--   > Se organiza según como se conecta al su `MuxDomain` de un multiplexor (local o remoto):
+--
+--     > Asociados a `MuxDomain` **local built-in** (si es un objeto de un multiplexor es el builtin o el externo pero en el mismo servidor y usando IPC)
+--       - Siempre esta asociado un proceso locales ejecutado sobre un interprete shell del sistema
+--       - Siempre crean un pseudo-terminal `tty` (local).
+--       - Pueden ser:
+--         > 'Local Domain'
+--           - Sus paneles solo  proceso locales, usualmente el interprete shell
+--         > 'Exec Domain'
+--           - Sus paneles solo ejecutan proceso locales interactivos que están asociado al interprete shell del sistema.
+--           - Usualmente estos procesos interactivos y locales esta asociado a:
+--             - A un proceso local que crea pseudo-terminal local dentro del mismo namespace de procesos principal.
+--             - A un proceso local que crea pseudo-terminal local pero esta en otro namespace de procesos (contenedores docker o similares como distrobox).
+--             - A un proceso local que crea pseudo-terminal local pero que redirige a otro pseudo-terminal remota: kubernates, wsl, etc.
+--	       > 'WSL Domain'
+--           - Ejecutan un proceso local `wsl` y siempre esta asocaido a un `MuxDomain` del `built-in multiplexer`.
+--           - Es un tipo especial de *Exec Domain*
+--         > 'SSH Domain' built-in
+--           - Si el 'SSH Domain' esta asociado al mulitplexor integrado a un 'multiplexer server'.
+--           - Internamente es considerado un proceso 'ssh' que se ejecuta localmente pero requiere conectarse remotamente por SSH.
+--
+--     > Asociados a `MuxDomain` local IPC (si es un objeto de un multiplexor externo pero en el mismo servidor)
+--       - Siempre esta asociado un proceso locales ejecutado sobre un interprete shell del sistema
+--       - Siempre crean un pseudo-terminal `tty` (local).
+--       - Pueden ser:
+--         > 'Unix Damain'
+--           - Siempre esta asociado a `MuxDomain` de un `multiplexer server` que esta local donde esta el emulador de terminal.
+--           - Se usa socket IPC para comunicarse con este.
+--
+--     > Asociados a `MuxDomain` *remoto* (si es un objeto de un multiplexor externo que esta en otro servidor)
+--       - Nunca crean un pseudo-terminal `tty` local (siempre crean uno remoto no asociado a este).
+--       - Pueden ser:
+--         > 'SSH Domain' remoto
+--           - Si el 'SSH Domain' esta asociado a un 'MuxDomain' de un 'multiplexer server'.
+--           - En su configuracion indica como conectarse al 'multiplexer server', y sera este el que decida como crear los 'MuxTab' y sus 'MuxPane'.
+--           - Se usa SSH para comunicarse con el servidor.
+--         > 'TSL Domain'
+--           - Siempre esta asociado a 'MuxDomain' de un 'multiplexer server', este indica como conectarse al 'multiplexer server', y sera este el que
+--             decida como crear los 'MuxTab' y sus 'MuxPane'.
+--           - Se usa TLS para comunicarse con este, aunque tambien puede usarse SSH solo para el inicio automatico del 'multiplexer server'.
+--
 --
 
 
@@ -151,6 +187,15 @@ local mod= {
         --zoxide = 'D:/apps/cmds/bin',
 
     },
+
+    -- Establece el 'default current working directory' a ser usando durante la creacion de un panel (cuando API 'SpawnCommand' no especifica
+    -- la opcion '.cwd'). Tiene limitaciones respecto si el Domain del panel a crear esta asociado a 'MuxDomain' remoto.
+    -- Siempre debe ser una ruta absoluta. No soporta el uso de '~'.
+    -- Vease: https://wezterm.org/config/lua/config/default_cwd.html
+    default_cwd = nil,
+    --default_cwd = "D:/work",
+    --default_cwd = "/home/lucianoepc/works/bpichincha",
+    --default_cwd = "$HOME",
 
 
     --------------------------------------------------------------------------------

@@ -1531,6 +1531,7 @@ function mod.get_custom_config()
             fd = nil,
             zoxide = nil,
         },
+        default_cwd = nil,
 
 
         ssh_domains = nil,

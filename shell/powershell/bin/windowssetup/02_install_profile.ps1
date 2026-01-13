@@ -995,8 +995,22 @@ function m_setup_profile($l_overwrite_ln_flag) {
     $l_source_path="${env:USERPROFILE}\.files\etc\yazi\catppuccin-mocha.yazi\tmtheme.xml"
     Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
 
-    $l_target_link="${env:LOCALAPPDATA}\.config\yazi\plugins"
-    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\plugins"
+    if(! (Test-Path "${env:APPDATA}\yazi\config\init.lua" )) {
+		Write-Host "            > Creando el archivo '${env:APPDATA}\yazi\config\init.lua' ..."
+        Copy-Item -Path "${env:USERPROFILE}\.files\etc\yazi\init_win.lua" -Destination "${env:APPDATA}\yazi\config\init.lua"
+
+        Write-Host "            > Edite '${env:APPDATA}\yazi\config\init.lua' si desea modificar las opciones Wezterm."
+	}
+    else {
+        Write-Host "            > Edite '${env:APPDATA}\yazi\config\init.lua' si desea modificar las opciones Wezterm."
+    }
+
+	if(! (Test-Path "${env:APPDATA}\yazi\config\plugins")) {
+		New-Item -ItemType Directory -Force -Path "${env:APPDATA}\yazi\config\plugins"
+    }
+
+    $l_target_link="${env:APPDATA}\.config\yazi\plugins\fzf-fd.yazi"
+    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\plugins\fzf-fd.yazi"
     m_create_folder_link "$l_source_path" "$l_target_link" "            > " $l_overwrite_ln_flag
 
 

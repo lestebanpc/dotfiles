@@ -14,7 +14,7 @@ prepend_keymap = [
     # --------------------------------------------------------------------------
 
     # El comando custom 'fzf_fd' se registra en el plugin fzf-utils
-    #{ on = [ "g", "s" ], run = "plugin fzf-utils:find", desc = "Search subfolder by name via fd" },
+    { on = [ "g", "s" ], run = "plugin fzf-fd --type=d --use_tmux=false", desc = "Search subfolder by name via fd" },
     #{ on = [ "g", "s" ], run = "search --via=fd --args='-f d'", desc = "Search subfolder by name via fd" },
 	#{ on = [ "g", "t" ], run = '''shell -- wezterm cli spawn --cwd "%s1"''', desc = "Open current subfolder in wezterm tab" },
 	#{ on = [ "g", "p" ], run = '''shell -- wezterm cli spawn --cwd "%d1"''', desc = "Open parent folder in wezterm tab" },

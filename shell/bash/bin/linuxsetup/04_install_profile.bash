@@ -1306,9 +1306,16 @@ function _setup_user_profile() {
     copy_file_on_home "${g_repo_path}/etc/yazi/catppuccin-mocha.yazi" "tmtheme.xml" ".config/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" $l_flag_overwrite_file "        > "
     l_status=$?
 
-    l_target_path=".config/yazi"
-    l_target_link="plugins"
-    l_source_path="${g_repo_name}/etc/yazi/plugins"
+    copy_file_on_home "${g_repo_path}/etc/yazi" "init_lnx.lua" ".config/yazi" "init.lua" $l_flag_overwrite_file "        > "
+    l_status=$?
+    printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
+           "$g_color_yellow1" "~/.config/yazi/init.lua" "$g_color_reset"
+
+    create_folderpath_on_home ".config" "yazi/plugins"
+
+    l_target_path=".config/yazi/plugins"
+    l_target_link="fzf-fd.yazi"
+    l_source_path="${g_repo_name}/etc/yazi/plugins/fzf-fd.yazi"
     create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
 
 
