@@ -10,22 +10,40 @@
 prepend_keymap = [
 
     # --------------------------------------------------------------------------
+    # Anulando keymappings
+    # --------------------------------------------------------------------------
+
+    # Se anula el keymapping built-in "f" ('filtrado de vista actual de yazi'). Se remplazara por "s".
+    { on = "f", run = "noop" },
+
+    # Se anula el keymapping built-in "S" ('busqueda de archivos por su contenido dentro de yazi'). Se remplazara por "s, c".
+    { on = "S", run = "noop" },
+
+    # Se anula el keymapping built-in "Ctrl + a" ('toggle all') para dejar libre a uso tmux. Se remplazara por "A"
+    { on = "<C-a>", run = "noop" },
+
+
+    # --------------------------------------------------------------------------
     # Nuevos keymappings
     # --------------------------------------------------------------------------
 
-    # El comando custom 'fzf_fd' se registra en el plugin fzf-utils
-    { on = [ "g", "s" ], run = "plugin fzf-fd --type=d --use_tmux=false", desc = "Search subfolder by name via fd" },
-    #{ on = [ "g", "s" ], run = "search --via=fd --args='-f d'", desc = "Search subfolder by name via fd" },
-	#{ on = [ "g", "t" ], run = '''shell -- wezterm cli spawn --cwd "%s1"''', desc = "Open current subfolder in wezterm tab" },
-	#{ on = [ "g", "p" ], run = '''shell -- wezterm cli spawn --cwd "%d1"''', desc = "Open parent folder in wezterm tab" },
-    #{ on = [ "g", "x" ], run = '''shell -- explorer.exe "%s1"''', orphan = true, block = false,  desc = "Open current subfolder in Explorer" },
+    # Comando de busqueda integrada en la vista de Yazi
+	{ on = [ "f", "n" ], run = "search --via=fd", desc = "Search files by name via fd" },
+	{ on = [ "f", "c" ], run = "search --via=rg", desc = "Search files by content via ripgrep" },
+
+    # Comando de busqueda externa usando 'fzf'
+    { on = [ "f", "d" ], run = "plugin fzf-fd -- d no", desc = "Search folders with fzf & fd" },
+    { on = [ "f", "f" ], run = "plugin fzf-fd -- f no", desc = "Search files with fzf & fd" },
 
 
     # --------------------------------------------------------------------------
     # Redefiniendo keymappings predeterminados
     # --------------------------------------------------------------------------
 
-    # Toggle: Modificar 'Ctrl + a' por 'Shift + a' para compatibilidad con el prefijo de tmux
-	{ on = "<S-a>",   run = "toggle_all --state=on", desc = "Select all files" },
+    # Se redefine el 'filtrado de vista actual de yazi' (el keymapping por defecto usa "f").
+    { on = "s", run = "filter --smart", desc = "Filter files" },
+
+    # Se redefine el 'toggle all' (el keymapping por defecto usa "A").
+	{ on = "A",   run = "toggle_all --state=on", desc = "Select all files" },
 
 ]

@@ -1,5 +1,5 @@
 --
--- Plugin que muestra directorios y folderes buscados por fd en fzf y luego permite ir
+-- Plugin que muestra directorios y folderes buscados por rg en fzf y luego permite ir
 -- a la ubicacion de estos dentro del explorar yazi.
 -- Basado en: https://github.com/sxyazi/yazi/blob/main/yazi-plugin/preset/plugins/fzf.lua
 --
@@ -52,7 +52,7 @@ mod.fzf_options = {
 
 }
 
-mod.fd_options = {
+mod.rg_options = {
 
     max_depth = 16,
 
@@ -66,7 +66,7 @@ mod.fd_options = {
 }
 
 local m_command_fzf = 'fzf'
-local m_command_fd  = 'fd'
+local m_command_rg  = 'rg'
 
 
 ---------------------------------------------------------------------------------
@@ -140,10 +140,10 @@ local function m_get_urls_of(p_cmd_output, p_cwd)
 
 end
 
--- Construye el argumentos del comando de 'fd'
+-- Construye el argumentos del comando de 'rg'
 -- Parametros:
 -- > Define el tipo de objeto a filtrar: 'd' si es directorio, 'f' si es un archivo
-local function m_get_fd_arguments(p_obj_type)
+local function m_get_rg_arguments(p_obj_type)
 
 
     local l_type = ""
@@ -151,9 +151,9 @@ local function m_get_fd_arguments(p_obj_type)
         l_type = p_obj_type
     end
 
-    local l_max_depth = mod.fd_options.max_depth or 16
-    local l_excludes = mod.fd_options.excludes or {}
-    local l_extra_args = mod.fd_options.extra_args or {}
+    local l_max_depth = mod.rg_options.max_depth or 16
+    local l_excludes = mod.rg_options.excludes or {}
+    local l_extra_args = mod.rg_options.extra_args or {}
 
     local l_args = {
         "--max-depth=" .. l_max_depth,
@@ -227,7 +227,7 @@ local function m_get_fzf_arguments(p_cwd, p_obj_type, p_use_tmux, p_height, p_wi
         l_width = p_width
     end
 
-    -- Calcular argymentos relacionados al tipo de objeto de fd
+    -- Calcular argymentos relacionados al tipo de objeto de rg
     local l_preview = ""
     local l_preview_window = ""
     local l_prompt = ""
@@ -335,7 +335,7 @@ end
 
 
 ---------------------------------------------------------------------------------
--- Funcion especificas de fd y fzf
+-- Funcion especificas de rg y fzf
 ---------------------------------------------------------------------------------
 
 -- Funcion sincrona que se ejecutara por yazi para capturar algunos datos relevantes del estado actual de yazi.
@@ -352,42 +352,42 @@ local m_get_current_state = ya.sync(function()
 end)
 
 
-local function m_run_fzf_fd(p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
+local function m_run_fzf_rg(p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
 
-    --Obtener los argumentos para ejecutar 'fd'
-    local l_args = m_get_fd_arguments(p_obj_type)
-    ya.dbg("fd args: " .. m_dump_table(l_args))
+    --Obtener los argumentos para ejecutar 'rg'
+    local l_args = m_get_rg_arguments(p_obj_type)
+    ya.dbg("rg args: " .. m_dump_table(l_args))
 
-    -- Generar el comando 'fd'
-    local fd_cmd = Command(m_command_fd)
+    -- Generar el comando 'rg'
+    local rg_cmd = Command(m_command_rg)
         :arg(l_args)
         :cwd(tostring(p_cwd))
         :stdout(Command.PIPED)
 
-    -- Ejecutar el comando 'fd', por ejemplo: fd --max-depth=16 --prune -t d -E .git -E node_modules -E.cache
-    local fd_child, fd_err = fd_cmd:spawn()
+    -- Ejecutar el comando 'rg', por ejemplo: rg
+    local rg_child, rg_err = rg_cmd:spawn()
     local l_message = ""
-    if not fd_child then
-        l_message ="fd failed to start: " .. tostring(fd_err)
+    if not rg_child then
+        l_message ="rg failed to start: " .. tostring(rg_err)
         ya.err(l_message)
         return nil, l_message
     end
 
-    -- Esperar a que el comando 'fd' termine de ejecutar y devuelva el STDOUT
-    local fd_output, fd_err2 = fd_child:wait_with_output()
-    if not fd_output then
-        l_message = "fd output error: " .. tostring(fd_err2)
+    -- Esperar a que el comando 'rg' termine de ejecutar y devuelva el STDOUT
+    local rg_output, rg_err2 = rg_child:wait_with_output()
+    if not rg_output then
+        l_message = "rg output error: " .. tostring(rg_err2)
         ya.err(l_message)
         return nil, l_message
     end
 
-    -- Si fd no encontró nada, salir temprano
-    if fd_output.stdout == "" then
+    -- Si rg no encontró nada, salir temprano
+    if rg_output.stdout == "" then
         ya.dbg("No selected item")
         return "", nil  -- Cadena vacía, sin error
     end
 
-    --Obtener los argumentos para ejecutar 'fd'
+    --Obtener los argumentos para ejecutar 'fzf'
     local l_args = m_get_fzf_arguments(p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
     ya.dbg("fzf args: " .. m_dump_table(l_args))
 
@@ -406,8 +406,8 @@ local function m_run_fzf_fd(p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
         return nil, l_message
     end
 
-    -- Conectar fd → fzf (pasar el SDTOUT de fs al STDIN de fzf)
-    fzf_child:write_all(fd_output.stdout)
+    -- Conectar rg → fzf (pasar el SDTOUT de fs al STDIN de fzf)
+    fzf_child:write_all(rg_output.stdout)
     fzf_child:flush()
 
     -- Esperar a que el comando 'ffz' termine de ejecutar y devuelva el STDOUT
@@ -442,15 +442,15 @@ function mod.setup(p_self, p_args)
 	    return
 	end
 
-    if p_args.fd_options then
+    if p_args.rg_options then
 
-        if p_self.fd_options == nil then
-            p_self.fd_options = {}
+        if p_self.rg_options == nil then
+            p_self.rg_options = {}
         end
 
-        p_self.fd_options.max_depth = p_args.fd_options.max_depth or 16
-        p_self.fd_options.excludes = p_args.fd_options.excludes or {}
-        p_self.fd_options.extra_args = p_args.fd_options.extra_args or {}
+        p_self.rg_options.max_depth = p_args.rg_options.max_depth or 16
+        p_self.rg_options.excludes = p_args.rg_options.excludes or {}
+        p_self.rg_options.extra_args = p_args.rg_options.extra_args or {}
 
     end
 
@@ -604,8 +604,8 @@ function mod.entry(p_self, p_job)
     -- Ocultar la Yazi
 	local permit = ya.hide()
 
-    -- Ejecutar 'fd | fzf' y obtener el STDOUT del resultado
-    local output, err = m_run_fzf_fd(cwd, obj_type, use_tmux, height, width)
+    -- Ejecutar 'rg | fzf' y obtener el STDOUT del resultado
+    local output, err = m_run_fzf_rg(cwd, obj_type, use_tmux, height, width)
 
     -- Restaurar (mostrar) yazi
     if permit then

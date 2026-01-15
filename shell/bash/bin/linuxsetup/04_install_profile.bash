@@ -1279,9 +1279,16 @@ function _setup_user_profile() {
     l_target_path=".config/yazi"
     create_folderpath_on_home ".config" "yazi"
 
-    l_target_link="yazi.toml"
-    l_source_path="${g_repo_name}/etc/yazi"
-    l_source_filename='yazi_lnx.toml'
+    # Si no es WSL o es un servidor desktop
+    if [ $g_os_type -ne 1 ] || [ $g_profile_type -eq 0 ]; then
+        l_target_link="yazi.toml"
+        l_source_path="${g_repo_name}/etc/yazi"
+        l_source_filename='yazi_desktop.toml'
+    else
+        l_target_link="yazi.toml"
+        l_source_path="${g_repo_name}/etc/yazi"
+        l_source_filename='yazi_headless.toml'
+    fi
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
@@ -1295,7 +1302,7 @@ function _setup_user_profile() {
 
     l_target_link="theme.toml"
     l_source_path="${g_repo_name}/etc/yazi"
-    l_source_filename='theme_default.toml'
+    l_source_filename='theme.toml'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
@@ -1306,7 +1313,7 @@ function _setup_user_profile() {
     copy_file_on_home "${g_repo_path}/etc/yazi/catppuccin-mocha.yazi" "tmtheme.xml" ".config/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" $l_flag_overwrite_file "        > "
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/etc/yazi" "init_lnx.lua" ".config/yazi" "init.lua" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/etc/yazi" "init.lua" ".config/yazi" "init.lua" $l_flag_overwrite_file "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
            "$g_color_yellow1" "~/.config/yazi/init.lua" "$g_color_reset"
@@ -1316,6 +1323,11 @@ function _setup_user_profile() {
     l_target_path=".config/yazi/plugins"
     l_target_link="fzf-fd.yazi"
     l_source_path="${g_repo_name}/etc/yazi/plugins/fzf-fd.yazi"
+    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
+
+    l_target_path=".config/yazi/plugins"
+    l_target_link="fzf-rg.yazi"
+    l_source_path="${g_repo_name}/etc/yazi/plugins/fzf-rg.yazi"
     create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
 
 

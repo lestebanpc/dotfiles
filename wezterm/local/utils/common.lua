@@ -839,7 +839,7 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name, p_fd_pat
 
         l_item = l_excludes[i]
 
-        if l_item ~= nil or l_item ~= '' then
+        if l_item ~= nil and l_item ~= '' then
             table.insert(l_args, '-E')
             table.insert(l_args, l_item)
         end
@@ -847,7 +847,7 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name, p_fd_pat
     end
 
     -- Adicionar el folder a usar
-    if l_path ~= nil or l_path ~= '' then
+    if l_path ~= nil and l_path ~= '' then
         table.insert(l_args, l_path)
     end
 
@@ -857,7 +857,7 @@ function mod.get_git_folders(p_options, p_os_type, p_distribution_name, p_fd_pat
 
         l_item = l_extra_args[i]
 
-        if l_item ~= nil or l_item ~= '' then
+        if l_item ~= nil and l_item ~= '' then
             table.insert(l_args, l_item)
         end
 
