@@ -51,7 +51,7 @@ local m_plugin = nil
 --})
 
 
--- Configuracion del plugin built-in 'fzf.lua'
+-- Configuracion del plugin 'fzf-fd'
 m_plugin = require("fzf-fd")
 m_plugin:setup({
 
@@ -106,4 +106,14 @@ m_plugin:setup({
         extra_args = {},
 
     },
+})
+
+-- Configuracion del plugin 'go-fs'
+local m_root_url, m_error = fs.cwd()
+local m_path = tostring(m_root_url.path)
+ya.dbg("root path: " .. m_path)
+
+m_plugin = require("go-fs")
+m_plugin:setup({
+    cwd_root =  m_path,
 })

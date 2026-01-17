@@ -471,7 +471,7 @@ main() {
     fi
 
     # Obtener el comando a scribir y ejecutar en el panel tmux
-    local g_tmux_command=''
+    local l_tmux_command=''
 
     if [ ${#l_command_args[@]} -gt 1 ]; then
 
@@ -480,29 +480,29 @@ main() {
         #   Tmux escribirara cada argumento colocado en 'send-keys' consecutivos y sin espacio.
         # > Cuando se pasan argumentos con espacios, dentro de script/funcion se elimina el entrecomillado.
         # > ¿Adicionar los caracteres de escape removidos?
-        g_i=0
-        g_item=''
+        local l_i=0
+        local l_item=''
 
-        for (( g_i = 0; g_i < ${#l_command_args[@]}; g_i++ )); do
+        for (( l_i = 0; l_i < ${#l_command_args[@]}; l_i++ )); do
 
-            g_item="${l_command_args[$g_i]}"
+            l_item="${l_command_args[$l_i]}"
 
-            if [ $g_i -eq 0 ]; then
+            if [ $l_i -eq 0 ]; then
 
-                if [[ "${g_item}" == *" "* ]]; then
-                    g_tmux_command="\"${g_item}\""
-                    #g_tmux_command="\\\"${g_item}\\\""
+                if [[ "${l_item}" == *" "* ]]; then
+                    l_tmux_command="\"${l_item}\""
+                    #l_tmux_command="\\\"${l_item}\\\""
                 else
-                    g_tmux_command="${g_item}"
+                    l_tmux_command="${l_item}"
                 fi
 
             else
 
-                if [[ "${g_item}" == *" "* ]]; then
-                    g_tmux_command+=" \"${g_item}\""
-                    #g_tmux_command+=" \\\"${g_item}\\\""
+                if [[ "${l_item}" == *" "* ]]; then
+                    l_tmux_command+=" \"${l_item}\""
+                    #l_tmux_command+=" \\\"${l_item}\\\""
                 else
-                    g_tmux_command+=" ${g_item}"
+                    l_tmux_command+=" ${l_item}"
                 fi
 
             fi
@@ -512,7 +512,7 @@ main() {
     else
 
         # Si solo tiene un argumento se tratara como un solo argumento en 'send-keys' de tmux
-        g_tmux_command="${l_command_args[0]}"
+        l_tmux_command="${l_command_args[0]}"
 
     fi
 
@@ -528,7 +528,7 @@ main() {
     fi
 
     # Enviar comandos ingesados al script al panel del DAP
-    tmux send-keys -lt "${l_pane_position}" "$g_tmux_command"
+    tmux send-keys -lt "${l_pane_position}" "$l_tmux_command"
     tmux send-keys -t "${l_pane_position}" Enter
 
     if [ $p_flag_set_active -eq 0 ] || [ $p_flag_zoom -eq 0 ]; then

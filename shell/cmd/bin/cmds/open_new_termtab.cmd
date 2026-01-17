@@ -79,7 +79,8 @@ exit /b 1
 
 :: 1. Procesar opciones
 set "show_info_file=0"
-set "use_default_work_dir=0"
+set "use_workdir_opts=0"
+set "workdir_type=0"
 set "arg_path="
 
 
@@ -93,7 +94,7 @@ if "%1"=="-e" (
 )
 
 if "%1"=="-w" (
-    set "use_default_work_dir=1"
+    set "use_workdir_opts=1"
     shift
     goto :arg_loop
 )
@@ -109,9 +110,15 @@ if "%1:~0,1%"=="-" (
     exit /b 1
 )
 
-set "arg_path=%1"
-shift
-goto :arg_loop
+if !use_workdir_opts!==1 (
+    set "workdir_type=%1"
+    shift
+    goto :arg_loop
+) else (
+    set "arg_path=%1"
+    shift
+    goto :arg_loop
+)
 
 
 :process_args
@@ -193,7 +200,7 @@ if !is_folder!==0 (
         echo [%color_gray%DEBUG%color_reset%] is_text_file: !is_text_file!
     )
 
-    if !use_default_work_dir!==0 (
+    if !workdir_type!==0 (
 
         :: Obtener la ruta dse trabajo del panel y la ruta/nombre del archivo
         for %%F in ("%full_path%") do (
@@ -224,7 +231,7 @@ if !is_folder!==1 (
     echo [%color_gray%INFO%color_reset%] Directorio         : !working_dir!
     echo [%color_gray%INFO%color_reset%] Current panel ID   : !WEZTERM_PANE!
 
-    if !use_default_work_dir!==1 (
+    if !workdir_type!==2 (
 
         set "working_dir="
         set "l_data="
@@ -260,11 +267,17 @@ if !is_folder!==1 (
         )
         echo [%color_gray%INFO%color_reset%] Current WorkingDir : !working_dir!
 
+    ) else if !workdir_type!==1 (
+        set "working_dir="
     )
 
     :: Crear nuevo tab en el directorio del archivo
     set "pane_id="
-    for /f "tokens=*" %%P in ('wezterm cli spawn --cwd "!working_dir!" 2^>nul') do set "pane_id=%%P"
+    if "!working_dir!"=="" (
+        for /f "tokens=*" %%P in ('wezterm cli spawn 2^>nul') do set "pane_id=%%P"
+    ) else (
+        for /f "tokens=*" %%P in ('wezterm cli spawn --cwd "!working_dir!" 2^>nul') do set "pane_id=%%P"
+    )
 
     if not defined pane_id (
         echo [%color_red%ERROR%color_reset%] No se pudo obtener el ID del panel de WezTerm.
@@ -309,9 +322,10 @@ echo.
 echo Crea una nueva ventana/tab en la terminal actual
 echo - El directorio de trabajo usado por la nueva ventana/panel es:
 echo   - Si el argumento es un folder, el directorio de trabajo siempre es este folder.
-echo   - Si el argumento es un archivo:
-echo     - Si se especifica la opcion '-w', se usara el directorio de trabajo del panel actual.
-echo     - Si no se especifica la opcion '-w', se usara el directorio donde se encuentra el archivo.
+echo   - Si el argumento es un archivo, depende del valor de la opcion '-w':
+echo     - Si el valor es '0' o no se especifica, es el directorio de trabajo sera el folder donde esta el archivo.
+echo     - Si el valor es '1', se creara el panel sin especificar el directorio de trabajo.
+echo     - Si el valor es '2', se usara el directorio usado por el proceso padre donde se ejecuta yazi.
 echo Los emuladores de terminal soportados son:
 echo - WezTerm
 echo.
@@ -328,8 +342,10 @@ echo   cmd /c "%USERPROFILE%\.files\shell\cmd\bin\cmds\open_new_termtab.cmd" -e 
 echo.
 echo Options:
 echo   -e     Si es un archivo, si es un archivo de texto lo abre con el editor %EDITOR%, si es binario muestra la informacion del archivo.
-echo   -w     Si es un archivo, el nuevo tab usara como directorio de trabajo el del panel actual.
-echo          Si no se especifica y es un archivo, se usara como directorio de trabajo el folder donde se ubica el archivo.
+echo   -w     Solo si es un archivo, el valor de esta opcion especifica el directorio de trabajo a usar con el nuevo tab. Sus valores son:
+echo          - Si el valor es '0' o no se especifica, es el directorio de trabajo sera el folder donde esta el archivo.
+echo          - Si el valor es '1', se creara el panel sin especificar el directorio de trabajo.
+echo          - Si el valor es '2', se usara el directorio usado por el proceso padre donde se ejecuta yazi.
 echo.
 echo Arguments:
 echo   ^<file_or_folder^> Ruta del folder o archivo.

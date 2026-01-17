@@ -32,9 +32,12 @@ prepend_keymap = [
 	{ on = [ "f", "c" ], run = "search --via=rg", desc = "Search files by content via ripgrep" },
 
     # Comando de busqueda externa usando 'fzf'
-    { on = [ "f", "d" ], run = "plugin fzf-fd -- d yes 80 99", desc = "Search folders with fzf & fd" },
-    { on = [ "f", "f" ], run = "plugin fzf-fd -- f yes 80 99", desc = "Search files with fzf & fd" },
+    { on = [ "f", "d" ], run = "plugin fzf-fd -- d --tmux --height=80 --width=99", desc = "Search folders with fzf & fd" },
+    { on = [ "f", "f" ], run = "plugin fzf-fd -- f --tmux --height=80 --width=99", desc = "Search files with fzf & fd" },
 
+    # Comando para ir a directorios especiales
+    { on = [ "g", "r" ], run = "plugin go-fs -- rootdir", desc = "Go inicial WorkingDir" },
+    { on = [ "g", "g" ], run = "plugin go-fs -- rootgit", desc = "Go root git folder" },
 
     # --------------------------------------------------------------------------
     # Redefiniendo keymappings predeterminados

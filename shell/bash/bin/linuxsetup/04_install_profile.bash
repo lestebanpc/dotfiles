@@ -1308,9 +1308,9 @@ function _setup_user_profile() {
     l_status=$?
 
     create_folderpath_on_home ".config" "yazi/flavors/catppuccin-mocha.yazi"
-    copy_file_on_home "${g_repo_path}/etc/yazi/catppuccin-mocha.yazi" "flavor.toml" ".config/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/etc/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" ".config/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" $l_flag_overwrite_file "        > "
     l_status=$?
-    copy_file_on_home "${g_repo_path}/etc/yazi/catppuccin-mocha.yazi" "tmtheme.xml" ".config/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/etc/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" ".config/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" $l_flag_overwrite_file "        > "
     l_status=$?
 
     copy_file_on_home "${g_repo_path}/etc/yazi" "init.lua" ".config/yazi" "init.lua" $l_flag_overwrite_file "        > "
@@ -1328,6 +1328,11 @@ function _setup_user_profile() {
     l_target_path=".config/yazi/plugins"
     l_target_link="fzf-rg.yazi"
     l_source_path="${g_repo_name}/etc/yazi/plugins/fzf-rg.yazi"
+    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
+
+    l_target_path=".config/yazi/plugins"
+    l_target_link="go-fs.yazi"
+    l_source_path="${g_repo_name}/etc/yazi/plugins/go-fs.yazi"
     create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
 
 

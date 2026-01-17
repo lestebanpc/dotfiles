@@ -11,60 +11,6 @@
 -- Objeto que el modulo devolvera
 local mod = {}
 
--- Opciones de configuracion modificables por el usuario
-mod.fzf_options = {
-
-    -- Permite la seleccion multiple
-    is_multiple = false,
-
-    -- Tiene un border
-    has_border = true,
-
-    -- Usar tmux
-    use_tmux = false,
-
-    -- Tamaño por defecto del popup en porcentajes
-    height = 80,
-    width = 99,
-
-    -- Comando de preview para archivos, directorio y otros
-    --preview_file = "",
-    preview_file = "bat --color=always --paging always {}",
-    preview_dir  = "eza --color=always --icons always {}",
-    --preview_dir  = "eza --tree --color=always --icons always -L 4 {}",
-    --preview_dir  = "eza --tree --color=always --icons always -L 4 {} | head -n 300",
-    preview_both = "",
-
-    -- Estilo de la ventana preview
-    preview_window_file = "down,60%",
-    preview_window_dir  = "down,60%",
-    preview_window_both = "right,60%",
-
-    -- Header a mostrar
-    header = "",
-
-    -- Arreglo de cadenas que representa los binds a usar
-    binds = {},
-
-    -- Arreglo de cadenas que representa los argumento adicionales del comando:
-    -- > Si es una opcion con valor, colocar el nombre y su valor como elementos separado del arreglo.
-    extra_args = {},
-
-}
-
-mod.rg_options = {
-
-    max_depth = 16,
-
-    -- Patrones de exclusión.
-    excludes = { ".git", "node_modules", ".cache" },
-
-    -- Arreglo de cadenas que representa los argumento adicionales del comando:
-    -- > Si es una opcion con valor, colocar el nombre y su valor como elementos separado del arreglo.
-    extra_args = {},
-
-}
-
 local m_command_fzf = 'fzf'
 local m_command_rg  = 'rg'
 
@@ -143,7 +89,7 @@ end
 -- Construye el argumentos del comando de 'rg'
 -- Parametros:
 -- > Define el tipo de objeto a filtrar: 'd' si es directorio, 'f' si es un archivo
-local function m_get_rg_arguments(p_obj_type)
+local function m_get_rg_arguments(p_state, p_obj_type)
 
 
     local l_type = ""
@@ -151,9 +97,9 @@ local function m_get_rg_arguments(p_obj_type)
         l_type = p_obj_type
     end
 
-    local l_max_depth = mod.rg_options.max_depth or 16
-    local l_excludes = mod.rg_options.excludes or {}
-    local l_extra_args = mod.rg_options.extra_args or {}
+    local l_max_depth = p_state.rg_options.max_depth or 16
+    local l_excludes = p_state.rg_options.excludes or {}
+    local l_extra_args = p_state.rg_options.extra_args or {}
 
     local l_args = {
         "--max-depth=" .. l_max_depth,
@@ -197,32 +143,32 @@ local function m_get_rg_arguments(p_obj_type)
 end
 
 -- Construye el argumentos del comando de 'fzf'
-local function m_get_fzf_arguments(p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
+local function m_get_fzf_arguments(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
 
-    local l_is_multiple = mod.fzf_options.is_multiple or false
+    local l_is_multiple = p_state.fzf_options.is_multiple or false
 
 	local l_has_border = false
-    if mod.fzf_options.has_border == nil then
+    if p_state.fzf_options.has_border == nil then
         l_has_border = false
     else
-        l_has_border = mod.fzf_options.has_border
+        l_has_border = p_state.fzf_options.has_border
     end
 
-    local l_header = mod.fzf_options.header or ""
-    local l_binds = mod.fzf_options.binds or {}
-    local l_extra_args = mod.fzf_options.extra_args or {}
+    local l_header = p_state.fzf_options.header or ""
+    local l_binds = p_state.fzf_options.binds or {}
+    local l_extra_args = p_state.fzf_options.extra_args or {}
 
-    local l_use_tmux = mod.fzf_options.use_tmux or false
+    local l_use_tmux = p_state.fzf_options.use_tmux or false
     if p_use_tmux ~= nil then
         l_use_tmux = p_use_tmux
     end
 
-    local l_height = mod.fzf_options.height or 80
+    local l_height = p_state.fzf_options.height or 80
     if p_height ~= nil then
         l_height = p_height
     end
 
-    local l_width = mod.fzf_options.width or 99
+    local l_width = p_state.fzf_options.width or 99
     if p_width ~= nil then
         l_width = p_width
     end
@@ -238,16 +184,16 @@ local function m_get_fzf_arguments(p_cwd, p_obj_type, p_use_tmux, p_height, p_wi
     end
 
     if l_type == 'd' then
-        l_preview = mod.fzf_options.preview_dir
-        l_preview_window = mod.fzf_options.preview_window_dir
+        l_preview = p_state.fzf_options.preview_dir
+        l_preview_window = p_state.fzf_options.preview_window_dir
         l_prompt = '📁 Folder> '
     elseif l_type == 'f' then
-        l_preview = mod.fzf_options.preview_file
-        l_preview_window = mod.fzf_options.preview_window_file
+        l_preview = p_state.fzf_options.preview_file
+        l_preview_window = p_state.fzf_options.preview_window_file
         l_prompt = '📄 File> '
     else
-        l_preview = mod.fzf_options.preview_both
-        l_preview_window = mod.fzf_options.preview_window_both
+        l_preview = p_state.fzf_options.preview_both
+        l_preview_window = p_state.fzf_options.preview_window_both
         l_prompt = '🔎 File or Folder> '
     end
 
@@ -352,10 +298,10 @@ local m_get_current_state = ya.sync(function()
 end)
 
 
-local function m_run_fzf_rg(p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
+local function m_run_fzf_rg(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
 
     --Obtener los argumentos para ejecutar 'rg'
-    local l_args = m_get_rg_arguments(p_obj_type)
+    local l_args = m_get_rg_arguments(p_state, p_obj_type)
     ya.dbg("rg args: " .. m_dump_table(l_args))
 
     -- Generar el comando 'rg'
@@ -388,7 +334,7 @@ local function m_run_fzf_rg(p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
     end
 
     --Obtener los argumentos para ejecutar 'fzf'
-    local l_args = m_get_fzf_arguments(p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
+    local l_args = m_get_fzf_arguments(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
     ya.dbg("fzf args: " .. m_dump_table(l_args))
 
     -- Generar el comando 'fzf', por ejemplo: fzf --info inline --layout reverse --height  80% --ansi --border --prompt "📁 Folder> " --header "WorDir: D:/Users/lucpea/.files"
@@ -431,12 +377,296 @@ end
 
 
 
+local function m_read_args(p_job)
+
+    if not p_job then
+        return nil, nil, nil, nil
+    end
+
+    local obj_type = nil
+    local use_tmux = nil
+    local height = nil
+    local width = nil
+
+    -- Actualmente el soporte de opciones esta en beta, solo soporta argumentos posicionales
+    local args = p_job.args or {}
+    local nargs = #args
+    --ya.dbg("args: " .. m_dump_table(args))
+
+    -- 1er argumento
+    local data = nil
+	if nargs > 0 then
+
+        data = args[1]
+        ya.dbg("args[1]: " .. data)
+
+        if data ~= nil and data ~= "" then
+            if data == "d" or data == "f" then
+                obj_type = data
+            elseif data == "b" then
+                obj_type = nil
+            else
+                obj_type = "d"
+                ya.err("El argumento nro 1 'type' solo puede ser 'd' o 'f', pero, tiene formato invalido '" .. data .. "'." )
+            end
+        end
+
+    end
+
+    -- 2do argumento
+	if nargs > 1 then
+
+        data = tostring(args[2])
+        ya.dbg("args[2]: " .. data)
+
+        if data ~= nil and data ~= "" then
+            if data == "yes" then
+                use_tmux = true
+            elseif data == "no" then
+                use_tmux = false
+            else
+                use_tmux = nil
+                ya.err("El argumento nro 2 'tmux' solo puede ser 'yes' o 'no', pero, tiene formato invalido '" .. data .. "'." )
+            end
+        end
+
+    end
+
+    -- 3er argumento
+	if nargs > 2 then
+
+        data = tostring(args[3])
+        ya.dbg("args[3]: " .. data)
+
+        if data ~= nil and data ~= "" then
+
+            -- Eliminar los espacios finales o iniciales
+            --data = data:match("^%s*(.-)%s*$")
+
+            -- Validar "0" o "0.12" OR números 1-99 con opcional fracción de 1-2 dígitos
+            if data:match("^0(%.%d%d?)?$") or data:match("^[1-9]%d?(%.%d%d?)?$") then
+                height = data
+            else
+                height = nil
+                ya.err("El argumento nro 3 'height' tiene formato invalido '" .. data .. "'." )
+            end
+
+        end
+
+    end
+
+    -- 4to argumento
+	if nargs > 3 then
+
+        data = tostring(args[4])
+        ya.dbg("args[4]: " .. data)
+
+        if data ~= nil and data ~= "" then
+
+            -- Eliminar los espacios finales o iniciales
+            --data = data:match("^%s*(.-)%s*$")
+
+            -- Validar "0" o "0.12" OR números 1-99 con opcional fracción de 1-2 dígitos
+            if data:match("^0(%.%d%d?)?$") or data:match("^[1-9]%d?(%.%d%d?)?$") then
+                width = data
+            else
+                width = nil
+                ya.err("El argumento nro 4 'width' tiene formato invalido '" .. data .. "'." )
+            end
+
+        end
+
+    end
+
+    return obj_type, use_tmux, height, width
+
+end
+
+
+
 ---------------------------------------------------------------------------------
--- Funciones a exportar
+-- Funcion que deben ser ejecutadas dentro sanbox de yazi
+---------------------------------------------------------------------------------
+--
+-- Estas funciones se caracterizan:
+-- > Tienen, opcionalmente. el 1er argumento al objeto 'state' (configuracion del usuario).
+-- > Si tiene mas de 1 argumento, estos son argumento pasados del que lo invoca.
+--
+
+-- Funcion sincrona que se ejecutara por yazi para capturar algunos datos relevantes del estado actual de yazi.
+local m_get_current_yazi_info = ya.sync(function()
+
+	--local selected = {}
+	--for _, url in pairs(cx.active.selected) do
+	--	selected[#selected + 1] = url
+	--end
+
+	--return cx.active.current.cwd, selected
+	return cx.active.current.cwd
+
+end)
+
+
+
+-- Obtener las opciones configurables por el usuario (state) y establece valores por defecto
+-- Se genera unc copia del objeto para sea accedido fuera de 'ya.sync()' o 'ya.async()'
+local m_get_current_yazi_state = ya.sync(function(p_state)
+
+    -- Establecer el valor por defecto al 'state'
+	if p_state == nil then
+        p_state = {}
+    end
+
+    if p_state.rg_options == nil then
+        p_state.rg_options = {}
+    end
+
+	if p_state.rg_options.max_depth == nil then
+		p_state.rg_options.max_depth = 16
+	end
+
+	if p_state.rg_options.excludes == nil then
+		p_state.rg_options.excludes = { ".git", "node_modules", ".cache" }
+	end
+
+	if p_state.rg_options.extra_args == nil then
+		p_state.rg_options.extra_args = {}
+	end
+
+
+    if p_state.fzf_options == nil then
+        p_state.fzf_options = {}
+    end
+
+	if p_state.fzf_options.is_multiple == nil then
+		p_state.fzf_options.is_multiple = false
+	end
+
+	if p_state.fzf_options.has_border == nil then
+		p_state.fzf_options.has_border = true
+	end
+
+	if p_state.fzf_options.use_tmux == nil then
+		p_state.fzf_options.use_tmux = false
+	end
+
+	if p_state.fzf_options.height == nil then
+		p_state.fzf_options.height = 80
+	end
+
+	if p_state.fzf_options.width == nil then
+		p_state.fzf_options.width = 99
+	end
+
+	if p_state.fzf_options.preview_file == nil then
+		p_state.fzf_options.preview_file = ""
+		--p_state.fzf_options.preview_file = "bat --color=always --paging always {}"
+	end
+
+	if p_state.fzf_options.preview_dir == nil then
+		p_state.fzf_options.preview_dir = ""
+		--p_state.fzf_options.preview_dir = "eza --color=always --icons always {}"
+	end
+
+	if p_state.fzf_options.preview_both == nil then
+		p_state.fzf_options.preview_both = ""
+	end
+
+	if p_state.fzf_options.preview_window_file == nil then
+		p_state.fzf_options.preview_window_file = "down,60%"
+		--p_state.fzf_options.preview_window_file = ""
+	end
+
+	if p_state.fzf_options.preview_window_dir == nil then
+		p_state.fzf_options.preview_window_dir = "down,60%"
+		--p_state.fzf_options.preview_window_dir = ""
+	end
+
+	if p_state.fzf_options.preview_window_both == nil then
+		p_state.fzf_options.preview_window_both = "right,60%"
+		--p_state.fzf_options.preview_window_both = ""
+	end
+
+	if p_state.fzf_options.header == nil then
+		p_state.fzf_options.header = ""
+	end
+
+	if p_state.fzf_options.binds == nil then
+		p_state.fzf_options.binds = {}
+	end
+
+	if p_state.fzf_options.extra_args == nil then
+		p_state.fzf_options.extra_args = {}
+	end
+
+
+    -- Devolver un copia del objeto 'state'
+    local l_state = {
+
+        -- Opciones de configuracion para el comando fzf
+        fzf_options = {
+
+            -- Permite la seleccion multiple
+            is_multiple = p_state.fzf_options.is_multiple,
+
+            -- Tiene un border
+            has_border = p_state.fzf_options.has_border,
+
+            -- Usar tmux
+            use_tmux = p_state.fzf_options.use_tmux,
+
+            -- Tamaño por defecto del popup en porcentajes
+            height = p_state.fzf_options.height,
+            width = p_state.fzf_options.width,
+
+            -- Comando de preview para archivos, directorio y otros
+            preview_file = p_state.fzf_options.preview_file,
+            preview_dir  = p_state.fzf_options.preview_dir,
+            preview_both = p_state.fzf_options.preview_both,
+
+            -- Estilo de la ventana preview
+            preview_window_file = p_state.fzf_options.preview_window_file,
+            preview_window_dir  = p_state.fzf_options.preview_window_dir,
+            preview_window_both = p_state.fzf_options.preview_window_both,
+
+            -- Header a mostrar
+            header = p_state.fzf_options.header,
+
+            -- Arreglo de cadenas que representa los binds a usar
+            binds = p_state.fzf_options.binds,
+
+            -- Arreglo de cadenas que representa los argumento adicionales del comando:
+            -- > Si es una opcion con valor, colocar el nombre y su valor como elementos separado del arreglo.
+            extra_args = p_state.fzf_options.extra_args,
+
+        },
+
+        -- Opciones de configuracion para el comando fd
+        rg_options = {
+            max_depth = p_state.rg_options.max_depth,
+
+            -- Patrones de exclusión.
+            excludes = p_state.rg_options.excludes,
+
+            -- Arreglo de cadenas que representa los argumento adicionales del comando:
+            -- > Si es una opcion con valor, colocar el nombre y su valor como elementos separado del arreglo.
+            extra_args = p_state.rg_options.extra_args,
+
+        },
+    }
+
+    return l_state
+
+end)
+
+
+
+---------------------------------------------------------------------------------
+-- Funciones a exportar e invocados por yazi
 ---------------------------------------------------------------------------------
 
 -- Funcion que customiza las opciones de configuracion
-function mod.setup(p_self, p_args)
+function mod.setup(p_state, p_args)
 
     if not p_args then
 	    return
@@ -444,40 +674,40 @@ function mod.setup(p_self, p_args)
 
     if p_args.rg_options then
 
-        if p_self.rg_options == nil then
-            p_self.rg_options = {}
+        if p_state.rg_options == nil then
+            p_state.rg_options = {}
         end
 
-        p_self.rg_options.max_depth = p_args.rg_options.max_depth or 16
-        p_self.rg_options.excludes = p_args.rg_options.excludes or {}
-        p_self.rg_options.extra_args = p_args.rg_options.extra_args or {}
+        p_state.rg_options.max_depth = p_args.rg_options.max_depth or 16
+        p_state.rg_options.excludes = p_args.rg_options.excludes or {}
+        p_state.rg_options.extra_args = p_args.rg_options.extra_args or {}
 
     end
 
     if p_args.fzf_options then
 
-        if p_self.fzf_options == nil then
-            p_self.fzf_options = {}
+        if p_state.fzf_options == nil then
+            p_state.fzf_options = {}
         end
 
-        p_self.fzf_options.is_multiple = p_args.fzf_options.is_multiple or false
+        p_state.fzf_options.is_multiple = p_args.fzf_options.is_multiple or false
 		if p_args.fzf_options.has_border == nil then
-            p_self.fzf_options.has_border = false
+            p_state.fzf_options.has_border = false
         else
-            p_self.fzf_options.has_border = p_args.fzf_options.has_border
+            p_state.fzf_options.has_border = p_args.fzf_options.has_border
         end
-        p_self.fzf_options.use_tmux = p_args.fzf_options.use_tmux or false
-        p_self.fzf_options.height = p_args.fzf_options.height or 80
-        p_self.fzf_options.width = p_args.fzf_options.width or 99
-        p_self.fzf_options.preview_file = p_args.fzf_options.preview_file or ""
-        p_self.fzf_options.preview_dir = p_args.fzf_options.preview_dir or ""
-        p_self.fzf_options.preview_both = p_args.fzf_options.preview_both or ""
-        p_self.fzf_options.preview_window_file = p_args.fzf_options.preview_window_file or ""
-        p_self.fzf_options.preview_window_dir = p_args.fzf_options.preview_window_dir or ""
-        p_self.fzf_options.preview_window_both = p_args.fzf_options.preview_window_both or ""
-        p_self.fzf_options.header = p_args.fzf_options.header or ""
-        p_self.fzf_options.binds = p_args.fzf_options.binds or {}
-        p_self.fzf_options.extra_args = p_args.fzf_options.extra_args or {}
+        p_state.fzf_options.use_tmux = p_args.fzf_options.use_tmux or false
+        p_state.fzf_options.height = p_args.fzf_options.height or 80
+        p_state.fzf_options.width = p_args.fzf_options.width or 99
+        p_state.fzf_options.preview_file = p_args.fzf_options.preview_file or ""
+        p_state.fzf_options.preview_dir = p_args.fzf_options.preview_dir or ""
+        p_state.fzf_options.preview_both = p_args.fzf_options.preview_both or ""
+        p_state.fzf_options.preview_window_file = p_args.fzf_options.preview_window_file or ""
+        p_state.fzf_options.preview_window_dir = p_args.fzf_options.preview_window_dir or ""
+        p_state.fzf_options.preview_window_both = p_args.fzf_options.preview_window_both or ""
+        p_state.fzf_options.header = p_args.fzf_options.header or ""
+        p_state.fzf_options.binds = p_args.fzf_options.binds or {}
+        p_state.fzf_options.extra_args = p_args.fzf_options.extra_args or {}
 
     end
 
@@ -487,112 +717,18 @@ end
 -- Funcion entrypoint del plugin (cuando se ejecuta el keymapping asociado al plugin)
 function mod.entry(p_self, p_job)
 
-    -- Analizar argumentos
-    local obj_type = nil
-    local use_tmux = nil
-    local height = nil
-    local width = nil
+    -- Obtener los argumentos
+    local obj_type, use_tmux, height, width = m_read_args(p_job)
 
-    if p_job then
-
-        -- Actualmente el soporte de opciones esta en beta, solo soporta argumentos posicionales
-        local args = p_job.args or {}
-        local nargs = #args
-        --ya.dbg("args: " .. m_dump_table(args))
-
-        -- 1er argumento
-        local data = nil
-		if nargs > 0 then
-
-            data = args[1]
-            ya.dbg("args[1]: " .. data)
-
-            if data ~= nil and data ~= "" then
-                if data == "d" or data == "f" then
-                    obj_type = data
-                elseif data == "b" then
-                    obj_type = nil
-                else
-                    obj_type = "d"
-                    ya.err("El argumento nro 1 'type' solo puede ser 'd' o 'f', pero, tiene formato invalido '" .. data .. "'." )
-                end
-            end
-
-        end
-
-        -- 2do argumento
-		if nargs > 1 then
-
-            data = tostring(args[2])
-            ya.dbg("args[2]: " .. data)
-
-            if data ~= nil and data ~= "" then
-                if data == "yes" then
-                    use_tmux = true
-                elseif data == "no" then
-                    use_tmux = false
-                else
-                    use_tmux = nil
-                    ya.err("El argumento nro 2 'tmux' solo puede ser 'yes' o 'no', pero, tiene formato invalido '" .. data .. "'." )
-                end
-            end
-
-        end
-
-        -- 3er argumento
-		if nargs > 2 then
-
-            data = tostring(args[3])
-            ya.dbg("args[3]: " .. data)
-
-            if data ~= nil and data ~= "" then
-
-                -- Eliminar los espacios finales o iniciales
-                --data = data:match("^%s*(.-)%s*$")
-
-                -- Validar "0" o "0.12" OR números 1-99 con opcional fracción de 1-2 dígitos
-                if data:match("^0(%.%d%d?)?$") or data:match("^[1-9]%d?(%.%d%d?)?$") then
-                    height = data
-                else
-                    height = nil
-                    ya.err("El argumento nro 3 'height' tiene formato invalido '" .. data .. "'." )
-                end
-
-            end
-
-        end
-
-        -- 4to argumento
-		if nargs > 3 then
-
-            data = tostring(args[4])
-            ya.dbg("args[4]: " .. data)
-
-            if data ~= nil and data ~= "" then
-
-                -- Eliminar los espacios finales o iniciales
-                --data = data:match("^%s*(.-)%s*$")
-
-                -- Validar "0" o "0.12" OR números 1-99 con opcional fracción de 1-2 dígitos
-                if data:match("^0(%.%d%d?)?$") or data:match("^[1-9]%d?(%.%d%d?)?$") then
-                    width = data
-                else
-                    width = nil
-                    ya.err("El argumento nro 4 'width' tiene formato invalido '" .. data .. "'." )
-                end
-
-            end
-
-        end
-
-    end
-
+    -- Salir de modo ...
 	ya.emit("escape", { visual = true })
 
-    -- Obtener datos del estado actual
-	local cwd = m_get_current_state()
-	--local cwd, selected = m_get_current_state()
-    ya.dbg("cwd: " .. tostring(cwd))
+    -- Obtener las opciones configurable del usaurio usando los valores por defecto
+    local l_state = m_get_current_yazi_state()
+
+    -- Obtener datos del estado actual de yazi
+	local cwd = m_get_current_yazi_info()
+    --ya.dbg("cwd: " .. tostring(cwd))
 
     if cwd.scheme then
 	    if cwd.scheme.is_virtual then
@@ -602,10 +738,10 @@ function mod.entry(p_self, p_job)
     end
 
     -- Ocultar la Yazi
-	local permit = ya.hide()
+	local permit = ui.hide()
 
     -- Ejecutar 'rg | fzf' y obtener el STDOUT del resultado
-    local output, err = m_run_fzf_rg(cwd, obj_type, use_tmux, height, width)
+    local output, err = m_run_fzf_rg(l_state, cwd, obj_type, use_tmux, height, width)
 
     -- Restaurar (mostrar) yazi
     if permit then
