@@ -22,6 +22,10 @@ prepend_keymap = [
     # Se anula el keymapping built-in "Ctrl + a" ('toggle all') para dejar libre a uso tmux. Se remplazara por "A"
     { on = "<C-a>", run = "noop" },
 
+    # Se anula el keymapping built-in "g,c" y "g,d" . Se remplazara por "g,2" y "g,1"
+    { on = [ "g", "c" ], run = "noop" },
+    { on = [ "g", "d" ], run = "noop" },
+
 
     # --------------------------------------------------------------------------
     # Nuevos keymappings
@@ -36,8 +40,18 @@ prepend_keymap = [
     { on = [ "f", "f" ], run = "plugin fzf-fd -- f", desc = "Search files with fzf & fd" },
 
     # Comando para ir a directorios especiales
-    { on = [ "g", "r" ], run = "plugin go-fs -- rootdir", desc = "Go inicial WorkingDir" },
+	{ on = [ "g", "1" ], run = "cd ~/Downloads", desc = "Go ~/Downloads" },
+	{ on = [ "g", "2" ], run = "cd ~/.config", desc = "Go ~/.config" },
+	{ on = [ "g", "3" ], run = "cd %APPDATA%", desc = "Go %APPDATA%" },
+	{ on = [ "g", "4" ], run = "cd %TEMP%", desc = "Go %TEMP%" },
+	{ on = [ "g", "5" ], run = "cd %APPDATA%", desc = "Go %APPDATA%" },
+	{ on = [ "g", "6" ], run = "cd C:", desc = "Go C:" },
+	{ on = [ "g", "7" ], run = "cd D:", desc = "Go D:" },
+
+    { on = [ "g", "r" ], run = "plugin go-fs -- rootdir", desc = "Go inicial WorkDir" },
     { on = [ "g", "g" ], run = "plugin go-fs -- rootgit", desc = "Go root git folder" },
+    { on = [ "g", "o" ], run = "plugin go-fs -- openintab --type=rootdir", desc = "View files in initial WorkDir" },
+    { on = [ "g", "q" ], run = "plugin go-fs -- openintab --type=rootgit", desc = "View files in root git folder" },
 
 
     # --------------------------------------------------------------------------

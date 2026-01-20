@@ -102,7 +102,10 @@ local function m_get_rg_arguments(p_state, p_obj_type)
     local l_extra_args = p_state.rg_options.extra_args or {}
 
     local l_args = {
-        "--max-depth=" .. l_max_depth,
+        "--column",
+        "--line-number",
+        "--no-heading",
+        "--color=always",
     }
 
     -- Argumento que define el tipo de objeto a filtrar: 'd' si es directorio, 'f' si es un archivo
@@ -208,6 +211,7 @@ local function m_get_fzf_arguments(p_state, p_cwd, p_obj_type, p_use_tmux, p_hei
         "--ansi",
     }
 
+
     -- Argumento para permitir la seleccion multiples
     if l_is_multiple then
         table.insert(l_args, '-m')
@@ -300,78 +304,107 @@ end)
 
 local function m_run_fzf_rg(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
 
-    --Obtener los argumentos para ejecutar 'rg'
-    local l_args = m_get_rg_arguments(p_state, p_obj_type)
-    ya.dbg("rg args: " .. m_dump_table(l_args))
+    --1. Ejecutar el comando 'rg'
 
-    -- Generar el comando 'rg'
-    local rg_cmd = Command(m_command_rg)
+    -- Obtener los argumentos para ejecutar 'rg'
+    local l_args = m_get_rg_arguments(p_state, p_obj_type)
+    --ya.dbg("fd args: " .. m_dump_table(l_args))
+
+    -- Generar el comando 'fd'
+    local l_cmd = Command(m_command_fd)
         :arg(l_args)
         :cwd(tostring(p_cwd))
         :stdout(Command.PIPED)
 
-    -- Ejecutar el comando 'rg', por ejemplo: rg
-    local rg_child, rg_err = rg_cmd:spawn()
-    local l_message = ""
-    if not rg_child then
-        l_message ="rg failed to start: " .. tostring(rg_err)
+    -- Ejecutar el comando 'rg'
+    local l_error = nil
+    local l_child = nil
+    local l_message = nil
+
+    l_child, l_error = l_cmd:spawn()
+    if not l_child then
+        l_message ="rg failed to start: " .. tostring(l_error)
         ya.err(l_message)
         return nil, l_message
     end
 
     -- Esperar a que el comando 'rg' termine de ejecutar y devuelva el STDOUT
-    local rg_output, rg_err2 = rg_child:wait_with_output()
-    if not rg_output then
-        l_message = "rg output error: " .. tostring(rg_err2)
+    local l_rg_output = nil
+
+    l_rg_output, l_error = l_child:wait_with_output()
+    if not l_rg_output then
+        l_message = "rg output error: " .. tostring(l_error)
         ya.err(l_message)
         return nil, l_message
     end
 
-    -- Si rg no encontró nada, salir temprano
-    if rg_output.stdout == "" then
-        ya.dbg("No selected item")
+    --ya.dbg("l_rg_output.status.success: " .. tostring(l_rg_output.status.success))
+    --ya.dbg("l_rg_output.status.code: " .. tostring(l_rg_output.status.code))
+    --ya.dbg("l_rg_output.stdout: " .. tostring(l_rg_output.stdout))
+    --ya.dbg("l_rg_output.stderr: " .. tostring(l_rg_output.stderr))
+
+    if not l_rg_output.status.success then
+        l_message = "rg exited with code: " .. tostring(l_rg_output.status.code)
+        ya.err(l_message)
+        return nil, l_message
+    end
+
+    -- Si fd no encontró nada, salir temprano
+    if l_rg_output.stdout == "" then
         return "", nil  -- Cadena vacía, sin error
     end
 
-    --Obtener los argumentos para ejecutar 'fzf'
-    local l_args = m_get_fzf_arguments(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
-    ya.dbg("fzf args: " .. m_dump_table(l_args))
 
-    -- Generar el comando 'fzf', por ejemplo: fzf --info inline --layout reverse --height  80% --ansi --border --prompt "📁 Folder> " --header "WorDir: D:/Users/lucpea/.files"
-    local fzf_cmd = Command(m_command_fzf)
+
+    --2. Ejecutar el comando 'fzf'
+
+    --Obtener los argumentos para ejecutar 'fd'
+    l_args = m_get_fzf_arguments(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
+    --ya.dbg("fzf args: " .. m_dump_table(l_args))
+
+    -- Generar el comando 'fzf'
+    -- > Por ejemplo: fzf --info inline --layout reverse --height  80% --ansi --border --prompt "📁 Folder> " --header "WorDir: D:/Users/lucpea/.files"
+    l_cmd = Command(m_command_fzf)
         :arg(l_args)
         :cwd(tostring(p_cwd))
         :stdin(Command.PIPED)
         :stdout(Command.PIPED)
 
     -- Ejecutar el comando 'fzf'
-    local fzf_child, fzf_err = fzf_cmd:spawn()
-    if not fzf_child then
-        l_message = "fzf failed to start: " .. tostring(fzf_err)
+    l_child, l_error = l_cmd:spawn()
+    if not l_child then
+        l_message = "fzf failed to start: " .. tostring(l_error)
         ya.err(l_message)
         return nil, l_message
     end
 
-    -- Conectar rg → fzf (pasar el SDTOUT de fs al STDIN de fzf)
-    fzf_child:write_all(rg_output.stdout)
-    fzf_child:flush()
+    -- Conectar fd → fzf (pasar el SDTOUT de fs al STDIN de fzf)
+    l_child:write_all(l_fd_output.stdout)
+    l_child:flush()
 
     -- Esperar a que el comando 'ffz' termine de ejecutar y devuelva el STDOUT
-    local fzf_output, fzf_err2 = fzf_child:wait_with_output()
-    if not fzf_output then
-        l_message = "fzf output error: " .. tostring(fzf_err2)
+    local l_fzf_output = nil
+
+    l_fzf_output, l_error = l_child:wait_with_output()
+    if not l_fzf_output then
+        l_message = "fzf output error: " .. tostring(l_error)
         ya.err(l_message)
         return nil, l_message
     end
+
+    --ya.dbg("l_fzf_output.status.success: " .. tostring(l_fzf_output.status.success))
+    --ya.dbg("l_fzf_output.status.code: " .. tostring(l_fzf_output.status.code))
+    --ya.dbg("l_fzf_output.stdout: " .. tostring(l_fzf_output.stdout))
+    --ya.dbg("l_fzf_output.stderr: " .. tostring(l_fzf_output.stderr))
 
     -- Código 130 es Ctrl+C (cancelado por usuario)
-    if not fzf_output.status.success and fzf_output.status.code ~= 130 then
-        l_message = "fzf exited with code: " .. tostring(fzf_output.status.code)
+    if not l_fzf_output.status.success then
+        l_message = "fzf exited with code: " .. tostring(l_fzf_output.status.code)
         ya.err(l_message)
         return nil, l_message
     end
 
-    return fzf_output.stdout, nil
+    return l_fzf_output.stdout, nil
 
 end
 
@@ -643,7 +676,7 @@ local m_get_current_yazi_state = ya.sync(function(p_state)
 
         -- Opciones de configuracion para el comando fd
         rg_options = {
-            max_depth = p_state.rg_options.max_depth,
+            smart_case = p_state.rg_options.smart_case,
 
             -- Patrones de exclusión.
             excludes = p_state.rg_options.excludes,
@@ -718,7 +751,7 @@ end
 function mod.entry(p_self, p_job)
 
     -- Obtener los argumentos
-    local obj_type, use_tmux, height, width = m_read_args(p_job)
+    local l_obj_type, l_use_tmux, l_height, l_width = m_read_args(p_job)
 
     -- Salir de modo ...
 	ya.emit("escape", { visual = true })
@@ -727,42 +760,42 @@ function mod.entry(p_self, p_job)
     local l_state = m_get_current_yazi_state()
 
     -- Obtener datos del estado actual de yazi
-	local cwd = m_get_current_yazi_info()
-    --ya.dbg("cwd: " .. tostring(cwd))
+	local l_cwd = m_get_current_yazi_info()
+    --ya.dbg("l_cwd: " .. tostring(l_cwd))
 
-    if cwd.scheme then
-	    if cwd.scheme.is_virtual then
+    if l_cwd.scheme then
+	    if l_cwd.scheme.is_virtual then
             ya.dbg("Not supported under virtual filesystems")
-	        return ya.notify({ title = "Fzf", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" })
+	        return ya.notify({ title = "fzf-rg", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" })
 	    end
     end
 
     -- Ocultar la Yazi
-	local permit = ui.hide()
+	local l_permit = ui.hide()
 
     -- Ejecutar 'rg | fzf' y obtener el STDOUT del resultado
-    local output, err = m_run_fzf_rg(l_state, cwd, obj_type, use_tmux, height, width)
+    local l_output, l_message = m_run_fzf_rg(l_state, l_cwd, l_obj_type, l_use_tmux, l_height, l_width)
 
     -- Restaurar (mostrar) yazi
-    if permit then
-        permit:drop()
+    if l_permit then
+        l_permit:drop()
     end
 
-	if not output then
-        --ya.err(tostring(err))
-		return ya.notify({ title = "Fzf", content = tostring(err), timeout = 5, level = "error" })
+	if not l_output then
+        --ya.err(tostring(l_message))
+		return ya.notify({ title = "fzf-rg", content = tostring(l_message), timeout = 5, level = "error" })
 	end
 
     -- Convertir los STDOUT de ruta de los archivos seleccionados por fzf en objetos Url con rutas absolutas
-	local urls = m_get_urls_of(output, cwd)
+	local l_urls = m_get_urls_of(l_output, l_cwd)
 
     -- Segun el tipo de Url, realizar tareas ...
-	if #urls == 1 then
-		local cha = fs.cha(urls[1])
-		ya.emit(cha and cha.is_dir and "cd" or "reveal", { urls[1], raw = true })
-	elseif #urls > 1 then
-		urls.state = "on"
-		ya.emit("toggle_all", urls)
+	if #l_urls == 1 then
+		local l_cha = fs.cha(l_urls[1])
+		ya.emit(l_cha and l_cha.is_dir and "cd" or "reveal", { l_urls[1], raw = true })
+	elseif #l_urls > 1 then
+		l_urls.state = "on"
+		ya.emit("toggle_all", l_urls)
 	end
 
 end

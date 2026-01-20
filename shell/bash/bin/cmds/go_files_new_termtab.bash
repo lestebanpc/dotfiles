@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Constantes
+#set -euo pipefail
 
 #Colores principales usados
 g_color_reset="\x1b[0m"
@@ -98,25 +98,26 @@ m_validate_first_file() {
     local -n r_file_full_path="$2"
 
     #2. Expandir la ruta relativa (y/o enlaces simbolicos) en rutas absolutas
-    local l_full_path=''
-    if ! l_full_path=$(realpath -m "$p_file_path" 2> /dev/null); then
-        printf '[%bERROR%b] El argumento "%b%s%b" no es la ruta de un folder/archivo valido.\n' "$g_color_red1" "$g_color_reset" \
-               "$g_color_gray1" "$l_item" "$g_color_reset"
+    local l_path=''
+    if ! l_path=$(realpath -m "$p_file_path" 2> /dev/null); then
+        printf '[%bERROR%b] El 1er argumento "%b%s%b" no es la ruta de un archivo valido.\n' "$g_color_red1" "$g_color_reset" \
+               "$g_color_gray1" "$p_file_path" "$g_color_reset"
         return 5
     fi
+    echo "local l_path: ${l_path}"
 
     #3. Validar si el archivo existe
-    if [ ! -f "$l_full_path" ]; then
-        printf '[%bERROR%b] El argumento "%b%s%b" no es la ruta de un folder ni un archivo.\n' "$g_color_red1" "$g_color_reset" \
-               "$g_color_gray1" "$l_full_path" "$g_color_reset"
+    if [ ! -f "$l_path" ]; then
+        printf '[%bERROR%b] El 1er argumento "%b%s%b" no es un archivo valido.\n' "$g_color_red1" "$g_color_reset" \
+               "$g_color_gray1" "$p_full_path" "$g_color_reset"
         return 6
     fi
 
     #4. Determinar si es un archivo de texto
-    r_file_full_path="$l_full_path"
+    r_file_full_path="$l_path"
 
     local l_is_text_file=1
-    m_is_text_file "$l_full_path"
+    m_is_text_file "$l_path"
     l_is_text_file=$?
 
     return $l_is_text_file
@@ -162,7 +163,8 @@ m_get_workdir_current_pane() {
             return 1
         fi
 
-        l_working_dir=$(echo "$l_data" | sed -E 's|^[^:]+://[^/]+||')
+        # Remover el prefijo 'file://' o 'file:/host/'
+        l_working_dir="${l_data#file:/*/}"
         l_status=$?
 
         if [ $l_status -ne 0 ]; then
@@ -209,13 +211,17 @@ m_get_fullpath_files() {
     local p_use_text_file=$2
     local p_first_full_path="$3"
     local p_working_dir="$4"
-    local -n ra_files_out="$2"
+    local -n ra_files_out="$5"
 
     #2. Registrar el 1er elemento
     local l_path=''
 
     # Si se define un directorio de trabajo, usar la ruta relativa a dicho directorio de trabajo
-    ra_files_out[0]="$p_first_full_path"
+    if [ -z "$p_working_dir" ]; then
+        ra_files_out[0]="$p_first_full_path"
+    else
+        ra_files_out[0]="${p_first_full_path#${p_working_dir}/}"
+    fi
 
     local l_n=${#ra_files_in[@]}
     if [ $l_n -eq 1 ]; then
@@ -229,7 +235,7 @@ m_get_fullpath_files() {
     local l_full_path=''
     local l_is_text_file=1
 
-    for (( l_i = 1; l_i < l_n; g_i++ )); do
+    for (( l_i = 1; l_i < l_n; l_i++ )); do
 
         l_item="${ra_files_in[$l_i]}"
 
@@ -243,8 +249,6 @@ m_get_fullpath_files() {
             continue
         fi
 
-        # Si se define un directorio de trabajo, usar la ruta relativa a dicho directorio de trabajo
-
         # Filtrar solo los archivos del mismo tipo
         m_is_text_file "$l_full_path"
         l_is_text_file=$?
@@ -252,6 +256,11 @@ m_get_fullpath_files() {
         # Si no es el tipo de archivo, omitirlo
         if [ $l_is_text_file -ne $p_use_text_file ]; then
             continue
+        fi
+
+        # Si se define un directorio de trabajo, usar la ruta relativa a dicho directorio de trabajo
+        if [ ! -z "$p_working_dir" ]; then
+            l_full_path="${l_full_path#${p_working_dir}/}"
         fi
 
         # Si es del mismo tipo que el 1er Remplazar la ruta absoluta
@@ -281,13 +290,13 @@ m_get_nbrline_files() {
 
     #2. Obtener los numeros de lineas
     local IFS=','
-    local la_data=(${1})
+    local -a la_data=(${p_data})
 
     #3. Validar los elementos del arreglo
     local l_i=0
     local l_item=''
 
-    for (( l_i = 0; l_i < ${#la_data[@]}; g_i++ )); do
+    for (( l_i = 0; l_i < ${#la_data[@]}; l_i++ )); do
 
         l_item="${la_data[$l_i]}"
 
@@ -316,14 +325,19 @@ m_get_cmd_to_exec() {
 
     #1. Argumentos
     local p_is_text_file=$1
-    local p_viewer_cmd="$3"
-    local -n ra_files="$4"
-    local -n ra_nbrlines="$5"
-    local -n r_cmd_to_exec="$6"
+    local p_viewer_cmd="$2"
+    local -n ra_files="$3"
+    local -n ra_nbrlines="$4"
+    local -n r_cmd_to_exec="$5"
 
 
     #2. Recorrer todos los archivos a visualizar
-    local l_data=""
+    local l_cmd=""
+
+    local l_is_vim=1
+    if [ $p_is_text_file -eq 0 ] && { [ "$p_viewer_cmd" = "vim" ] || [ "$p_viewer_cmd" = "nvim" ]; }; then
+        l_is_vim=0
+    fi
 
     local l_n=${#ra_files[@]}
     local l_i=0
@@ -331,15 +345,15 @@ m_get_cmd_to_exec() {
     local l_file_path=''
     local l_nbr_line=0
 
-    for (( l_i = 0; l_i < l_n; g_i++ )); do
+    for (( l_i = 0; l_i < l_n; l_i++ )); do
 
         l_file_path="${ra_files[$l_i]}"
 
         # Si es un archivo texto, obtener el numero de liena a posicionarse
         l_nbr_line=0
-        if [ $p_is_text_file -eq 0 ]; then
+        if [ $l_is_vim -eq 0 ]; then
             l_aux="${ra_nbrlines[$l_i]}"
-            if [ -z "$l_aux" ]; then
+            if [ ! -z "$l_aux" ]; then
                 l_nbr_line=$l_aux
             fi
         fi
@@ -348,32 +362,27 @@ m_get_cmd_to_exec() {
         if [ $l_i -eq 0 ]; then
 
             # Si el comando es vim o nvim
-            if [ "$p_viewer_cmd" = "vim" ] || [ "$p_viewer_cmd" = "nvim" ]; then
-                if [ $l_nbr_line -gt 0 ]; then
-                    printf -v l_data '%s -%s "%s"' "$p_viewer_cmd" "$l_nbr_line" "$l_file_path"
-                else
-                    printf -v l_data '%s "%s"' "$p_viewer_cmd" "$l_file_path"
-                fi
-            else
-                printf -v l_data '%s "%s"' "$p_viewer_cmd" "$l_file_path"
-            fi
-        fi
-
-        # Si no es el primer archivo
-        if [ "$p_viewer_cmd" = "vim" ] || [ "$p_viewer_cmd" = "nvim" ]; then
             if [ $l_nbr_line -gt 0 ]; then
-                printf -v l_data "%s -c \"e '%s' | %s\"" "$l_data" "$l_nbr_line" "$l_file_path"
+                printf -v l_cmd '%s +%s "%s"' "$p_viewer_cmd" "$l_nbr_line" "$l_file_path"
             else
-                printf -v l_data '%s "%s"' "$l_data" "$l_file_path"
+                printf -v l_cmd '%s "%s"' "$p_viewer_cmd" "$l_file_path"
             fi
+
         else
-            printf -v l_data '%s "%s"' "$l_data" "$l_file_path"
+
+            # Si no es el primer archivo
+            if [ $l_nbr_line -gt 0 ]; then
+                printf -v l_cmd '%s -c "e %s | %s"' "$l_cmd" "$l_file_path" "$l_nbr_line"
+            else
+                printf -v l_cmd '%s "%s"' "$l_cmd" "$l_file_path"
+            fi
+
         fi
 
 
     done
 
-    r_cmd_to_exec="$l_data"
+    r_cmd_to_exec="$l_cmd"
     return 0
 
 }
@@ -466,7 +475,7 @@ m_exec_cmd_in_pane() {
        #2. Escribir el comandos en el prompt de panel creado
 
        # No se usara 'send-keys' debido a que se desea evitar al expansion y soporte al commillado simple
-       #tmux send-keys -lt "${l_position}" "$p_cmd_to_exec"
+       #tmux send-keys -lt "${p_position}" "$p_cmd_to_exec"
 
        # Escribir en un buffer nombrado
        tmux set-buffer -b 'yazifiles' "$p_cmd_to_exec"
@@ -475,7 +484,7 @@ m_exec_cmd_in_pane() {
        tmux paste-buffer -b 'yazifiles' -t "$p_position"
 
        # Ejecutar el comando escrito en el panel
-       tmux send-keys -t "${l_position}" Enter
+       tmux send-keys -t "${p_position}" Enter
 
         #if [ $l_status -ne 0 ]; then
         #    return 1
@@ -485,8 +494,8 @@ m_exec_cmd_in_pane() {
     elif [ $p_multiplexor_type -eq 1 ]; then
 
         # Escribir el comandos en el prompt de panel creado y ejecutar escribiendo el fin de linea
-        # Para ello se usara 'echo', en vez de 'printf' para enviar el fin de linea
-        echo "$p_cmd_to_exec" | wezterm cli send-text --pane-id "$l_position" --no-paste
+        # Para ello se usara 'echo' o 'printf' con un fin de linea
+        printf "%s\n" "$p_cmd_to_exec" | wezterm cli send-text --pane-id "$p_position" --no-paste
 
         #if [ $l_status -ne 0 ]; then
         #    return 1
@@ -544,7 +553,7 @@ main() {
     # (1) Se usara el directorio de trabajo usado por el proceso ejecutandose en el panel actual.
     # (2) Se usara el directorio donde pertenece el archivo indicado como 1er argumento.
     # (3) No se especifica un directorio de trabajo durante la creacion del panel.
-    local p_working_dir_src=2
+    local p_working_dir_src=3
     local p_data_lines=""
 
     while [ $# -gt 0 ]; do
@@ -557,6 +566,7 @@ main() {
                 ;;
 
             -p)
+                # Si se ingreso el directorio de trabajo con la opcion '-w', este tiene mayor prioridad.
                 if [ $p_working_dir_src -ne 0 ]; then
 
                     if ! [[ "$2" =~ ^[1-2]$ ]]; then
@@ -622,6 +632,9 @@ main() {
         _usage
         return 4
     fi
+    #printf "pa_files: "
+    #printf '"%s"\n' "${pa_files[@]}"
+    #echo "p_working_dir_src: ${p_working_dir_src}"
 
 
     #4. Validar el primer argumento
@@ -635,6 +648,7 @@ main() {
     if [ $l_is_text_file -gt 1 ]; then
         return $l_is_text_file
     fi
+    #echo "l_is_text_file: ${l_is_text_file}, l_full_path: ${l_full_path}"
 
     # Determinar el comando usado para visualizar el archivo
     local l_viewer_cmd='file'
@@ -657,14 +671,18 @@ main() {
             if [ $l_status -ne 0 ]; then
                 return 2
             fi
+            #printf "la_nbrlines: "
+            #printf '"%s"\n' "${la_nbrlines[@]}"
+
 
         fi
     fi
 
 
-    #6. Determinar el working dir ausar para crear el nuevo panel (Calculo automatico del working dir)
-    if [ $p_working_dir_src -eq 2 ]; then
+    #6. Determinar el working dir a usar para crear el nuevo panel
+    if [ $p_working_dir_src -eq 1 ]; then
 
+        # Si el working-dir se calcula automiaticamenbte en base al usado por el proceso actual del panel actual
         m_get_workdir_current_pane $l_multiplexor_type "p_working_dir"
         l_status=$?
 
@@ -673,16 +691,27 @@ main() {
             return 7
         fi
 
-    elif [ $p_working_dir_src -eq 3 ]; then
-        p_working_dir="${l_full_path##*/}"
+    elif [ $p_working_dir_src -eq 2 ]; then
+
+        # Si el working se cacula automaticamente en base la ruta donde esta el archvio/folder
+        p_working_dir="${l_full_path%/*}"
+
+    elif [ $p_working_dir_src -ne 0 ]; then
+
+        #Si no se ingreso desde la opcion '-w'
+        p_working_dir=""
+
     fi
+    #echo "p_working_dir: ${p_working_dir}"
 
 
     #7. Obtener la lista de archivos a visualizar
     local -a la_files=()
 
-    m_get_fullpath_files "pa_files" "la_files" $l_is_text_file "$l_full_path" "$p_working_dir"
+    m_get_fullpath_files "pa_files" $l_is_text_file "$l_full_path" "$p_working_dir" "la_files"
     #echo "Step 1 ${p_full_path}" >> /tmp/remove.txt
+    #printf "la_files: "
+    #printf '"%s"\n' "${la_files[@]}"
 
 
     #8. Crear el comando que visualiza los archivos a visualizar
@@ -692,13 +721,14 @@ main() {
     if [ -z "$l_cmd_to_exec" ]; then
         return 2
     fi
+    #echo "l_cmd_to_exec: ${l_cmd_to_exec}"
 
 
     #9. Crear el panel y ejecutar el comando de visualizacion
     local l_pane_position=""
-    m_create_new_pane $l_multiplexor_type "l_pane_position"
+    m_create_new_pane $l_multiplexor_type "$p_working_dir" "l_pane_position"
     #echo "Step 2 ${p_full_path}" >> /tmp/remove.txt
-
+    #echo "l_pane_position: ${l_pane_position}"
 
     #10. Ejecutar el comando en el panel indicado
     m_exec_cmd_in_pane $l_multiplexor_type "$l_pane_position" "$l_cmd_to_exec"
@@ -711,4 +741,4 @@ main() {
 # Ejecutar la funcion principal
 main "$@"
 _g_result=$?
-exit $g_result
+exit $_g_result

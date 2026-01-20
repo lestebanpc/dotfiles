@@ -197,12 +197,128 @@ ge_ps() {
 _g_fzf_rg_cmd=''
 _g_fzf_rg_initial_query=""
 
+
+_ge_rg_open_vim() {
+
+    local p_result="$1"
+
+    local -A processed_files
+    local -a files_to_open=()
+    local -a line_numbers=()
+
+    # Procesar cada línea
+    while IFS= read -r line; do
+
+        if [[ "$line" =~ ^([^:]+):([0-9]+):([0-9]+): ]]; then
+            file="${BASH_REMATCH[1]}"
+            line_num="${BASH_REMATCH[2]}"
+
+            if [[ -z "${processed_files[$file]}" ]]; then
+                processed_files["$file"]=1
+                files_to_open+=("$file")
+                line_numbers+=("$line_num")
+            fi
+        fi
+
+    done <<< "$p_result"
+
+    # Verificar si hay resultados
+    if [[ ${#files_to_open[@]} -eq 0 ]]; then
+        echo "No se encontraron archivos para abrir"
+        exit 0
+    fi
+
+    # Usar argumentos de array para manejar mejor los espacios
+    local -a vim_args=()
+
+    # Primer archivo con su línea
+    vim_args+=("+${line_numbers[0]}")
+    vim_args+=("${files_to_open[0]}")
+
+    # Archivos restantes
+    for ((i=1; i<${#files_to_open[@]}; i++)); do
+        vim_args+=("-c")
+        vim_args+=("edit ${files_to_open[$i]}")
+        vim_args+=("-c")
+        vim_args+=("${line_numbers[$i]}")
+    done
+
+    # Ejecutar vim
+    #printf '"%s"\n' "${vim_args[@]}"
+    vim "${vim_args[@]}"
+
+}
+
+
 #Uselo para buscar contenido de archivos en carpetas (recursivamente).
 #Restricciones:
 # - No es pensado para busqueda en un archivo use directamente el comando 'ripgrep' o simplemente 'grep'.
 # - Solo permite la busqueda de un query de busqueda. No esta diseñado usar muilples query con '-e' o '-f'.
 # - RipGrep solo esta pensado para criterios de busqueda usando expresiones regulares extendidas.
-ge_rg() {
+ge_rg1() {
+
+    local l_initial_query="$1"
+    local l_path="$2"
+
+    if [ -z "$l_initial_query" ]; then
+        printf 'You must specify the first parameter.\nUsage:\n'
+        printf '    ge_rg QUERY\n'
+        printf '    ge_rg QUERY PATH\n'
+        return 1
+    fi
+
+    #Anteponer el caracter de escape "\" a los caracteres especial de una cadena
+    _g_fzf_rg_initial_query=$(printf %q "$l_initial_query")
+
+    if [ ! -z "$l_path" ]; then
+        _g_fzf_rg_cmd="rg --column --line-number --no-heading --color=always --smart-case ${l_path} -e"
+    else
+        _g_fzf_rg_cmd='rg --column --line-number --no-heading --color=always --smart-case -e'
+    fi
+
+    local l_fzf_size='--height 80%'
+    if [ ! -z "$TMUX" ]; then
+        l_fzf_size='--tmux center,100%,80%'
+    fi
+
+    local l_status=0
+    local l_result=$(FZF_DEFAULT_COMMAND="${_g_fzf_rg_cmd} ${_g_fzf_rg_initial_query}" \
+    fzf $l_fzf_size --ansi -m \
+        --color "hl:-1:underline,hl+:-1:underline:reverse" \
+        --header 'CTRL-r (ripgrep mode), CTRL-f (fzf mode), ENTER (Open in VIM)' \
+        --disabled --query "$_g_fzf_rg_initial_query" \
+        --bind "change:reload:sleep 0.1; $_g_fzf_rg_cmd {q} || true" \
+        --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt(🔦 fzf> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-ra; cat /tmp/rg-fzf-fa)" \
+        --bind "ctrl-r:unbind(ctrl-r)+change-prompt(🔍 ripgrep> )+disable-search+reload($_g_fzf_rg_cmd {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-fa; cat /tmp/rg-fzf-ra)" \
+        --bind "start:unbind(ctrl-r)" \
+        --prompt '🔍 ripgrep> ' \
+        --delimiter : \
+        --preview "$_g_fzf_bat --style=numbers,header-filename,grid {1} --highlight-line {2}" \
+        --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
+    )
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        return $l_status
+    fi
+
+    # Si el usuario no seleciono nada
+    if [ -z "$l_result" ]; then
+        return 0
+    fi
+
+    # Parsear el resultado
+    _ge_rg_open_vim "$l_result"
+
+}
+
+
+#Uselo para buscar contenido de archivos en carpetas (recursivamente).
+#Restricciones:
+# - No es pensado para busqueda en un archivo use directamente el comando 'ripgrep' o simplemente 'grep'.
+# - Solo permite la busqueda de un query de busqueda. No esta diseñado usar muilples query con '-e' o '-f'.
+# - RipGrep solo esta pensado para criterios de busqueda usando expresiones regulares extendidas.
+ge_rg2() {
 
     local l_initial_query="$1"
     local l_path="$2"
@@ -235,8 +351,8 @@ ge_rg() {
         --header 'CTRL-r (ripgrep mode), CTRL-f (fzf mode), ENTER (Exit & view file)' \
         --disabled --query "$_g_fzf_rg_initial_query" \
         --bind "change:reload:sleep 0.1; $_g_fzf_rg_cmd {q} || true" \
-        --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt(🔦 fzf> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-r; cat /tmp/rg-fzf-f)" \
-        --bind "ctrl-r:unbind(ctrl-r)+change-prompt(🔍 ripgrep> )+disable-search+reload($_g_fzf_rg_cmd {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-f; cat /tmp/rg-fzf-r)" \
+        --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt(🔦 fzf> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-rb; cat /tmp/rg-fzf-fb)" \
+        --bind "ctrl-r:unbind(ctrl-r)+change-prompt(🔍 ripgrep> )+disable-search+reload($_g_fzf_rg_cmd {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-fb; cat /tmp/rg-fzf-rb)" \
         --bind "start:unbind(ctrl-r)" \
         --prompt '🔍 ripgrep> ' \
         --delimiter : \

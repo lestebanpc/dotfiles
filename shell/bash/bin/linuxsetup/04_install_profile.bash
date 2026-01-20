@@ -1389,11 +1389,20 @@ function _setup_user_profile() {
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="open_new_termtab"
+    l_target_link="go_files_new_termtab"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-    l_source_filename='open_new_termtab.bash'
+    l_source_filename='go_files_new_termtab.bash'
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
     l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="go_folder_new_termtab"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='go_folder_new_termtab.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    l_status=$?
+
 
 
     #Crear el enlace simbolico de comandos basicos

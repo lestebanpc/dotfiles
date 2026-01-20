@@ -2,6 +2,11 @@
 -- Configuración general
 --------------------------------------------------------------------------------------
 
+-- Variables generales
+m_is_unix_family = ya.target_family() == "unix"
+m_is_windows = ya.target_os() == "windows"
+
+
 -- Handler para adicionar la ruta destino de un 'symbolic link' en una nueva seccion en el 'status bar'.
 local function m_add_link_to_statusbar(self)
 	local h = self._current.hovered
@@ -21,22 +26,29 @@ local function m_add_owner_to_statusbar(self)
 		return ""
 	end
 
-	return ui.Line {
+	return ui.Line({
 		ui.Span(ya.user_name(h.cha.uid) or tostring(h.cha.uid)):fg("magenta"),
 		":",
 		ui.Span(ya.group_name(h.cha.gid) or tostring(h.cha.gid)):fg("magenta"),
 		" ",
-	}
+	})
 end
 
-if ya.target_family() == "unix" then
+if m_is_unix_family then
     Status:children_add(m_add_owner_to_statusbar, 500, Status.RIGHT)
 end
 
+-- Obtener la ruta donde estan los script a ejecutar
+local m_base_script_path = nil
+if m_is_windows then
+    m_base_script_path = os.getenv("USER_PROFILE") .. "/.files/shell/cmd/bin/cmds"
+else
+    m_base_script_path = os.getenv("HOME") .. "/.files/shell/bash/bin/cmds"
+end
 
 
 --------------------------------------------------------------------------------------
--- Configuración del plugins
+-- Configuración del plugin built-ins
 --------------------------------------------------------------------------------------
 --
 local m_plugin = nil
@@ -51,15 +63,18 @@ local m_plugin = nil
 --})
 
 
+--------------------------------------------------------------------------------------
 -- Configuracion del plugin 'fzf-fd'
-m_plugin = require("fzf-fd")
-m_plugin:setup({
+--------------------------------------------------------------------------------------
+--
+t_plugin = require("fzf-fd")
+t_plugin:setup({
 
     -- Parametros usados para 'fzf'
     fzf_options = {
 
         -- Permite la seleccion multiple
-        is_multiple = false,
+        is_multiple = true,
 
         -- Tiene un border
         has_border = true,
@@ -108,12 +123,25 @@ m_plugin:setup({
     },
 })
 
--- Configuracion del plugin 'go-fs'
-local m_root_url, m_error = fs.cwd()
-local m_path = tostring(m_root_url.path)
-ya.dbg("root path: " .. m_path)
 
-m_plugin = require("go-fs")
-m_plugin:setup({
-    cwd_root =  m_path,
+--------------------------------------------------------------------------------------
+-- Configuracion del plugin 'go-fs'
+--------------------------------------------------------------------------------------
+--
+-- Obtener la ruta del diretorio de trabajo actual durante el inicio de yazi
+local t_root_url, t_error = fs.cwd()
+local t_path = tostring(t_root_url.path)
+ya.dbg("root path: " .. t_path)
+
+local t_script_path = nil
+if m_is_windows then
+    t_script_path = m_base_script_path .. "/go_files_new_termtab.cmd"
+else
+    t_script_path = m_base_script_path .. "/go_files_new_termtab.bash"
+end
+
+t_plugin = require("go-fs")
+t_plugin:setup({
+    cwd_root =  t_path,
+    script_path = t_script_path,
 })

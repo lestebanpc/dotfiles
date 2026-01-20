@@ -113,7 +113,7 @@ m_get_workdir_current_pane() {
             return 1
         fi
 
-        l_working_dir=$(echo "$l_data" | sed -E 's|^[^:]+://[^/]+||')
+        l_working_dir="${l_data#file:/*/}"
         l_status=$?
 
         if [ $l_status -ne 0 ]; then
@@ -216,16 +216,16 @@ m_exec_cmd_in_pane() {
        #2. Escribir el comandos en el prompt de panel creado
 
        # No se usara 'send-keys' debido a que se desea evitar al expansion y soporte al commillado simple
-       #tmux send-keys -lt "${l_position}" "$p_cmd_to_exec"
+       #tmux send-keys -lt "${p_position}" "$p_cmd_to_exec"
 
        # Escribir en un buffer nombrado
-       tmux set-buffer -b 'yazifiles' "$p_cmd_to_exec"
+       tmux set-buffer -b 'yazifolder' "$p_cmd_to_exec"
 
        # Pegar el texto en el buffer nombrado respetando el texto (no realizara ninguna expansion)
-       tmux paste-buffer -b 'yazifiles' -t "$p_position"
+       tmux paste-buffer -b 'yazifolder' -t "$p_position"
 
        # Ejecutar el comando escrito en el panel
-       tmux send-keys -t "${l_position}" Enter
+       tmux send-keys -t "${p_position}" Enter
 
         #if [ $l_status -ne 0 ]; then
         #    return 1
@@ -235,8 +235,8 @@ m_exec_cmd_in_pane() {
     elif [ $p_multiplexor_type -eq 1 ]; then
 
         # Escribir el comandos en el prompt de panel creado y ejecutar escribiendo el fin de linea
-        # Para ello se usara 'echo', en vez de 'printf' para enviar el fin de linea
-        echo "$p_cmd_to_exec" | wezterm cli send-text --pane-id "$l_position" --no-paste
+        # Para ello se usara 'echo' o 'printf' con un fin de linea
+        printf "%s\n" "$p_cmd_to_exec" | wezterm cli send-text --pane-id "$p_position" --no-paste
 
         #if [ $l_status -ne 0 ]; then
         #    return 1
@@ -262,8 +262,8 @@ m_exec_cmd_in_pane() {
 #   (2) No se tiene soporta al multiplexor o emulador de terminal usado.
 #   (3) Opciones ingresados son invalidos.
 #   (4) No se han ingresado argumentos (archivos).
-#   (5) El 1er argumento no tiene una ruta de archivo valida.
-#   (6) El 1er argumento no es folder o es un archivo valido.
+#   (5) El argumento no tiene una ruta de archivo valida.
+#   (6) El argumento no es folder o es un archivo valido.
 #   (7) No se puede calcular el directorio de trabajo
 #
 main() {
@@ -294,7 +294,7 @@ main() {
     # (1) Se usara el directorio de trabajo usado por el proceso ejecutandose en el panel actual.
     # (2) Se usara el directorio donde pertenece el archivo indicado como 1er argumento.
     # (3) No se especifica un directorio de trabajo durante la creacion del panel.
-    local p_working_dir_src=2
+    local p_working_dir_src=3
 
     while [ $# -gt 0 ]; do
 
@@ -361,37 +361,42 @@ main() {
     #3. Leer los argumentos restantes
     if [ -z "$1" ]; then
         printf '[%bERROR%b] Debe especificar como argumento la ruta de un folder o archivo.\n' "$g_color_red1" "$g_color_reset"
-        return 1
+        return 4
     fi
 
-    # Si es una ruta absoluta que inicia con '~', expandierlo
     local p_full_path="$1"
-    #if [[ "$p_full_path" == "~"* ]]; then
-    #    p_full_path="$HOME/${p_full_path#~/}"
-    #fi
 
     # Obtener la ruta real
     if ! p_full_path=$(realpath -m "$p_full_path" 2> /dev/null); then
-        printf '[%bERROR%b] El argumento "%b%s%b" no es la ruta de un folder/archivo valido.\n' "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$1" "$g_color_reset"
-        return 1
+        printf '[%bERROR%b] El argumento "%b%s%b" no es la ruta de un folder/archivo valido.\n' "$g_color_red1" "$g_color_reset" \
+               "$g_color_gray1" "$1" "$g_color_reset"
+        return 5
     fi
     #echo "Step 1 ${p_full_path}" >> /tmp/remove.txt
+    #echo "p_full_path: ${p_full_path}"
 
     #3. Determinar si es folder o archivo
     local l_is_folder=1
+    local l_folder_path="$p_full_path"
+
     if [ -d "$p_full_path" ]; then
         l_is_folder=0
     elif [ ! -f "$p_full_path" ]; then
 
         printf '[%bERROR%b] El argumento "%b%s%b" no es la ruta de un folder ni un archivo.\n' "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$p_full_path" "$g_color_reset"
-        return 1
+        return 6
 
     fi
 
+    if [ $l_is_folder -ne 0 ]; then
+        l_folder_path="${p_full_path%/*}"
+    fi
+    #echo "l_is_folder: ${l_is_folder}, l_folder_path: $l_folder_path, p_working_dir_src: ${p_working_dir_src}"
 
     #6. Determinar el working dir ausar para crear el nuevo panel (Calculo automatico del working dir)
-    if [ $p_working_dir_src -eq 2 ]; then
+    if [ $p_working_dir_src -eq 1 ]; then
 
+        # Si el working-dir se calcula automiaticamenbte en base al usado por el proceso actual del panel actual
         m_get_workdir_current_pane $l_multiplexor_type "p_working_dir"
         l_status=$?
 
@@ -400,24 +405,38 @@ main() {
             return 7
         fi
 
-    elif [ $p_working_dir_src -eq 3 ]; then
-        p_working_dir="${l_full_path##*/}"
-    fi
+    elif [ $p_working_dir_src -eq 2 ]; then
 
+        # Si el working se cacula automaticamente en base la ruta donde esta el archvio/folder
+        p_working_dir="$l_folder_path"
+
+    elif [ $p_working_dir_src -ne 0 ]; then
+
+        #Si no se ingreso desde la opcion '-w'
+        p_working_dir=""
+
+    fi
+    #echo "p_working_dir: $p_working_dir"
 
 
     #8. Crear el comando que visualiza los archivos a visualizar
     local l_cmd_to_exec=""
 
+    if [ ! -z "$p_working_dir" ] && [ $p_working_dir_src -ne 3 ]; then
+
+        #Se usara la ruta relativa al directorio de trabajo
+        printf -v l_cmd_to_exec 'cd "%s"' "${l_folder_path#${p_working_dir}/}"
+    fi
+    #echo "l_cmd_to_exec: ${l_cmd_to_exec}"
 
     #9. Crear el panel y ejecutar el comando de visualizacion
     local l_pane_position=""
-    m_create_new_pane $l_multiplexor_type "l_pane_position"
+    m_create_new_pane $l_multiplexor_type "$p_working_dir" "l_pane_position"
     #echo "Step 2 ${p_full_path}" >> /tmp/remove.txt
 
 
     #10. Ejecutar el comando en el panel indicado
-    if [ -z "$l_cmd_to_exec" ]; then
+    if [ ! -z "$l_cmd_to_exec" ]; then
         m_exec_cmd_in_pane $l_multiplexor_type "$l_pane_position" "$l_cmd_to_exec"
     fi
 
@@ -428,5 +447,5 @@ main() {
 
 # Ejecutar la funcion principal
 main "$@"
-_g_result=$?
+g_result=$?
 exit $g_result
