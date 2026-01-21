@@ -41,7 +41,7 @@ end
 -- Obtener la ruta donde estan los script a ejecutar
 local m_base_script_path = nil
 if m_is_windows then
-    m_base_script_path = os.getenv("USER_PROFILE") .. "/.files/shell/cmd/bin/cmds"
+    m_base_script_path = os.getenv("USERPROFILE") .. "/.files/shell/cmd/bin/cmds"
 else
     m_base_script_path = os.getenv("HOME") .. "/.files/shell/bash/bin/cmds"
 end

@@ -1,6 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
 
+::echo Argumentos recibidos: %*
+
 :: #####################################################################
 :: Configuración inicial
 :: #####################################################################
@@ -60,6 +62,8 @@ if "!git_file_exe!"=="" (
         )
     )
 )
+
+
 :: Si no se encontró file.exe
 if "!git_file_exe!"=="" (
     echo [%color_red%ERROR%color_reset%] No se encontró file.exe.
@@ -71,6 +75,9 @@ if "!git_file_exe!"=="" (
     echo   3. O agregue la ubicación de file.exe al PATH del sistema
     exit /b 1
 )
+
+::echo "git_file_exe: !git_file_exe!"
+goto :MAIN
 
 
 :: #####################################################################
@@ -137,12 +144,10 @@ if not "%TERM_PROGRAM%"=="WezTerm" (
 
 :: Verificar que wezterm CLI esté disponible
 where wezterm >nul 2>&1
-::if %errorlevel% neq 0 (
 if errorlevel 1 (
     echo [%color_red%ERROR%color_reset%] WezTerm CLI no está instalado o no está en el PATH.
     exit /b 1
 )
-
 exit /b 0
 
 
@@ -157,25 +162,27 @@ set "_IS_TEXT=1"
 if "!git_file_exe!"=="" (
     goto :CHECK_EXTENSION
 ) else (
-    for /f "tokens=*" %%F in ('"!git_file_exe!" -i "!FILE_PATH!" 2^>nul') do set "FILE_INFO=%%F"
+    ::echo "git_file_exe: !git_file_exe!"
+    for /f "delims=" %%F in ('""!git_file_exe!" -ib "!FILE_PATH!"" 2^>^&1') do (
+       set "FILE_INFO=%%F"
+    )
+
+	echo "file output: !FILE_INFO!"
     if "!FILE_INFO!"=="" goto :CHECK_EXTENSION
 
     echo !FILE_INFO! | find /i "text/" >nul && set "_IS_TEXT=0"
     echo !FILE_INFO! | find /i "application/json" >nul && set "_IS_TEXT=0"
     echo !FILE_INFO! | find /i "inode/x-empty" >nul && set "_IS_TEXT=0"
-
+    ::echo "_IS_TEXT: !_IS_TEXT!"
     if "!_IS_TEXT!"=="0" exit /b 0
 )
 
-
-:: ---------------------------------------------------------------------
 :: Determiniar si es un archivo o texto segun la extension del archivo
-:: ---------------------------------------------------------------------
 :CHECK_EXTENSION
 set "EXT=%~x1"
 set "EXT=!EXT:.=!"
 if not "!EXT!"=="" (
-    set "TEXT_EXTS=txt md json xml yaml yml js ts py rb java c cpp h cs ps1 bat cmd sh bash config ini cfg log"
+    set "TEXT_EXTS=txt md json xml yaml yml js ts py rb java c cpp h cs ps1 bat cmd sh bash config ini cfg log toml"
     for %%E in (!TEXT_EXTS!) do (
         if /i "!EXT!"=="%%E" set "_IS_TEXT=0"
     )
@@ -186,7 +193,6 @@ if "!_IS_TEXT!"=="1" (
     type "!FILE_PATH!" >nul 2>&1
     if not errorlevel 1 set "_IS_TEXT=0"
 )
-
 exit /b !_IS_TEXT!
 
 
@@ -253,31 +259,32 @@ if "!PANEDIR!"=="" (
 )
 
 :: Limpiar posibles retornos de carro
-if not "!PANE_ID!"=="" (
-    set "PANE_ID=!PANE_ID:~0,-1!"
-)
+::if not "!PANE_ID!"=="" (
+::    set "PANE_ID=!PANE_ID:~0,-1!"
+::)
 exit /b 0
 
 :: ---------------------------------------------------------------------
 :: Enviar comando a panel de WezTerm
-:: Parámetros: %1=ID del panel, %2=comando a ejecutar
+:: Parámetros: %1=ID del panel, Variable global 'COMMAND_TO_EXEC'
 :: ---------------------------------------------------------------------
 :SEND_TO_PANE
 set "TARGET_PANE=%~1"
-set "COMMAND=%~2"
-
 if "!TARGET_PANE!"=="" exit /b 1
 
-:: Limpiar pantalla primero
-wezterm.exe cli send-text --pane-id !TARGET_PANE! --no-paste "clear"
-wezterm.exe cli send-text --pane-id !TARGET_PANE! --no-paste "!COMMAND!"
+echo "COMMAND: !COMMAND_TO_EXEC!"
+:: El echo envian un fin de linea la cual se interpreta como enter y ejecuta el comando.
+echo(%COMMAND_TO_EXEC% | wezterm.exe cli send-text --pane-id !TARGET_PANE! --no-paste
+
 exit /b 0
+
 
 
 
 :: #####################################################################
 :: Codigo Principal del scrtpt
 :: #####################################################################
+:MAIN
 
 :: ---------------------------------------------------------------------
 :: Procesamiento de argumentos
@@ -293,72 +300,94 @@ set "WORKING_DIR_SRC=3"  :: 0=-w, 1=-p 1, 2=-p 2, 3=ninguno
 
 :: Procesar opciones
 :PARSE_ARGS_LOOP
-if "%1"=="" goto :ARGS_DONE
 
-if "%1"=="-h" (
+:: Copiamos los parámetros a variables normales para evitar % con bloques y SHIFT
+set "ARG=%~1"
+set "VAL=%~2"
+
+::echo "arg: !ARG!, val: !VAL!"
+if not defined ARG goto :ARGS_DONE
+
+:: -h / ayuda
+if /I "!ARG!"=="-h" (
     call :USAGE
     exit /b 0
 )
 
-if "%1"=="-p" (
-    if "%2"=="1" set "OPTION_P=1" & set "WORKING_DIR_SRC=1"
-    if "%2"=="2" set "OPTION_P=2" & set "WORKING_DIR_SRC=2"
-    if "%2"=="" (
-        echo [ERROR] Opcion -p requiere un valor (1 o 2)
+:: -p <1|2>
+if /I "!ARG!"=="-p" (
+    if "!VAL!"=="" (
+        echo [ERROR] Opcion -p requiere un valor ^(1 o 2^)
         exit /b 1
     )
-    if not "%2"=="1" if not "%2"=="2" (
-        echo [ERROR] Valor invalido para -p: %2 (debe ser 1 o 2)
+    if /I not "!VAL!"=="1" if /I not "!VAL!"=="2" (
+        echo [ERROR] Valor invalido para -p: !VAL! ^(debe ser 1 o 2^)
         exit /b 1
     )
+    if /I "!VAL!"=="1" set "OPTION_P=1" & set "WORKING_DIR_SRC=1"
+    if /I "!VAL!"=="2" set "OPTION_P=2" & set "WORKING_DIR_SRC=2"
     shift & shift
     goto :PARSE_ARGS_LOOP
 )
 
-if "%1"=="-w" (
-    if "%2"=="" (
+:: -w <path>
+if /I "!ARG!"=="-w" (
+    if "!VAL!"=="" (
         echo [ERROR] Opcion -w requiere un directorio
         exit /b 1
     )
-    if not exist "%2\" (
-        echo [ERROR] Directorio no existe: %2
+    if not exist "!VAL!\\" (
+        echo [ERROR] Directorio no existe: !VAL!
         exit /b 1
     )
-    set "OPTION_W=%~2"
+    set "OPTION_W=!VAL!"
     set "WORKING_DIR_SRC=0"
     shift & shift
     goto :PARSE_ARGS_LOOP
 )
 
-if "%1"=="-l" (
-    if "%2"=="" (
+:: -l <nums>
+if /I "!ARG!"=="-l" (
+    if "!VAL!"=="" (
         echo [ERROR] Opcion -l requiere una lista de numeros
         exit /b 1
     )
-    set "OPTION_L=%~2"
+    set "OPTION_L=!VAL!"
     shift & shift
     goto :PARSE_ARGS_LOOP
 )
 
-if "%1"=="--" (
+:: -- fin de opciones
+if /I "!ARG!"=="--" (
     shift
     goto :ARGS_DONE
 )
 
-if "%1:~0,1%"=="-" (
-    echo [ERROR] Opcion desconocida: %1
+:: Opcion desconocida: primer caracter '-'
+if "!ARG:~0,1!"=="-" (
+    echo [ERROR] Opcion desconocida: !ARG!
     call :USAGE
     exit /b 1
 )
 
+
 :: Es un archivo
-set "ARG_!FILES_INDEX!=%~1"
+set "ARG_!FILES_INDEX!=!ARG!"
 set /a FILES_INDEX+=1
 shift
 goto :PARSE_ARGS_LOOP
 
+
 :ARGS_DONE
 set /a FILES_COUNT=FILES_INDEX-1
+
+
+::echo "OPTION_P: !OPTION_P!"
+::echo "OPTION_W: !OPTION_W!"
+::echo "OPTION_L: !OPTION_L!"
+::echo "FILES_INDEX: !FILES_INDEX!"
+::echo "FIRST_FILE: !FIRST_FILE!"
+
 
 :: Verificar que tenemos archivos
 if !FILES_COUNT! lss 1 (
@@ -371,6 +400,9 @@ if !FILES_COUNT! lss 1 (
 :: ---------------------------------------------------------------------
 :: Validaciones principales
 :: ---------------------------------------------------------------------
+::echo "IS_TEXT_FILE: !IS_TEXT_FILE!"
+::echo "WORKING_DIR: !WORKING_DIR!"
+::echo "WORKING_DIR_SRC: !WORKING_DIR_SRC!"
 
 :: 1. Verificar WezTerm
 call :CHECK_WEZTERM
@@ -426,12 +458,15 @@ if !WORKING_DIR_SRC! equ 0 (
     echo [DEBUG] Sin directorio especifico
 )
 
+::echo "WORKING_DIR: !WORKING_DIR!"
+
 :: 5. Procesar números de línea (si aplica)
 set "LINE_NUMBERS="
 if not "!OPTION_L!"=="" if !IS_TEXT_FILE! equ 0 (
     echo !EDITOR! | find /i "vim" >nul
     if not errorlevel 1 (
         set "LINE_NUMBERS=!OPTION_L!"
+		set "LINE_REST=!LINE_NUMBERS!"
         echo [DEBUG] Numeros de linea: !LINE_NUMBERS!
     )
 )
@@ -443,59 +478,44 @@ if not "!OPTION_L!"=="" if !IS_TEXT_FILE! equ 0 (
 set "FILE_LIST="
 set "VALID_FILE_COUNT=0"
 
-:: Procesar primer archivo
-set "FIRST_FULL_PATH=!FIRST_FILE!"
+:: Procesar primer archivo (Se normaliza a ruta completa y luego recorta contra WORKING_DIR)
+for %%F in ("!FIRST_FILE!") do set "FIRST_FULL_PATH=%%~fF"
 if not "!WORKING_DIR!"=="" (
-    :: Convertir a ruta relativa si es posible
-    set "FIRST_FULL_PATH=!FIRST_FILE!"
-    set "FIRST_FULL_PATH=!FIRST_FULL_PATH:%WORKING_DIR%\=!"
+  set "FIRST_FULL_PATH=!FIRST_FULL_PATH:%WORKING_DIR%\=!"
 )
 
-set "FILE_LIST=!FIRST_FULL_PATH!"
+echo "FIRST_FULL_PATH: !FIRST_FULL_PATH!"
+set "FILE_LIST="!FIRST_FULL_PATH!""
+
 set /a VALID_FILE_COUNT=1
+echo "FIRST_FULL_PATH: !FIRST_FULL_PATH!, FILE_LIST: !FILE_LIST!, FILES_COUNT: !FILES_COUNT!"
 
-:: Procesar archivos restantes
+:: Procesar archivos restantes (desde 2 hasta FILES_COUNT)
 if !FILES_COUNT! gtr 1 (
-    set /a I=2
-    :PROCESS_FILES_LOOP
-    if !I! gtr !FILES_COUNT! goto :FILES_DONE
-
-    set "CURRENT_FILE=!ARG_%I%!"
-
-    :: Verificar que existe y es archivo
+  for /L %%I in (2,1,!FILES_COUNT!) do (
+    call set "CURRENT_FILE=%%ARG_%%I%%"
     if exist "!CURRENT_FILE!" if not exist "!CURRENT_FILE!\" (
+      call :IS_TEXT_FILE "!CURRENT_FILE!"
+      set "CURRENT_IS_TEXT=!errorlevel!"
 
-        :: Determinar tipo del archivo actual
-        call :IS_TEXT_FILE "!CURRENT_FILE!"
-        set "CURRENT_IS_TEXT=!errorlevel!"
-
-        :: Solo agregar si es del mismo tipo
-        if !CURRENT_IS_TEXT! equ !IS_TEXT_FILE! (
-
-            :: Obtener ruta completa
-            for %%F in ("!CURRENT_FILE!") do set "CURRENT_FULL=%%~fF"
-
-            :: Convertir a ruta relativa si hay directorio de trabajo
-            if not "!WORKING_DIR!"=="" (
-                set "CURRENT_FULL=!CURRENT_FULL:%WORKING_DIR%\=!"
-            )
-
-            :: Agregar a la lista
-            set "FILE_LIST=!FILE_LIST! "!CURRENT_FULL!""
-            set /a VALID_FILE_COUNT+=1
-        ) else (
-            echo [WARN] Omitiendo archivo tipo diferente: !CURRENT_FILE!
+      if !CURRENT_IS_TEXT! equ !IS_TEXT_FILE! (
+        for %%F in ("!CURRENT_FILE!") do set "CURRENT_FULL=%%~fF"
+        if not "!WORKING_DIR!"=="" (
+          set "CURRENT_FULL=!CURRENT_FULL:%WORKING_DIR%\=!"
         )
+        set "FILE_LIST=!FILE_LIST! "!CURRENT_FULL!""
+        set /a VALID_FILE_COUNT+=1
+      ) else (
+        echo [WARN] Omitiendo archivo tipo diferente: !CURRENT_FILE!
+      )
     ) else (
-        echo [WARN] Omitiendo (no es archivo valido): !CURRENT_FILE!
+      echo [WARN] Omitiendo ^(no es archivo valido^): !CURRENT_FILE!
     )
-
-    set /a I+=1
-    goto :PROCESS_FILES_LOOP
+  )
 )
+
 
 :FILES_DONE
-
 if !VALID_FILE_COUNT! equ 0 (
     echo [ERROR] No hay archivos validos para mostrar
     exit /b 1
@@ -510,60 +530,72 @@ echo [DEBUG] Archivos a procesar: !VALID_FILE_COUNT!
 set "COMMAND_TO_EXEC="
 
 if !IS_TEXT_FILE! equ 0 (
-    :: Archivos de texto
-    echo !VIEWER_CMD! | find /i "vim" >nul
-    if not errorlevel 1 (
-        :: Editor vim/nvim - soporte para números de línea
-        set "COMMAND_TO_EXEC=!VIEWER_CMD!"
+  :: Editor es vim/nvim (ya lo comprobaste antes)
+  echo !VIEWER_CMD! | find /i "vim" >nul
 
-        :: Convertir lista de números de línea a array
-        set "LINE_INDEX=0"
-        set "FILE_INDEX=0"
+  if not errorlevel 1 (
 
-        for %%F in (!FILE_LIST!) do (
-            set "CURRENT_FILE=%%~F"
-            set "CURRENT_LINE="
+    if "!LINE_NUMBERS!"=="" (
 
-            :: Obtener número de línea correspondiente
-            if not "!LINE_NUMBERS!"=="" (
-                for /f "tokens=1,* delims=," %%A in ("!LINE_NUMBERS!") do (
-                    if !LINE_INDEX! equ 0 set "CURRENT_LINE=%%A"
-                    set "LINE_NUMBERS=%%B"
-                )
-                set /a LINE_INDEX+=1
-            )
+      ::Caso sin -l: nvim "f1" "f2" ...
+      set "COMMAND_TO_EXEC=!VIEWER_CMD!"
+      for %%F in (!FILE_LIST!) do (
+        set "CURRENT_FILE=%%~F"
+        set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! ^"!CURRENT_FILE!^""
+      )
 
-            if !FILE_INDEX! equ 0 (
-                :: Primer archivo
-                if not "!CURRENT_LINE!"=="" (
-                    set "COMMAND_TO_EXEC=!VIEWER_CMD! +!CURRENT_LINE! "!CURRENT_FILE!""
-                ) else (
-                    set "COMMAND_TO_EXEC=!VIEWER_CMD! "!CURRENT_FILE!""
-                )
-            ) else (
-                :: Archivos subsiguientes
-                if not "!CURRENT_LINE!"=="" (
-                    set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! -c "e "!CURRENT_FILE!"^|!CURRENT_LINE!""
-                ) else (
-                    set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! -c "e "!CURRENT_FILE!""
-                )
-            )
-            set /a FILE_INDEX+=1
+    ) else (
+
+      :: Caso con -l: +L1 "f1" y luego -c "e f2" [-c L2] ...
+      set "LINE_INDEX=0"
+      set "COMMAND_TO_EXEC="
+
+      for %%F in (!FILE_LIST!) do (
+        set "CURRENT_FILE=%%~F"
+        set "CURRENT_LINE="
+
+        :: Tomar el primer número disponible y acortar la cola
+        if defined LINE_REST (
+          for /f "tokens=1,* delims=," %%A in ("!LINE_REST!") do (
+            set "CURRENT_LINE=%%~A"
+            set "LINE_REST=%%~B"
+			::echo "LINE_REST: !LINE_REST!"
+          )
         )
-    ) else (
-        :: Otros editores (VS Code, Notepad++, etc.)
-        set "COMMAND_TO_EXEC=!VIEWER_CMD! !FILE_LIST!"
+        ::echo "CURRENT_LINE final: !CURRENT_LINE!"
+        if "!COMMAND_TO_EXEC!"=="" (
+          :: Primer archivo
+          if defined CURRENT_LINE (
+            set "COMMAND_TO_EXEC=!VIEWER_CMD! +!CURRENT_LINE! ^"!CURRENT_FILE!^""
+          ) else (
+            set "COMMAND_TO_EXEC=!VIEWER_CMD! ^"!CURRENT_FILE!^""
+          )
+        ) else (
+          :: Archivos siguientes
+          if defined CURRENT_LINE (
+            set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! -c ^"e !CURRENT_FILE!^" -c ^"!CURRENT_LINE!^""
+          ) else (
+            set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! -c ^"e !CURRENT_FILE!^""
+          )
+        )
+      )
+
     )
+  ) else (
+    :: Otros editores
+    set "COMMAND_TO_EXEC=!VIEWER_CMD! !FILE_LIST!"
+  )
 ) else (
-    :: Archivos binarios
-    if "!VIEWER_CMD!"=="file.exe" (
-        set "COMMAND_TO_EXEC=file.exe !FILE_LIST!"
-    ) else (
-        set "COMMAND_TO_EXEC=for %%f in (!FILE_LIST!) do @echo %%~nxf"
-    )
+  :: Archivos binarios
+  if "!VIEWER_CMD!"=="file.exe" (
+    set "COMMAND_TO_EXEC=file.exe !FILE_LIST!"
+  ) else (
+    set "COMMAND_TO_EXEC=for %%f in (!FILE_LIST!) do @echo %%~nxf"
+  )
 )
 
 echo [DEBUG] Comando: !COMMAND_TO_EXEC!
+
 
 
 :: ---------------------------------------------------------------------
@@ -580,7 +612,7 @@ if "!PANE_ID!"=="" (
 echo [INFO] Panel creado con ID: !PANE_ID!
 
 :: 2. Ejecutar comando en el panel
-call :SEND_TO_PANE "!PANE_ID!" "!COMMAND_TO_EXEC!"
+call :SEND_TO_PANE "!PANE_ID!"
 if errorlevel 1 (
     echo [ERROR] No se pudo ejecutar comando en el panel
     exit /b 1
