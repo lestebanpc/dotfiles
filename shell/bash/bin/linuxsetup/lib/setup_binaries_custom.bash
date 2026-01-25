@@ -31,6 +31,7 @@ declare -A gA_repotypes=(
         ['awscli']='https://awscli.amazonaws.com'
         ['rclone']='https://downloads.rclone.org'
         ['apache']='https://dlcdn.apache.org'
+        ['gitlab-cli']='gitlab-org/cli'
     )
 
 # Diccionario de todos los repositorios y su respecto identificadores del repositorio de artefactos
@@ -517,10 +518,11 @@ declare -A gA_current_version_parameter1=(
     ['ctags-nowin']='ctags.info'
     ['tailspin']='tspin'
     ['github-cli']='gh'
+    ['gitlab-cli']='glab'
     )
 
 
-# Parametros usasdos para calcular la versiopn actual (instalada) del repositorio.
+# Parametros usados para calcular la versiopn actual (instalada) del repositorio.
 # Su valor depdende el metodo usado para obtener la version actual.
 # > Si es '3' y '2', no usa estos parametros.
 # > Si es '0' y '1', son los argumentos/opciones usados al comando para obtener el texto donde esta la version deseada.
@@ -700,6 +702,20 @@ function get_repo_last_version() {
     #printf 'RepoID: "%s", URL base: "%s", RepoName: "%s"\n' "$p_repo_id" "$l_base_url_fixed" "$p_repo_name"
 
     case "$p_repo_id" in
+
+
+        gitlab-cli)
+            # Convertir el repositorio en codificacion de URL ('gitlab/cli' -> 'gitlab-org%2Fcli')
+            p_repo_name=$(url_encode "$p_repo_name")
+
+            # Usar el API usado por los GitLab server
+            l_repo_last_version=$(curl -Ls -H 'Accept: application/json' "${l_base_url_fixed}/api/v4/projects/${p_repo_name}/releases/permalink/latest" | ${g_lnx_bin_path}/jq -r '.tag_name')
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 2
+            fi
+            ;;
+
 
         kubectl|kubelet|kubeadm)
             #El artefacto se obtiene del repositorio de Kubernates
@@ -2680,30 +2696,40 @@ function get_repo_artifacts() {
             ;;
 
 
+        gitlab-cli)
 
-        #xsv)
-        #    #No soportado para architecture ARM de 64 bits
-        #    if [ "$g_os_architecture_type" = "aarch64" ]; then
-        #        pna_artifact_baseurl=()
-        #        pna_artifact_names=()
-        #        return 2
-        #    fi
+            #URL base fijo     :  Usualmente "https://gitlab.com"
+            #local l_base_url_fixed="${gA_repotypes[${l_repotype}]:-https://github.com}"
 
-        #    #Generar los datos de artefactado requeridos para su configuración:
-        #    if [ $p_is_win_binary -eq 0 ]; then
-        #        pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-pc-windows-msvc.zip")
-        #        pna_artifact_types=(11)
-        #    else
-        #        #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
-        #        if [ $g_os_subtype_id -eq 1 ]; then
-        #            pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.tar.gz")
-        #        else
-        #            pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.tar.gz")
-        #            #pna_artifact_names=("xsv-${p_repo_last_pretty_version}-x86_64-unknown-linux-gnu.tar.gz")
-        #        fi
-        #        pna_artifact_types=(10)
-        #    fi
-        #    ;;
+            #URL base variable :
+            local l_base_url_variable="${p_repo_name}/-/releases/${p_repo_last_version}/downloads"
+
+            #URL base para un repositorio GitHub
+            pna_artifact_baseurl=("${l_base_url_fixed}/${l_base_url_variable}")
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                pna_artifact_names=("glab_${p_repo_last_pretty_version}_windows_amd64.zip")
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("glab_${p_repo_last_pretty_version}_linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("glab_${p_repo_last_pretty_version}_linux_amd64.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("glab_${p_repo_last_pretty_version}_linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("glab_${p_repo_last_pretty_version}_linux_amd64.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
 
 
 
@@ -3642,12 +3668,14 @@ function get_repo_artifacts() {
             fi
             ;;
 
+
         nerd-fonts)
             #Generar los datos de artefactado requeridos para su configuración:
             pna_artifact_names=("JetBrainsMono.tar.xz" "CascadiaCode.tar.xz" "DroidSansMono.tar.xz"
                                 "InconsolataLGC.tar.xz" "UbuntuMono.tar.xz" "3270.tar.xz")
             pna_artifact_types=(14 14 14 14 14 14)
             ;;
+
 
         go)
             #URL base fijo     : "https://storage.googleapis.com"
@@ -3668,6 +3696,37 @@ function get_repo_artifacts() {
                 pna_artifact_types=(20)
             fi
             ;;
+
+
+        resvg)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("resvg-win64.zip")
+                else
+                    pna_artifact_names=("resvg-win64.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("resvg-linux-x86_64.tar.gz")
+                    else
+                        pna_artifact_names=("resvg-linux-x86_64.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("resvg-linux-x86_64.tar.gz")
+                    else
+                        pna_artifact_names=("resvg-linux-x86_64.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
 
         rust)
             #Solo para Linux
@@ -5232,6 +5291,27 @@ function _copy_artifact_files() {
             ;;
 
 
+        resvg)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -ne 0 ]; then
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "resvg" 0 1
+
+            else
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "resvg.exe" 1 1
+
+            fi
+            ;;
+
+
+
         github-cli)
             #Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
@@ -5485,6 +5565,29 @@ function _copy_artifact_files() {
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             copy_binary_file "${l_source_path}" "lazygit" 0 1
             ;;
+
+
+
+        gitlab-cli)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+
+            #A. Si es WSL de Windows y se copia binarios de windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                copy_binary_file "${l_source_path}/bin" "glab.exe" 1 1
+                return 0
+
+            fi
+
+            #B. Si es Linux (no WSL)
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            copy_binary_file "${l_source_path}/bin" "glab" 0 1
+            ;;
+
 
 
         rmpc)

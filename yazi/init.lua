@@ -93,7 +93,7 @@ t_plugin:setup({
         binds = {},
 
         -- Comando de preview para archivos, directorio y otros
-        preview_file = "bat --color=always --paging always {}",
+        preview_file = "bat --color=always --paging always --style=numbers,header-filename {}",
         preview_dir = "eza --color=always --icons always {}",
         preview_both = "ls -la {}",
 

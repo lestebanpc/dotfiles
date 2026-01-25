@@ -2,16 +2,6 @@
 
 [ -z "$g_repo_name" ] && g_repo_name='.files'
 
-#Obtener el comando bat: 'bat' y 'batcat'
-if [ -z "$_g_fzf_bat" ]; then
-
-    if command -v batcat > /dev/null; then
-        _g_fzf_bat="batcat --color=always"
-    elif command -v bat > /dev/null; then
-        _g_fzf_bat="bat --color=always"
-    fi
-fi
-
 #Ruta del script para ejecutar funciones en acciones FZF
 _g_script_path=~/${g_repo_name}/shell/bash/fun/fzf
 
@@ -171,10 +161,10 @@ ge_files() {
     fi
 
     FZF_DEFAULT_COMMAND="$l_cmd_ls" \
-    fzf $l_fzf_size --preview "$_g_fzf_bat --style=numbers {}" \
+    fzf $l_fzf_size --preview "bat --color=always --style=numbers,header-filename {}" \
         --prompt '📄 File> ' -m \
         --bind "shift-up:preview-page-up,shift-down:preview-page-down" \
-        --bind "ctrl-a:execute:$_g_fzf_bat --paging always --style=numbers,header-filename,grid {}" \
+        --bind "ctrl-a:execute:bat --color=always --paging always --style=numbers,header-filename {}" \
         --preview-window "right,60%" \
         --header $'CTRL-a (Show in full-screen), SHIFT-↑/↓ (Navigate preview\'s pages)\n'
 }
@@ -293,7 +283,7 @@ ge_rg1() {
         --bind "start:unbind(ctrl-r)" \
         --prompt '🔍 ripgrep> ' \
         --delimiter : \
-        --preview "$_g_fzf_bat --style=numbers,header-filename,grid {1} --highlight-line {2}" \
+        --preview "bat --color=always --style=numbers,header-filename {1} --highlight-line {2}" \
         --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
     )
     l_status=$?
@@ -356,7 +346,7 @@ ge_rg2() {
         --bind "start:unbind(ctrl-r)" \
         --prompt '🔍 ripgrep> ' \
         --delimiter : \
-        --preview "$_g_fzf_bat --style=numbers,header-filename,grid {1} --highlight-line {2}" \
+        --preview "bat --color=always --style=numbers,header-filename {1} --highlight-line {2}" \
         --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
         --bind 'enter:become(vim {1} +{2})'
 }
@@ -424,7 +414,7 @@ gi_files() {
         --bind "ctrl-o:execute-silent:bash ${_g_script_path}/fun_git.bash git_open_url 4 {-1}" \
         --bind "alt-e:execute:${EDITOR:-vim} {-1} > /dev/tty" \
         --preview-window "right,60%" \
-        --preview "git diff --color=always -- {-1} | delta; $_g_fzf_bat --style=numbers,header-filename,grid {-1}" "$@" |
+        --preview "git diff --color=always -- {-1} | delta; bat --color=always --style=numbers,header-filename {-1}" "$@" |
     cut -c4- | sed 's/.* -> //'
 }
 
@@ -804,11 +794,11 @@ oc_projects() {
         --prompt "Project> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-d (Set Default), CTRL-e (View Events)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/fun_k8s.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 0) > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 0) > /dev/tty" \
         --bind "ctrl-d:execute-silent:oc project {1}" \
-        --bind "ctrl-e:execute:$_g_fzf_bat --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
+        --bind "ctrl-e:execute:bat --color=always --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
         --preview-window "right,60%" \
-        --preview "bash ${_g_script_path}/fun_k8s.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 0 | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_script_path}/fun_k8s.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 0 | bat --color=always --style plain" |
     awk "$l_awk_template"
 
     rm -f $_g_fzf_kc_data_file
@@ -886,11 +876,11 @@ kc_ns() {
         --prompt "Project> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTR-d (Set Default), CTRL-e (View Events)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/fun_k8s.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 1) > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 1) > /dev/tty" \
         --bind "ctrl-d:execute-silent:kubectl config set-context --current --namespace={1}" \
-        --bind "ctrl-e:execute:$_g_fzf_bat --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
+        --bind "ctrl-e:execute:bat --color=always --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
         --preview-window "right,60%" \
-        --preview "bash ${_g_script_path}/fun_k8s.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 1 | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_script_path}/fun_k8s.bash show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 1 | bat --color=always --style plain" |
     awk "$l_awk_template"
 
     rm -f $_g_fzf_kc_data_file
@@ -980,14 +970,14 @@ kc_po() {
         --bind "alt-a:change-prompt(Pod> )+reload:bash \"${_g_script_path}/fun_k8s.bash\" show_pods_table \"${_g_fzf_kc_data_file}\" 1" \
 		--bind "alt-b:change-prompt(Not-succeeded Pod> )+reload:bash \"${_g_script_path}/fun_k8s.bash\" show_pods_table \"${_g_fzf_kc_data_file}\" 0" \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/fun_k8s.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-e:become:bash \"${_g_script_path}/fun_k8s.bash\" open_terminal1 '{1}' '{2}' 'bash' 0 '${_g_fzf_kc_data_file}' > /dev/tty" \
         --bind "ctrl-t:execute:bash \"${_g_script_path}/fun_k8s.bash\" open_terminal1 '{1}' '{2}' 'bash' 1 '${_g_fzf_kc_data_file}' > /dev/tty" \
         --bind "ctrl-l:execute(bash \"${_g_script_path}/fun_k8s.bash\" show_log_pod '{1}' '{2}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
         --bind "ctrl-p:become(bash \"${_g_script_path}/fun_k8s.bash\" port_forward_pod '{1}' '{2}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
         --bind "ctrl-x:become(bash \"${_g_script_path}/fun_k8s.bash\" show_log_pod '{1}' '{2}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${_g_script_path}/fun_k8s.bash show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_script_path}/fun_k8s.bash show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}' | bat --color=always --style plain" |
     awk "$l_awk_template"
 
     rm -f $_g_fzf_kc_data_file
@@ -1076,17 +1066,17 @@ kc_containers() {
         --bind "alt-a:change-prompt(Pod's Container> )+reload:bash \"${_g_script_path}/fun_k8s.bash\" show_containers_table \"${_g_fzf_kc_data_file}\" 1" \
 		--bind "alt-b:change-prompt(Not-succeeded Pod's Container> )+reload:bash \"${_g_script_path}/fun_k8s.bash\" show_containers_table \"${_g_fzf_kc_data_file}\" 0" \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/fun_k8s.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}') > /dev/tty" \
         --bind "ctrl-e:become:bash \"${_g_script_path}/fun_k8s.bash\" open_terminal2 '{1}' '{2}' '{3}' 'bash' 0 '${_g_fzf_kc_data_file}' > /dev/tty" \
         --bind "ctrl-t:execute:bash \"${_g_script_path}/fun_k8s.bash\" open_terminal2 '{1}' '{2}' '{3}' 'bash' 1 '${_g_fzf_kc_data_file}' > /dev/tty" \
         --bind "ctrl-l:execute(bash \"${_g_script_path}/fun_k8s.bash\" show_log_container '{1}' '{2}' '{3}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
         --bind "ctrl-p:become(bash \"${_g_script_path}/fun_k8s.bash\" port_forward_container '{1}' '{2}' '{3}' '{7}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
         --bind "ctrl-x:become(bash \"${_g_script_path}/fun_k8s.bash\" show_log_container '{1}' '{2}' '{3}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${_g_script_path}/fun_k8s.bash show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_script_path}/fun_k8s.bash show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}' | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    #    --bind "ctrl-l:execute:$_g_fzf_bat --paging always --style plain  <(kubectl logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
+    #    --bind "ctrl-l:execute:bat --color=always --paging always --style plain  <(kubectl logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
     #    --bind "ctrl-x:become(bash \"${_g_script_path}/fun_k8s.bash\" show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
 
     rm -f $_g_fzf_kc_data_file
@@ -1174,11 +1164,11 @@ kc_deploy() {
         --prompt "Deployment> " \
         --header "$(_fzf_kc_get_context_info)"$'\nCTRL-a (View yaml), CTRL-b (View Preview), CTRL-d (View Revisions), CTRL-w (Watch pods)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/fun_k8s.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
-        --bind "ctrl-d:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_dply_revision1 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
+        --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_dply_revision1 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${_g_script_path}/fun_k8s.bash show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_script_path}/fun_k8s.bash show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | bat --color=always --style plain" |
     awk "$l_awk_template"
 
     rm -f ${_g_fzf_kc_data_file}
@@ -1272,11 +1262,11 @@ kc_rs() {
         --bind "alt-a:change-prompt(All Replicaset> )+reload:bash \"${_g_script_path}/fun_k8s.bash\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 1" \
 		--bind "alt-b:change-prompt(Active Replicaset> )+reload:bash \"${_g_script_path}/fun_k8s.bash\" show_replicasets_table \"${_g_fzf_kc_data_file}\" 0" \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${_g_script_path}/fun_k8s.bash show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
-        --bind "ctrl-d:execute:$_g_fzf_bat --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_dply_revision2 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
+        --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${_g_script_path}/fun_k8s.bash show_dply_revision2 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${_g_script_path}/fun_k8s.bash show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | $_g_fzf_bat --style plain" |
+        --preview "bash ${_g_script_path}/fun_k8s.bash show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | bat --color=always --style plain" |
     awk "$l_awk_template"
 
     rm -f ${_g_fzf_kc_data_file}

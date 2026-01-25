@@ -1,40 +1,51 @@
 @echo off
 setlocal enabledelayedexpansion
 
-::echo Argumentos recibidos: %*
+rem echo Argumentos recibidos: %*
 
-:: #####################################################################
-:: Configuración inicial
-:: #####################################################################
 
-:: Si se ejecuta en una terminal que soporta colores (Windows Terminal/WezTerm)
+rem #####################################################################
+rem Configuración inicial
+rem #####################################################################
+
+rem Si se ejecuta en una terminal que soporta colores (Windows Terminal/WezTerm)
 if not "%WT_SESSION%"=="" (
-    for /f %%a in ('echo prompt $E ^| cmd') do set "ESC=%%a"
-    set "color_red=%ESC%[91m"
-    set "color_green=%ESC%[92m"
-    set "color_gray=%ESC%[90m"
-    set "color_reset=%ESC%[0m"
+  set "ANSI_OK=1"
+) else if /i "%TERM_PROGRAM%"=="WezTerm" (
+  set "ANSI_OK=1"
 ) else (
-    set "color_red="
-    set "color_green="
-    set "color_gray="
-    set "color_reset="
+  set "ANSI_OK="
 )
 
+rem if defined ANSI_OK (
+rem   for /f %%a in ('echo prompt $E ^| cmd') do set "ESC=%%a"
+rem   set "color_red=%ESC%[91m"
+rem   set "color_green=%ESC%[92m"
+rem   set "color_gray=%ESC%[90m"
+rem   set "color_yellow=%ESC%[33m"
+rem   set "color_reset=%ESC%[0m"
+rem ) else (
+  set "color_red="
+  set "color_green="
+  set "color_gray="
+  set "color_yellow="
+  set "color_reset="
+rem )
 
-:: Estableces valor inicia de las variables de entorno
+
+
 if "%EDITOR%"=="" (
     set "EDITOR=nvim.exe"
-    ::set "EDITOR=vim.exe"
-    ::set "EDITOR=code.exe"
-    ::set "EDITOR=notepad++.exe"
-    ::set "EDITOR=notepad.exe"
+    rem set "EDITOR=vim.exe"
+    rem set "EDITOR=code.exe"
+    rem set "EDITOR=notepad++.exe"
+    rem set "EDITOR=notepad.exe"
 )
 
-:: Buscar file.exe en varios lugares posibles
+rem Buscar file.exe en varios lugares posibles
 set "git_file_exe="
 
-:: 1. Intentar usar la variable YAZI_FILE_ONE si está definida
+rem 1. Intentar usar la variable YAZI_FILE_ONE si está definida
 if defined YAZI_FILE_ONE (
     if exist "%YAZI_FILE_ONE%" (
         set "git_file_exe=%YAZI_FILE_ONE%"
@@ -43,7 +54,7 @@ if defined YAZI_FILE_ONE (
     )
 )
 
-:: 2. Buscar file.exe en el PATH usando where
+rem 2. Buscar file.exe en el PATH usando where
 if "!git_file_exe!"=="" (
     where file.exe >nul 2>&1
     if %errorlevel%==0 (
@@ -53,7 +64,7 @@ if "!git_file_exe!"=="" (
     )
 )
 
-:: 3. Buscar en ubicaciones comunes de Git for Windows
+rem 3. Buscar en ubicaciones comunes de Git for Windows
 if "!git_file_exe!"=="" (
     set "common_paths=C:\Program Files\Git\usr\bin\file.exe;C:\Program Files (x86)\Git\usr\bin\file.exe"
     for %%P in (%common_paths%) do (
@@ -64,7 +75,7 @@ if "!git_file_exe!"=="" (
 )
 
 
-:: Si no se encontró file.exe
+rem Si no se encontró file.exe
 if "!git_file_exe!"=="" (
     echo [%color_red%ERROR%color_reset%] No se encontró file.exe.
     echo Este comando es requerido para determinar el tipo de archivo.
@@ -76,25 +87,25 @@ if "!git_file_exe!"=="" (
     exit /b 1
 )
 
-::echo "git_file_exe: !git_file_exe!"
+rem echo "git_file_exe: !git_file_exe!"
 goto :MAIN
 
 
-:: #####################################################################
-:: Funciones de utilidad
-:: #####################################################################
+rem #####################################################################
+rem Funciones de utilidad
+rem #####################################################################
 
-:: ---------------------------------------------------------------------
-:: Mostrar mensaje con color
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Mostrar mensaje con color
+rem ---------------------------------------------------------------------
 :COLOR_ECHO
 echo %~1
 exit /b 0
 
 
-:: ---------------------------------------------------------------------
-:: Mostrar uso del script
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Mostrar uso del script
+rem ---------------------------------------------------------------------
 :USAGE
 echo.
 echo USAGE: go_files_new_termtab.cmd [OPTIONS] file1 file2 ... filen
@@ -131,18 +142,18 @@ echo.
 exit /b 0
 
 
-:: ---------------------------------------------------------------------
-:: Verificar si WezTerm está disponible
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Verificar si WezTerm está disponible
+rem ---------------------------------------------------------------------
 :CHECK_WEZTERM
-:: Verificar si estamos en WezTerm usando TERM_PROGRAM
+rem Verificar si estamos en WezTerm usando TERM_PROGRAM
 if not "%TERM_PROGRAM%"=="WezTerm" (
     echo [%color_red%ERROR%color_reset%] Este script solo funciona dentro de WezTerm.
     echo Variable TERM_PROGRAM actual: "%TERM_PROGRAM%"
     exit /b 1
 )
 
-:: Verificar que wezterm CLI esté disponible
+rem Verificar que wezterm CLI esté disponible
 where wezterm >nul 2>&1
 if errorlevel 1 (
     echo [%color_red%ERROR%color_reset%] WezTerm CLI no está instalado o no está en el PATH.
@@ -151,10 +162,10 @@ if errorlevel 1 (
 exit /b 0
 
 
-:: ---------------------------------------------------------------------
-:: Determinar si un archivo es de texto
-:: Retorna: 0=texto, 1=binario
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Determinar si un archivo es de texto
+rem Retorna: 0=texto, 1=binario
+rem ---------------------------------------------------------------------
 :IS_TEXT_FILE
 set "FILE_PATH=%~1"
 set "_IS_TEXT=1"
@@ -162,7 +173,7 @@ set "_IS_TEXT=1"
 if "!git_file_exe!"=="" (
     goto :CHECK_EXTENSION
 ) else (
-    ::echo "git_file_exe: !git_file_exe!"
+    rem echo "git_file_exe: !git_file_exe!"
     for /f "delims=" %%F in ('""!git_file_exe!" -ib "!FILE_PATH!"" 2^>^&1') do (
        set "FILE_INFO=%%F"
     )
@@ -173,11 +184,11 @@ if "!git_file_exe!"=="" (
     echo !FILE_INFO! | find /i "text/" >nul && set "_IS_TEXT=0"
     echo !FILE_INFO! | find /i "application/json" >nul && set "_IS_TEXT=0"
     echo !FILE_INFO! | find /i "inode/x-empty" >nul && set "_IS_TEXT=0"
-    ::echo "_IS_TEXT: !_IS_TEXT!"
+    rem echo "_IS_TEXT: !_IS_TEXT!"
     if "!_IS_TEXT!"=="0" exit /b 0
 )
 
-:: Determiniar si es un archivo o texto segun la extension del archivo
+rem Determiniar si es un archivo o texto segun la extension del archivo
 :CHECK_EXTENSION
 set "EXT=%~x1"
 set "EXT=!EXT:.=!"
@@ -188,7 +199,7 @@ if not "!EXT!"=="" (
     )
 )
 
-:: Método 3: Intentar leer primeras líneas
+rem Método 3: Intentar leer primeras líneas
 if "!_IS_TEXT!"=="1" (
     type "!FILE_PATH!" >nul 2>&1
     if not errorlevel 1 set "_IS_TEXT=0"
@@ -196,27 +207,27 @@ if "!_IS_TEXT!"=="1" (
 exit /b !_IS_TEXT!
 
 
-:: ---------------------------------------------------------------------
-:: Obtener directorio de trabajo actual de WezTerm
-:: Retorna el directorio en variable WORKDIR
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Obtener directorio de trabajo actual de WezTerm
+rem Retorna el directorio en variable WORKDIR
+rem ---------------------------------------------------------------------
 :GET_WEZTERM_WORKDIR
 set "WORKDIR="
 
-:: Obtener el directorio de trabajo del panel actual de Wezterm
+rem Obtener el directorio de trabajo del panel actual de Wezterm
 set "l_data="
 for /f "delims=" %%a in ('wezterm cli list --format json ^| jq -r --arg pid "!WEZTERM_PANE!" ".[] | select(.pane_id == ($pid | tonumber)) | .cwd"') do (
     set "l_data=%%a"
 )
 
-:: Verificar si l_data está vacío
+rem Verificar si l_data está vacío
 if "!l_data!"=="" (
-    ::set "WORKDIR=%CD%"
+    rem set "WORKDIR=%CD%"
     exit /b 2
 )
 echo [%color_gray%INFO%color_reset%] Current WorkingDir : !l_data!
 
-:: Extraer la parte del directorio de la URL (similar a sed)
+rem Extraer la parte del directorio de la URL (similar a sed)
 set "l_str="
 set "l_working_dir="
 if "!l_data:~0,7!"=="file://" (
@@ -232,9 +243,9 @@ if "!l_data:~0,7!"=="file://" (
 
 )
 
-:: Verificar si l_data está vacío
+rem Verificar si l_data está vacío
 if "!l_working_dir!"=="" (
-    ::set "WORKDIR=%CD%"
+    rem set "WORKDIR=%CD%"
     exit /b 2
 )
 
@@ -243,11 +254,11 @@ echo [%color_gray%INFO%color_reset%] Current WorkingDir : !l_working_dir!
 exit /b 0
 
 
-:: ---------------------------------------------------------------------
-:: Crear nuevo panel en WezTerm
-:: Parámetros: %1=directorio de trabajo (opcional)
-:: Retorna: PANE_ID contiene el ID del panel creado
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Crear nuevo panel en WezTerm
+rem Parámetros: %1=directorio de trabajo (opcional)
+rem Retorna: PANE_ID contiene el ID del panel creado
+rem ---------------------------------------------------------------------
 :CREATE_WEZTERM_PANE
 set "PANEDIR=%~1"
 set "PANE_ID="
@@ -258,37 +269,37 @@ if "!PANEDIR!"=="" (
     for /f "tokens=*" %%P in ('wezterm.exe cli spawn --cwd "!PANEDIR!" 2^>nul') do set "PANE_ID=%%P"
 )
 
-:: Limpiar posibles retornos de carro
-::if not "!PANE_ID!"=="" (
-::    set "PANE_ID=!PANE_ID:~0,-1!"
-::)
+rem Limpiar posibles retornos de carro
+rem if not "!PANE_ID!"=="" (
+rem     set "PANE_ID=!PANE_ID:~0,-1!"
+rem )
 exit /b 0
 
-:: ---------------------------------------------------------------------
-:: Enviar comando a panel de WezTerm
-:: Parámetros: %1=ID del panel, Variable global 'COMMAND_TO_EXEC'
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Enviar comando a panel de WezTerm
+rem Parámetros: %1=ID del panel, Variable global 'COMMAND_TO_EXEC'
+rem ---------------------------------------------------------------------
 :SEND_TO_PANE
 set "TARGET_PANE=%~1"
 if "!TARGET_PANE!"=="" exit /b 1
 
 echo "COMMAND: !COMMAND_TO_EXEC!"
-:: El echo envian un fin de linea la cual se interpreta como enter y ejecuta el comando.
-echo(%COMMAND_TO_EXEC% | wezterm.exe cli send-text --pane-id !TARGET_PANE! --no-paste
+rem El echo envian un fin de linea la cual se interpreta como enter y ejecuta el comando.
+echo(!COMMAND_TO_EXEC! | wezterm.exe cli send-text --pane-id !TARGET_PANE! --no-paste
 
 exit /b 0
 
 
 
 
-:: #####################################################################
-:: Codigo Principal del scrtpt
-:: #####################################################################
+rem #####################################################################
+rem Codigo Principal del scrtpt
+rem #####################################################################
 :MAIN
 
-:: ---------------------------------------------------------------------
-:: Procesamiento de argumentos
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Procesamiento de argumentos
+rem ---------------------------------------------------------------------
 set "OPTION_P="
 set "OPTION_W="
 set "OPTION_L="
@@ -296,25 +307,26 @@ set "FILES_INDEX=1"
 set "FIRST_FILE="
 set "IS_TEXT_FILE=1"
 set "WORKING_DIR="
-set "WORKING_DIR_SRC=3"  :: 0=-w, 1=-p 1, 2=-p 2, 3=ninguno
+rem Valores poosibles: 0=-w, 1=-p 1, 2=-p 2, 3=ninguno
+set "WORKING_DIR_SRC=3"
 
-:: Procesar opciones
+rem Procesar opciones
 :PARSE_ARGS_LOOP
 
-:: Copiamos los parámetros a variables normales para evitar % con bloques y SHIFT
+rem Copiamos los parámetros a variables normales para evitar % con bloques y SHIFT
 set "ARG=%~1"
 set "VAL=%~2"
 
-::echo "arg: !ARG!, val: !VAL!"
+rem echo "arg: !ARG!, val: !VAL!"
 if not defined ARG goto :ARGS_DONE
 
-:: -h / ayuda
+rem -h / ayuda
 if /I "!ARG!"=="-h" (
     call :USAGE
     exit /b 0
 )
 
-:: -p <1|2>
+rem -p <1|2>
 if /I "!ARG!"=="-p" (
     if "!VAL!"=="" (
         echo [ERROR] Opcion -p requiere un valor ^(1 o 2^)
@@ -330,7 +342,7 @@ if /I "!ARG!"=="-p" (
     goto :PARSE_ARGS_LOOP
 )
 
-:: -w <path>
+rem -w <path>
 if /I "!ARG!"=="-w" (
     if "!VAL!"=="" (
         echo [ERROR] Opcion -w requiere un directorio
@@ -346,7 +358,7 @@ if /I "!ARG!"=="-w" (
     goto :PARSE_ARGS_LOOP
 )
 
-:: -l <nums>
+rem -l <nums>
 if /I "!ARG!"=="-l" (
     if "!VAL!"=="" (
         echo [ERROR] Opcion -l requiere una lista de numeros
@@ -357,13 +369,13 @@ if /I "!ARG!"=="-l" (
     goto :PARSE_ARGS_LOOP
 )
 
-:: -- fin de opciones
+rem -- fin de opciones
 if /I "!ARG!"=="--" (
     shift
     goto :ARGS_DONE
 )
 
-:: Opcion desconocida: primer caracter '-'
+rem Opcion desconocida: primer caracter '-'
 if "!ARG:~0,1!"=="-" (
     echo [ERROR] Opcion desconocida: !ARG!
     call :USAGE
@@ -371,7 +383,7 @@ if "!ARG:~0,1!"=="-" (
 )
 
 
-:: Es un archivo
+rem Es un archivo
 set "ARG_!FILES_INDEX!=!ARG!"
 set /a FILES_INDEX+=1
 shift
@@ -382,14 +394,14 @@ goto :PARSE_ARGS_LOOP
 set /a FILES_COUNT=FILES_INDEX-1
 
 
-::echo "OPTION_P: !OPTION_P!"
-::echo "OPTION_W: !OPTION_W!"
-::echo "OPTION_L: !OPTION_L!"
-::echo "FILES_INDEX: !FILES_INDEX!"
-::echo "FIRST_FILE: !FIRST_FILE!"
+rem echo "OPTION_P: !OPTION_P!"
+rem echo "OPTION_W: !OPTION_W!"
+rem echo "OPTION_L: !OPTION_L!"
+rem echo "FILES_INDEX: !FILES_INDEX!"
+rem echo "FIRST_FILE: !FIRST_FILE!"
 
 
-:: Verificar que tenemos archivos
+rem Verificar que tenemos archivos
 if !FILES_COUNT! lss 1 (
     echo [ERROR] Debe especificar al menos un archivo
     call :USAGE
@@ -397,31 +409,31 @@ if !FILES_COUNT! lss 1 (
 )
 
 
-:: ---------------------------------------------------------------------
-:: Validaciones principales
-:: ---------------------------------------------------------------------
-::echo "IS_TEXT_FILE: !IS_TEXT_FILE!"
-::echo "WORKING_DIR: !WORKING_DIR!"
-::echo "WORKING_DIR_SRC: !WORKING_DIR_SRC!"
+rem ---------------------------------------------------------------------
+rem Validaciones principales
+rem ---------------------------------------------------------------------
+rem echo "IS_TEXT_FILE: !IS_TEXT_FILE!"
+rem echo "WORKING_DIR: !WORKING_DIR!"
+rem echo "WORKING_DIR_SRC: !WORKING_DIR_SRC!"
 
-:: 1. Verificar WezTerm
+rem 1. Verificar WezTerm
 call :CHECK_WEZTERM
 if errorlevel 1 exit /b 1
 
-:: 2. Validar primer archivo
+rem 2. Validar primer archivo
 set "FIRST_FILE=!ARG_1!"
 if not exist "!FIRST_FILE!" (
     echo [ERROR] Primer archivo no existe: !FIRST_FILE!
     exit /b 1
 )
 
-:: Verificar si es directorio
+rem Verificar si es directorio
 if exist "!FIRST_FILE!\" (
     echo [ERROR] Primer argumento no puede ser un directorio: !FIRST_FILE!
     exit /b 1
 )
 
-:: 3. Determinar tipo de archivo
+rem 3. Determinar tipo de archivo
 call :IS_TEXT_FILE "!FIRST_FILE!"
 set "IS_TEXT_FILE=!errorlevel!"
 if !IS_TEXT_FILE! equ 0 (
@@ -437,30 +449,30 @@ if !IS_TEXT_FILE! equ 0 (
     )
 )
 
-:: 4. Determinar directorio de trabajo
+rem 4. Determinar directorio de trabajo
 if !WORKING_DIR_SRC! equ 0 (
-    :: Usar directorio especificado con -w
+    rem Usar directorio especificado con -w
     set "WORKING_DIR=!OPTION_W!"
     echo [DEBUG] Usando directorio especificado: !WORKING_DIR!
 ) else if !WORKING_DIR_SRC! equ 1 (
-    :: Obtener directorio actual de WezTerm
+    rem Obtener directorio actual de WezTerm
     call :GET_WEZTERM_WORKDIR
     echo [DEBUG] Usando directorio actual WezTerm: !WORKDIR!
     set "WORKING_DIR=!WORKDIR!"
 ) else if !WORKING_DIR_SRC! equ 2 (
-    :: Usar directorio del primer archivo
+    rem Usar directorio del primer archivo
     for %%F in ("!FIRST_FILE!") do set "WORKING_DIR=%%~dpF"
     set "WORKING_DIR=!WORKING_DIR:~0,-1!"
     echo [DEBUG] Usando directorio del archivo: !WORKING_DIR!
 ) else (
-    :: No especificar directorio
+    rem No especificar directorio
     set "WORKING_DIR="
     echo [DEBUG] Sin directorio especifico
 )
 
-::echo "WORKING_DIR: !WORKING_DIR!"
+echo "WORKING_DIR: !WORKING_DIR!"
 
-:: 5. Procesar números de línea (si aplica)
+rem 5. Procesar números de línea (si aplica)
 set "LINE_NUMBERS="
 if not "!OPTION_L!"=="" if !IS_TEXT_FILE! equ 0 (
     echo !EDITOR! | find /i "vim" >nul
@@ -472,16 +484,17 @@ if not "!OPTION_L!"=="" if !IS_TEXT_FILE! equ 0 (
 )
 
 
-:: ---------------------------------------------------------------------
-:: Filtrar y procesar archivos
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Filtrar y procesar archivos
+rem ---------------------------------------------------------------------
 set "FILE_LIST="
 set "VALID_FILE_COUNT=0"
 
-:: Procesar primer archivo (Se normaliza a ruta completa y luego recorta contra WORKING_DIR)
+rem Procesar primer archivo (Se normaliza a ruta completa y luego recorta contra WORKING_DIR)
 for %%F in ("!FIRST_FILE!") do set "FIRST_FULL_PATH=%%~fF"
 if not "!WORKING_DIR!"=="" (
-  set "FIRST_FULL_PATH=!FIRST_FULL_PATH:%WORKING_DIR%\=!"
+  rem set "FIRST_FULL_PATH=!FIRST_FULL_PATH:%WORKING_DIR%\=!"
+  call set "FIRST_FULL_PATH=%%FIRST_FULL_PATH:%WORKING_DIR%\=%%"
 )
 
 echo "FIRST_FULL_PATH: !FIRST_FULL_PATH!"
@@ -490,7 +503,7 @@ set "FILE_LIST="!FIRST_FULL_PATH!""
 set /a VALID_FILE_COUNT=1
 echo "FIRST_FULL_PATH: !FIRST_FULL_PATH!, FILE_LIST: !FILE_LIST!, FILES_COUNT: !FILES_COUNT!"
 
-:: Procesar archivos restantes (desde 2 hasta FILES_COUNT)
+rem Procesar archivos restantes (desde 2 hasta FILES_COUNT)
 if !FILES_COUNT! gtr 1 (
   for /L %%I in (2,1,!FILES_COUNT!) do (
     call set "CURRENT_FILE=%%ARG_%%I%%"
@@ -501,7 +514,8 @@ if !FILES_COUNT! gtr 1 (
       if !CURRENT_IS_TEXT! equ !IS_TEXT_FILE! (
         for %%F in ("!CURRENT_FILE!") do set "CURRENT_FULL=%%~fF"
         if not "!WORKING_DIR!"=="" (
-          set "CURRENT_FULL=!CURRENT_FULL:%WORKING_DIR%\=!"
+          rem set "CURRENT_FULL=!CURRENT_FULL:%WORKING_DIR%\=!"
+          call set "CURRENT_FULL=%%CURRENT_FULL:%WORKING_DIR%\=%%"
         )
         set "FILE_LIST=!FILE_LIST! "!CURRENT_FULL!""
         set /a VALID_FILE_COUNT+=1
@@ -524,20 +538,21 @@ if !VALID_FILE_COUNT! equ 0 (
 echo [DEBUG] Archivos a procesar: !VALID_FILE_COUNT!
 
 
-:: ---------------------------------------------------------------------
-:: Construir comando para ejecutar
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Construir comando para ejecutar
+rem ---------------------------------------------------------------------
 set "COMMAND_TO_EXEC="
 
 if !IS_TEXT_FILE! equ 0 (
-  :: Editor es vim/nvim (ya lo comprobaste antes)
-  echo !VIEWER_CMD! | find /i "vim" >nul
 
+  rem Si el editor es vim/nvim
+  rem echo "Archivo de texto"
+  echo !VIEWER_CMD! | find /i "vim" >nul
   if not errorlevel 1 (
 
     if "!LINE_NUMBERS!"=="" (
 
-      ::Caso sin -l: nvim "f1" "f2" ...
+      rem Caso sin -l: nvim "f1" "f2" ...
       set "COMMAND_TO_EXEC=!VIEWER_CMD!"
       for %%F in (!FILE_LIST!) do (
         set "CURRENT_FILE=%%~F"
@@ -546,63 +561,71 @@ if !IS_TEXT_FILE! equ 0 (
 
     ) else (
 
-      :: Caso con -l: +L1 "f1" y luego -c "e f2" [-c L2] ...
+      rem Caso con -l: +L1 "f1" y luego -c "e f2" [-c L2] ...
       set "LINE_INDEX=0"
       set "COMMAND_TO_EXEC="
 
       for %%F in (!FILE_LIST!) do (
+
         set "CURRENT_FILE=%%~F"
         set "CURRENT_LINE="
+        rem echo "CURRENT_LINE ini: !CURRENT_LINE!"
 
-        :: Tomar el primer número disponible y acortar la cola
+        rem Tomar el primer número disponible y acortar la cola
         if defined LINE_REST (
           for /f "tokens=1,* delims=," %%A in ("!LINE_REST!") do (
             set "CURRENT_LINE=%%~A"
             set "LINE_REST=%%~B"
-			::echo "LINE_REST: !LINE_REST!"
+			rem echo "LINE_REST: !LINE_REST!"
           )
         )
-        ::echo "CURRENT_LINE final: !CURRENT_LINE!"
+        rem echo "CURRENT_LINE fin: !CURRENT_LINE!"
+
         if "!COMMAND_TO_EXEC!"=="" (
-          :: Primer archivo
+          rem Primer archivo
           if defined CURRENT_LINE (
             set "COMMAND_TO_EXEC=!VIEWER_CMD! +!CURRENT_LINE! ^"!CURRENT_FILE!^""
           ) else (
             set "COMMAND_TO_EXEC=!VIEWER_CMD! ^"!CURRENT_FILE!^""
           )
         ) else (
-          :: Archivos siguientes
+          rem Archivos siguientes
           if defined CURRENT_LINE (
             set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! -c ^"e !CURRENT_FILE!^" -c ^"!CURRENT_LINE!^""
           ) else (
             set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! -c ^"e !CURRENT_FILE!^""
           )
         )
+
       )
 
     )
+
   ) else (
-    :: Otros editores
+    rem Otros editores
     set "COMMAND_TO_EXEC=!VIEWER_CMD! !FILE_LIST!"
   )
+
 ) else (
-  :: Archivos binarios
+
+  rem Archivos binarios
   if "!VIEWER_CMD!"=="file.exe" (
     set "COMMAND_TO_EXEC=file.exe !FILE_LIST!"
   ) else (
     set "COMMAND_TO_EXEC=for %%f in (!FILE_LIST!) do @echo %%~nxf"
   )
+
 )
 
 echo [DEBUG] Comando: !COMMAND_TO_EXEC!
 
 
 
-:: ---------------------------------------------------------------------
-:: Crear panel y ejecutar comando
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Crear panel y ejecutar comando
+rem ---------------------------------------------------------------------
 
-:: 1. Crear nuevo panel
+rem 1. Crear nuevo panel
 call :CREATE_WEZTERM_PANE "!WORKING_DIR!"
 if "!PANE_ID!"=="" (
     echo [ERROR] No se pudo crear panel en WezTerm
@@ -611,7 +634,7 @@ if "!PANE_ID!"=="" (
 
 echo [INFO] Panel creado con ID: !PANE_ID!
 
-:: 2. Ejecutar comando en el panel
+rem 2. Ejecutar comando en el panel
 call :SEND_TO_PANE "!PANE_ID!"
 if errorlevel 1 (
     echo [ERROR] No se pudo ejecutar comando en el panel
@@ -622,9 +645,9 @@ echo [INFO] Comando ejecutado exitosamente
 exit /b 0
 
 
-:: ---------------------------------------------------------------------
-:: Manejo de errores inesperados
-:: ---------------------------------------------------------------------
+rem ---------------------------------------------------------------------
+rem Manejo de errores inesperados
+rem ---------------------------------------------------------------------
 
 :ERROR
 echo [ERROR] Error inesperado en la ejecucion

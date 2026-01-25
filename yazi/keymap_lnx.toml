@@ -26,33 +26,27 @@ prepend_keymap = [
     { on = [ "g", "c" ], run = "noop" },
     { on = [ "g", "d" ], run = "noop" },
 
-
     # --------------------------------------------------------------------------
     # Nuevos keymappings
     # --------------------------------------------------------------------------
 
     # Comando de busqueda integrada en la vista de Yazi
-	{ on = [ "f", "n" ], run = "search --via=fd", desc = "Search files by name via fd" },
-	{ on = [ "f", "c" ], run = "search --via=rg", desc = "Search files by content via ripgrep" },
+	{ on = [ "f", "n" ], run = "search --via=fd", desc = "Search files by name    (fd)" },
+	{ on = [ "f", "c" ], run = "search --via=rg", desc = "Search files by content (rg)" },
 
     # Comando de busqueda externa usando 'fzf'
-    { on = [ "f", "d" ], run = "plugin fzf-fd -- d", desc = "Search folders with fzf & fd" },
-    { on = [ "f", "f" ], run = "plugin fzf-fd -- f", desc = "Search files with fzf & fd" },
+    { on = [ "f", "d" ], run = "plugin fzf-fd -- d --tmux --height=80 --width=99", desc = "Search folders (fzf & fd)" },
+    { on = [ "f", "f" ], run = "plugin fzf-fd -- f --tmux --height=80 --width=99", desc = "Search files   (fzf & fd)" },
+	#{ on = [ "f", "w" ], run = "plugin fzf-rg", desc = "Search files by content (fzf & rg)" },
 
     # Comando para ir a directorios especiales
 	{ on = [ "g", "1" ], run = "cd ~/Downloads", desc = "Go ~/Downloads" },
 	{ on = [ "g", "2" ], run = "cd ~/.config", desc = "Go ~/.config" },
-	{ on = [ "g", "3" ], run = "cd %APPDATA%", desc = "Go %APPDATA%" },
-	{ on = [ "g", "4" ], run = "cd %TEMP%", desc = "Go %TEMP%" },
-	{ on = [ "g", "5" ], run = "cd %APPDATA%", desc = "Go %APPDATA%" },
-	{ on = [ "g", "6" ], run = "cd C:", desc = "Go C:" },
-	{ on = [ "g", "7" ], run = "cd D:", desc = "Go D:" },
 
     { on = [ "g", "r" ], run = "plugin go-fs -- rootdir", desc = "Go inicial WorkDir" },
     { on = [ "g", "g" ], run = "plugin go-fs -- rootgit", desc = "Go root git folder" },
-    { on = [ "g", "o" ], run = "plugin go-fs -- openintab --type=rootdir", desc = "View files in initial WorkDir" },
-    { on = [ "g", "q" ], run = "plugin go-fs -- openintab --type=rootgit", desc = "View files in root git folder" },
-
+    { on = [ "g", "o" ], run = "plugin go-fs -- openintab --type=rootdir", desc = "Edit in new TermTab (Main WorkDir)" },
+    { on = [ "g", "q" ], run = "plugin go-fs -- openintab --type=rootgit", desc = "Edit in new TermTab (Root Git)" },
 
     # --------------------------------------------------------------------------
     # Redefiniendo keymappings predeterminados

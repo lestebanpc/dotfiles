@@ -414,6 +414,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer, $p_index_document
     $l_repo_branch= ""
     $l_repo_scope= ""
     $l_aux= ""
+    $l_enable_ai_plugin= 1
 
     $la_doc_paths= New-Object System.Collections.Generic.List[System.String]
     $la_doc_repos= New-Object System.Collections.Generic.List[System.String]
@@ -461,8 +462,45 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer, $p_index_document
         }
 		#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
 
-        #Si es un plugin de AI
+        #4.3 Si es un plugin de AI
+        if ($l_repo_type -ge 11 -and $l_repo_type -le 16) {
 
+            # Si se excluye todos los plugin de AI
+            if ($g_setup_vim_ai_plugins -eq 0) {
+                Write-Host "Paquete ${l_tag} (${l_repo_type}) `"${l_repo_git}`":  Ha sigo excluido para su descarga (g_setup_vim_ai_plugins es ${g_setup_vim_ai_plugins})"
+                continue
+            }
+
+            $l_enable_ai_plugin=1
+
+            # Validar si se excluye los plugins de AI completion
+            if ( ($g_setup_vim_ai_plugins -band 1) -eq 1 ) {
+                if ( $l_repo_type -eq 11 -or $l_repo_type -eq 14 ) {
+                    $l_enable_ai_plugin = 0
+                }
+            }
+
+            # Validar si se excluye los plugins de AI Chatbot y AI Agent internos
+            if ( ($g_setup_vim_ai_plugins -band 2) -eq 2 ) {
+                if ( $l_repo_type -eq 12 -or $l_repo_type -eq 15 ) {
+                    $l_enable_ai_plugin = 0
+                }
+            }
+
+            # Validar si se excluye los plugins de integracion con AI Chatbot y AI Agent externos (OpenCode CLI, Gemini CLI, etc)
+            if ( ($g_setup_vim_ai_plugins -band 3) -eq 3 ) {
+                if ( $l_repo_type -eq 13 -or $l_repo_type -eq 16 ) {
+                    $l_enable_ai_plugin = 0
+                }
+            }
+
+            # Si se excluye
+            if [ $l_enable_ai_plugin -eq 1 ]; then
+                Write-Host "Paquete ${l_tag} (${l_repo_type}) `"${l_repo_git}`":  Ha sigo excluido para su descarga (g_setup_vim_ai_plugins es ${g_setup_vim_ai_plugins})"
+                continue
+            fi
+
+        }
 
         #4.3 Validar si el paquete ya esta instalando
 		if(Test-Path "${l_base_path}\${l_repo_name}\.git") {
@@ -964,7 +1002,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
     #Configuracion por Yazi
     $l_target_link="${env:APPDATA}\yazi\config\yazi.toml"
-    $l_source_path="${env:USERPROFILE}\.files\etc\yazi"
+    $l_source_path="${env:USERPROFILE}\.files\yazi"
     $l_source_filename='yazi_win.toml'
 
 	if(! (Test-Path "${env:APPDATA}\yazi\config")) {
@@ -974,7 +1012,7 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
 
     $l_target_link="${env:APPDATA}\yazi\config\theme.toml"
-    $l_source_path="${env:USERPROFILE}\.files\etc\yazi"
+    $l_source_path="${env:USERPROFILE}\.files\yazi"
     $l_source_filename='theme_default.toml'
     m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $l_overwrite_ln_flag
 
@@ -984,17 +1022,17 @@ function m_setup_profile($l_overwrite_ln_flag) {
     }
 
     $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\flavor.toml"
-    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\catppuccin-mocha.yazi\flavor.toml"
+    $l_source_path="${env:USERPROFILE}\.files\yazi\catppuccin-mocha.yazi\flavor.toml"
     Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
 
     $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\tmtheme.xml"
-    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\catppuccin-mocha.yazi\tmtheme.xml"
+    $l_source_path="${env:USERPROFILE}\.files\yazi\catppuccin-mocha.yazi\tmtheme.xml"
     Copy-Item -Path "$l_source_path" -Destination "$l_target_link"
 
 
     if(! (Test-Path "${env:APPDATA}\yazi\config\keymap.toml" )) {
 		Write-Host "            > Creando el archivo '${env:APPDATA}\yazi\config\keymap.toml' ..."
-        Copy-Item -Path "${env:USERPROFILE}\.files\etc\yazi\keymap_win.toml" -Destination "${env:APPDATA}\yazi\config\keymap.toml"
+        Copy-Item -Path "${env:USERPROFILE}\.files\yazi\keymap_win.toml" -Destination "${env:APPDATA}\yazi\config\keymap.toml"
 
         Write-Host "            > Edite '${env:APPDATA}\yazi\config\keymap.toml' si desea modificar las opciones Wezterm."
 	}
@@ -1005,27 +1043,25 @@ function m_setup_profile($l_overwrite_ln_flag) {
 
     if(! (Test-Path "${env:APPDATA}\yazi\config\init.lua" )) {
 		Write-Host "            > Creando el archivo '${env:APPDATA}\yazi\config\init.lua' ..."
-        Copy-Item -Path "${env:USERPROFILE}\.files\etc\yazi\init_win.lua" -Destination "${env:APPDATA}\yazi\config\init.lua"
+        Copy-Item -Path "${env:USERPROFILE}\.files\yazi\init_win.lua" -Destination "${env:APPDATA}\yazi\config\init.lua"
 
         Write-Host "            > Edite '${env:APPDATA}\yazi\config\init.lua' si desea modificar las opciones Wezterm."
 	}
     else {
         Write-Host "            > Edite '${env:APPDATA}\yazi\config\init.lua' si desea modificar las opciones Wezterm."
     }
+
 	if(! (Test-Path "${env:APPDATA}\yazi\config\plugins")) {
 		New-Item -ItemType Directory -Force -Path "${env:APPDATA}\yazi\config\plugins"
     }
 
-
     $l_target_link="${env:APPDATA}\.config\yazi\plugins\fzf-fd.yazi"
-    $l_source_path="${env:USERPROFILE}\.files\etc\yazi\plugins\fzf-fd.yazi"
+    $l_source_path="${env:USERPROFILE}\.files\yazi\plugins\fzf-fd.yazi"
     m_create_folder_link "$l_source_path" "$l_target_link" "            > " $l_overwrite_ln_flag
 
 
-
-
-
 }
+
 
 
 function m_install_pws_module() {
@@ -1067,6 +1103,8 @@ function m_create_basic_folders($p_flag_developer) {
         "${env:LOCALAPPDATA}\lazygit"
         "${env:APPDATA}\yazi"
         "${env:APPDATA}\yazi\config"
+        "${env:APPDATA}\yazi\config\plugins"
+        "${env:APPDATA}\yazi\config\flavors"
     )
 
     $l_folder_path = $null
@@ -1126,6 +1164,18 @@ function m_create_all_links($p_overwrite_ln_flag) {
         [PSCustomObject]@{
             target_link     = "${env:USERPROFILE}\vimfiles\ftplugin"
             source_path     = "${env:USERPROFILE}\.files\vim\ftplugin\cocide"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:APPDATA}\.config\yazi\plugins"
+            source_path     = "${env:USERPROFILE}\.files\yazi\plugins\fzf-fd.yazi"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:APPDATA}\.config\yazi\plugins"
+            source_path     = "${env:USERPROFILE}\.files\yazi\plugins\fzf-rg.yazi"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:APPDATA}\.config\yazi\plugins"
+            source_path     = "${env:USERPROFILE}\.files\yazi\plugins\go-fs.yazi"
         },
         [PSCustomObject]@{
             target_link     = "${env:USERPROFILE}\.config\wezterm\utils"
@@ -1199,18 +1249,13 @@ function m_create_all_links($p_overwrite_ln_flag) {
         },
         [PSCustomObject]@{
             target_link     = "${env:APPDATA}\yazi\config\yazi.toml"
-            source_path     = "${env:USERPROFILE}\.files\etc\yazi"
-            source_filename = "yazi_default.toml"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:APPDATA}\yazi\config\keymap.toml"
-            source_path     = "${env:USERPROFILE}\.files\etc\yazi"
-            source_filename = "keymap_default.toml"
+            source_path     = "${env:USERPROFILE}\.files\yazi"
+            source_filename = "yazi_desktop.toml"
         },
         [PSCustomObject]@{
             target_link     = "${env:APPDATA}\yazi\config\theme.toml"
-            source_path     = "${env:USERPROFILE}\.files\etc\yazi"
-            source_filename = "theme_default.toml"
+            source_path     = "${env:USERPROFILE}\.files\yazi"
+            source_filename = "theme.toml"
         }
     )
 
@@ -1531,6 +1576,16 @@ $g_temp_path=''
 # Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
 #Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
 $g_setup_only_last_version=1
+
+# Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
+# Sus valores puede ser:
+# > 0 No instala ningun plugin de AI.
+# > Puede ser la suma de los siguientes valores:
+#   > 1 Instala plugin de AI Completion.
+#   > 2 Instala plugin de AI Chatbot y AI Agent interno (por ejemplo Avante)
+#   > 4 Instala plugin de integracion de AI Chatbot y AI Agent externo (por ejemplo integracion con OpenCode-CLI o Gemini-CLI)
+# Si no se define el valor por defecto es '0' (no se instala ningun plugin de AI).
+$g_setup_vim_ai_plugins=0
 
 # Cargar la información:
 if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1") {

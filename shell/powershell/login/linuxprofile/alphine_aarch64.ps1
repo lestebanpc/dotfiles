@@ -182,7 +182,7 @@ if($null -eq $env:FZF_DEFAULT_OPTS) {
         --color header:italic"
 
     $env:FZF_CTRL_T_OPTS="--prompt 'Select> '
-        --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 4 {} | head -n 300; else bat --color=always --style=numbers,header-filename,grid --line-range :500 {}; fi'"
+        --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 4 {} | head -n 300; else bat --color=always --style=numbers,header-filename --line-range :500 {}; fi'"
 
     $env:FZF_ALT_C_OPTS="--prompt 'Go to Folder> '
         --preview 'eza --tree --color=always --icons always -L 4 {} | head -n 300'"
@@ -213,17 +213,19 @@ Invoke-Expression (& { (zoxide init powershell | Out-String) })
 # Otras variable de entorno
 #------------------------------------------------------------------------------------------------
 
+# Editor por defecto usando por programas como Yazi, Oh-my-tmux, etc.
 if($null -eq $env:EDITOR) {
-
-    # MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC
-    $env:MPD_HOST="/run/mpd/socket"
-
-    # Oh-my-tmux> Opciones
     $env:EDITOR="vim"
+}
 
-    # Editor por defecto para "systemctl edit"
+# Editor por defecto para "systemctl edit"
+if($null -eq $env:SYSTEMD_EDITOR) {
     $env:SYSTEMD_EDITOR="vim"
+}
 
+# MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC
+if($null -eq $env:MPD_HOST) {
+    $env:MPD_HOST="/run/mpd/socket"
 }
 
 

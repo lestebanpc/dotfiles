@@ -154,7 +154,7 @@ export FZF_CTRL_R_OPTS="--prompt 'History> '
 export FZF_CTRL_T_OPTS="--prompt 'Select> '
     --bind 'ctrl-y:execute-silent(echo -n {} | wl-copy)+abort'
     --header '(Ctrl+y) Copy file/folder path'
-    --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 4 {} | head -n 300; else bat --color=always --style=numbers,header-filename,grid --line-range :500 {}; fi'"
+    --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 4 {} | head -n 300; else bat --color=always --style=numbers,header-filename --line-range :500 {}; fi'"
 
 export FZF_ALT_C_OPTS="--prompt 'Go to Folder> '
     --bind 'ctrl-y:execute-silent(echo -n {} | wl-copy)+abort'
@@ -183,10 +183,10 @@ eval "$(zoxide init bash)"
 #-----------------------------------------------------------------------------------
 
 # Editor por defecto
-export EDITOR=vim
+export EDITOR="${EDITOR:-vim}"
 
 # Editor por defecto para "systemctl edit"
-export SYSTEMD_EDITOR=vim
+export SYSTEMD_EDITOR="${SYSTEMD_EDITOR:-vim}"
 
 #Usado por archivo de configuración de programas como TMUX, VIM, NeoVIM y CoC.
 export MY_REPO_PATH="$HOME/$g_repo_name"

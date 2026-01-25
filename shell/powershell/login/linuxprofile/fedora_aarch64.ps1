@@ -215,17 +215,19 @@ Invoke-Expression (& { (zoxide init powershell | Out-String) })
 # Otras variable de entorno
 #------------------------------------------------------------------------------------------------
 
+# Editor por defecto usando por programas como Yazi, Oh-my-tmux, etc.
 if($null -eq $env:EDITOR) {
-
-    # MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC
-    $env:MPD_HOST="/run/mpd/socket"
-
-    # Oh-my-tmux> Opciones
     $env:EDITOR="vim"
+}
 
-    # Editor por defecto para "systemctl edit"
+# Editor por defecto para "systemctl edit"
+if($null -eq $env:SYSTEMD_EDITOR) {
     $env:SYSTEMD_EDITOR="vim"
+}
 
+# MPD> Para cliente CLI de MPD se conecten al servidor MPD usando Socket IPC
+if($null -eq $env:MPD_HOST) {
+    $env:MPD_HOST="/run/mpd/socket"
 }
 
 
