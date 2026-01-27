@@ -1,7 +1,7 @@
 --
--- Plugin que muestra directorios y folderes buscados por fd en fzf y luego permite ir
--- a la ubicacion de estos dentro del explorar yazi.
--- Basado en: https://github.com/sxyazi/yazi/blob/main/yazi-plugin/preset/plugins/fzf.lua
+-- Plugin que permite:
+-- > Busca archivos y folderes usanbdo fd en fzf y luego permite ir a la ubicacion de estos
+--   dentro del explorar yazi.
 --
 
 ---------------------------------------------------------------------------------
@@ -65,6 +65,8 @@ end
 --
 --end
 
+
+
 -- Si un comando devuelve un conjunto de objetos  de lineas de rutas, genera un arreglo de rutas absolutas
 local function m_get_urls_of(p_cmd_output, p_cwd)
 
@@ -85,6 +87,7 @@ local function m_get_urls_of(p_cmd_output, p_cwd)
 	return t
 
 end
+
 
 -- Construye el argumentos del comando de 'fd'
 -- Parametros:
@@ -394,11 +397,18 @@ local function m_run_fzf_fd(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_
     --ya.dbg("l_fzf_output.stdout: " .. tostring(l_fzf_output.stdout))
     --ya.dbg("l_fzf_output.stderr: " .. tostring(l_fzf_output.stderr))
 
-    -- Código 130 es Ctrl+C (cancelado por usuario)
+    -- Si se tiene un cogido de error
     if not l_fzf_output.status.success then
+
+        -- Si retorna 130, el usuario salio de fzf (cancelado por el usuario)
+        if l_fzf_output.status.code == 130 then
+            return "", nil
+        end
+
         l_message = "fzf exited with code: " .. tostring(l_fzf_output.status.code)
         ya.err(l_message)
         return nil, l_message
+
     end
 
     return l_fzf_output.stdout, nil
@@ -426,7 +436,7 @@ local function m_read_args(p_job)
 	if nargs > 0 then
 
         data = args[1]
-        ya.dbg("args[1]: " .. data)
+        --ya.dbg("args[1]: " .. data)
 
         if data ~= nil and data ~= "" then
             if data == "d" or data == "f" then
@@ -443,7 +453,7 @@ local function m_read_args(p_job)
     local use_tmux = false
 	if args.tmux then
 
-        ya.dbg("args.tmux: " .. tostring(args.tmux))
+        --ya.dbg("args.tmux: " .. tostring(args.tmux))
         use_tmux = true
 
     end
@@ -452,7 +462,7 @@ local function m_read_args(p_job)
     local height = nil
 	if args.height then
 
-        ya.dbg("args.height: " .. tostring(args.height))
+        --ya.dbg("args.height: " .. tostring(args.height))
         data = tostring(args.height)
 
         if data ~= nil and data ~= "" then
@@ -475,7 +485,7 @@ local function m_read_args(p_job)
     local width = nil
 	if args.width then
 
-        ya.dbg("args.width: " .. tostring(args.width))
+        --ya.dbg("args.width: " .. tostring(args.width))
         data = tostring(args.width)
 
         if data ~= nil and data ~= "" then
@@ -763,10 +773,16 @@ function mod.entry(p_self, p_job)
         l_permit:drop()
     end
 
-	if not l_output then
+    -- Si hubo un error al ejecutar fzf
+	if l_output == nil then
         --ya.err(tostring(l_message))
 		return ya.notify({ title = "fzf-fd", content = tostring(l_message), timeout = 5, level = "error" })
 	end
+
+    -- Si no se seleciono nada en fzf
+	if l_output == "" then
+        return
+    end
 
     -- Convertir los STDOUT de ruta de los archivos seleccionados por fzf en objetos Url con rutas absolutas
 	local l_urls = m_get_urls_of(l_output, l_cwd)

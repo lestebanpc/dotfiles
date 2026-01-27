@@ -13,6 +13,11 @@
 # Variables globales de configuracion (generales)
 #-----------------------------------------------------------------------------------
 
+# Variables de entorno comunes y usuados por varios programas
+#export EDITOR="vim"
+#export VISUAL="vim"
+#export SYSTEMD_EDITOR="vim"
+
 # Nombre del repositorio git o la ruta relativa del repositorio git respecto al HOME.
 # - Si no se establece (valor vacio), se usara el valor '.files'.
 # - Usado para generar la variable de entorno 'MY_REPO_PATH' usado en la configuración de programas como TMUX.

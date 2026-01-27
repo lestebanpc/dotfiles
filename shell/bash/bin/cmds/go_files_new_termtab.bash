@@ -104,7 +104,7 @@ m_validate_first_file() {
                "$g_color_gray1" "$p_file_path" "$g_color_reset"
         return 5
     fi
-    echo "local l_path: ${l_path}"
+    #echo "local l_path: ${l_path}"
 
     #3. Validar si el archivo existe
     if [ ! -f "$l_path" ]; then
@@ -335,8 +335,10 @@ m_get_cmd_to_exec() {
     local l_cmd=""
 
     local l_is_vim=1
-    if [ $p_is_text_file -eq 0 ] && { [ "$p_viewer_cmd" = "vim" ] || [ "$p_viewer_cmd" = "nvim" ]; }; then
-        l_is_vim=0
+    if [ $p_is_text_file -eq 0 ]; then
+        if [[ "$p_viewer_cmd" =~ (vim|nvim)$ ]]; then
+            l_is_vim=0
+        fi
     fi
 
     local l_n=${#ra_files[@]}
@@ -372,7 +374,7 @@ m_get_cmd_to_exec() {
 
             # Si no es el primer archivo
             if [ $l_nbr_line -gt 0 ]; then
-                printf -v l_cmd '%s -c "e %s | %s"' "$l_cmd" "$l_file_path" "$l_nbr_line"
+                printf -v l_cmd '%s -c "e %s" -c "%s"' "$l_cmd" "$l_file_path" "$l_nbr_line"
             else
                 printf -v l_cmd '%s "%s"' "$l_cmd" "$l_file_path"
             fi
@@ -663,7 +665,8 @@ main() {
     local -a la_nbrlines=()
 
     if [ $l_is_text_file -eq 0 ]; then
-        if [ "$l_viewer_cmd" = "vim" ] || [ "$l_viewer_cmd" = "nvim" ]; then
+
+        if [[ "$l_viewer_cmd" =~ (vim|nvim)$ ]]; then
 
             m_get_nbrline_files "$p_data_lines" "la_nbrlines"
             l_status=$?
@@ -674,8 +677,8 @@ main() {
             #printf "la_nbrlines: "
             #printf '"%s"\n' "${la_nbrlines[@]}"
 
-
         fi
+
     fi
 
 

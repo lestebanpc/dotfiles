@@ -1,7 +1,8 @@
 --
--- Plugin que muestra directorios y folderes buscados por rg en fzf y luego permite ir
--- a la ubicacion de estos dentro del explorar yazi.
--- Basado en: https://github.com/sxyazi/yazi/blob/main/yazi-plugin/preset/plugins/fzf.lua
+-- Plugin que permite:
+--  > Permite ir a directorios especificos.
+--  > Muestra directorios y folderes buscados por fd y fzf y luego permite ir a la ubicacion de estos
+--    dentro del explorar yazi.
 --
 
 ---------------------------------------------------------------------------------
