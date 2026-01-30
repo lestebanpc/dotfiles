@@ -248,3 +248,19 @@ if vim.g.cmdline_completion then
     })
 
 end
+
+
+------------------------------------------------------------------------------------------------
+-- UI> render-markdown
+------------------------------------------------------------------------------------------------
+
+local t_file_types= { 'markdown' }
+
+if vim.g.use_ai_agent ~= vim.NIL and vim.g.use_ai_agent == 0 then
+    -- Si se usa un agente de AI integrado al IDE (Avente)
+    table.insert(t_file_types, 'Avante')
+end
+
+require('render-markdown').setup({
+    file_types = t_file_types,
+})

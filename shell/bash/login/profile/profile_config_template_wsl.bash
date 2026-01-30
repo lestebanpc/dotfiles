@@ -13,11 +13,6 @@
 # Variables globales de configuracion (generales)
 #-----------------------------------------------------------------------------------
 
-# Variables de entorno comunes y usuados por varios programas
-#export EDITOR="vim"
-#export VISUAL="vim"
-#export SYSTEMD_EDITOR="vim"
-
 # Nombre del repositorio git o la ruta relativa del repositorio git respecto al HOME.
 # - Si no se establece (valor vacio), se usara el valor '.files'.
 # - Usado para generar la variable de entorno 'MY_REPO_PATH' usado en la configuración de programas como TMUX.
@@ -39,6 +34,13 @@
 # Ruta del tema de 'Oh-My-Posh' usada para establecer el prompt a usar.
 # Si no se establecer (es vacio), se usara '~/${g_repo_name}/etc/oh-my-posh/default_settings.json'
 #g_prompt_theme=~/.files/etc/oh-my-posh/lepc-montys-blue1.json
+
+# Tipo de origin de la sesion del profile. Si no se especifica, se calcula automaticamente.
+# Sus valores puede ser:
+#  > 0 Si se usa sesion remota SSH (ya se de un 'desktop server' o 'headless server').
+#  > 1 Si se realiza una sesion local usando 'Console Linux'.
+#  > 2 Si se usa sesion dentro del escritorio del servidor (ya sea local desktop o remote desktop).
+#g_session_src=''
 
 # Si su valor es 0, se cargara (importara como libreria), dentro de profile del usuario el archivo, las funciones
 # genericas "~/${g_repo_name}/shell/bash/lib/mod_myfunc.bash" de utilidades cuando esta en la red local dei
@@ -73,8 +75,13 @@ g_load_wslfunc=0
 
 
 #-----------------------------------------------------------------------------------
-# My enviroment variables
+# Variables de entorno basicos
 #-----------------------------------------------------------------------------------
+
+# Variables de entorno comunes y usuados por varios programas
+#export EDITOR="vim"
+#export VISUAL="vim"
+#export SYSTEMD_EDITOR="vim"
 
 # La variable de entorno 'TMUX_NESTED' es usado por 'tmux' e indica si el tmux actual se ejecuta dentro de otro tmux padre.
 # Es usado para definir para cambiar el prefijo de 'CTRL + b' (root tmux)  a 'Ctrl + a' (nested tmux).

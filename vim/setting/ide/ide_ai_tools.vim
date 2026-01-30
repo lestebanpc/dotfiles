@@ -59,11 +59,9 @@ if g:is_neovim && !g:use_coc && g:use_ai_agent isnot v:null
     " Si se usa el agente de AI integrado ('yetone/avente.nvim')
     if g:use_ai_agent == 0
 
-        packadd avante.nvim
         packadd dressing.nvim
         packadd nui.nvim
-        packadd render-markdown.nvim
-        packadd img-clip.nvim
+        packadd avante.nvim
 
     " Si usa integra con un agente de AI 'OpenCode'
     elseif g:use_ai_agent == 1

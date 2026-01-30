@@ -242,6 +242,10 @@ runtime setting/setting_core.vim
 " StatusLine, TabLine, TMUX, FZF, NERDTree.
 runtime setting/basic/basic_core.vim
 
-" Autocpmpletado de la linea de comandos, Highlighting Sintax (resaltado de sintaxis) nativo y el ofrecido
-" por Treesitter.
+" Autocompletado de la linea de comandos, Highlighting Sintax (resaltado de sintaxis) nativo y el ofrecido
+" por Treesitter, Markdown render.
 runtime setting/basic/basic_extended.vim
+
+" Herramientas para visualiazion de buffer en un browser, uso imagenes externas, etc.
+" Solo si la pesudo-terminal donde se ejecuta es local y usa un 'desktop' (tiene GUI).
+runtime setting/basic/basic_desktop.vim

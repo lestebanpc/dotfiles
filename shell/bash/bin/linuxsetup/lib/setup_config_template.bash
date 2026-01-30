@@ -209,31 +209,51 @@
 #g_setup_only_last_version=0
 
 
+
+
 ##############################################################################################
 # Usado por los script "04_install_profile.bash"
 ##############################################################################################
 
-# Definir el tipo de profile del shell del usuario que se va a configurar (usando '04_install_profile.bash').
+# Definir el tipo de entorno donde los shell del usuario se va a configurar.
+# Actualmente es usado por '04_install_profile.bash' para determinar que capacidades se instala/configura.
+#  > No confundir con la variable de entorno definida en el archivo del profile del usuario y su script '~/.profile.config'
+#    que permite establecer las capacidades del profile del usuario en tiempo de ejecucion y depende si realmente se este
+#    se ejecuta localmente o remotamente (aun cuando es un 'headless server').
 # Su valores son:
-#  > 0 (Profile de un shell local)
-#    > El shell se ejecuta directamente en un emulador de terminal GUI (usa GUI Desktop) por lo cual tiene acceso a
-#      recursos como: clipboard, dispostivos de hardware como tarjeta de video, tarjeta de sonido, etc.
-#      Puede ser:
-#      > Un equipo local con GUI Desktop.
-#      > Un contenedor (usualmente 'distrobox' o 'toolbox') que tiene acceso al GUI Desktop
-#        > Estos contenedores usualmente crean un 'binding mount' que montan el '/dev' del host dentro del contenedor
-#          teniendo acceso a dispositivos '/dev/kfd' y '/dev/dri'.
-#      > Una distribucion WSL2 es una VM linux especial que esta diseñada para acceso local desde su Windows, que se
-#        integra con el emulador de terminal GUI de Windows como local y con acceso al clipboard de Windows.
-#  > 1 (Profile de un shell remoto donde se es owner)
-#    > Por ejemplo, una VM accedido por comando ssh, cuyo owner soy yo.
-#  > 2 (Profile de un shell remote donde no se es ownwer)
-#    > Por ejemplo, una VM accedido por comando ssh, cuyo owner NO soy yo.
-# Si no se define el valor por defecto es '0' (Local).
+#  > Si no se define (o su valor es una cadena vacia), se intenta culcular automaticamente este valor.
+#    Si el valor no es calculado correctamente, se recomienda establecer este valor manualemte en este archivo.
+#  > 0 Los script se ejecutan en un 'Headless Server'
+#      > El script se ejecutan en un servidor donde no se tiene un gestor de ventanas (usualmente no se cuenta con GPU).
+#      > No cuenta con aplicaciones GUI (no cuenta con emulador de terminal GUI).
+#      > Se puede conectar localmente usando el emulador de terminal CLI 'Linux Console'.
+#      > Se puede conectar remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
+#  > 1 Los script se ejecutan en un 'Desktop Server'
+#      > El script se ejecutan en un servidor donde se tiene un gestor de ventanas (siempre cuenta con GPU).
+#      > Cuenta con aplicaciones GUI, incluyendo un emulador de terminal GUI que permite ejecutar scrript localmente.
+#      > Se puede ejecutar script localmente:
+#        > Conectandose al escritorio del servidor (ingresando localmente al escritorio del servidor o conectandose
+#          remotamente usando un programa de gestion de escritorio remoto como VNC) y usando el emulador de terminal GUI
+#          existente en el servidor.
+#        > Muy poco usual, conectandose localmente pero usando el emulador de terminal CLI 'Linux Console'.
+#      > Se puede ejecutar script remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
+#  > 2 Los script se ejecutan en un contenedor dentro de un 'Desktop Server' y este tiene acceso a la GPU de este servidor.
+#      > Los script de ejecutan dentro de proceso local de un 'Desktop Server' pero en un entorno aislado (contenedor)
+#        pero que tiene acceso a GPU y progrmadas GUI del servidor.
+#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
+#      > No estan diseñados para que se conecten remotamente por ssh.
+#      > Por defecto los contenedores no tiene acceso a la GPU del servidor donde se ejecuta.
+#      > Ejemplo: Contenedores Distrobox o Toolbox en Linux.
+#  > 3 Los script de ejecutan en un VM local dentro de un 'Desktop Server' tiene acceso a la GPU del servidor.
+#      > Los script de ejecutan dentro de proceso remoto de un 'Desktop Server' (dentro de una VM) pero que tiene acceso a GPU
+#        y progrmadas GUI del servidor.
+#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
+#      > No estan diseñados para que se conecten remotamente por ssh.
+#      > Ejemplo: La VM ligera WSL2 que esta integrada con Windows en modo escritorio.
+#  > Por el script pofile del usuario y '~/.custom_config', para determina que capacidades se incluyen en el profile.
 # Actualmente, es usado para definir valores por defecto en algunos archivos de configuracion (modificables) del profile:
 #  > El tema usado por 'oh-my-posh': '~/.files/etc/oh-my-posh/default_settings.json'
-#  > El archivo de parametros usados por el profile del usuario: '~/.profile.config'
-#g_profile_type=0
+#g_enviroment_type=0
 
 
 # Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).

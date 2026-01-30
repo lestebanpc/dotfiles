@@ -37,6 +37,9 @@ if g:is_neovim
     "Package Core> Fuente CMP: Command Line
     packadd cmp-cmdline
 
+    "Package Core> Render Markdown
+    packadd render-markdown.nvim
+
     "Configuraciones de los plugins exclusivas
     lua require('basic.basic_extended')
 

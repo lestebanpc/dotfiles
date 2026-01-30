@@ -54,6 +54,19 @@ g_lnx_bin_path='/usr/local/bin'
 #g_prompt_theme=~/${g_repo_name}/etc/oh-my-posh/lepc-montys-blue1.json
 #g_prompt_theme=~/${g_repo_name}/etc/oh-my-posh/default_settings.json
 
+# Tipo de origin de la sesion del profile. Si no se especifica, se calcula automaticamente.
+# Sus valores puede ser:
+#  > 0 Si se usa sesion remota SSH (ya se de un 'desktop server' o 'headless server').
+#  > 1 Si se realiza una sesion local usando 'Console Linux'.
+#  > 2 Si se usa sesion dentro del escritorio del servidor (ya sea local desktop o remote desktop).
+if [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_CLIENT" ]; then
+    export MY_SESSION_SRC=0
+elif [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+    export MY_SESSION_SRC=2
+else
+    export MY_SESSION_SRC=1
+fi
+
 # Ruta del folder donde se ubican comandos personalizado del usuario.
 if [ "$g_lnx_bin_path" != "/usr/local/bin" ] && [ "$g_lnx_bin_path" != "$HOME/.local/bin" ]; then
     PATH="${g_lnx_bin_path}:${PATH}"

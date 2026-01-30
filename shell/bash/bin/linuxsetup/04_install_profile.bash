@@ -169,23 +169,24 @@ declare -r g_version_none='0.0.0'
 
 
 # Grupo de plugins de VIM/NeoVIM :
-# (00) Grupo Basic > Themes             - Temas
-# (01) Grupo Basic > Core               - StatusLine, TabLine, FZF, TMUX utilities, Files Tree
-# (02) Grupo Basic > Extended           - Highlighting Sintax, Autocompletion para linea de comandos.
-# (03) Grupo IDE > Utils                - Libreries, Typing utilities.
-# (04) Grupo IDE > Development > Common - Plugin comunes de soporte independiente de tipo LSP usado (nativa o CoC).
-# (05) Grupo IDE > Development > Native - LSP, Snippets, Compeletion  ... usando la implementacion nativa.
-# (06) Grupo IDE > Development > CoC    - LSP, Snippets, Completion ... usando CoC.
-# (07) Grupo IDE > Testing              - Unit Testing y Debugging.
-# (08) Grupo IDE > Basic Tools > Common - Plugin de tools independiente del tipo de LSP usado (nativa o CoC).
-# (09) Grupo IDE > Basic Tools > Native - Tools: Git, Rest Client, etc.
-# (10) Grupo IDE > Basic Tools > CoC    - Tools: Git, Rest Client, etc.
-# (11) Grupo IDE > AI Tools    > Native - Tools: AI Completion
-# (12) Grupo IDE > AI Tools    > Native - Tools: AI Chatbot y AI Agent interno del IDE
-# (13) Grupo IDE > AI Tools    > Native - Tools: AI Chatbot y AI Agent externo al IDE (Solo se integra CLI externo como OpenCode-CLI, Gemini-CLI, etc).
-# (14) Grupo IDE > AI Tools    > CoC    - Tools: AI Completion
-# (15) Grupo IDE > AI Tools    > CoC    - Tools: AI Chatbot y AI Agent interno del IDE
-# (16) Grupo IDE > AI Tools    > CoC    - Tools: AI Chatbot y AI Agent externo al IDE (Solo se integra CLI externo como OpenCode-CLI, Gemini-CLI, etc).
+# (00) Grupo Basic > Themes              - Temas
+# (01) Grupo Basic > Core                - StatusLine, TabLine, FZF, TMUX utilities, Files Tree
+# (02) Grupo Basic > Extended (Headless) - Highlighting Sintax, Autocompletion para linea de comandos, Markdown render.
+# (03) Grupo Basic > Extended (Desktop)  - Integracion con imagenes externas, Previsualidor en browser.
+# (04) Grupo IDE > Utils                 - Libreries, Typing utilities.
+# (05) Grupo IDE > Development > Common  - Plugin comunes de soporte independiente de tipo LSP usado (nativa o CoC).
+# (06) Grupo IDE > Development > Native  - LSP, Snippets, Compeletion  ... usando la implementacion nativa.
+# (07) Grupo IDE > Development > CoC     - LSP, Snippets, Completion ... usando CoC.
+# (08) Grupo IDE > Testing               - Unit Testing y Debugging.
+# (09) Grupo IDE > Basic Tools > Common  - Plugin de tools independiente del tipo de LSP usado (nativa o CoC).
+# (10) Grupo IDE > Basic Tools > Native  - Tools: Git, Rest Client, etc.
+# (11) Grupo IDE > Basic Tools > CoC     - Tools: Git, Rest Client, etc.
+# (12) Grupo IDE > AI Tools    > Native  - Tools: AI Completion
+# (13) Grupo IDE > AI Tools    > Native  - Tools: AI Chatbot y AI Agent interno del IDE
+# (14) Grupo IDE > AI Tools    > Native  - Tools: AI Chatbot y AI Agent externo al IDE (Solo se integra CLI externo como OpenCode-CLI, Gemini-CLI, etc).
+# (15) Grupo IDE > AI Tools    > CoC     - Tools: AI Completion
+# (16) Grupo IDE > AI Tools    > CoC     - Tools: AI Chatbot y AI Agent interno del IDE
+# (17) Grupo IDE > AI Tools    > CoC     - Tools: AI Chatbot y AI Agent externo al IDE (Solo se integra CLI externo como OpenCode-CLI, Gemini-CLI, etc).
 declare -A gA_repos_type=(
         ['morhetz/gruvbox']=0
         ['joshdick/onedark.vim']=0
@@ -199,17 +200,17 @@ declare -A gA_repos_type=(
         ['junegunn/fzf.vim']=1
         ['ibhagwan/fzf-lua']=1
         ['girishji/vimsuggest']=2
-        ['tpope/vim-surround']=3
-        ['mg979/vim-visual-multi']=3
-        ['mattn/emmet-vim']=3
-        ['dense-analysis/ale']=4
-        ['liuchengxu/vista.vim']=4
-        ['neoclide/coc.nvim']=6
-        ['antoinemadec/coc-fzf']=6
-        ['SirVer/ultisnips']=6
-        ['OmniSharp/omnisharp-vim']=6
-        ['honza/vim-snippets']=6
-        ['puremourning/vimspector']=7
+        ['tpope/vim-surround']=4
+        ['mg979/vim-visual-multi']=4
+        ['mattn/emmet-vim']=4
+        ['dense-analysis/ale']=5
+        ['liuchengxu/vista.vim']=5
+        ['neoclide/coc.nvim']=7
+        ['antoinemadec/coc-fzf']=7
+        ['SirVer/ultisnips']=7
+        ['OmniSharp/omnisharp-vim']=7
+        ['honza/vim-snippets']=7
+        ['puremourning/vimspector']=8
         ['folke/tokyonight.nvim']=0
         ['catppuccin/nvim']=0
         ['kyazdani42/nvim-web-devicons']=1
@@ -222,36 +223,38 @@ declare -A gA_repos_type=(
         ['hrsh7th/cmp-buffer']=2
         ['hrsh7th/cmp-path']=2
         ['hrsh7th/cmp-cmdline']=2
-        ['nvim-lua/plenary.nvim']=3
-        ['nvim-treesitter/nvim-treesitter-context']=4
-        ['stevearc/aerial.nvim']=4
-        ['neovim/nvim-lspconfig']=5
-        ['ray-x/lsp_signature.nvim']=5
-        ['hrsh7th/cmp-nvim-lsp']=5
-        ['L3MON4D3/LuaSnip']=5
-        ['rafamadriz/friendly-snippets']=5
-        ['saadparwaiz1/cmp_luasnip']=5
-        ['b0o/SchemaStore.nvim']=5
-        ['kosayoda/nvim-lightbulb']=5
-        ['doxnit/cmp-luasnip-choice']=5
-        ['mfussenegger/nvim-jdtls']=5
-        ['mfussenegger/nvim-dap']=7
-        ['rcarriga/nvim-dap-ui']=7
-        ['theHamsta/nvim-dap-virtual-text']=7
-        ['nvim-neotest/nvim-nio']=7
-        ['vim-test/vim-test']=7
-        ['mistweaverco/kulala.nvim']=8
-        ['lewis6991/gitsigns.nvim']=8
-        ['sindrets/diffview.nvim']=8
-        ['zbirenbaum/copilot.lua']=11
-        ['zbirenbaum/copilot-cmp']=11
-        ['milanglacier/minuet-ai.nvim']=11
-        ['stevearc/dressing.nvim']=12
-        ['MunifTanjim/nui.nvim']=12
-        ['MeanderingProgrammer/render-markdown.nvim']=12
-        ['HakonHarnes/img-clip.nvim']=12
-        ['yetone/avante.nvim']=12
-        ['NickvanDyke/opencode.nvim']=13
+        ['MeanderingProgrammer/render-markdown.nvim']=2
+        ['HakonHarnes/img-clip.nvim']=3
+        ['iamcco/markdown-preview.nvim']=3
+        ['obsidian-nvim/obsidian.nvim']=3
+        ['nvim-lua/plenary.nvim']=4
+        ['nvim-treesitter/nvim-treesitter-context']=5
+        ['stevearc/aerial.nvim']=5
+        ['neovim/nvim-lspconfig']=6
+        ['ray-x/lsp_signature.nvim']=6
+        ['hrsh7th/cmp-nvim-lsp']=6
+        ['L3MON4D3/LuaSnip']=6
+        ['rafamadriz/friendly-snippets']=6
+        ['saadparwaiz1/cmp_luasnip']=6
+        ['b0o/SchemaStore.nvim']=6
+        ['kosayoda/nvim-lightbulb']=6
+        ['doxnit/cmp-luasnip-choice']=6
+        ['mfussenegger/nvim-jdtls']=6
+        ['mfussenegger/nvim-dap']=8
+        ['rcarriga/nvim-dap-ui']=8
+        ['theHamsta/nvim-dap-virtual-text']=8
+        ['nvim-neotest/nvim-nio']=8
+        ['vim-test/vim-test']=8
+        ['mistweaverco/kulala.nvim']=9
+        ['lewis6991/gitsigns.nvim']=9
+        ['sindrets/diffview.nvim']=9
+        ['zbirenbaum/copilot.lua']=12
+        ['zbirenbaum/copilot-cmp']=12
+        ['milanglacier/minuet-ai.nvim']=12
+        ['stevearc/dressing.nvim']=13
+        ['MunifTanjim/nui.nvim']=13
+        ['yetone/avante.nvim']=13
+        ['NickvanDyke/opencode.nvim']=14
     )
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
@@ -284,6 +287,10 @@ declare -A gA_repos_scope=(
         ['lewis6991/gitsigns.nvim']=2
         ['neovim/nvim-lspconfig']=2
         ['hrsh7th/nvim-cmp']=2
+        ['MeanderingProgrammer/render-markdown.nvim']=2
+        ['HakonHarnes/img-clip.nvim']=2
+        ['iamcco/markdown-preview.nvim']=2
+        ['obsidian-nvim/obsidian.nvim']=2
         ['hrsh7th/cmp-nvim-lsp']=2
         ['hrsh7th/cmp-buffer']=2
         ['hrsh7th/cmp-path']=2
@@ -305,8 +312,6 @@ declare -A gA_repos_scope=(
         ['milanglacier/minuet-ai.nvim']=2
         ['stevearc/dressing.nvim']=2
         ['MunifTanjim/nui.nvim']=2
-        ['MeanderingProgrammer/render-markdown.nvim']=2
-        ['HakonHarnes/img-clip.nvim']=2
         ['yetone/avante.nvim']=2
         ['NickvanDyke/opencode.nvim']=2
     )
@@ -334,6 +339,7 @@ declare -a ga_group_plugin_folder=(
     "basic_themes"
     "basic_core"
     "basic_extended"
+    "basic_desktop"
     "ide_utils"
     "ide_dev_common"
     "ide_dev_native"
@@ -363,6 +369,33 @@ declare -a ga_group_plugin_folder=(
 # funciones, cuyo nombre inicia con '_g_'.
 #
 
+
+
+function _get_default_enviroment_type() {
+
+    # Validar si Distrobox
+    if [ -n "$CONTAINER_ID" ]; then
+    #if [ -n "$DISTROBOX_ENTER_PATH" ]; then
+        return 2
+    fi
+
+    # Validar si es WSL
+    if [ "$g_os_type" -eq 1 ]; then
+        return 3
+    fi
+
+    # Validar si el servidor tiene un gestor de ventana accesible.
+    # Si se ejecuta por SSH y no se tiene habilitado el x11 port-forwarding, por mas que sea un servidor con escritorio,
+    # devolvera 0, indicando que no es un 'headless server', en ese caso, establezca el valor correcto  usando el archivo
+    # de configuracion.
+    if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+        return 1
+    fi
+
+    # Si es un servidor headless
+    return 0
+
+}
 
 
 
@@ -557,13 +590,25 @@ function _download_vim_packages() {
 
         l_path_base="${l_base_plugins}/${l_foldername}/opt"
 
+        #Si es un repositorio que requiere capacidades de un Desktop
+        if [ $l_repo_type -eq 3 ]; then
+
+            # Solo si es un 'Desktop Server', 'Distrobox' y 'WSL2'
+            if [ $g_enviroment_type -ne 0 ]; then
+                printf '%s > Paquete (%s) "%b%s%b": Ha sigo excluido para su descarga (%bg_enviroment_type%b es %s)\n' "$l_tag" "${l_repo_type}" \
+                       "$g_color_gray1" "${l_repo_git}" "$g_color_reset"  "$g_color_gray1" "$g_color_reset" "$g_enviroment_type"
+                continue
+            fi
+
+        fi
+
         #Si es un repositorio para developer no debe instalarse en el perfil basico
         if [ $p_flag_developer -ne 0 ] && [ $l_repo_type -ge 3 ]; then
             continue
         fi
 
-        #Si es un plugin de AI
-        if [ $l_repo_type -ge 11 ] && [ $l_repo_type -le 16 ]; then
+        #Si es un repositorio asociado a un plugin de AI
+        if [ $l_repo_type -ge 12 ] && [ $l_repo_type -le 17 ]; then
 
             # Si se excluye todos los plugin de AI
             if [ $g_setup_vim_ai_plugins -eq 0 ]; then
@@ -576,21 +621,21 @@ function _download_vim_packages() {
 
             # Validar si se excluye los plugins de AI completion
             if [ $(( g_setup_vim_ai_plugins & 1 )) -eq 1 ]; then
-                if [ $l_repo_type -eq 11 ] || [ $l_repo_type -eq 14 ]; then
+                if [ $l_repo_type -eq 12 ] || [ $l_repo_type -eq 15 ]; then
                     l_enable_ai_plugin=0
                 fi
             fi
 
             # Validar si se excluye los plugins de AI Chatbot y AI Agent internos
             if [ $(( g_setup_vim_ai_plugins & 2 )) -eq 2 ]; then
-                if [ $l_repo_type -eq 12 ] || [ $l_repo_type -eq 15 ]; then
+                if [ $l_repo_type -eq 13 ] || [ $l_repo_type -eq 16 ]; then
                     l_enable_ai_plugin=0
                 fi
             fi
 
             # Validar si se excluye los plugins de integracion con AI Chatbot y AI Agent externos (OpenCode CLI, Gemini CLI, etc)
             if [ $(( g_setup_vim_ai_plugins & 3 )) -eq 3 ]; then
-                if [ $l_repo_type -eq 13 ] || [ $l_repo_type -eq 16 ]; then
+                if [ $l_repo_type -eq 14 ] || [ $l_repo_type -eq 17 ]; then
                     l_enable_ai_plugin=0
                 fi
             fi
@@ -1086,7 +1131,7 @@ function _setup_user_profile() {
     l_status=$?
 
     # Para WSL copiar el archivo de configuracion del profile
-    if [ $g_os_type -eq 1 ]; then
+    if [ $g_enviroment_type -eq 3 ]; then
 
         copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_wsl.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
         l_status=$?
@@ -1094,29 +1139,26 @@ function _setup_user_profile() {
               "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
 
     # Si es contenedor distrobox
-    elif [ ! -z "$CONTAINER_ID" ]; then
+    elif [ $g_enviroment_type -eq 2 ]; then
 
         copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_distrobox.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
               "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
 
+    # Si es un 'Desktop server'
+    elif [ $g_enviroment_type -eq 1 ]; then
+
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_desktop.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
+              "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
+
+    # Si es un 'Headless server'
     else
 
-        # Si el distro tiene acceos a los dispositivos como GPU, ...
-        if [ $g_profile_type -eq 0 ]; then
-
-            printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/profile_config_template_basic_local.bash %b~/.custom_profile.bash%b"\n' \
-                  "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
-
-        else
-
-            copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_basic_remote.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
-            l_status=$?
-            printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-                  "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
-
-        fi
+        printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/profile_config_template_headless.bash %b~/.custom_profile.bash%b"\n' \
+              "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
 
     fi
 
@@ -1187,15 +1229,10 @@ function _setup_user_profile() {
 
     #Archivo de configuración para el emulador de terminal wezterm
 
-    # Es WSL (es un local espacial: diseñado para ser accedido solo desde el windows local)
-    if [ $g_os_type -eq 1 ]; then
+    # Es WSL
+    if [ $g_enviroment_type -eq 3 ]; then
 
         create_folderpath_on_home ".config" "wezterm"
-
-        #l_target_path=".config/wezterm"
-        #l_target_link="utils"
-        #l_source_path="${g_repo_name}/wezterm/remote/utils"
-        #create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
 
         copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_wsl_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrite_file "        > "
         l_status=$?
@@ -1203,52 +1240,51 @@ function _setup_user_profile() {
                "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
 
     # Si es contenedor distrobox
-    elif [ ! -z "$CONTAINER_ID" ]; then
+    elif [ $g_enviroment_type -eq 2 ]; then
 
         printf 'Profile > No se realizara configuraciones para Wezterm.\n'
 
-    # Linux clasico (No es WSL)
+    # Si es un 'Desktop Server'
+    elif [ $g_enviroment_type -eq 1 ]; then
+
+        create_folderpath_on_home ".config" "wezterm"
+
+        l_target_path=".config/wezterm"
+        l_target_link="wezterm.lua"
+        l_source_path="${g_repo_name}/wezterm/local"
+        l_source_filename='wezterm.lua'
+
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        l_status=$?
+
+        l_target_path=".config/wezterm"
+        l_target_link="utils"
+        l_source_path="${g_repo_name}/wezterm/local/utils"
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
+
+        copy_file_on_home "${g_repo_path}/wezterm/local" "custom_config_template_lnx.lua" ".config/wezterm" "custom_config.lua" $l_flag_overwrite_file "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
+               "$g_color_yellow1" "~/.config/wezterm/custom_config.lua" "$g_color_reset"
+
+    # Si es un 'Headless Server'
     else
 
         create_folderpath_on_home ".config" "wezterm"
 
-        if [ $g_profile_type -eq 0 ]; then
+        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_lnx_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrite_file "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
+               "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
 
-            l_target_path=".config/wezterm"
-            l_target_link="wezterm.lua"
-            l_source_path="${g_repo_name}/wezterm/local"
-            l_source_filename='wezterm.lua'
 
-            create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
-            l_status=$?
-
-            l_target_path=".config/wezterm"
-            l_target_link="utils"
-            l_source_path="${g_repo_name}/wezterm/local/utils"
-            create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
-
-            copy_file_on_home "${g_repo_path}/wezterm/local" "custom_config_template_lnx.lua" ".config/wezterm" "custom_config.lua" $l_flag_overwrite_file "        > "
-            l_status=$?
-            printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
-                   "$g_color_yellow1" "~/.config/wezterm/custom_config.lua" "$g_color_reset"
-
-        else
-
-            #l_target_path=".config/wezterm"
-            #l_target_link="utils"
-            #l_source_path="${g_repo_name}/wezterm/remote/utils"
-            #create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
-
-            copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_lnx_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrite_file "        > "
-            l_status=$?
-            printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
-                   "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
-
-        fi
     fi
 
+
     #Archivo de configuración para el emulador de terminal foot
-    if [ -z "$CONTAINER_ID" ] && [ $g_os_type -ne 1 ]; then
+
+    # Si es un 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
 
         l_target_path=".config/foot"
         create_folderpath_on_home ".config" "foot"
@@ -1259,6 +1295,7 @@ function _setup_user_profile() {
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
         l_status=$?
 
+    # Cualquier otro caso
     else
         printf 'Profile > No se realizara configuraciones para Foot.\n'
     fi
@@ -1279,8 +1316,8 @@ function _setup_user_profile() {
     l_target_path=".config/yazi"
     create_folderpath_on_home ".config" "yazi"
 
-    # Si no es WSL o es un servidor desktop
-    if [ $g_os_type -ne 1 ] || [ $g_profile_type -eq 0 ]; then
+    # Si es un 'Desktop Server' y es Distrobox
+    if [ $g_enviroment_type -eq 1 ] || [ $g_enviroment_type -eq 2 ]; then
         l_target_link="yazi.toml"
         l_source_path="${g_repo_name}/yazi"
         l_source_filename='yazi_desktop.toml'
@@ -1335,7 +1372,9 @@ function _setup_user_profile() {
 
 
     #Archivo de configuración para cliente MDP 'rmpc'
-    if [ -z "$CONTAINER_ID" ] && [ $g_os_type -ne 1 ]; then
+
+    # Si es un 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
 
         l_target_path=".config/rmpc"
         create_folderpath_on_home ".config" "rmpc"
@@ -1404,7 +1443,8 @@ function _setup_user_profile() {
 
 
     #Crear el enlace simbolico de comandos basicos
-    if [ -z "$CONTAINER_ID" ] && [ $g_os_type -ne 1 ]; then
+    # Si es un 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
 
         l_target_path=".local/bin"
         l_target_link="sync_folder"
@@ -1420,7 +1460,8 @@ function _setup_user_profile() {
 
 
     #Crear el enlace simbolico de comandos basicos
-    if [ -z "$CONTAINER_ID" ] && [ $g_os_type -ne 1 ]; then
+    # Si es un 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
 
         l_target_path=".local/bin"
         l_target_link="mymusic"
@@ -1456,8 +1497,8 @@ function _setup_user_profile() {
 
     #Archivo de configuración de Oh-My-Posh
 
-    # Es WSL (es un local espacial: diseñado para ser accedido solo desde el windows local)
-    if [ $g_os_type -eq 1 ]; then
+    # Si es WSL
+    if [ $g_enviroment_type -eq 3 ]; then
 
         # Si el que instala es el usuario root
         if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
@@ -1468,7 +1509,7 @@ function _setup_user_profile() {
         fi
 
     # Si es contenedor distrobox
-    elif [ ! -z "$CONTAINER_ID" ]; then
+    elif [ $g_enviroment_type -eq 2 ]; then
 
         # Si el que instala es el usuario root
         if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
@@ -1478,32 +1519,30 @@ function _setup_user_profile() {
             l_source_filename='lepc-montys-blue1.json'
         fi
 
-    # Linux clasico (No es WSL)
+    # Si es un 'Desktop server'
+    elif [ $g_enviroment_type -eq 1 ]; then
+
+        # Si el que instala es el usuario root
+        if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
+            l_source_filename='lepc-montys-purple1.json'
+        # Si el que instala es el usuario no-root
+        else
+            l_source_filename='lepc-montys-cyan1.json'
+        fi
+
+    # Si es un 'Headless server'
     else
 
-        if [ $g_profile_type -eq 0 ]; then
-
-            # Si el que instala es el usuario root
-            if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
-                l_source_filename='lepc-montys-purple1.json'
-            # Si el que instala es el usuario no-root
-            else
-                l_source_filename='lepc-montys-cyan1.json'
-            fi
-
+        # Si el que instala es el usuario root
+        if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
+            l_source_filename='lepc-montys-yellow1.json'
+        # Si el que instala es el usuario no-root
         else
-
-            # Si el que instala es el usuario root
-            if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
-                l_source_filename='lepc-montys-yellow1.json'
-            # Si el que instala es el usuario no-root
-            else
-                l_source_filename='lepc-montys-green1.json'
-            fi
-
+            l_source_filename='lepc-montys-green1.json'
         fi
 
     fi
+
 
     copy_file_on_home "${g_repo_path}/etc/oh-my-posh" "$l_source_filename" "${g_repo_name}/etc/oh-my-posh" "default_settings.json" $l_flag_overwrite_file "        > "
     l_status=$?
@@ -3206,25 +3245,49 @@ g_targethome_path=''
 # - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 g_repo_name=''
 
-# Definir el tipo de profile del shell del usuario que se va a configurar (usando '04_install_profile.bash').
+# Definir el tipo de entorno donde los shell del usuario se va a configurar.
+# Actualmente es usado por '04_install_profile.bash' para determinar que capacidades se instala/configura.
+#  > No confundir con la variable de entorno definida en el archivo del profile del usuario y su script '~/.profile.config'
+#    que permite establecer las capacidades del profile del usuario en tiempo de ejecucion y depende si realmente se este
+#    se ejecuta localmente o remotamente (aun cuando es un 'headless server').
 # Su valores son:
-#  > 0 (Profile de un shell local)
-#    > El shell se ejecuta directamente en un emulador de terminal GUI (usa GUI Desktop) por lo cual tiene acceso a
-#      recursos como: clipboard, dispostivos de hardware como tarjeta de video, tarjeta de sonido, etc.
-#      Puede ser:
-#      > Un equipo local con GUI Desktop.
-#      > Un equipo remoto pero que se accede usando su GUI Desktop.
-#      > Una distribucion WSL2 es una VM linux especial que esta diseñada para acceso local desde su Windows, que se
-#        integra con el emulador de terminal GUI de Windows como local y con acceso al clipboard de Windows.
-#  > 1 (Profile de un shell remoto donde se es owner)
-#    > Por ejemplo, una VM accedido por comando ssh, cuyo owner soy yo.
-#  > 2 (Profile de un shell remote donde no se es ownwer)
-#    > Por ejemplo, una VM accedido por comando ssh, cuyo owner NO soy yo.
-# Si no se define el valor por defecto es '0' (Local).
+#  > Si no se define (o su valor es una cadena vacia), se intenta culcular automaticamente este valor.
+#    Si el valor no es calculado correctamente, se recomienda establecer este valor manualemte en este archivo.
+#  > 0 Los script se ejecutan en un 'Headless Server'
+#      > El script se ejecutan en un servidor donde no se tiene un gestor de ventanas (usualmente no se cuenta con GPU).
+#      > No cuenta con aplicaciones GUI (no cuenta con emulador de terminal GUI).
+#      > Se puede conectar localmente usando el emulador de terminal CLI 'Linux Console'.
+#      > Se puede conectar remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
+#  > 1 Los script se ejecutan en un 'Desktop Server'
+#      > El script se ejecutan en un servidor donde se tiene un gestor de ventanas (siempre cuenta con GPU).
+#      > Cuenta con aplicaciones GUI, incluyendo un emulador de terminal GUI que permite ejecutar scrript localmente.
+#      > Se puede ejecutar script localmente:
+#        > Conectandose al escritorio del servidor (ingresando localmente al escritorio del servidor o conectandose
+#          remotamente usando un programa de gestion de escritorio remoto como VNC) y usando el emulador de terminal GUI
+#          existente en el servidor.
+#        > Muy poco usual, conectandose localmente pero usando el emulador de terminal CLI 'Linux Console'.
+#      > Se puede ejecutar script remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
+#  > 2 Los script se ejecutan en un contenedor dentro de un 'Desktop Server' y este tiene acceso a la GPU de este servidor.
+#      > Los script de ejecutan dentro de proceso local de un 'Desktop Server' pero en un entorno aislado (contenedor)
+#        pero que tiene acceso a GPU y progrmadas GUI del servidor.
+#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
+#      > No estan diseñados para que se conecten remotamente por ssh.
+#      > Por defecto los contenedores no tiene acceso a la GPU del servidor donde se ejecuta.
+#      > Ejemplo: Contenedores Distrobox o Toolbox en Linux.
+#  > 3 Los script de ejecutan en un VM local dentro de un 'Desktop Server' tiene acceso a la GPU del servidor.
+#      > Los script de ejecutan dentro de proceso remoto de un 'Desktop Server' (dentro de una VM) pero que tiene acceso a GPU
+#        y progrmadas GUI del servidor.
+#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
+#      > No estan diseñados para que se conecten remotamente por ssh.
+#      > Ejemplo: La VM ligera WSL2 que esta integrada con Windows en modo escritorio.
+#  > Por el script pofile del usuario y '~/.custom_config', para determina que capacidades se incluyen en el profile.
 # Actualmente, es usado para definir valores por defecto en algunos archivos de configuracion (modificables) del profile:
 #  > El tema usado por 'oh-my-posh': '~/.files/etc/oh-my-posh/default_settings.json'
-#  > El archivo de parametros usados por el profile del usuario: '~/.profile.config'
-g_profile_type=0
+if [ -z "$g_enviroment_type" ]; then
+    _get_default_enviroment_type
+    g_enviroment_type=$?
+    echo "g_enviroment_type: ${g_enviroment_type}"
+fi
 
 # Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
 # Sus valores puede ser:
@@ -3243,7 +3306,10 @@ if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
     . ${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash
 
     #Corregir algunos valores
-    #...
+    if [ "$g_enviroment_type" != "0" ] || [ "$g_enviroment_type" != "1" ] || [ "$g_enviroment_type" != "2" ] || [ "$g_enviroment_type" != "3" ]; then
+        g_enviroment_type=0
+    fi
+
 fi
 
 

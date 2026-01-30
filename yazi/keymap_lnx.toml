@@ -50,6 +50,7 @@ prepend_keymap = [
 	{ on = [ "g", "5" ], run = "cd ~/.local/share/nvim/site/pack", desc = "Go NoeVIM packages" },
 	#{ on = [ "g", "6" ], run = "cd /nas/lepc/data", desc = "Go /nas/lepc/data" },
 	#{ on = [ "g", "7" ], run = "cd /tempo", desc = "Go /tempo" },
+	#{ on = [ "g", "8" ], run = "cd /dt2/vaults/notes", desc = "Go Obsidian vaults" },
 
     { on = [ "g", "w" ], run = "plugin go-fs -- rootdir", desc = "Go inicial workdir folder" },
     { on = [ "g", "g" ], run = "plugin go-fs -- rootgit", desc = "Go root git folder" },

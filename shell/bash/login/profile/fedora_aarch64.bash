@@ -85,6 +85,9 @@ if [ -z "$g_tools_path" ] || [ ! -d "$g_tools_path" ]; then
     g_tools_path='/var/opt/tools'
 fi
 
+export MY_TOOLS_PATH="$g_tools_path"
+unset g_tools_path
+
 # Ruta del folder donde se ubican comandos personalizado del usuario.
 if [ -z "$g_lnx_bin_path" ] || [ ! -d "$g_lnx_bin_path" ]; then
     g_lnx_bin_path='/usr/local/bin'
@@ -95,10 +98,27 @@ if [ -z "$g_prompt_theme" ] || [ ! -f "$g_prompt_theme" ]; then
     g_prompt_theme=~/${g_repo_name}/etc/oh-my-posh/default_settings.json
 fi
 
-#Usado por archivo de configuración de programas como TMUX, VIM, NeoVIM y CoC.
+# Usado por archivo de configuración de programas como TMUX, VIM, NeoVIM y CoC.
 export MY_REPO_PATH="$HOME/$g_repo_name"
-export MY_TOOLS_PATH="$g_tools_path"
-unset g_tools_path
+
+# Origen de la sesion del shell (usado para habilitar o desabilitar ciertas capacidades del profile
+if [ -z "$g_session_src" ]; then
+
+    # Si se usa sesion remota SSH (ya se de un 'desktop server' o 'headless server')
+    if [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_CLIENT" ]; then
+        g_session_src=0
+    # Si se usa sesion  dentro del escritorio del servidor (local desktop o remote desktop)
+    elif [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+        g_session_src=2
+    # Console Linux
+    else
+        g_session_src=1
+    fi
+
+fi
+
+export MY_SESSION_SRC=${g_session_src}
+unset g_session_src
 
 
 #-----------------------------------------------------------------------------------

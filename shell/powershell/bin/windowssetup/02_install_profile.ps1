@@ -495,10 +495,10 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer, $p_index_document
             }
 
             # Si se excluye
-            if [ $l_enable_ai_plugin -eq 1 ]; then
+            if ($l_enable_ai_plugin -eq 1) {
                 Write-Host "Paquete ${l_tag} (${l_repo_type}) `"${l_repo_git}`":  Ha sigo excluido para su descarga (g_setup_vim_ai_plugins es ${g_setup_vim_ai_plugins})"
                 continue
-            fi
+            }
 
         }
 
@@ -1166,15 +1166,15 @@ function m_create_all_links($p_overwrite_ln_flag) {
             source_path     = "${env:USERPROFILE}\.files\vim\ftplugin\cocide"
         },
         [PSCustomObject]@{
-            target_link     = "${env:APPDATA}\.config\yazi\plugins"
+            target_link     = "${env:APPDATA}\yazi\config\plugins\fzf-fd.yazi"
             source_path     = "${env:USERPROFILE}\.files\yazi\plugins\fzf-fd.yazi"
         },
         [PSCustomObject]@{
-            target_link     = "${env:APPDATA}\.config\yazi\plugins"
+            target_link     = "${env:APPDATA}\yazi\config\plugins\fzf-rg.yazi"
             source_path     = "${env:USERPROFILE}\.files\yazi\plugins\fzf-rg.yazi"
         },
         [PSCustomObject]@{
-            target_link     = "${env:APPDATA}\.config\yazi\plugins"
+            target_link     = "${env:APPDATA}\yazi\config\plugins\go-fs.yazi"
             source_path     = "${env:USERPROFILE}\.files\yazi\plugins\go-fs.yazi"
         },
         [PSCustomObject]@{
@@ -1259,6 +1259,8 @@ function m_create_all_links($p_overwrite_ln_flag) {
         }
     )
 
+    Write-Host ""
+	Write-Host ""
     $l_item = $null
     $l_tag = "File link   > "
     for ($i=0; $i -lt $l_file_links.Count; $i++) {
