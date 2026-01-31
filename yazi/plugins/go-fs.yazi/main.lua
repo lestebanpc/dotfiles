@@ -76,10 +76,28 @@ local function m_read_args(p_job)
 
     -- Leer los opciones
     local l_options= {}
+
+    -- Opcion 'type'
     ya.dbg('args.type: ' .. tostring(args["type"]))
 
     if l_cmd_type == "openintab" then
         l_options.open_type = args["type"]
+    end
+
+    -- Opcion 'editor'
+    l_options.editor_type=0
+    local l_data = nil
+    if args.editor then
+
+        l_data = tostring(args.editor)
+        if l_data == "vim" then
+            l_options.editor_type = 1
+        elseif l_data == "nvim" then
+            l_options.editor_type = 2
+        else
+            ya.err("La opcion '--editor' tiene formato invalido '" .. l_data .. "'." )
+        end
+
     end
 
     return l_cmd_type, l_options
@@ -136,11 +154,13 @@ end
 
 
 
-local function m_opentab_with_files(p_cwd, p_script_path, p_file_paths, p_pane_wd)
+local function m_opentab_with_selected_files(p_cwd, p_script_path, p_file_paths, p_pane_wd, p_editor_type)
 
 
     -- Creando los argumentos del comando
     local l_args = {
+        "-e",
+        tostring(p_editor_type),
         "-w",
         p_pane_wd,
     }
@@ -420,7 +440,7 @@ function mod.entry(p_self, p_job)
         -- Abrir los archivos en un tab
         ya.dbg("l_state.script_path: " .. tostring(l_state.script_path))
         ya.dbg("l_pane_wd: " .. tostring(l_pane_wd))
-        l_message = m_opentab_with_files(l_cwd, l_state.script_path, l_paths, l_pane_wd)
+        l_message = m_opentab_with_selected_files(l_cwd, l_state.script_path, l_paths, l_pane_wd, l_options.editor_type)
         if l_message ~= nil then
 	        return ya.notify({ title = "go-fs (openintab)", content = l_message, timeout = 5, level = "error" })
         end

@@ -216,10 +216,9 @@
 ##############################################################################################
 
 # Definir el tipo de entorno donde los shell del usuario se va a configurar.
-# Actualmente es usado por '04_install_profile.bash' para determinar que capacidades se instala/configura.
-#  > No confundir con la variable de entorno definida en el archivo del profile del usuario y su script '~/.profile.config'
-#    que permite establecer las capacidades del profile del usuario en tiempo de ejecucion y depende si realmente se este
-#    se ejecuta localmente o remotamente (aun cuando es un 'headless server').
+# > Actualmente es usado por '04_install_profile.bash' para determinar que capacidades se instala/configura.
+# > Una variable similar es usado por el profile del usuario (usando su script '~/.profile.config') cuyo valor es
+#   calculado durante la instalación ('04_install_profile.bash') pero puede ser modificado despues de la instalación.
 # Su valores son:
 #  > Si no se define (o su valor es una cadena vacia), se intenta culcular automaticamente este valor.
 #    Si el valor no es calculado correctamente, se recomienda establecer este valor manualemte en este archivo.
@@ -250,9 +249,6 @@
 #      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
 #      > No estan diseñados para que se conecten remotamente por ssh.
 #      > Ejemplo: La VM ligera WSL2 que esta integrada con Windows en modo escritorio.
-#  > Por el script pofile del usuario y '~/.custom_config', para determina que capacidades se incluyen en el profile.
-# Actualmente, es usado para definir valores por defecto en algunos archivos de configuracion (modificables) del profile:
-#  > El tema usado por 'oh-my-posh': '~/.files/etc/oh-my-posh/default_settings.json'
 #g_enviroment_type=0
 
 

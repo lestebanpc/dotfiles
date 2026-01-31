@@ -47,6 +47,11 @@ Opciones usadas son:
                   > Programas como 'yazi' modifican el directorio de trabajo de sus proceso segun que directorio se este navegando.
             > '2' Se usa el directorio padre donde pertenece el archivo del 1er argumento.
 
+ -e         Determina el editor a usar en caso que trabaje con archivos de texto:
+            > '0' Si se usa el editor de texto definido en %EDITOR%
+            > '1' Si se usa VIM como editor de texto
+            > '2' Si se usa NeoVIM como editor de texto
+
  -w wordir  El valor de esta opcion se usara como directorio de trabajo del nuevo tab.
             > Si se especifica tanto esta opcion como la opcion '-p', esta opcion tendra mayor prioridad.
 
@@ -551,6 +556,11 @@ main() {
     #2. Procesar las opciones (siempre deben estar anstes de los argumentos)
     local p_working_dir=""
 
+    # (0) Usa el editor indicado en la variable de entorno $EDITOR.
+    # (1) Usa el editor VIM.
+    # (2) Usa el editor NoeVIM.
+    local p_editor_type=0
+
     # (0) El directorio esta espeificado por la opciones '-w'
     # (1) Se usara el directorio de trabajo usado por el proceso ejecutandose en el panel actual.
     # (2) Se usara el directorio donde pertenece el archivo indicado como 1er argumento.
@@ -585,6 +595,24 @@ main() {
                     fi
 
                 fi
+                shift 2
+                ;;
+
+            -e)
+
+                if ! [[ "$2" =~ ^[0-2]$ ]]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" es inválido: %b%s%b\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-e" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
+                    _usage
+                    exit 3
+                fi
+
+                if [ $2 -eq 1 ]; then
+                    p_editor_type=1
+                elif [ $2 -eq 2 ]; then
+                    p_editor_type=2
+                fi
+
                 shift 2
                 ;;
 
@@ -652,15 +680,24 @@ main() {
     fi
     #echo "l_is_text_file: ${l_is_text_file}, l_full_path: ${l_full_path}"
 
-    # Determinar el comando usado para visualizar el archivo
+
+    #5. Determinar el comando usado para visualizar el archivo
     local l_viewer_cmd='file'
 
     if [ $l_is_text_file -eq 0 ]; then
-        l_viewer_cmd="${EDITOR:-vim}"
+
+        if [ $p_editor_type -eq 1 ]; then
+            l_viewer_cmd="vim"
+        elif [ $p_editor_type -eq 2 ]; then
+            l_viewer_cmd="nvim"
+        else
+            l_viewer_cmd="${EDITOR:-vim}"
+        fi
+
     fi
 
 
-    #5. Si es un archivo de texto, obtener las posiciones de las lineas
+    #6. Si es un archivo de texto, obtener las posiciones de las lineas
     local l_status=0
     local -a la_nbrlines=()
 
@@ -682,7 +719,7 @@ main() {
     fi
 
 
-    #6. Determinar el working dir a usar para crear el nuevo panel
+    #7. Determinar el working dir a usar para crear el nuevo panel
     if [ $p_working_dir_src -eq 1 ]; then
 
         # Si el working-dir se calcula automiaticamenbte en base al usado por el proceso actual del panel actual
@@ -708,7 +745,7 @@ main() {
     #echo "p_working_dir: ${p_working_dir}"
 
 
-    #7. Obtener la lista de archivos a visualizar
+    #8. Obtener la lista de archivos a visualizar
     local -a la_files=()
 
     m_get_fullpath_files "pa_files" $l_is_text_file "$l_full_path" "$p_working_dir" "la_files"
@@ -717,7 +754,7 @@ main() {
     #printf '"%s"\n' "${la_files[@]}"
 
 
-    #8. Crear el comando que visualiza los archivos a visualizar
+    #9. Crear el comando que visualiza los archivos a visualizar
     local l_cmd_to_exec=""
     m_get_cmd_to_exec $l_is_text_file "$l_viewer_cmd" "la_files" "la_nbrlines" "l_cmd_to_exec"
 
@@ -727,13 +764,13 @@ main() {
     #echo "l_cmd_to_exec: ${l_cmd_to_exec}"
 
 
-    #9. Crear el panel y ejecutar el comando de visualizacion
+    #10. Crear el panel y ejecutar el comando de visualizacion
     local l_pane_position=""
     m_create_new_pane $l_multiplexor_type "$p_working_dir" "l_pane_position"
     #echo "Step 2 ${p_full_path}" >> /tmp/remove.txt
     #echo "l_pane_position: ${l_pane_position}"
 
-    #10. Ejecutar el comando en el panel indicado
+    #11. Ejecutar el comando en el panel indicado
     m_exec_cmd_in_pane $l_multiplexor_type "$l_pane_position" "$l_cmd_to_exec"
 
     return 0

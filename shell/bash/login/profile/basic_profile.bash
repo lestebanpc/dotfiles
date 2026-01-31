@@ -73,6 +73,38 @@ if [ "$g_lnx_bin_path" != "/usr/local/bin" ] && [ "$g_lnx_bin_path" != "$HOME/.l
 fi
 unset g_lnx_bin_path
 
+# Definir el tipo de entorno donde los shell del usuario se va a configurar.
+# Su valores son:
+#  > 0 Los script se ejecutan en un 'Headless Server'
+#      > El script se ejecutan en un servidor donde no se tiene un gestor de ventanas (usualmente no se cuenta con GPU).
+#      > No cuenta con aplicaciones GUI (no cuenta con emulador de terminal GUI).
+#      > Se puede conectar localmente usando el emulador de terminal CLI 'Linux Console'.
+#      > Se puede conectar remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
+#  > 1 Los script se ejecutan en un 'Desktop Server'
+#      > El script se ejecutan en un servidor donde se tiene un gestor de ventanas (siempre cuenta con GPU).
+#      > Cuenta con aplicaciones GUI, incluyendo un emulador de terminal GUI que permite ejecutar scrript localmente.
+#      > Se puede ejecutar script localmente:
+#        > Conectandose al escritorio del servidor (ingresando localmente al escritorio del servidor o conectandose
+#          remotamente usando un programa de gestion de escritorio remoto como VNC) y usando el emulador de terminal GUI
+#          existente en el servidor.
+#        > Muy poco usual, conectandose localmente pero usando el emulador de terminal CLI 'Linux Console'.
+#      > Se puede ejecutar script remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
+#  > 2 Los script se ejecutan en un contenedor dentro de un 'Desktop Server' y este tiene acceso a la GPU de este servidor.
+#      > Los script de ejecutan dentro de proceso local de un 'Desktop Server' pero en un entorno aislado (contenedor)
+#        pero que tiene acceso a GPU y progrmadas GUI del servidor.
+#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
+#      > No estan diseñados para que se conecten remotamente por ssh.
+#      > Por defecto los contenedores no tiene acceso a la GPU del servidor donde se ejecuta.
+#      > Ejemplo: Contenedores Distrobox o Toolbox en Linux.
+#  > 3 Los script de ejecutan en un VM local dentro de un 'Desktop Server' tiene acceso a la GPU del servidor.
+#      > Los script de ejecutan dentro de proceso remoto de un 'Desktop Server' (dentro de una VM) pero que tiene acceso a GPU
+#        y programadas GUI del servidor.
+#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
+#      > No estan diseñados para que se conecten remotamente por ssh.
+#      > Ejemplo: La VM ligera WSL2 que esta integrada con Windows en modo escritorio.
+#  > Si no se define, su valor por defecto es '0' (Headless Server).
+export MY_ENV_TYPE=0
+
 
 #-----------------------------------------------------------------------------------
 # Variable de entorno> PATH y similares

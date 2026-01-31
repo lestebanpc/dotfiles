@@ -127,6 +127,11 @@ echo   -p 1^|2        Calcula directorio automaticamente:
 echo                  1: Usa directorio actual del proceso
 echo                  2: Usa directorio padre del primer archivo
 echo.
+echo   -e 0^|1^|2     Determina el editor a usar en caso que trabaje con archivos de texto:
+echo                  0: Se usa el editor de texto definido en %EDITOR%
+echo                  1: Se usa VIM como editor de texto
+echo                  2: Se usa NeoVIM como editor de texto
+echo.
 echo   -w ^<path^>    Directorio de trabajo especifico ^(prioridad sobre -p^)
 echo.
 echo   -l ^<nums^>    Lista de numeros de linea separados por coma
@@ -303,6 +308,7 @@ rem ---------------------------------------------------------------------
 set "OPTION_P="
 set "OPTION_W="
 set "OPTION_L="
+set "OPTION_E=0"
 set "FILES_INDEX=1"
 set "FIRST_FILE="
 set "IS_TEXT_FILE=1"
@@ -338,6 +344,22 @@ if /I "!ARG!"=="-p" (
     )
     if /I "!VAL!"=="1" set "OPTION_P=1" & set "WORKING_DIR_SRC=1"
     if /I "!VAL!"=="2" set "OPTION_P=2" & set "WORKING_DIR_SRC=2"
+    shift & shift
+    goto :PARSE_ARGS_LOOP
+)
+
+rem -e <0|1|2>
+if /I "!ARG!"=="-e" (
+    if "!VAL!"=="" (
+        echo [ERROR] Opcion -e requiere un valor ^(0 o 1 o 2^)
+        exit /b 1
+    )
+    if /I not "!VAL!"=="0" if /I not "!VAL!"=="1" if /I not "!VAL!"=="2" (
+        echo [ERROR] Valor invalido para -p: !VAL! ^(debe ser 0 o 1 o 2^)
+        exit /b 1
+    )
+    if /I "!VAL!"=="1" set "OPTION_E=1"
+    if /I "!VAL!"=="2" set "OPTION_E=2"
     shift & shift
     goto :PARSE_ARGS_LOOP
 )
@@ -436,9 +458,20 @@ if exist "!FIRST_FILE!\" (
 rem 3. Determinar tipo de archivo
 call :IS_TEXT_FILE "!FIRST_FILE!"
 set "IS_TEXT_FILE=!errorlevel!"
+
+rem 4. Determinar programa de procesamiento de archivos
 if !IS_TEXT_FILE! equ 0 (
+
     echo [INFO] Primer archivo es de texto: !FIRST_FILE!
-    set "VIEWER_CMD=!EDITOR!"
+
+    if !OPTION_E! equ 1 (
+        set "VIEWER_CMD=vim"
+    ) else if !OPTION_E! equ 2 (
+        set "VIEWER_CMD=nvim"
+    ) else (
+        set "VIEWER_CMD=!EDITOR!"
+    )
+
 ) else (
     echo [INFO] Primer archivo es binario: !FIRST_FILE!
     where file.exe >nul 2>&1
@@ -449,7 +482,7 @@ if !IS_TEXT_FILE! equ 0 (
     )
 )
 
-rem 4. Determinar directorio de trabajo
+rem 5. Determinar directorio de trabajo
 if !WORKING_DIR_SRC! equ 0 (
     rem Usar directorio especificado con -w
     set "WORKING_DIR=!OPTION_W!"
@@ -472,7 +505,7 @@ if !WORKING_DIR_SRC! equ 0 (
 
 echo "WORKING_DIR: !WORKING_DIR!"
 
-rem 5. Procesar números de línea (si aplica)
+rem 6. Procesar números de línea (si aplica)
 set "LINE_NUMBERS="
 if not "!OPTION_L!"=="" if !IS_TEXT_FILE! equ 0 (
     echo !EDITOR! | find /i "vim" >nul

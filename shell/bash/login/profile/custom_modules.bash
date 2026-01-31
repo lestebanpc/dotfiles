@@ -11,7 +11,7 @@ source ~/${g_repo_name}/shell/bash/lib/mod_general.bash
 source ~/${g_repo_name}/shell/bash/lib/mod_fzf.bash
 
 #Funciones genericas para WSL
-if [ "$g_load_wslfunc" = "0"  ]; then
+if [ "$MY_ENV_TYPE" = "3"  ]; then
     # shellcheck source=/home/lucianoepc/.files/shell/bash/lib/mod_wsl.bash
     source ~/${g_repo_name}/shell/bash/lib/mod_wsl.bash
 fi

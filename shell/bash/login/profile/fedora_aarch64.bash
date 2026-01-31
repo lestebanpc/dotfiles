@@ -120,6 +120,14 @@ fi
 export MY_SESSION_SRC=${g_session_src}
 unset g_session_src
 
+# Tipo de entorno deonde se ejecuta el script (usado para habilitar/desabilitar algunas capacidades)
+if [ -z "$g_enviroment_type" ]; then
+    g_enviroment_type=0
+fi
+
+export MY_ENV_TYPE=${g_enviroment_type}
+unset g_enviroment_type
+
 
 #-----------------------------------------------------------------------------------
 # Variable de entorno> PATH y similares

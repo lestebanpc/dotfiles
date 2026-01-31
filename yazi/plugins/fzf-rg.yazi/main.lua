@@ -413,10 +413,12 @@ end
 
 
 
-local function m_edit_in_vim(p_cwd, p_script_path, p_info_files, p_pane_wd)
+local function m_opentab_with_selected_files(p_cwd, p_script_path, p_info_files, p_pane_wd, p_editor_type)
 
     -- Creando los argumentos del comando
     local l_args = {
+        "-e",
+        tostring(p_editor_type),
         "-w",
         p_pane_wd,
         "-l",
@@ -439,7 +441,7 @@ local function m_edit_in_vim(p_cwd, p_script_path, p_info_files, p_pane_wd)
 
     end
 
-    l_args[4] = l_linenbr_lists
+    l_args[6] = l_linenbr_lists
     --ya.dbg("l_args: " ..  m_dump_table(l_args, " "))
 
     -- Generar el comando
@@ -572,7 +574,22 @@ local function m_read_args(p_job)
 
     end
 
-    return l_cmd_type, use_tmux, height, width
+    -- Opcion
+    local l_editor_type=0
+    if args.editor then
+
+        data = tostring(args.editor)
+        if data == "vim" then
+            l_editor_type = 1
+        elseif data == "nvim" then
+            l_editor_type = 2
+        else
+            ya.err("La opcion '--editor' tiene formato invalido '" .. data .. "'." )
+        end
+
+    end
+
+    return l_cmd_type, use_tmux, height, width, l_editor_type
 
 end
 
@@ -880,7 +897,7 @@ function mod.entry(p_self, p_job)
     --1. Obtener datos de entrada
 
     -- Obtener los argumentos
-    local l_cmd_type, l_use_tmux, l_height, l_width = m_read_args(p_job)
+    local l_cmd_type, l_use_tmux, l_height, l_width, l_editor_type = m_read_args(p_job)
 
     -- Salir de modo ...
 	ya.emit("escape", { visual = true })
@@ -997,7 +1014,8 @@ function mod.entry(p_self, p_job)
     -- Abrir los archivos en un tab
     --ya.dbg("l_state.script_path: " .. tostring(l_state.script_path))
     --ya.dbg("l_pane_wd: " .. tostring(l_pane_wd))
-    l_message = m_edit_in_vim(l_cwd, l_state.script_path, l_info_files, l_pane_wd)
+	--ya.dbg("l_editor_type: " .. tostring(l_editor_type))
+    l_message = m_opentab_with_selected_files(l_cwd, l_state.script_path, l_info_files, l_pane_wd, l_editor_type)
     if l_message ~= nil then
 	    return ya.notify({ title = "fzf-rg", content = l_message, timeout = 5, level = "error" })
     end

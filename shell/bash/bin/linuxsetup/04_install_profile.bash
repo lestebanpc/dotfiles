@@ -1157,8 +1157,13 @@ function _setup_user_profile() {
     # Si es un 'Headless server'
     else
 
-        printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/profile_config_template_headless.bash %b~/.custom_profile.bash%b"\n' \
-              "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_headless.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
+              "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
+
+        #printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/profile_config_template_headless.bash %b~/.custom_profile.bash%b"\n' \
+        #      "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
 
     fi
 

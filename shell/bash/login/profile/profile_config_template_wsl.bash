@@ -20,8 +20,8 @@
 
 # Folder base donde se almacena los subfolderes de los programas.
 # - Si no es un valor valido (no existe o es vacio), su valor sera el valor por defecto "/var/opt/tools".
-# - Si es un directorio valido se Convertira en la variable de entorno 'MY_TOOLS_PATH' usado en la configuración
-#   de programas como TMUX.
+# - Si es un directorio valido, se valor sera usadoo para definir la  variable de entorno de usuario 'MY_TOOLS_PATH'
+# - Esta variable es usado en la configuración de programas como TMUX, VIM o NeoVIM.
 #g_tools_path='/var/opt/tools'
 
 # Folder donde se almacena los binarios de tipo comando.
@@ -35,28 +35,62 @@
 # Si no se establecer (es vacio), se usara '~/${g_repo_name}/etc/oh-my-posh/default_settings.json'
 #g_prompt_theme=~/.files/etc/oh-my-posh/lepc-montys-blue1.json
 
-# Tipo de origin de la sesion del profile. Si no se especifica, se calcula automaticamente.
-# Sus valores puede ser:
+# Tipo de origin de la sesion del profile.
+# > Usando esta variable se determina el valor de la variable de entorno del usuario 'MY_SESSION_SRC'.
+# Sus valores son:
 #  > 0 Si se usa sesion remota SSH (ya se de un 'desktop server' o 'headless server').
 #  > 1 Si se realiza una sesion local usando 'Console Linux'.
 #  > 2 Si se usa sesion dentro del escritorio del servidor (ya sea local desktop o remote desktop).
+#  > Si no se especifica, se calcula automaticamente.
 #g_session_src=''
 
-# Si su valor es 0, se cargara (importara como libreria), dentro de profile del usuario el archivo, las funciones
-# genericas "~/${g_repo_name}/shell/bash/lib/mod_myfunc.bash" de utilidades cuando esta en la red local dei
-# 'my house', tales como:
-# > 'start_music' y 'stop_music': monta la unidades de musica, establece acceso exlusivo de la tarjeta de sonido
-#    e iniciar el servidor MDP.
-# > 'set_first_dns_server': vuelve a establece el servidor DNS cuando se usa intefaces de red bridge.
-# Cualquier otro valor, no se cargara este script.
-# Su valor por defecto es 1 (no se carga el script).
-#g_load_myfunc=0
+# Definir el tipo de entorno donde los shell del usuario se va a configurar.
+# > Es usado por el profile del usuario (usando su script '~/.profile.config') cuyo valor es calculado durante la
+#   instalación ('04_install_profile.bash') pero puede ser modificado despues de la instalación.
+# > Usando esta variable se determina el valor de la variable de entorno del usuario 'MY_ENV_TYPE'.
+# Su valores son:
+#  > 0 Los script se ejecutan en un 'Headless Server'
+#      > El script se ejecutan en un servidor donde no se tiene un gestor de ventanas (usualmente no se cuenta con GPU).
+#      > No cuenta con aplicaciones GUI (no cuenta con emulador de terminal GUI).
+#      > Se puede conectar localmente usando el emulador de terminal CLI 'Linux Console'.
+#      > Se puede conectar remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
+#  > 1 Los script se ejecutan en un 'Desktop Server'
+#      > El script se ejecutan en un servidor donde se tiene un gestor de ventanas (siempre cuenta con GPU).
+#      > Cuenta con aplicaciones GUI, incluyendo un emulador de terminal GUI que permite ejecutar scrript localmente.
+#      > Se puede ejecutar script localmente:
+#        > Conectandose al escritorio del servidor (ingresando localmente al escritorio del servidor o conectandose
+#          remotamente usando un programa de gestion de escritorio remoto como VNC) y usando el emulador de terminal GUI
+#          existente en el servidor.
+#        > Muy poco usual, conectandose localmente pero usando el emulador de terminal CLI 'Linux Console'.
+#      > Se puede ejecutar script remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
+#  > 2 Los script se ejecutan en un contenedor dentro de un 'Desktop Server' y este tiene acceso a la GPU de este servidor.
+#      > Los script de ejecutan dentro de proceso local de un 'Desktop Server' pero en un entorno aislado (contenedor)
+#        pero que tiene acceso a GPU y progrmadas GUI del servidor.
+#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
+#      > No estan diseñados para que se conecten remotamente por ssh.
+#      > Por defecto los contenedores no tiene acceso a la GPU del servidor donde se ejecuta.
+#      > Ejemplo: Contenedores Distrobox o Toolbox en Linux.
+#  > 3 Los script de ejecutan en un VM local dentro de un 'Desktop Server' tiene acceso a la GPU del servidor.
+#      > Los script de ejecutan dentro de proceso remoto de un 'Desktop Server' (dentro de una VM) pero que tiene acceso a GPU
+#        y progrmadas GUI del servidor.
+#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
+#      > No estan diseñados para que se conecten remotamente por ssh.
+#      > Ejemplo: La VM ligera WSL2 que esta integrada con Windows en modo escritorio.
+#  > Si no se define, su valor por defecto es '0' (Headless Server).
+g_enviroment_type=3
 
-# Si su valor es 0, se cargara (importara como libreria), dentro de profile del usuario el archivo, las funciones
-# genericas "~/${g_repo_name}/shell/bash/lib/mod_myfunc.bash" sobre WSL.
-# Cualquier otro valor, no se cargara este script.
-# Su valor por defecto es 1 (no se carga el script).
-g_load_wslfunc=0
+# Permite cargar capacidades adicionales (funciones ubicados en "~/${g_repo_name}/shell/bash/lib/mod_myfunc.bash") requeridas
+# cuando se esta en red local de 'my house'.
+# Entre las capacidades que se tiene son:
+#  > 'start_music' y 'stop_music'
+#    Permite montar la unidades de musica, establece acceso exlusivo de la tarjeta de sonido e iniciar el servidor MDP.
+#  > 'set_first_dns_server'
+#    Vuelve a establece el servidor DNS primario/local cuando se usa intefaces de red bridge y pierde comunicación.
+# Sus valores puede ser:
+#  > 0 Se importara dentro de profile la capacidades adicionales
+#  > Cualquier otro valor, no se cargara este script.
+#    Su valor por defecto es 1 (no se carga el script).
+#g_load_myfunc=0
 
 
 #-----------------------------------------------------------------------------------
