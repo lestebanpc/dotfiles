@@ -33,3 +33,16 @@
 #   > 4 Instala plugin de integracion de AI Chatbot y AI Agent externo (por ejemplo integracion con OpenCode-CLI o Gemini-CLI)
 # Si no se define el valor por defecto es '0' (no se instala ningun plugin de AI).
 #$g_setup_vim_ai_plugins=7
+
+# Modo de instalacion segun los acceso que se tiene para crear enlaces simbolicos
+# Sus valores pueden ser:
+# > 0 Si no se tiene acceso para crear a enlaces simbolicos (debe tener un usuario que puede ejecutar en en modo privilegiado
+#     o poder ejecutar 'sudo').
+#     > Usualmente se realiza una copia (y/o elimina versiones anteriores) de los archivos no-modificables por el usuario.
+#     > Existe algunos archivos que usuario puede modificarlos. Estos archivos solo se puede reescribir si se flag de reescritura
+#       para evitar perdidas de configuraciones de usuario.
+# > 1 Se puede crear enlaces simbolicos pero desde una instancia de una pseudo-terminal con acceso privilegiado.
+# > 2 Se puede crear enlaces simbolicos en la misma pseudo-terminal usando el comando 'sudo' (Solo en Windows que no son Core
+#     y cuya version >= 24H2)
+# > Si no se especifica su valor por defecto es 1.
+#$g_setup_access_type=1

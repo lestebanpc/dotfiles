@@ -763,9 +763,9 @@ function _setup_nvim_files() {
         l_mode="IDE"
     fi
 
-    local p_flag_overwrite_link=1
+    local p_flag_overwrites_file_notmodifiable=1
     if [ "$2" = "0" ]; then
-        p_flag_overwrite_link=0
+        p_flag_overwrites_file_notmodifiable=0
     fi
 
     #Sobrescribir los enlaces simbolicos
@@ -797,44 +797,44 @@ function _setup_nvim_files() {
         l_target_link="coc-settings.json"
         l_source_path="${g_repo_name}/nvim"
         l_source_filename='coc-settings_linux.json'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
 
         l_target_path=".config/nvim"
         l_target_link="init.vim"
         l_source_path="${g_repo_name}/nvim"
         l_source_filename='init_ide.vim'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".config/nvim"
         l_target_link="lua"
         l_source_path="${g_repo_name}/nvim/lua"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".config/nvim"
         l_target_link="setting"
         l_source_path="${g_repo_name}/vim/setting"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
         #El codigo open/close asociado a los 'file types'
         l_target_path=".config/nvim"
         l_target_link="ftplugin"
         l_source_path="${g_repo_name}/nvim/ftplugin/commonide"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
 
         #Para el codigo open/close asociado a los 'file types' de CoC
         l_target_path=".config/nvim/rte_cocide"
         l_target_link="ftplugin"
         l_source_path="${g_repo_name}/nvim/ftplugin/cocide"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
 
         #Para el codigo open/close asociado a los 'file types' que no sean CoC
         l_target_path=".config/nvim/rte_nativeide"
         l_target_link="ftplugin"
         l_source_path="${g_repo_name}/nvim/ftplugin/nativeide"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
     #Configurar NeoVIM como Editor
     else
@@ -843,24 +843,24 @@ function _setup_nvim_files() {
         l_target_link="init.vim"
         l_source_path="${g_repo_name}/nvim"
         l_source_filename='init_editor.vim'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".config/nvim"
         l_target_link="setting"
         l_source_path="${g_repo_name}/vim/setting"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".config/nvim"
         l_target_link="lua"
         l_source_path="${g_repo_name}/nvim/lua"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
 
         #El codigo open/close asociado a los 'file types' como Editor
         l_target_path=".config/nvim"
         l_target_link="ftplugin"
         l_source_path="${g_repo_name}/nvim/ftplugin/editor"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
     fi
 
@@ -881,9 +881,9 @@ function _setup_vim_files() {
         l_mode="IDE"
     fi
 
-    local p_flag_overwrite_link=1
+    local p_flag_overwrites_file_notmodifiable=1
     if [ "$2" = "0" ]; then
-        p_flag_overwrite_link=0
+        p_flag_overwrites_file_notmodifiable=0
     fi
 
 
@@ -910,17 +910,17 @@ function _setup_vim_files() {
         l_target_link="coc-settings.json"
         l_source_path="${g_repo_name}/vim"
         l_source_filename='coc-settings_linux.json'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".vim"
         l_target_link="setting"
         l_source_path="${g_repo_name}/vim/setting"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".vim"
         l_target_link="ftplugin"
         l_source_path="${g_repo_name}/vim/ftplugin/cocide"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
 
 
         l_target_path=""
@@ -928,7 +928,7 @@ function _setup_vim_files() {
         l_source_path="${g_repo_name}/vim"
         l_source_filename='vimrc_ide.vim'
 
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
 
 
     #Configurar VIM como Editor basico
@@ -937,18 +937,18 @@ function _setup_vim_files() {
         l_target_path=".vim"
         l_target_link="setting"
         l_source_path="${g_repo_name}/vim/setting"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".vim"
         l_target_link="ftplugin"
         l_source_path="${g_repo_name}/vim/ftplugin/editor"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=""
         l_target_link=".vimrc"
         l_source_path="${g_repo_name}/vim"
         l_source_filename='vimrc_editor.vim'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
 
 
     fi
@@ -977,18 +977,18 @@ function _setup_user_profile() {
         return 99
     fi
 
-    #¿Se puede recrear los enlaces simbolicos en caso existir?
+    # Indica si se puede sobrescribir los archivos que NO pueden ser modificados por el usuario (archivos que forman parte de un enlace simbolico)
     l_option=2
-    local l_flag_overwrite_link=1
+    local l_flag_overwrites_file_notmodifiable=1
     if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-        l_flag_overwrite_link=0
+        l_flag_overwrites_file_notmodifiable=0
     fi
 
-    #¿Se puede recrear los enlaces simbolicos en caso existir?
+    # Indica si se puede sobrescribir los archivos que pueden ser modificados por el usuario (archivos copiados)
     l_option=4
-    local l_flag_overwrite_file=1
+    local l_flag_overwrites_file_modifiable=1
     if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-        l_flag_overwrite_file=0
+        l_flag_overwrites_file_modifiable=0
     fi
 
 
@@ -997,7 +997,7 @@ function _setup_user_profile() {
     print_line '-' $g_max_length_line "$g_color_gray1"
     #print_line '─' $g_max_length_line  "$g_color_blue1"
 
-    if [ $l_flag_overwrite_link -eq 0 ]; then
+    if [ $l_flag_overwrites_file_notmodifiable -eq 0 ]; then
         printf "OS > Creando los %benlaces simbolicos%b del perfil %b(sobrescribir lo existente)%b\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
     else
         printf "OS > Creando los %benlaces simbolicos%b del perfil %b(solo crar si no existe)%b\n" "$g_color_cian1" "$g_color_reset" "$g_color_gray1" "$g_color_reset"
@@ -1046,7 +1046,7 @@ function _setup_user_profile() {
     fi
 
     if [ ! -z "$l_source_filename" ]; then
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
     fi
 
@@ -1087,7 +1087,7 @@ function _setup_user_profile() {
         fi
     fi
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Creando el profile del interprete shell
@@ -1127,13 +1127,13 @@ function _setup_user_profile() {
         fi
     fi
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     # Para WSL copiar el archivo de configuracion del profile
     if [ $g_enviroment_type -eq 3 ]; then
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_wsl.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_wsl.bash" "" ".custom_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
               "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
@@ -1141,7 +1141,7 @@ function _setup_user_profile() {
     # Si es contenedor distrobox
     elif [ $g_enviroment_type -eq 2 ]; then
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_distrobox.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_distrobox.bash" "" ".custom_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
               "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
@@ -1149,7 +1149,7 @@ function _setup_user_profile() {
     # Si es un 'Desktop server'
     elif [ $g_enviroment_type -eq 1 ]; then
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_desktop.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_desktop.bash" "" ".custom_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
               "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
@@ -1157,7 +1157,7 @@ function _setup_user_profile() {
     # Si es un 'Headless server'
     else
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_headless.bash" "" ".custom_profile.bash" $l_flag_overwrite_file "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_headless.bash" "" ".custom_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
               "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
@@ -1176,7 +1176,7 @@ function _setup_user_profile() {
     l_source_path="${g_repo_name}/etc/readline"
     l_source_filename='inputrc'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
 
@@ -1186,7 +1186,7 @@ function _setup_user_profile() {
     l_source_path="${g_repo_name}/etc/lftp"
     l_source_filename='lftprc_default.conf'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
 
@@ -1197,11 +1197,11 @@ function _setup_user_profile() {
     l_source_path="${g_repo_name}/etc/tmux"
     l_source_filename='tmux.conf'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     l_source_filename='custom_config_template_1.conf'
-    copy_file_on_home "${g_repo_path}/etc/tmux" "$l_source_filename" ".config/tmux" "custom_config.conf" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/etc/tmux" "$l_source_filename" ".config/tmux" "custom_config.conf" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de tmux.\n' \
            "$g_color_yellow1" "~/.config/tmux/custom_config.conf" "$g_color_reset"
@@ -1215,10 +1215,10 @@ function _setup_user_profile() {
     l_source_path="${g_repo_name}/etc/sesh"
     l_source_filename='sesh_default.toml'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/etc/sesh" "custom_config_template_1.toml" ".config/sesh" "custom_config.toml" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/etc/sesh" "custom_config_template_1.toml" ".config/sesh" "custom_config.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
            "$g_color_yellow1" "~/.config/sesh/custom_config.toml" "$g_color_reset"
@@ -1228,7 +1228,7 @@ function _setup_user_profile() {
     #l_source_path="${g_repo_name}/shell/bash/bin/tmux_layout"
     #l_source_filename='tmx_upload_movies.bash'
 
-    #create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrite_link
+    #create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrites_file_notmodifiable
     #l_status=$?
 
 
@@ -1239,7 +1239,7 @@ function _setup_user_profile() {
 
         create_folderpath_on_home ".config" "wezterm"
 
-        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_wsl_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrite_file "        > "
+        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_wsl_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
                "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
@@ -1259,15 +1259,15 @@ function _setup_user_profile() {
         l_source_path="${g_repo_name}/wezterm/local"
         l_source_filename='wezterm.lua'
 
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
         l_target_path=".config/wezterm"
         l_target_link="utils"
         l_source_path="${g_repo_name}/wezterm/local/utils"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
 
-        copy_file_on_home "${g_repo_path}/wezterm/local" "custom_config_template_lnx.lua" ".config/wezterm" "custom_config.lua" $l_flag_overwrite_file "        > "
+        copy_file_on_home "${g_repo_path}/wezterm/local" "custom_config_template_lnx.lua" ".config/wezterm" "custom_config.lua" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
                "$g_color_yellow1" "~/.config/wezterm/custom_config.lua" "$g_color_reset"
@@ -1277,7 +1277,7 @@ function _setup_user_profile() {
 
         create_folderpath_on_home ".config" "wezterm"
 
-        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_lnx_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrite_file "        > "
+        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_lnx_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
                "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
@@ -1297,7 +1297,7 @@ function _setup_user_profile() {
         l_source_path="${g_repo_name}/etc/foot"
         l_source_filename='foot_default.ini'
 
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     # Cualquier otro caso
@@ -1313,7 +1313,7 @@ function _setup_user_profile() {
     l_source_path="${g_repo_name}/etc/lazygit"
     l_source_filename='config_default.yaml'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
 
@@ -1332,28 +1332,28 @@ function _setup_user_profile() {
         l_source_filename='yazi_headless.toml'
     fi
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     l_target_link="theme.toml"
     l_source_path="${g_repo_name}/yazi"
     l_source_filename='theme.toml'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     create_folderpath_on_home ".config" "yazi/flavors/catppuccin-mocha.yazi"
-    copy_file_on_home "${g_repo_path}/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" ".config/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" ".config/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
-    copy_file_on_home "${g_repo_path}/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" ".config/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" ".config/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/yazi" "keymap_lnx.toml" ".config/yazi" "keymap.toml" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/yazi" "keymap_lnx.toml" ".config/yazi" "keymap.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
            "$g_color_yellow1" "~/.config/yazi/keymap.toml" "$g_color_reset"
 
-    copy_file_on_home "${g_repo_path}/yazi" "init.lua" ".config/yazi" "init.lua" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/yazi" "init.lua" ".config/yazi" "init.lua" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
            "$g_color_yellow1" "~/.config/yazi/init.lua" "$g_color_reset"
@@ -1363,17 +1363,17 @@ function _setup_user_profile() {
     l_target_path=".config/yazi/plugins"
     l_target_link="fzf-fd.yazi"
     l_source_path="${g_repo_name}/yazi/plugins/fzf-fd.yazi"
-    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
+    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
 
     l_target_path=".config/yazi/plugins"
     l_target_link="fzf-rg.yazi"
     l_source_path="${g_repo_name}/yazi/plugins/fzf-rg.yazi"
-    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
+    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
 
     l_target_path=".config/yazi/plugins"
     l_target_link="go-fs.yazi"
     l_source_path="${g_repo_name}/yazi/plugins/go-fs.yazi"
-    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrite_link
+    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
 
 
     #Archivo de configuración para cliente MDP 'rmpc'
@@ -1388,7 +1388,7 @@ function _setup_user_profile() {
         l_source_path="${g_repo_name}/etc/rmpc"
         l_source_filename='config_default.ron'
 
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
         create_folderpath_on_home ".config/rmpc" "themes"
@@ -1397,7 +1397,7 @@ function _setup_user_profile() {
         l_target_link="theme_default.ron"
         l_source_path="${g_repo_name}/etc/rmpc/themes"
         l_source_filename='theme_default.ron'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     else
@@ -1410,7 +1410,7 @@ function _setup_user_profile() {
     l_target_link="osc52"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='osc52.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
@@ -1418,7 +1418,7 @@ function _setup_user_profile() {
     l_target_link="tmux_run_cmd"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='tmux_run_cmd.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
@@ -1426,7 +1426,7 @@ function _setup_user_profile() {
     l_target_link="wezterm_run_cmd"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='wezterm_run_cmd.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
@@ -1434,7 +1434,7 @@ function _setup_user_profile() {
     l_target_link="go_files_new_termtab"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='go_files_new_termtab.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
@@ -1442,7 +1442,7 @@ function _setup_user_profile() {
     l_target_link="go_folder_new_termtab"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='go_folder_new_termtab.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
 
@@ -1455,7 +1455,7 @@ function _setup_user_profile() {
         l_target_link="sync_folder"
         l_source_path="${g_repo_name}/shell/bash/bin/cmds"
         l_source_filename='sync_folder.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     else
@@ -1472,7 +1472,7 @@ function _setup_user_profile() {
         l_target_link="mymusic"
         l_source_path="${g_repo_name}/shell/bash/bin/cmds"
         l_source_filename='mymusic.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     else
@@ -1486,14 +1486,14 @@ function _setup_user_profile() {
     l_source_path="${g_repo_name}/etc/git"
     l_source_filename='gitconfig_lnx.toml'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     create_folderpath_on_home ".config" "git"
-    copy_file_on_home "${g_repo_path}/etc/git" "user_main_template_lnx.toml" ".config/git" "user_main.toml" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/etc/git" "user_main_template_lnx.toml" ".config/git" "user_main.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/etc/git" "user_work_template_lnx.toml" ".config/git" "user_mywork.toml" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/etc/git" "user_work_template_lnx.toml" ".config/git" "user_mywork.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite los archivos "%b%s%b" y "%b%s%b" si desea personalizar las opciones a nivel global del usuario ("%b~/.gitconfig%b")\n' \
            "$g_color_yellow1" "~/.config/git/user_main.toml" "$g_color_reset" "$g_color_yellow1" "~/.config/git/user_mywork.toml" "$g_color_reset" \
@@ -1549,7 +1549,7 @@ function _setup_user_profile() {
     fi
 
 
-    copy_file_on_home "${g_repo_path}/etc/oh-my-posh" "$l_source_filename" "${g_repo_name}/etc/oh-my-posh" "default_settings.json" $l_flag_overwrite_file "        > "
+    copy_file_on_home "${g_repo_path}/etc/oh-my-posh" "$l_source_filename" "${g_repo_name}/etc/oh-my-posh" "default_settings.json" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de oh-my-posh\n' \
            "$g_color_yellow1" "~/.config/etc/oh-my-posh/defaut_settings.json" "$g_color_reset"
@@ -1561,7 +1561,7 @@ function _setup_user_profile() {
     l_source_path="${g_repo_name}/etc/urlscan"
     l_source_filename='default_config.json'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
     #NerdCtl: Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD'
     l_target_path=".config/nerdctl"
@@ -1569,7 +1569,7 @@ function _setup_user_profile() {
     l_target_link="nerdctl.toml"
     l_source_path="${g_repo_name}/etc/nerdctl"
     l_source_filename='config_default.toml'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
 
@@ -1584,7 +1584,7 @@ function _setup_user_profile() {
         l_target_link="containers.conf"
         l_source_path="${g_repo_name}/etc/podman"
         l_source_filename='containers_default.toml'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
         #Podman: Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
@@ -1592,7 +1592,7 @@ function _setup_user_profile() {
         l_target_link="registries.conf"
         l_source_path="${g_repo_name}/etc/podman"
         l_source_filename='registries_default.toml'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
         #ContainerD: Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
@@ -1600,7 +1600,7 @@ function _setup_user_profile() {
         #l_target_link="config.toml"
         #l_source_path="${g_repo_name}/etc/containerd"
         #l_source_filename='config_overlay_default.toml'
-        #create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        #create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         #l_status=$?
 
 
@@ -1610,7 +1610,7 @@ function _setup_user_profile() {
         l_target_link="buildkitd.toml"
         l_source_path="${g_repo_name}/etc/buildkit"
         l_source_filename='config_default.toml'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrite_link
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     fi
@@ -1619,12 +1619,12 @@ function _setup_user_profile() {
 
     #Configuracion por defecto para un Cluster de Kubernates
     create_folderpath_on_home "" ".kube"
-    copy_file_on_home "${g_repo_path}/etc/kubectl" "template_config.yaml" ".kube" "lepc_clusters.yaml" $l_flag_overwrite_file "Profile > "
+    copy_file_on_home "${g_repo_path}/etc/kubectl" "template_config.yaml" ".kube" "lepc_clusters.yaml" $l_flag_overwrites_file_modifiable "Profile > "
     l_status=$?
 
     #Archivo de configuración de SSH
     create_folderpath_on_home "" ".ssh"
-    copy_file_on_home "${g_repo_path}/etc/ssh" "template_linux_withpublickey.conf" ".ssh" "config" $l_flag_overwrite_file "Profile > "
+    copy_file_on_home "${g_repo_path}/etc/ssh" "template_linux_withpublickey.conf" ".ssh" "config" $l_flag_overwrites_file_modifiable "Profile > "
     l_status=$?
 
 
@@ -2632,29 +2632,29 @@ function _setup_vim_environment() {
     if [ $l_flag_setup_1 -eq 0 ]; then
 
         # Flag de sobrescribir un symbolic link existente
-        local l_flag_overwrite_link=1
+        local l_flag_overwrites_file_notmodifiable=1
 
         l_option=2
         if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-            l_flag_overwrite_link=0
+            l_flag_overwrites_file_notmodifiable=0
         fi
 
         # Flag de sobrescribir un file existente
-        #local l_flag_overwrite_file=1
+        #local l_flag_overwrites_file_modifiable=1
 
         #l_option=4
         #if [ $(( $p_opciones & $l_option )) -eq $l_option ]; then
-        #    l_flag_overwrite_file=0
+        #    l_flag_overwrites_file_modifiable=0
         #fi
 
         # Crear los archivos de configuracion requiridos
         if [ $p_is_vim -eq 0 ]; then
-            _setup_vim_files $l_flag_developer $l_flag_overwrite_link
-            #_setup_vim_files $l_flag_developer $l_flag_overwrite_link $l_flag_overwrite_file
+            _setup_vim_files $l_flag_developer $l_flag_overwrites_file_notmodifiable
+            #_setup_vim_files $l_flag_developer $l_flag_overwrites_file_notmodifiable $l_flag_overwrites_file_modifiable
             l_status=$?
         else
-            _setup_nvim_files $l_flag_developer $l_flag_overwrite_link
-            #_setup_nvim_files $l_flag_developer $l_flag_overwrite_link $l_flag_overwrite_file
+            _setup_nvim_files $l_flag_developer $l_flag_overwrites_file_notmodifiable
+            #_setup_nvim_files $l_flag_developer $l_flag_overwrites_file_notmodifiable $l_flag_overwrites_file_modifiable
             l_status=$?
         fi
 
@@ -2779,8 +2779,16 @@ function _setup() {
 
 function _show_menu_core() {
 
+    local l_env_type='Headless Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+        l_env_type='Desktop Server'
+    elif [ $g_enviroment_type -eq 2 ]; then
+        l_env_type='Distrobox Container'
+    elif [ $g_enviroment_type -eq 3 ]; then
+        l_env_type='WSL VM'
+    fi
 
-    print_text_in_center "Menu de Opciones" $g_max_length_line "$g_color_green1"
+    print_text_in_center "Menu de Opciones (${l_env_type})" $g_max_length_line "$g_color_green1"
     print_line '-' $g_max_length_line  "$g_color_gray1"
     printf " (%bq%b) Salir del menu\n" "$g_color_green1" "$g_color_reset"
 
@@ -2830,8 +2838,8 @@ function _show_menu_core() {
 
     printf "     (%b%${l_max_digits}d%b) Configurar archivos del %bprofile del usuario%b actual\n" "$g_color_green1" "1" "$g_color_reset" \
            "$g_color_gray1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) Flag para %boverwrite symbolic link%b en caso de existir\n" "$g_color_green1" "2" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
-    printf "     (%b%${l_max_digits}d%b) Flag para %boverwrite file%b en caso de existir\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) Flag para %boverwrites symboliclink y/o files%b existentes y no-modificable por el usuario\n" "$g_color_green1" "2" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
+    printf "     (%b%${l_max_digits}d%b) Flag para %boverwrites files%b existentes y modificable por el usuario\n" "$g_color_green1" "4" "$g_color_reset" "$g_color_cian1" "$g_color_reset"
 
 
     printf "     (%b%${l_max_digits}d%b) %bVIM%b    > Instalar el programa '%bvim%b'\n" "$g_color_green1" "8" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
@@ -3194,6 +3202,7 @@ g_usage() {
 #------------------------------------------------------------------------------------------------------------------
 
 #1. Variables de los argumentos del script
+_g_status=0
 
 #Parametros (argumentos) basicos del script
 gp_uninstall=1          #(0) Para instalar/actualizar
@@ -3232,94 +3241,7 @@ fi
 #printf 'Parametro 9: %s\n' "$9"
 
 
-
-#2. Variables globales cuyos valor puede ser modificados el usuario
-
-# Ruta del home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git.
-# Este valor se obtendra segun orden prioridad:
-# - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
-# - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
-# - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
-g_targethome_path=''
-
-# Nombre del repositorio git o la ruta relativa del repositorio git respecto al home de usuario OBJETIVO (al cual se desea configurar el profile del usuario).
-# Este valor se obtendra segun orden prioridad:
-# - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
-# - Si ninguno de los anteriores se establece, se usara el valor '.files'.
-g_repo_name=''
-
-# Definir el tipo de entorno donde los shell del usuario se va a configurar.
-# Actualmente es usado por '04_install_profile.bash' para determinar que capacidades se instala/configura.
-#  > No confundir con la variable de entorno definida en el archivo del profile del usuario y su script '~/.profile.config'
-#    que permite establecer las capacidades del profile del usuario en tiempo de ejecucion y depende si realmente se este
-#    se ejecuta localmente o remotamente (aun cuando es un 'headless server').
-# Su valores son:
-#  > Si no se define (o su valor es una cadena vacia), se intenta culcular automaticamente este valor.
-#    Si el valor no es calculado correctamente, se recomienda establecer este valor manualemte en este archivo.
-#  > 0 Los script se ejecutan en un 'Headless Server'
-#      > El script se ejecutan en un servidor donde no se tiene un gestor de ventanas (usualmente no se cuenta con GPU).
-#      > No cuenta con aplicaciones GUI (no cuenta con emulador de terminal GUI).
-#      > Se puede conectar localmente usando el emulador de terminal CLI 'Linux Console'.
-#      > Se puede conectar remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
-#  > 1 Los script se ejecutan en un 'Desktop Server'
-#      > El script se ejecutan en un servidor donde se tiene un gestor de ventanas (siempre cuenta con GPU).
-#      > Cuenta con aplicaciones GUI, incluyendo un emulador de terminal GUI que permite ejecutar scrript localmente.
-#      > Se puede ejecutar script localmente:
-#        > Conectandose al escritorio del servidor (ingresando localmente al escritorio del servidor o conectandose
-#          remotamente usando un programa de gestion de escritorio remoto como VNC) y usando el emulador de terminal GUI
-#          existente en el servidor.
-#        > Muy poco usual, conectandose localmente pero usando el emulador de terminal CLI 'Linux Console'.
-#      > Se puede ejecutar script remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
-#  > 2 Los script se ejecutan en un contenedor dentro de un 'Desktop Server' y este tiene acceso a la GPU de este servidor.
-#      > Los script de ejecutan dentro de proceso local de un 'Desktop Server' pero en un entorno aislado (contenedor)
-#        pero que tiene acceso a GPU y progrmadas GUI del servidor.
-#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
-#      > No estan diseñados para que se conecten remotamente por ssh.
-#      > Por defecto los contenedores no tiene acceso a la GPU del servidor donde se ejecuta.
-#      > Ejemplo: Contenedores Distrobox o Toolbox en Linux.
-#  > 3 Los script de ejecutan en un VM local dentro de un 'Desktop Server' tiene acceso a la GPU del servidor.
-#      > Los script de ejecutan dentro de proceso remoto de un 'Desktop Server' (dentro de una VM) pero que tiene acceso a GPU
-#        y progrmadas GUI del servidor.
-#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
-#      > No estan diseñados para que se conecten remotamente por ssh.
-#      > Ejemplo: La VM ligera WSL2 que esta integrada con Windows en modo escritorio.
-#  > Por el script pofile del usuario y '~/.custom_config', para determina que capacidades se incluyen en el profile.
-# Actualmente, es usado para definir valores por defecto en algunos archivos de configuracion (modificables) del profile:
-#  > El tema usado por 'oh-my-posh': '~/.files/etc/oh-my-posh/default_settings.json'
-if [ -z "$g_enviroment_type" ]; then
-    _get_default_enviroment_type
-    g_enviroment_type=$?
-    echo "g_enviroment_type: ${g_enviroment_type}"
-fi
-
-# Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
-# Sus valores puede ser:
-# > 0 No instala ningun plugin de AI.
-# > Puede ser la suma de los siguientes valores:
-#   > 1 Instala plugin de AI Completion.
-#   > 2 Instala plugin de AI Chatbot y AI Agent interno (por ejemplo Avante)
-#   > 4 Instala plugin de integracion de AI Chatbot y AI Agent externo (por ejemplo integracion con OpenCode-CLI o Gemini-CLI)
-# Si no se define el valor por defecto es '0' (no se instala ningun plugin de AI).
-g_setup_vim_ai_plugins=0
-
-#Obtener los parametros del archivos de configuración
-if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
-
-    #Obtener los valores por defecto de las variables
-    . ${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash
-
-    #Corregir algunos valores
-    if [ "$g_enviroment_type" != "0" ] || [ "$g_enviroment_type" != "1" ] || [ "$g_enviroment_type" != "2" ] || [ "$g_enviroment_type" != "3" ]; then
-        g_enviroment_type=0
-    fi
-
-fi
-
-
-
-#3. Variables globales cuyos valor son AUTOGENERADOS internamente por el script
+#2. Variables globales cuyos valor son AUTOGENERADOS internamente por el script
 
 #Usuario OBJETIVO al cual se desa configurar su profile. Su valor es calcuado por 'get_targethome_info'.
 g_targethome_owner=''
@@ -3351,11 +3273,127 @@ g_status_crendential_storage=-1
 g_is_credential_storage_externally=1
 
 
+#3. Variables globales cuyos valor puede ser modificados el usuario
+
+#Obtener los parametros del archivos de configuración
+if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
+
+    #Obtener los valores por defecto de las variables
+    # shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/setup_config_template.bash
+    . ${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash
+
+    #Corregir algunos valores ingresados
+    # ...
+fi
+
+# Nombre del repositorio git o la ruta relativa del repositorio git respecto al home de usuario OBJETIVO (al cual se desea configurar el profile del usuario).
+# Este valor se obtendra segun orden prioridad:
+# - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
+# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+# - Si ninguno de los anteriores se establece, se usara el valor '.files'.
+#
+# Calcular el valor efectivo de 'g_repo_name'.
+# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
+if [ $gp_type_calling -eq 0 ]; then
+    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+        g_repo_name="$3"
+    fi
+else
+    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
+        g_repo_name="$4"
+    fi
+fi
+
+# Si no se especifica valor, se usara el por defecto
+if [ -z "$g_repo_name" ]; then
+    g_repo_name='.files'
+fi
+
+# Ruta del home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git.
+# Este valor se obtendra segun orden prioridad:
+# - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
+# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+# - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
+# - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
+#
+# Calcular el valor efectivo de 'g_repo_name'.
+# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
+if [ $gp_type_calling -eq 0 ]; then
+    if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
+        g_targethome_path="$2"
+    fi
+else
+    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+        g_targethome_path="$3"
+    fi
+fi
+
+# Obtener los valores efectivo de la variable 'g_targethome_path', 'g_repo_path', 'g_targethome_owner', 'g_targethome_group'
+get_targethome_info "$g_repo_name" "$g_targethome_path"
+_g_status=$?
+if [ $_g_status -ne 0 ]; then
+    exit 111
+fi
+printf '%bTarget Home Path      : "%s"%b\n' "$g_color_gray1" "${g_targethome_path}" "$g_color_reset"
+printf '%bRepository Path       : "%s"%b\n' "$g_color_gray1" "${g_repo_path}" "$g_color_reset"
+
+
+# Definir el tipo de entorno donde los shell del usuario se va a configurar.
+# > Actualmente es usado por '04_install_profile.bash' para determinar que capacidades se instala/configura.
+# > Una variable similar es usado por el profile del usuario (usando su script '~/.profile.config') cuyo valor es
+#   calculado durante la instalación ('04_install_profile.bash') pero puede ser modificado despues de la instalación.
+# Su valores son:
+#  > Si no se define (o su valor es una cadena vacia), se intenta culcular automaticamente este valor.
+#    Si el valor no es calculado correctamente, se recomienda establecer este valor manualemte en este archivo.
+#  > 0 Los script se ejecutan en un 'Headless Server'
+#      > El script se ejecutan en un servidor donde no se tiene un gestor de ventanas (usualmente no se cuenta con GPU).
+#      > No cuenta con aplicaciones GUI (no cuenta con emulador de terminal GUI).
+#      > Se puede conectar localmente usando el emulador de terminal CLI 'Linux Console'.
+#      > Se puede conectar remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
+#  > 1 Los script se ejecutan en un 'Desktop Server'
+#      > El script se ejecutan en un servidor donde se tiene un gestor de ventanas (siempre cuenta con GPU).
+#      > Cuenta con aplicaciones GUI, incluyendo un emulador de terminal GUI que permite ejecutar scrript localmente.
+#      > Se puede ejecutar script localmente:
+#        > Conectandose al escritorio del servidor (ingresando localmente al escritorio del servidor o conectandose
+#          remotamente usando un programa de gestion de escritorio remoto como VNC) y usando el emulador de terminal GUI
+#          existente en el servidor.
+#        > Muy poco usual, conectandose localmente pero usando el emulador de terminal CLI 'Linux Console'.
+#      > Se puede ejecutar script remotamente usando SSH con su emulador de terminal externo (usualmente GUI) favorito.
+#  > 2 Los script se ejecutan en un contenedor dentro de un 'Desktop Server' y este tiene acceso a la GPU de este servidor.
+#      > Los script de ejecutan dentro de proceso local de un 'Desktop Server' pero en un entorno aislado (contenedor)
+#        pero que tiene acceso a GPU y progrmadas GUI del servidor.
+#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
+#      > No estan diseñados para que se conecten remotamente por ssh.
+#      > Por defecto los contenedores no tiene acceso a la GPU del servidor donde se ejecuta.
+#      > Ejemplo: Contenedores Distrobox o Toolbox en Linux.
+#  > 3 Los script de ejecutan en un VM local dentro de un 'Desktop Server' tiene acceso a la GPU del servidor.
+#      > Los script de ejecutan dentro de proceso remoto de un 'Desktop Server' (dentro de una VM) pero que tiene acceso a GPU
+#        y progrmadas GUI del servidor.
+#      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
+#      > No estan diseñados para que se conecten remotamente por ssh.
+#      > Ejemplo: La VM ligera WSL2 que esta integrada con Windows en modo escritorio.
+if [ -z "$g_enviroment_type" ]; then
+    _get_default_enviroment_type
+    g_enviroment_type=$?
+fi
+printf '%bEnviroment type       : "%s"%b\n' "$g_color_gray1" "${g_enviroment_type}" "$g_color_reset"
+
+# Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
+# Sus valores puede ser:
+# > 0 No instala ningun plugin de AI.
+# > Puede ser la suma de los siguientes valores:
+#   > 1 Instala plugin de AI Completion.
+#   > 2 Instala plugin de AI Chatbot y AI Agent interno (por ejemplo Avante)
+#   > 4 Instala plugin de integracion de AI Chatbot y AI Agent externo (por ejemplo integracion con OpenCode-CLI o Gemini-CLI)
+# Si no se define el valor por defecto es '0' (no se instala ningun plugin de AI).
+if [ -z "$g_setup_vim_ai_plugins" ]; then
+    g_setup_vim_ai_plugins=0
+fi
+printf '%bSetup AI VIM plugins  : "%s"%b\n' "$g_color_gray1" "${g_setup_vim_ai_plugins}" "$g_color_reset"
 
 
 #4. LOGICA: Configuración del profile
 _g_result=0
-_g_status=0
 
 
 #4.1. Mostrar el menu para escoger lo que se va instalar
@@ -3373,29 +3411,6 @@ if [ $gp_type_calling -eq 0 ]; then
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
     #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
-
-
-    #Calcular el valor efectivo de 'g_repo_name'.
-    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-        g_repo_name="$3"
-    fi
-
-    if [ -z "$g_repo_name" ]; then
-        g_repo_name='.files'
-    fi
-
-    #Obtener los valores efectivo de la variable 'g_targethome_path', 'g_repo_path', 'g_targethome_owner', 'g_targethome_group'
-    if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-        g_targethome_path="$2"
-    fi
-
-    get_targethome_info "$g_repo_name" "$g_targethome_path"
-    _g_status=$?
-    if [ $_g_status -ne 0 ]; then
-        exit 111
-    fi
 
     #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
     #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info')
@@ -3450,30 +3465,6 @@ else
         fi
 
     fi
-
-
-    #Calcular el valor efectivo de 'g_repo_name'.
-    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-        g_repo_name="$4"
-    fi
-
-    if [ -z "$g_repo_name" ]; then
-        g_repo_name='.files'
-    fi
-
-    #Obtener los valores efectivo de la variable 'g_targethome_path', 'g_repo_path', 'g_targethome_owner', 'g_targethome_group'
-    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-        g_targethome_path="$3"
-    fi
-
-    get_targethome_info "$g_repo_name" "$g_targethome_path"
-    _g_status=$?
-    if [ $_g_status -ne 0 ]; then
-        exit 111
-    fi
-
 
     #Validar los requisitos
     #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info')
