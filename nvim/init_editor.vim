@@ -246,6 +246,14 @@ runtime setting/basic/basic_core.vim
 " por Treesitter, Markdown render.
 runtime setting/basic/basic_extended.vim
 
-" Herramientas para visualiazion de buffer en un browser, uso imagenes externas, etc.
-" Solo si la pesudo-terminal donde se ejecuta es local y usa un 'desktop' (tiene GUI).
-runtime setting/basic/basic_desktop.vim
+" Solo se cargara los plugins que requieren un 'Desktop Server' en entornos que no sean 'HeadLess Server'.
+" > Estos entornos pueden ser 'Desktop Server', 'Distrobox'/'Toolboox' y 'WSL2'.
+" > MY_ENV_TYPE es una variable de entorno calculado en el configuracion del  profile y definido en el
+"   profile del usuario.
+if $MY_ENV_TYPE != '' && $MY_ENV_TYPE != 0
+
+    " Herramientas para visualizacion de buffer en un browser, uso imagenes externas, etc.
+    " Solo si la pesudo-terminal donde se ejecuta es local y usa un 'desktop' (tiene GUI).
+    runtime setting/basic/basic_desktop.vim
+
+endif

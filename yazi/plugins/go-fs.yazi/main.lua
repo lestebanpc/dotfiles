@@ -81,22 +81,28 @@ local function m_read_args(p_job)
     ya.dbg('args.type: ' .. tostring(args["type"]))
 
     if l_cmd_type == "openintab" then
+
         l_options.open_type = args["type"]
-    end
 
-    -- Opcion 'editor'
-    l_options.editor_type=0
-    local l_data = nil
-    if args.editor then
+        -- Opcion 'editor'
+        l_options.editor_type=0
+        local l_data = nil
+        if args.editor then
 
-        l_data = tostring(args.editor)
-        if l_data == "vim" then
-            l_options.editor_type = 1
-        elseif l_data == "nvim" then
-            l_options.editor_type = 2
-        else
-            ya.err("La opcion '--editor' tiene formato invalido '" .. l_data .. "'." )
+            l_data = tostring(args.editor)
+            if l_data == "vim" then
+                l_options.editor_type = 1
+            elseif l_data == "nvim" then
+                l_options.editor_type = 2
+            else
+                ya.err("La opcion '--editor' tiene formato invalido '" .. l_data .. "'." )
+            end
+
         end
+
+    elseif l_cmd_type == "copycb" then
+
+        l_options.path_type = args["type"]
 
     end
 
@@ -130,7 +136,7 @@ local function m_go_git_root_folder(p_cwd)
 
     l_output, l_error = l_child:wait_with_output()
     if not l_output then
-        l_message = "git output error: " .. tostring(l_output)
+        l_message = "git output error: " .. tostring(l_err)
         ya.err(l_message)
         return nil, l_message
     end
@@ -142,9 +148,28 @@ local function m_go_git_root_folder(p_cwd)
 
     -- Si el comando devolvio un codigo de error en su ejecucion
     if not l_output.status.success then
-        l_message = "git error: " .. tostring(l_output.stderr)
-        ya.err(l_message)
+
+        l_message = nil
+        if l_output.status.code then
+            l_message = "git status-code: " .. tostring(l_output.status.code)
+        end
+
+        if l_output.stderr ~= nil and l_output.stderr ~= "" then
+
+            if l_message == nil then
+                l_message = "git error: " .. l_output.stderr
+            else
+                l_message = l_message .. ", git error: " .. l_output.stderr
+            end
+
+        end
+
+        ya.err("git status.code: " .. tostring(l_output.status.code))
+        ya.err("git stdout: " .. tostring(l_output.stdout))
+        ya.err("git stderr: " .. tostring(l_output.stderr))
+
         return nil, l_message
+
     end
 
     l_git_folder = l_output.stdout:gsub("%s*$", "")
@@ -198,10 +223,10 @@ local function m_opentab_with_selected_files(p_cwd, p_script_path, p_file_paths,
 
     -- Esperar a que el comando termine de ejecutar y devuelva el STDOUT
     local l_output = nil
+    l_output, l_error = l_child:wait_with_output()
 
-    l_output, l_err = l_child:wait_with_output()
     if not l_output then
-        l_message = "cmd output error: " .. tostring(l_err)
+        l_message = "cmd output error: " .. tostring(l_error)
         ya.err(l_message)
         return l_message
     end
@@ -213,9 +238,23 @@ local function m_opentab_with_selected_files(p_cwd, p_script_path, p_file_paths,
 
     -- Si el comando devolvio un codigo de error en su ejecucion
     if not l_output.status.success then
-        l_message = "status code '" .. tostring(l_output.status.code) .. "' during the execution '" .. p_script_path .. "'."
-        ya.err(l_message)
+
+        l_message = nil
+        if l_output.status.code then
+            l_message = "status-code: " .. tostring(l_output.status.code)
+        end
+
+        if l_message == nil then
+            l_message = "error during the execution '" .. p_script_path .. "'."
+        else
+            l_message = l_message .. ", error during the execution '" .. p_script_path .. "'."
+        end
+
+        ya.err(p_script_path .. " status-code: " .. tostring(l_output.status.code))
+        ya.err(p_script_path .. " stdout: " .. tostring(l_output.stdout))
+        ya.err(p_script_path .. " stderr: " .. tostring(l_output.stderr))
         return l_message
+
     end
 
     return nil
@@ -269,21 +308,81 @@ end
 -- Funcion para capturar algunos datos relevantes de yazi.
 local m_get_current_yazi_info1 = ya.sync(function()
 
-	return cx.active.current.cwd
+    -- El tab actual
+    local l_current_tab = cx.active
+
+    -- El folder de trabajo actual
+    local l_cwd = l_current_tab.current.cwd
+
+    -- Los archivos ocultos se muestran
+    --local l_hidden_files_are_shown = l_current_tab.pref.show_hidden
+
+	return l_cwd
 
 end)
+
 
 -- Funcion para capturar algunos datos relevantes de yazi.
 local m_get_current_yazi_info2 = ya.sync(function()
 
-    local selected = {}
-	for _, url in pairs(cx.active.selected) do
-		selected[#selected + 1] = url
-	end
+    -- El tab actual
+    local l_current_tab = cx.active
 
-	return cx.active.current.cwd, selected
+    -- Obtener las ruta de los archivos selecionados (omitir los folderes)
+	local l_selected_urls = {}
+	for _, l_url in pairs(l_current_tab.selected) do
+        table.insert(l_selected_urls, l_url)
+    end
+
+    -- Si no nada selecionado, y el cursor esta selecionado a un archivo, usar este
+    local l_current_file = nil
+    local l_file = l_current_tab.current.hovered
+    if l_file then
+
+        -- Si no es directorio
+        if not l_file.cha.is_dir then
+            l_current_file = tostring(l_file.url.path)
+        end
+
+    end
+    --ya.dbg("l_current_path: " .. tostring(l_current_file))
+
+
+    -- El folder de trabajo actual
+    local l_cwd = l_current_tab.current.cwd
+
+    -- Los archivos ocultos se muestran
+    --local l_hidden_files_are_shown = l_current_tab.pref.show_hidden
+
+	return l_cwd, l_selected_urls, l_current_file
 
 end)
+
+
+-- Funcion para capturar algunos datos relevantes de yazi.
+local m_get_current_yazi_info3 = ya.sync(function()
+
+    -- El tab actual
+    local l_current_tab = cx.active
+
+    -- Si no nada selecionado, y el cursor esta selecionado a un archivo, usar este
+    local l_current_url = nil
+    local l_file = l_current_tab.current.hovered
+    if l_file then
+        l_current_url = l_file.url
+    end
+
+    -- El folder de trabajo actual
+    local l_cwd = l_current_tab.current.cwd
+
+    -- Los archivos ocultos se muestran
+    --local l_hidden_files_are_shown = l_current_tab.pref.show_hidden
+
+	return l_cwd, l_current_url
+
+end)
+
+
 
 -- Obtener las opciones configurables por el usuario (state) y establece valores por defecto
 -- Se genera unc copia del objeto para sea accedido fuera de 'ya.sync()' o 'ya.async()'
@@ -373,7 +472,7 @@ function mod.entry(p_self, p_job)
 
         local l_git_folder, l_message = m_go_git_root_folder(l_cwd)
         if l_message ~= nil then
-	        return ya.notify({ title = "go-fs (rootgit)", content = l_message, timeout = 5, level = "error" })
+	        return ya.notify({ title = "go-fs (rootgit)", content = "It's not git folder (" .. l_message .. ")", timeout = 5, level = "error" })
         end
 
         if l_git_folder == nil or l_git_folder == "" then
@@ -382,7 +481,7 @@ function mod.entry(p_self, p_job)
         end
 
         ya.dbg("git_folder: " .. tostring(l_git_folder))
-        local url = Url(l_state.cwd_root)
+        local url = Url(l_git_folder)
 		ya.emit("cd", { url, raw = true })
 
         return
@@ -397,13 +496,20 @@ function mod.entry(p_self, p_job)
         end
 
         -- Obtener informacion actual
-        local l_cwd, l_selects = m_get_current_yazi_info2()
+        local l_cwd, l_selected_urls, l_current_path = m_get_current_yazi_info2()
         ya.dbg("l_cwd: " .. tostring(l_cwd))
 
         -- Obtener las rutas absolutas de los archivos seleccionados
-        local l_paths = m_get_file_fullpath(l_selects)
-        if not l_paths then
-	        return ya.notify({ title = "go-fs (openintab)", content = "Not selected files was found", timeout = 5, level = "warn" })
+        local l_paths = m_get_file_fullpath(l_selected_urls)
+
+        if not l_paths or #l_paths < 1 then
+
+            if not l_current_path then
+	            return ya.notify({ title = "go-fs (openintab)", content = "You must select at least one file or set the cursor to a file.", timeout = 5, level = "warn" })
+            else
+                l_paths = { l_current_path }
+            end
+
         end
         ya.dbg("l_paths: " .. m_dump_table(l_paths, " "))
 
@@ -422,7 +528,7 @@ function mod.entry(p_self, p_job)
 
             l_pane_wd, l_message = m_go_git_root_folder(l_cwd)
             if l_message ~= nil then
-	            return ya.notify({ title = "go-fs (openintab)", content = l_message, timeout = 5, level = "error" })
+	            return ya.notify({ title = "go-fs (openintab)", content = "It's not git folder (" .. l_message .. ")", timeout = 5, level = "error" })
             end
 
         else
@@ -447,6 +553,61 @@ function mod.entry(p_self, p_job)
 
         return
 
+    end
+
+    -- Si se desea copiar al clipboard
+    if l_cmd_type == "copycb" then
+
+        if l_options.path_type == nil then
+            return
+        end
+
+        -- Obtener informacion actual
+        local l_cwd, l_current_url = m_get_current_yazi_info3()
+        if not l_current_url then
+	        return ya.notify({ title = "go-fs (copycb)", content = "You must set the cursor to a file or folder.", timeout = 5, level = "warn" })
+        end
+
+        local l_base_path = nil
+
+        -- Si se desea ir al root working-dir
+        if l_options.path_type == "rootdir" then
+
+            --ya.dbg("cwd_root: " .. tostring(l_state.cwd_root))
+            if l_state.cwd_root == nil or l_state.cwd_root == "" then
+	            return ya.notify({ title = "go-fs (copycb)", content = "Initial working directory is not defined", timeout = 5, level = "warn" })
+            end
+
+            l_base_path = l_state.cwd_root
+
+        -- Si se desea ir al root git folder
+        elseif l_options.path_type == "rootgit" then
+
+            local l_git_folder, l_message = m_go_git_root_folder(l_cwd)
+            if l_message ~= nil then
+	            return ya.notify({ title = "go-fs (copycb)", content = "It's not git folder (" .. l_message .. ")", timeout = 5, level = "error" })
+            end
+
+            if l_git_folder == nil or l_git_folder == "" then
+                ya.dbg("el comando no arrojo error pero no devolvio la ruta del git padre")
+                return
+            end
+
+            ya.dbg("git_folder: " .. tostring(l_git_folder))
+            l_base_path = l_git_folder
+
+        end
+
+        if l_base_path == nil or l_base_path == "" then
+            return
+        end
+
+        local l_relative_path = l_current_url:strip_prefix(l_base_path)
+        if not l_relative_path then
+	        return ya.notify({ title = "go-fs (copycb)", content = "Error to obtain relative path", timeout = 5, level = "error" })
+        end
+
+        ya.clipboard(tostring(l_relative_path))
     end
 
 end

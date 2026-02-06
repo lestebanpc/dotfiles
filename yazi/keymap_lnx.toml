@@ -27,6 +27,10 @@ prepend_keymap = [
     # Nuevos keymappings
     # --------------------------------------------------------------------------
 
+    # Comando para copiar la ruta relativa de objeto actual selecionado (no usar los reservados 'c', 'd', 'f' y 'n')
+    { on = [ "c", "w" ], run = "plugin go-fs -- copycb --type=rootdir", desc = "Copy relative path (Inicial Workdir)" },
+    { on = [ "c", "g" ], run = "plugin go-fs -- copycb --type=rootgit", desc = "Copy relative path (Root Git)" },
+
     # Comandos de busqueda integrada en la vista de Yazi
     { on = [ "f", "n" ], run = "search --via=fd", desc = "Search files by name    (fd)" },
     { on = [ "f", "c" ], run = "search --via=rg", desc = "Search files by content (rg)" },

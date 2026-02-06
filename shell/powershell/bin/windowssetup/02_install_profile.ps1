@@ -4,8 +4,6 @@
 
 $g_max_length_line= 120
 
-$g_use_sudo= $false
-
 # Grupo de plugins de VIM/NeoVIM :
 # (00) Grupo Basic > Themes              - Temas
 # (01) Grupo Basic > Core                - StatusLine, TabLine, FZF, TMUX utilities, Files Tree
@@ -195,13 +193,43 @@ $ga_group_plugin_folder= @(
     )
 
 
+# Usado para escribir logs
+$g_tag_empty= "            > "
+
+
 # Importando funciones de utilidad
 . "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/lib/setup_profile_utility.ps1"
 
 
+
 #------------------------------------------------------------------------------------------------
-# Funciones
+# Funciones de cracion de folderes y/o enlaces simbolicos
 #------------------------------------------------------------------------------------------------
+
+function m_create_folder($p_existing_base_path, $p_relative_folder_path_to_validate, $p_tag) {
+
+    # Si la ruta base no existe, salirr
+    $l_tmp= $null
+	if(! (Test-Path "${p_existing_base_path}")) {
+        Write-Host "${p_tag}El folder '${p_existing_base_path}' no existe."
+        return 2
+    }
+
+    # Crear el directorio padre del target
+    $l_folder_path = "${p_existing_base_path}\${p_relative_folder_path_to_validate}"
+
+    # Si no existe el target, copiarlo
+	if(! (Test-Path "$l_folder_path")) {
+
+		$l_tmp= New-Item -ItemType Directory -Force -Path "${l_folder_path}"
+        Write-Host "${p_tag}Se ha creado el folder '${l_folder_path}'."
+		return 1
+
+	}
+    return 0
+
+}
+
 
 function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, $p_tag, $p_override_target_link) {
 
@@ -219,7 +247,7 @@ function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, 
     $l_source_fullfilename="${p_source_path}\${p_source_filename}"
 	if(! (Test-Path "$p_target_link")) {
 
-        if ($g_use_sudo) {
+        if ($g_setup_access_type -eq 2) {
 		    sudo cmd /c mklink "$p_target_link" "$l_source_fullfilename"
         }
         else {
@@ -238,7 +266,7 @@ function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, 
 		if(! (Test-Path $l_info.LinkTarget)) {
 
 			rm "$p_target_link"
-            if ($g_use_sudo) {
+            if ($g_setup_access_type -eq 2) {
 			    sudo cmd /c mklink "$p_target_link" "$l_source_fullfilename"
             }
             else {
@@ -253,7 +281,7 @@ function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, 
 			if($p_override_target_link) {
 
 				rm "$p_target_link"
-                if ($g_use_sudo) {
+                if ($g_setup_access_type -eq 2) {
 				    sudo cmd /c mklink "$p_target_link" "$l_source_fullfilename"
                 }
                 else {
@@ -272,7 +300,7 @@ function m_create_file_link($p_source_path, $p_source_filename, $p_target_link, 
     else {
 
         rm "$p_target_link"
-        if ($g_use_sudo) {
+        if ($g_setup_access_type -eq 2) {
 		    sudo cmd /c mklink "$p_target_link" "$l_source_fullfilename"
         }
         else {
@@ -297,7 +325,7 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
 
 	if(! (Test-Path "${p_target_link}")) {
 
-        if ($g_use_sudo) {
+        if ($g_setup_access_type -eq 2) {
             sudo cmd /c mklink /d "$p_target_link" "$p_source_path"
         }
         else {
@@ -316,7 +344,7 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
 		if(! (Test-Path $l_info.LinkTarget)) {
 
 			rmdir "$p_target_link"
-            if ($g_use_sudo) {
+            if ($g_setup_access_type -eq 2) {
 			    sudo cmd /c mklink /d "$p_target_link" "$p_source_path"
             }
             else {
@@ -331,7 +359,7 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
 
 			if($p_override_target_link) {
 				rmdir "$p_target_link"
-                if ($g_use_sudo) {
+                if ($g_setup_access_type -eq 2) {
 				    sudo cmd /c mklink /d "$p_target_link" "$p_source_path"
                 }
                 else {
@@ -351,7 +379,7 @@ function m_create_folder_link($p_source_path, $p_target_link, $p_tag, $p_overrid
     else {
 
         rmdir "$p_target_link"
-        if ($g_use_sudo) {
+        if ($g_setup_access_type -eq 2) {
 		    sudo cmd /c mklink /d "$p_target_link" "$p_source_path"
         }
         else {
@@ -380,7 +408,7 @@ function m_copy_file($p_source_path, $p_source_filename, $p_target_file, $p_tag,
     $l_source_fullfilename="${p_source_path}\${p_source_filename}"
 	if(! (Test-Path "$p_target_file")) {
 
-		cp "$l_source_fullfilename" "$p_target_file"
+        Copy-Item -Path "${l_source_fullfilename}" -Destination "${p_target_file}"
 
         Write-Host "${p_tag}Se ha creado el archivo '${p_target_link}' " -NoNewline
 		Write-Host "(copiado de '${l_source_fullfilename}')" -ForegroundColor DarkGray
@@ -396,7 +424,7 @@ function m_copy_file($p_source_path, $p_source_filename, $p_target_file, $p_tag,
     if ( $l_info.LinkType -eq "SymbolicLink" ) {
 
         rm "$p_target_file"
-		cp "$l_source_fullfilename" "$p_target_file"
+        Copy-Item -Path "${l_source_fullfilename}" -Destination "${p_target_file}"
 
         Write-Host "${p_tag}Se ha creado el archivo '${p_target_file}' eliminando el enlace simbolico " -NoNewline
 		Write-Host "(copiado de '${l_source_fullfilename}')" -ForegroundColor DarkGray
@@ -408,7 +436,7 @@ function m_copy_file($p_source_path, $p_source_filename, $p_target_file, $p_tag,
     if ( $p_override_file ) {
 
         rm "$p_target_file"
-		cp "$l_source_fullfilename" "$p_target_file"
+        Copy-Item -Path "${l_source_fullfilename}" -Destination "${p_target_file}"
 
         Write-Host "${p_tag}Se ha re-creado el archivo '${p_target_file}' " -NoNewline
 		Write-Host "(copiado de '${l_source_fullfilename}')" -ForegroundColor DarkGray
@@ -469,6 +497,242 @@ function m_copy_folder($p_source_path, $p_target_folder, $p_tag, $p_override_fol
 }
 
 
+
+#------------------------------------------------------------------------------------------------
+# Funciones de cracion de enlaces simbolicos requeridos y modulos
+#------------------------------------------------------------------------------------------------
+
+function m_create_folders_for_symboliclinks($p_flag_developer) {
+
+    $document_path= [Environment]::GetFolderPath("mydocuments")
+
+    $l_folders = @(
+        "${env:USERPROFILE}\vimfiles"
+        "${env:LOCALAPPDATA}\nvim"
+        "${env:LOCALAPPDATA}\nvim\rte_cocide"
+        "${env:LOCALAPPDATA}\nvim\rte_nativeide"
+        "${env:APPDATA}\eclipse\jdtls"
+        "${document_path}\PowerShell"
+        "${document_path}\WindowsPowerShell"
+        "${env:USERPROFILE}\.config"
+        "${env:LOCALAPPDATA}\lazygit"
+        "${env:APPDATA}\yazi"
+        "${env:APPDATA}\yazi\config"
+        "${env:APPDATA}\yazi\config\plugins"
+        "${env:APPDATA}\yazi\config\flavors"
+    )
+
+    $l_folder_path = $null
+    $l_is_first = $true
+    for ($i=0; $i -lt $l_folders.Count; $i++) {
+
+        $l_folder_path= $l_folders[$i]
+        if (!$l_folder_path) {
+            continue
+        }
+
+	    if(! (Test-Path "$l_folder_path")) {
+            if ($l_is_first) {
+                Write-Host "New folders > Creando el folder '${l_folder_path}'."
+            }
+            else {
+                $l_is_first = $false
+                Write-Host "            > Creando el folder '${l_folder_path}'."
+            }
+		    New-Item -ItemType Directory -Force -Path "$l_folder_path"
+        }
+
+    }
+
+}
+
+
+function m_create_all_symboliclinks($p_flag_overwrites_ln) {
+
+    $document_path= [Environment]::GetFolderPath("mydocuments")
+
+    $l_folder_links = @(
+        [PSCustomObject]@{
+            target_link     = "${env:LOCALAPPDATA}\nvim\setting"
+            source_path     = "${env:USERPROFILE}\.files\vim\setting"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:LOCALAPPDATA}\nvim\lua"
+            source_path     = "${env:USERPROFILE}\.files\nvim\lua"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:LOCALAPPDATA}\nvim\ftplugin"
+            source_path     = "${env:USERPROFILE}\.files\nvim\ftplugin\commonide"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:LOCALAPPDATA}\nvim\rte_cocide\ftplugin"
+            source_path     = "${env:USERPROFILE}\.files\nvim\ftplugin\cocide"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:LOCALAPPDATA}\nvim\rte_nativeide\ftplugin"
+            source_path     = "${env:USERPROFILE}\.files\nvim\ftplugin\nativeide"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:USERPROFILE}\vimfiles\setting"
+            source_path     = "${env:USERPROFILE}\.files\vim\setting"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:USERPROFILE}\vimfiles\ftplugin"
+            source_path     = "${env:USERPROFILE}\.files\vim\ftplugin\cocide"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:APPDATA}\yazi\config\plugins\fzf-fd.yazi"
+            source_path     = "${env:USERPROFILE}\.files\yazi\plugins\fzf-fd.yazi"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:APPDATA}\yazi\config\plugins\fzf-rg.yazi"
+            source_path     = "${env:USERPROFILE}\.files\yazi\plugins\fzf-rg.yazi"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:APPDATA}\yazi\config\plugins\go-fs.yazi"
+            source_path     = "${env:USERPROFILE}\.files\yazi\plugins\go-fs.yazi"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:USERPROFILE}\.config\wezterm\utils"
+            source_path     = "${env:USERPROFILE}\.files\wezterm\local\utils"
+        }
+    )
+
+    $l_item = $null
+    $l_tag = "Folder link > "
+    for ($i=0; $i -lt $l_folder_links.Count; $i++) {
+
+        $l_item= $l_folder_links[$i]
+        if (!$l_item) {
+            continue
+        }
+
+        if($i -ne 0) {
+            $l_tag = "            > "
+        }
+
+        m_create_folder_link $l_item.source_path $l_item.target_link $l_tag $p_flag_overwrites_ln
+
+    }
+
+
+    $l_file_links = @(
+        [PSCustomObject]@{
+            target_link     = "${env:LOCALAPPDATA}\nvim\init.vim"
+            source_path     = "${env:USERPROFILE}\.files\nvim"
+            source_filename = "init_ide.vim"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:LOCALAPPDATA}\nvim\coc-settings.json"
+            source_path     = "${env:USERPROFILE}\.files\nvim"
+            source_filename = "coc-settings_windows.json"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:USERPROFILE}\.vimrc"
+            source_path     = "${env:USERPROFILE}\.files\vim"
+            source_filename = "vimrc_ide.vim"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:USERPROFILE}\vimfiles\coc-settings.json"
+            source_path     = "${env:USERPROFILE}\.files\vim"
+            source_filename = "coc-settings_windows.json"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:USERPROFILE}\.gitconfig"
+            source_path     = "${env:USERPROFILE}\.files\etc\git"
+            source_filename = "gitconfig_win.toml"
+        },
+        [PSCustomObject]@{
+            target_link     = "${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
+            source_path     = "${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
+            source_filename = "windows_x64.ps1"
+        },
+        [PSCustomObject]@{
+            target_link     = "${document_path}\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
+            source_path     = "${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
+            source_filename = "legacy_x64.ps1"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:USERPROFILE}\.config\wezterm\wezterm.lua"
+            source_path     = "${env:USERPROFILE}\.files\wezterm\local"
+            source_filename = "wezterm.lua"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:LOCALAPPDATA}\lazygit\config.yml"
+            source_path     = "${env:USERPROFILE}\.files\lazygit"
+            source_filename = "config_default.yaml"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:APPDATA}\yazi\config\yazi.toml"
+            source_path     = "${env:USERPROFILE}\.files\yazi"
+            source_filename = "yazi_desktop.toml"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:APPDATA}\yazi\config\theme.toml"
+            source_path     = "${env:USERPROFILE}\.files\yazi"
+            source_filename = "theme.toml"
+        }
+    )
+
+    Write-Host ""
+	Write-Host ""
+    $l_item = $null
+    $l_tag = "File link   > "
+    for ($i=0; $i -lt $l_file_links.Count; $i++) {
+
+        $l_item= $l_file_links[$i]
+        if (!$l_item) {
+            continue
+        }
+
+        if($i -ne 0) {
+            $l_tag = "            > "
+        }
+
+        m_create_file_link $l_item.source_path $l_item.source_filename $l_item.target_link $l_tag $p_flag_overwrites_ln
+
+    }
+
+}
+
+
+function m_install_pws_module($p_module_name, $p_flag_user_scope) {
+
+    Write-Host ""
+
+    #i. Instalar el modulo PSFzf
+
+    #Buscar si el modulo esta instado
+    $mod= Get-InstalledModule $p_module_name 2> $null
+    if($mod) {
+        Write-Host "El modulo '${p_module_name}' $($mod.Version) esta instalado."
+        Write-Host "Intentando actualizar el modulo '${p_module_name}' ..."
+
+        if ($p_flag_user_scope) {
+            Update-Module -Name $p_module_name -Scope CurrentUser
+        }
+        else {
+            Update-Module -Name $p_module_name -Scope AllUser
+        }
+
+    }
+    else {
+        Write-Host "Instalando el modulo '${p_module_name}' ..."
+
+        if ($p_flag_user_scope) {
+            Install-Module -Name $p_module_name -Scope CurrentUser
+        }
+        else {
+            Install-Module -Name $p_module_name -Scope AllUser
+        }
+    }
+
+}
+
+
+#------------------------------------------------------------------------------------------------
+# Funciones de configuracion de VIM o NeoVIM
+#------------------------------------------------------------------------------------------------
 
 function m_setup_vim_packages($p_is_neovim, $p_flag_developer, $p_index_documentation) {
 
@@ -564,7 +828,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer, $p_index_document
         $l_base_path= "${l_base_plugins}\${l_group_folder}\opt"
 
         #Si es un repositorio para developer no debe instalarse en el perfil basico
-        if (-not $p_flag_developer -and $l_repo_type -ge 3) {
+        if (-not $p_flag_developer -and $l_repo_type -ge 4) {
 			#Write-Host "Repo-Name '${l_repo_name}', Repo-Scope '${l_repo_scope}', Repo-Git '${l_repo_git}', Current-Scope '${l_current_scope}', Developer '${p_flag_developer}', Base-Path '${l_base_path}'"
 			continue
         }
@@ -596,7 +860,7 @@ function m_setup_vim_packages($p_is_neovim, $p_flag_developer, $p_index_document
             }
 
             # Validar si se excluye los plugins de integracion con AI Chatbot y AI Agent externos (OpenCode CLI, Gemini CLI, etc)
-            if ( ($g_setup_vim_ai_plugins -band 3) -eq 3 ) {
+            if ( ($g_setup_vim_ai_plugins -band 4) -eq 4 ) {
                 if ( $l_repo_type -eq 13 -or $l_repo_type -eq 16 ) {
                     $l_enable_ai_plugin = 0
                 }
@@ -731,79 +995,85 @@ function m_setup_nvim_files($p_flag_developer, $p_flag_overwrites_file_notmodifi
     $l_target_link= ""
     $l_source_path= ""
     $l_source_filename= ""
+    $l_tag= "NeoVIM (IDE)> "
 
     # Configurar NeoVIM como IDE (Developer)
     if ($p_flag_developer) {
 
+        m_create_folder("${env:LOCALAPPDATA}", "nvim", $l_tag)
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\init.vim"
         $l_source_path="${env:USERPROFILE}\.files\nvim"
         $l_source_filename="init_ide.vim"
         if ($g_setup_access_type -eq 0) {
-            m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\coc-settings.json"
         $l_source_path="${env:USERPROFILE}\.files\nvim"
         $l_source_filename="coc-settings_windows.json"
         if ($g_setup_access_type -eq 0) {
-            m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\setting"
         $l_source_path="${env:USERPROFILE}\.files\vim\setting"
         if ($g_setup_access_type -eq 0) {
-            m_copy_folder "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\lua"
         $l_source_path="${env:USERPROFILE}\.files\nvim\lua"
         if ($g_setup_access_type -eq 0) {
-            m_copy_folder "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         #El codigo open\close asociado a los 'file types'
         $l_target_link="${env:LOCALAPPDATA}\nvim\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\nvim\ftplugin\commonide"
         if ($g_setup_access_type -eq 0) {
-            m_copy_folder "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         #Para el codigo open/close asociado a los 'file types' de CoC
+        m_create_folder("${env:LOCALAPPDATA}", "nvim\rte_cocide", $l_tag)
+
         $l_target_link="${env:LOCALAPPDATA}\nvim\rte_cocide\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\nvim\ftplugin\cocide"
         if ($g_setup_access_type -eq 0) {
-            m_copy_folder "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
         #Para el codigo open/close asociado a los 'file types' que no sean CoC
+        m_create_folder("${env:LOCALAPPDATA}", "nvim\rte_nativeide", $l_tag)
+
         $l_target_link="${env:LOCALAPPDATA}\nvim\rte_nativeide\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\nvim\ftplugin\nativeide"
         if ($g_setup_access_type -eq 0) {
-            m_copy_folder "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
@@ -818,33 +1088,35 @@ function m_setup_nvim_files($p_flag_developer, $p_flag_overwrites_file_notmodifi
     # Configurar NeoVIM como Editor
     else {
 
+        m_create_folder("${env:LOCALAPPDATA}", "nvim", $l_tag)
+
         $l_target_link="${env:LOCALAPPDATA}\nvim\init.vim"
         $l_source_path="${env:USERPROFILE}\.files\nvim"
         $l_source_filename="init_editor.vim"
         if ($g_setup_access_type -eq 0) {
-            m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\setting"
         $l_source_path="${env:USERPROFILE}\.files\vim\setting"
         if ($g_setup_access_type -eq 0) {
-            m_copy_folder "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
         $l_target_link="${env:LOCALAPPDATA}\nvim\lua"
         $l_source_path="${env:USERPROFILE}\.files\nvim\lua"
         if ($g_setup_access_type -eq 0) {
-            m_copy_folder "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
@@ -852,10 +1124,10 @@ function m_setup_nvim_files($p_flag_developer, $p_flag_overwrites_file_notmodifi
         $l_target_link="${env:LOCALAPPDATA}\nvim\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\nvim\ftplugin\editor"
         if ($g_setup_access_type -eq 0) {
-            m_copy_folder "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_folder_link "$l_source_path" "$l_target_link" "NeoVIM (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
@@ -863,16 +1135,18 @@ function m_setup_nvim_files($p_flag_developer, $p_flag_overwrites_file_notmodifi
 
     return 0
 
-
 }
+
 
 
 # Parametros:
 #  1> Flag configurar como Developer (si es '0')
-function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag, $p_index_documentation) {
+function m_config_nvim($p_input_options, $p_flag_developer, $p_flag_overwrites_file_notmodifiable, $p_flag_overwrites_file_notmodifiable) {
 
     #1. Argumentos
-
+    if ($p_input_options -le 0) {
+        return
+    }
 
     #2. Crear el subtitulo
     $l_title= ">> Configurando NeoVIM ("
@@ -883,7 +1157,7 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag, $p_index_documen
         $l_title= "${l_title} Modo editor"
     }
 
-    if($p_overwrite_ln_flag) {
+    if($p_flag_overwrites_ln) {
         $l_title= "${l_title}, Sobrescribiendo los enlaces simbolicos)"
     }
     else {
@@ -897,15 +1171,37 @@ function m_config_nvim($p_flag_developer, $p_overwrite_ln_flag, $p_index_documen
     #3. Creando el directorio hijos si no existen
 	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:LOCALAPPDATA}\nvim"
 
-    #4. Instalando paquetes
-    $l_status= m_setup_vim_packages $true $p_flag_developer $p_index_documentation
 
-    #5. Creando los archivos y folderes requeridos por NeoVIM
-    $l_status= m_setup_nvim_files $p_flag_developer
+	# (1024) NeoVIM > Descargar plugins de NeoVIM sin indexar su documentación
+	# (2048) NeoVIM > Descargar plugins de NeoVIM indexando su documentación
+	# (4096) NoeVIM > Crear los archivos de configuración de NeoVIM
+
+    # Instalando paquetes
+    $l_status = 0
+    $l_flag_index_documentation = $false
+
+    $l_option = 1024
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+        $l_status= m_setup_vim_packages $true $p_flag_developer $l_flag_index_documentation
+    }
+
+    # Instalando paquetes
+    $l_option = 2048
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+
+        $l_flag_index_documentation = $true
+        $l_status= m_setup_vim_packages $true $p_flag_developer $l_flag_index_documentation
+
+    }
+
+    # Creando los archivos y folderes requeridos por NeoVIM
+    $l_option = 4096
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+        $l_status= m_setup_nvim_files $p_flag_developer $p_flag_overwrites_file_notmodifiable
+    }
 
     #6. Mostrar la informacion de lo instalado
-    show_vim_config_report $p_is_neovim $p_flag_developer
-
+    show_vim_config_report $true $p_flag_developer
 
 }
 
@@ -922,12 +1218,8 @@ function m_setup_vim_files($p_flag_developer, $p_flag_overwrites_file_notmodifia
     $l_target_link= ""
     $l_source_path= ""
     $l_source_filename= ""
+    $l_tag= "VIM    (IDE)> "
 
-    # Si el modo de acceso permite crear enlaces simbolicos pero solo usando una pseudo-terminal con accesos administivos
-    if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
-        Write-Host "Para crear enlaces SymbolicLink debe usar una terminal con accesos administrativos (g_setup_access_type: ${g_setup_access_type})."
-        return 0
-    }
 
     # Configurar VIM como IDE (Developer)
     if ($p_flag_developer) {
@@ -937,38 +1229,40 @@ function m_setup_vim_files($p_flag_developer, $p_flag_overwrites_file_notmodifia
         $l_source_path="${env:USERPROFILE}\.files\vim"
         $l_source_filename="vimrc_ide.vim"
         if ($g_setup_access_type -eq 0) {
-            m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
+
+        m_create_folder("${env:USERPROFILE}", "vimfiles", $l_tag)
 
         $l_target_link="${env:USERPROFILE}\vimfiles\coc-settings.json"
         $l_source_path="${env:USERPROFILE}\.files\vim"
         $l_source_filename="coc-settings_windows.json"
         if ($g_setup_access_type -eq 0) {
-            m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         $l_target_link="${env:USERPROFILE}\vimfiles\setting"
         $l_source_path="${env:USERPROFILE}\.files\vim\setting"
         if ($g_setup_access_type -eq 0) {
-            m_copy_folder "$l_source_path" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         $l_target_link="${env:USERPROFILE}\vimfiles\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\vim\ftplugin\cocide"
         if ($g_setup_access_type -eq 0) {
-            m_copy_folder "$l_source_path" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            m_create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
@@ -985,6 +1279,8 @@ function m_setup_vim_files($p_flag_developer, $p_flag_overwrites_file_notmodifia
         else {
             m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
         }
+
+        m_create_folder("${env:USERPROFILE}", "vimfiles", $l_tag)
 
         $l_target_link="${env:USERPROFILE}\vimfiles\setting"
         $l_source_path="${env:USERPROFILE}\.files\vim\setting"
@@ -1008,17 +1304,19 @@ function m_setup_vim_files($p_flag_developer, $p_flag_overwrites_file_notmodifia
 
     }
 
-
 }
+
 
 
 # Parametros:
 #  1> Flag configurar como Developer (si es '0')
 #  2> Sobrescribir los enlaces simbolicos
-function m_config_vim($p_flag_developer, $p_overwrite_ln_flag, $p_index_documentation) {
+function m_config_vim($p_input_options, $p_flag_developer, $p_flag_overwrites_file_notmodifiable, $p_flag_overwrites_file_notmodifiable) {
 
     #1. Argumentos
-
+    if ($p_input_options -le 0) {
+        return
+    }
 
     #2. Crear el subtitulo
     $l_title= ">> Configurando VIM ("
@@ -1029,7 +1327,7 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag, $p_index_document
         $l_title= "${l_title} Modo editor"
     }
 
-    if($p_overwrite_ln_flag) {
+    if($p_flag_overwrites_ln) {
         $l_title= "${l_title}, Sobrescribiendo los enlaces simbolicos)"
     }
     else {
@@ -1043,19 +1341,45 @@ function m_config_vim($p_flag_developer, $p_overwrite_ln_flag, $p_index_document
     #3. Creando el directorio hijos si no existen
 	$l_tmp= New-Item -ItemType Directory -Force -Path "${env:USERPROFILE}\vimfiles"
 
-    #4. Instalando paquetes
-    $l_status= m_setup_vim_packages $false $p_flag_developer $p_index_documentation
+	# ( 128) VIM    > Descargar plugins de VIM sin indexar su documentación
+	# ( 256) VIM    > Descargar plugins de VIM indexando su documentación
+	# ( 512) VIM    > Crear los archivos de configuración de VIM
 
-    #5. Creando los archivos y folderes requeridos por NeoVIM
-    $l_status= m_setup_vim_files $p_flag_developer
+    # Instalando paquetes
+    $l_status = 0
+    $l_flag_index_documentation = $false
+
+    $l_option = 128
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+        $l_status= m_setup_vim_packages $false $p_flag_developer $l_flag_index_documentation
+    }
+
+    # Instalando paquetes
+    $l_option = 256
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+
+        $l_flag_index_documentation = $true
+        $l_status= m_setup_vim_packages $false $p_flag_developer $l_flag_index_documentation
+
+    }
+
+    # Creando los archivos y folderes requeridos por NeoVIM
+    $l_option = 512
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+        $l_status= m_setup_vim_files $p_flag_developer $p_flag_overwrites_file_notmodifiable
+    }
 
     #6. Mostrar la informacion de lo instalado
-    show_vim_config_report $p_is_neovim $p_flag_developer
+    show_vim_config_report $false $p_flag_developer
 
 }
 
 
-function m_setup_profile($p_flag_developer, $p_flag_overwrites_file_notmodifiable, $p_flag_overwrites_file_notmodifiable) {
+#------------------------------------------------------------------------------------------------
+# Funciones de configuracion del Profile
+#------------------------------------------------------------------------------------------------
+
+function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmodifiable, $p_flag_overwrites_file_notmodifiable) {
 
     #1. Si el modo de acceso permite crear enlaces simbolicos pero solo usando una pseudo-terminal con accesos administivos
     if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
@@ -1064,23 +1388,11 @@ function m_setup_profile($p_flag_developer, $p_flag_overwrites_file_notmodifiabl
     }
 
 
-    #2. Mostrar el titulo
-    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
-	$l_title=""
-    if ($l_overwrite_ln_flag) {
-        $l_title= ">> Creando los senlaces simbolicos del perfil (sobrescribir lo existente)"
-	}
-    else {
-        $l_title= ">> Creando los enlaces simbolicos del perfil (solo crar si no existe)"
-    }
-	Write-Host "$l_title" -ForegroundColor Blue
-    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
-
-
     #3. Creando enlaces simbolico dependientes del tipo de distribución Linux
     $l_target_link= ""
     $l_source_path= ""
     $l_source_filename= ""
+    $l_tag= "General     > "
 
 
     #Archivo de configuracion de Git
@@ -1088,40 +1400,48 @@ function m_setup_profile($p_flag_developer, $p_flag_overwrites_file_notmodifiabl
     $l_source_path="${env:USERPROFILE}\.files\etc\git"
 	$l_source_filename='gitconfig_win.toml'
     if ($g_setup_access_type -eq 0) {
-        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     else {
-        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
+
+    m_create_folder("${env:USERPROFILE}", ".config\git", $l_tag)
 
     $l_target_link="${env:USERPROFILE}\.config\git\user_main.toml"
     $l_source_path="${env:USERPROFILE}\.files\etc\git"
     $l_source_filename="user_main_template_win"
-    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_modifiable
+    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
 
     $l_target_link="${env:USERPROFILE}\.config\git\user_mywork.toml"
     $l_source_path="${env:USERPROFILE}\.files\etc\git"
     $l_source_filename="user_work_template_win"
-    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_modifiable
-    Write-Host "            > Edite '~\.config\git\user_main.toml' y '~\.config\git\user_mywork.toml' si desea crear modificar las opciones de '~/.gitignore'."
+    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
+    Write-Host "${g_tag_empty}Edite '~\.config\git\user_main.toml' y '~\.config\git\user_mywork.toml' si desea crear modificar las opciones de '~/.gitignore'."
 
 
     #Archivo de configuracion de SSH
+    m_create_folder("${env:USERPROFILE}", ".ssh", $l_tag)
+
     $l_target_link="${env:USERPROFILE}\.ssh\config"
     $l_source_path="${env:USERPROFILE}\.files\etc\ssh\template_windows_withpublickey.conf"
-    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_modifiable
+    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
 
 
     #Archivos de configuracion de PowerShell
 	$document_path= [Environment]::GetFolderPath("mydocuments")
+    m_create_folder("${document_path}", "PowerShell", $l_tag)
+    m_create_folder("${document_path}", "WindowsPowerShell", $l_tag)
+
+
     $l_target_link="${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
     $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
 	$l_source_filename='windows_x64.ps1'
     if ($g_setup_access_type -eq 0) {
-        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     else {
-        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
 
@@ -1129,10 +1449,10 @@ function m_setup_profile($p_flag_developer, $p_flag_overwrites_file_notmodifiabl
     $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
 	$l_source_filename='legacy_x64.ps1'
     if ($g_setup_access_type -eq 0) {
-        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     else {
-        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
 
@@ -1144,52 +1464,59 @@ function m_setup_profile($p_flag_developer, $p_flag_overwrites_file_notmodifiabl
 
 
     # Configuracion de wezterm
+    m_create_folder("${env:USERPROFILE}", ".config\wezterm", $l_tag)
+
     $l_target_link="${env:USERPROFILE}\.config\wezterm\wezterm.lua"
     $l_source_path="${env:USERPROFILE}\.files\wezterm\local"
 	$l_source_filename='wezterm.lua'
     if ($g_setup_access_type -eq 0) {
-        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     else {
-        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-
 
     $l_target_link="${env:USERPROFILE}\.config\wezterm\utils"
     $l_source_path="${env:USERPROFILE}\.files\wezterm\local\utils"
     if ($g_setup_access_type -eq 0) {
-        m_copy_folder "$l_source_path" "$l_target_link" "            > " $p_flag_overwrites_file_notmodifiable
+        m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     else {
-        m_create_folder_link "$l_source_path" "$l_target_link" "            > " $p_flag_overwrites_file_notmodifiable
+        m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
     $l_target_link="${env:USERPROFILE}\.config\wezterm\custom_config.lua"
     $l_source_path="${env:USERPROFILE}\.files\wezterm\local\custom_config_template_win.lua"
-    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_modifiable
+    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
 
 
     #Configuracion por Lazygit
+    m_create_folder("${env:LOCALAPPDATA}", "lazygit", $l_tag)
+
     $l_target_link="${env:LOCALAPPDATA}\lazygit\config.yml"
     $l_source_path="${env:USERPROFILE}\.files\etc\lazygit"
     $l_source_filename='config_default.yaml'
     if ($g_setup_access_type -eq 0) {
-        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     else {
-        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
 
     #Configuracion por Yazi
+    m_create_folder("${env:APPDATA}", "yazi\config", $l_tag)
+    m_create_folder("${env:APPDATA}\yazi\config", "flavors", $l_tag)
+    m_create_folder("${env:APPDATA}\yazi\config", "plugins", $l_tag)
+
     $l_target_link="${env:APPDATA}\yazi\config\yazi.toml"
     $l_source_path="${env:USERPROFILE}\.files\yazi"
-    $l_source_filename='yazi_win.toml'
+    $l_source_filename='yazi_desktop.toml'
     if ($g_setup_access_type -eq 0) {
-        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     else {
-        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
 
@@ -1197,268 +1524,119 @@ function m_setup_profile($p_flag_developer, $p_flag_overwrites_file_notmodifiabl
     $l_source_path="${env:USERPROFILE}\.files\yazi"
     $l_source_filename='theme_default.toml'
     if ($g_setup_access_type -eq 0) {
-        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     else {
-        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_notmodifiable
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-
-    $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\flavor.toml"
-    $l_source_path="${env:USERPROFILE}\.files\yazi\catppuccin-mocha.yazi\flavor.toml"
-    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "            > " $p_flag_overwrites_file_modifiable
-
-    $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\tmtheme.xml"
-    $l_source_path="${env:USERPROFILE}\.files\yazi\catppuccin-mocha.yazi\tmtheme.xml"
-    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "            > " $p_flag_overwrites_file_modifiable
 
     $l_target_link="${env:APPDATA}\yazi\config\keymap.toml"
     $l_source_path="${env:USERPROFILE}\.files\yazi\keymap_win.toml"
-    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "            > " $p_flag_overwrites_file_modifiable
+    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
     Write-Host "            > Edite '${env:APPDATA}\yazi\config\keymap.toml' si desea modificar las opciones Wezterm."
 
 
     $l_target_link="${env:APPDATA}\yazi\config\init.lua"
-    $l_source_path="${env:USERPROFILE}\.files\yazi\init_win.lua"
-    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "            > " $p_flag_overwrites_file_modifiable
+    $l_source_path="${env:USERPROFILE}\.files\yazi"
+    $l_source_filename='init.lua'
+    if ($g_setup_access_type -eq 0) {
+        m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    }
+    else {
+        m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    }
     Write-Host "            > Edite '${env:APPDATA}\yazi\config\init.lua' si desea modificar las opciones Wezterm."
 
+    $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\flavor.toml"
+    $l_source_path="${env:USERPROFILE}\.files\yazi\catppuccin-mocha.yazi\flavor.toml"
+    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
 
-	if(! (Test-Path "${env:APPDATA}\yazi\config\plugins")) {
-		New-Item -ItemType Directory -Force -Path "${env:APPDATA}\yazi\config\plugins"
-    }
+    $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\tmtheme.xml"
+    $l_source_path="${env:USERPROFILE}\.files\yazi\catppuccin-mocha.yazi\tmtheme.xml"
+    m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+
 
     $l_target_link="${env:APPDATA}\.config\yazi\plugins\fzf-fd.yazi"
     $l_source_path="${env:USERPROFILE}\.files\yazi\plugins\fzf-fd.yazi"
     if ($g_setup_access_type -eq 0) {
-        m_copy_folder "$l_source_path" "$l_target_link" "            > " $p_flag_overwrites_file_notmodifiable
+        m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     else {
-        m_create_folder_link "$l_source_path" "$l_target_link" "            > " $p_flag_overwrites_file_notmodifiable
+        m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
-
-}
-
-
-
-function m_install_pws_module() {
-
-    Write-Host ""
-
-    #i. Instalar el modulo PSFzf
-
-    #Buscar si el modulo esta instado
-    $mod= Get-InstalledModule PSFzf 2> $null
-    if($mod) {
-        Write-Host "El modulo 'PSFzf' $($mod.Version) esta instalado."
-        Write-Host "Intentando actualizar el modulo 'PSFzf' ..."
-        Update-Module -Name PSFzf
+    $l_target_link="${env:APPDATA}\.config\yazi\plugins\fzf-rgazi"
+    $l_source_path="${env:USERPROFILE}\.files\yazi\plugins\fzf-rgyazi"
+    if ($g_setup_access_type -eq 0) {
+        m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     else {
-        Write-Host "Instalando el modulo 'PSFzf' ..."
-        Install-Module -Name PSFzf
+        m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
-
-
-}
-
-
-function m_create_folders_for_symboliclinks($p_flag_developer) {
-
-    $document_path= [Environment]::GetFolderPath("mydocuments")
-
-    $l_folders = @(
-        "${env:USERPROFILE}\vimfiles"
-        "${env:LOCALAPPDATA}\nvim"
-        "${env:LOCALAPPDATA}\nvim\rte_cocide"
-        "${env:LOCALAPPDATA}\nvim\rte_nativeide"
-        "${env:APPDATA}\eclipse\jdtls"
-        "${document_path}\PowerShell"
-        "${document_path}\WindowsPowerShell"
-        "${env:USERPROFILE}\.config"
-        "${env:LOCALAPPDATA}\lazygit"
-        "${env:APPDATA}\yazi"
-        "${env:APPDATA}\yazi\config"
-        "${env:APPDATA}\yazi\config\plugins"
-        "${env:APPDATA}\yazi\config\flavors"
-    )
-
-    $l_folder_path = $null
-    $l_is_first = $true
-    for ($i=0; $i -lt $l_folders.Count; $i++) {
-
-        $l_folder_path= $l_folders[$i]
-        if (!$l_folder_path) {
-            continue
-        }
-
-	    if(! (Test-Path "$l_folder_path")) {
-            if ($l_is_first) {
-                Write-Host "New folders > Creando el folder '${l_folder_path}'."
-            }
-            else {
-                $l_is_first = $false
-                Write-Host "            > Creando el folder '${l_folder_path}'."
-            }
-		    New-Item -ItemType Directory -Force -Path "$l_folder_path"
-        }
-
+    $l_target_link="${env:APPDATA}\.config\yazi\plugins\go-fs.yazi"
+    $l_source_path="${env:USERPROFILE}\.files\yazi\plugins\go-fs.yazi"
+    if ($g_setup_access_type -eq 0) {
+        m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    }
+    else {
+        m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
 }
 
 
-function m_create_all_symboliclinks($p_overwrite_ln_flag) {
+function m_setup_profile($p_input_options, $p_flag_developer, $p_flag_overwrites_file_notmodifiable, $p_flag_overwrites_file_notmodifiable) {
 
-    $document_path= [Environment]::GetFolderPath("mydocuments")
-
-    $l_folder_links = @(
-        [PSCustomObject]@{
-            target_link     = "${env:LOCALAPPDATA}\nvim\setting"
-            source_path     = "${env:USERPROFILE}\.files\vim\setting"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:LOCALAPPDATA}\nvim\lua"
-            source_path     = "${env:USERPROFILE}\.files\nvim\lua"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:LOCALAPPDATA}\nvim\ftplugin"
-            source_path     = "${env:USERPROFILE}\.files\nvim\ftplugin\commonide"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:LOCALAPPDATA}\nvim\rte_cocide\ftplugin"
-            source_path     = "${env:USERPROFILE}\.files\nvim\ftplugin\cocide"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:LOCALAPPDATA}\nvim\rte_nativeide\ftplugin"
-            source_path     = "${env:USERPROFILE}\.files\nvim\ftplugin\nativeide"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:USERPROFILE}\vimfiles\setting"
-            source_path     = "${env:USERPROFILE}\.files\vim\setting"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:USERPROFILE}\vimfiles\ftplugin"
-            source_path     = "${env:USERPROFILE}\.files\vim\ftplugin\cocide"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:APPDATA}\yazi\config\plugins\fzf-fd.yazi"
-            source_path     = "${env:USERPROFILE}\.files\yazi\plugins\fzf-fd.yazi"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:APPDATA}\yazi\config\plugins\fzf-rg.yazi"
-            source_path     = "${env:USERPROFILE}\.files\yazi\plugins\fzf-rg.yazi"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:APPDATA}\yazi\config\plugins\go-fs.yazi"
-            source_path     = "${env:USERPROFILE}\.files\yazi\plugins\go-fs.yazi"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:USERPROFILE}\.config\wezterm\utils"
-            source_path     = "${env:USERPROFILE}\.files\wezterm\local\utils"
-        }
-    )
-
-    $l_item = $null
-    $l_tag = "Folder link > "
-    for ($i=0; $i -lt $l_folder_links.Count; $i++) {
-
-        $l_item= $l_folder_links[$i]
-        if (!$l_item) {
-            continue
-        }
-
-        if($i -ne 0) {
-            $l_tag = "            > "
-        }
-
-        m_create_folder_link $l_item.source_path $l_item.target_link $l_tag $p_overwrite_ln_flag
-
+    if ($p_input_options -le 0) {
+        return
     }
 
+    # Mostrar el titulo
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
+	$l_title=">> Configurando el Profile del Usuario"
+	Write-Host "$l_title" -ForegroundColor Blue
+    Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
 
-    $l_file_links = @(
-        [PSCustomObject]@{
-            target_link     = "${env:LOCALAPPDATA}\nvim\init.vim"
-            source_path     = "${env:USERPROFILE}\.files\nvim"
-            source_filename = "init_ide.vim"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:LOCALAPPDATA}\nvim\coc-settings.json"
-            source_path     = "${env:USERPROFILE}\.files\nvim"
-            source_filename = "coc-settings_windows.json"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:USERPROFILE}\.vimrc"
-            source_path     = "${env:USERPROFILE}\.files\vim"
-            source_filename = "vimrc_ide.vim"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:USERPROFILE}\vimfiles\coc-settings.json"
-            source_path     = "${env:USERPROFILE}\.files\vim"
-            source_filename = "coc-settings_windows.json"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:USERPROFILE}\.gitconfig"
-            source_path     = "${env:USERPROFILE}\.files\etc\git"
-            source_filename = "gitconfig_win.toml"
-        },
-        [PSCustomObject]@{
-            target_link     = "${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
-            source_path     = "${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
-            source_filename = "windows_x64.ps1"
-        },
-        [PSCustomObject]@{
-            target_link     = "${document_path}\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
-            source_path     = "${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
-            source_filename = "legacy_x64.ps1"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:USERPROFILE}\.config\wezterm\wezterm.lua"
-            source_path     = "${env:USERPROFILE}\.files\wezterm\local"
-            source_filename = "wezterm.lua"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:LOCALAPPDATA}\lazygit\config.yml"
-            source_path     = "${env:USERPROFILE}\.files\lazygit"
-            source_filename = "config_default.yaml"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:APPDATA}\yazi\config\yazi.toml"
-            source_path     = "${env:USERPROFILE}\.files\yazi"
-            source_filename = "yazi_desktop.toml"
-        },
-        [PSCustomObject]@{
-            target_link     = "${env:APPDATA}\yazi\config\theme.toml"
-            source_path     = "${env:USERPROFILE}\.files\yazi"
-            source_filename = "theme.toml"
-        }
-    )
 
-    Write-Host ""
-	Write-Host ""
-    $l_item = $null
-    $l_tag = "File link   > "
-    for ($i=0; $i -lt $l_file_links.Count; $i++) {
-
-        $l_item= $l_file_links[$i]
-        if (!$l_item) {
-            continue
-        }
-
-        if($i -ne 0) {
-            $l_tag = "            > "
-        }
-
-        m_create_file_link $l_item.source_path $l_item.source_filename $l_item.target_link $l_tag $p_overwrite_ln_flag
-
+	# (   4) Crear todos los folder requeridos para crear enlaces simbolicos
+    $l_option = 4
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+        m_create_folders_for_symboliclinks $p_flag_developer
     }
 
+    # (   8) Crear todos los enlaces simbolicos requeridos (se debe ejecutar con administrador)
+    $l_option = 8
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+        m_create_all_symboliclinks $p_flag_developer
+    }
 
+	# (  16) Instalar y/o actualizar PSFzf a nivel global  (se debe ejecutar con administrador)
+    $l_option = 16
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+        m_install_pws_module 'PSFzf' $false
+    }
+
+	# (  32) Instalar y/o actualizar PSFzf a nivel usuario
+    $l_option = 32
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+        m_install_pws_module 'PSFzf' $true
+    }
+
+	# (  64) Setup Profile como developer
+    $l_option = 64
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+        m_setup_profile_files $p_flag_developer $l_flag_overwrites_file_notmodifiable $l_flag_overwrites_file_notmodifiable
+    }
+
+    return 0
 
 }
 
+
+#------------------------------------------------------------------------------------------------
+# Funciones principales
+#------------------------------------------------------------------------------------------------
 
 function m_setup($p_input_options) {
 
@@ -1466,20 +1644,10 @@ function m_setup($p_input_options) {
         return
     }
 
+    $l_flag_developer = $true
 
 	# (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario
 	# (   2) Sobrescribir archivos modificables por el usuario
-	# (   4) Crear todos los folder requeridos para crear enlaces simbolicos
-    # (   8) Crear todos los enlaces simbolicos requeridos (se debe ejecutar con administrador)
-	# (  16) Instalar y/o actualizar el plugin PSFzf       (se debe ejecutar con administrador)
-	# (  32) Setup Profile como developer
-	# (  64) VIM    > Descargar plugins de VIM sin indexar su documentación
-	# ( 128) VIM    > Descargar plugins de VIM indexando su documentación
-	# ( 256) VIM    > Crear los archivos de configuración de VIM
-	# ( 512) NeoVIM > Descargar plugins de NeoVIM sin indexar su documentación
-	# (1024) NeoVIM > Descargar plugins de NeoVIM indexando su documentación
-	# (2048) NoeVIM > Crear los archivos de configuración de NeoVIM
-
     $l_flag_overwrites_file_notmodifiable = $false
     $l_option = 1
     if ( ($p_input_options -band $l_option) -eq $l_option ) {
@@ -1492,136 +1660,27 @@ function m_setup($p_input_options) {
         $l_flag_overwrites_file_modifiable = $true
     }
 
+    # (   8) Crear todos los enlaces simbolicos requeridos (se debe ejecutar con administrador)
+	# (  16) Instalar y/o actualizar PSFzf a nivel global  (se debe ejecutar con administrador)
+	# (  32) Instalar y/o actualizar PSFzf a nivel usuario
+	# (  64) Setup Profile como developer
+    m_setup_profile $p_input_options $l_flag_developer $l_flag_overwrites_file_notmodifiable $l_flag_overwrites_file_notmodifiable
 
+	# ( 128) VIM    > Descargar plugins de VIM sin indexar su documentación
+	# ( 256) VIM    > Descargar plugins de VIM indexando su documentación
+	# ( 512) VIM    > Crear los archivos de configuración de VIM
+	m_config_vim $p_input_options $l_flag_developer $l_flag_overwrites_file_notmodifiable $l_flag_overwrites_file_notmodifiable
 
-    if($p_input_options -eq "a") {
+	# (1024) NeoVIM > Descargar plugins de NeoVIM sin indexar su documentación
+	# (2048) NeoVIM > Descargar plugins de NeoVIM indexando su documentación
+	# (4096) NoeVIM > Crear los archivos de configuración de NeoVIM
+	m_config_nvim $p_input_options $l_flag_developer $l_flag_overwrites_file_notmodifiable $l_flag_overwrites_file_notmodifiable
 
-        m_create_basic_folders
-        return
-    }
-
-
-    if($p_input_options -eq "b") {
-
-        m_create_all_links $false
-        m_install_pws_module
-        return
-    }
-
-
-    if($p_input_options -eq "c") {
-
-        m_create_all_links $true
-        m_install_pws_module
-        return
-    }
-
-
-    if($p_input_options -eq "d") {
-
-        $l_overwrite_ln_flag = $true
-
-	    #Instalar VIM como Developer
-	    m_config_vim $true $l_overwrite_ln_flag $true
-	    Write-Host ""
-        return
-    }
-
-
-    if($p_input_options -eq "e") {
-
-        $l_overwrite_ln_flag = $false
-
-	    #Instalar NeoVIM como Developer
-	    m_config_nvim $true $l_overwrite_ln_flag $true
-	    Write-Host ""
-
-        return
-    }
-
-
-    if($p_input_options -eq "f") {
-
-        $l_overwrite_ln_flag = $false
-
-	    #Configurar el profile
-	    m_setup_profile $l_overwrite_ln_flag
-        return
-    }
-
-    if($p_input_options -eq "g") {
-
-        $l_overwrite_ln_flag = $false
-
-	    #Instalar VIM como Developer
-	    m_config_vim $true $l_overwrite_ln_flag $true
-	    Write-Host ""
-
-	    #Instalar NeoVIM como Developer
-	    m_config_nvim $true $l_overwrite_ln_flag $true
-	    Write-Host ""
-
-	    #Configurar el profile
-	    m_setup_profile $l_overwrite_ln_flag
-        return
-    }
-
-
-    if($p_input_options -eq "h") {
-
-        $l_overwrite_ln_flag = $true
-
-	    #Instalar VIM como Developer
-	    m_config_vim $true $l_overwrite_ln_flag $true
-	    Write-Host ""
-
-	    #Instalar NeoVIM como Developer
-	    m_config_nvim $true $l_overwrite_ln_flag $true
-	    Write-Host ""
-
-	    #Configurar el profile
-	    m_setup_profile $l_overwrite_ln_flag
-        return
-    }
-
-
-    if($p_input_options -eq "i") {
-
-        $l_overwrite_ln_flag = $false
-
-	    #Instalar VIM como Developer
-	    m_config_vim $true $l_overwrite_ln_flag $false
-	    Write-Host ""
-
-	    #Instalar NeoVIM como Developer
-	    m_config_nvim $true $l_overwrite_ln_flag $false
-	    Write-Host ""
-
-	    #Configurar el profile
-	    m_setup_profile $l_overwrite_ln_flag
-        return
-    }
-
-
-    if($p_input_options -eq "j") {
-
-        $l_overwrite_ln_flag = $true
-
-	    #Instalar VIM como Developer
-	    m_config_vim $true $l_overwrite_ln_flag $false
-	    Write-Host ""
-
-	    #Instalar NeoVIM como Developer
-	    m_config_nvim $true $l_overwrite_ln_flag $false
-	    Write-Host ""
-
-	    #Configurar el profile
-	    m_setup_profile $l_overwrite_ln_flag
-        return
-    }
-
+    return 0
 
 }
+
+
 
 function m_show_menu_core() {
 
@@ -1629,36 +1688,52 @@ function m_show_menu_core() {
 	Write-Host "                                                      Menu de Opciones" -ForegroundColor Green
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 
+    $l_options= 0
     Write-Host " (q) Salir del menu"
 
     if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
 
+        $l_options = 4
 	    Write-Host " (a) Crear todos los folder requeridos para crear los SymbolicLink " -NoNewline
-		Write-Host "(opcion 4)" -ForegroundColor DarkGray
+		Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
 
-	    Write-Host " (b) Crear todos los SymbolicLink e instalar plugin PSFzf (usar administrador) " -NoNewline
-		Write-Host "(opcion 4)" -ForegroundColor DarkGray
+        $l_options = 8 + 16
+	    Write-Host " (b) Crear todos los SymbolicLink e instalar PSFzf globalmente " -NoNewline
+        if (-not $g_shell_with_admin_privileges) {
+            Write-Host " (ejecutar como administrador) " -NoNewline -ForegroundColor Red
+        }
+		Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
 
-	    Write-Host " (c) Recrear todos los SymbolicLink e instalar plugin PSFzf (usar administrador) " -NoNewline
-		Write-Host "(opcion 4)" -ForegroundColor DarkGray
+        $l_options = 8 + 16 + 1
+	    Write-Host " (c) Recrear todos los SymbolicLink e instalar PSFzf globalmente " -NoNewline
+        if (-not $g_shell_with_admin_privileges) {
+            Write-Host " (ejecutar como administrador) " -NoNewline -ForegroundColor Red
+        }
+		Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
 
     }
 
-	Write-Host " ( ) Estas opciones siempre sobrescriben los SymbolicLink y archivos no-modificables:"
+	Write-Host " ( ) Estas opciones siempre sobrescriben los SymbolicLink/Files no-modificables:"
+
+    $l_options = 64 + 1
 	Write-Host " (d) Setup Profile como developer " -NoNewline
-    Write-Host "(opcion 4)" -ForegroundColor DarkGray
+    Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
 
+    $l_options = 256 + 512 + 1
 	Write-Host " (e) Setup VIM como developer " -NoNewline
-    Write-Host "(opcion 4)" -ForegroundColor DarkGray
+    Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
 
+    $l_options = 2048 + 4096 + 1
 	Write-Host " (f) Setup NeoVIM como developer " -NoNewline
-    Write-Host "(opcion 4)" -ForegroundColor DarkGray
+    Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
 
+    $l_options = 64 + 256 + 512 + 2048 + 4096 + 1
 	Write-Host " (g) Setup VIM/NeoVIM y Profile como developer " -NoNewline
-    Write-Host "(opcion 4)" -ForegroundColor DarkGray
+    Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
 
+    $l_options = 64 + 128 + 512 + 1024 + 4096 + 1
 	Write-Host " (h) Setup VIM/NeoVIM (sin indexar documentación) y Profile como developer " -NoNewline
-    Write-Host "(opcion 4)" -ForegroundColor DarkGray
+    Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
 
 	Write-Host " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:"
 	Write-Host "    (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario"
@@ -1667,16 +1742,17 @@ function m_show_menu_core() {
     if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
 	    Write-Host "    (   4) Crear todos los folder requeridos para crear enlaces simbolicos"
         Write-Host "    (   8) Crear todos los enlaces simbolicos requeridos (se debe ejecutar con administrador)"
-	    Write-Host "    (  16) Instalar y/o actualizar el plugin PSFzf       (se debe ejecutar con administrador)"
+	    Write-Host "    (  16) Instalar y/o actualizar PSFzf a nivel global  (se debe ejecutar con administrador)"
     }
 
-	Write-Host "    (  32) Setup Profile como developer"
-	Write-Host "    (  64) VIM    > Descargar plugins de VIM sin indexar su documentación"
-	Write-Host "    ( 128) VIM    > Descargar plugins de VIM indexando su documentación"
-	Write-Host "    ( 256) VIM    > Crear los archivos de configuración de VIM"
-	Write-Host "    ( 512) NeoVIM > Descargar plugins de NeoVIM sin indexar su documentación"
-	Write-Host "    (1024) NeoVIM > Descargar plugins de NeoVIM indexando su documentación"
-	Write-Host "    (2048) NoeVIM > Crear los archivos de configuración de NeoVIM"
+	Write-Host "    (  32) Instalar y/o actualizar PSFzf a nivel usuario"
+	Write-Host "    (  64) Setup Profile como developer"
+	Write-Host "    ( 128) VIM    > Descargar plugins de VIM sin indexar su documentación"
+	Write-Host "    ( 256) VIM    > Descargar plugins de VIM indexando su documentación"
+	Write-Host "    ( 512) VIM    > Crear los archivos de configuración de VIM"
+	Write-Host "    (1024) NeoVIM > Descargar plugins de NeoVIM sin indexar su documentación"
+	Write-Host "    (2048) NeoVIM > Descargar plugins de NeoVIM indexando su documentación"
+	Write-Host "    (4096) NoeVIM > Crear los archivos de configuración de NeoVIM"
 
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 }
@@ -1703,90 +1779,126 @@ function show_menu() {
 	            # (   2) Sobrescribir archivos modificables por el usuario
 	            # (   4) Crear todos los folder requeridos para crear enlaces simbolicos
                 # (   8) Crear todos los enlaces simbolicos requeridos (se debe ejecutar con administrador)
-	            # (  16) Instalar y/o actualizar el plugin PSFzf       (se debe ejecutar con administrador)
-	            # (  32) Setup Profile como developer
-	            # (  64) VIM    > Descargar plugins de VIM sin indexar su documentación
-	            # ( 128) VIM    > Descargar plugins de VIM indexando su documentación
-	            # ( 256) VIM    > Crear los archivos de configuración de VIM
-	            # ( 512) NeoVIM > Descargar plugins de NeoVIM sin indexar su documentación
-	            # (1024) NeoVIM > Descargar plugins de NeoVIM indexando su documentación
-	            # (2048) NoeVIM > Crear los archivos de configuración de NeoVIM
+	            # (  16) Instalar y/o actualizar PSFzf a nivel global  (se debe ejecutar con administrador)
+	            # (  32) Instalar y/o actualizar PSFzf a nivel usuario
+	            # (  64) Setup Profile como developer
+	            # ( 128) VIM    > Descargar plugins de VIM sin indexar su documentación
+	            # ( 256) VIM    > Descargar plugins de VIM indexando su documentación
+	            # ( 512) VIM    > Crear los archivos de configuración de VIM
+	            # (1024) NeoVIM > Descargar plugins de NeoVIM sin indexar su documentación
+	            # (2048) NeoVIM > Descargar plugins de NeoVIM indexando su documentación
+	            # (4096) NoeVIM > Crear los archivos de configuración de NeoVIM
 
 				'^a$' {
-					$l_continue= $false
+					$l_continue= $true
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 
                     if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
+
+					    $l_continue= $false
                         $l_options = 4
 					    m_setup $l_options
+
                     }
 				}
 
 				'^b$' {
+					$l_continue= $true
 					$l_continue= $false
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 
                     if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
-                        $l_options = 4
+
+					    $l_continue= $false
+                        $l_options = 8 + 16
 					    m_setup $l_options
+
                     }
 				}
 
 				'^c$' {
-					$l_continue= $false
+					$l_continue= $true
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 
                     if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
-                        $l_options = 4
+
+					    $l_continue= $false
+                        $l_options = 8 + 16 + 1
 					    m_setup $l_options
+
                     }
 				}
 
+	            # (d) Setup Profile como developer
 				'^d$' {
 					$l_continue= $false
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 
-                    $l_options = 4
+	                # (  64) Setup Profile como developer
+	                # (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario
+                    $l_options = 64 + 1
 					m_setup $l_options
 				}
 
+	            # (e) Setup VIM como developer
 				'^e$' {
 					$l_continue= $false
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 
-                    $l_options = 4
+	                # ( 256) VIM    > Descargar plugins de VIM indexando su documentación
+	                # ( 512) VIM    > Crear los archivos de configuración de VIM
+	                # (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario
+                    $l_options = 256 + 512 + 1
 					m_setup $l_options
 				}
 
+	            # (f) Setup NeoVIM como developer
 				'^f$' {
 					$l_continue= $false
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 
-                    $l_options = 4
+	                # (2048) NeoVIM > Descargar plugins de NeoVIM indexando su documentación
+	                # (4096) NoeVIM > Crear los archivos de configuración de NeoVIM
+	                # (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario
+                    $l_options = 2048 + 4096 + 1
 					m_setup $l_options
 				}
 
+	            # (g) Setup VIM/NeoVIM y Profile como developer
 				'^g$' {
 					$l_continue= $false
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 
-                    $l_options = 4
+	                # (  64) Setup Profile como developer
+	                # ( 256) VIM    > Descargar plugins de VIM indexando su documentación
+	                # ( 512) VIM    > Crear los archivos de configuración de VIM
+	                # (2048) NeoVIM > Descargar plugins de NeoVIM indexando su documentación
+	                # (4096) NoeVIM > Crear los archivos de configuración de NeoVIM
+	                # (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario
+                    $l_options = 64 + 256 + 512 + 2048 + 4096 + 1
 					m_setup $l_options
 				}
 
+	            # (h) Setup VIM/NeoVIM (sin indexar documentación) y Profile como developer
 				'^h$' {
 					$l_continue= $false
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 
-                    $l_options = 4
+	                # (  64) Setup Profile como developer
+	                # ( 128) VIM    > Descargar plugins de VIM sin indexar su documentación
+	                # ( 512) VIM    > Crear los archivos de configuración de VIM
+	                # (1024) NeoVIM > Descargar plugins de NeoVIM sin indexar su documentación
+	                # (4096) NoeVIM > Crear los archivos de configuración de NeoVIM
+	                # (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario
+                    $l_options = 64 + 128 + 512 + 1024 + 4096 + 1
 					m_setup $l_options
 				}
 

@@ -594,7 +594,7 @@ function _download_vim_packages() {
         if [ $l_repo_type -eq 3 ]; then
 
             # Solo si es un 'Desktop Server', 'Distrobox' y 'WSL2'
-            if [ $g_enviroment_type -ne 0 ]; then
+            if [ $g_enviroment_type -eq 0 ]; then
                 printf '%s > Paquete (%s) "%b%s%b": Ha sigo excluido para su descarga (%bg_enviroment_type%b es %s)\n' "$l_tag" "${l_repo_type}" \
                        "$g_color_gray1" "${l_repo_git}" "$g_color_reset"  "$g_color_gray1" "$g_color_reset" "$g_enviroment_type"
                 continue
@@ -603,7 +603,7 @@ function _download_vim_packages() {
         fi
 
         #Si es un repositorio para developer no debe instalarse en el perfil basico
-        if [ $p_flag_developer -ne 0 ] && [ $l_repo_type -ge 3 ]; then
+        if [ $p_flag_developer -ne 0 ] && [ $l_repo_type -ge 4 ]; then
             continue
         fi
 
@@ -634,7 +634,7 @@ function _download_vim_packages() {
             fi
 
             # Validar si se excluye los plugins de integracion con AI Chatbot y AI Agent externos (OpenCode CLI, Gemini CLI, etc)
-            if [ $(( g_setup_vim_ai_plugins & 3 )) -eq 3 ]; then
+            if [ $(( g_setup_vim_ai_plugins & 4 )) -eq 4 ]; then
                 if [ $l_repo_type -eq 14 ] || [ $l_repo_type -eq 17 ]; then
                     l_enable_ai_plugin=0
                 fi
@@ -3282,8 +3282,11 @@ if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
     # shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/setup_config_template.bash
     . ${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash
 
+    printf '%bConfig File           : "%s"%b\n' "$g_color_gray1" "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" "$g_color_reset"
+
     #Corregir algunos valores ingresados
     # ...
+
 fi
 
 # Nombre del repositorio git o la ruta relativa del repositorio git respecto al home de usuario OBJETIVO (al cual se desea configurar el profile del usuario).
@@ -3376,7 +3379,7 @@ if [ -z "$g_enviroment_type" ]; then
     _get_default_enviroment_type
     g_enviroment_type=$?
 fi
-printf '%bEnviroment type       : "%s"%b\n' "$g_color_gray1" "${g_enviroment_type}" "$g_color_reset"
+printf '%bEnviroment type       : "%s" (0= Headless Server, 1= Desktop Server, 2= Distrobox, 3= WLS2)%b\n' "$g_color_gray1" "${g_enviroment_type}" "$g_color_reset"
 
 # Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
 # Sus valores puede ser:
@@ -3389,7 +3392,7 @@ printf '%bEnviroment type       : "%s"%b\n' "$g_color_gray1" "${g_enviroment_typ
 if [ -z "$g_setup_vim_ai_plugins" ]; then
     g_setup_vim_ai_plugins=0
 fi
-printf '%bSetup AI VIM plugins  : "%s"%b\n' "$g_color_gray1" "${g_setup_vim_ai_plugins}" "$g_color_reset"
+printf '%bSetup AI VIM plugins  : "%s" (1= AI Completion, 2= AI Chatbot/Agent interno, 3= AI Chatbot/Agent externo)%b\n' "$g_color_gray1" "${g_setup_vim_ai_plugins}" "$g_color_reset"
 
 
 #4. LOGICA: Configuración del profile

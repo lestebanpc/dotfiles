@@ -4197,6 +4197,8 @@ if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
     #Obtener los valores por defecto de las variables
     . ${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash
 
+    printf '%bConfig File           : "%s"%b\n' "$g_color_gray1" "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" "$g_color_reset"
+
     #Corregir algunos valaores
     if [ "$g_setup_only_last_version" = "0" ]; then
         g_setup_only_last_version=0

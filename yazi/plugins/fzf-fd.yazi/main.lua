@@ -405,8 +405,23 @@ local function m_run_fzf_fd(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_
             return "", nil
         end
 
-        l_message = "fzf exited with code: " .. tostring(l_fzf_output.status.code)
-        ya.err(l_message)
+        -- Si es otro tipo de error
+        l_message = nil
+        if l_output.status.code then
+            l_message = "fzf status-code: " .. tostring(l_output.status.code)
+        end
+
+        if l_output.stderr ~= nil and l_output.stderr ~= "" then
+            if l_message == nil then
+                l_message = "fzf error: " .. l_output.stderr
+            else
+                l_message = l_message .. ", fzf error: " .. l_output.stderr
+            end
+        end
+
+        ya.err("fzf status.code: " .. tostring(l_output.status.code))
+        ya.err("fzf stdout: " .. tostring(l_output.stdout))
+        ya.err("fzf stderr: " .. tostring(l_output.stderr))
         return nil, l_message
 
     end
@@ -521,13 +536,22 @@ end
 -- Funcion sincrona que se ejecutara por yazi para capturar algunos datos relevantes del estado actual de yazi.
 local m_get_current_yazi_info = ya.sync(function()
 
-	--local selected = {}
-	--for _, url in pairs(cx.active.selected) do
-	--	selected[#selected + 1] = url
+    -- El tab actual
+    local l_current_tab = cx.active
+
+    -- Las URLs de lo objetos selecionados
+	--local l_selected = {}
+	--for _, url in pairs(l_current_tab.selected) do
+	--	l_selected[#l_selected + 1] = url
 	--end
 
-	--return cx.active.current.cwd, selected
-	return cx.active.current.cwd
+    -- El folder de trabajo actual
+    local l_cwd = l_current_tab.current.cwd
+
+    -- Los archivos ocultos se muestran
+    --local l_hidden_files_are_shown = l_current_tab.pref.show_hidden
+
+	return l_cwd
 
 end)
 

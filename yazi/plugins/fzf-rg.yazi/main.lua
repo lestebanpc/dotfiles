@@ -401,8 +401,23 @@ local function m_run_fzf_rg(p_state, p_cwd, p_initial_query, p_hidden_files_are_
             return "", nil
         end
 
-        l_message = "fzf exited with code: " .. tostring(l_fzf_output.status.code)
-        ya.err(l_message)
+        -- Si es otro tipo de error
+        l_message = nil
+        if l_output.status.code then
+            l_message = "fzf status-code: " .. tostring(l_output.status.code)
+        end
+
+        if l_output.stderr ~= nil and l_output.stderr ~= "" then
+            if l_message == nil then
+                l_message = "fzf error: " .. l_output.stderr
+            else
+                l_message = l_message .. ", fzf error: " .. l_output.stderr
+            end
+        end
+
+        ya.err("fzf status.code: " .. tostring(l_output.status.code))
+        ya.err("fzf stdout: " .. tostring(l_output.stdout))
+        ya.err("fzf stderr: " .. tostring(l_output.stderr))
         return nil, l_message
 
     end
@@ -469,9 +484,9 @@ local function m_opentab_with_selected_files(p_cwd, p_script_path, p_info_files,
     -- Esperar a que el comando termine de ejecutar y devuelva el STDOUT
     local l_output = nil
 
-    l_output, l_err = l_child:wait_with_output()
+    l_output, l_error = l_child:wait_with_output()
     if not l_output then
-        l_message = "cmd output error: " .. tostring(l_err)
+        l_message = "cmd output error: " .. tostring(l_error)
         ya.err(l_message)
         return l_message
     end
@@ -483,12 +498,93 @@ local function m_opentab_with_selected_files(p_cwd, p_script_path, p_info_files,
 
     -- Si el comando devolvio un codigo de error en su ejecucion
     if not l_output.status.success then
-        l_message = "status code '" .. tostring(l_output.status.code) .. "' during the execution '" .. p_script_path .. "'."
-        ya.err(l_message)
+
+        l_message = nil
+        if l_output.status.code then
+            l_message = "status-code: " .. tostring(l_output.status.code)
+        end
+
+        if l_message == nil then
+            l_message = "error during the execution '" .. p_script_path .. "'."
+        else
+            l_message = l_message .. ", error during the execution '" .. p_script_path .. "'."
+        end
+
+        ya.err(p_script_path .. " status-code: " .. tostring(l_output.status.code))
+        ya.err(p_script_path .. " stdout: " .. tostring(l_output.stdout))
+        ya.err(p_script_path .. " stderr: " .. tostring(l_output.stderr))
         return l_message
+
     end
 
     return nil
+
+end
+
+
+local function m_go_git_root_folder(p_cwd)
+
+    -- Generar el comando 'git'
+    local git_cmd = Command("git")
+        :arg({ "rev-parse", "--show-toplevel" })
+        :cwd(tostring(p_cwd))
+        :stdout(Command.PIPED)
+
+    -- Ejecutar el comando 'git'
+    local l_error = nil
+    local l_child = nil
+    local l_message = nil
+
+    l_child, l_error = git_cmd:spawn()
+    if not l_child then
+        l_message ="git failed to start: " .. tostring(l_error)
+        ya.err(l_message)
+        return nil, l_message
+    end
+
+    -- Esperar a que el comando termine de ejecutar y devuelva el STDOUT
+    local l_output = nil
+
+    l_output, l_error = l_child:wait_with_output()
+    if not l_output then
+        l_message = "git output error: " .. tostring(l_error)
+        ya.err(l_message)
+        return nil, l_message
+    end
+
+    --ya.dbg("l_output.status.success: " .. tostring(l_output.status.success))
+    --ya.dbg("l_output.status.code: " .. tostring(l_output.status.code))
+    --ya.dbg("l_output.stdout: " .. tostring(l_output.stdout))
+    --ya.dbg("l_output.stderr: " .. tostring(l_output.stderr))
+
+    -- Si el comando devolvio un codigo de error en su ejecucion
+    if not l_output.status.success then
+
+        l_message = nil
+        if l_output.status.code then
+            l_message = "git status-code: " .. tostring(l_output.status.code)
+        end
+
+        if l_output.stderr ~= nil and l_output.stderr ~= "" then
+
+            if l_message == nil then
+                l_message = "git error: " .. l_output.stderr
+            else
+                l_message = l_message .. ", git error: " .. l_output.stderr
+            end
+
+        end
+
+        ya.err("git status.code: " .. tostring(l_output.status.code))
+        ya.err("git stdout: " .. tostring(l_output.stdout))
+        ya.err("git stderr: " .. tostring(l_output.stderr))
+
+        return nil, l_message
+
+    end
+
+    l_git_folder = l_output.stdout:gsub("%s*$", "")
+    return l_git_folder, nil
 
 end
 
@@ -590,54 +686,6 @@ local function m_read_args(p_job)
     end
 
     return l_cmd_type, use_tmux, height, width, l_editor_type
-
-end
-
-
-local function m_go_git_root_folder(p_cwd)
-
-    -- Generar el comando 'git'
-    local git_cmd = Command("git")
-        :arg({ "rev-parse", "--show-toplevel" })
-        :cwd(tostring(p_cwd))
-        :stdout(Command.PIPED)
-
-    -- Ejecutar el comando 'git'
-    local l_error = nil
-    local l_child = nil
-    local l_message = nil
-
-    l_child, l_error = git_cmd:spawn()
-    if not l_child then
-        l_message ="git failed to start: " .. tostring(l_error)
-        ya.err(l_message)
-        return nil, l_message
-    end
-
-    -- Esperar a que el comando termine de ejecutar y devuelva el STDOUT
-    local l_output = nil
-
-    l_output, l_error = l_child:wait_with_output()
-    if not l_output then
-        l_message = "git output error: " .. tostring(l_output)
-        ya.err(l_message)
-        return nil, l_message
-    end
-
-    --ya.dbg("l_output.status.success: " .. tostring(l_output.status.success))
-    --ya.dbg("l_output.status.code: " .. tostring(l_output.status.code))
-    --ya.dbg("l_output.stdout: " .. tostring(l_output.stdout))
-    --ya.dbg("l_output.stderr: " .. tostring(l_output.stderr))
-
-    -- Si el comando devolvio un codigo de error en su ejecucion
-    if not l_output.status.success then
-        l_message = "git error: " .. tostring(l_output.stderr)
-        ya.err(l_message)
-        return nil, l_message
-    end
-
-    l_git_folder = l_output.stdout:gsub("%s*$", "")
-    return l_git_folder, nil
 
 end
 
