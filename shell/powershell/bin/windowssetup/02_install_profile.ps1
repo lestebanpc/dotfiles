@@ -1442,7 +1442,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1480,7 +1480,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1491,7 +1491,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1512,7 +1512,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1521,7 +1521,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1539,7 +1539,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1555,7 +1555,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1566,7 +1566,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1582,7 +1582,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     Write-Host "            > Edite '${env:APPDATA}\yazi\config\init.lua' si desea modificar las opciones Wezterm."
@@ -1603,7 +1603,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1612,7 +1612,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1621,7 +1621,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
