@@ -1464,7 +1464,8 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     $l_status= m_create_folder "${env:USERPROFILE}" ".ssh" $l_tag
 
     $l_target_link="${env:USERPROFILE}\.ssh\config"
-    $l_source_path="${env:USERPROFILE}\.files\etc\ssh\template_windows_withpublickey.conf"
+    $l_source_path="${env:USERPROFILE}\.files\etc\ssh"
+    $l_source_filename='template_windows_withpublickey.conf'
     $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
 
 
@@ -1498,7 +1499,8 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
 
     # Configuracion de 'oh-my-posh'
     $l_target_link="${env:USERPROFILE}\.files\etc\oh-my-posh\default_settings.json"
-    $l_source_path="${env:USERPROFILE}\.files\etc\oh-my-posh\lepc-montys-cyan1.json"
+    $l_source_path="${env:USERPROFILE}\.files\etc\oh-my-posh"
+    $l_source_filename='lepc-montys-cyan1.json'
     $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_modifiable
     Write-Host "            > Edite '${env:USERPROFILE}\.files\etc\oh-my-posh\default_settings.json' si desea modificar las opciones Wezterm."
 
@@ -1526,7 +1528,8 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     }
 
     $l_target_link="${env:USERPROFILE}\.config\wezterm\custom_config.lua"
-    $l_source_path="${env:USERPROFILE}\.files\wezterm\local\custom_config_template_win.lua"
+    $l_source_path="${env:USERPROFILE}\.files\wezterm\local"
+    $l_source_filename='custom_config_template_win.lua'
     $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
 
 
@@ -1571,7 +1574,8 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     }
 
     $l_target_link="${env:APPDATA}\yazi\config\keymap.toml"
-    $l_source_path="${env:USERPROFILE}\.files\yazi\keymap_win.toml"
+    $l_source_path="${env:USERPROFILE}\.files\yazi"
+    $l_source_filename='keymap_win.toml'
     $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
     Write-Host "            > Edite '${env:APPDATA}\yazi\config\keymap.toml' si desea modificar las opciones Wezterm."
 
