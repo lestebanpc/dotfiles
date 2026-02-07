@@ -1775,7 +1775,7 @@ function m_show_menu_core() {
     if ($g_setup_access_type -eq 1) {
 
         if ($g_shell_with_admin_privileges) {
-	        Write-Host " ( ) Esta ejecutando con " -NoNewline DarkGray
+	        Write-Host " ( ) Esta ejecutando con " -NoNewline -ForegroundColor DarkGray
             Write-Host "privilegios administrativos" -NoNewline -ForegroundColor Blue
             Write-Host " y puede crear SymbolicLink para el usuario." -ForegroundColor DarkGray
         }
