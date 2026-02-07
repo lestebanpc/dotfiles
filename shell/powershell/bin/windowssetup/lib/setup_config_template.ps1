@@ -21,8 +21,13 @@
 #$g_temp_path='C:\Windows\Temp'
 
 # Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
-# Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
-#$g_setup_only_last_version=1
+# Por defecto es se considerado 'false'.
+#$g_setup_only_last_version= $false
+
+# Usado solo durante la instalación. Define si se tiene puede eliminar el archivo descargado de para la instalacion.
+# Por defecto se descarga en %TEMP% y en algunos casos no se tiene permiso para eliminar solo para crear archivo.
+# Por defecto es se considerado 'true'.
+#$g_remove_donwload_files= $true
 
 # Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
 # Sus valores puede ser:

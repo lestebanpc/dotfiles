@@ -99,82 +99,156 @@ function m_compare_versions2 {
 function m_get_current_version($p_repo_id) {
 
     $l_current_version= $null
-    try {
+	switch ($p_repo_id)
+	{
 
-	    switch ($p_repo_id)
-	    {
+	    'wezterm' {
 
-		    'wezterm' {
+	        if (-not (Test-Path "${g_win_base_path}\wezterm.info")) {
+	        	return $null
+	        }
 
-                #$versionInfo = "$(wezterm --version 2>$null)"
-                #if ($LASTEXITCODE -eq 0 -and $versionInfo) {
-                #    # Extraer la versión del formato "wezterm 20230712-072601-f4abf8fd"
-                #    if ($versionInfo -match '.* ([0-9]+)_.*') {
-                #        return $matches[1]
-                #    }
-                #}
-
-		        if (-not (Test-Path "${g_win_base_path}\wezterm.info")) {
-		        	return $null
-	            }
-
-		        $l_current_version = Get-Content -Path "${g_win_base_path}\wezterm.info" -TotalCount 1
-
-            }
-
-            # nvim --version | head -n 1
-            #NVIM v0.11.5
-
-            # vim --version | head -n 1
-            #VIM - Vi IMproved 9.1 (2024 Jan 02, compiled Jan 30 2026 00:00:00)
+	        $l_current_version = Get-Content -Path "${g_win_base_path}\wezterm.info" -TotalCount 1
 
         }
 
-        return $l_current_version
+	    'nvim' {
+
+            # nvim --version | head -n 1
+            # NVIM v0.11.5
+            $l_version_info = $null
+            try {
+                $l_version_info = nvim --version 2>$null | Select-Object -First 1
+                if ($LASTEXITCODE -ne 0) {
+                    return $null
+                }
+            }
+            catch {
+                return $null
+            }
+
+            if ($null -eq $l_version_info -or $l_version_info -eq "") {
+                return $null
+            }
+
+            # Extraer la versión del formato
+            if ($l_version_info -match 'v(\d+(\.\d+)+)') {
+                return $matches[1]
+            }
+
+            throw "Con la informacion '${l_version_info}' no se puede obtener la version actual"
+            return $null
+
+        }
+
+	    'vim' {
+
+	        if (-not (Test-Path "${g_win_base_path}\vim.info")) {
+	        	return $null
+	        }
+
+	        $l_current_version = Get-Content -Path "${g_win_base_path}\vim.info" -TotalCount 1
+
+        }
+
+        # No se usa esta opcion, debido a que solo se obtiene la version 9.1 pero no la complate como 9.1.254
+	    'vim-noused' {
+
+            # vim --version | head -n 1
+            # VIM - Vi IMproved 9.1 (2024 Jan 02, compiled Jan 30 2026 00:00:00)
+            $l_version_info = $null
+            try {
+                $l_version_info = vim --version 2>$null | Select-Object -First 1
+                if ($LASTEXITCODE -ne 0) {
+                    return $null
+                }
+            }
+            catch {
+                return $null
+            }
+
+
+            if ($null -eq $l_version_info -or $l_version_info -eq "") {
+                return $null
+            }
+
+            # Extraer la versión del formato
+            #if ($l_version_info -match '.* ([0-9.]+) .*') {
+            if ($l_version_info -match '\b(\d+\.\d+)\b') {
+                return $matches[1]
+            }
+
+            throw "Con la informacion '${l_version_info}' no se puede obtener la version actual"
+            return $null
+
+        }
 
     }
-    catch {
-        Write-Warning "No se pudo obtener la versión actual instalada"
-    }
 
-    return $null
+    return $l_current_version
 
 }
 
 # Función para obtener la última versión nightly de GitHub
 function m_get_latest_version($p_repo_id) {
 
-    $l_last_version= $null
+    $l_lastest_version= $null
+    $l_lastest_pretty_version= $null
+    $l_repo_name= $null
 
-    try {
+	switch ($p_repo_id)
+	{
 
+	    'wezterm' {
 
-	    switch ($p_repo_id)
-	    {
-
-		    'wezterm' {
-
-                Write-Host "Obteniendo información de la última versión nightly..."
-
-                $l_last_version="$(curl -Ls -H 'Accept: application/vnd.github+json' 'https://api.github.com/repos/wezterm/wezterm/releases/tags/nightly' | jq -r '.updated_at')"
-                if($null -eq $l_last_version) {
-                    return $null
-                }
-
-                $l_date_obj = [datetime]::Parse($l_repo_last_version)
-                $l_last_version = $l_date_obj.ToString('yyyyMMdd')
-
+            Write-Host "Obteniendo información de la última versión nightly..."
+            $l_repo_name= "wezterm/wezterm"
+            $l_lastest_version= curl -Ls -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/${l_repo_name}/releases/tags/nightly" | jq -r '.updated_at'
+            if ($LASTEXITCODE -ne 0) {
+                return $null
             }
+
+            if ($null -eq $l_lastest_version -or $l_lastest_version -eq "") {
+                return $null
+            }
+
+            $l_date_obj = [datetime]::Parse($l_lastest_version)
+            $l_lastest_version = $l_date_obj.ToString('yyyyMMdd')
+            $l_lastest_pretty_version = $l_lastest_version
 
         }
 
-        return $l_last_version
+	    'nvim' {
+
+            $l_repo_name= "neovim/neovim"
+            $l_lastest_version = curl -Ls -H 'Accept: application/json' "https://github.com/${l_repo_name}/releases/latest" | jq -r '.tag_name'
+            if ($LASTEXITCODE -ne 0) {
+                return $null
+            }
+
+            if ($null -eq $l_lastest_version -or $l_lastest_version -eq "") {
+                return $null
+            }
+
+            $l_lastest_pretty_version = $l_lastest_version -replace '^v', ''
+
+        }
+
+	    'vim' {
+
+            $l_repo_name= "vim/vim-win32-installer"
+            #Usando el API resumido del repositorio de GitHub
+            $l_lastest_version = curl -Ls -H 'Accept: application/json' "https://github.com/${l_repo_name}/releases/latest" | jq -r '.tag_name'
+
+            $l_lastest_pretty_version = $l_lastest_version -replace '^v', ''
+
+        }
+
 
     }
-    catch {
-        Write-Error "Error al obtener la información de la versión nightly: $($_.Exception.Message)"
-        return $null
-    }
+
+    return $l_lastest_pretty_version
+
 }
 
 
@@ -195,10 +269,10 @@ function m_should_setup_repo_version($p_repo_id, $p_curent_version, $p_lastest_v
         # Comparar versiones
         $l_status = 0
 	    if ($p_repo_id -eq "wezterm") {
-            $l_status = m_compare_versions1 "${l_current_version}.0" "${l_latest_version}.0"
+            $l_status = m_compare_versions1 "${l_current_version}.0" "${l_lastest_version}.0"
         }
         else {
-            $l_status = m_compare_versions1 "${l_current_version}" "${l_latest_version}"
+            $l_status = m_compare_versions1 "${l_current_version}" "${l_lastest_version}"
         }
 
         # Solo actualizar
@@ -237,9 +311,9 @@ function m_get_repo_info($p_repo_id, $p_pretty_version, $p_flag_use_arm, $p_tag)
 
                 #https://github.com/neovim/neovim/releases/download/v0.11.6/nvim-win-arm64.zip
                 #https://github.com/neovim/neovim/releases/download/v0.11.6/nvim-win64.zip
-                $l_artifact_url = "https://github.com/neovim/neovim/releases/download/v${l_latest_version}/nvim-win64.zip"
+                $l_artifact_url = "https://github.com/neovim/neovim/releases/download/v${p_pretty_version}/nvim-win64.zip"
                 if( $p_flag_use_arm ) {
-                    $l_artifact_url = "https://github.com/neovim/neovim/releases/download/v${l_latest_version}/nvim-win-arm64.zip"
+                    $l_artifact_url = "https://github.com/neovim/neovim/releases/download/v${p_pretty_version}/nvim-win-arm64.zip"
                 }
 
             }
@@ -247,15 +321,15 @@ function m_get_repo_info($p_repo_id, $p_pretty_version, $p_flag_use_arm, $p_tag)
 		    'vim' {
                 #https://github.com/vim/vim-win32-installer/releases/download/v9.1.2132/gvim_9.1.2132_arm64.zip
                 #https://github.com/vim/vim-win32-installer/releases/download/v9.1.2132/gvim_9.1.2132_x64.zip
-                $l_artifact_url = "https://github.com/vim/vim-win32-installer/releases/download/v${l_latest_version}/gvim_${l_latest_version}_x64.zip"
+                $l_artifact_url = "https://github.com/vim/vim-win32-installer/releases/download/v${p_pretty_version}/gvim_${p_pretty_version}_x64.zip"
                 if( $p_flag_use_arm ) {
-                    $l_artifact_url = "https://github.com/vim/vim-win32-installer/releases/download/v${l_latest_version}/gvim_${l_latest_version}_arm64.zip"
+                    $l_artifact_url = "https://github.com/vim/vim-win32-installer/releases/download/v${p_pretty_version}/gvim_${p_pretty_version}_arm64.zip"
                 }
             }
 
         }
 
-        return @($l_repo_url, $l_type_file, $l_file_name)
+        return @($l_artifact_url, $l_type_file, $l_file_name)
 
     }
     catch {
@@ -266,7 +340,7 @@ function m_get_repo_info($p_repo_id, $p_pretty_version, $p_flag_use_arm, $p_tag)
 
 }
 
-function m_setup_repo_info($p_repo_id, $p_file_type, $p_download_file, $p_pretty_version, $p_flag_use_arm, $p_tag) {
+function m_setup_repo_info($p_repo_id, $p_file_type, $p_download_file, $p_pretty_version, $p_flag_use_arm, $p_remove_download_file, $p_tag) {
 
     $l_install_path = ''
 
@@ -303,14 +377,16 @@ function m_setup_repo_info($p_repo_id, $p_file_type, $p_download_file, $p_pretty
                 Write-Host "${p_tag} - No se encontró carpeta que empiece con 'WezTerm-windows-'"
             }
 
-            # Limpiar archivo temporal
-            if (Test-Path $p_download_file) {
-                Remove-Item $p_download_file -Force
-                Write-Host "${p_tag} - Archivo temporal eliminado." -ForegroundColor Green
-            }
-
             # Crea o sobrescribe el archivo de version
-            Set-Content -Path "${g_win_base_path}\wezterm.info" -Value "$l_latest_version"
+            Set-Content -Path "${g_win_base_path}\wezterm.info" -Value "$p_pretty_version"
+
+            # Limpiar archivo temporal
+            if ( $p_remove_download_file ) {
+                if (Test-Path $p_download_file) {
+                    Remove-Item $p_download_file -Force
+                    Write-Host "${p_tag} - Archivo temporal eliminado." -ForegroundColor Green
+                }
+            }
 
             Write-Host "${p_tag} - ¡Actualización completada exitosamente!"
             Write-Host "${p_tag} - WezTerm ha sido instalado en: $l_install_path"
@@ -340,18 +416,23 @@ function m_setup_repo_info($p_repo_id, $p_file_type, $p_download_file, $p_pretty
 
             # Si se encontró, renombrar
             if ($l_folder) {
+                Write-Host "${p_tag} - Renombrado el folder de '$($l_folder.FullName)' a 'neovim'"
                 Rename-Item -Path $l_folder.FullName -NewName 'neovim'
-                Write-Host "${p_tag} - Renombrado '$($l_folder.Name)' a 'neovim'"
             }
             else {
                 Write-Host "${p_tag} - No se encontró carpeta que empiece con 'nvim-'"
             }
 
             # Limpiar archivo temporal
-            if (Test-Path $p_download_file) {
-                Remove-Item $p_download_file -Force
-                Write-Host "${p_tag} - Archivo temporal eliminado." -ForegroundColor Green
+            if ( $p_remove_download_file ) {
+                if (Test-Path $p_download_file) {
+                    Remove-Item $p_download_file -Force
+                    Write-Host "${p_tag} - Archivo temporal eliminado." -ForegroundColor Green
+                }
             }
+
+            Write-Host "${p_tag} - ¡Actualización completada exitosamente!"
+            Write-Host "${p_tag} - VIM ha sido instalado en: $l_install_path\neovim"
 
         }
 
@@ -373,23 +454,41 @@ function m_setup_repo_info($p_repo_id, $p_file_type, $p_download_file, $p_pretty
             Write-Host "${p_tag} - Descompresión completada." -ForegroundColor Green
 
             # Buscar el primer subfolder que cumpla la condición
-            $l_folder = Get-ChildItem -Path "${l_install_path}" -Directory |
+            $l_folder = Get-ChildItem -Path "${l_install_path}/vim" -Directory |
                 Where-Object { $_.Name -like 'vim*' } | Select-Object -First 1
 
             # Si se encontró, renombrar
             if ($l_folder) {
-                Rename-Item -Path $l_folder.FullName -NewName 'vim'
-                Write-Host "${p_tag} - Renombrado '$($l_folder.Name)' a 'vim'"
+
+                $l_folder_name = $l_folder.Name
+                Write-Host "${p_tag} - Moviendo '$($l_folder.FullName)' a '${l_install_path}'"
+                Move-Item -Path $l_folder.FullName -Destination "${l_install_path}"
+
+                Write-Host "${p_tag} - Eliminando '${l_install_path}\vim'"
+                Remove-Item "$l_install_path\vim" -Recurse -Force
+
+                Write-Host "${p_tag} - Renombrado '${l_install_path}\${l_folder_name}' a 'vim'"
+                Rename-Item -Path "${l_install_path}\${l_folder_name}"  -NewName 'vim'
+
             }
             else {
                 Write-Host "${p_tag} - No se encontró carpeta que empiece con 'vim'"
             }
 
+            # Crea o sobrescribe el archivo de version
+            Set-Content -Path "${g_win_base_path}\vim.info" -Value "$p_pretty_version"
+
             # Limpiar archivo temporal
-            if (Test-Path $p_download_file) {
-                Remove-Item $p_download_file -Force
-                Write-Host "${p_tag} - Archivo temporal eliminado." -ForegroundColor Green
+            if ( $p_remove_download_file ) {
+                if (Test-Path $p_download_file) {
+                    Remove-Item $p_download_file -Force
+                    Write-Host "${p_tag} - Archivo temporal eliminado." -ForegroundColor Green
+                }
             }
+
+            Write-Host "${p_tag} - ¡Actualización completada exitosamente!"
+            Write-Host "${p_tag} - VIM ha sido instalado en: $l_install_path\vim"
+
 
         }
 
@@ -404,26 +503,43 @@ function m_setup_repo_info($p_repo_id, $p_file_type, $p_download_file, $p_pretty
 # Funciones de Instalacion
 #------------------------------------------------------------------------------------------------
 
-function m_setup_repo($p_repo_id, $p_flag_use_arm) {
+function m_setup_repo($p_repo_id, $p_flag_use_arm, $p_remove_download_file) {
 
     $l_status = 0
     $l_tag = "${p_repo_id}"
 
     # Obtener versiones
     Write-Host "${l_tag} - Verificando versiones..."
-    $l_current_version = m_get_current_version $p_repo_id
-    $l_latest_version = m_get_latest_version $p_repo_id
+    $l_current_version= $null
+    $l_lastest_version= $null
 
-    if (!$l_latest_version) {
+    try {
+        $l_current_version = m_get_current_version $p_repo_id
+    }
+    catch {
+        Write-Error "${l_tag} - Error al obtener la versión actual que esta instalada el repositorio '${p_repo_id}': $($_.Exception.Message)"
+        return 1
+    }
+
+    try {
+        $l_lastest_version = m_get_latest_version $p_repo_id
+    }
+    catch {
+        Write-Error "${l_tag} - Error al obtener la información de la ultima versión disponible del repositorio '${p_repo_id}': $($_.Exception.Message)"
+        return 2
+    }
+
+
+    if ($null -eq $l_lastest_version -or $l_lastest_version -eq "") {
         Write-Error "${l_tag} - No se pudo obtener la información de la última versión"
         return 3
     }
 
-    Write-Host "${l_tag} - Versión actual instalada: $($l_current_version)"
-    Write-Host "${l_tag} - Última versión nightly  : $($l_latest_version)"
+    Write-Host "${l_tag} - Versión actual instalada  : $($l_current_version)"
+    Write-Host "${l_tag} - Última versión disponible : $($l_lastest_version)"
 
     # Verificar si es necesario actualizar
-    $l_should_download = m_should_setup_repo_version $p_repo_id $l_current_version $l_latest_version $l_tag
+    $l_should_download = m_should_setup_repo_version $p_repo_id $l_current_version $l_lastest_version $l_tag
 
     # Si no es neceario Descargar
     if (-not $l_should_download) {
@@ -431,8 +547,8 @@ function m_setup_repo($p_repo_id, $p_flag_use_arm) {
     }
 
     # Obtener la informacion del repositorio
-    $l_tag = "${p_repo_id}[${l_latest_version}]"
-    $la_repo_info = m_get_repo_info $p_repo_id $l_last_version $p_flag_use_arm $p_tag
+    $l_tag = "${p_repo_id}[${l_lastest_version}]"
+    $la_repo_info = m_get_repo_info $p_repo_id $l_lastest_version $p_flag_use_arm $p_tag
     if ( $null -eq $la_repo_info ) {
         Write-Host "${l_tag} - No es se puede obtener informacion del repositorio '${p_repo_id}'." -ForegroundColor Red
         return 1
@@ -441,11 +557,12 @@ function m_setup_repo($p_repo_id, $p_flag_use_arm) {
     # Descargar los artefactos del repositorio
     $l_file_url = $la_repo_info[0]
     $l_file_type = $la_repo_info[1]
-    $l_download_file = "${g_temp_path}\$la_repo_info[2]"
+    $l_download_file = $la_repo_info[2]
+    $l_download_file = "${g_temp_path}\${l_download_file}"
 
     try {
 
-        Write-Host "${l_tag} - Descargando la última versión nightly..." -ForegroundColor Cyan
+        Write-Host "${l_tag} - Descargando la última versión .." -ForegroundColor Cyan
         Write-Host "${l_tag} - URL: ${l_file_url}" -ForegroundColor Gray
         Write-Host "${l_tag} - Destino: $l_download_file" -ForegroundColor Gray
 
@@ -459,24 +576,31 @@ function m_setup_repo($p_repo_id, $p_flag_use_arm) {
         Write-Error "${l_tag} - Error durante el proceso de actualización: $($_.Exception.Message)"
 
         # Limpiar archivo temporal en caso de error
-        if (Test-Path $l_download_file) {
-            Remove-Item $l_download_file -Force -ErrorAction SilentlyContinue
+        if ( $p_remove_download_file ) {
+            if (Test-Path $l_download_file) {
+                Remove-Item $l_download_file -Force -ErrorAction SilentlyContinue
+            }
         }
+
         return 2
     }
 
 
     # Configurar el repositorio
     try {
-        $l_status= m_setup_repo_info $p_repo_id $l_file_type $l_download_file $l_latest_version $p_flag_use_arm $p_tag
+        $l_status= m_setup_repo_info $p_repo_id $l_file_type $l_download_file $l_lastest_version $p_flag_use_arm $p_tag
     }
     catch {
 
         Write-Error "${l_tag} - Error durante el proceso de actualización: $($_.Exception.Message)"
+
         # Limpiar archivo temporal en caso de error
-        if (Test-Path $l_download_file) {
-            Remove-Item $l_download_file -Force -ErrorAction SilentlyContinue
+        if ( $p_remove_download_file ) {
+            if (Test-Path $l_download_file) {
+                Remove-Item $l_download_file -Force -ErrorAction SilentlyContinue
+            }
         }
+
         return 2
     }
 
@@ -503,17 +627,20 @@ function m_setup($p_input_options) {
 	# (   4) Descargar/Actualizar NeoVIM
     $l_option = 1
     if ( ($p_input_options -band $l_option) -eq $l_option ) {
-        $l_status= m_setup_repo 'wezterm' $false
+        Write-Host ""
+        $l_status= m_setup_repo 'wezterm' $false $g_remove_donwload_files
     }
 
     $l_option = 2
     if ( ($p_input_options -band $l_option) -eq $l_option ) {
-        $l_status= m_setup_repo 'vim' $false
+        Write-Host ""
+        $l_status= m_setup_repo 'vim' $false $g_remove_donwload_files
     }
 
     $l_option = 4
     if ( ($p_input_options -band $l_option) -eq $l_option ) {
-        $l_status= m_setup_repo 'nvim' $false
+        Write-Host ""
+        $l_status= m_setup_repo 'nvim' $false $g_remove_donwload_files
     }
 
 
@@ -634,10 +761,18 @@ if((-not ${g_temp_path}) -or -not (Test-Path "$g_temp_path")) {
 Write-Host "Temporary Path                 : ${g_temp_path}" -ForegroundColor DarkGray
 
 # Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
-#Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
+#Por defecto es 'false'.
 if(-not (Get-Variable g_setup_only_last_version -ErrorAction SilentlyContinue) ) {
-    $g_setup_only_last_version=1
+    $g_setup_only_last_version= $false
 }
+
+# Usado solo durante la instalación. Define si se tiene puede eliminar el archivo descargado de para la instalacion.
+# Por defecto se descarga en %TEMP% y en algunos casos no se tiene permiso para eliminar solo para crear archivo.
+# Por defecto es se considerado 'true'.
+if(-not (Get-Variable g_remove_donwload_files -ErrorAction SilentlyContinue) ) {
+    $g_remove_donwload_files= $true
+}
+Write-Host "Remove Downloaded Files        : ${g_remove_donwload_files}" -ForegroundColor DarkGray
 
 # Determinar si se esta ejecutando la terminal con privilegios administratrivos
 $g_shell_with_admin_privileges = $false

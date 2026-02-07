@@ -324,23 +324,47 @@ function m_update_vim($p_options, $p_is_neovim)
     }
 
     #4. Prerequisito: VIM/Neovim debe esta instalado
-    $l_version=$(vim --version 2> $null)
-    if (-not $?) {
-        $l_version= $l_version[0]
-        #Write-Host "VIM Version: ${l_version}"
-        $l_version= $l_version -creplace "$g_regexp_sust_version1", '$1'
+    $l_version= $null
+
+    try {
+
+        $l_version_info= $null
+
+        if ($p_is_neovim) {
+
+            $l_version_info = nvim --version 2>$null | Select-Object -First 1
+            if ($LASTEXITCODE -ne 0) {
+                $l_version= $null
+            }
+            else {
+                $l_version= $l_version_info -creplace "$g_regexp_sust_version1", '$1'
+            }
+
+        }
+        else {
+
+            $l_version_info = vim --version 2>$null | Select-Object -First 1
+            if ($LASTEXITCODE -ne 0) {
+                $l_version= $null
+            }
+            else {
+                $l_version= $l_version_info -creplace "$g_regexp_sust_version1", '$1'
+            }
+
+        }
     }
-    else {
-        $l_version=""
+    catch {
+        $l_version= $null
     }
 
-    if ($l_version -eq "") {
+    if ( $null -eq $l_version -or $l_version -eq "" ) {
         #No esta instalado VIM/NeoVIM, No configurarlo
         Write-Host "Se requiere que ${l_tag} este instalado para actualizar sus paquetes."
         return 1
     }
 
-    #Write-Host "VIM Version: ${l_version}"
+
+    #Write-Host "${l_tag} Version: ${l_version}"
 
     #5. Actualizar los paquetes
 
@@ -362,16 +386,6 @@ function m_update_vim($p_options, $p_is_neovim)
 
 }
 
-function m_update_all($p_input_options) {
-
-
-    #1. Actualizar paquetes VIM instalados
-    m_update_vim $p_input_options $false
-
-    #2. Actaulizar paquetes de NeoVIM
-    m_update_vim $p_input_options $true
-
-}
 
 function m_rollback_changes_plugins_fzf()
 {
@@ -475,33 +489,54 @@ function m_changes_plugins_fzf()
 
 function m_setup($p_input_options)
 {
-	if($p_input_options -eq 2) {
+    if ($p_input_options -le 0) {
+        return
+    }
 
-		m_rollback_changes_plugins_fzf
-		return
-	}
+    $l_status= 0
 
-	if($p_input_options -eq 3) {
+	# (   1) Actualizar los plugins de VIM"
+	# (   2) Actualizar los plugins de NeoVIM"
+	# (   4) Rollback las modificaciones realizadas del plugin 'fzf.vim'"
+	# (   8) Cambiar el plugin 'fzf.vim' usando la fuente corregida"
+    $l_option = 1
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+        $l_status= m_update_vim $p_input_options $false
+    }
 
-		m_changes_plugins_fzf
-		return
-	}
+    $l_option = 2
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+        $l_status= m_update_vim $p_input_options $true
+    }
 
-    $l_status= m_update_all $p_input_options
+    $l_option = 4
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+		$l_status= m_rollback_changes_plugins_fzf
+    }
+
+    $l_option = 8
+    if ( ($p_input_options -band $l_option) -eq $l_option ) {
+		$l_status= m_changes_plugins_fzf
+    }
+
 }
 
 
 function m_show_menu_core()
 {
 	Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
-	Write-Host "                                                      Menu de Opciones" -ForegroundColor Green
+	Write-Host "                                                  Menu de Opciones" -ForegroundColor Green
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 	Write-Host " (q) Salir del menu"
 	Write-Host " (a) Actualizar los plugins VIM/NeoVIM"
-	Write-Host " (b) Rollback las modificaciones realizadas del plugin 'fzf.vim'"
-	Write-Host " (c) Cambiar el plugin 'fzf.vim' usando la fuente corregida"
+	Write-Host " ( ) Configuración personalizado. Ingrese la suma de las opciones que desea configurar:"
+	Write-Host "    (   1) Actualizar los plugins de VIM"
+	Write-Host "    (   2) Actualizar los plugins de NeoVIM"
+	Write-Host "    (   4) Rollback las modificaciones realizadas del plugin 'fzf.vim'"
+	Write-Host "    (   8) Cambiar el plugin 'fzf.vim' usando la fuente corregida"
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 }
+
 
 function show_menu()
 {
@@ -510,39 +545,43 @@ function show_menu()
 
 	$l_continue= $true
 	$l_read_option= ""
+    $l_options=0
+    $l_status=0
+
 	while($l_continue)
 	{
 			Write-Host "Ingrese la opción (" -NoNewline
 			Write-Host "no ingrese los ceros a la izquierda" -NoNewline -ForegroundColor DarkGray
 			$l_read_option= Read-Host ")"
-			switch ($l_read_option)
+
+			switch -Regex ($l_read_option)
 			{
-				'a' {
+
+				'^a$' {
 					$l_continue= $false
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
-					m_setup 1
+
+                    $l_options = 1 + 2
+					$l_status= m_setup $l_options
 				}
 
-				'b' {
+				'^\d+$' {
 					$l_continue= $false
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
-					m_setup 2
+
+                    $l_options = [int]$l_read_option
+					$l_status= m_setup $l_options
 				}
 
-				'c' {
+
+				'^q$' {
 					$l_continue= $false
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
-					m_setup 3
 				}
 
-				'q' {
-					$l_continue= $false
-	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
-					Write-Host ""
-				}
 
 				default {
 					$l_continue= $true
@@ -572,6 +611,17 @@ function show_menu()
 #    }
 #}
 
+
+# Cargar la parametros globales modificables por el usuario
+if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1") {
+
+    . "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1"
+    Write-Host "Config File                    : ${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1" -ForegroundColor DarkGray
+
+    #Fix the bad entry values
+
+}
+
 # Folder base donde se almacena el programas, comando y afines usados por Windows.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
 # - Si no es un valor valido, se asignara "C:\apps"
@@ -582,41 +632,40 @@ function show_menu()
 #     > "${g_win_base_path}/cmds/doc" : subfolder donde se almacena documentacion del comando.
 #     > "${g_win_base_path}/cmds/etc" : subfolder donde se almacena archivos adicionales del comando.
 #     > "${g_win_base_path}/fonts" : subfolder donde se almacena los archivos de fuentes tipograficas.
-$g_win_base_path=''
+#
+# Valor por defecto del folder base de  programas, comando y afines usados por Windows.
+if(-not ${g_win_base_path} -or -not (Test-Path "$g_win_base_path")) {
+    $g_win_base_path='C:\apps'
+}
+Write-Host "Base Folder Path               : ${g_win_base_path}" -ForegroundColor DarkGray
 
 # Folder base donde se almacena data temporal que sera eliminado automaticamente despues completar la configuración.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
 # - Si no es valido, la funcion "get_temp_path" asignara segun orden de prioridad a '$env:TEMP'.
-$g_temp_path=''
-
-# Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
-#Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
-$g_setup_only_last_version=1
-
-# Cargar la información:
-if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1") {
-
-    . "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1"
-
-    #Fix the bad entry values
-    if( "$g_setup_only_last_version" -eq "0" ) {
-        $g_setup_only_last_version=0
-    }
-    else {
-        $g_setup_only_last_version=1
-    }
-
-}
-
-# Valor por defecto del folder base de  programas, comando y afines usados por Windows.
-if((-not ${g_win_base_path}) -or -not (Test-Path "$g_win_base_path")) {
-    $g_win_base_path='C:\apps'
-}
-
+#
 # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
 if((-not ${g_temp_path}) -or -not (Test-Path "$g_temp_path")) {
     $g_temp_path= 'C:\Windows\Temp'
 }
+Write-Host "Temporary Path                 : ${g_temp_path}" -ForegroundColor DarkGray
 
+# Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
+#Por defecto es considerado 'false'.
+if(-not (Get-Variable g_setup_only_last_version -ErrorAction SilentlyContinue) ) {
+    $g_setup_only_last_version= $false
+}
+
+
+# Determinar si se esta ejecutando la terminal con privilegios administratrivos
+$g_shell_with_admin_privileges = $false
+
+$t_principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+if ($t_principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    $g_shell_with_admin_privileges = $true
+    Write-Host "Administrator Privileges       : ${g_shell_with_admin_privileges}" -ForegroundColor DarkGray
+}
+else {
+    Write-Host "Administrator Privileges       : ${g_shell_with_admin_privileges}" -ForegroundColor DarkGray
+}
 
 show_menu

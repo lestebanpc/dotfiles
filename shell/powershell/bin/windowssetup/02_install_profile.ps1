@@ -1179,12 +1179,14 @@ function m_config_nvim($p_input_options, $p_flag_developer, $p_flag_overwrites_f
 
 
     #2. Crear el subtitulo
-    $l_title= ">> Configurando NeoVIM ("
+    Write-Host ""
+
+    $l_title= ">> Configurando NeoVIM"
     if($p_flag_developer) {
-        $l_title= "${l_title} Modo developer"
+        $l_title= "${l_title} (Modo developer)"
     }
     else {
-        $l_title= "${l_title} Modo editor"
+        $l_title= "${l_title} (Modo editor)"
     }
 
 
@@ -1369,12 +1371,14 @@ function m_config_vim($p_input_options, $p_flag_developer, $p_flag_overwrites_fi
 
 
     #2. Crear el subtitulo
-    $l_title= ">> Configurando VIM ("
+    Write-Host ""
+
+    $l_title= ">> Configurando VIM"
     if($p_flag_developer) {
-        $l_title= "${l_title} Modo developer"
+        $l_title= "${l_title} (Modo developer)"
     }
     else {
-        $l_title= "${l_title} Modo editor"
+        $l_title= "${l_title} (Modo editor)"
     }
 
 
@@ -1680,6 +1684,8 @@ function m_setup_profile($p_input_options, $p_flag_developer, $p_flag_overwrites
 
 
     # Mostrar el titulo
+    Write-Host ""
+
     Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Blue
 	$l_title=">> Configurando el Profile del Usuario"
 	Write-Host "$l_title" -ForegroundColor Blue
@@ -1839,6 +1845,7 @@ function m_show_menu_core() {
 	Write-Host ([string]::new('-', $g_max_length_line)) -ForegroundColor DarkGray
 }
 
+
 function show_menu() {
 
 	Write-Host ""
@@ -1847,6 +1854,7 @@ function show_menu() {
 	$l_continue= $true
 	$l_read_option= ""
     $l_options=0
+    $l_status=0
 
 	while($l_continue)
 	{
@@ -1880,7 +1888,7 @@ function show_menu() {
 
 					    $l_continue= $false
                         $l_options = 4
-					    m_setup $l_options
+					    $l_status= m_setup $l_options
 
                     }
 				}
@@ -1895,7 +1903,7 @@ function show_menu() {
 
 					    $l_continue= $false
                         $l_options = 8 + 16
-					    m_setup $l_options
+					    $l_status= m_setup $l_options
 
                     }
 				}
@@ -1909,7 +1917,7 @@ function show_menu() {
 
 					    $l_continue= $false
                         $l_options = 8 + 16 + 1
-					    m_setup $l_options
+					    $l_status= m_setup $l_options
 
                     }
 				}
@@ -1923,7 +1931,7 @@ function show_menu() {
 	                # (  64) Setup Profile como developer
 	                # (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario
                     $l_options = 64 + 1
-					m_setup $l_options
+					$l_status= m_setup $l_options
 				}
 
 	            # (e) Setup VIM como developer
@@ -1936,7 +1944,7 @@ function show_menu() {
 	                # ( 512) VIM    > Crear los archivos de configuración de VIM
 	                # (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario
                     $l_options = 256 + 512 + 1
-					m_setup $l_options
+					$l_status= m_setup $l_options
 				}
 
 	            # (f) Setup NeoVIM como developer
@@ -1949,7 +1957,7 @@ function show_menu() {
 	                # (4096) NoeVIM > Crear los archivos de configuración de NeoVIM
 	                # (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario
                     $l_options = 2048 + 4096 + 1
-					m_setup $l_options
+					$l_status= m_setup $l_options
 				}
 
 	            # (g) Setup VIM/NeoVIM y Profile como developer
@@ -1965,7 +1973,7 @@ function show_menu() {
 	                # (4096) NoeVIM > Crear los archivos de configuración de NeoVIM
 	                # (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario
                     $l_options = 64 + 256 + 512 + 2048 + 4096 + 1
-					m_setup $l_options
+					$l_status= m_setup $l_options
 				}
 
 	            # (h) Setup VIM/NeoVIM (sin indexar documentación) y Profile como developer
@@ -1981,7 +1989,7 @@ function show_menu() {
 	                # (4096) NoeVIM > Crear los archivos de configuración de NeoVIM
 	                # (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario
                     $l_options = 64 + 128 + 512 + 1024 + 4096 + 1
-					m_setup $l_options
+					$l_status= m_setup $l_options
 				}
 
 				'^\d+$' {
@@ -1990,7 +1998,7 @@ function show_menu() {
 					Write-Host ""
 
                     $l_options = [int]$l_read_option
-					m_setup $l_options
+					$l_status= m_setup $l_options
 				}
 
 
@@ -2066,9 +2074,9 @@ if((-not ${g_temp_path}) -or -not (Test-Path "$g_temp_path")) {
 Write-Host "Temporary Path                 : ${g_temp_path}" -ForegroundColor DarkGray
 
 # Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
-#Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
+#Por defecto es considerado 'false'.
 if(-not (Get-Variable g_setup_only_last_version -ErrorAction SilentlyContinue) ) {
-    $g_setup_only_last_version=1
+    $g_setup_only_last_version= $false
 }
 
 # Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
