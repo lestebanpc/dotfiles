@@ -712,7 +712,7 @@ function m_install_pws_module($p_module_name, $p_flag_user_scope) {
             Update-Module -Name $p_module_name -Scope CurrentUser
         }
         else {
-            Update-Module -Name $p_module_name -Scope AllUser
+            Update-Module -Name $p_module_name -Scope AllUsers
         }
 
     }
@@ -723,7 +723,7 @@ function m_install_pws_module($p_module_name, $p_flag_user_scope) {
             Install-Module -Name $p_module_name -Scope CurrentUser
         }
         else {
-            Install-Module -Name $p_module_name -Scope AllUser
+            Install-Module -Name $p_module_name -Scope AllUsers
         }
     }
 
@@ -1427,14 +1427,7 @@ function m_config_vim($p_input_options, $p_flag_developer, $p_flag_overwrites_fi
 
 function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmodifiable, $p_flag_overwrites_file_modifiable) {
 
-    #1. Si el modo de acceso permite crear enlaces simbolicos pero solo usando una pseudo-terminal con accesos administivos
-    if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
-        Write-Host "Para crear enlaces SymbolicLink debe usar una terminal con accesos administrativos (g_setup_access_type: ${g_setup_access_type})."
-        return 0
-    }
-
-
-    #3. Creando enlaces simbolico dependientes del tipo de distribución Linux
+    # Creando enlaces simbolico dependientes del tipo de distribución Linux
     $l_target_link= ""
     $l_source_path= ""
     $l_source_filename= ""
@@ -1449,7 +1442,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1487,7 +1480,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1498,7 +1491,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1519,7 +1512,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1528,7 +1521,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1546,7 +1539,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1562,7 +1555,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1573,7 +1566,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1589,7 +1582,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     Write-Host "            > Edite '${env:APPDATA}\yazi\config\init.lua' si desea modificar las opciones Wezterm."
@@ -1610,7 +1603,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1619,7 +1612,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1628,7 +1621,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
-    else {
+    else if ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
         $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
@@ -1779,25 +1772,32 @@ function m_show_menu_core() {
     $l_options= 0
     Write-Host " (q) Salir del menu"
 
-    if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
+    if ($g_setup_access_type -eq 1) {
+
+        if ($g_shell_with_admin_privileges) {
+	        Write-Host " ( ) Para crear SymbolicLink deje ejecutar el scrpit como privilegios administrativos." -ForegroundColor DarkGray
+        }
+        else {
+	        Write-Host " ( ) Esta ejecutando con " -NoNewline DarkGray
+            Write-Host "privilegios administrativos" -NoNewline -ForegroundColor Blue
+            Write-Host " y puede crear SymbolicLink para el usuario." -ForegroundColor DarkGray
+        }
 
         $l_options = 4
 	    Write-Host " (a) Crear todos los folder requeridos para crear los SymbolicLink " -NoNewline
 		Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
 
-        $l_options = 8 + 16
-	    Write-Host " (b) Crear todos los SymbolicLink e instalar PSFzf globalmente " -NoNewline
-        if (-not $g_shell_with_admin_privileges) {
-            Write-Host " (ejecutar como administrador) " -NoNewline -ForegroundColor Red
-        }
-		Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
+        if ($g_shell_with_admin_privileges) {
 
-        $l_options = 8 + 16 + 1
-	    Write-Host " (c) Recrear todos los SymbolicLink e instalar PSFzf globalmente " -NoNewline
-        if (-not $g_shell_with_admin_privileges) {
-            Write-Host " (ejecutar como administrador) " -NoNewline -ForegroundColor Red
+            $l_options = 8 + 16
+	        Write-Host " (b) Crear todos los SymbolicLink e instalar PSFzf globalmente " -NoNewline
+		    Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
+
+            $l_options = 8 + 16 + 1
+	        Write-Host " (c) Recrear todos los SymbolicLink e instalar PSFzf globalmente " -NoNewline
+		    Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
+
         }
-		Write-Host "(opcion ${l_options})" -ForegroundColor DarkGray
 
     }
 
@@ -1827,10 +1827,12 @@ function m_show_menu_core() {
 	Write-Host "    (   1) Sobrescribir enlaces simbolicos y archivos no-modificables por el usuario"
 	Write-Host "    (   2) Sobrescribir archivos modificables por el usuario"
 
-    if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
+    if ($g_setup_access_type -eq 1) {
 	    Write-Host "    (   4) Crear todos los folder requeridos para crear enlaces simbolicos"
-        Write-Host "    (   8) Crear todos los enlaces simbolicos requeridos (se debe ejecutar con administrador)"
-	    Write-Host "    (  16) Instalar y/o actualizar PSFzf a nivel global  (se debe ejecutar con administrador)"
+        if ($g_shell_with_admin_privileges) {
+            Write-Host "    (   8) Crear todos los enlaces simbolicos requeridos"
+	        Write-Host "    (  16) Instalar y/o actualizar PSFzf a nivel global"
+        }
     }
 
 	Write-Host "    (  32) Instalar y/o actualizar PSFzf a nivel usuario"
@@ -1884,7 +1886,7 @@ function show_menu() {
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 
-                    if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
+                    if ($g_setup_access_type -eq 1) {
 
 					    $l_continue= $false
                         $l_options = 4
@@ -1899,7 +1901,7 @@ function show_menu() {
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 
-                    if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
+                    if ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges) {
 
 					    $l_continue= $false
                         $l_options = 8 + 16
@@ -1913,7 +1915,7 @@ function show_menu() {
 	                Write-Host ([string]::new('─', $g_max_length_line)) -ForegroundColor Green
 					Write-Host ""
 
-                    if ($g_setup_access_type -eq 1 -and -not $g_shell_with_admin_privileges) {
+                    if ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges) {
 
 					    $l_continue= $false
                         $l_options = 8 + 16 + 1
@@ -2090,7 +2092,7 @@ if(-not (Get-Variable g_setup_only_last_version -ErrorAction SilentlyContinue) )
 if(-not (Get-Variable g_setup_vim_ai_plugins -ErrorAction SilentlyContinue) ) {
     $g_setup_vim_ai_plugins=0
 }
-Write-Host "Setup AI VIM Plugins           : ${g_setup_vim_ai_plugins} (1= AI Completion, 2= AI Chatbot/Agent interno, 3= AI Chatbot/Agent externo)" -ForegroundColor DarkGray
+Write-Host "Setup AI VIM Plugins           : ${g_setup_vim_ai_plugins} (1= AI Completion, 2= AI Chatbot/Agent interno, 4= AI Chatbot/Agent externo)" -ForegroundColor DarkGray
 
 # Modo de instalacion segun los acceso que se tiene para crear enlaces simbolicos
 # Sus valores pueden ser:
