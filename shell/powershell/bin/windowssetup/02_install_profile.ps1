@@ -1775,12 +1775,12 @@ function m_show_menu_core() {
     if ($g_setup_access_type -eq 1) {
 
         if ($g_shell_with_admin_privileges) {
-	        Write-Host " ( ) Para crear SymbolicLink deje ejecutar el scrpit como privilegios administrativos." -ForegroundColor DarkGray
-        }
-        else {
 	        Write-Host " ( ) Esta ejecutando con " -NoNewline DarkGray
             Write-Host "privilegios administrativos" -NoNewline -ForegroundColor Blue
             Write-Host " y puede crear SymbolicLink para el usuario." -ForegroundColor DarkGray
+        }
+        else {
+	        Write-Host " ( ) Para crear SymbolicLink deje ejecutar el scrpit como privilegios administrativos." -ForegroundColor DarkGray
         }
 
         $l_options = 4
