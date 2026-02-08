@@ -329,14 +329,14 @@ if !exists("g:ale_linters") || empty(g:ale_linters)
 
     "Establecer valores por defecto
     let g:ale_linters = {
+    \   'dockerfile': ['hadolint'],
+    \   'javascript': ['biome'],
+    \   'typescript': ['biome'],
     "\   'cpp': ['clangtidy'],
     "\   'c':   ['clangtidy'],
     "\   'rust': ['clippy'],
     "\   'go': ['golangci-lint'],
     "\   'python': ['pylint', 'flake8'],
-    \   'dockerfile': ['hadolint'],
-    \   'javascript': ['biome'],
-    \   'typescript': ['biome'],
     \}
 
 endif
@@ -445,9 +445,20 @@ runtime setting/basic/basic_core.vim
 " por Treesitter, Markdown render.
 runtime setting/basic/basic_extended.vim
 
-" Herramientas para visualiazion de buffer en un browser, uso imagenes externas, etc.
-" Solo si la pesudo-terminal donde se ejecuta es local y usa un 'desktop' (tiene GUI).
-runtime setting/basic/basic_desktop.vim
+" Los plugins que interactuan con GUI solo se habilitara para entornos 'Desktop Server' (nunca se debe usar
+" en entornos que no sean 'HeadLess Server').
+" > Estos entornos pueden ser 'Desktop Server'.
+"   > Aunque 'Distrobox'/'Toolboox' puede interacturar con GUI si se instala dentro de esta, no se le dara soporte.
+"   > La VM 'WSL2' puede interactuar con GUI del host, pero requiere configuracion algo emborrosa.
+" > MY_ENV_TYPE es una variable de entorno calculado en el configuracion del  profile y definido en el
+"   profile del usuario.
+if $MY_ENV_TYPE != '' && $MY_ENV_TYPE == 1
+
+    " Herramientas para visualizacion de buffer en un browser, uso imagenes externas, etc.
+    " Solo si la pesudo-terminal donde se ejecuta es local y usa un 'desktop' (tiene GUI).
+    runtime setting/basic/basic_desktop.vim
+
+endif
 
 
 "#########################################################################################################

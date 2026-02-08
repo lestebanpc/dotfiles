@@ -3201,20 +3201,20 @@ g_usage() {
 #> Logica principal del script {{{
 #------------------------------------------------------------------------------------------------------------------
 
-#1. Variables de los argumentos del script
+# 1. Variables de los argumentos del script
 _g_status=0
 
-#Parametros (argumentos) basicos del script
+# Parametros (argumentos) basicos del script
 gp_uninstall=1          #(0) Para instalar/actualizar
                         #(1) Para desintalar
 
-#Tipo de ejecucion del script principal
+# Tipo de ejecucion del script principal
 gp_type_calling=0       #(0) Ejecución mostrando el menu del opciones (siempre es interactiva).
                         #(1) Ejecución sin el menu de opciones, interactivo    - configurar un conjunto de opciones del menú
                         #(2) Ejecución sin el menu de opciones, no-interactivo - configurar un conjunto de opciones del menú
 
 
-#Argumento 1: el modo de ejecución del script
+# Argumento 1: el modo de ejecución del script
 if [ -z "$1" ]; then
     gp_type_calling=0
 else
@@ -3241,50 +3241,49 @@ fi
 #printf 'Parametro 9: %s\n' "$9"
 
 
-#2. Variables globales cuyos valor son AUTOGENERADOS internamente por el script
+# 2. Variables globales cuyos valor son AUTOGENERADOS internamente por el script
 
-#Usuario OBJETIVO al cual se desa configurar su profile. Su valor es calcuado por 'get_targethome_info'.
+# Usuario OBJETIVO al cual se desa configurar su profile. Su valor es calcuado por 'get_targethome_info'.
 g_targethome_owner=''
 
-#Grupo de acceso que tiene el home del usuario OBJETIVO (al cual se desea configurar su profile). Su valor es calcuado por 'get_targethome_info'.
+# Grupo de acceso que tiene el home del usuario OBJETIVO (al cual se desea configurar su profile). Su valor es calcuado por 'get_targethome_info'.
 g_targethome_group=''
 
-#Ruta base del respositorio git del usuario donde se instalar el profile del usuario. Su valor es calculado por 'get_targethome_info'.
+# Ruta base del respositorio git del usuario donde se instalar el profile del usuario. Su valor es calculado por 'get_targethome_info'.
 g_repo_path=''
 
-#Flag que determina si el usuario runner (el usuario que ejecuta este script de instalación) es el usuario objetivo o no.
-#Su valor es calculado por 'get_targethome_info'.
-# - Si es '0', el runner es el usuario objetivo (onwer del "target home").
-# - Si no es '0', el runner es NO es usuario objetivo, SOLO puede ser el usuario root.
-#   Este caso, el root realizará la configuracion requerida para el usuario objetivo (usando sudo), nunca realizara configuración para el propio usuario root.
+# Flag que determina si el usuario runner (el usuario que ejecuta este script de instalación) es el usuario objetivo o no.
+# > Su valor es calculado por 'get_targethome_info'.
+#   - Si es '0', el runner es el usuario objetivo (onwer del "target home").
+#   - Si no es '0', el runner es NO es usuario objetivo, SOLO puede ser el usuario root.
+#     Este caso, el root realizará la configuracion requerida para el usuario objetivo (usando sudo), nunca realizara configuración para el propio usuario root.
 g_runner_is_target_user=0
 
 
-#Estado del almacenado temporalmente de las credenciales para sudo
-# -1 - No se solicito el almacenamiento de las credenciales
-#  0 - No es root: se almaceno las credenciales
-#  1 - No es root: no se pudo almacenar las credenciales.
-#  2 - Es root: no requiere realizar sudo.
+# Estado del almacenado temporalmente de las credenciales para sudo
+#  -1 - No se solicito el almacenamiento de las credenciales
+#   0 - No es root: se almaceno las credenciales
+#   1 - No es root: no se pudo almacenar las credenciales.
+#   2 - Es root: no requiere realizar sudo.
 g_status_crendential_storage=-1
 
-#Si la credenciales de sudo es abierto externamente.
+# Si la credenciales de sudo es abierto externamente.
 #  1 - No se abrio externamente
 #  0 - Se abrio externamente (solo se puede dar en una ejecución no-interactiva)
 g_is_credential_storage_externally=1
 
 
-#3. Variables globales cuyos valor puede ser modificados el usuario
+# 3. Variables globales cuyos valor puede ser modificados el usuario
 
-#Obtener los parametros del archivos de configuración
+# Obtener los parametros del archivos de configuración
 if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
 
-    #Obtener los valores por defecto de las variables
+    # Obtener los valores por defecto de las variables
     # shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/setup_config_template.bash
     . ${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash
-
     printf '%bConfig File           : "%s"%b\n' "$g_color_gray1" "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" "$g_color_reset"
 
-    #Corregir algunos valores ingresados
+    # Corregir algunos valores ingresados
     # ...
 
 fi
@@ -3395,14 +3394,14 @@ fi
 printf '%bSetup AI VIM plugins  : "%s" (1= AI Completion, 2= AI Chatbot/Agent interno, 3= AI Chatbot/Agent externo)%b\n' "$g_color_gray1" "${g_setup_vim_ai_plugins}" "$g_color_reset"
 
 
-#4. LOGICA: Configuración del profile
+# 4. LOGICA: Configuración del profile
 _g_result=0
 
 
-#4.1. Mostrar el menu para escoger lo que se va instalar
+# 4.1. Mostrar el menu para escoger lo que se va instalar
 if [ $gp_type_calling -eq 0 ]; then
 
-    #Parametros usados por el script:
+    # Parametros usados por el script:
     # 1> Tipo de configuración: 0 (instalación con un menu interactivo).
     # 2> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
@@ -3415,7 +3414,7 @@ if [ $gp_type_calling -eq 0 ]; then
     #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 
-    #Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
+    # Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
     #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info')
     #  2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
     #  3 > Flag '0' si se requere curl
@@ -3430,10 +3429,10 @@ if [ $gp_type_calling -eq 0 ]; then
         _g_result=111
     fi
 
-#4.2. No mostrar el menu, la opcion del menu a ejecutar se envia como parametro
+# 4.2. No mostrar el menu, la opcion del menu a ejecutar se envia como parametro
 else
 
-    #Parametros usados por el script:
+    # Parametros usados por el script:
     # 1> Tipo de configuración: 1/2 (instalación sin un menu interactivo/no-interactivo).
     # 2> Opciones de menu a ejecutar: entero positivo.
     # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:
@@ -3469,7 +3468,7 @@ else
 
     fi
 
-    #Validar los requisitos
+    # Validar los requisitos
     #  1 > El tipo de distribucion Linux (variable 'g_os_subtype_id' generado por 'get_linux_type_info')
     #  2 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
     #  3 > Flag '0' si se requere curl
@@ -3477,19 +3476,19 @@ else
     fulfill_preconditions 1 1 1
     _g_status=$?
 
-    #Iniciar el procesamiento
+    # Iniciar el procesamiento
     if [ $_g_status -eq 0 ]; then
 
         _setup $_gp_menu_options
         _g_status=$?
 
-        #No se cumplen las precondiciones obligatorios
+        # No se cumplen las precondiciones obligatorios
         if [ $l_status -eq 111 ]; then
             _g_result=111
-        #Informar si se nego almacenar las credencial cuando es requirido
+        # Informar si se nego almacenar las credencial cuando es requirido
         elif [ $_g_status -eq 120 ]; then
             _g_result=120
-        #Si la credencial se almaceno en este script (localmente). avisar para que lo cierre el caller
+        # Si la credencial se almaceno en este script (localmente). avisar para que lo cierre el caller
         elif [ $g_is_credential_storage_externally -ne 0 ] && [ $g_status_crendential_storage -eq 0 ]; then
             _g_result=119
         fi

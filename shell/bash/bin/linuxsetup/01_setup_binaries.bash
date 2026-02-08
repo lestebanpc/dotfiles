@@ -4118,31 +4118,237 @@ fi
 
 
 
-#2. Variables globales cuyos valor puede ser modificados el usuario
+# 2. Variables globales cuyos valor son AUTOGENERADOS internamente por el script
+_g_status=0
 
-#Ruta del home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git.
-#Este valor se obtendra segun orden prioridad:
-# - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
-# - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
-# - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
-g_targethome_path=''
+# Usuario OBJETIVO al cual se desa configurar su profile. Su valor es calcuado por 'get_targethome_info'.
+g_targethome_owner=''
 
-#Nombre del repositorio git o la ruta relativa del repositorio git respecto al home de usuario OBJETIVO (al cual se desea configurar el profile del usuario).
-#Este valor se obtendra segun orden prioridad:
-# - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
-# - Si ninguno de los anteriores se establece, se usara el valor '.files'.
-g_repo_name=''
+# Grupo de acceso que tiene el home del usuario OBJETIVO (al cual se desea configurar su profile). Su valor es calcuado por 'get_targethome_info'.
+g_targethome_group=''
 
-#Folder base donde se almacena los subfolderes de los programas.
+# Ruta base del respositorio git del usuario donde se instalar el profile del usuario. Su valor es calculado por 'get_targethome_info'.
+g_repo_path=''
+
+# Usuario del owner del folder base de programa.
+g_tools_owner=''
+
+# Grupo de acceso del folder base de programa
+g_tools_group=''
+
+# Usuario del owner del folder base de comandos
+g_lnx_base_owner=''
+
+# Grupo de acceso del folder base de comandos
+g_lnx_base_group=''
+
+# Flag que determina si el usuario runner (el usuario que ejecuta este script de instalación) es el usuario objetivo o no.
+# > Su valor es calculado por 'get_targethome_info'.
+#   - Si es '0', el runner es el usuario objetivo (onwer del "target home").
+#   - Si no es '0', el runner es NO es usario objetivo, SOLO puede ser el usuario root.
+#     Este caso, el root realizará la configuracion requerida para el usuario objetivo (usando sudo), nunca realizara configuración para el propio usuario root.
+g_runner_is_target_user=0
+
+# Validar los requisitos que debe cumplir el script de instalación:
+# Folder donde se almacena los binarios. Su valor es autogenerado por "g_lnx_paths" y puede ser:
+#  - "${g_lnx_base_path}/bin"
+#  - "/usr/local/bin"
+#  - "~/.local/bin"
+g_lnx_bin_path=''
+
+# Folder donde se almacena los subfolderes './man1/', './man5/' y './man7/' donde estan los archivos de ayuda man1, man5 y man7.
+# Su valor es autogenerado por "g_lnx_paths" y puede ser:
+#  - "${g_lnx_base_path}/man/man1"  "${g_lnx_base_path}/man/man5"  "${g_lnx_base_path}/man/man7"
+#  - "/usr/local/share/man/man1"    "/usr/local/share/man/man5"    "/usr/local/share/man/man7"
+#  - "~/.local/share/man/man1"      "~/.local/share/man/man1"      "~/.local/share/man/man1"
+g_lnx_man_path=''
+
+# Folder donde se almacena los archivos fuentes. Su valor es autogenerado por "g_lnx_paths" y puede ser:
+#  - "${g_lnx_base_path}/share/fonts"
+#  - "/usr/local/share/fonts"
+#  - "~/.local/local/share/fonts"
+g_lnx_fonts_path=''
+
+# Folder donde se almacena los archivos fuentes. Su valor es autogenerado por "g_lnx_paths" y puede ser:
+#  - "${g_lnx_base_path}/share/icons"
+#  - "/usr/local/share/icons"
+#  - "~/.local/share/fonts"
+g_lnx_icons_path=''
+
+# Define el tipo de ruta escogido para los comandos. Su valor, es CALCULADO por "g_lnx_paths". Su valor puede ser 0 o la suma binario
+# de las siguientes flags:
+#  00001 (1) - La carpeta de comandos esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
+#  00010 (2) - La carpeta de comandos tiene como owner al usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
+#  00100 (4) - La carpeta de comandos es una ruta personalizado (ingresada por el usuario)
+g_lnx_base_options=1
+
+# Define el tipo de ruta escogido para los programas. Su valor, es CALCULADO por "get_tools_path". Su valor puede ser 0 o la suma binaria
+# de las siguientes flags:
+#  00001 (1) - La carpeta de programas esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
+#  00010 (2) - La carpeta de programas tiene como owner al usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
+#  00100 (4) - La carpeta de programas es una ruta ruta personalizado (ingresada por el usuario)
+g_tools_options=1
+
+
+# Estado del almacenado temporalmente de las credenciales para sudo
+#  -1 - No se solicito el almacenamiento de las credenciales
+#   0 - No es root: se almaceno las credenciales
+#   1 - No es root: no se pudo almacenar las credenciales.
+#   2 - Es root: no requiere realizar sudo.
+g_status_crendential_storage=-1
+
+# Si la credenciales de sudo es abierto externamente.
+#   1 - No se abrio externamente
+#   0 - Se abrio externamente (solo se puede dar en una ejecución no-interactiva)
+g_is_credential_storage_externally=1
+
+
+
+# 3. Variables globales cuyos valor puede ser modificados el usuario
+
+# Obtener los parametros del archivos de configuración
+if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
+
+    #Obtener los valores por defecto de las variables
+    . ${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash
+    printf '%bConfig File           : "%s"%b\n' "$g_color_gray1" "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" "$g_color_reset"
+
+    #Corregir algunos valaores
+    if [ "$g_setup_only_last_version" = "0" ]; then
+        g_setup_only_last_version=0
+    else
+        g_setup_only_last_version=1
+    fi
+fi
+
+# Nombre del repositorio git o la ruta relativa del repositorio git respecto al home de usuario OBJETIVO (al cual se desea configurar el profile del usuario).
+# > Este valor se obtendra segun orden prioridad:
+#   - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
+#   - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+#   - Si ninguno de los anteriores se establece, se usara el valor '.files'.
+#
+# Calcular el valor efectivo de 'g_repo_name'.
+# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
+if [ $gp_uninstall -eq 0 ]; then
+    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+        g_repo_name="$3"
+    fi
+else
+    if [ $gp_type_calling -eq 0 ]; then
+        if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+            g_repo_name="$3"
+        fi
+    elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
+        if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
+            g_repo_name="$4"
+        fi
+    else
+        if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
+            g_repo_name="$4"
+        fi
+    fi
+fi
+
+# Si no se especifica valor, se usara el por defecto
+if [ -z "$g_repo_name" ]; then
+    g_repo_name='.files'
+fi
+
+# Ruta del home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git.
+# > Este valor se obtendra segun orden prioridad:
+#   - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
+#   - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+#   - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
+#   - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
+#
+# Calcular el valor efectivo de 'g_repo_name'.
+# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
+if [ $gp_uninstall -eq 0 ]; then
+    if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
+        g_targethome_path="$2"
+    fi
+else
+    if [ $gp_type_calling -eq 0 ]; then
+        if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
+            g_targethome_path="$2"
+        fi
+    elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
+        if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+            g_targethome_path="$3"
+        fi
+    else
+        if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
+            g_targethome_path="$3"
+        fi
+    fi
+fi
+
+# Obtener los valores efectivo de la variable 'g_targethome_path', 'g_repo_path', 'g_targethome_owner', 'g_targethome_group'
+get_targethome_info "$g_repo_name" "$g_targethome_path"
+_g_status=$?
+if [ $_g_status -ne 0 ]; then
+    exit 111
+fi
+printf '%bTarget Home Path      : "%s"%b\n' "$g_color_gray1" "${g_targethome_path}" "$g_color_reset"
+printf '%bRepository Path       : "%s"%b\n' "$g_color_gray1" "${g_repo_path}" "$g_color_reset"
+
+
+
+# Folder base donde se almacena los subfolderes de los programas.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
 # - Si no es un valor valido, la funcion "get_tools_path" asignara un sus posibles valores (segun orden de prioridad):
 #     > "/var/opt/tools"
 #     > "~/tools"
-g_tools_path=''
+_g_is_noninteractive=1
+if [ $gp_uninstall -eq 0 ]; then
 
-#Folder base donde se almacena el comando y sus archivos afines.
+    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
+        g_tools_path="$4"
+    fi
+    _g_is_noninteractive=1
+
+else
+    if [ $gp_type_calling -eq 0 ]; then
+
+        if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
+            g_tools_path="$4"
+        fi
+        _g_is_noninteractive=1
+
+    elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
+
+        if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
+            g_tools_path="$5"
+        fi
+
+        _g_is_noninteractive=0
+        if [ $gp_type_calling -eq 1 ]; then
+            _g_is_noninteractive=1
+        fi
+
+    else
+
+        if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
+            g_tools_path="$5"
+        fi
+
+        _g_is_noninteractive=0
+        if [ $gp_type_calling -eq 2 ]; then
+            _g_is_noninteractive=1
+        fi
+
+    fi
+fi
+
+# Obtener la ruta real del folder donde se alamacena los de programas 'g_tools_path'
+get_tools_path $_g_is_noninteractive "$g_tools_path"
+_g_status=$?
+if [ $_g_status -ne 0 ]; then
+    printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
+    exit 111
+fi
+
+# Folder base donde se almacena el comando y sus archivos afines.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura), dentro
 #   de este folder se creara/usara la siguiente estructura de folderes:
 #     > "${g_lnx_base_path}/bin"            : subfolder donde se almacena los comandos.
@@ -4167,15 +4373,68 @@ g_tools_path=''
 #        - "~/.local/share/fonts"      : subfolder donde se almacena las fuentes.
 #        - "~/.local/share/icons"      : Subfolder donde se almacena los iconos o imagenes usados por programas GUI.
 # - Si el valor es vacio, se usara el los folderes predeterminado para todos los usuarios.
-g_lnx_base_path=''
+#
+# Calcular el valor efectivo de 'g_lnx_base_path'.
+# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
+if [ $gp_uninstall -eq 0 ]; then
+    if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
+        g_lnx_base_path="$5"
+    fi
+else
+    if [ $gp_type_calling -eq 0 ]; then
+        if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
+            g_lnx_base_path="$5"
+        fi
+    elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
+        if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
+            g_lnx_base_path="$6"
+        fi
+    else
+        if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
+            g_lnx_base_path="$6"
+        fi
+    fi
+fi
 
-#Folder base donde se almacena data temporal que sera eliminado automaticamente despues completar la configuración.
+# Obtener la ruta real del folder donde se almacena los binarios y archivos 'g_lnx_base_path'
+g_lnx_paths $_g_is_noninteractive "$g_lnx_base_path"
+_g_status=$?
+if [ $_g_status -ne 0 ]; then
+    printf 'No se pede establecer la ruta base donde se instalarán los comandos.\n'
+    exit 111
+fi
+
+# Folder base donde se almacena data temporal que sera eliminado automaticamente despues completar la configuración.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
 # - Si no es valido, la funcion "get_temp_path" asignara segun orden de prioridad a '/var/tmp' o '/tmp'.
 # - Tener en cuenta que en muchas distribuciones el folder '/tmp' esta en la memoria y esta limitado a su tamaño.
-g_temp_path=''
+#
+# Calcular el valor efectivo de 'g_temp_path'.
+# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
+if [ $gp_uninstall -eq 0 ]; then
+    if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
+        g_temp_path="$6"
+    fi
+else
+    if [ $gp_type_calling -eq 0 ]; then
+        if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
+            g_temp_path="$6"
+        fi
+    elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
+        if [ ! -z "$7" ] && [ "$7" != "EMPTY" ]; then
+            g_temp_path="$7"
+        fi
+    else
+        if [ ! -z "$7" ] && [ "$7" != "EMPTY" ]; then
+            g_temp_path="$7"
+        fi
+    fi
+fi
 
-#Folder base, generados solo para Linux WSL, donde se almacena el programas, comando y afines usados por Windows.
+# Obtener la ruta real del folder de archivos temporales 'g_temp_path'
+get_temp_path "$g_temp_path"
+
+# Folder base, generados solo para Linux WSL, donde se almacena el programas, comando y afines usados por Windows.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
 # - Si no es un valor valido, se asignara su valor por defecto "/mnt/c/apps" (es decir "c:\apps").
 # - En este folder se creara/usara la siguiente estructura de folderes:
@@ -4186,131 +4445,12 @@ g_temp_path=''
 #     > "${g_win_base_path}/fonts" : subfolder donde se almacena los archivos de fuentes tipograficas.
 g_win_base_path=''
 
-#Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
-#Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
-g_setup_only_last_version=1
-
-
-#Obtener los parametros del archivos de configuración
-if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
-
-    #Obtener los valores por defecto de las variables
-    . ${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash
-
-    printf '%bConfig File           : "%s"%b\n' "$g_color_gray1" "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" "$g_color_reset"
-
-    #Corregir algunos valaores
-    if [ "$g_setup_only_last_version" = "0" ]; then
-        g_setup_only_last_version=0
-    else
-        g_setup_only_last_version=1
-    fi
-fi
-
-#Establecer el valor por defecto 'g_win_bin_path', si no se especifo una valor valido (no existe y no tiene permisos de escritura).
+# Establecer el valor por defecto 'g_win_bin_path', si no se especifo una valor valido (no existe y no tiene permisos de escritura).
 if [ $g_os_type -eq 1 ] && { [ -z "$g_win_base_path" ] || [ ! -w "$g_win_base_path" ]; }; then
     g_win_base_path='/mnt/c/apps'
 fi
 
-
-#3. Variables globales cuyos valor son AUTOGENERADOS internamente por el script
-
-#Usuario OBJETIVO al cual se desa configurar su profile. Su valor es calcuado por 'get_targethome_info'.
-g_targethome_owner=''
-
-#Grupo de acceso que tiene el home del usuario OBJETIVO (al cual se desea configurar su profile). Su valor es calcuado por 'get_targethome_info'.
-g_targethome_group=''
-
-#Ruta base del respositorio git del usuario donde se instalar el profile del usuario. Su valor es calculado por 'get_targethome_info'.
-g_repo_path=''
-
-#Usuario del owner del folder base de programa.
-g_tools_owner=''
-
-#Grupo de acceso del folder base de programa
-g_tools_group=''
-
-#Usuario del owner del folder base de comandos
-g_lnx_base_owner=''
-
-#Grupo de acceso del folder base de comandos
-g_lnx_base_group=''
-
-#Flag que determina si el usuario runner (el usuario que ejecuta este script de instalación) es el usuario objetivo o no.
-#Su valor es calculado por 'get_targethome_info'.
-# - Si es '0', el runner es el usuario objetivo (onwer del "target home").
-# - Si no es '0', el runner es NO es usario objetivo, SOLO puede ser el usuario root.
-#   Este caso, el root realizará la configuracion requerida para el usuario objetivo (usando sudo), nunca realizara configuración para el propio usuario root.
-g_runner_is_target_user=0
-
-#Validar los requisitos que debe cumplir el script de instalación:
-#Folder donde se almacena los binarios. Su valor es autogenerado por "g_lnx_paths" y puede ser:
-# - "${g_lnx_base_path}/bin"
-# - "/usr/local/bin"
-# - "~/.local/bin"
-g_lnx_bin_path=''
-
-#Folder donde se almacena los subfolderes './man1/', './man5/' y './man7/' donde estan los archivos de ayuda man1, man5 y man7.
-#Su valor es autogenerado por "g_lnx_paths" y puede ser:
-# - "${g_lnx_base_path}/man/man1"  "${g_lnx_base_path}/man/man5"  "${g_lnx_base_path}/man/man7"
-# - "/usr/local/share/man/man1"    "/usr/local/share/man/man5"    "/usr/local/share/man/man7"
-# - "~/.local/share/man/man1"      "~/.local/share/man/man1"      "~/.local/share/man/man1"
-g_lnx_man_path=''
-
-#Folder donde se almacena los archivos fuentes. Su valor es autogenerado por "g_lnx_paths" y puede ser:
-# - "${g_lnx_base_path}/share/fonts"
-# - "/usr/local/share/fonts"
-# - "~/.local/local/share/fonts"
-g_lnx_fonts_path=''
-
-#Folder donde se almacena los archivos fuentes. Su valor es autogenerado por "g_lnx_paths" y puede ser:
-# - "${g_lnx_base_path}/share/icons"
-# - "/usr/local/share/icons"
-# - "~/.local/share/fonts"
-g_lnx_icons_path=''
-
-#Define el tipo de ruta escogido para los comandos. Su valor, es CALCULADO por "g_lnx_paths". Su valor puede ser 0 o la suma binario
-#de las siguientes flags:
-# 00001 (1) - La carpeta de comandos esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
-# 00010 (2) - La carpeta de comandos tiene como owner al usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
-# 00100 (4) - La carpeta de comandos es una ruta personalizado (ingresada por el usuario)
-g_lnx_base_options=1
-
-#Define el tipo de ruta escogido para los programas. Su valor, es CALCULADO por "get_tools_path". Su valor puede ser 0 o la suma binaria
-#de las siguientes flags:
-# 00001 (1) - La carpeta de programas esta en el home del usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
-# 00010 (2) - La carpeta de programas tiene como owner al usuario owner del home de setup (donde estan los archivos de configuración de profile, comandos y programas).
-# 00100 (4) - La carpeta de programas es una ruta ruta personalizado (ingresada por el usuario)
-g_tools_options=1
-
-
-#Estado del almacenado temporalmente de las credenciales para sudo
-# -1 - No se solicito el almacenamiento de las credenciales
-#  0 - No es root: se almaceno las credenciales
-#  1 - No es root: no se pudo almacenar las credenciales.
-#  2 - Es root: no requiere realizar sudo.
-g_status_crendential_storage=-1
-
-#Si la credenciales de sudo es abierto externamente.
-#  1 - No se abrio externamente
-#  0 - Se abrio externamente (solo se puede dar en una ejecución no-interactiva)
-g_is_credential_storage_externally=1
-
-
-#Menu personalizado: Opciones iniciales y especiales del menu (no estan vinculado al menu dinamico):
-# > Actualizar todos paquetes del sistema operativo (Opción 1 del arreglo del menu)
-g_opt_update_installed_pckg=$((1 << 0))
-# > Actualizar todos los repositorios instalados (Opción 2 del arreglo del menu)
-g_opt_update_installed_repo=$((1 << 1))
-
-
-#Menu dinamico: Offset (desface) del indice del menu dinamico respecto a menu personalizado.
-#               Generalmente el menu dinamico no inicia desde la primera opcion personalizado del menú.
-g_offset_option_index_menu_install=2
-g_offset_option_index_menu_uninstall=0
-
-
-#Variables de la rutas usadas para almacenar binarios en el Windows asociado a un WSL2
+# Variables de la rutas usadas para almacenar binarios en el Windows asociado a un WSL2
 if [ $g_os_type -eq 1 ]; then
 
     g_win_tools_path="${g_win_base_path}/tools"
@@ -4321,14 +4461,47 @@ if [ $g_os_type -eq 1 ]; then
 
 fi
 
+# Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
+# Por defecto es 1 (considerado 'false'). Solo si su valor es '0', es considera 'true'.
+g_setup_only_last_version=1
 
-#4. LOGICA: Desintalar los artefactos de un repositorio
-_g_status=0
+if [ $gp_uninstall -ne 0 ]; then
+    if [ $gp_type_calling -eq 0 ]; then
+        if [ "$7" = "0" ]; then
+            g_setup_only_last_version=0
+        fi
+    elif [ $gp_type_calling -eq 1 ] || [ $gp_type_calling -eq 3 ]; then
+        if [ "$9" = "0" ]; then
+            g_setup_only_last_version=0
+        fi
+    else
+        if [ "$9" = "0" ]; then
+            g_setup_only_last_version=0
+        fi
+    fi
+fi
+
+
+
+# 4. LOGICA: Desintalar los artefactos de un repositorio
 _g_result=0
+
+# Menu personalizado: Opciones iniciales y especiales del menu (no estan vinculado al menu dinamico):
+# > Actualizar todos paquetes del sistema operativo (Opción 1 del arreglo del menu)
+g_opt_update_installed_pckg=$((1 << 0))
+# > Actualizar todos los repositorios instalados (Opción 2 del arreglo del menu)
+g_opt_update_installed_repo=$((1 << 1))
+
+
+# Menu dinamico: Offset (desface) del indice del menu dinamico respecto a menu personalizado.
+#                Generalmente el menu dinamico no inicia desde la primera opcion personalizado del menú.
+g_offset_option_index_menu_install=2
+g_offset_option_index_menu_uninstall=0
+
 
 if [ $gp_uninstall -eq 0 ]; then
 
-    #Parametros usados por el script:
+    # Parametros usados por el script:
     # 1> Tipo de llamado: "uninstall"
     # 2> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
@@ -4352,66 +4525,6 @@ if [ $gp_uninstall -eq 0 ]; then
     #       > Archivo imagenes : "/usr/local/share/icons"    (para todos los usuarios) y "~/.local/share/icons"    (solo para el usuario actual)
     # 6> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
 
-    #Calcular el valor efectivo de 'g_repo_name'.
-    if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-        g_repo_name="$3"
-    fi
-
-    if [ -z "$g_repo_name" ]; then
-        g_repo_name='.files'
-    fi
-
-    #Obtener los valores efectivo de la variable 'g_targethome_path', 'g_repo_path', 'g_targethome_owner', 'g_targethome_group'
-    if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-        g_targethome_path="$2"
-    fi
-
-    get_targethome_info "$g_repo_name" "$g_targethome_path"
-    _g_status=$?
-    if [ $_g_status -ne 0 ]; then
-        exit 111
-    fi
-
-
-    #Obtener la ruta real del folder donde se alamacena los de programas 'g_tools_path'
-    if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-        g_tools_path="$4"
-    fi
-
-    _g_is_noninteractive=1
-    get_tools_path $_g_is_noninteractive "$g_tools_path"
-    _g_status=$?
-    if [ $_g_status -ne 0 ]; then
-        printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
-        exit 111
-    fi
-
-
-    #Obtener la ruta real del folder de comandos 'g_lnx_bin_path', archivos de ayuda 'g_lnx_man_path' y fuentes de letras 'g_lnx_fonts_path'
-    if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-        g_lnx_base_path="$5"
-    fi
-
-    g_lnx_paths $_g_is_noninteractive "$g_lnx_base_path"
-    _g_status=$?
-    if [ $_g_status -ne 0 ]; then
-        printf 'No se pede establecer la ruta base donde se instalarán los comandos.\n'
-        exit 111
-    fi
-
-
-    #Obtener la ruta real del folder temporal 'g_temp_path'
-    if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
-        #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-        g_temp_path="$6"
-    fi
-
-    get_temp_path "$g_temp_path"
-
     #Validar los requisitos
     #  1 > Flag '0' si de desea mostrar información adicional (solo mostrar cuando se muestra el menu)
     #  2 > Flag '0' si se requere curl
@@ -4427,10 +4540,10 @@ if [ $gp_uninstall -eq 0 ]; then
     fi
 
 
-#5. LOGICA: Instalar y Actualizar los artefactos de un repositorio
+# 5. LOGICA: Instalar y Actualizar los artefactos de un repositorio
 else
 
-    #5.1. Mostrar el menu para escoger lo que se va instalar
+    # 5.1. Mostrar el menu para escoger lo que se va instalar
     if [ $gp_type_calling -eq 0 ]; then
 
         #Parametros usados por el script:
@@ -4458,73 +4571,6 @@ else
         # 6> Ruta de archivos temporales. Si se envia vacio o EMPTY se usara el directorio predeterminado.
         # 7> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
         # 8> Flag '0' si desea almacenar la ruta de programas elegido en '/tmp/prgpath.txt'. Por defecto es '1'.
-
-
-        #Calcular el valor efectivo de 'g_repo_name'.
-        if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_repo_name="$3"
-        fi
-
-        if [ -z "$g_repo_name" ]; then
-            g_repo_name='.files'
-        fi
-
-        #Obtener los valores efectivo de la variable 'g_targethome_path', 'g_repo_path', 'g_targethome_owner', 'g_targethome_group'
-        if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_targethome_path="$2"
-        fi
-
-        get_targethome_info "$g_repo_name" "$g_targethome_path"
-        _g_status=$?
-        if [ $_g_status -ne 0 ]; then
-            exit 111
-        fi
-
-
-        #Obtener la ruta real del folder donde se alamacena los de programas 'g_tools_path'
-        if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_tools_path="$4"
-        fi
-
-        _g_is_noninteractive=1
-        get_tools_path $_g_is_noninteractive "$g_tools_path"
-        _g_status=$?
-        if [ $_g_status -ne 0 ]; then
-            printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
-            exit 111
-        fi
-
-
-        #Obtener la ruta real del folder de comandos 'g_lnx_bin_path', archivos de ayuda 'g_lnx_man_path' y fuentes de letras 'g_lnx_fonts_path'
-        if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_lnx_base_path="$5"
-        fi
-
-        g_lnx_paths $_g_is_noninteractive "$g_lnx_base_path"
-        _g_status=$?
-        if [ $_g_status -ne 0 ]; then
-            printf 'No se pede establecer la ruta base donde se instalarán los comandos.\n'
-            exit 111
-        fi
-
-
-        #Obtener la ruta real del folder de archivos temporales 'g_temp_path'
-        if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_temp_path="$6"
-        fi
-
-        get_temp_path "$g_temp_path"
-
-        #Parametros del script usados hasta el momento:
-        # 1> Install only last version: por defecto es 1 (false). Solo si ingresa 0, se cambia a 0 (true).
-        if [ "$7" = "0" ]; then
-            g_setup_only_last_version=0
-        fi
 
         if [ "$8" = "0" ]; then
             echo "$g_tools_path" > /tmp/prgpath.txt
@@ -4596,75 +4642,6 @@ else
             fi
 
         fi
-
-        if [ "$9" = "0" ]; then
-            g_setup_only_last_version=0
-        fi
-
-
-        #Calcular el valor efectivo de 'g_repo_name'.
-        if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_repo_name="$4"
-        fi
-
-        if [ -z "$g_repo_name" ]; then
-            g_repo_name='.files'
-        fi
-
-        #Obtener los valores efectivo de la variable 'g_targethome_path', 'g_repo_path', 'g_targethome_owner', 'g_targethome_group'
-        if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_targethome_path="$3"
-        fi
-
-        get_targethome_info "$g_repo_name" "$g_targethome_path"
-        _g_status=$?
-        if [ $_g_status -ne 0 ]; then
-            exit 111
-        fi
-
-
-        #Obtener la ruta real del folder donde se alamacena los de programas 'g_tools_path'
-        if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_tools_path="$5"
-        fi
-
-        _g_is_noninteractive=0
-        if [ $gp_type_calling -eq 1 ]; then
-            _g_is_noninteractive=1
-        fi
-        get_tools_path $_g_is_noninteractive "$g_tools_path"
-        _g_status=$?
-        if [ $_g_status -ne 0 ]; then
-            printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
-            exit 111
-        fi
-
-
-        #Obtener la ruta real del folder de comandos 'g_lnx_bin_path', archivos de ayuda 'g_lnx_man_path' y fuentes de letras 'g_lnx_fonts_path'
-        if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_lnx_base_path="$6"
-        fi
-
-        g_lnx_paths $_g_is_noninteractive "$g_lnx_base_path"
-        _g_status=$?
-        if [ $_g_status -ne 0 ]; then
-            printf 'No se pede establecer la ruta base donde se instalarán los comandos.\n'
-            exit 111
-        fi
-
-
-
-        #Obtener la ruta real del folder de los archivos temporales 'g_temp_path'
-        if [ ! -z "$7" ] && [ "$7" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_temp_path="$7"
-        fi
-
-        get_temp_path "$g_temp_path"
 
 
         if [ "${10}" = "0" ]; then
@@ -4743,10 +4720,6 @@ else
             fi
         fi
 
-        if [ "$9" = "0" ]; then
-            g_setup_only_last_version=0
-        fi
-
         _gp_filter_usr_programs=2
         if [ "${10}" = "0" ]; then
             _gp_filter_usr_programs=0
@@ -4758,67 +4731,6 @@ else
         if [ "${11}" = "0" ]; then
             _g_show_title_on_onerepo=0
         fi
-
-        #Calcular el valor efectivo de 'g_repo_name'.
-        if [ ! -z "$4" ] && [ "$4" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_repo_name="$4"
-        fi
-
-        if [ -z "$g_repo_name" ]; then
-            g_repo_name='.files'
-        fi
-
-        #Obtener los valores efectivo de la variable 'g_targethome_path', 'g_repo_path', 'g_targethome_owner', 'g_targethome_group'
-        if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
-            #La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
-            g_targethome_path="$3"
-        fi
-
-        get_targethome_info "$g_repo_name" "$g_targethome_path"
-        _g_status=$?
-        if [ $_g_status -ne 0 ]; then
-            exit 111
-        fi
-
-
-        #Obtener la ruta real del folder donde se alamacena los de programas 'g_tools_path'
-        if [ ! -z "$5" ] && [ "$5" != "EMPTY" ]; then
-            g_tools_path="$5"
-        fi
-
-        _g_is_noninteractive=0
-        if [ $gp_type_calling -eq 2 ]; then
-            _g_is_noninteractive=1
-        fi
-        get_tools_path $_g_is_noninteractive "$g_tools_path"
-        _g_status=$?
-        if [ $_g_status -ne 0 ]; then
-            printf 'No se pede establecer la ruta base donde se instalarán los programas.\n'
-            exit 111
-        fi
-
-
-        #Obtener la ruta real del folder de comandos 'g_lnx_bin_path', archivos de ayuda 'g_lnx_man_path' y fuentes de letras 'g_lnx_fonts_path'
-        if [ ! -z "$6" ] && [ "$6" != "EMPTY" ]; then
-            g_lnx_base_path="$6"
-        fi
-
-        g_lnx_paths $_g_is_noninteractive "$g_lnx_base_path"
-        _g_status=$?
-        if [ $_g_status -ne 0 ]; then
-            printf 'No se pede establecer la ruta base donde se instalarán los comandos.\n'
-            exit 111
-        fi
-
-
-        #Obtener la ruta real del folder de los archivos temporales 'g_temp_path'
-        if [ ! -z "$7" ] && [ "$7" != "EMPTY" ]; then
-            g_temp_path="$7"
-        fi
-
-        get_temp_path "$g_temp_path"
-
 
         if [ "${11}" = "0" ]; then
             echo "$g_tools_path" > /tmp/prgpath.txt

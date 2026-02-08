@@ -4,6 +4,11 @@
 #  vim "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1"
 #
 
+
+##############################################################################################
+# Variables globales generales
+##############################################################################################
+
 # Folder base, donde se almacena el programas, comando y afines usados por Windows.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
 # - Si no es un valor valido, se asignara su valor por defecto "/mnt/c/tools" (es decir "c:\apps").
@@ -20,14 +25,24 @@
 # - Si no es valido, la funcion "set_temp_path" asignara segun orden de prioridad a '$env:TEMP'.
 #$g_temp_path='C:\Windows\Temp'
 
-# Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
-# Por defecto es se considerado 'false'.
-#$g_setup_only_last_version= $false
-
 # Usado solo durante la instalación. Define si se tiene puede eliminar el archivo descargado de para la instalacion.
 # Por defecto se descarga en %TEMP% y en algunos casos no se tiene permiso para eliminar solo para crear archivo.
 # Por defecto es se considerado 'true'.
 #$g_remove_donwload_files= $true
+
+
+##############################################################################################
+# Variables globales usado por '01_setup_binaries.ps1'
+##############################################################################################
+
+# Usado solo durante la instalación. Define si se instala solo la ultima version de un programa.
+# Por defecto es se considerado 'false'.
+#$g_setup_only_last_version= $false
+
+
+##############################################################################################
+# Variables globales usado por '02_install_profile.ps1'
+##############################################################################################
 
 # Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
 # Sus valores puede ser:
