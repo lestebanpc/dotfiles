@@ -5533,15 +5533,15 @@ function _copy_artifact_files() {
             #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
 
             # Copiando/descargado otros archivos
-            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "flavor.toml" "~/.cofig/yazi/flavors/catppuccin-mocha.yazi/"
-            curl -fLo ${g_repo_path}/etc/yazi/catppuccin-mocha/flavor.toml https://raw.githubusercontent.com/yazi-rs/flavors/main/catppuccin-mocha.yazi/flavor.toml
+            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "flavor.toml" "~/.files/yazi/flavors/catppuccin-mocha.yazi/"
+            curl -fLo ${g_repo_path}/yazi/flavors/catppuccin-mocha.yazi/flavor.toml https://raw.githubusercontent.com/yazi-rs/flavors/main/catppuccin-mocha.yazi/flavor.toml
 
-            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "flavor.toml" "~/.cofig/yazi/flavors/catppuccin-mocha.yazi/"
-            curl -fLo ${g_repo_path}/etc/yazi/catppuccin-mocha/tmtheme.xml  https://raw.githubusercontent.com/yazi-rs/flavors/main/catppuccin-mocha.yazi/tmtheme.xml
+            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "flavor.toml" "~/.files/yazi/flavors/catppuccin-mocha.yazi/"
+            curl -fLo ${g_repo_path}/yazi/flavors/catppuccin-mocha.yazi/tmtheme.xml  https://raw.githubusercontent.com/yazi-rs/flavors/main/catppuccin-mocha.yazi/tmtheme.xml
 
             if [ $g_runner_is_target_user -ne 0 ]; then
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/yazi/catppuccin-mocha/flavor.toml
-                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/yazi/catppuccin-mocha/tmtheme.xml
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/yazi/flavors/catppuccin-mocha/flavor.toml
+                chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/yazi/flavors/catppuccin-mocha/tmtheme.xml
             fi
             ;;
 
