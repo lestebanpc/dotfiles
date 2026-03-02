@@ -1523,6 +1523,7 @@ function mod.get_custom_config()
 
         launch_menu = nil,
         windows_style = 0,
+        use_gnome_style_buttons = false,
 
         font_dirs = nil,
         font_locator = nil,

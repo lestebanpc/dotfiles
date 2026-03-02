@@ -1179,6 +1179,15 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
+    #Archivo de GDU (Go Disk Usage)
+    l_target_path=".config/gdu"
+    l_target_link="gdu.yaml"
+    l_source_path="${g_repo_name}/etc/gdu"
+    l_source_filename='gdu_default.yaml'
+
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
 
     #Archivo de configuración para LFTP
     l_target_path=""

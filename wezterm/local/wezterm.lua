@@ -195,6 +195,11 @@ if m_custom_config.windows_style == 1  or m_custom_config.windows_style == 2 the
     mod.window_decorations = "TITLE|RESIZE"
 elseif m_custom_config.windows_style == 3 then
     mod.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
+
+    if m_os_type == 0 and m_custom_config.use_gnome_style_buttons ~= nil and m_custom_config.use_gnome_style_buttons then
+        mod.integrated_title_button_style = "Gnome"
+    end
+
 end
 
 -- Configures the visual style of the tabbar-integrated titlebar button replacements that are shown when window_decorations = "INTEGRATED_BUTTONS|RESIZE".

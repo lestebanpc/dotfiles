@@ -136,9 +136,7 @@ local mod= {
     -- Solo valido para Linux. Si es 'true' se conectara a un compositor Wayland, caso contrario se considera un server X11.
     -- > Si usa X11 en una distribucion que solo usa Wayland, revise que el compositor 'Xwayland' para X11 este activo:
     --   'ps -fea | grep Xwayland'
-    -- > Limitaciones de usar 'Wayland' en 2024.07.07:
-    --   > No funciona correctamente el sopotte a OSC 52 para manejo del clipboard.
-    --   > El estilo de ventanas funciona peor que el de X11.
+    -- > En 2026, el soporte a 'Wayland' aun esta en reconstruccion, por lo que el estilo de ventana funciona peor que el de X11.
     enable_wayland = false,
 
     -- Si establece en false la navegacion solo lo puede hacer usando teclas para ingresa`r al modo copia, busqueda, copia rapida.
@@ -156,6 +154,15 @@ local mod= {
     --  1 > Muestra el 'title bar' ocultando el 'tab bar' si existe solo 1 tab (estilo 'TITLE|RESIZE')
     --  2 > Muestra el 'title bar' y siempre muestra el 'tab bar' (estilo 'TITLE|RESIZE')
     --  3 > Solo muestra el 'tab bar' el cual incluyen los botones cerrar, maximizar, minimizar (estilo 'INTEGRATED_BUTTONS|RESIZE')
+    --      > Limitaciones en Wayland
+    --        > En 2026, aun esta en reconstruccion.
+    --      > Limitaciones en X11
+    --        > En GNOME, se muestra la barra de titulo principal aun cuando este no deberia hacerlo.
+    --          https://github.com/wezterm/wezterm/issues/3936
+    --          https://github.com/wezterm/wezterm/issues/5483
+    --          https://gitlab.gnome.org/GNOME/mutter/-/issues/2912
+    --        > En GNOME, no funciona el boton de minimizar
+    --          https://github.com/wezterm/wezterm/issues/6086
     windows_style = 3,
 
     -- Ruta de los folderes de directorios personalizados (diferentes a la rutas reservadas del sistema) donde estan los archivos de fuentes.

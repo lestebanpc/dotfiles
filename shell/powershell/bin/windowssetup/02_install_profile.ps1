@@ -515,6 +515,7 @@ function m_create_folders_for_symboliclinks($p_flag_developer) {
         "${document_path}\PowerShell"
         "${document_path}\WindowsPowerShell"
         "${env:USERPROFILE}\.config"
+        "${env:USERPROFILE}\.config\gdu"
         "${env:LOCALAPPDATA}\lazygit"
         "${env:APPDATA}\yazi"
         "${env:APPDATA}\yazi\config"
@@ -656,6 +657,11 @@ function m_create_all_symboliclinks($p_flag_overwrites_ln) {
             target_link     = "${env:USERPROFILE}\.config\wezterm\wezterm.lua"
             source_path     = "${env:USERPROFILE}\.files\wezterm\local"
             source_filename = "wezterm.lua"
+        },
+        [PSCustomObject]@{
+            target_link     = "${env:USERPROFILE}\.config\gdu\gdu_default.yaml"
+            source_path     = "${env:USERPROFILE}\.files\etc\gdu"
+            source_filename = "gdu_default.yaml"
         },
         [PSCustomObject]@{
             target_link     = "${env:LOCALAPPDATA}\lazygit\config.yml"
@@ -1539,6 +1545,20 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     $l_target_link="${env:LOCALAPPDATA}\lazygit\config.yml"
     $l_source_path="${env:USERPROFILE}\.files\etc\lazygit"
     $l_source_filename='config_default.yaml'
+    if ($g_setup_access_type -eq 0) {
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    }
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    }
+
+
+    #Configuracion por GDU (Go Disk Usage)
+    $l_status= m_create_folder "${env:USERPROFILE}" ".config\gdu" $l_tag
+
+    $l_target_link="${env:USERPROFILE}\.config\gdu\gdu.yaml"
+    $l_source_path="${env:USERPROFILE}\.files\etc\gdu"
+    $l_source_filename='gdu_default.yaml'
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }

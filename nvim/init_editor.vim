@@ -94,6 +94,22 @@ else
 endif
 
 
+" Habilitar el uso treesitter (en caso de no tener un compilador C/C++) requirido por nvim-treesitter.
+" > Si no se define su valor es 'v:true'.
+" > Solo aplica para NeoVIM
+if exists("g:enable_compile_treesitter")
+
+    if empty(g:enable_compile_treesitter)
+        let g:enable_compile_treesitter = v:false
+    else
+        let g:enable_compile_treesitter = v:true
+    endif
+
+else
+    let g:enable_compile_treesitter = v:true
+endif
+
+
 " Establecer un mecanismo de escritura (copy) al clipboard para VIM/NeoVim, lo cual incluye:
 "  > Acciones de escritura al clipboard usanbdo el valor de los registros VIM.
 "  > Escritura automatica al clipboard despues de realizar el yank (si esta habilitado 'g:yank_to_clipboard').
@@ -226,6 +242,7 @@ let g:use_ai_agent = v:null
 let g:tools_path = ''
 let g:use_lsp_adapters = {}
 let g:use_dap_adapters = {}
+
 
 "#########################################################################################################
 " Basic Settings

@@ -58,6 +58,7 @@
 " de determacion del clipboard de VIM/NeoVIM se realize automaticamente.
 "let g:clipboard_osc52_format = 0
 
+
 " Permitir que cuando se realize un 'yank' se copie automaticamente al clipboard.
 " El valor real, se obtendra segun orden de prioridad:
 "  > El valor definido por la variable de entorno 'YANK_TO_CB'
@@ -97,6 +98,7 @@
 "let g:clipboard_reader_cmd = 'pwsh.exe -NoProfile -Command "Get-Clipboard"'
 "let g:clipboard_reader_cmd = 'pbpaste'
 "let g:clipboard_reader_cmd = v:null
+
 
 " Para NeoVIM, deshabilitar el treesitter (en caso de no tener un compilador C/C++) requirido por nvim-treesitter.
 " Por defecto, si no se define su valor es 'v:true' (se habilita la compilacion de tree-sitter).

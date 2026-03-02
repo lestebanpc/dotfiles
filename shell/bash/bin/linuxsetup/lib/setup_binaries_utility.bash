@@ -113,7 +113,7 @@ g_usage() {
 #  1> Nombre de archivo comprimido
 #  2> El tipo de item de cada artefacto puede ser:
 #     Comprimidos no tan pesados (se descomprimen y copian en el lugar deseado)
-#       > 0 si es un .tar.gz
+#       > 0 si es un .tar.gz o .tgz
 #       > 1 si es un .zip
 #       > 2 si es un .gz
 #       > 3 si es un .tgz

@@ -75,22 +75,6 @@
 " Cargar los valores de las variables globales
 runtime custom_config.vim
 
-
-" Para NeoVIM, deshabilitar el treesitter (en caso de no tener un compilador C/C++) requirido por nvim-treesitter.
-" Por defecto, si no se define su valor es 'v:true' (se habilita la compilacion de tree-sitter).
-if exists("g:enable_compile_treesitter")
-
-    if empty(g:enable_compile_treesitter)
-        let g:enable_compile_treesitter = v:true
-    else
-        let g:enable_compile_treesitter = v:false
-    endif
-
-else
-    let g:enable_compile_treesitter = v:false
-endif
-
-
 " Determina si habilita el completado a nivel linea de comandos (modo editor o ide) incluyendo ':' y las
 " busquedas '/' y '?'. Su valores pueden ser:
 "  > '1' o 'v:true', si se habilita el completado en la linea de comandos.
@@ -108,6 +92,21 @@ else
     let g:cmdline_completion = v:true
 endif
 
+
+" Habilitar el uso treesitter (en caso de no tener un compilador C/C++) requirido por nvim-treesitter.
+" > Si no se define su valor es 'v:true'.
+" > Solo aplica para NeoVIM
+if exists("g:enable_compile_treesitter")
+
+    if empty(g:enable_compile_treesitter)
+        let g:enable_compile_treesitter = v:false
+    else
+        let g:enable_compile_treesitter = v:true
+    endif
+
+else
+    let g:enable_compile_treesitter = v:true
+endif
 
 
 " Establecer un mecanismo de escritura (copy) al clipboard para VIM/NeoVim, lo cual incluye:

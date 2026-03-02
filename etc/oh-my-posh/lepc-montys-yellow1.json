@@ -179,18 +179,12 @@
         {
           "type": "root",
           "style": "plain",
-          "properties": {
-            "cache_duration": "none"
-          },
           "template": "\ue3bf ",
           "foreground": "#fdb13f"
         },
         {
           "type": "text",
           "style": "plain",
-          "properties": {
-            "cache_duration": "none"
-          },
           "template": "<#5b4600>\udb81\uded5</> {{.UserName}} <#5b4600>❯</>",
           "foreground": "#fdb13f"
         }

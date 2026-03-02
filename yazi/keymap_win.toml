@@ -27,6 +27,12 @@ prepend_keymap = [
     # Nuevos keymappings
     # --------------------------------------------------------------------------
 
+    # Toogle (maximiza/restaura) el zoom del panel 'preview' (oculta/muestra los paneles 'parent' y 'current')
+    # > Requiere el plugin 'toogle-pane'
+    #   > Info                : https://github.com/dawsers/toggle-view.yazi/blob/master/init.lua
+    #   > Descarga del plugin : ya pkg add yazi-rs/plugins:toggle-pane
+    #{ on = [ "T" ], run = "plugin toggle-pane max-preview", desc = "Maximize or restore the preview pane" },
+
     # Comando para copiar la ruta relativa de objeto actual selecionado (no usar los reservados 'c', 'd', 'f' y 'n')
     { on = [ "c", "w" ], run = "plugin go-fs -- copycb --type=rootdir", desc = "Copy relative path (Inicial Workdir)" },
     { on = [ "c", "g" ], run = "plugin go-fs -- copycb --type=rootgit", desc = "Copy relative path (Root Git)" },

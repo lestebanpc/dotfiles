@@ -151,6 +151,7 @@ declare -A gA_repos_artifact=(
         ['github-cli']='cli/cli'
         ['gitlab-cli']='gitlab-org/cli'
         ['resvg']='linebender/resvg'
+        ['gdu']='dundee/gdu'
     )
 
 # Diccionario de los repositorios que tiene un repositorio de versiones diferente al repositorio de artefactos.
@@ -164,6 +165,7 @@ declare -A gA_repos_version=(
 
 # Tipo de repositorio usado por descargar los artefactos de un repositorio
 # > Valores solo pueden ser los definidos por 'gA_repotypes'.
+# > Si no se define se considera que es 'github'.
 declare -A gA_repo_artifact_repotype=(
         ['kubectl']='k8s'
         ['kubelet']='k8s'
@@ -245,7 +247,7 @@ declare -a ga_menuoption_title=(
 declare -a ga_menuoption_repos=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
     "tmux-thumbs,tmux-fingers,sesh,grpcurl,websocat,protoc,jwt"
-    "rclone,tailspin,qsv,xan,evans,glow,gum,butane,biome,step,yazi,lazygit,rmpc,resvg"
+    "rclone,tailspin,qsv,xan,evans,glow,gum,butane,biome,step,yazi,lazygit,rmpc,resvg,gdu"
     "nerd-fonts"
     "neovim,tree-sitter"
     "powershell"
@@ -487,7 +489,7 @@ declare -A gA_current_version_method_type=(
     )
 
 
-# Parametros usasdos para calcular la versiopn actual (instalada) del repositorio.
+# Parametros usasdos para calcular la version actual (instalada) del repositorio.
 # Su valor depdende el metodo usado para obtener la version actual.
 # > Si es '3', no usa parametros.
 # > Si es '2', es el nombre del archivo donde se almacena la version del programa.
@@ -2227,6 +2229,39 @@ function get_repo_artifacts() {
                 pna_artifact_types=(11)
             fi
             ;;
+
+
+        gdu)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("gdu_windows_amd64.exe.zip")
+                else
+                    pna_artifact_names=("gdu_windows_amd64.exe.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("gdu_linux_arm64.tgz")
+                    else
+                        pna_artifact_names=("gdu_linux_amd64.tgz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("gdu_linux_arm64.tgz")
+                    else
+                        pna_artifact_names=("gdu_linux_amd64.tgz")
+                    fi
+                fi
+                pna_artifact_types=(13)
+            fi
+            ;;
+
+
 
 
 
@@ -5310,6 +5345,33 @@ function _copy_artifact_files() {
             fi
             ;;
 
+
+
+        gdu)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                # Renombrando el archivo
+                echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/gdu.exe\" ..."
+                mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/gdu.exe"
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "gdu.exe" 1 1
+
+                return
+            fi
+
+            # Renombrando el archivo
+            echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/gdu\" ..."
+            mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/gdu"
+
+            #Copiar el comando
+            copy_binary_file "${l_source_path}" "gdu" 0 1
+            ;;
 
 
         github-cli)

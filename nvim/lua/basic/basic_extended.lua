@@ -82,148 +82,231 @@ treesitter.setup(treesitter_data)
 -- Treesitter> Plugin 'TextObjects'
 ------------------------------------------------------------------------------------------------
 --
--- URL        : https://github.com/nvim-treesitter/nvim-treesitter-textobjects
--- Examples   : Old configuration (usa la rama 'master')
---  > https://www.josean.com/posts/nvim-treesitter-and-textobjects
---  > https://github.com/josean-dev/dev-environment-files/blob/main/.config/nvim/lua/josean/plugins/nvim-treesitter-text-objects.lua
---  > https://www.youtube.com/watch?v=CEMPq_r8UYQ
--- Examples   : New configuration (usa la rama 'main')
---  >
+-- URL                 : https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+-- Builtin TextObjects :
+--   > https://github.com/nvim-treesitter/nvim-treesitter-textobjects/blob/main/BUILTIN_TEXTOBJECTS.md
+--   > Permite generar 'query string' requerido para definir el keymap, por ejemplo:
+--     > '@function.inner' que representa el contenido interno de la funcion.
+-- Examples            :
+--  > Old configuration (usa la rama 'master')
+--    > https://www.josean.com/posts/nvim-treesitter-and-textobjects
+--    > https://github.com/josean-dev/dev-environment-files/blob/main/.config/nvim/lua/josean/plugins/nvim-treesitter-text-objects.lua
+--    > https://www.youtube.com/watch?v=CEMPq_r8UYQ
+-- > New configuration (usa la rama 'main')
+--    >
 --
 
--- Configuracion del modulo de navigacion de objetos de TreeSitter
--- > En la nueva version los keymaps se define fuera de este.
-local textobjects_data = {
+-- Disable entire built-in ftplugin mappings to avoid conflicts.
+-- See https://github.com/neovim/neovim/tree/master/runtime/ftplugin for built-in ftplugins.
+vim.g.no_plugin_maps = true
 
-    -- Habilitar en la selección o operaciones de un rango de texto asociado a un nodo del AST.
-    -- > Las acciones para seleccionar un rango de texto son del modo visual (v + keymap).
-    -- > Las acciones como delete, change y yank del rango de texto son del submodo 'operator-pending' del modo normal:
-    --   > Delete   : d + keymap
-    --   > Change   : c + keymap
-    --   > Yank     : y + keymap
-    --
+-- Configuracion del modulo de navigacion de objetos de TreeSitter.
+local ts_textobjects_data = {
+
+    -- Opciones de configuracion para 'selection of continues AST nodes'.
+    -- > Usa keymappings en el modo visual o el submodo 'operator-pending' del modo normal.
     select = {
-        enable = true,
 
         -- Si no este dentro del objeto, busca el siguiente mas cercadno (similar to targets.vim)
         lookahead = true,
 
+        -- Personalizar el modo de seleccion (por caracter o por linea o bloque) segun el 'query string' usado.
+        -- > Puede ser una funcion que tiene 2 parametros (el 'query string' y el 'modo de seleccion' como 'v', 'V','<c-v>')
+        --   y retorna una table donde indica el 'query string' y el modo de seleccion.
+        --selection_modes = {
+        --    ['@parameter.outer']  = 'v',
+        --    ['@function.outer']   = 'V',
+        --    ['@class.outer']      = '<c-v>',
+        --},
 
+        -- If you set this to `true` then any textobject is extended to include preceding or succeeding whitespace.
+        -- > Succeeding whitespace has priority in order to act similarly to eg the built-in `ap`.
+        -- > Valor por defecto es 'false'.
+        -- > Puede ser una funcion que tiene 2 parametros (el 'query string' y el 'modo de seleccion' como 'v', 'V','<c-v>')
+        --   y retorna true o false.
+        include_surrounding_whitespace = false,
     },
 
-    -- Intercambiar la posición de nodos actual respecto al nodo anterior o siguiente nodo.
-    -- Acciones del modo NORMAL.
-    swap = {
-        enable = true,
-    },
+    -- Opciones de configuracion para 'swapping AST nodes'.
+    -- > Usa keymappings en el modo normal.
+    --swap = {
+    --},
 
-    -- Navegar/Moverse entre nodos especiales del AST
-    -- Acciones del modo NORMAL.
+    -- Opciones de configuracion para 'move between AST nodes'
+    -- > Usa keymappings en el modo normal, visual o el submodo 'operator-pending' del modo normal.
     move = {
-        enable = true,
 
-        -- Permite adicionar los jumps al jumplist de VIM. Ello permite avanzar y retroceder a través de ellos
-        -- usuando con <C-o>(atrás) y <C-i> (adelante).
+        -- Permite adicionar los jumps al jumplist de VIM.
+        -- Ello permite avanzar y retroceder a través de ellos usuando con <C-o>(atrás) y <C-i> (adelante).
         set_jumps = true,
 
     },
 }
 
---local ts_texobjs = require("nvim-treesitter-textobjects")
---ts_texobjs.setup(textobjects_data)
+local ts_to = require("nvim-treesitter-textobjects")
+ts_to.setup(ts_textobjects_data)
 
 
--- Keymaps usados por la opcion 'select'
---keymaps = {
---    -- You can use the capture groups defined in textobjects.scm
---    ["a="] = { query = "@assignment.outer", desc = "Select outer part of an assignment" },
---    ["i="] = { query = "@assignment.inner", desc = "Select inner part of an assignment" },
---    ["l="] = { query = "@assignment.lhs", desc = "Select left hand side of an assignment" },
---    ["r="] = { query = "@assignment.rhs", desc = "Select right hand side of an assignment" },
---
---    ["aa"] = { query = "@parameter.outer", desc = "Select outer part of a parameter/argument" },
---    ["ia"] = { query = "@parameter.inner", desc = "Select inner part of a parameter/argument" },
---
---    ["ai"] = { query = "@conditional.outer", desc = "Select outer part of a conditional" },
---    ["ii"] = { query = "@conditional.inner", desc = "Select inner part of a conditional" },
---
---    ["al"] = { query = "@loop.outer", desc = "Select outer part of a loop" },
---    ["il"] = { query = "@loop.inner", desc = "Select inner part of a loop" },
---
---    ["af"] = { query = "@call.outer", desc = "Select outer part of a function call" },
---    ["if"] = { query = "@call.inner", desc = "Select inner part of a function call" },
---
---    ["am"] = { query = "@function.outer", desc = "Select outer part of a method/function definition" },
---    ["im"] = { query = "@function.inner", desc = "Select inner part of a method/function definition" },
---
---    ["ac"] = { query = "@class.outer", desc = "Select outer part of a class" },
---    ["ic"] = { query = "@class.inner", desc = "Select inner part of a class" },
---}
+-- Keymaps usados para la 'selección de nodos AST continuos'.
+-- > Esto keymaps solo aplica en los siguiente modos:
+--   > Si esta en el modo visual:
+--     > Selección x caracter: v, keymap
+--     > Selección x lineas  : V, keymap
+--     > Selección x bloques : ctrl + v/q, keymap
+--   > Si es en submodo 'operator-pending' del modo normal:
+--     > Delete              : d, keymap
+--     > Change              : c, keymap
+--     > Yank                : y, keymap
+local function ts_to_keymap_select(p_keys, p_query_string, p_description)
+    local l_ts_to_select = require("nvim-treesitter-textobjects.select")
+    vim.keymap.set({"x", "o"}, p_keys, function() l_ts_to_select.select_textobject(p_query_string, "textobjects") end, { noremap = true, buffer = false, desc = p_description })
+end
 
+ts_to_keymap_select("a=", "@assignment.outer" , "Select outer part of an assignment")
+ts_to_keymap_select("i=", "@assignment.inner" , "Select inner part of an assignment")
 
--- Keymaps usados por 'swap'
---swap_next = {
---    -- swap parameters/argument with next
---    ["<space>na"] = "@parameter.inner",
---    -- swap function with next
---    ["<space>nm"] = "@function.outer",
---}
---
---swap_previous = {
---    -- swap parameters/argument with prev
---    ["<space>pa"] = "@parameter.inner",
---    -- swap function with previous
---    ["<space>pm"] = "@function.outer",
---}
+ts_to_keymap_select("l=", "@assignment.lhs"   , "Select left hand side of an assignment")
+ts_to_keymap_select("r=", "@assignment.rhs"   , "Select right hand side of an assignment")
 
+ts_to_keymap_select("aa", "@parameter.outer"  , "Select outer part of a parameter/argument")
+ts_to_keymap_select("ia", "@parameter.inner"  , "Select inner part of a parameter/argument")
 
--- Keymaps usados por 'move'
---goto_next_start = {
---    ["]f"] = { query = "@call.outer", desc = "Next function call start" },
---    ["]m"] = { query = "@function.outer", desc = "Next method/function def start" },
---    ["]c"] = { query = "@class.outer", desc = "Next class start" },
---    ["]i"] = { query = "@conditional.outer", desc = "Next conditional start" },
---    ["]l"] = { query = "@loop.outer", desc = "Next loop start" },
---
---    -- You can pass a query group to use query from `queries/<lang>/<query_group>.scm file in your runtime path.
---    -- Below example nvim-treesitter's `locals.scm` and `folds.scm`. They also provide highlights.scm and indent.scm.
---    ["]s"] = { query = "@scope", query_group = "locals", desc = "Next scope" },
---    ["]z"] = { query = "@fold", query_group = "folds", desc = "Next fold" },
---}
---
---goto_next_end = {
---    ["]F"] = { query = "@call.outer", desc = "Next function call end" },
---    ["]M"] = { query = "@function.outer", desc = "Next method/function def end" },
---    ["]C"] = { query = "@class.outer", desc = "Next class end" },
---    ["]I"] = { query = "@conditional.outer", desc = "Next conditional end" },
---    ["]L"] = { query = "@loop.outer", desc = "Next loop end" },
---}
---
---goto_previous_start = {
---    ["[f"] = { query = "@call.outer", desc = "Prev function call start" },
---    ["[m"] = { query = "@function.outer", desc = "Prev method/function def start" },
---    ["[c"] = { query = "@class.outer", desc = "Prev class start" },
---    ["[i"] = { query = "@conditional.outer", desc = "Prev conditional start" },
---    ["[l"] = { query = "@loop.outer", desc = "Prev loop start" },
---}
---
---goto_previous_end = {
---    ["[F"] = { query = "@call.outer", desc = "Prev function call end" },
---    ["[M"] = { query = "@function.outer", desc = "Prev method/function def end" },
---    ["[C"] = { query = "@class.outer", desc = "Prev class end" },
---    ["[I"] = { query = "@conditional.outer", desc = "Prev conditional end" },
---    ["[L"] = { query = "@loop.outer", desc = "Prev loop end" },
---}
+ts_to_keymap_select("ai", "@conditional.outer", "Select outer part of a conditional")
+ts_to_keymap_select("ii", "@conditional.inner", "Select inner part of a conditional")
+
+ts_to_keymap_select("al", "@loop.outer"       , "Select outer part of a loop")
+ts_to_keymap_select("il", "@loop.inner"       , "Select inner part of a loop")
+
+ts_to_keymap_select("af", "@call.outer"       , "Select outer part of a function call")
+ts_to_keymap_select("if", "@call.inner"       , "Select inner part of a function call")
+
+ts_to_keymap_select("am", "@function.outer"   , "Select outer part of a method/function definition")
+ts_to_keymap_select("im", "@function.inner"   , "Select inner part of a method/function definition")
+
+ts_to_keymap_select("ac", "@class.outer"      , "Select outer part of a class")
+ts_to_keymap_select("ic", "@class.inner"      , "Select inner part of a class")
 
 
 
+-- Keymap para 'swapping AST nodes' (intercambios de nodos AST).
+-- > Este keymaps solo aplica en el modo normal.
+local function ts_to_keymap_swap_next(p_keys, p_query_string, p_description)
+    local l_ts_to_swap = require("nvim-treesitter-textobjects.swap")
+    vim.keymap.set("n", p_keys, function() l_ts_to_swap.swap_next(p_query_string) end, { noremap = true, buffer = false, desc = p_description })
+end
+
+local function ts_to_keymap_swap_prev(p_keys, p_query_string, p_description)
+    local l_ts_to_swap = require("nvim-treesitter-textobjects.swap")
+    vim.keymap.set("n", p_keys, function() l_ts_to_swap.swap_previous(p_query_string) end, { noremap = true, buffer = false, desc = p_description })
+end
+
+ts_to_keymap_swap_next("<space>na", "@parameter.inner", "Swap parameters/argument with next")
+ts_to_keymap_swap_next("<space>nm", "@function.outer" , "Swap function with next")
+
+ts_to_keymap_swap_prev("<space>pa", "@parameter.inner", "Swap parameters/argument with prev")
+ts_to_keymap_swap_prev("<space>pm", "@function.outer" , "Swap function with previous")
+
+
+-- Keymaps usados 'move between AST nodes'
+-- > Esto keymaps solo aplica en los siguiente modos:
+--   > Si esta en el modo normal.
+--   > Si esta en el modo visual:
+--     > Selección x caracter: v, keymap
+--     > Selección x lineas  : V, keymap
+--     > Selección x bloques : ctrl + v/q, keymap
+--   > Si es en submodo 'operator-pending' del modo normal:
+--     > Delete              : d, keymap
+--     > Change              : c, keymap
+--     > Yank                : y, keymap
+
+-- > Argumentos
+--   > p_query_group
+--     > You can pass a query group to use query from `queries/<lang>/<queriy_group>.scm file in your runtime path.
+--       Ejemplos: `locals.scm` o `folds.scm`
+local function ts_to_keymap_move_goto_next(p_keys, p_query_string, p_query_group, p_description)
+    local l_ts_to_move = require("nvim-treesitter-textobjects.move")
+    local l_query_group = p_query_group or "textobjects"
+    vim.keymap.set({ "n", "x", "o" }, p_keys, function() l_ts_to_move.goto_next(p_query_string, l_query_group) end, { noremap = true, buffer = false, desc = p_description })
+end
+
+local function ts_to_keymap_move_goto_prev(p_keys, p_query_string, p_query_group, p_description)
+    local l_ts_to_move = require("nvim-treesitter-textobjects.move")
+    local l_query_group = p_query_group or "textobjects"
+    vim.keymap.set({ "n", "x", "o" }, p_keys, function() l_ts_to_move.goto_previous(p_query_string, l_query_group) end, { noremap = true, buffer = false, desc = p_description })
+end
+
+local function ts_to_keymap_move_goto_next_start(p_keys, p_query_string, p_query_group, p_description)
+    local l_ts_to_move = require("nvim-treesitter-textobjects.move")
+    local l_query_group = p_query_group or "textobjects"
+    vim.keymap.set({ "n", "x", "o" }, p_keys, function() l_ts_to_move.goto_next_start(p_query_string, l_query_group) end, { noremap = true, buffer = false, desc = p_description })
+end
+
+local function ts_to_keymap_move_goto_next_end(p_keys, p_query_string, p_query_group, p_description)
+    local l_ts_to_move = require("nvim-treesitter-textobjects.move")
+    local l_query_group = p_query_group or "textobjects"
+    vim.keymap.set({ "n", "x", "o" }, p_keys, function() l_ts_to_move.goto_next_end(p_query_string, l_query_group) end, { noremap = true, buffer = false, desc = p_description })
+end
+
+local function ts_to_keymap_move_goto_prev_start(p_keys, p_query_string, p_query_group, p_description)
+    local l_ts_to_move = require("nvim-treesitter-textobjects.move")
+    local l_query_group = p_query_group or "textobjects"
+    vim.keymap.set({ "n", "x", "o" }, p_keys, function() l_ts_to_move.goto_previous_start(p_query_string, l_query_group) end, { noremap = true, buffer = false, desc = p_description })
+end
+
+local function ts_to_keymap_move_goto_prev_end(p_keys, p_query_string, p_query_group, p_description)
+    local l_ts_to_move = require("nvim-treesitter-textobjects.move")
+    local l_query_group = p_query_group or "textobjects"
+    vim.keymap.set({ "n", "x", "o" }, p_keys, function() l_ts_to_move.goto_previous_end(p_query_string, l_query_group) end, { noremap = true, buffer = false, desc = p_description })
+end
+
+ts_to_keymap_move_goto_next_start( "]f", "@call.outer"       , nil       , "Next function call start"      )
+ts_to_keymap_move_goto_next_start( "]m", "@function.outer"   , nil       , "Next method/function def start")
+ts_to_keymap_move_goto_next_start( "]c", "@class.outer"      , nil       , "Next class start"              )
+ts_to_keymap_move_goto_next_start( "]i", "@conditional.outer", nil       , "Next conditional start"        )
+ts_to_keymap_move_goto_next_start( "]l", "@loop.outer"       , nil       , "Next loop start"               )
+ts_to_keymap_move_goto_next_start( "]s", "@scope"            , "locals"  , "Next scope"                    )
+ts_to_keymap_move_goto_next_start( "]z", "@fold"             , "folds"   , "Next fold"                     )
+
+ts_to_keymap_move_goto_next_end(   "]F", "@call.outer"       , nil       , "Next function call end"      )
+ts_to_keymap_move_goto_next_end(   "]M", "@function.outer"   , nil       , "Next method/function def end")
+ts_to_keymap_move_goto_next_end(   "]C", "@class.outer"      , nil       , "Next class end"              )
+ts_to_keymap_move_goto_next_end(   "]I", "@conditional.outer", nil       , "Next conditional end"        )
+ts_to_keymap_move_goto_next_end(   "]L", "@loop.outer"       , nil       , "Next loop end"               )
+
+ts_to_keymap_move_goto_prev_start( "[f", "@call.outer"       , nil       , "Prev function call start"      )
+ts_to_keymap_move_goto_prev_start( "[m", "@function.outer"   , nil       , "Prev method/function def start")
+ts_to_keymap_move_goto_prev_start( "[c", "@class.outer"      , nil       , "Prev class start"              )
+ts_to_keymap_move_goto_prev_start( "[i", "@conditional.outer", nil       , "Prev conditional start"        )
+ts_to_keymap_move_goto_prev_start( "[l", "@loop.outer"       , nil       , "Prev loop start"               )
+
+ts_to_keymap_move_goto_prev_end(   "[F", "@call.outer"       , nil       , "Prev function call end"      )
+ts_to_keymap_move_goto_prev_end(   "[M", "@function.outer"   , nil       , "Prev method/function def end")
+ts_to_keymap_move_goto_prev_end(   "[C", "@class.outer"      , nil       , "Prev class end"              )
+ts_to_keymap_move_goto_prev_end(   "[I", "@conditional.outer", nil       , "Prev conditional end"        )
+ts_to_keymap_move_goto_prev_end(   "[L", "@loop.outer"       , nil       , "Prev loop end"               )
 
 -- Permitir repitir el ultimo moviento de objeto realizado
---local ts_texobjs_repeatable_move = require("nvim-treesitter-textobjects.repeatable_move")
+local function ts_to_keymap_repeat_move_last(p_keys, p_previous, p_description)
+    local l_ts_to_repeat_move = require("nvim-treesitter-textobjects.repeatable_move")
+    local l_function = nil
+    if p_previous then
+        l_function = l_ts_to_repeat_move.repeat_last_move_previous
+    else
+        l_function = l_ts_to_repeat_move.repeat_last_move_next
+    end
 
---vim.keymap.set({ "n", "x", "o" }, ';', ts_texobjs_repeatable_move.repeat_last_move_next)
---vim.keymap.set({ "n", "x", "o" }, '\\', ts_texobjs_repeatable_move.repeat_last_move_previous)
+    vim.keymap.set({ "n", "x", "o" }, p_keys, l_function, { noremap = true, buffer = false, desc = p_description })
+end
 
+--local function ts_to_keymap_repeat_move_builtin(p_keys, p_type, p_description)
+--    local l_ts_to_repeat_move = require("nvim-treesitter-textobjects.repeatable_move")
+--    local l_function = nil
+--
+--    vim.keymap.set({ "n", "x", "o" }, p_keys, l_function, { expr = true, desc = p_description })
+--end
+
+ts_to_keymap_repeat_move_last(',' , 'Repeat the last move next')
+ts_to_keymap_repeat_move_last('\\', 'Repeat the last move previous')
 
 -- Optionally, make builtin f, F, t, T also repeatable with ; and ,
 --vim.keymap.set({ "n", "x", "o" }, "f", ts_texobjs_repeatable_move.builtin_f_expr, { expr = true })
