@@ -13,10 +13,10 @@ g_get_repo_infos() {
     local l_repo_name
     local l_repo_name_aux
 
-    for l_repo_id in "${!gA_repos[@]}"; do
+    for l_repo_id in "${!gA_repos_artifact[@]}"; do
 
         #Nombre a mostrar del paquete
-        l_repo_name="${gA_repos[${l_repo_id}]}"
+        l_repo_name="${gA_repos_artifact[${l_repo_id}]}"
 
         if [ -z "$l_repo_infos" ]; then
             if [ "$l_repo_name" = "$g_empty_str" ]; then
