@@ -604,7 +604,7 @@ function show_vim_config_report() {
 
 
     #4. Validar si los plugin estan desacargados
-    check_vim_plugins 1
+    check_vim_plugins $p_is_neovim
     l_status=$?
 
     # No esta configura sus archivos, No configurarlo.

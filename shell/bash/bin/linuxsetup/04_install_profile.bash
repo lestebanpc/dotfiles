@@ -1180,6 +1180,7 @@ function _setup_user_profile() {
     l_status=$?
 
     #Archivo de GDU (Go Disk Usage)
+    create_folderpath_on_home ".config" "gdu"
     l_target_path=".config/gdu"
     l_target_link="gdu.yaml"
     l_source_path="${g_repo_name}/etc/gdu"
