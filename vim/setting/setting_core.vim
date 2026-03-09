@@ -60,11 +60,16 @@ else
 endif
 
 "Determinar si se usa TMUX
-"if (g:os_type != 0) && exists('$TMUX') && executable('tmux')
+let g:use_tmux = v:false
+let g:use_tmux_higher_330 = v:false
+
 if (g:os_type != 0) && exists('$TMUX')
+
     let g:use_tmux = v:true
-else
-    let g:use_tmux = v:false
+    if exists('$TMUX_VERSION') && str2nr($TMUX_VERSION) >= 330
+        let g:use_tmux_higher_330 = v:true
+    endif
+
 endif
 
 

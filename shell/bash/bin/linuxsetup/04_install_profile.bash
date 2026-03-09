@@ -1455,6 +1455,14 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="fzf-tmux"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='fzf-tmux.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
 
 
     #Crear el enlace simbolico de comandos basicos

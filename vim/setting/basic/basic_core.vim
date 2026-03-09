@@ -624,11 +624,11 @@ endif
 " UI> File Explorer> NerdTree
 "###################################################################################
 "
-"Segun la documentación oficial, se deben cargarse antes de 'Vim-DevIcons',
-"pero si se hace ello no se muestra los Iconos
-"https://github.com/ryanoasis/vim-devicons/issues/428
+" Segun la documentación oficial, se deben cargarse antes de 'Vim-DevIcons',
+" pero si se hace ello no se muestra los Iconos
+" https://github.com/ryanoasis/vim-devicons/issues/428
 
-"Plugin UI> Explorador de archivos.
+" Plugin UI> Explorador de archivos.
 packadd nerdtree
 
 
@@ -649,60 +649,59 @@ nnoremap <leader>ee :NERDTreeToggle<CR>
 " UI> FZF (FuZzy Finder)
 "###################################################################################
 
-"Plug-In UI> FZF ("FuZzy Finder") - Funciones shell basicas de utilidad para fzf
+" Plug-In UI> FZF ("FuZzy Finder") - Funciones shell basicas de utilidad para fzf
 packadd fzf
 
-"Plug-In UI> FZF ("FuZzy Finder") - Comandos VIM para usar mejor FzF
+" Plug-In UI> FZF ("FuZzy Finder") - Comandos VIM para usar mejor FzF
 packadd fzf.vim
 
 
-"Sobreescribir las opciones por defecto de FZF (VIM define muchas opciones usando
-"variables globales).
+" Sobreescribir las opciones por defecto de FZF (VIM define muchas opciones usando variables globales).
 let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
 
-"El comando por defecto de FZF sera 'fd' y no 'find' debido a que:
-"  - 'fd' excluye de la busqueda folderes y archivos, y lo indicado por '.gitignore'.
-"  - La opcion '--walker-skip' aun no permite excluir archivos solo carpetas.
-"Adicionalmente :
-"  > Solo incluir archivos '-t f' o '--type f'
-"  > Incluir los archivos ocultos '-H' o '--hidden'
-"  > Excluir de la busqueda '-E' o '--exclue'
-"    > La carpetas de git                        : '.git'
-"    > Paquetes ('binario' del Node.JS) locales  : 'node_modules'
-"    > Archivo de Swap o temporales de VIM       : '.swp'
-"    > Archivo de 'persistence undo' de VIM      : '.un~'
+" El comando por defecto de FZF sera 'fd' y no 'find' debido a que:
+"   - 'fd' excluye de la busqueda folderes y archivos, y lo indicado por '.gitignore'.
+"   - La opcion '--walker-skip' aun no permite excluir archivos solo carpetas.
+" Adicionalmente :
+"   > Solo incluir archivos '-t f' o '--type f'
+"   > Incluir los archivos ocultos '-H' o '--hidden'
+"   > Excluir de la busqueda '-E' o '--exclue'
+"     > La carpetas de git                        : '.git'
+"     > Paquetes ('binario' del Node.JS) locales  : 'node_modules'
+"     > Archivo de Swap o temporales de VIM       : '.swp'
+"     > Archivo de 'persistence undo' de VIM      : '.un~'
 let $FZF_DEFAULT_COMMAND="fd -H -t f -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
 
-"Layout de FZF, define el tamaño y posicion del popup, usando la variable global 'g:fzf_layout'
-if g:use_tmux
-	"Si se usa TMUX, usar el 'tmux popup', definiendo el valor de la opcion '--tmux'
-    "Su valor es la misma que la opcion: [center|top|bottom|left|right][,SIZE[%]][,SIZE[%]]
-    let g:fzf_layout = { 'tmux': '99%,80%' }
+" Layout de FZF, define el tamaño y posicion del popup, usando la variable global 'g:fzf_layout'
+if g:use_tmux && g:use_tmux_higher_330
+	" Si se usa TMUX, usar el 'tmux popup', definiendo el valor de la opcion '--tmux'
+    " Su valor es la misma que la opcion: [center|top|bottom|left|right][,SIZE[%]][,SIZE[%]]
+    let g:fzf_layout = { 'tmux': 'center,99%,80%' }
 else
-    "Si no se usa TMUX, definir el valor de las opciones '--height', '--width' y '--border'.
-    "Campos obligatorios:
-    " - 'width'    : float range [0 ~ 1] or integer range [8 ~ ]
-    " - 'height'   : float range [0 ~ 1] or integer range [4 ~ ]
-    "Campos opcionales:
-    " - 'xoffset'  : float default 0.5 range [0 ~ 1]
-    " - 'yoffset'  : float default 0.5 range [0 ~ 1]
-    " - 'relative' : boolean (default v:false)
-    " - 'border'   : Border style (default is 'rounded')
-    "                Values : rounded, sharp, horizontal, vertical, top, bottom, left, right
-    " - 'highlight': Comment, Identifier
+    " Si no se usa TMUX, definir el valor de las opciones '--height', '--width' y '--border'.
+    " Campos obligatorios:
+    "  - 'width'    : float range [0 ~ 1] or integer range [8 ~ ]
+    "  - 'height'   : float range [0 ~ 1] or integer range [4 ~ ]
+    " Campos opcionales:
+    "  - 'xoffset'  : float default 0.5 range [0 ~ 1]
+    "  - 'yoffset'  : float default 0.5 range [0 ~ 1]
+    "  - 'relative' : boolean (default v:false)
+    "  - 'border'   : Border style (default is 'rounded')
+    "                 Values : rounded, sharp, horizontal, vertical, top, bottom, left, right
+    "  - 'highlight': Comment, Identifier
     let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.99, 'height': 0.8 } }
     "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.9, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'highlight': 'Identifier', 'border': 'rounded' } }
     "let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.99, 'height': 0.8, 'yoffset': 0.5, 'xoffset': 0.5, 'border': 'rounded' } }
 
 endif
 
-"Soporte a color 24 bits (RGB)
-"Permite traducir color 'ANSI 256 color' (muchos de los temas de VIM usa este tipo de color) a su equivalente a 24 bits (RGB)
+" Soporte a color 24 bits (RGB)
+" Permite traducir color 'ANSI 256 color' (muchos de los temas de VIM usa este tipo de color) a su equivalente a 24 bits (RGB)
 let g:fzf_force_24_bit_colors = 1
 
-"Color de FZF, usando la variable global 'g:fzf_colors'.
-"La variable global define la opcion '--color' de FZF.
-"Los campos a definir se usaran:
+" Color de FZF, usando la variable global 'g:fzf_colors'.
+" La variable global define la opcion '--color' de FZF.
+" Los campos a definir se usaran:
 "   fg, bg, hl                Item (foreground / background / highlight)
 "   fg+, bg+, hl+             Current item (foreground / background / highlight)
 "   preview-fg, preview-bg    Preview window text and background
@@ -718,7 +717,7 @@ let g:fzf_force_24_bit_colors = 1
 "   disabled                  Query string when search is disabled
 "   prompt                    Prompt before query (> )
 "   pointer                   Pointer to the current line (>)
-"Se usaran los colores del tema de VIM para definir el color
+" Se usaran los colores del tema de VIM para definir el color
 let g:fzf_colors =
 \ { 'fg':         ['fg', 'Normal'],
   \ 'bg':         ['bg', 'Normal'],
@@ -739,43 +738,43 @@ let g:fzf_colors =
 "let g:fzf_vim.tags_command = 'ctags -R'
 
 
-"Busqueda de archivos del proyecto usando busqueda difuso 'ripgrep'.
+" Busqueda de archivos del proyecto usando busqueda difuso 'ripgrep'.
 nnoremap <silent> <leader>ff :Rg<CR>
 nnoremap <silent> <leader>fw :Rg <C-r><C-w><CR>
 "nnoremap <silent> <leader>fW :call fzf#vim#grep('rg --vimgrep --no-heading --smart-case ' . shellescape(expand('<cWORD>')), 1, fzf#vim#with_preview(), 0)
 
-"Listar, Selexionar/Examinar e Ir al buffer
+" Listar, Selexionar/Examinar e Ir al buffer
 nnoremap <silent> <leader>bb :Buffers<CR>
 
-"Listar archivos del proyecto, Seleccionar/Examinar e Ir
+" Listar archivos del proyecto, Seleccionar/Examinar e Ir
 nnoremap <silent> <leader>ll :Files<CR>
 
-"Listar archivos del 'Git Files', Seleccionar/Examinar e Ir
+" Listar archivos del 'Git Files', Seleccionar/Examinar e Ir
 nnoremap <silent> <leader>lg :GFiles<CR>
 
-"Listar archivos del 'Git Status Files', Seleccionar/Examinar e Ir
+" Listar archivos del 'Git Status Files', Seleccionar/Examinar e Ir
 nnoremap <silent> <leader>ls :GFiles?<CR>
 
-"Listar comandos VIM, seleccionar y ejecutar
+" Listar comandos VIM, seleccionar y ejecutar
 nnoremap <silent> <leader>lc :History:<CR>
 
-"Listar las marcas (marks), seleccionar e ir
+" Listar las marcas (marks), seleccionar e ir
 nnoremap <silent> <leader>lm :Marks<CR>
 
-"Listar los saltos (jumps), seleccionar e ir
+" Listar los saltos (jumps), seleccionar e ir
 nnoremap <silent> <leader>lj :Jumps<CR>
 
-"Listar todos los tags del proyecto. (Si no se encuenta el archivo tags, debe generarlo usando 'ctags -R')
+" Listar todos los tags del proyecto. (Si no se encuenta el archivo tags, debe generarlo usando 'ctags -R')
 nnoremap <silent> <leader>lT :Tags<CR>
 
-"Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
+" Listar los tags (generados por ctags) del buffer actual, seleccionar e ir
 nnoremap <silent> <leader>lt :BTags<CR>
 
-"Listar help tags de vim (archivos de ayuda de vim)
+" Listar help tags de vim (archivos de ayuda de vim)
 nnoremap <silent> <leader>lh :Helptags<CR>
 
-"Recomendaciones del uso de tags de codigo:
-" - Regenerar los tags cuando realiza cambios ejecutando 'ctags -R' en el folder root del proyecto.
-" - Crear archivos 'option files' dentro del proyecto (ubicados usualmente carpata './.ctags.d/'),
-"   donde defina las opciones por defecto cuando se ejecuta 'ctags', por ejemplo, coloque los archivos
-"   y carpetas de exclusiion.
+" Recomendaciones del uso de tags de codigo:
+"  - Regenerar los tags cuando realiza cambios ejecutando 'ctags -R' en el folder root del proyecto.
+"  - Crear archivos 'option files' dentro del proyecto (ubicados usualmente carpata './.ctags.d/'),
+"    donde defina las opciones por defecto cuando se ejecuta 'ctags', por ejemplo, coloque los archivos
+"    y carpetas de exclusiion.

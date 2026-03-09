@@ -87,8 +87,6 @@ Durante la ejecución del servidor tmux, se *crea automáticamente* las siguient
 
 - `TMUX_CUSTOM_CONF`
     - Ruta del archivo de configuracion personalizable.
-- `TMUX_SHELL_PATH`
-    - Ruta donde estan los script requeridos para el setup
 - `TMUX_VERSION`
     - Version de TMUX entero y comparable, por ejemplo `3.2a` convierte a `320`, `2.56` convierte a `256`, `2.506` convierte a `250`.
 

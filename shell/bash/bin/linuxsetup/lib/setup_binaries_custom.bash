@@ -5070,8 +5070,12 @@ function _copy_artifact_files() {
                 echo "Copiando \"./bin/fzf-preview.sh\" como \"~/.files/shell/bash/bin/cmds/fzf-preview.bash\"..."
                 cp "${g_temp_path}/${l_source_path}/bin/fzf-preview.sh" "${g_repo_path}/shell/bash/bin/cmds/fzf-preview.bash"
 
+                echo "Copiando \"./bin/fzf-tmux\" como \"~/.files/shell/bash/bin/cmds/fzf-tmux.bash\"..."
+                cp "${g_temp_path}/${l_source_path}/bin/fzf-tmux" "${g_repo_path}/shell/bash/bin/cmds/fzf-tmux.bash"
+
                 if [ $g_runner_is_target_user -ne 0 ]; then
                     chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/bin/cmds/fzf-preview.bash
+                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_targethome_path}/shell/bash/bin/cmds/fzf-tmux.bash
                 fi
 
             fi

@@ -9,14 +9,45 @@
 #  vim ~/.custom_profile.bash
 #
 
+
 #-----------------------------------------------------------------------------------
-# Variables globales de configuracion (generales)
+# Variables globales de configuracion general
 #-----------------------------------------------------------------------------------
 
-# Variables de entorno comunes y usuados por varios programas
-#export EDITOR="vim"
-#export VISUAL="vim"
-#export SYSTEMD_EDITOR="vim"
+# Permite cargar capacidades adicionales (funciones ubicados en "~/${g_repo_name}/shell/bash/lib/mod_myfunc.bash") requeridas
+# cuando se esta en red local de 'my house'.
+# Entre las capacidades que se tiene son:
+#  > 'start_music' y 'stop_music'
+#    Permite montar la unidades de musica, establece acceso exlusivo de la tarjeta de sonido e iniciar el servidor MDP.
+#  > 'set_first_dns_server'
+#    Vuelve a establece el servidor DNS primario/local cuando se usa intefaces de red bridge y pierde comunicación.
+# Sus valores puede ser:
+#  > 0 Se importara dentro de profile la capacidades adicionales
+#  > Cualquier otro valor, no se cargara este script.
+#    Su valor por defecto es 1 (no se carga el script).
+#g_load_myfunc=0
+
+# Ruta del tema de 'Oh-My-Posh' usada para establecer el prompt a usar.
+# Si no se establecer (es vacio), se usara '~/${g_repo_name}/etc/oh-my-posh/default_settings.json'
+#g_prompt_theme=~/.files/etc/oh-my-posh/lepc-montys-blue1.json
+
+# Folder donde se almacena los binarios de tipo comando.
+# - Si los comandos instalados por el script '~/${g_repo_name}/shell/bash/bin/linuxsetup/01_setup_binaries.bash'
+#   se ha instalado en una ruta personalizado (diferente a '/usr/local/bin' o '~/.local/bin'), es obligatorio
+#   establecer la ruta correcta en dicha variable.
+# - Si no se especifica (es vacio), se considera la ruta estandar '/usr/local/bin'
+#g_lnx_bin_path='/usr/local/bin'
+
+# Folder base donde se encuentra la ruta de codigo.
+# > Usado para crear sesiones tmux usando 'fzf' + 'sesh' cuyo ruta es un subfolder de dicha carpeta.
+# > Si no se especifica se usara '~/code'
+# > Para mayor detalle, vease '~/.files/shell/bash/fun/fzf/fun_tmux_sesh.bash'
+#g_code_folder_path=~/code
+
+
+#-----------------------------------------------------------------------------------
+# Variables globales para generar variables de entorno
+#-----------------------------------------------------------------------------------
 
 # Nombre del repositorio git o la ruta relativa del repositorio git respecto al HOME.
 # - Si no se establece (valor vacio), se usara el valor '.files'.
@@ -28,17 +59,6 @@
 # - Si es un directorio valido se Convertira en la variable de entorno 'MY_TOOLS_PATH' usado en la configuración
 #   de programas como TMUX.
 #g_tools_path='/var/opt/tools'
-
-# Folder donde se almacena los binarios de tipo comando.
-# - Si los comandos instalados por el script '~/${g_repo_name}/shell/bash/bin/linuxsetup/01_setup_binaries.bash'
-#   se ha instalado en una ruta personalizado (diferente a '/usr/local/bin' o '~/.local/bin'), es obligatorio
-#   establecer la ruta correcta en dicha variable.
-# - Si no se especifica (es vacio), se considera la ruta estandar '/usr/local/bin'
-#g_lnx_bin_path='/usr/local/bin'
-
-# Ruta del tema de 'Oh-My-Posh' usada para establecer el prompt a usar.
-# Si no se establecer (es vacio), se usara '~/${g_repo_name}/etc/oh-my-posh/default_settings.json'
-#g_prompt_theme=~/.files/etc/oh-my-posh/lepc-montys-blue1.json
 
 # Tipo de origen de la sesion del profile.
 # > Usando esta variable se determina el valor de la variable de entorno del usuario 'MY_SESSION_SRC'.
@@ -83,19 +103,6 @@
 #      > Ejemplo: La VM ligera WSL2 que esta integrada con Windows en modo escritorio.
 #  > Si no se define, su valor por defecto es '0' (Headless Server).
 #g_enviroment_type=0
-
-# Permite cargar capacidades adicionales (funciones ubicados en "~/${g_repo_name}/shell/bash/lib/mod_myfunc.bash") requeridas
-# cuando se esta en red local de 'my house'.
-# Entre las capacidades que se tiene son:
-#  > 'start_music' y 'stop_music'
-#    Permite montar la unidades de musica, establece acceso exlusivo de la tarjeta de sonido e iniciar el servidor MDP.
-#  > 'set_first_dns_server'
-#    Vuelve a establece el servidor DNS primario/local cuando se usa intefaces de red bridge y pierde comunicación.
-# Sus valores puede ser:
-#  > 0 Se importara dentro de profile la capacidades adicionales
-#  > Cualquier otro valor, no se cargara este script.
-#    Su valor por defecto es 1 (no se carga el script).
-#g_load_myfunc=0
 
 
 #-----------------------------------------------------------------------------------

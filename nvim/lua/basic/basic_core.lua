@@ -308,7 +308,7 @@ vim.keymap.set('n', '<leader>ee', '<cmd>NvimTreeToggle<cr>', { noremap=true, sil
 local fzf_lua= require("fzf-lua")
 local actions= require("fzf-lua").actions
 
-fzf_lua.setup({
+local fzf_lua_conf = {
     winopts = {
         width  = 0.99,
         height = 0.80,
@@ -325,7 +325,6 @@ fzf_lua.setup({
         ["--info"]           = "inline-right",
         ["--layout"]         = "reverse",
         ["--highlight-line"] = true,
-        ["--tmux"]           = "center,99%,80%"
     },
     fzf_colors= {
         true,
@@ -349,8 +348,13 @@ fzf_lua.setup({
             previewer = "codeaction_native",
         },
     },
-})
+}
 
+if vim.g.use_tmux and vim.g.use_tmux_higher_330 then
+    fzf_lua_conf.fzf_opts["--tmux"] = "center,99%,80%"
+end
+
+fzf_lua.setup(fzf_lua_conf)
 
 --Busqueda de archivos del proyecto usando busqueda difuso 'ripgrep'.
 vim.keymap.set('n', '<leader>ff', ':lua require("fzf-lua").grep_project()<CR>', { noremap = true, silent = true })

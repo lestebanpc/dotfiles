@@ -9,17 +9,20 @@ if [ -z "$TMUX_PROGRAM" ]; then
 fi
 
 
+#------------------------------------------------------------------------------------
+# Funciones genericas
+#------------------------------------------------------------------------------------
 
-#Determinar el tipo de SO compatible con interprete shell POSIX.
-#Devuelve:
-#  00 > Si es Linux no-WSL
-#  01 > Si es Linux WSL2 (Kernel de Linux nativo sobre Windows)
-#  02 > Si es Unix
-#  03 > Si es MacOS
-#  04 > Emulador Bash CYGWIN para Windows
-#  05 > Emulador Bash MINGW  para Windows
-#  06 > Emulador Bash Termux para Linux Android
-#  09 > No identificado
+# Determinar el tipo de SO compatible con interprete shell POSIX.
+# > Devuelve:
+#   00 > Si es Linux no-WSL
+#   01 > Si es Linux WSL2 (Kernel de Linux nativo sobre Windows)
+#   02 > Si es Unix
+#   03 > Si es MacOS
+#   04 > Emulador Bash CYGWIN para Windows
+#   05 > Emulador Bash MINGW  para Windows
+#   06 > Emulador Bash Termux para Linux Android
+#   09 > No identificado
 function _get_os_type() {
     local l_system=$(uname -s)
 
@@ -51,6 +54,10 @@ function _get_os_type() {
 
 }
 
+
+#------------------------------------------------------------------------------------
+# Funciones para la inicializacion (no disparados por un keymappings)
+#------------------------------------------------------------------------------------
 
 # Obtener el comando externo usado como backend del clipboard
 function _get_backend_clipboard() {
@@ -327,6 +334,18 @@ setting_clipboard() {
 }
 
 
+basic_settings() {
+
+    local p_key="$1"
+    local p_clipboard_mode="$2"
+    setting_clipboard "$p_key" "$p_clipboard_mode"
+
+}
+
+
+#------------------------------------------------------------------------------------
+# Usado por keymapings
+#------------------------------------------------------------------------------------
 
 
 maximize_pane() {
