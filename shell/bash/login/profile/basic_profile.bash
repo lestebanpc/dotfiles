@@ -110,6 +110,48 @@ export MY_ENV_TYPE=0
 # Variable de entorno> PATH y similares
 #-----------------------------------------------------------------------------------
 
+# Si se esta dentro de DistroBox, se debe excluir las variables de entorno del 'HOME' del usuario del host.
+# En distribox, se usa un ruta de HOME diferente entre el host y el contenedor.
+#if [ ! -z "$CONTAINER_ID" ]; then
+#
+#    # Desactivar funciones de shell heredadas del host que deben ser usados por comandos del host.
+#    pyenv() { :; }
+#
+#    # Reconstruir un PATH limpio, excluyendo rutas del host
+#    _CLEAN_PATH=""
+#    _OLD_IFS="$IFS"
+#
+#    IFS=':'
+#
+#    for p in $PATH; do
+#        case "$p" in
+#
+#            /home/*)
+#                # Excluye rutas tipicas del usuario en el host
+#                ;;
+#
+#            /var/opt/tools/*)
+#                # Excluye rutas tipicas del usuario en el host
+#                ;;
+#
+#            *)
+#                # Mantenemos el resto (principalmente rutas del contenedor)
+#                if [ -n "$p" ]; then
+#                    _CLEAN_PATH="${_CLEAN_PATH:+$_CLEAN_PATH:}$p"
+#                fi
+#                ;;
+#
+#        esac
+#    done
+#
+#    IFS="$_OLD_IFS"
+#
+#    # Establecer el PATH limpio
+#    PATH="${_CLEAN_PATH}:${HOME}/.local/bin"
+#    unset _CLEAN_PATH _OLD_IFS
+#
+#fi
+
 # Java - GraalVM (RTE y Herramientas de desarrollo para Java y otros)
 if [ -d "${MY_TOOLS_PATH}/graalvm" ]; then
     GRAALVM_HOME="${MY_TOOLS_PATH}/graalvm"
