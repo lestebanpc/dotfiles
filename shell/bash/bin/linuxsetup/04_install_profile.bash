@@ -1670,6 +1670,7 @@ function _install_python_package() {
 
     #1. Validar si fue instalado como libreria
     #   Ejemplo: nodejs-wheel-binaries 22.15.0
+    # Obtener la version de pip
     local l_aux
     l_aux=$(pip3 list --user 2> /dev/null)
     local l_status=$?

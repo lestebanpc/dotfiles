@@ -561,6 +561,7 @@ declare -A gA_current_version_parameter3=(
 # > Si es '0' y '1', solo es usado para 'programas de usuario' y define la ruta relativa del comando respecto a la ruta
 #   base de archivos de programa.
 declare -A gA_current_version_parameter4=(
+    ['awscli']='aws-cli'
     ['protoc']='protoc/bin'
     ['netcoredbg']='dap_servers/netcoredbg'
     ['neovim']='neovim/bin'

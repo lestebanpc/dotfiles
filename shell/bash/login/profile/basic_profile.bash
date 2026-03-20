@@ -207,7 +207,7 @@ fi
 [ -d "${MY_TOOLS_PATH}/protoc/bin" ] && PATH="${MY_TOOLS_PATH}/protoc/bin:$PATH"
 
 # AWS CLI v2
-[ -d "${MY_TOOLS_PATH}/aws-cli/v2/current/bin" ] && PATH="${MY_TOOLS_PATH}/aws-cli/v2/current/bin:$PATH"
+[ -d "${MY_TOOLS_PATH}/aws-cli" ] && PATH="${MY_TOOLS_PATH}/aws-cli:$PATH"
 
 # CTags
 [ -d "${MY_TOOLS_PATH}/ctags" ] && PATH="${MY_TOOLS_PATH}/ctags/bin:$PATH"
