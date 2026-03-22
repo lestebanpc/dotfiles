@@ -1667,10 +1667,10 @@ function _install_python_package() {
     local p_pkg_group=$3
     local p_pkg_type=$4
     local p_pkg_description="$5"
+    local p_pip_version_is_gt_230=$6
 
-    #1. Validar si fue instalado como libreria
+    #1. Validar los paquetes (tipo libreria) instalados a nivel usuario
     #   Ejemplo: nodejs-wheel-binaries 22.15.0
-    # Obtener la version de pip
     local l_aux
     l_aux=$(pip3 list --user 2> /dev/null)
     local l_status=$?
@@ -1704,7 +1704,7 @@ function _install_python_package() {
                "$g_color_gray1" "$p_pkg_description" "$g_color_reset"
 
         #Se instalar a nivel usuario
-        if [ $g_os_type -eq 19 ]; then
+        if [ $p_pip_version_is_gt_230 -ne 0 ]; then
 
             printf '       > Ejecutando %b%s%b.\n' "$g_color_gray1" "pip3 install --user ${p_pkg_name}" "$g_color_reset"
             printf '%b' "$g_color_gray1"
@@ -1734,7 +1734,7 @@ function _install_python_package() {
     # Si fuen instalado como libreria, deseintalarlo
     if [ ! -z "$l_version" ]; then
 
-        if [ $g_os_type -eq 19 ]; then
+        if [ $p_pip_version_is_gt_230 -ne 0 ]; then
 
             printf 'Python > El programa CLI "%b%s%b" se instalo como una libreria a nivel usuario (%b%s%b).\n' "$g_color_gray1" "$p_pkg_name" "$g_color_reset" \
                    "$g_color_gray1" "pip3 install --user ${p_pkg_name}" "$g_color_reset"
@@ -1823,6 +1823,7 @@ function _install_python_package() {
 function _install_python_package_group() {
 
     local p_pkg_group=$1
+    local p_pip_version_is_gt_230=$2
 
     # Obtener los nemonicos de los paquetes que pertenecen al grupo
     local l_pkg_nemonic
@@ -1879,7 +1880,7 @@ function _install_python_package_group() {
         l_pkg_type=${gA_python_pckgs_type[$l_pkg_nemonic]:-0}
         l_pkg_description="${gA_python_pckgs_description[$l_pkg_nemonic]}"
 
-        _install_python_package "$l_pkg_nemonic" "$l_pkg_name" $l_pkg_group $l_pkg_type "$l_pkg_description"
+        _install_python_package "$l_pkg_nemonic" "$l_pkg_name" $l_pkg_group $l_pkg_type "$l_pkg_description" $p_pip_version_is_gt_230
         l_status=$?
 
         if [ $l_status -eq 0 ]; then
@@ -1959,12 +1960,13 @@ function _setup_python_enviroment() {
 
     #2. Instalar Python y su gestor de paquetes 'pip' y 'pipx'
     local l_status
+    local l_pip_version=""
     local l_is_python_installed=-1   #(-1) No determinado, (0) Instalado, (1) Solo instalado Python pero no pip o pipx, (2) No instalado ni Python ni Pip
 
     if [ $l_flag_setup -eq 0 ]; then
 
         #Instalar Python
-        install_python
+        install_python 1 "l_pip_version"
         l_status=$?
 
         #No se cumplen las precondiciones obligatorios
@@ -1991,12 +1993,15 @@ function _setup_python_enviroment() {
         return 0
     fi
 
-    #Si aun no se ha revisado si se ha instalado python y sus gestores de paquetes pip y pipx
+    # Si aun no se ha revisado si se ha instalado python y sus gestores de paquetes pip y pipx
     local l_aux
     if [ $l_is_python_installed -eq -1 ]; then
 
         l_aux=$(get_python_versions)
         l_status=$?
+
+        local -a la_versions=(${l_aux})
+        l_pip_version="${la_versions[1]}"
 
         # Si NO estan instalados python, pip y pipx
         if [ $l_status -eq 0 ]; then
@@ -2025,7 +2030,7 @@ function _setup_python_enviroment() {
         return 1
     fi
 
-    #Si el runner es root el modo suplantacion del usuario objetivo
+    # Si el runner es root el modo suplantacion del usuario objetivo
     if [ $g_runner_is_target_user -ne 0 ]; then
 
         printf '%b       > Warning: La instalación de paquetes de usuario python lo tiene que ejecutar con el usuario "%b%s%b"\n' \
@@ -2036,10 +2041,27 @@ function _setup_python_enviroment() {
         return 1
     fi
 
+
+    # Validar la version de pip es >= 23.0
+    local l_pip_version_is_gt_230=0
+    compare_version "$l_pip_version" "23.0"
+    l_status=$?
+
+    if [ $l_status -eq 2 ]; then
+        l_pip_version_is_gt_230=1
+    fi
+
+    if [ $l_pip_version_is_gt_230 -eq 0 ]; then
+        printf 'Python > Pip installed %b(version %s >= 23.0)%b\n'  "$g_color_gray1" "$l_pip_version" "$g_color_reset"
+    else
+        printf 'Python > Pip installed %b(version %s < 23.0)%b\n'  "$g_color_gray1" "$l_pip_version" "$g_color_reset"
+    fi
+
+
     # Instalar los paquetes python basicos
     if [ $l_flag_setup_1 -eq 0 ]; then
 
-        _install_python_package_group 0
+        _install_python_package_group 0 $l_pip_version_is_gt_230
         l_status=$?
 
     fi
@@ -2047,7 +2069,7 @@ function _setup_python_enviroment() {
     # Instalar los paquetes python asociados a LSP/DAP, Fixers y Linter basicos
     if [ $l_flag_setup_2 -eq 0 ]; then
 
-        _install_python_package_group 1
+        _install_python_package_group 1 $l_pip_version_is_gt_230
         l_status=$?
 
     fi
@@ -2056,7 +2078,7 @@ function _setup_python_enviroment() {
     # Instalar los paquetes python otros para development
     if [ $l_flag_setup_3 -eq 0 ]; then
 
-        _install_python_package_group 2
+        _install_python_package_group 2 $l_pip_version_is_gt_230
         l_status=$?
 
     fi

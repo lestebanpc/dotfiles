@@ -2962,7 +2962,9 @@ install_nodejs() {
 
 
 # Instalar RTE Python3
-# Parametro de salida:
+# > Parametros:
+#   > Si es '0' se muestra el titulo
+#   > Devuelve la version de pip instalado
 # > Valor de retorno:
 #      00> Si Python, Pip y Pipx estan instalado o si se instaló correctamente.
 #      01> Si Python esta instalado, pero no se puede instalar pip o pipx.
@@ -2977,11 +2979,13 @@ install_python() {
         p_show_title=0
     fi
 
+    local -n r_pip_version="$2"
+
     #1. Validar si 'python', 'pip' y 'pipx' estan instalados
     local l_aux
     l_aux=$(get_python_versions)
     local l_status=$?
-    local la_versions=(${l_aux})
+    local -a la_versions=(${l_aux})
 
     #echo "l_status=${l_status}, l_aux=${l_aux}"
 
@@ -3012,6 +3016,7 @@ install_python() {
         printf 'Python > Python %b%s%b ya esta instalado.\n' "$g_color_gray1" "${la_versions[0]}" "$g_color_reset"
         printf '       > El gestor de paquetes pip %b%s%b ya esta instalado.\n' "$g_color_gray1" "${la_versions[1]}" "$g_color_reset"
         printf '       > El gestor de paquetes pipx %b%s%b ya esta instalado.\n' "$g_color_gray1" "${la_versions[2]}" "$g_color_reset"
+        r_pip_version="${la_versions[1]}"
         return 0
     fi
 
@@ -3125,6 +3130,9 @@ install_python() {
     if [ $l_status -eq 0 ]; then
         return 2
     fi
+
+    la_versions=(${l_aux})
+    r_pip_version="${la_versions[1]}"
 
     # Si estan instalados python, pip y pipx
     if [ $l_status -eq 7 ]; then

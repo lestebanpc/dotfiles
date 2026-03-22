@@ -644,9 +644,10 @@ function _setup_system_tools() {
 
     # Instalar programnas del sistema: Python y sus gestores de paquetes Pip/Pix
     local l_status
+    local l_pip_version=""
     if [ $l_flag_setup_python -eq 0 ]; then
 
-        install_python 1
+        install_python 1 "l_pip_version"
         l_status=$?
 
         # Si no se acepto almacenar credenciales
