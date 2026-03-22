@@ -43,6 +43,9 @@
 # > Para mayor detalle, vease '~/.files/shell/bash/fun/fzf/fun_tmux_sesh.bash'
 #g_code_folder_path=~/code
 
+# Folder base donde se almacena los subfolderes de los programas en el host.
+#g_host_tools_path='/var/opt/tools'
+
 
 #-----------------------------------------------------------------------------------
 # Variables globales para generar variables de entorno

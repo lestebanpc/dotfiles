@@ -153,7 +153,7 @@ if [ ! -z "$CONTAINER_ID" ]; then
                 # Excluye rutas tipicas del usuario en el host
                 ;;
 
-            /var/opt/tools/*)
+            ${g_host_tools_path:-/var/opt/tools}/*)
                 # Excluye rutas tipicas del usuario en el host
                 ;;
 
@@ -171,7 +171,7 @@ if [ ! -z "$CONTAINER_ID" ]; then
 
     # Establecer el PATH limpio
     PATH="${_CLEAN_PATH}:${HOME}/.local/bin"
-    unset _CLEAN_PATH _OLD_IFS
+    unset _CLEAN_PATH _OLD_IFS g_host_tools_path
 
 fi
 
