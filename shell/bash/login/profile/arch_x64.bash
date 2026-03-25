@@ -272,7 +272,7 @@ export FZF_COMPLETION_PATH_OPTS="--walker=file,dir,hidden,follow"
 export FZF_COMPLETION_DIR_OPTS="--walker=dir,hidden,follow"
 
 if [ ! -z "$TMUX" ] && [ "$TMUX_VERSION" -ge 330 ]; then
-    FZF_DEFAULT_OPTS="--tmux center,100%,80% --height=80%
+    FZF_DEFAULT_OPTS="--tmux center,100%,80%
         --layout=reverse --walker-skip=.git,node_modules
         --info=inline --border
         --color=bg+:#293739,bg:#0F0F0F,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"

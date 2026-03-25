@@ -168,7 +168,7 @@ if($null -eq $env:FZF_DEFAULT_OPTS) {
     $env:FZF_COMPLETION_DIR_OPTS="--walker=dir,hidden,follow"
 
     if ($env:TMUX -and $env:TMUX_VERSION -and ([int]$env:TMUX_VERSION -ge 330)) {
-        $env:FZF_DEFAULT_OPTS="--height=80% --tmux=center,100%,80%
+        $env:FZF_DEFAULT_OPTS="--tmux=center,100%,80%
             --layout=reverse --walker-skip=.git,node_modules
             --info=inline --border
             --color=bg+:#293739,bg:#0F0F0F,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"
