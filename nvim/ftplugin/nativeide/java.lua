@@ -46,7 +46,8 @@ local jdtls_cfg = require('jdtls')
 local on_attach = function(client, bufnr)
 
     --1. Obtener la informacion del CodeLens ¿del workspace?
-    vim.lsp.codelens.refresh()
+    vim.lsp.codelens.enable(true)
+    --vim.lsp.codelens.refresh()
 
     -- Si se usa tmux, usar la terminal externa configurada para el cliente DAP 'nvim-dap'
     local dap_config_override = { }
@@ -117,7 +118,8 @@ local on_attach = function(client, bufnr)
     vim.api.nvim_create_autocmd("BufWritePost", {
         pattern = { "*.java" },
         callback = function()
-            local _, _ = pcall(vim.lsp.codelens.refresh)
+            --local _, _ = pcall(vim.lsp.codelens.refresh)
+            local _, _ = pcall(vim.lsp.codelens.enable, true)
         end,
     })
 

@@ -244,7 +244,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
             -- Refrescar CodeLens automáticamente en eventos relevantes
             vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave", "BufWritePost" }, {
                 buffer = buffer,
-                callback = vim.lsp.codelens.refresh,
+                callback = function() vim.lsp.codelens.enable(true) end,
+                --callback = vim.lsp.codelens.refresh,
             })
 
             -- ---------------------------------------------------------------------------------------------
@@ -471,14 +472,26 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
 --01. Handler (controlador de eventos) de 'vim.lsp.buf.hover()' que muestra el 'Documentation Windows'.
 --    Se modificaran los borde del 'Documentation Windows'.
-vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(
-    vim.lsp.handlers.hover,
-    { border = 'rounded' }
-)
+vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
+    config = config or {}
+    config.border = "rounded"
+    return vim.lsp.handlers.hover(err, result, ctx, config)
+end
+
+--vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(
+--    vim.lsp.handlers.hover,
+--    { border = 'rounded' }
+--)
 
 --01. Handler (controlador de eventos) de 'vim.lsp.buf.signature_help()' que muestra el 'Signature Help'.
 --    Se modificaran los borde del 'Signature Help'.
-vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(
-    vim.lsp.handlers.signature_help,
-    { border = 'rounded' }
-)
+vim.lsp.handlers["textDocument/signatureHelp"] = function(err, result, ctx, config)
+    config = config or {}
+    config.border = "rounded"
+    return vim.lsp.handlers.hover(err, result, ctx, config)
+end
+
+--vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(
+--    vim.lsp.handlers.signature_help,
+--    { border = 'rounded' }
+--)
