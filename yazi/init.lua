@@ -53,10 +53,13 @@ local m_root_path = tostring(t_root_url.path)
 
 -- Obtener la ruta de script para procesar archivos de texto en nuevo tab/windows del terminal
 local m_script_proccess_files = nil
+local m_script_proccess_folder = nil
 if m_is_windows then
     m_script_proccess_files = m_base_script_path .. "/go_files_new_termtab.cmd"
+    m_script_proccess_folder = m_base_script_path .. "/go_folder_new_termtab.cmd"
 else
     m_script_proccess_files = m_base_script_path .. "/go_files_new_termtab.bash"
+    m_script_proccess_folder = m_base_script_path .. "/go_folder_new_termtab.bash"
 end
 
 
@@ -64,14 +67,14 @@ end
 -- Configuración del plugin built-ins
 --------------------------------------------------------------------------------------
 --
-local m_plugin = nil
+local t_plugin = nil
 
 -- Plugin built-in 'zoxide.lua'
 -- Plugin built-in 'fzf.lua'
 
 -- Plugin built-in 'zoxide.lua'
---m_plugin = require("zoxide")
---m_plugin:setup({
+--t_plugin = require("zoxide")
+--t_plugin:setup({
 --	update_db = true,
 --})
 
@@ -206,5 +209,6 @@ t_plugin:setup({
 t_plugin = require("go-fs")
 t_plugin:setup({
     cwd_root =  m_root_path,
-    script_path = m_script_proccess_files,
+    script_path_1 = m_script_proccess_files,
+    script_path_2 = m_script_proccess_folder,
 })

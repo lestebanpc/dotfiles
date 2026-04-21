@@ -19,7 +19,7 @@ _usage() {
     cat <<EOF
 Usage: go_folder_new_termtab [options] folder_or_file
 
-> Crea una nueva ventana/tab en la terminal con un nuevo panel y cuyo directorio de trabajo es caclulado, segun prioridad:
+> Crea una nueva ventana/tab en la terminal con un nuevo panel y cuyo directorio de trabajo es calculado, segun prioridad:
     > El folder especificado por la opcion '-w'.
     > Si se usa la opcion '-p', el directorio de trabajo sera calculado pot el script y su valor depende del valor de la opcion:
       > '1' Se usa el directorio de trabajo usado por el proceso de ejecucion del panel actual.
@@ -38,6 +38,8 @@ Ejemplos:
   $ go_folder_new_termtab /home/lucianoepc/code
   $ go_folder_new_termtab /home/lucianoepc/code/mynote.txt
   $ go_folder_new_termtab -p 1 /home/lucianoepc/code
+  $ go_folder_new_termtab
+  $ go_folder_new_termtab -w /home/lucianoepc
 
 Las opciones usadas son:
 
@@ -81,12 +83,12 @@ m_get_multiplexor_type() {
 m_get_workdir_current_pane() {
 
     #1. Argumentos
-    local p_multiplexor_type=$1
+    local -i p_multiplexor_type=$1
     local -n r_working_dir="$2"
 
 
     local l_working_dir=""
-    local l_status=0
+    local -i l_status=0
 
     # Si es tmux
     if [ $p_multiplexor_type -eq 0 ]; then
@@ -137,13 +139,13 @@ m_get_workdir_current_pane() {
 m_create_new_pane() {
 
     #1. Argumentos
-    local p_multiplexor_type=$1
+    local -i p_multiplexor_type=$1
     local p_working_dir="$2"
     local -n r_position="$3"
 
 
     local l_position=""
-    local l_status=0
+    local -i l_status=0
 
     # Si es tmux
     if [ $p_multiplexor_type -eq 0 ]; then
@@ -200,7 +202,7 @@ m_create_new_pane() {
 m_exec_cmd_in_pane() {
 
     #1. Argumentos
-    local p_multiplexor_type=$1
+    local -i p_multiplexor_type=$1
     local p_position="$2"
     local p_cmd_to_exec="$3"
 
@@ -358,45 +360,56 @@ main() {
     #echo "Setp 0 ${1}" >> /tmp/remove.txt
 
 
-    #3. Leer los argumentos restantes
-    if [ -z "$1" ]; then
-        printf '[%bERROR%b] Debe especificar como argumento la ruta de un folder o archivo.\n' "$g_color_red1" "$g_color_reset"
-        return 4
-    fi
+    #3. Procesar los argumentos restantes
+    #if [ -z "$1" ]; then
+    #    printf '[%bERROR%b] Debe especificar como argumento la ruta de un folder o archivo.\n' "$g_color_red1" "$g_color_reset"
+    #    return 4
+    #fi
+
+    local -i l_is_folder=1
+    local l_folder_path=""
 
     local p_full_path="$1"
+    if [ ! -z "$p_full_path" ]; then
 
-    # Obtener la ruta real
-    if ! p_full_path=$(realpath -m "$p_full_path" 2> /dev/null); then
-        printf '[%bERROR%b] El argumento "%b%s%b" no es la ruta de un folder/archivo valido.\n' "$g_color_red1" "$g_color_reset" \
-               "$g_color_gray1" "$1" "$g_color_reset"
-        return 5
+        # Obtener la ruta real
+        if ! p_full_path=$(realpath -m "$p_full_path" 2> /dev/null); then
+            printf '[%bERROR%b] El argumento "%b%s%b" no es la ruta de un folder/archivo valido.\n' "$g_color_red1" "$g_color_reset" \
+                   "$g_color_gray1" "$1" "$g_color_reset"
+            return 5
+        fi
+        #echo "Step 1 ${p_full_path}" >> /tmp/remove.txt
+        #echo "p_full_path: ${p_full_path}"
+
+        # Determinar si es folder o archivo
+        l_folder_path="$p_full_path"
+
+        if [ -d "$p_full_path" ]; then
+            l_is_folder=0
+        elif [ ! -f "$p_full_path" ]; then
+
+            printf '[%bERROR%b] El argumento "%b%s%b" no es la ruta de un folder ni un archivo.\n' "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$p_full_path" "$g_color_reset"
+            return 6
+        fi
+
+        # Si es archivo, obtener el folder
+        if [ $l_is_folder -ne 0 ]; then
+            l_folder_path="${p_full_path%/*}"
+        fi
+        #echo "l_is_folder: ${l_is_folder}, l_folder_path: $l_folder_path, p_working_dir_src: ${p_working_dir_src}"
+
     fi
-    #echo "Step 1 ${p_full_path}" >> /tmp/remove.txt
-    #echo "p_full_path: ${p_full_path}"
 
-    #3. Determinar si es folder o archivo
-    local l_is_folder=1
-    local l_folder_path="$p_full_path"
-
-    if [ -d "$p_full_path" ]; then
-        l_is_folder=0
-    elif [ ! -f "$p_full_path" ]; then
-
-        printf '[%bERROR%b] El argumento "%b%s%b" no es la ruta de un folder ni un archivo.\n' "$g_color_red1" "$g_color_reset" "$g_color_gray1" "$p_full_path" "$g_color_reset"
-        return 6
-
-    fi
-
-    if [ $l_is_folder -ne 0 ]; then
-        l_folder_path="${p_full_path%/*}"
-    fi
-    #echo "l_is_folder: ${l_is_folder}, l_folder_path: $l_folder_path, p_working_dir_src: ${p_working_dir_src}"
-
-    #6. Determinar el working dir ausar para crear el nuevo panel (Calculo automatico del working dir)
+    #6. Calcular el 'working dir' si no se definio con la opcion '-w'
+    #   > Si 'p_working_dir_src' no la especificado por '-w', determinar el working dir ausar para crear el nuevo panel
+    #   > Valores de 'p_working_dir_src':
+    #     (0) El directorio esta espeificado por la opciones '-w'
+    #     (1) Se usara el directorio de trabajo usado por el proceso ejecutandose en el panel actual.
+    #     (2) Se usara el directorio donde pertenece el archivo indicado como 1er argumento.
+    #     (3) No se especifica un directorio de trabajo durante la creacion del panel.
     if [ $p_working_dir_src -eq 1 ]; then
 
-        # Si el working-dir se calcula automiaticamenbte en base al usado por el proceso actual del panel actual
+        # Si el working-dir se calcula automaticamente en base al usado por el proceso actual del panel actual
         m_get_workdir_current_pane $l_multiplexor_type "p_working_dir"
         l_status=$?
 
@@ -407,7 +420,8 @@ main() {
 
     elif [ $p_working_dir_src -eq 2 ]; then
 
-        # Si el working se cacula automaticamente en base la ruta donde esta el archvio/folder
+        # Si el working se cacula automaticamente en base la ruta donde esta el archivo/folder.
+        # Si no se ingreso como argumento un folder o archivo, sera empty.
         p_working_dir="$l_folder_path"
 
     elif [ $p_working_dir_src -ne 0 ]; then
@@ -422,7 +436,7 @@ main() {
     #8. Crear el comando que visualiza los archivos a visualizar
     local l_cmd_to_exec=""
 
-    if [ ! -z "$p_working_dir" ] && [ $p_working_dir_src -ne 3 ]; then
+    if [ ! -z "$l_folder_path" ] && [ ! -z "$p_working_dir" ] && [ "$l_folder_path" != "${p_working_dir}/" ]; then
 
         #Se usara la ruta relativa al directorio de trabajo
         printf -v l_cmd_to_exec 'cd "%s"' "${l_folder_path#${p_working_dir}/}"

@@ -28,6 +28,9 @@ open_file = [
 edit_txt = [
     # Para Windows
 	{ run = '%EDITOR% %*', desc = "Edit in this TermTab", for = "windows", block = true },
+	#{ run = 'ya pub go-fs --list "openintab" "rootdir"', desc = "Edit in new TermTab (Initial WorkDir)", for = "windows" },
+	#{ run = 'ya pub go-fs --list "openintab" "rootdir" "vim"', desc = "Edit VIM in new TermTab (Initial WorkDir)", for = "windows" },
+	#{ run = 'ya pub go-fs --list "openintab" "rootdir" "nvim"', desc = "Edit NeoVIM in new TermTab (Initial WorkDir)", for = "windows" },
 	{ run = 'cmd /c "%USERPROFILE%\.files\shell\cmd\bin\cmds\go_files_new_termtab" -p 2 %1', desc = "Edit in new TermTab (Parent folder)", for = "windows" },
 	#{ run = 'code %*', desc = "Edit with VSCode", for = "windows", orphan = true },
 
@@ -36,6 +39,9 @@ edit_txt = [
 
     # Para Linux y Unix
 	{ run = '${EDITOR:-vim} "$@"', desc = "Edit in this TermTab", for = "unix", block = true },
+	#{ run = 'ya pub go-fs --list "openintab" "rootdir"', desc = "Edit in new TermTab (Initial WorkDir)", for = "linux" },
+	#{ run = 'ya pub go-fs --list "openintab" "rootdir" "vim"', desc = "Edit VIM in new TermTab (Initial WorkDir)", for = "linux" },
+	#{ run = 'ya pub go-fs --list "openintab" "rootdir" "nvim"', desc = "Edit NeoVIM in new TermTab (Initial WorkDir)", for = "linux" },
 	{ run = '${HOME}/.local/bin/go_files_new_termtab -p 2 "$1"', desc = "Edit in new TermTab (Parent folder)", for = "linux" },
 	#{ run = 'code "$@"', desc = "Edit with VSCode", for = "unix", orphan = true },
 ]
@@ -79,6 +85,10 @@ open_folder = [
 reveal = [
     # Para Windows
 	#{ run = 'explorer /select,%1', desc = "View in Explorer", for = "windows", orphan = true },
+	{ run = 'ya pub go-fs --list "copycb" "rootdir"', desc = "Copy relative path (Inicial Workdir)", for = "Windows" },
+	{ run = 'ya pub go-fs --list "copycb" "rootgit"', desc = "Copy relative path (Root Git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "newtab" "rootdir"', desc = "Go Inicial Workdir in new TermTab", for = "windows" },
+	{ run = 'ya pub go-fs --list "newtab" "rootgit"', desc = "Go Root Git in new TermTab", for = "windows" },
 	{ run = 'cmd /c "%USERPROFILE%\.files\shell\cmd\bin\cmds\go_folder_new_termtab.cmd" -p 2 %1', desc = "Go parent folder in new TermTab", for = "windows" },
 
     # Para Android (Termux)
@@ -86,6 +96,10 @@ reveal = [
 
     # Para Linux y Unix
 	#{ run = 'nautilus --select "$1" &', desc = "View in Explorer", for = "linux", orphan = true },
+	{ run = 'ya pub go-fs --list "copycb" "rootdir"', desc = "Copy relative path (Inicial Workdir)", for = "linux" },
+	{ run = 'ya pub go-fs --list "copycb" "rootgit"', desc = "Copy relative path (Root Git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "newtab" "rootdir"', desc = "Go Inicial Workdir in new TermTab", for = "linux" },
+	{ run = 'ya pub go-fs --list "newtab" "rootgit"', desc = "Go Root Git in new TermTab", for = "linux" },
 	{ run = '${HOME}/.local/bin/go_folder_new_termtab -p 2 "$1"', desc = "Go parent folder in new TermTab", for = "linux" },
 
 ]
@@ -95,8 +109,8 @@ extract = [
 ]
 
 download = [
-	{ run = "ya emit download --open %S", desc = "Download and open" },
-	{ run = "ya emit download %S", desc = "Download" },
+	{ run = "ya pub download --open %S", desc = "Download and open" },
+	{ run = "ya pub download %S", desc = "Download" },
 ]
 
 

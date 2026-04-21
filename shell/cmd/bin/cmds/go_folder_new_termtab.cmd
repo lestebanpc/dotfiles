@@ -281,11 +281,11 @@ echo "WORKING_DIR: !WORKING_DIR!"
 echo "WORKING_DIR_SRC: !WORKING_DIR_SRC!"
 
 rem Verificar que tenemos una ruta
-if "!INPUT_PATH!"=="" (
-    echo [!color_red!ERROR!color_reset!] Debe especificar una ruta de folder o archivo.
-    call :USAGE
-    exit /b 4
-)
+rem if "!INPUT_PATH!"=="" (
+rem    echo [!color_red!ERROR!color_reset!] Debe especificar una ruta de folder o archivo.
+rem    call :USAGE
+rem    exit /b 4
+rem )
 
 rem ---------------------------------------------------------------------
 rem Validaciones iniciales
@@ -298,27 +298,32 @@ rem Procesar la ruta de entrada
 rem ---------------------------------------------------------------------
 echo [!color_gray!INFO!color_reset!] Procesando ruta: !INPUT_PATH!
 
-rem Obtener ruta absoluta
-set "FULL_PATH="
-for %%F in ("!INPUT_PATH!") do set "FULL_PATH=%%~fF"
-echo "FULL_PATH: !FULL_PATH!"
-
-rem Determinar si es folder o archivo
 set "IS_FOLDER=1"
-set "FOLDER_PATH=!FULL_PATH!"
+set "FOLDER_PATH="
+if not "!INPUT_PATH!"=="" (
 
-if exist "!FULL_PATH!\" (
-    set "IS_FOLDER=0"
-) else if not exist "!FULL_PATH!" (
-    echo [!color_red!ERROR!color_reset!] La ruta no existe: !FULL_PATH!
-    exit /b 6
-)
+    rem Obtener ruta absoluta
+    set "FULL_PATH="
+    for %%F in ("!INPUT_PATH!") do set "FULL_PATH=%%~fF"
+    echo "FULL_PATH: !FULL_PATH!"
 
-if !IS_FOLDER! equ 1 (
+    rem Determinar si es folder o archivo
+    set "FOLDER_PATH=!FULL_PATH!"
+
+    if exist "!FULL_PATH!\" (
+        set "IS_FOLDER=0"
+    ) else if not exist "!FULL_PATH!" (
+        echo [!color_red!ERROR!color_reset!] La ruta no existe: !FULL_PATH!
+        exit /b 6
+    )
+
     rem Es archivo, obtener directorio padre
-    for %%F in ("!FULL_PATH!") do set "FOLDER_PATH=%%~dpF"
-    rem Quitar la barra final
-    if "!FOLDER_PATH:~-1!"=="\" set "FOLDER_PATH=!FOLDER_PATH:~0,-1!"
+    if !IS_FOLDER! equ 1 (
+        for %%F in ("!FULL_PATH!") do set "FOLDER_PATH=%%~dpF"
+        rem Quitar la barra final
+        if "!FOLDER_PATH:~-1!"=="\" set "FOLDER_PATH=!FOLDER_PATH:~0,-1!"
+    )
+
 )
 
 echo [!color_gray!INFO!color_reset!] Ruta procesada: !FULL_PATH!
@@ -356,33 +361,37 @@ rem Construir comando a ejecutar siempre que sea necesario
 rem ---------------------------------------------------------------------
 set "COMMAND_TO_EXEC="
 
-if "!WORKING_DIR!"=="" (
+if not "!FOLDER_PATH!"=="" (
 
-    rem Calcular ruta relativa
-    set "COMMAND_TO_EXEC=cd "!FOLDER_PATH!""
-    rem echo "ok2"
+    if "!WORKING_DIR!"=="" (
 
-) else (
-
-    rem Si el directorio de trabajo no es el mismo que FOLDER_PATH
-	if /i "!WORKING_DIR!"=="!FOLDER_PATH!" (
-        rem Ya estoy en el mismo directorio -> no hace falta comando
-        rem echo "ok1"
-
-	) else (
-        rem echo "ok0"
         rem Calcular ruta relativa
-        set "RELATIVE_PATH=!FOLDER_PATH!"
-        rem set "RELATIVE_PATH=!RELATIVE_PATH:%WORKING_DIR%\=!"
-        call set "RELATIVE_PATH=%%RELATIVE_PATH:%WORKING_DIR%\=%%"
-	    rem echo "RELATIVE_PATH: !REL_PATH!"
+        set "COMMAND_TO_EXEC=cd "!FOLDER_PATH!""
+        rem echo "ok2"
 
-        if not "!RELATIVE_PATH!"=="!FOLDER_PATH!" (
-            set "COMMAND_TO_EXEC=cd "!RELATIVE_PATH!""
-	    ) else (
-            rem Si no es subdirectorio, usar ruta absoluta
-            set "COMMAND_TO_EXEC=cd "!FOLDER_PATH!""
+    ) else (
+
+        rem Si el directorio de trabajo no es el mismo que FOLDER_PATH
+    	if /i "!WORKING_DIR!"=="!FOLDER_PATH!" (
+            rem Ya estoy en el mismo directorio -> no hace falta comando
+            rem echo "ok1"
+
+    	) else (
+            rem echo "ok0"
+            rem Calcular ruta relativa
+            set "RELATIVE_PATH=!FOLDER_PATH!"
+            rem set "RELATIVE_PATH=!RELATIVE_PATH:%WORKING_DIR%\=!"
+            call set "RELATIVE_PATH=%%RELATIVE_PATH:%WORKING_DIR%\=%%"
+    	    rem echo "RELATIVE_PATH: !REL_PATH!"
+
+            if not "!RELATIVE_PATH!"=="!FOLDER_PATH!" (
+                set "COMMAND_TO_EXEC=cd "!RELATIVE_PATH!""
+    	    ) else (
+                rem Si no es subdirectorio, usar ruta absoluta
+                set "COMMAND_TO_EXEC=cd "!FOLDER_PATH!""
+            )
         )
+
     )
 
 )

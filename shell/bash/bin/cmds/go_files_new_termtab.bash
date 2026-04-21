@@ -19,9 +19,9 @@ _usage() {
     cat <<EOF
 Usage: go_files_new_termtab [options] file1 file2 ... filen
 
-> Crea una nueva ventana/tab en la terminal con un nuevo panel y cuyo directorio de trabajo es caclulado, segun prioridad:
+> Crea una nueva ventana/tab en la terminal con un nuevo panel y cuyo directorio de trabajo es calculado, segun prioridad:
     > El folder especificado por la opcion '-w'.
-    > Si se usa la opcion '-p', el directorio de trabajo sera calculado pot el script y su valor depende del valor de la opcion:
+    > Si se usa la opcion '-p', el directorio de trabajo sera calculado por el script y su valor depende del valor de la opcion:
       > '1' Se usa el directorio de trabajo usado por el proceso de ejecucion del panel actual.
             > Programas como 'yazi' modifican el directorio de trabajo de sus proceso segun que directorio se este navegando.
       > '2' Se usa el directorio padre donde pertenece el archivo del 1er argumento.
@@ -60,7 +60,7 @@ Opciones usadas son:
             > Solo aplicable si son archivo de texto y el editor es 'vim' o 'nvim'.
             > Si en los argumentos se colocan folderes y archivos binarios seran excluidos, y por ende, el orden no se respetara.
 
-Argumentos son unlistado de archivos:
+Argumentos son un listado de archivos:
    > El primer argumento siempre debe ser un archivo.
    > La ruta puede ser absoluta o relativa.
    > Si se incluye ruta de folderes, estos seran omitidos.
@@ -136,12 +136,12 @@ m_validate_first_file() {
 m_get_workdir_current_pane() {
 
     #1. Argumentos
-    local p_multiplexor_type=$1
+    local -i p_multiplexor_type=$1
     local -n r_working_dir="$2"
 
 
     local l_working_dir=""
-    local l_status=0
+    local -i l_status=0
 
     # Si es tmux
     if [ $p_multiplexor_type -eq 0 ]; then
@@ -192,7 +192,7 @@ m_is_text_file() {
     local p_full_path="$1"
 
     local l_data=''
-    local l_is_text_file=1
+    local -i l_is_text_file=1
 
     # Determinar el tipo MIME del archivo
     l_data=$(file -i "$p_full_path")
