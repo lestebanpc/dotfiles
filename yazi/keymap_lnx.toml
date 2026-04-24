@@ -34,8 +34,8 @@ prepend_keymap = [
     #{ on = [ "T" ], run = "plugin toggle-pane max-preview", desc = "Maximize or restore the preview pane" },
 
     # Comando para copiar la ruta relativa de objeto actual selecionado (no usar los reservados 'c', 'd', 'f' y 'n')
-    { on = [ "c", "w" ], run = "plugin go-fs -- copycb --type=rootdir", desc = "Copy relative path (Inicial Workdir)" },
-    { on = [ "c", "g" ], run = "plugin go-fs -- copycb --type=rootgit", desc = "Copy relative path (Root Git)" },
+    { on = [ "c", "w" ], run = "plugin go-fs -- copycb --type=rootdir", desc = "Copy relative path (Inicial workdir)" },
+    { on = [ "c", "g" ], run = "plugin go-fs -- copycb --type=rootgit", desc = "Copy relative path (Root git)" },
 
     # Comandos de busqueda integrada en la vista de Yazi
     { on = [ "f", "n" ], run = "search --via=fd", desc = "Search files by name    (fd)" },
@@ -47,21 +47,21 @@ prepend_keymap = [
     #{ on = [ "f", "w" ], run = "plugin fzf-rg", desc = "Search files by content (fzf & rg)" },
 
     # Comandos para editar archivos de texto (opcionalmente realizan una busqueda en los archivos de texto)
-    { on = [ "e", "w" ], run = "plugin go-fs -- openintab --type=rootdir", desc = "Edit in new TermTab (Initial WorkDir)" },
-    { on = [ "e", "1" ], run = "plugin go-fs -- openintab --type=rootdir --editor=vim", desc = "Edit VIM in new TermTab (Initial WorkDir)" },
-    { on = [ "e", "2" ], run = "plugin go-fs -- openintab --type=rootdir --editor=nvim", desc = "Edit NeoVIM in new TermTab (Initial WorkDir)" },
+    { on = [ "e", "w" ], run = "plugin go-fs -- editfiles --type=rootdir", desc = "Edit files (New TermTab, (Initial workdir)" },
+    { on = [ "e", "1" ], run = "plugin go-fs -- editfiles --type=rootdir --editor=vim" , desc = "Edit in VIM (New TermTab, Initial workdir)" },
+    { on = [ "e", "2" ], run = "plugin go-fs -- editfiles --type=rootdir --editor=nvim", desc = "Edit in NVIM (New TermTab, Initial workdir)" },
 
-    { on = [ "e", "g" ], run = "plugin go-fs -- openintab --type=rootgit", desc = "Edit in new TermTab (Root Git)" },
-    { on = [ "e", "3" ], run = "plugin go-fs -- openintab --type=rootgit --editor=vim", desc = "Edit VIM in new TermTab (Root Git)" },
-    { on = [ "e", "4" ], run = "plugin go-fs -- openintab --type=rootgit --editor=nvim", desc = "Edit NeoVIM in new TermTab (Root Git)" },
+    { on = [ "e", "g" ], run = "plugin go-fs -- editfiles --type=rootgit", desc = "Edit files (New TermTab, Root git)" },
+    { on = [ "e", "3" ], run = "plugin go-fs -- editfiles --type=rootgit --editor=vim" , desc = "Edit in VIM (New TermTab, Root git)" },
+    { on = [ "e", "4" ], run = "plugin go-fs -- editfiles --type=rootgit --editor=nvim", desc = "Edit in NVIM (New TermTab, Root git)" },
 
-    { on = [ "e", "a" ], run = "plugin fzf-rg -- rootdir --tmux --height=80 --width=99", desc = "Search & Edit in new TermTab (Initial WorkDir)" },
-    { on = [ "e", "b" ], run = "plugin fzf-rg -- rootdir --tmux --height=80 --width=99 --editor=vim", desc = "Search & Edit VIM in new TermTab (Initial WorkDir)" },
-    { on = [ "e", "c" ], run = "plugin fzf-rg -- rootdir --tmux --height=80 --width=99 --editor=nvim", desc = "Search & Edit NeoVIM in new TermTab (Initial WorkDir)" },
+    { on = [ "e", "a" ], run = "plugin fzf-rg -- rootdir --tmux --height=80 --width=99", desc = "Search & Edit files (New TermTab, Initial workdir)" },
+    { on = [ "e", "b" ], run = "plugin fzf-rg -- rootdir --tmux --height=80 --width=99 --editor=vim", desc = "Search & Edit VIM (New TermTab, Initial workdir)" },
+    { on = [ "e", "c" ], run = "plugin fzf-rg -- rootdir --tmux --height=80 --width=99 --editor=nvim", desc = "Search & Edit NVIM (New TermTab, Initial workdir)" },
 
-    { on = [ "e", "d" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99", desc = "Search & Edit in new TermTab (Root Git)" },
-    { on = [ "e", "e" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=vim", desc = "Search & Edit VIM in new TermTab (Root Git)" },
-    { on = [ "e", "f" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=nvim", desc = "Search & Edit NeoVIM in new TermTab (Root Git)" },
+    { on = [ "e", "d" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99", desc = "Search & Edit files (New TermTab, Root git)" },
+    { on = [ "e", "e" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=vim", desc = "Search & Edit VIM (New TermTab, Root git)" },
+    { on = [ "e", "f" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=nvim", desc = "Search & Edit NVIM (New TermTab, Root git)" },
 
 
     # Comandos para ir a directorios especiales (no usar los reservados 'c', 'd', 'h', '<scape>' y 'f')

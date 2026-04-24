@@ -77,32 +77,49 @@ local function m_filter_files1(p_selected_urls)
 end
 
 
-local function m_filter_files2(p_selected_paths)
+local function m_filter_files2(p_selected_paths, p_hovered_file_path, p_source)
 
-    local l_files = {}
-    if not p_selected_paths then
-        return l_files
+    if not p_selected_paths and not p_hovered_file_path then
+        return nil
     end
 
-    local l_path = nil
-    local l_url = nil
-    local l_cha = nil
-    local l_err = nil
+    local l_files = {}
 
-    for i = 1, #p_selected_paths do
+    if p_selected_paths and (p_source == "both" or p_source == "selected") then
 
-        l_path = p_selected_paths[i]
-        l_url = Url(l_path)
+        local l_path = nil
+        local l_url = nil
+        local l_cha = nil
+        local l_err = nil
 
-        -- Obtener caracteristicas/propiedades del archivo/folder relacionado al objeto URL
-        l_cha, l_err = fs.cha(l_url, true)
-        if not l_err then
+        for i = 1, #p_selected_paths do
 
-           -- Si no es directorio
-           if not l_cha.is_dir then
-               table.insert(l_files, l_path)
-           end
+            l_path = p_selected_paths[i]
+            l_url = Url(l_path)
 
+            -- Obtener caracteristicas/propiedades del archivo/folder relacionado al objeto URL
+            l_cha, l_err = fs.cha(l_url, true)
+            if not l_err then
+
+               -- Si no es directorio
+               if not l_cha.is_dir then
+                   table.insert(l_files, l_path)
+               end
+
+            end
+
+        end
+
+    end
+
+    if p_hovered_file_path then
+
+        if p_source == "both" and #l_files <= 0 then
+            table.insert(l_files, p_hovered_file_path)
+        end
+
+        if p_source == "hovered" then
+            table.insert(l_files, p_hovered_file_path)
         end
 
     end
@@ -111,6 +128,34 @@ local function m_filter_files2(p_selected_paths)
 
 end
 
+
+local function m_get_folder(p_hovered_file_path, p_get_parent)
+
+    if p_hovered_file_path then
+        return nil, 'empty hovered file'
+    end
+
+    local l_url = Url(p_hovered_file_path)
+
+    -- Obtener caracteristicas/propiedades del archivo/folder relacionado al objeto URL
+    local l_cha, l_err = fs.cha(l_url, true)
+    if l_err then
+        return nil, tostring(l_err)
+    end
+
+    -- Obtener el folder actual
+    if not l_cha.is_dir then
+        l_url = l_url.parent
+    end
+
+    -- Si se desea obtener el folder padre
+    if p_get_parent then
+        l_url = l_url.parent
+    end
+
+    return tostring(l_url), nil
+
+end
 
 
 ---------------------------------------------------------------------------------
@@ -263,11 +308,15 @@ local function m_opentab_with_selected_files(p_cwd, p_script_path, p_file_paths,
 
     -- Creando los argumentos del comando
     local l_args = {
-        "-e",
-        tostring(p_editor_type),
         "-w",
         p_pane_wd,
     }
+
+    if p_editor_type > 0 then
+        table.insert(l_args, "-e")
+        table.insert(l_args, tostring(p_editor_type))
+    end
+
 
     local l_item = nil
     for i = 1, #p_file_paths do
@@ -277,6 +326,7 @@ local function m_opentab_with_selected_files(p_cwd, p_script_path, p_file_paths,
 
     end
 
+    --ya.dbg("l_args: " .. m_dump_table(l_args))
 
     -- Generar el comando
     local l_cmd = Command(p_script_path)
@@ -410,7 +460,7 @@ end
 
 
 
--- Crear uyn puntero a la funcion sincrona que se ejecuta en el hilo principal del UI.
+-- Crear un puntero a la funcion sincrona que se ejecuta en el hilo principal del UI.
 local m_get_ui_info = ya.sync(m_get_ui_info_sync)
 
 
@@ -471,7 +521,7 @@ local function m_read_args_1(p_job)
     end
 
     local l_cmd_type = l_args[1]
-    ya.dbg("args[1]: " .. l_cmd_type)
+    --ya.dbg("args[1]: " .. l_cmd_type)
 
     if l_cmd_type == nil or l_cmd_type == "" then
         ya.dbg('No se define el subcomando')
@@ -482,9 +532,9 @@ local function m_read_args_1(p_job)
     local l_options= {}
 
     -- Opcion 'type'
-    ya.dbg('args.type: ' .. tostring(l_args["type"]))
+    --ya.dbg('args.type: ' .. tostring(l_args["type"]))
 
-    if l_cmd_type == "openintab" then
+    if l_cmd_type == "editfiles" then
 
         l_options.parent_type = l_args["type"]
 
@@ -498,11 +548,26 @@ local function m_read_args_1(p_job)
                 l_options.editor_type = 1
             elseif l_data == "nvim" then
                 l_options.editor_type = 2
+            elseif l_data == "file" then
+                l_options.editor_type = 3
+            elseif l_data == "none" then
+                l_options.editor_type = -1
             else
                 ya.err("La opcion '--editor' tiene formato invalido '" .. l_data .. "'." )
             end
 
         end
+
+        -- Opcion 'source' el cual puede ser:
+        -- 'both'     > Primero busca los archivos selecionados, si no existe usa el archivo hovered actual.
+        -- 'hovered'  > Solo se considera el archivo hovered actual.
+        -- 'selected' > Solo se considera el archivo selecionados.
+        l_options.source = l_args["source"]
+
+        if l_options.source == nil or l_options.source == "" then
+            l_options.source = "both"
+        end
+
 
     elseif l_cmd_type == "newtab" then
 
@@ -554,25 +619,46 @@ local function m_read_args_2(p_args)
     -- Opcion 'type'
     ya.dbg('args[2]: ' .. tostring(l_args[2]))
 
-    if l_cmd_type == "openintab" then
+    if l_cmd_type == "editfiles" then
 
         l_options.parent_type = l_args[2]
 
         -- Opcion 'editor'
         l_options.editor_type=0
         local l_data = nil
-        if l_args.editor then
+        if nargs >= 3 then
 
             l_data = tostring(l_args[3])
             if l_data == "vim" then
                 l_options.editor_type = 1
             elseif l_data == "nvim" then
                 l_options.editor_type = 2
+            elseif l_data == "file" then
+                l_options.editor_type = 3
+            elseif l_data == "none" then
+                l_options.editor_type = -1
             else
                 ya.err("La opcion 'args[3]' tiene formato invalido '" .. l_data .. "'." )
             end
 
         end
+
+        -- Opcion 'source' el cual puede ser:
+        -- 'both'     > Primero busca los archivos selecionados, si no existe usa el archivo hovered actual.
+        -- 'hovered'  > Solo se considera el archivo hovered actual.
+        -- 'selected' > Solo se considera el archivo selecionados.
+        if nargs >= 4 then
+
+            l_options.source = tostring(l_args[4])
+            ya.dbg('args[4]: ' .. tostring(l_args[4]))
+            if l_options.source == nil or l_options.source == "" then
+                l_options.source = "both"
+            end
+
+        else
+            l_options.source = "both"
+        end
+
 
     elseif l_cmd_type == "newtab" then
 
@@ -593,7 +679,7 @@ local function m_read_args_2(p_args)
 end
 
 -- Obtener los flags de campos a UI obtener por un tipo de accion/comando
-local function m_get_flags_ui_info(p_cmd_type)
+local function m_get_flags_ui_info(p_cmd_type, p_options)
 
     local l_flag_get_cwd = false
     local l_flag_get_selected_files = false
@@ -606,14 +692,33 @@ local function m_get_flags_ui_info(p_cmd_type)
             l_flag_get_cwd = false
         elseif p_options.parent_type == "rootgit" then
             l_flag_get_cwd = true
+        elseif p_options.parent_type == "currentdir" then
+            l_flag_get_cwd = true
+            l_flag_get_hovered_file = true
+        elseif p_options.parent_type == "parentdir" then
+            l_flag_get_cwd = true
+            l_flag_get_hovered_file = true
         end
 
     -- Si se desea abrir un terminal editanto los archivos selected o hovered
-    elseif p_cmd_type == "openintab" then
+    elseif p_cmd_type == "editfiles" then
 
         l_flag_get_cwd = true
-        l_flag_get_selected_files = true
-        l_flag_get_hovered_file = true
+
+        if p_options.source == "both" then
+            l_flag_get_selected_files = true
+            l_flag_get_hovered_file = true
+        elseif p_options.source == "hovered" then
+            l_flag_get_hovered_file = true
+        elseif p_options.source == "selected" then
+            l_flag_get_selected_files = true
+        end
+
+        if p_options.parent_type == "currentdir" then
+            l_flag_get_hovered_file = true
+        elseif p_options.parent_type == "parentdir" then
+            l_flag_get_hovered_file = true
+        end
 
     -- Si se desea abrir un terminal en determino folder
     elseif p_cmd_type == "newtab" then
@@ -691,7 +796,7 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
     end
 
     -- Si se desea abrir un terminal editanto los archivos selected o hovered
-    if p_cmd_type == "openintab" then
+    if p_cmd_type == "editfiles" then
 
         if p_options.parent_type == nil then
             return
@@ -704,16 +809,10 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
         ya.dbg("l_cwd: " .. tostring(l_cwd))
 
         -- Obtener las rutas absolutas de los archivos seleccionados
-        local l_paths = m_filter_files2(l_selected_file_paths)
+        local l_paths = m_filter_files2(l_selected_file_paths, l_hovered_file_path, p_options.source)
 
         if not l_paths or #l_paths < 1 then
-
-            if not l_hovered_file_path then
-	            return ya.notify({ title = "go-fs (openintab)", content = "You must select at least one file or set the cursor to a file.", timeout = 5, level = "warn" })
-            else
-                l_paths = { l_hovered_file_path }
-            end
-
+            return ya.notify({ title = "go-fs (editfiles)", content = "You must have atleast 1 selected/hovered file.", timeout = 5, level = "warn" })
         end
         ya.dbg("l_paths: " .. m_dump_table(l_paths, " "))
 
@@ -724,7 +823,7 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
 
             -- Validar si el root directorio
             if p_state.cwd_root == nil or p_state.cwd_root == "" then
-	            return ya.notify({ title = "go-fs (openintab)", content = "Initial working directory is not defined", timeout = 5, level = "warn" })
+	            return ya.notify({ title = "go-fs (editfiles)", content = "Initial working directory is not defined", timeout = 5, level = "warn" })
             end
             l_pane_wd = p_state.cwd_root
 
@@ -732,12 +831,26 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
 
             l_pane_wd, l_message = m_go_git_root_folder(l_cwd)
             if l_message ~= nil then
-	            return ya.notify({ title = "go-fs (openintab)", content = "It's not git folder (" .. l_message .. ")", timeout = 5, level = "error" })
+	            return ya.notify({ title = "go-fs (editfiles)", content = "It's not git folder (" .. l_message .. ")", timeout = 5, level = "error" })
+            end
+
+        elseif p_options.parent_type == "currentdir" then
+
+            l_pane_wd, l_message = m_get_folder(l_hovered_file_path, false)
+            if l_message ~= nil then
+	            return ya.notify({ title = "go-fs (editfiles)", content = "It's invalid hovered path (" .. l_message .. ")", timeout = 5, level = "error" })
+            end
+
+        elseif p_options.parent_type == "parentdir" then
+
+            l_pane_wd, l_message = m_get_folder(l_hovered_file_path, true)
+            if l_message ~= nil then
+	            return ya.notify({ title = "go-fs (editfiles)", content = "It's invalid hovered path (" .. l_message .. ")", timeout = 5, level = "error" })
             end
 
         else
 
-            ya.err("El valor de 'state.parent_type' no valido '" .. tostring(p_options.parent_type) .. "'.")
+            ya.err("El valor de 'p_options.parent_type' no valido '" .. tostring(p_options.parent_type) .. "'.")
             return
 
         end
@@ -752,7 +865,7 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
         ya.dbg("l_pane_wd: " .. tostring(l_pane_wd))
         l_message = m_opentab_with_selected_files(l_cwd, p_state.script_path_1, l_paths, l_pane_wd, p_options.editor_type)
         if l_message ~= nil then
-	        return ya.notify({ title = "go-fs (openintab)", content = l_message, timeout = 5, level = "error" })
+	        return ya.notify({ title = "go-fs (editfiles)", content = l_message, timeout = 5, level = "error" })
         end
 
         return
@@ -786,6 +899,20 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
             l_pane_wd, l_message = m_go_git_root_folder(l_cwd)
             if l_message ~= nil then
 	            return ya.notify({ title = "go-fs (newtab)", content = "It's not git folder (" .. l_message .. ")", timeout = 5, level = "error" })
+            end
+
+        elseif p_options.parent_type == "currentdir" then
+
+            l_pane_wd, l_message = m_get_folder(l_hovered_file_path, false)
+            if l_message ~= nil then
+	            return ya.notify({ title = "go-fs (newtab)", content = "It's invalid hovered path (" .. l_message .. ")", timeout = 5, level = "error" })
+            end
+
+        elseif p_options.parent_type == "parentdir" then
+
+            l_pane_wd, l_message = m_get_folder(l_hovered_file_path, true)
+            if l_message ~= nil then
+	            return ya.notify({ title = "go-fs (newtab)", content = "It's invalid hovered path (" .. l_message .. ")", timeout = 5, level = "error" })
             end
 
         else
@@ -889,7 +1016,9 @@ local function m_process_remote_event(p_args)
     local l_state = m_get_plugin_state()
     ya.dbg("l_state  : " .. m_dump_table(l_state))
 
-    local l_flag_get_cwd, l_flag_get_selected_files, l_flag_get_hovered_file = m_get_flags_ui_info(l_cmd_type)
+    local l_flag_get_cwd, l_flag_get_selected_files, l_flag_get_hovered_file = m_get_flags_ui_info(l_cmd_type, l_options)
+    ya.dbg("l_flag_get_selected_files : " .. tostring(l_flag_get_selected_files))
+    ya.dbg("l_flag_get_hovered_file   : " .. tostring(l_flag_get_hovered_file))
     local l_ui_info = {}
     if l_flag_get_cwd then
         l_ui_info = m_get_ui_info(l_flag_get_selected_files, l_flag_get_hovered_file)
@@ -961,7 +1090,9 @@ function mod.entry(p_self, p_job)
     local l_state = m_get_plugin_state()
     ya.dbg("l_state  : " .. m_dump_table(l_state))
 
-    local l_flag_get_cwd, l_flag_get_selected_files, l_flag_get_hovered_file = m_get_flags_ui_info(l_cmd_type)
+    local l_flag_get_cwd, l_flag_get_selected_files, l_flag_get_hovered_file = m_get_flags_ui_info(l_cmd_type, l_options)
+    ya.dbg("l_flag_get_selected_files : " .. tostring(l_flag_get_selected_files))
+    ya.dbg("l_flag_get_hovered_file   : " .. tostring(l_flag_get_hovered_file))
     local l_ui_info = {}
     if l_flag_get_cwd then
         l_ui_info = m_get_ui_info(l_flag_get_selected_files, l_flag_get_hovered_file)

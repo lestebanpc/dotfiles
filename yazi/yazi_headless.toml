@@ -8,154 +8,217 @@
 
 [opener]
 
-open_file = [
+# > Por el 'opener' selecionado (por el usuario o el por defecto), el comando del SO definido en 'run' se caracteriza por:
+#   > Lo items a procesar son los 'selected items'. Si no se tiene items selecionado, se usara 'hovered items'.
+#   > Si se tiene 'selected items' y en el comando se usa las variables especiales del shell:
+#     > '$@' (o '%*' en Windows), el comando en 'run' solo se ejecutara 1 vez el comando.
+#     > '$1' (o '%1' en Windows), el comando en 'run' se ejecutara tantas veces el comando cuando 'selected items' exista.
+#   > Para publicar un mensaje DDS de tipo 'go-fs' usando 'ya', usaremos '$@' o '%*' para:
+#     > Para que el comando siempre se emita un solo 'opener' selecionado, independiente de los 'selected items' existentes.
+#     > El controlador del plugin que procesa este evento, internamente tiene la logica para obtener los 'selected item' y
+#       los 'hovered items'.
+
+open_nontext_file_1 = [
     # Para Windows
-	#{ run = 'start "" %1', desc = "Open by defualt", for = "windows", orphan = true },
-	{ run = 'cmd /c "%USERPROFILE%\.files\shell\cmd\bin\cmds\go_files_new_termtab.cmd" -p 2 %1', desc = "View in new TermTab (Parent folder)", for = "windows" },
+	{ run = 'start "" %1', desc = "Open by defualt", for = "windows", orphan = true },
 
     # Para Android (Termux)
-	#{ run = 'termux-open "$1"', desc = "Open by default", for = "android" },
+	{ run = 'termux-open "$1"', desc = "Open by default", for = "android" },
 
     # Para MacOS
-	#{ run = 'open "$@"', desc = "Open by default", for = "macos" },
+	{ run = 'open "$@"', desc = "Open by default", for = "macos" },
 
     # Para Linux y Unix
-	#{ run = 'xdg-open "$1"', desc = "Open by default", for = "linux" },
-	{ run = '${HOME}/.local/bin/go_files_new_termtab -p 2 "$1"', desc = "View in new TermTab (Parent folder)", for = "linux" },
+	{ run = 'xdg-open "$1"', desc = "Open by default", for = "linux" },
+]
+
+edit_text_file_1 = [
+    # Para Windows
+	{ run = '%EDITOR% %*', desc = "Edit in Yazi", for = "windows", block = true },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "vim"  "hovered" %*'  , desc = "Edit in VIM (New TermTab, Initial workdir)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "nvim" "hovered" %*'  , desc = "Edit in NVIM (New TermTab, Initial workdir)", for = "windows" },
+
+    # Para Android (Termux)
+    # Para MacOS
+
+    # Para Linux y Unix
+	{ run = '${EDITOR:-vim} "$@"', desc = "Edit in Yazi", for = "unix", block = true },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "vim"  "hovered" "$@"'  , desc = "Edit in VIM (New TermTab, Initial workdir)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "nvim" "hovered" "$@"'  , desc = "Edit in NVIM (New TermTab, Initial workdir)", for = "linux" },
+]
+
+edit_text_file_2 = [
+    # Para Windows
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "vim"  "selected" %*' , desc = "Edit selected in VIM (New TermTab, Initial workdir)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "nvim" "selected" %*' , desc = "Edit selected in NVIM (New TermTab, Initial workdir)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim"  "hovered" %*'  , desc = "Edit in VIM (New TermTab, Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "hovered" %*'  , desc = "Edit in NVIM (New TermTab, Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim"  "selected" %*' , desc = "Edit selected in VIM (New TermTab, Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "selected" %*' , desc = "Edit selected in NVIM (New TermTab, Root git)", for = "windows" },
+	{ run = 'code %*', desc = "Edit in VSCode", for = "windows", orphan = true },
+
+    # Para Android (Termux)
+    # Para MacOS
+
+    # Para Linux y Unix
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "vim"  "selected" "$@"' , desc = "Edit selected in VIM (New TermTab, Initial workdir)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "nvim" "selected" "$@"' , desc = "Edit selected in NVIM (New TermTab, Initial workdir)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim"  "hovered" "$@"'  , desc = "Edit in VIM (New TermTab, Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "hovered" "$@"'  , desc = "Edit in NVIM (New TermTab, Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim"  "selected" "$@"' , desc = "Edit selected in VIM (New TermTab, Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "selected" "$@"' , desc = "Edit selected in NVIM (New TermTab, Root git)", for = "linux" },
+	{ run = 'code "$@"', desc = "Edit in VSCode", for = "unix", orphan = true },
+]
+
+#open_image_file = [
+#    # Para Windows
+#    # Para Android (Termux)
+#    # Para MacOS
+#
+#    # Para Linux y Unix
+#	{ run = 'krita "$1"', desc = "Open by Krita", for = "linux" },
+#	{ run = 'gimp "$1"', desc = "Open by Gimp", for = "linux" },
+#]
+
+#play_video_file = [
+#    # Para Windows
+#	{ run = 'mediainfo %1 & pause', block = true, desc = "Show media info", for = "windows" },
+#
+#    # Para Android (Termux)
+#    # Para MacOS
+#
+#    # Para Linux y Unix
+#	{ run = 'mediainfo "$1"; echo "Press enter to exit"; read _', block = true, desc = "Show media info", for = "unix" },
+#]
+
+#open_folder = [
+#    # Para Windows
+#	{ run = 'code %1', desc = "Open in VSCode", for = "windows", orphan = true },
+#
+#    # Para Android (Termux)
+#    # Para MacOS
+#
+#    # Para Linux y Unix
+#	{ run = 'code "$1"', desc = "Open in VSCode", for = "unix", orphan = true },
+#]
+
+common_1 = [
+    # Para Windows
+	{ run = 'explorer /select,%1', desc = "View in Explorer", for = "windows", orphan = true },
+	{ run = 'ya pub go-fs --list "copycb" "rootdir" %*', desc = "Copy relative path (Initial workdir)", for = "Windows" },
+	{ run = 'ya pub go-fs --list "copycb" "rootgit" %*', desc = "Copy relative path (Root git)", for = "windows" },
+
+    # Para Android (Termux)
+    # Para MacOS
+
+    # Para Linux y Unix
+	{ run = 'nautilus --select "$1" &', desc = "View in Explorer", for = "linux", orphan = true },
+	{ run = 'ya pub go-fs --list "copycb" "rootdir" "$@"', desc = "Copy relative path (Initial workdir)", for = "linux" },
+	{ run = 'ya pub go-fs --list "copycb" "rootgit" "$@"', desc = "Copy relative path (Root git)", for = "linux" },
+
+]
+
+common_2 = [
+    # Para Windows
+	{ run = 'ya pub go-fs --list "newtab" "rootdir" %*'   , desc = "New TermTab (Initial workdir)", for = "windows" },
+	{ run = 'ya pub go-fs --list "newtab" "rootgit" %*'   , desc = "New TermTab (Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "newtab" "currentdir" %*', desc = "New TermTab (Current directory)", for = "windows" },
+	{ run = 'ya pub go-fs --list "newtab" "parentdir" %*' , desc = "New TermTab (Parent directory)", for = "windows" },
+
+    # Para Android (Termux)
+    # Para MacOS
+
+    # Para Linux y Unix
+	{ run = 'ya pub go-fs --list "newtab" "rootdir" "$@"'   , desc = "New TermTab (Initial workdir)", for = "linux" },
+	{ run = 'ya pub go-fs --list "newtab" "rootgit" "$@"'   , desc = "New TermTab (Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "newtab" "currentdir" "$@"', desc = "New TermTab (Current directory)", for = "linux" },
+	{ run = 'ya pub go-fs --list "newtab" "parentdir" "$@"' , desc = "New TermTab (Parent directory)", for = "linux" },
+
+]
+
+common_3 = [
+    # Para Windows
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "file" "hovered" "$@"' , desc = "View file info (New TermTab, Initial workdir)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "file" "selected" "$@"', desc = "View selected file info (New TermTab, Initial workdir)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "hovered" "$@"' , desc = "View file info (New TermTab, Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "selected" "$@"', desc = "View selected file info (New TermTab, Root git)", for = "windows" },
+
+    # Para Android (Termux)
+    # Para MacOS
+
+    # Para Linux y Unix
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "none" "hovered" "$@"' , desc = "View file info (New TermTab, Initial workdir)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "none" "selected" "$@"', desc = "View selected file info (New TermTab, Initial workdir)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "none" "hovered" "$@"' , desc = "View file info (New TermTab, Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "none" "selected" "$@"', desc = "View selected file info (New TermTab, Root git)", for = "linux" },
 	{ run = 'clear; exiftool "$1"; echo "Press enter to exit"; read _', desc = "Show metadata", for = "unix", block = true },
 ]
 
-edit_txt = [
+extract_compress_file = [
     # Para Windows
-	{ run = '%EDITOR% %*', desc = "Edit in this TermTab", for = "windows", block = true },
-	#{ run = 'ya pub go-fs --list "openintab" "rootdir"', desc = "Edit in new TermTab (Initial WorkDir)", for = "windows" },
-	#{ run = 'ya pub go-fs --list "openintab" "rootdir" "vim"', desc = "Edit VIM in new TermTab (Initial WorkDir)", for = "windows" },
-	#{ run = 'ya pub go-fs --list "openintab" "rootdir" "nvim"', desc = "Edit NeoVIM in new TermTab (Initial WorkDir)", for = "windows" },
-	{ run = 'cmd /c "%USERPROFILE%\.files\shell\cmd\bin\cmds\go_files_new_termtab" -p 2 %1', desc = "Edit in new TermTab (Parent folder)", for = "windows" },
-	#{ run = 'code %*', desc = "Edit with VSCode", for = "windows", orphan = true },
+	{ run = 'ya pub extract --list %*', desc = "Extract here", for = "windows" },
 
     # Para Android (Termux)
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = '${EDITOR:-vim} "$@"', desc = "Edit in this TermTab", for = "unix", block = true },
-	#{ run = 'ya pub go-fs --list "openintab" "rootdir"', desc = "Edit in new TermTab (Initial WorkDir)", for = "linux" },
-	#{ run = 'ya pub go-fs --list "openintab" "rootdir" "vim"', desc = "Edit VIM in new TermTab (Initial WorkDir)", for = "linux" },
-	#{ run = 'ya pub go-fs --list "openintab" "rootdir" "nvim"', desc = "Edit NeoVIM in new TermTab (Initial WorkDir)", for = "linux" },
-	{ run = '${HOME}/.local/bin/go_files_new_termtab -p 2 "$1"', desc = "Edit in new TermTab (Parent folder)", for = "linux" },
-	#{ run = 'code "$@"', desc = "Edit with VSCode", for = "unix", orphan = true },
+	{ run = 'ya pub extract --list "$@"', desc = "Extract here", for = "linux" },
 ]
 
-open_image = [
+download_file = [
     # Para Windows
-    # Para Android (Termux)
-    # Para MacOS
-
-    # Para Linux y Unix
-	#{ run = 'krita "$1"', desc = "Open by Krita", for = "linux" },
-	#{ run = 'gimp "$1"', desc = "Open by Gimp", for = "linux" },
-]
-
-play_video = [
-    # Para Windows
-	{ run = 'mediainfo %1 & pause', block = true, desc = "Show media info", for = "windows" },
 
     # Para Android (Termux)
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = 'mediainfo "$1"; echo "Press enter to exit"; read _', block = true, desc = "Show media info", for = "unix" },
-]
 
-open_folder = [
-    # Para Windows
-	{ run = 'cmd /c "%USERPROFILE%\.files\shell\cmd\bin\cmds\go_folder_new_termtab.cmd" -p 2 %1', desc = "Open in new TermTab", for = "windows" },
-	#{ run = 'explorer /select,%1', desc = "Open in Explorer", for = "windows", orphan = true },
-	#{ run = 'code %1', desc = "Open with VSCode", for = "windows", orphan = true },
-
-    # Para Android (Termux)
-    # Para MacOS
-
-    # Para Linux y Unix
-	{ run = '${HOME}/.local/bin/go_folder_new_termtab -p 2 "$1"', desc = "Open in new TermTab", for = "linux" },
-	#{ run = 'nautilus --select "$1" &', desc = "Open in Explorer", for = "linux", orphan = true },
-	#{ run = 'code "$1"', desc = "Open with VSCode", for = "unix", orphan = true },
-]
-
-reveal = [
-    # Para Windows
-	#{ run = 'explorer /select,%1', desc = "View in Explorer", for = "windows", orphan = true },
-	{ run = 'ya pub go-fs --list "copycb" "rootdir"', desc = "Copy relative path (Inicial Workdir)", for = "Windows" },
-	{ run = 'ya pub go-fs --list "copycb" "rootgit"', desc = "Copy relative path (Root Git)", for = "windows" },
-	{ run = 'ya pub go-fs --list "newtab" "rootdir"', desc = "Go Inicial Workdir in new TermTab", for = "windows" },
-	{ run = 'ya pub go-fs --list "newtab" "rootgit"', desc = "Go Root Git in new TermTab", for = "windows" },
-	{ run = 'cmd /c "%USERPROFILE%\.files\shell\cmd\bin\cmds\go_folder_new_termtab.cmd" -p 2 %1', desc = "Go parent folder in new TermTab", for = "windows" },
-
-    # Para Android (Termux)
-    # Para MacOS
-
-    # Para Linux y Unix
-	#{ run = 'nautilus --select "$1" &', desc = "View in Explorer", for = "linux", orphan = true },
-	{ run = 'ya pub go-fs --list "copycb" "rootdir"', desc = "Copy relative path (Inicial Workdir)", for = "linux" },
-	{ run = 'ya pub go-fs --list "copycb" "rootgit"', desc = "Copy relative path (Root Git)", for = "linux" },
-	{ run = 'ya pub go-fs --list "newtab" "rootdir"', desc = "Go Inicial Workdir in new TermTab", for = "linux" },
-	{ run = 'ya pub go-fs --list "newtab" "rootgit"', desc = "Go Root Git in new TermTab", for = "linux" },
-	{ run = '${HOME}/.local/bin/go_folder_new_termtab -p 2 "$1"', desc = "Go parent folder in new TermTab", for = "linux" },
-
-]
-
-extract = [
-	{ run = "ya pub extract --list %s", desc = "Extract here" },
-]
-
-download = [
 	{ run = "ya pub download --open %S", desc = "Download and open" },
 	{ run = "ya pub download %S", desc = "Download" },
 ]
-
 
 
 [open]
 rules = [
 
 	# Folder> Folder en Unix (Linux)
-	{ mime = "inode/directory", use = [ "open_folder" ] },
+	{ mime = "inode/directory", use = [ "common_1", "common_2" ] },
 
 	# Folder> Folder en Windows
-	{ mime = "folder/local", use = [ "open_folder" ] },
+	{ mime = "folder/local", use = [ "common_1", "common_2" ] },
 
     # File> Draw.IO (xml file that should be treated as binary)
-    { url = "*.drawio", use = [ "open_file", "reveal" ] },
+    #{ url = "*.drawio", use = [ "open_nontext_file_1", "common_1", "common_2" ] },
 
 	# File> Text
-	{ mime = "text/*", use = [ "edit_txt", "reveal" ] },
+	{ mime = "text/*", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2" ] },
 
 	# File> Empty file (new file create, for example, with 'touch')
-	{ mime = "inode/empty", use = [ "edit_txt", "reveal" ] },
+	{ mime = "inode/empty", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2" ] },
 
 	# File> JSON
-	{ mime = "application/{json,ndjson}", use = [ "edit_txt", "reveal" ] },
-	{ mime = "*/javascript", use = [ "edit_txt", "reveal" ] },
+	{ mime = "application/{json,ndjson}", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2" ] },
+	{ mime = "*/javascript", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2" ] },
 
 	# File> Image
-	{ mime = "image/*", use = [ "open_file", "open_image", "reveal" ] },
+	#{ mime = "image/*", use = [ "open_nontext_file_1", "open_image_file", "common_1", "common_3", "common_2" ] },
 
 	# File> Media
-	{ mime = "{audio,video}/*", use = [ "open_file", "play_video", "reveal" ] },
+	#{ mime = "{audio,video}/*", use = [ "open_nontext_file_1", "play_video_file", "common_1", "common_3",  "common_2" ] },
 
 	# File> Compressed file
-	{ mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", use = [ "extract", "reveal" ] },
+	{ mime = "application/{tar,gzip,xz,zstd,bzip*,lzma,zip,octet-stream,rar,7z*,compress,archive,cpio,arj,xar,ms-cab*}", use = [ "extract_compress_file", "common_1", "common_3", "common_2" ] },
 
     # File> Office document
-	{ mime = "application/{msword,ms-excel,ms-powerpoint}", use = [ "open_file", "reveal" ] },
-	{ mime = "application/openxmlformats-officedocument.wordprocessingml.document", use = [ "open_file", "reveal" ] },
-	{ mime = "application/openxmlformats-officedocument.spreadsheetml.sheet", use = [ "open_file", "reveal" ] },
-	{ mime = "application/openxmlformats-officedocument.presentationml.presentation", use = [ "open_file", "reveal" ] },
+	{ mime = "application/{msword,ms-excel,ms-powerpoint}", use = [ "common_1", "common_3", "common_2" ] },
+	{ mime = "application/openxmlformats-officedocument.wordprocessingml.document", use = [ "common_1", "common_3", "common_2" ] },
+	{ mime = "application/openxmlformats-officedocument.spreadsheetml.sheet", use = [ "common_1", "common_3", "common_2" ] },
+	{ mime = "application/openxmlformats-officedocument.presentationml.presentation", use = [ "common_1", "common_3", "common_2" ] },
 
 	# Generic> Virtual file system
-	{ mime = "vfs/{absent,stale}", use = "download" },
+	{ mime = "vfs/{absent,stale}", use = "download_file" },
 
 	# Generic> Fallback
-	{ url = "*", use = [ "open_file", "reveal" ] },
+	{ url = "*", use = [ "common_1", "common_3", "common_2" ] },
 
 ]

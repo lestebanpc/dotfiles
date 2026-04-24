@@ -531,10 +531,12 @@ end
 -- Estas funciones se caracterizan:
 -- > Tienen, opcionalmente. el 1er argumento al objeto 'state' (configuracion del usuario).
 -- > Si tiene mas de 1 argumento, estos son argumento pasados del que lo invoca.
+-- > Para evitar problemas entre diferentes llamadas de hilos, solo se puede enviar uno de los siguientes
+--   tipo de datos (https://yazi-rs.github.io/docs/plugins/overview/?utm_source=chatgpt.com#sendable).
 --
 
 -- Funcion sincrona que se ejecutara por yazi para capturar algunos datos relevantes del estado actual de yazi.
-local m_get_current_yazi_info = ya.sync(function()
+local function m_get_ui_info_sync()
 
     -- El tab actual
     local l_current_tab = cx.active
@@ -553,13 +555,16 @@ local m_get_current_yazi_info = ya.sync(function()
 
 	return l_cwd
 
-end)
+end
+
+-- Crear un puntero a la funcion sincrona que se ejecuta en el hilo principal del UI.
+local m_get_ui_info = ya.sync(m_get_ui_info_sync)
 
 
 
--- Obtener las opciones configurables por el usuario (state) y establece valores por defecto
+-- Obtener el 'state' del plugin (las opciones configurables por el usuario) y establece valores por defecto.
 -- Se genera unc copia del objeto para sea accedido fuera de 'ya.sync()' o 'ya.async()'
-local m_get_current_yazi_state = ya.sync(function(p_state)
+local function m_get_plugin_state_sync(p_state)
 
     -- Establecer el valor por defecto al 'state'
 	if p_state == nil then
@@ -706,7 +711,65 @@ local m_get_current_yazi_state = ya.sync(function(p_state)
 
     return l_state
 
-end)
+end
+
+-- Crear un puntero a la funcion sincrona que se ejecuta en el hilo principal del UI.
+local m_get_plugin_state = ya.sync(m_get_plugin_state_sync)
+
+
+
+---------------------------------------------------------------------------------
+-- Funciones basicas usando por el entrypopoins del plugin
+---------------------------------------------------------------------------------
+--
+
+function m_process_action_async(l_obj_type, l_use_tmux, l_height, l_width, l_state, l_cwd)
+
+    -- Salir de modo ...
+	ya.emit("escape", { visual = true })
+
+    if l_cwd.scheme then
+	    if l_cwd.scheme.is_virtual then
+            ya.dbg("Not supported under virtual filesystems")
+	        return ya.notify({ title = "fzf-fd", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" })
+	    end
+    end
+
+    -- Ocultar la Yazi
+	local l_permit = ui.hide()
+
+    -- Ejecutar 'rg | fzf' y obtener el STDOUT del resultado
+    local l_output, l_message = m_run_fzf_fd(l_state, l_cwd, l_obj_type, l_use_tmux, l_height, l_width)
+
+    -- Restaurar (mostrar) yazi
+    if l_permit then
+        l_permit:drop()
+    end
+
+    -- Si hubo un error al ejecutar fzf
+	if l_output == nil then
+        --ya.err(tostring(l_message))
+		return ya.notify({ title = "fzf-fd", content = tostring(l_message), timeout = 5, level = "error" })
+	end
+
+    -- Si no se seleciono nada en fzf
+	if l_output == "" then
+        return
+    end
+
+    -- Convertir los STDOUT de ruta de los archivos seleccionados por fzf en objetos Url con rutas absolutas
+	local l_urls = m_get_urls_of(l_output, l_cwd)
+
+    -- Segun el tipo de Url, realizar tareas ...
+	if #l_urls == 1 then
+		local l_cha = fs.cha(l_urls[1])
+		ya.emit(l_cha and l_cha.is_dir and "cd" or "reveal", { l_urls[1], raw = true })
+	elseif #l_urls > 1 then
+		l_urls.state = "on"
+		ya.emit("toggle_all", l_urls)
+	end
+
+end
 
 
 
@@ -768,57 +831,19 @@ function mod.entry(p_self, p_job)
 
     -- Obtener los argumentos
     local l_obj_type, l_use_tmux, l_height, l_width = m_read_args(p_job)
-
-    -- Salir de modo ...
-	ya.emit("escape", { visual = true })
-
-    -- Obtener las opciones configurable del usaurio usando los valores por defecto
-    local l_state = m_get_current_yazi_state()
-
-    -- Obtener datos del estado actual de yazi
-	local l_cwd = m_get_current_yazi_info()
-    --ya.dbg("l_cwd: " .. tostring(l_cwd))
-
-    if l_cwd.scheme then
-	    if l_cwd.scheme.is_virtual then
-            ya.dbg("Not supported under virtual filesystems")
-	        return ya.notify({ title = "fzf-fd", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" })
-	    end
-    end
-
-    -- Ocultar la Yazi
-	local l_permit = ui.hide()
-
-    -- Ejecutar 'rg | fzf' y obtener el STDOUT del resultado
-    local l_output, l_message = m_run_fzf_fd(l_state, l_cwd, l_obj_type, l_use_tmux, l_height, l_width)
-
-    -- Restaurar (mostrar) yazi
-    if l_permit then
-        l_permit:drop()
-    end
-
-    -- Si hubo un error al ejecutar fzf
-	if l_output == nil then
-        --ya.err(tostring(l_message))
-		return ya.notify({ title = "fzf-fd", content = tostring(l_message), timeout = 5, level = "error" })
-	end
-
-    -- Si no se seleciono nada en fzf
-	if l_output == "" then
+    if l_obj_type == nil or l_obj_type == "" then
         return
     end
 
-    -- Convertir los STDOUT de ruta de los archivos seleccionados por fzf en objetos Url con rutas absolutas
-	local l_urls = m_get_urls_of(l_output, l_cwd)
 
-    -- Segun el tipo de Url, realizar tareas ...
-	if #l_urls == 1 then
-		local l_cha = fs.cha(l_urls[1])
-		ya.emit(l_cha and l_cha.is_dir and "cd" or "reveal", { l_urls[1], raw = true })
-	elseif #l_urls > 1 then
-		l_urls.state = "on"
-		ya.emit("toggle_all", l_urls)
-	end
+    -- Obtener las opciones configurable del usuario usando los valores por defecto
+    local l_state = m_get_plugin_state()
+    ya.dbg("l_state  : " .. m_dump_table(l_state))
+
+    local l_cwd =  m_get_ui_info()
+    --ya.dbg("l_ui_info: " .. m_dump_table(l_ui_info))
+
+    m_process_action_async(l_obj_type, l_use_tmux, l_height, l_width, l_state, l_cwd)
 
 end
 

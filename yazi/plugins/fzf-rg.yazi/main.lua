@@ -697,10 +697,11 @@ end
 -- Estas funciones se caracterizan:
 -- > Tienen, opcionalmente. el 1er argumento al objeto 'state' (configuracion del usuario).
 -- > Si tiene mas de 1 argumento, estos son argumento pasados del que lo invoca.
---
+-- > Para evitar problemas entre diferentes llamadas de hilos, solo se puede enviar uno de los siguientes
+--   tipo de datos (https://yazi-rs.github.io/docs/plugins/overview/?utm_source=chatgpt.com#sendable).
 
 -- Funcion sincrona que se ejecutara por yazi para capturar algunos datos relevantes del estado actual de yazi.
-local m_get_current_yazi_info = ya.sync(function()
+local function m_get_ui_info_sync()
 
     -- El tab actual
     local l_current_tab = cx.active
@@ -717,16 +718,25 @@ local m_get_current_yazi_info = ya.sync(function()
     -- Los archivos ocultos se muestran
     local l_hidden_files_are_shown = l_current_tab.pref.show_hidden
 
+    local l_ui_info = {
+        cwd = l_cwd,
+        hidden_files_are_shown = l_hidden_files_are_shown,
+    }
 
-	return l_cwd, l_hidden_files_are_shown
+    return l_ui_info
 
-end)
+end
 
 
 
--- Obtener las opciones configurables por el usuario (state) y establece valores por defecto
+-- Crear un puntero a la funcion sincrona que se ejecuta en el hilo principal del UI.
+local m_get_ui_info = ya.sync(m_get_ui_info_sync)
+
+
+
+-- Obtener el 'state' del plugin (las opciones configurables por el usuario) y establece valores por defecto.
 -- Se genera unc copia del objeto para sea accedido fuera de 'ya.sync()' o 'ya.async()'
-local m_get_current_yazi_state = ya.sync(function(p_state)
+local function m_get_plugin_state_sync(p_state)
 
     -- Establecer el valor por defecto al 'state'
 	if p_state == nil then
@@ -871,8 +881,136 @@ local m_get_current_yazi_state = ya.sync(function(p_state)
 
     return l_state
 
-end)
+end
 
+
+-- Crear un puntero a la funcion sincrona que se ejecuta en el hilo principal del UI.
+local m_get_plugin_state = ya.sync(m_get_plugin_state_sync)
+
+
+
+
+---------------------------------------------------------------------------------
+-- Funciones basicas usando por el entrypopoins del plugin
+---------------------------------------------------------------------------------
+--
+
+function m_process_action_async(l_cmd_type, l_use_tmux, l_height, l_width, l_editor_type, l_state, l_ui_info)
+
+
+    -- Salir de modo ...
+	ya.emit("escape", { visual = true })
+
+    if l_ui_info.cwd.scheme then
+	    if l_ui_info.cwd.scheme.is_virtual then
+            ya.dbg("Not supported under virtual filesystems")
+	        return ya.notify({ title = "fzf-rg", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" })
+	    end
+    end
+
+
+    --2. Obtener el query inicial de busqueda
+    local l_initial_query, l_status = ya.input({
+	    -- Position
+	    pos = { "center", w = 50 },
+
+	    -- Title
+	    title = "RipGrep Query:",
+
+	    -- Default value
+	    value = "",
+
+	    -- Whether to obscure the input.
+	    obscure = false,
+
+	    -- Whether to report user input in real time.
+	    realtime = false,
+
+	    -- Number of seconds to wait for the user to stop typing, available if `realtime = true`.
+	    --debounce = 0.3,
+    })
+
+    if l_status ~= 1 then
+        ya.dbg("El status al leer 'l_initial_query' es " .. tostring(l_status))
+        return
+    end
+
+    if l_initial_query == nil or l_initial_query == "" then
+        ya.dbg("No se ingreso el valor de 'l_initial_query'.")
+        return
+    end
+
+
+    --3. Ejecutar 'fzf' y obtener los archivos seleccionados
+
+    -- Ocultar la Yazi
+	local l_permit = ui.hide()
+
+    local l_output, l_message = m_run_fzf_rg(l_state, l_ui_info.cwd, l_initial_query, l_ui_info.hidden_files_are_shown, l_use_tmux, l_height, l_width)
+
+    -- Restaurar (mostrar) yazi
+    if l_permit then
+        l_permit:drop()
+    end
+
+    -- Si hubo un error al ejecutar fzf
+	if l_output == nil then
+        --ya.err(tostring(l_message))
+		return ya.notify({ title = "fzf-rg", content = tostring(l_message), timeout = 5, level = "error" })
+	end
+
+    -- Si no se seleciono nada en fzf
+	if l_output == "" then
+        return
+    end
+
+    -- Convertir los STDOUT de ruta de los archivos seleccionados indicando la lined del archivo a seleccionar.
+	local l_info_files = m_get_files_of_rg_output(l_output, l_ui_info.cwd)
+
+
+    --4. Ejecutar el script que abre vim y los archivos selecionados
+
+    -- Obtener el directorio de trabajo a usar
+    local l_pane_wd = nil
+    local l_message = nil
+    if l_cmd_type == "rootdir" then
+
+        -- Validar si el root directorio
+        if l_state.cwd_root == nil or l_state.cwd_root == "" then
+	        return ya.notify({ title = "fzf-rg", content = "Initial working directory is not defined", timeout = 5, level = "warn" })
+        end
+        l_pane_wd = l_state.cwd_root
+
+    elseif l_cmd_type == "rootgit" then
+
+        l_pane_wd, l_message = m_go_git_root_folder(l_ui_info.cwd)
+        if l_message ~= nil then
+	        return ya.notify({ title = "fzf-rg", content = l_message, timeout = 5, level = "error" })
+        end
+
+    else
+
+        ya.err("El valor del subcomando no es valido '" .. tostring(l_options.open_type) .. "'.")
+        return
+
+    end
+
+    if l_pane_wd == nil or l_pane_wd == "" then
+        ya.dbg("No se ha definido el directorio a trabajo a usar")
+        return
+    end
+
+    -- Abrir los archivos en un tab
+    --ya.dbg("l_state.script_path: " .. tostring(l_state.script_path))
+    --ya.dbg("l_pane_wd: " .. tostring(l_pane_wd))
+	--ya.dbg("l_editor_type: " .. tostring(l_editor_type))
+    l_message = m_opentab_with_selected_files(l_ui_info.cwd, l_state.script_path, l_info_files, l_pane_wd, l_editor_type)
+    if l_message ~= nil then
+	    return ya.notify({ title = "fzf-rg", content = l_message, timeout = 5, level = "error" })
+    end
+
+
+end
 
 
 ---------------------------------------------------------------------------------
@@ -939,137 +1077,27 @@ function mod.setup(p_state, p_args)
 end
 
 
--- Funcion entrypoint del plugin (cuando se ejecuta el keymapping asociado al plugin)
+-- Funcion entrypoint del plugin cuando se ejecuta una accion (usualmente desde el keymapping)
 function mod.entry(p_self, p_job)
 
-    --1. Obtener datos de entrada
-
-    -- Obtener los argumentos
+    -- Leer los argumentos
     local l_cmd_type, l_use_tmux, l_height, l_width, l_editor_type = m_read_args(p_job)
-
-    -- Salir de modo ...
-	ya.emit("escape", { visual = true })
-
-    -- Obtener las opciones configurable del usaurio usando los valores por defecto
-    local l_state = m_get_current_yazi_state()
-    --ya.dbg("l_state.fzf_options.preview: " .. tostring(l_state.fzf_options.preview))
-    --ya.dbg("l_state.fzf_options.preview_window: " .. tostring(l_state.fzf_options.preview_window))
-
-    -- Obtener datos del estado actual de yazi
-	local l_cwd, l_hidden_files_are_shown = m_get_current_yazi_info()
-    --ya.dbg("l_cwd: " .. tostring(l_cwd))
-    --ya.dbg("l_hidden_files_are_shown: " .. tostring(l_hidden_files_are_shown))
-
-    if l_cwd.scheme then
-	    if l_cwd.scheme.is_virtual then
-            ya.dbg("Not supported under virtual filesystems")
-	        return ya.notify({ title = "fzf-rg", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" })
-	    end
-    end
-
-
-    --2. Obtener el query inicial de busqueda
-    local l_initial_query, l_status = ya.input {
-	    -- Position
-	    pos = { "center", w = 50 },
-
-	    -- Title
-	    title = "RipGrep Query:",
-
-	    -- Default value
-	    value = "",
-
-	    -- Whether to obscure the input.
-	    obscure = false,
-
-	    -- Whether to report user input in real time.
-	    realtime = false,
-
-	    -- Number of seconds to wait for the user to stop typing, available if `realtime = true`.
-	    --debounce = 0.3,
-    }
-
-    if l_status ~= 1 then
-        ya.dbg("El status al leer 'l_initial_query' es " .. tostring(l_status))
-        return
-    end
-
-    if l_initial_query == nil or l_initial_query == "" then
-        ya.dbg("No se ingreso el valor de 'l_initial_query'.")
+    if l_cmd_type == nil or l_cmd_type == "" then
         return
     end
 
 
-    --3. Ejecutar 'fzf' y obtener los archivos seleccionados
+    -- Obtener las opciones configurable del usuario usando los valores por defecto
+    local l_state = m_get_plugin_state()
+    ya.dbg("l_state  : " .. m_dump_table(l_state))
 
-    -- Ocultar la Yazi
-	local l_permit = ui.hide()
+    local l_ui_info =  m_get_ui_info()
+    ya.dbg("l_ui_info: " .. m_dump_table(l_ui_info))
 
-    local l_output, l_message = m_run_fzf_rg(l_state, l_cwd, l_initial_query, l_hidden_files_are_shown, l_use_tmux, l_height, l_width)
-
-    -- Restaurar (mostrar) yazi
-    if l_permit then
-        l_permit:drop()
-    end
-
-    -- Si hubo un error al ejecutar fzf
-	if l_output == nil then
-        --ya.err(tostring(l_message))
-		return ya.notify({ title = "fzf-rg", content = tostring(l_message), timeout = 5, level = "error" })
-	end
-
-    -- Si no se seleciono nada en fzf
-	if l_output == "" then
-        return
-    end
-
-    -- Convertir los STDOUT de ruta de los archivos seleccionados indicando la lined del archivo a seleccionar.
-	local l_info_files = m_get_files_of_rg_output(l_output, l_cwd)
-
-
-    --4. Ejecutar el script que abre vim y los archivos selecionados
-
-    -- Obtener el directorio de trabajo a usar
-    local l_pane_wd = nil
-    local l_message = nil
-    if l_cmd_type == "rootdir" then
-
-        -- Validar si el root directorio
-        if l_state.cwd_root == nil or l_state.cwd_root == "" then
-	        return ya.notify({ title = "fzf-rg", content = "Initial working directory is not defined", timeout = 5, level = "warn" })
-        end
-        l_pane_wd = l_state.cwd_root
-
-    elseif l_cmd_type == "rootgit" then
-
-        l_pane_wd, l_message = m_go_git_root_folder(l_cwd)
-        if l_message ~= nil then
-	        return ya.notify({ title = "fzf-rg", content = l_message, timeout = 5, level = "error" })
-        end
-
-    else
-
-        ya.err("El valor del subcomando no es valido '" .. tostring(l_options.open_type) .. "'.")
-        return
-
-    end
-
-    if l_pane_wd == nil or l_pane_wd == "" then
-        ya.dbg("No se ha definido el directorio a trabajo a usar")
-        return
-    end
-
-    -- Abrir los archivos en un tab
-    --ya.dbg("l_state.script_path: " .. tostring(l_state.script_path))
-    --ya.dbg("l_pane_wd: " .. tostring(l_pane_wd))
-	--ya.dbg("l_editor_type: " .. tostring(l_editor_type))
-    l_message = m_opentab_with_selected_files(l_cwd, l_state.script_path, l_info_files, l_pane_wd, l_editor_type)
-    if l_message ~= nil then
-	    return ya.notify({ title = "fzf-rg", content = l_message, timeout = 5, level = "error" })
-    end
-
+    m_process_action_async(l_cmd_type, l_use_tmux, l_height, l_width, l_editor_type, l_state, l_ui_info)
 
 end
+
 
 
 -- Retornar los miembros publicos del modulo

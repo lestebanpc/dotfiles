@@ -51,6 +51,7 @@ Opciones usadas son:
             > '0' Si se usa el editor de texto definido en %EDITOR%
             > '1' Si se usa VIM como editor de texto
             > '2' Si se usa NeoVIM como editor de texto
+            > '3' Se usa 'file' para mostrar informacion del archivo
 
  -w wordir  El valor de esta opcion se usara como directorio de trabajo del nuevo tab.
             > Si se especifica tanto esta opcion como la opcion '-p', esta opcion tendra mayor prioridad.
@@ -329,7 +330,7 @@ m_get_nbrline_files() {
 m_get_cmd_to_exec() {
 
     #1. Argumentos
-    local p_is_text_file=$1
+    local -i p_is_text_file=$1
     local p_viewer_cmd="$2"
     local -n ra_files="$3"
     local -n ra_nbrlines="$4"
@@ -339,26 +340,26 @@ m_get_cmd_to_exec() {
     #2. Recorrer todos los archivos a visualizar
     local l_cmd=""
 
-    local l_is_vim=1
-    if [ $p_is_text_file -eq 0 ]; then
-        if [[ "$p_viewer_cmd" =~ (vim|nvim)$ ]]; then
-            l_is_vim=0
-        fi
+    local -i l_cmd_type=0
+    if [[ "$p_viewer_cmd" =~ (vim|nvim)$ ]]; then
+        l_cmd_type=1
+    elif [[ "$p_viewer_cmd" =~ file$ ]]; then
+        l_cmd_type=2
     fi
 
-    local l_n=${#ra_files[@]}
-    local l_i=0
+    local -i l_n=${#ra_files[@]}
+    local -i l_i=0
     local l_aux=""
     local l_file_path=''
-    local l_nbr_line=0
+    local -i l_nbr_line=0
 
     for (( l_i = 0; l_i < l_n; l_i++ )); do
 
         l_file_path="${ra_files[$l_i]}"
 
-        # Si es un archivo texto, obtener el numero de liena a posicionarse
+        # Si es un archivo texto, y es VIM/NeoVIM, obtener el numero de liena a posicionarse
         l_nbr_line=0
-        if [ $l_is_vim -eq 0 ]; then
+        if [ $l_cmd_type -eq 1 ]; then
             l_aux="${ra_nbrlines[$l_i]}"
             if [ ! -z "$l_aux" ]; then
                 l_nbr_line=$l_aux
@@ -369,17 +370,31 @@ m_get_cmd_to_exec() {
         if [ $l_i -eq 0 ]; then
 
             # Si el comando es vim o nvim
-            if [ $l_nbr_line -gt 0 ]; then
-                printf -v l_cmd '%s +%s "%s"' "$p_viewer_cmd" "$l_nbr_line" "$l_file_path"
+            if [ $l_cmd_type -eq 1 ]; then
+
+                if [ $l_nbr_line -gt 0 ]; then
+                    printf -v l_cmd '%s +%s "%s"' "$p_viewer_cmd" "$l_nbr_line" "$l_file_path"
+                else
+                    printf -v l_cmd '%s "%s"' "$p_viewer_cmd" "$l_file_path"
+                fi
+
+            elif [ $l_cmd_type -eq 2 ]; then
+                printf -v l_cmd '%s -i "%s"' "$p_viewer_cmd" "$l_file_path"
             else
                 printf -v l_cmd '%s "%s"' "$p_viewer_cmd" "$l_file_path"
             fi
 
+        # Si no es el primer archivo
         else
 
-            # Si no es el primer archivo
-            if [ $l_nbr_line -gt 0 ]; then
-                printf -v l_cmd '%s -c "e %s" -c "%s"' "$l_cmd" "$l_file_path" "$l_nbr_line"
+            # Si el comando es vim o nvim
+            if [ $l_cmd_type -eq 1 ]; then
+
+                if [ $l_nbr_line -gt 0 ]; then
+                    printf -v l_cmd '%s -c "e %s" -c "%s"' "$l_cmd" "$l_file_path" "$l_nbr_line"
+                else
+                    printf -v l_cmd '%s "%s"' "$l_cmd" "$l_file_path"
+                fi
             else
                 printf -v l_cmd '%s "%s"' "$l_cmd" "$l_file_path"
             fi
@@ -559,13 +574,13 @@ main() {
     # (0) Usa el editor indicado en la variable de entorno $EDITOR.
     # (1) Usa el editor VIM.
     # (2) Usa el editor NoeVIM.
-    local p_editor_type=0
+    local -i p_editor_type=0
 
     # (0) El directorio esta espeificado por la opciones '-w'
     # (1) Se usara el directorio de trabajo usado por el proceso ejecutandose en el panel actual.
     # (2) Se usara el directorio donde pertenece el archivo indicado como 1er argumento.
     # (3) No se especifica un directorio de trabajo durante la creacion del panel.
-    local p_working_dir_src=3
+    local -i p_working_dir_src=3
     local p_data_lines=""
 
     while [ $# -gt 0 ]; do
@@ -600,7 +615,7 @@ main() {
 
             -e)
 
-                if ! [[ "$2" =~ ^[0-2]$ ]]; then
+                if ! [[ "$2" =~ ^[0-3]$ ]]; then
                     printf '[%bERROR%b] Valor de la opción "%b%s%b" es inválido: %b%s%b\n' "$g_color_red1" "$g_color_reset" \
                            "$g_color_gray1" "-e" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
                     _usage
@@ -611,6 +626,8 @@ main() {
                     p_editor_type=1
                 elif [ $2 -eq 2 ]; then
                     p_editor_type=2
+                elif [ $2 -eq 3 ]; then
+                    p_editor_type=3
                 fi
 
                 shift 2
@@ -690,6 +707,8 @@ main() {
             l_viewer_cmd="vim"
         elif [ $p_editor_type -eq 2 ]; then
             l_viewer_cmd="nvim"
+        elif [ $p_editor_type -eq 3 ]; then
+            l_viewer_cmd="file"
         else
             l_viewer_cmd="${EDITOR:-vim}"
         fi
