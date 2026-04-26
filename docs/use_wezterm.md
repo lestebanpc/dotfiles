@@ -69,9 +69,12 @@ Para diferencias usando:
 
 - El keybinding por defecto que no se usa estara ~~tachado~~.
 - El keybinding personalizada que se indicara con *cursiva*.
-- Se usara como **key leader** a `ATL + a`
-    - No usar `CTRL + a` entrar en conflicto con el prefijo alterno/remoto de tmux
-    - Evitar de usar `CTRL` para dejarlo a ciertos keymapping para VIM
+- Se usara como **key leader** a `Alt + a` para Linux y `CTRL + Space` para Windows.
+    - No usar `CTRL + a` entrar en conflicto con el prefijo alterno/remoto de tmux.
+    - Evitar de usar `CTRL` para dejarlo a ciertos keymapping para VIM.
+    - En windows, no se usara `ALT + a`, debido a que las ultimas versiones de Windows las teclas que inician con `ALT` estan reservadas por el sistema operativo.
+    - En Linux con GNome, no se usara `Ctrl + Space`, debido a que es usado por el sistema operativo para selecionar el idioma y el teclado.
+      - Si usa 'ULancher', por defecto sobrescribe este comportamiento y lo usa para ejecutarlo, pero puede ser modificado.
 
 
 

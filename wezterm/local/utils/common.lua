@@ -1525,6 +1525,11 @@ function mod.get_custom_config()
         windows_style = 0,
         use_gnome_style_buttons = false,
 
+        leader_key = {
+            mods = nil,
+            key = nil,
+        },
+
         font_dirs = nil,
         font_locator = nil,
         program_paths = {

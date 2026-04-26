@@ -177,6 +177,27 @@ local mod= {
     --font_locator = "ConfigDirsOnly",
     font_locator = nil,
 
+    -- Define el 'leader key' a usar para el keymappings.
+    -- > Si no define usara en el keymapping a 'Alt + a'.
+    -- > No use 'Ctrl + b' o 'Ctrl + a' si desea usar 'tmux'.
+    -- > En las ultimas versiones de Windows, muchas teclas que inicia con 'ALT' son procesado por el sistema operativo.
+    -- > En las ultimas versiones de GNome, 'Ctrl + Space' lo procesa el sistema operativo para selecionar el idioma y el teclado.
+    --   Si usa 'ULancher', por defecto sobrescribe este comportamiento y lo usa para ejecutarlo.
+    leader_key = {
+
+        -- Si no se especifica, se usara 'Ctrl + Space'
+        --mods = nil,
+        --key = nil,
+
+        -- Usando 'Ctrl + Space'
+        mods = 'CTRL',
+        key = 'Space',
+
+        -- Usando 'ALT + a'
+        --mods = 'ALT',
+        --key = 'a',
+    }
+
     -- Ruta donde se encuentra ubica los programas basicos usados para crear workspace y dominios (si no se especifica, lo buscara dentro del PATH)
     -- Esta ruta siempre para el SO donde ejecuta la terminal, no para la distribucion WSL o Distrobox (este siempre buscara en el PATH).
     program_paths = {
@@ -275,6 +296,7 @@ local mod= {
     -- > Se puede usar '~' al inicio para representar el 'home directory' del usuario actual y local.
     root_git_folder = nil,
     --root_git_folder = '~/code',
+    --root_git_folder = 'D:/works/mywork/code',
 
     -- Ruta del folder donde buscar los repositorios git, donde se encuentra diferentes proyectos 'git', usados para crear un workspace asociado
     -- a path del dominio externo al local:

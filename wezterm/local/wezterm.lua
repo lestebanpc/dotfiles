@@ -554,7 +554,15 @@ mod.key_map_preference = "Mapped"
 
 -- Leader key (called 'LEADER') stays active until a keypress is registered (whether it matches a key binding or not),
 -- or until it has been active for the duration specified by timeout_milliseconds, at which point it will automatically cancel itself.
-mod.leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 2000 }
+if m_custom_config.leader_key ~= nil and m_custom_config.leader_key.key ~= nil and m_custom_config.leader_key.mods ~= nil then
+    mod.leader = {
+        mods = m_custom_config.leader_key.mods,
+        key = m_custom_config.leader_key.key,
+        timeout_milliseconds = 2000,
+    }
+else
+    mod.leader = { mods = 'ALT', key = 'a', timeout_milliseconds = 2000 }
+end
 
 -- Keybinding de los otros modos y los 'ActivateKeyTable' del modo normal.
 mod.key_tables = mm_ugeneralui.get_keytables_mappins()
