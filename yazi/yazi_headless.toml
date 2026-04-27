@@ -147,10 +147,10 @@ common_3 = [
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "none" "hovered" "$@"' , desc = "View file info (New TermTab, Initial workdir)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "none" "selected" "$@"', desc = "View selected file info (New TermTab, Initial workdir)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "none" "hovered" "$@"' , desc = "View file info (New TermTab, Root git)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "none" "selected" "$@"', desc = "View selected file info (New TermTab, Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "file" "hovered" "$@"' , desc = "View file info (New TermTab, Initial workdir)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "file" "selected" "$@"', desc = "View selected file info (New TermTab, Initial workdir)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "hovered" "$@"' , desc = "View file info (New TermTab, Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "selected" "$@"', desc = "View selected file info (New TermTab, Root git)", for = "linux" },
 	{ run = 'clear; exiftool "$1"; echo "Press enter to exit"; read _', desc = "Show metadata", for = "unix", block = true },
 ]
 
