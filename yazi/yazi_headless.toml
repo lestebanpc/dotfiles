@@ -104,7 +104,7 @@ edit_text_file_2 = [
 
 common_1 = [
     # Para Windows
-	{ run = 'explorer /select,%1', desc = "View in Explorer", for = "windows", orphan = true },
+	#{ run = 'explorer /select,%1', desc = "View in Explorer", for = "windows", orphan = true },
 	{ run = 'ya pub go-fs --list "copycb" "rootdir" %*', desc = "Copy relative path (Initial workdir)", for = "windows" },
 	{ run = 'ya pub go-fs --list "copycb" "rootgit" %*', desc = "Copy relative path (Root git)", for = "windows" },
 
@@ -112,7 +112,7 @@ common_1 = [
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = 'nautilus --select "$1" &', desc = "View in Explorer", for = "linux", orphan = true },
+	#{ run = 'nautilus --select "$1" &', desc = "View in Explorer", for = "linux", orphan = true },
 	{ run = 'ya pub go-fs --list "copycb" "rootdir" "$@"', desc = "Copy relative path (Initial workdir)", for = "linux" },
 	{ run = 'ya pub go-fs --list "copycb" "rootgit" "$@"', desc = "Copy relative path (Root git)", for = "linux" },
 
@@ -191,14 +191,14 @@ rules = [
     #{ url = "*.drawio", use = [ "open_nontext_file_1", "common_1", "common_2" ] },
 
 	# File> Text
-	{ mime = "text/*", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2" ] },
+	{ mime = "text/*", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2", "common_3" ] },
 
 	# File> Empty file (new file create, for example, with 'touch')
-	{ mime = "inode/empty", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2" ] },
+	{ mime = "inode/empty", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2", "common_3" ] },
 
 	# File> JSON
-	{ mime = "application/{json,ndjson}", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2" ] },
-	{ mime = "*/javascript", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2" ] },
+	{ mime = "application/{json,ndjson}", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2", "common_3" ] },
+	{ mime = "*/javascript", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2", "common_3" ] },
 
 	# File> Image
 	#{ mime = "image/*", use = [ "open_nontext_file_1", "open_image_file", "common_1", "common_3", "common_2" ] },
