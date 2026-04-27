@@ -138,10 +138,10 @@ common_2 = [
 
 common_3 = [
     # Para Windows
-	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "file" "hovered" "$@"' , desc = "View file info (New TermTab, Initial workdir)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "file" "selected" "$@"', desc = "View selected file info (New TermTab, Initial workdir)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "hovered" "$@"' , desc = "View file info (New TermTab, Root git)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "selected" "$@"', desc = "View selected file info (New TermTab, Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "file" "hovered" %*' , desc = "View file info (New TermTab, Initial workdir)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootdir" "file" "selected" %*', desc = "View selected file info (New TermTab, Initial workdir)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "hovered" %*' , desc = "View file info (New TermTab, Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "selected" %*', desc = "View selected file info (New TermTab, Root git)", for = "windows" },
 
     # Para Android (Termux)
     # Para MacOS
