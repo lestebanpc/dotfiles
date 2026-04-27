@@ -37,9 +37,9 @@ local treesitter_data= {
         enable = true,
         keymaps = {
             -- Accion de modo NORMAL :
-            init_selection = "<C-space>",
+            init_selection = "<C-]>",
             -- Acciones del modo VISUAL :
-            node_incremental = "<C-space>",
+            node_incremental = "<C-]>",
             scope_incremental = false,
             node_decremental = "<bs>",
         },

@@ -1207,10 +1207,10 @@ Los objetos validos depende de lenguaje y puede verlo en: https://github.com/nvi
 ### Smart selections
 
 
-- `Ctrl + Space` (normal)
+- `Ctrl + ]` (normal)
     - Iniciar el smart selection, esto pasara el modo visual.
 
-- `Ctrl + Space` (visual)
+- `Ctrl + ]` (visual)
     - Incrementar la selecion (en modo visual) incluyendo el nodo superior que lo contiene ("Expand Selection")
 
 - `Backspace` (visual)

@@ -218,7 +218,7 @@ local mod= {
         -- Usando 'ALT + a'
         --mods = 'ALT',
         --key = 'a',
-    }
+    },
 
     -- Establece el 'default current working directory' a ser usando durante la creacion de un panel (cuando API 'SpawnCommand' no especifica
     -- la opcion '.cwd'). Tiene limitaciones respecto si el Domain del panel a crear esta asociado a 'MuxDomain' remoto.

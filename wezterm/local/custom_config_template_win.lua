@@ -196,7 +196,7 @@ local mod= {
         -- Usando 'ALT + a'
         --mods = 'ALT',
         --key = 'a',
-    }
+    },
 
     -- Ruta donde se encuentra ubica los programas basicos usados para crear workspace y dominios (si no se especifica, lo buscara dentro del PATH)
     -- Esta ruta siempre para el SO donde ejecuta la terminal, no para la distribucion WSL o Distrobox (este siempre buscara en el PATH).

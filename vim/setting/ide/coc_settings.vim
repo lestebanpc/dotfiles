@@ -210,11 +210,16 @@ if !g:is_neovim
     " > Selection inteligente ('Incremental Selection' o 'Smart Selecction')
 
     " Iniciar la selecion y/o expandir la seleccion (expand selection)
-    " > En VIM puede existir problemas en el  key-mapping usando '<c-space>', debido a que muchos terminales
-    "   espera que despues CRTL exista un caracter visible, para evitar ello use '@', ello hara que vim
-    "   lo trare como tecla '<space>'.
-    nnoremap <silent> <C-@> <Plug>(coc-range-select)
-    xnoremap <silent> <C-@> <Plug>(coc-range-select)
+    " > En VIM/NeoVIM por defecto solo tiene habilititado el 'Legacy Terminal Protocol', por ello existir problemas en procesar
+    "   key-mapping usando '<c-space>'.
+    "   > Las terminales espera que despues CRTL solo ciertos caracteres (usualmente caracteres visible) sean permitidos.
+    "   > Para evitar ello use '@', ello hara que vim lo trare como tecla '<space>'.
+    "   > Tanto VIM/NoeVIM como la terminal debenconfigurarse protocoloes modernas para evitar ello.
+    " > Para evitar ello usaramos key que si estan permitidos como 'Ctrl + ]'
+    nnoremap <silent> <C-]> <Plug>(coc-range-select)
+    xnoremap <silent> <C-]> <Plug>(coc-range-select)
+    "nnoremap <silent> <C-@> <Plug>(coc-range-select)
+    "xnoremap <silent> <C-@> <Plug>(coc-range-select)
 
     " Reducir la selecion (shrink selection)
     xnoremap <silent> <bs> <Plug>(coc-range-select-backward)
