@@ -214,7 +214,7 @@ if !g:is_neovim
     "   key-mapping usando '<c-space>'.
     "   > Las terminales espera que despues CRTL solo ciertos caracteres (usualmente caracteres visible) sean permitidos.
     "   > Para evitar ello use '@', ello hara que vim lo trare como tecla '<space>'.
-    "   > Tanto VIM/NoeVIM como la terminal debenconfigurarse protocoloes modernas para evitar ello.
+    "   > Tanto el programa CLI (VIM/NoeVIM) como la terminal deben configurarse para soportar protocolos modernas para evitar ello.
     " > Para evitar ello usaramos key que si estan permitidos como 'Ctrl + ]'
     nnoremap <silent> <C-]> <Plug>(coc-range-select)
     xnoremap <silent> <C-]> <Plug>(coc-range-select)
