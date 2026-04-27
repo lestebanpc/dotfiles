@@ -105,7 +105,7 @@ edit_text_file_2 = [
 common_1 = [
     # Para Windows
 	{ run = 'explorer /select,%1', desc = "View in Explorer", for = "windows", orphan = true },
-	{ run = 'ya pub go-fs --list "copycb" "rootdir" %*', desc = "Copy relative path (Initial workdir)", for = "Windows" },
+	{ run = 'ya pub go-fs --list "copycb" "rootdir" %*', desc = "Copy relative path (Initial workdir)", for = "windows" },
 	{ run = 'ya pub go-fs --list "copycb" "rootgit" %*', desc = "Copy relative path (Root git)", for = "windows" },
 
     # Para Android (Termux)

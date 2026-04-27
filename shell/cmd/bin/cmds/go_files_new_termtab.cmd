@@ -127,10 +127,11 @@ echo   -p 1^|2        Calcula directorio automaticamente:
 echo                  1: Usa directorio actual del proceso
 echo                  2: Usa directorio padre del primer archivo
 echo.
-echo   -e 0^|1^|2     Determina el editor a usar en caso que trabaje con archivos de texto:
+echo   -e 0^|1^|2^|3  Determina el editor a usar en caso que trabaje con archivos de texto:
 echo                  0: Se usa el editor de texto definido en %EDITOR%
-echo                  1: Se usa VIM como editor de texto
-echo                  2: Se usa NeoVIM como editor de texto
+echo                  1: Se usa 'vim' como editor de texto
+echo                  2: Se usa 'nvim' como editor de texto
+echo                  3: Se usa 'file' para mostrar informacion del archivo
 echo.
 echo   -w ^<path^>    Directorio de trabajo especifico ^(prioridad sobre -p^)
 echo.
@@ -351,15 +352,16 @@ if /I "!ARG!"=="-p" (
 rem -e <0|1|2>
 if /I "!ARG!"=="-e" (
     if "!VAL!"=="" (
-        echo [ERROR] Opcion -e requiere un valor ^(0 o 1 o 2^)
+        echo [ERROR] Opcion -e requiere un valor ^(0 o 1 o 2 o 3 ^)
         exit /b 1
     )
-    if /I not "!VAL!"=="0" if /I not "!VAL!"=="1" if /I not "!VAL!"=="2" (
-        echo [ERROR] Valor invalido para -p: !VAL! ^(debe ser 0 o 1 o 2^)
+    if /I not "!VAL!"=="0" if /I not "!VAL!"=="1" if /I not "!VAL!"=="2" if /I not "!VAL!"=="3" (
+        echo [ERROR] Valor invalido para -p: !VAL! ^(debe ser 0 o 1 o 2 o 3^)
         exit /b 1
     )
     if /I "!VAL!"=="1" set "OPTION_E=1"
     if /I "!VAL!"=="2" set "OPTION_E=2"
+    if /I "!VAL!"=="3" set "OPTION_E=3"
     shift & shift
     goto :PARSE_ARGS_LOOP
 )
@@ -468,17 +470,18 @@ if !IS_TEXT_FILE! equ 0 (
         set "VIEWER_CMD=vim"
     ) else if !OPTION_E! equ 2 (
         set "VIEWER_CMD=nvim"
+    ) else if !OPTION_E! equ 3 (
+        set "VIEWER_CMD=!git_file_exe!"
     ) else (
         set "VIEWER_CMD=!EDITOR!"
     )
 
 ) else (
     echo [INFO] Primer archivo es binario: !FIRST_FILE!
-    where file.exe >nul 2>&1
-    if errorlevel 1 (
+    if "%YAZI_FILE_ONE%"=="" (
         set "VIEWER_CMD=dir /b"
     ) else (
-        set "VIEWER_CMD=file.exe"
+        set "VIEWER_CMD=%YAZI_FILE_ONE%"
     )
 )
 
@@ -576,78 +579,90 @@ rem Construir comando para ejecutar
 rem ---------------------------------------------------------------------
 set "COMMAND_TO_EXEC="
 
-if !IS_TEXT_FILE! equ 0 (
+rem Tipo de comando
+rem 0 Si es usa un comando built-in y generico del sistema operativo.
+rem 1 Si se usa 'vim' o 'nvim'.
+rem 2 Si se usa 'file'.
+set "L_CMD_TYPE=0"
+echo !VIEWER_CMD! | find /i "vim" >nul
+if not errorlevel 1 (
+    set "L_CMD_TYPE=1"
+) else (
+    echo !VIEWER_CMD! | find /i "file" >nul
+    if not errorlevel 1 (
+        set "L_CMD_TYPE=2"
+    )
+)
 
-  rem Si el editor es vim/nvim
-  rem echo "Archivo de texto"
-  echo !VIEWER_CMD! | find /i "vim" >nul
-  if not errorlevel 1 (
+rem Si el comando es el editor es vim/nvim
+if !L_CMD_TYPE! equ 1 (
 
-    if "!LINE_NUMBERS!"=="" (
+  rem Si no especifica numero de lineas de los archivos
+  if "!LINE_NUMBERS!"=="" (
 
-      rem Caso sin -l: nvim "f1" "f2" ...
-      set "COMMAND_TO_EXEC=!VIEWER_CMD!"
-      for %%F in (!FILE_LIST!) do (
-        set "CURRENT_FILE=%%~F"
-        set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! ^"!CURRENT_FILE!^""
+    rem Caso sin -l: nvim "f1" "f2" ...
+    set "COMMAND_TO_EXEC=!VIEWER_CMD!"
+    for %%F in (!FILE_LIST!) do (
+      set "CURRENT_FILE=%%~F"
+      set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! ^"!CURRENT_FILE!^""
+    )
+
+  rem Si se especifica numero de lineas de los archivos
+  ) else (
+
+    rem Caso con -l: +L1 "f1" y luego -c "e f2" [-c L2] ...
+    set "LINE_INDEX=0"
+    set "COMMAND_TO_EXEC="
+
+    for %%F in (!FILE_LIST!) do (
+
+      set "CURRENT_FILE=%%~F"
+      set "CURRENT_LINE="
+      rem echo "CURRENT_LINE ini: !CURRENT_LINE!"
+
+      rem Tomar el primer número disponible y acortar la cola
+      if defined LINE_REST (
+        for /f "tokens=1,* delims=," %%A in ("!LINE_REST!") do (
+          set "CURRENT_LINE=%%~A"
+          set "LINE_REST=%%~B"
+  		rem echo "LINE_REST: !LINE_REST!"
+        )
       )
+      rem echo "CURRENT_LINE fin: !CURRENT_LINE!"
 
-    ) else (
-
-      rem Caso con -l: +L1 "f1" y luego -c "e f2" [-c L2] ...
-      set "LINE_INDEX=0"
-      set "COMMAND_TO_EXEC="
-
-      for %%F in (!FILE_LIST!) do (
-
-        set "CURRENT_FILE=%%~F"
-        set "CURRENT_LINE="
-        rem echo "CURRENT_LINE ini: !CURRENT_LINE!"
-
-        rem Tomar el primer número disponible y acortar la cola
-        if defined LINE_REST (
-          for /f "tokens=1,* delims=," %%A in ("!LINE_REST!") do (
-            set "CURRENT_LINE=%%~A"
-            set "LINE_REST=%%~B"
-			rem echo "LINE_REST: !LINE_REST!"
-          )
-        )
-        rem echo "CURRENT_LINE fin: !CURRENT_LINE!"
-
-        if "!COMMAND_TO_EXEC!"=="" (
-          rem Primer archivo
-          if defined CURRENT_LINE (
-            set "COMMAND_TO_EXEC=!VIEWER_CMD! +!CURRENT_LINE! ^"!CURRENT_FILE!^""
-          ) else (
-            set "COMMAND_TO_EXEC=!VIEWER_CMD! ^"!CURRENT_FILE!^""
-          )
+      if "!COMMAND_TO_EXEC!"=="" (
+        rem Primer archivo
+        if defined CURRENT_LINE (
+          set "COMMAND_TO_EXEC=!VIEWER_CMD! +!CURRENT_LINE! ^"!CURRENT_FILE!^""
         ) else (
-          rem Archivos siguientes
-          if defined CURRENT_LINE (
-            set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! -c ^"e !CURRENT_FILE!^" -c ^"!CURRENT_LINE!^""
-          ) else (
-            set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! -c ^"e !CURRENT_FILE!^""
-          )
+          set "COMMAND_TO_EXEC=!VIEWER_CMD! ^"!CURRENT_FILE!^""
         )
-
+      ) else (
+        rem Archivos siguientes
+        if defined CURRENT_LINE (
+          set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! -c ^"e !CURRENT_FILE!^" -c ^"!CURRENT_LINE!^""
+        ) else (
+          set "COMMAND_TO_EXEC=!COMMAND_TO_EXEC! -c ^"e !CURRENT_FILE!^""
+        )
       )
 
     )
 
-  ) else (
-    rem Otros editores
-    set "COMMAND_TO_EXEC=!VIEWER_CMD! !FILE_LIST!"
   )
 
 ) else (
 
-  rem Archivos binarios
-  if "!VIEWER_CMD!"=="file.exe" (
-    set "COMMAND_TO_EXEC=file.exe !FILE_LIST!"
-  ) else (
-    set "COMMAND_TO_EXEC=for %%f in (!FILE_LIST!) do @echo %%~nxf"
-  )
+    rem Si el comando es 'file'
+    if !L_CMD_TYPE! equ 2 (
 
+        set "COMMAND_TO_EXEC=!VIEWER_CMD! -i !FILE_LIST!"
+
+    rem Si es otro comando
+    ) else (
+
+        set "COMMAND_TO_EXEC=!VIEWER_CMD! !FILE_LIST!"
+
+    )
 )
 
 echo [DEBUG] Comando: !COMMAND_TO_EXEC!
