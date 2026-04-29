@@ -44,6 +44,14 @@
 # Variables globales usado por '02_install_profile.ps1'
 ##############################################################################################
 
+# Setup el archivo profile ('Microsoft.PowerShell_profile.ps1') de Powershell.
+# Por defecto es '$true'.
+#$g_setup_pwsh_profile= $false
+
+# Setup el archivo profile ('Microsoft.PowerShell_profile.ps1') de Windows Powershell.
+# Por defecto es '$true'.
+#$g_setup_winpwsh_profile= $false
+
 # Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
 # Sus valores puede ser:
 # > 0 No instala ningun plugin de AI.

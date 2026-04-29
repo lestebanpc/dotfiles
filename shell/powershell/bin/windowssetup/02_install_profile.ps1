@@ -1477,30 +1477,46 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
 
     #Archivos de configuracion de PowerShell
 	$document_path= [Environment]::GetFolderPath("mydocuments")
-    $l_status= m_create_folder "${document_path}" "PowerShell" $l_tag
-    $l_status= m_create_folder "${document_path}" "WindowsPowerShell" $l_tag
+
+    if ($g_setup_pwsh_profile) {
+
+        $l_status= m_create_folder "${document_path}" "PowerShell" $l_tag
+        $l_status= m_create_folder "${document_path}" "WindowsPowerShell" $l_tag
 
 
-    $l_target_link="${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
-    $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
-	$l_source_filename='windows_x64.ps1'
-    if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_target_link="${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
+        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
+	    $l_source_filename='windows_x64.ps1'
+        if ($g_setup_access_type -eq 0) {
+            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        }
+        elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        }
+
     }
-    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    else {
+        Write-Host "            > NO esta habilitado para usar '${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile\windows_x64.ps1' como '${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1'"
     }
 
 
-	$l_target_link="${document_path}\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
-    $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
-	$l_source_filename='legacy_x64.ps1'
-    if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    if ($g_setup_winpwsh_profile) {
+
+	    $l_target_link="${document_path}\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
+        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
+	    $l_source_filename='legacy_x64.ps1'
+        if ($g_setup_access_type -eq 0) {
+            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        }
+        elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        }
+
     }
-    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    else {
+        Write-Host "            > NO esta habilitado para usar '${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile\legacy_x64.ps1' como '${document_path}\WindowsPowerShell\Microsoft.PowerShell_profile.ps1'"
     }
+
 
 
     # Configuracion de 'oh-my-posh'
@@ -1622,7 +1638,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
 
 
-    $l_target_link="${env:APPDATA}\.config\yazi\plugins\fzf-fd.yazi"
+    $l_target_link="${env:APPDATA}\yazi\config\plugins\fzf-fd.yazi"
     $l_source_path="${env:USERPROFILE}\.files\yazi\plugins\fzf-fd.yazi"
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
@@ -1631,7 +1647,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
         $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
-    $l_target_link="${env:APPDATA}\.config\yazi\plugins\fzf-rg.yazi"
+    $l_target_link="${env:APPDATA}\yazi\config\plugins\fzf-rg.yazi"
     $l_source_path="${env:USERPROFILE}\.files\yazi\plugins\fzf-rg.yazi"
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
@@ -1640,7 +1656,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
         $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
-    $l_target_link="${env:APPDATA}\.config\yazi\plugins\go-fs.yazi"
+    $l_target_link="${env:APPDATA}\yazi\config\plugins\go-fs.yazi"
     $l_source_path="${env:USERPROFILE}\.files\yazi\plugins\go-fs.yazi"
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
@@ -2104,6 +2120,21 @@ Write-Host "Temporary Path                 : ${g_temp_path}" -ForegroundColor Da
 if(-not (Get-Variable g_setup_only_last_version -ErrorAction SilentlyContinue) ) {
     $g_setup_only_last_version= $false
 }
+
+# Setup el archivo profile ('Microsoft.PowerShell_profile.ps1') de Powershell.
+# Por defecto es '$true'.
+if(-not (Get-Variable g_setup_pwsh_profile -ErrorAction SilentlyContinue) ) {
+    $g_setup_pwsh_profile= $true
+}
+Write-Host "Setup Powershell Profile File  : ${g_setup_pwsh_profile}" -ForegroundColor DarkGray
+
+# Setup el archivo profile ('Microsoft.PowerShell_profile.ps1') de Windows Powershell.
+# Por defecto es '$true'.
+if(-not (Get-Variable g_setup_winpwsh_profile -ErrorAction SilentlyContinue) ) {
+    $g_setup_winpwsh_profile= $true
+}
+Write-Host "Setup WinPowershell Profile File: ${g_setup_winpwsh_profile}" -ForegroundColor DarkGray
+
 
 # Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
 # Sus valores puede ser:
