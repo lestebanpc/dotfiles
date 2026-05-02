@@ -187,17 +187,25 @@
 # Usado por los script "01_setup_binaries.bash"
 ##############################################################################################
 
-#Folder base, generados solo para Linux WSL, donde se almacena el programas, comando y afines usados por Windows.
-# - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
-# - Si no es un valor valido, se asignara su valor por defecto "/mnt/c/apps" (es decir "c:\apps").
-# - En este folder se creara/usara la siguiente estructura de folderes:
-#     > "${g_win_base_path}/tools"     : subfolder donde se almacena los subfolder de los programas.
-#     > "${g_win_base_path}/cmds/bin" : subfolder donde se almacena los comandos.
-#     > "${g_win_base_path}/cmds/doc" : subfolder donde se almacena documentacion del comando.
-#     > "${g_win_base_path}/cmds/etc" : subfolder donde se almacena archivos adicionales del comando.
-#     > "${g_win_base_path}/fonts" : subfolder donde se almacena los archivos de fuentes tipograficas.
+# Folder base, generados solo para Linux WSL, donde se almacena el programas, comando y afines usados por Windows.
+#  - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura).
+#  - Si no es un valor valido, se asignara su valor por defecto "/mnt/c/apps" (es decir "c:\apps").
+#  - En este folder se creara/usara la siguiente estructura de folderes:
+#      > "${g_win_base_path}/tools"     : subfolder donde se almacena los subfolder de los programas.
+#      > "${g_win_base_path}/cmds/bin" : subfolder donde se almacena los comandos.
+#      > "${g_win_base_path}/cmds/doc" : subfolder donde se almacena documentacion del comando.
+#      > "${g_win_base_path}/cmds/etc" : subfolder donde se almacena archivos adicionales del comando.
+#      > "${g_win_base_path}/fonts" : subfolder donde se almacena los archivos de fuentes tipograficas.
 #g_win_base_path='/mnt/d/apps'
 
+# Listado de ID de repositorios (separados por comas) que son excluidos de la actualización.
+# - Usando principalmente por programas que son creados solo actualizados de forma manual (por ejemplo, 'yazi'
+#   compilados usando una libreria CRT de C++ no soportada por el realese automatico y que se compila manualmente).
+#g_non_updated_repo_ids='yazi,tree-sitter'
+
+# Listado de ID de repositorios (separados por comas) que son excluidos de la actualización de binarios windows.
+# Solo si esta en Windows y esta ejecutando el script sobre WSL2.
+#g_win_non_updated_repo_ids=''
 
 ##############################################################################################
 # Usado por los script "01_setup_binaries.bash", "05_update_profile.bash"

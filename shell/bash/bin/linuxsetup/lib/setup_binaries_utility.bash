@@ -3,9 +3,52 @@
 
 #Funciones de Utilidad {{{
 
+# Valida si una elemento esta en una lista separada por comas
+# > Valores de retorno:
+#   > 1 No existe el elemento en la lista.
+#   > 0 Existe el elemeno en la lista.
+g_is_in_list() {
+
+    #1. Parametros
+    local p_element="$1"
+    local p_list="$2"
+
+    if [ -z "$p_element" ] || [ -z "$p_list" ]; then
+        return 1
+    fi
+
+    # Recorrer
+    local IFS=','
+    local -a la_list=(${p_list})
+    local -i l_n=${#la_list[@]}
+
+    if [ $l_n -le 0 ]; then
+        return 1
+    fi
+
+    local l_item
+    local -i l_i=0
+
+    for (( l_i = 0; l_i < l_n; l_j++ )); do
+
+        #Nombre a mostrar del paquete
+        l_item="${la_list[${l_i}]}"
+
+        if [ "$p_element" = "$l_item" ]; then
+            return 0
+        fi
+
+    done
+
+    return 1
+
+}
+
+
+
 g_get_repo_infos() {
 
-    #5. Instalar los paquetes indicados
+    # Recorrer la lista de parametros identificados ....
     local l_x=0
     local l_repo_infos=""
 

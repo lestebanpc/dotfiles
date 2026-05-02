@@ -206,14 +206,15 @@ rules = [
 	# File> Media
 	#{ mime = "{audio,video}/*", use = [ "open_nontext_file_1", "play_video_file", "common_1", "common_3",  "common_2" ] },
 
-	# File> Compressed file
-	{ mime = "application/{tar,gzip,xz,zstd,bzip*,lzma,zip,octet-stream,rar,7z*,compress,archive,cpio,arj,xar,ms-cab*}", use = [ "extract_compress_file", "common_1", "common_3", "common_2" ] },
-
     # File> Office document
 	{ mime = "application/{msword,ms-excel,ms-powerpoint}", use = [ "common_1", "common_3", "common_2" ] },
 	{ mime = "application/openxmlformats-officedocument.wordprocessingml.document", use = [ "common_1", "common_3", "common_2" ] },
 	{ mime = "application/openxmlformats-officedocument.spreadsheetml.sheet", use = [ "common_1", "common_3", "common_2" ] },
 	{ mime = "application/openxmlformats-officedocument.presentationml.presentation", use = [ "common_1", "common_3", "common_2" ] },
+
+	# File> Compressed file
+	{ mime = "application/{tar,gzip,xz,zstd,bzip*,lzma,zip,rar,7z*,compress,archive,cpio,arj,xar,ms-cab*}", use = [ "extract_compress_file", "common_1", "common_3", "common_2" ] },
+	#{ mime = "application/{tar,gzip,xz,zstd,bzip*,lzma,zip,octet-stream,rar,7z*,compress,archive,cpio,arj,xar,ms-cab*}", use = [ "extract_compress_file", "common_1", "common_3", "common_2" ] },
 
 	# Generic> Virtual file system
 	{ mime = "vfs/{absent,stale}", use = "download_file" },

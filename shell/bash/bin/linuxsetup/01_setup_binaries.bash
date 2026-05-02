@@ -2360,8 +2360,9 @@ function g_install_repository() {
                                    #  8 > El repositorio inicio la actualización y lo termino con error.
 
     #Flag '0' si se instala (se realiza por primera vez), caso contrario no se instala (se actualiza o no se realiza ningun cambio)
-    local l_flag_install=1
+    local -i l_flag_install=1
     local l_repo_current_pretty_version=""
+    local -i l_flag=1
 
     #Si esta permitido configurarse en este sistema operativo, iniciar el proceso
     if [ $l_what_can_it_does -eq 0 ] || [ $l_what_can_it_does -eq 1 ]; then
@@ -2427,8 +2428,24 @@ function g_install_repository() {
                 l_aux='actualización'
             fi
 
+            # Verificar si el usuario no permite la actualizacion del repositorio
+            if [ $l_status -lt 0 ] || [ $l_status -gt 4 ]; then
+
+                g_is_in_list "$p_repo_id" "$g_non_updated_repo_ids"
+                l_flag=$?
+
+                if [ $l_flag -eq 0 ]; then
+
+                    printf '\nEl repositorio "%b%s%b" fue desabilitado por el usuario para ser actualizado en "%b%s%b" (Current "%b%s%b", Last "%b%s%b").\n' \
+                           "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$g_os_subtype_name" "$g_color_reset" "$g_color_gray1" "$l_repo_current_pretty_version" "$g_color_reset" \
+                           "$g_color_gray1" "$l_repo_last_pretty_version" "$g_color_reset"
+                    return 1
+                fi
+            fi
+
             printf -v l_empty_version ' %.0s' $(seq ${#l_repo_current_pretty_version})
 
+            # Instalar
             if [ $l_artifact_subversions_nbr -eq 0 ]; then
 
                 #Etiqueta para identificar el repositorio que se usara en lo logs cuando se instala
@@ -2438,7 +2455,8 @@ function g_install_repository() {
                     l_tag="${p_repo_id}${g_color_gray1}[${l_empty_version}]${g_color_reset}"
                 fi
 
-                printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%s" ...\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
+                printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%b%s%b" ...\n' "$l_aux" "${l_tag}" \
+                       "$g_color_gray1" "$g_os_subtype_name" "$g_color_reset"
 
                 _install_repository_internal "$p_repo_id" "$l_repo_name" "${l_repo_current_pretty_version}" "$l_repo_last_version" "$l_repo_last_pretty_version" \
                                              "" 0 $l_is_win_binary $l_flag_install
@@ -2468,7 +2486,9 @@ function g_install_repository() {
                     else
                         l_tag="${p_repo_id}${g_color_gray1}[${l_empty_version}][${la_artifact_subversions[${l_n}]}]${g_color_reset}"
                     fi
-                    printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%s" ...\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
+
+                    printf '\nIniciando la %s de los artefactos del repositorio "%b" en Linux "%b%s%b" ...\n' "$l_aux" "${l_tag}" \
+                           "$g_color_gray1" "$g_os_subtype_name" "$g_color_reset"
 
                     _install_repository_internal "$p_repo_id" "$l_repo_name" "${l_repo_current_pretty_version}" "$l_repo_last_version" "$l_repo_last_pretty_version" \
                         "${la_artifact_subversions[${l_n}]}" ${l_n} $l_is_win_binary $l_flag_install
@@ -2559,6 +2579,21 @@ function g_install_repository() {
                 l_aux='actualización'
             fi
 
+            # Verificar si el usuario no permite la actualizacion del repositorio
+            if [ $l_status -lt 0 ] || [ $l_status -gt 4 ]; then
+
+                g_is_in_list "$p_repo_id" "$g_non_updated_repo_ids"
+                l_flag=$?
+
+                if [ $l_flag -eq 0 ]; then
+
+                    printf '\nEl repositorio "%b%s%b" fue desabilitado por el usuario para ser actualizado en "%b%s%b" (Current "%b%s%b", Last "%b%s%b").\n' \
+                           "$g_color_gray1" "$l_aux" "$g_color_reset" "$g_color_gray1" "$g_os_subtype_name" "$g_color_reset" "$g_color_gray1" "$l_repo_current_pretty_version" "$g_color_reset" \
+                           "$g_color_gray1" "$l_repo_last_pretty_version" "$g_color_reset"
+                    return 1
+                fi
+            fi
+
             printf -v l_empty_version ' %.0s' $(seq ${#l_repo_current_pretty_version})
 
 
@@ -2571,7 +2606,8 @@ function g_install_repository() {
                     l_tag="${p_repo_id}${g_color_gray1}[${l_empty_version}]${g_color_reset}"
                 fi
 
-                printf '\nIniciando la %s de los artefactos del repositorio "%b" Windows (asociado al WSL "%s")\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
+                printf '\nIniciando la %s de los artefactos del repositorio "%b" en Windows (asociado al WSL de "%b%s%b") ...\n' "$l_aux" "${l_tag}" \
+                       "$g_color_gray1" "$g_os_subtype_name" "$g_color_reset"
 
                 _install_repository_internal "$p_repo_id" "$l_repo_name" "${l_repo_current_pretty_version}" "$l_repo_last_version" "$l_repo_last_pretty_version" \
                                              "" 0 $l_is_win_binary $l_flag_install
@@ -2596,7 +2632,8 @@ function g_install_repository() {
                         l_tag="${p_repo_id}${g_color_gray1}[${l_empty_version}][${la_artifact_subversions[${l_n}]}]${g_color_reset}"
                     fi
 
-                    printf '\nIniciando la %s de los artefactos del repositorio "%b" Windows (asociado al WSL "%s")\n' "$l_aux" "${l_tag}" "$g_os_subtype_name"
+                    printf '\nIniciando la %s de los artefactos del repositorio "%b" en Windows (asociado al WSL de "%b%s%b") ...\n' "$l_aux" "${l_tag}" \
+                           "$g_color_gray1" "$g_os_subtype_name" "$g_color_reset"
 
                     _install_repository_internal "$p_repo_id" "$l_repo_name" "${l_repo_current_pretty_version}" "$l_repo_last_version" "$l_repo_last_pretty_version" \
                         "${la_artifact_subversions[${l_n}]}" ${l_n} $l_is_win_binary $l_flag_install
@@ -2604,7 +2641,7 @@ function g_install_repository() {
 
                 done
 
-                #Si no termino sin errores ... cambiar al estado 5/6 segun sea el caso
+                    #Si no termino sin errores ... cambiar al estado 5/6 segun sea el caso
                 if [ $l_status -ge 0 ] && [ $l_status -le 4 ]; then
                     l_status_process_win=5
                 else
