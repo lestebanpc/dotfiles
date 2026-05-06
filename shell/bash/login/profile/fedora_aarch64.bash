@@ -49,22 +49,40 @@ alias ll='ls -alF'
 
 
 #-------------------------------------------------------------------------------------
-# Command history
+# History management
 #-------------------------------------------------------------------------------------
 
-# Tamaño maximo de comandos en memoria por shell interactivo
-export HISTSIZE=10000
-
-# Tamaño maximo del historial de comandos
+# Tamaño maximo del archivo historial de comandos (definido en la variable HISTFILE)
 export HISTFILESIZE=20000
 
-# No almacenar comandos conscutivos repetidas y que inician con espacio.
+# Tamaño maximo de comandos en memoria por shell interactivo (vinculado a una pseudoterminal)
+# > Por defecto, cada shell interactiva (por ejemplo una panel tmux) maneja su propia copia en memoria
+#   del historia actual.
+#   > Cuando la pseudoterminal inicia, se carga en memoria los ultimos HISTSIZE registros del historial.
+#   > Cada vez que se escribe un comando, este se almacena en la lista interna (memoria) del psuedoterminal.
+#   > Cuando la pseudoterminal finaliza, se serializa la memoria al archivo historial.
+export HISTSIZE=10000
+
+# Cuando se serializa los comandos en memoria del shell, no se almacenar comandos conscutivos repetidas y
+# que inician con espacio.
 export HISTCONTROL=ignoredups:erasedups
 
-# Por defecto, la ultima instancia del shell interactivo, trunca el archivo y sobre-escribe el historial
-# con su historia de comandos contenido en memoria.
-# Activar la opcion 'histappend', no trunca el archivo, lo adiciona.
+# Cuando se serializa los comandos en memoria del shell, por defecto, la ultima instancia del shell interactivo,
+# trunca el archivo y sobre-escribe el historial con su historia de comandos contenido en memoria.
+# > Activar la opcion 'histappend', no trunca el archivo, lo adiciona si no existe.
 shopt -s histappend
+
+# Establecer comando que se debe mostrar antes de mostrar el 'prompt' (variable 'PROMPT_COMMAND').
+# > Generadores de prompt como 'oh-my-posh' generan y muestran el prompt pero no modifican esta variable.
+# > El comando realizará:
+#   > 'history -a' para permitir guardar historial inmediatamente cuando se ejecuta el comando.
+#   > 'history -n' para recargar el archivo del historial.
+# > Esto se realizara cada vez que se muestre un prompt (ejecute 'enter' para actualizar el prompt actual).
+if [ -n "${PROMPT_COMMAND:-}" ]; then
+  PROMPT_COMMAND="history -a; history -n; $PROMPT_COMMAND"
+else
+  PROMPT_COMMAND="history -a; history -n"
+fi
 
 
 #-----------------------------------------------------------------------------------

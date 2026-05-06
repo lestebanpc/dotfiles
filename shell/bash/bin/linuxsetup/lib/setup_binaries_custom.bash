@@ -46,6 +46,7 @@ declare -A gA_repos_artifact=(
         ['fzf']='junegunn/fzf'
         ['jq']='stedolan/jq'
         ['yq']='mikefarah/yq'
+        ['jp']='jmespath/jp'
         ['less']='jftuga/less-Windows'
         ['fd']='sharkdp/fd'
         ['zoxide']='ajeetdsouza/zoxide'
@@ -268,7 +269,7 @@ declare -a ga_menuoption_repos=(
     "shellcheck,shfmt,marksman,luals,taplo,lemminx,flamelens,powershell_es"
     "ctags-win,ctags-nowin"
     "llama-swap"
-    "awscli,distrobox,github-cli,gitlab-cli,opencode"
+    "awscli,distrobox,github-cli,gitlab-cli,jp,opencode"
     )
 
 # Tipos de archivos (usualmente binarios), que estan en el repositorio, segun el tipo de SO al cual pueden ser usados/ejecutados.
@@ -2593,6 +2594,33 @@ function get_repo_artifacts() {
                 pna_artifact_types=(10)
             fi
             ;;
+
+
+        jp)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                pna_artifact_names=("jp-windows-amd64")
+                pna_artifact_types=(0)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("jp-linux-arm64")
+                    else
+                        pna_artifact_names=("jp-linux-amd64")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("jp-linux-arm64")
+                    else
+                        pna_artifact_names=("jp-linux-amd64")
+                    fi
+                fi
+                pna_artifact_types=(0)
+            fi
+            ;;
+
 
 
         cilium)
@@ -5082,6 +5110,7 @@ function _copy_artifact_files() {
             fi
             ;;
 
+
         jq)
 
             #Ruta local de los artefactos
@@ -5137,6 +5166,33 @@ function _copy_artifact_files() {
                 copy_binary_file "${l_source_path}" "yq.exe" 1 1
             fi
             ;;
+
+
+        jp)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Renombrar el binario antes de copiarlo
+            if [ $p_is_win_binary -ne 0 ]; then
+
+                echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/jp\" ..."
+                mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/jp"
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "jp" 0 1
+
+            else
+
+                echo "Renombrando \"jp-windows-amd64\" como \"${g_temp_path}/${l_source_path}/jp.exe\" ..."
+                mv "${g_temp_path}/${l_source_path}/jp-windows-amd64" "${g_temp_path}/${l_source_path}/jp.exe"
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "jp.exe" 1 1
+
+            fi
+            ;;
+
 
 
         rclone)
