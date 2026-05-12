@@ -46,10 +46,10 @@ else
     m_base_script_path = os.getenv("HOME") .. "/.files/shell/bash/bin/cmds"
 end
 
--- Obtener la ruta del diretorio de trabajo actual durante el inicio de yazi
-local t_root_url, t_error = fs.cwd()
-local m_root_path = tostring(t_root_url.path)
---ya.dbg("root path: " .. m_root_path)
+-- Obtener la ruta del diretorio de trabajo raiz (es el actual durante el inicio de yazi)
+local t_root_wd_url, t_error = fs.cwd()
+local m_root_wd = tostring(t_root_wd_url.path)
+--ya.dbg("root path: " .. m_root_wd)
 
 -- Obtener la ruta de script para procesar archivos de texto en nuevo tab/windows del terminal
 local m_script_proccess_files = nil
@@ -85,6 +85,9 @@ local t_plugin = nil
 --
 t_plugin = require("fzf-fd")
 t_plugin:setup({
+
+    root_wd =  m_root_wd,
+    script_path = m_script_proccess_files,
 
     -- Parametros usados para 'fd'
     fd_options = {
@@ -147,7 +150,7 @@ t_plugin:setup({
 t_plugin = require("fzf-rg")
 t_plugin:setup({
 
-    cwd_root =  m_root_path,
+    root_wd =  m_root_wd,
     script_path = m_script_proccess_files,
 
     -- Parametros usados para 'rg'
@@ -208,7 +211,7 @@ t_plugin:setup({
 
 t_plugin = require("go-fs")
 t_plugin:setup({
-    cwd_root =  m_root_path,
+    root_wd =  m_root_wd,
     script_path_1 = m_script_proccess_files,
     script_path_2 = m_script_proccess_folder,
 })

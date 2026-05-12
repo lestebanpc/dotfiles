@@ -143,7 +143,7 @@ local function m_get_folder(p_hovered_file_path, p_get_parent)
         return nil, tostring(l_err)
     end
 
-    -- Obtener el folder actual
+    -- Si es archivo obtener el folder donde esta el archivo
     if not l_cha.is_dir then
         l_url = l_url.parent
     end
@@ -163,12 +163,12 @@ end
 ---------------------------------------------------------------------------------
 
 
-local function m_go_git_root_folder(p_cwd)
+local function m_go_git_root_folder(p_cwd_path)
 
     -- Generar el comando 'git'
     local git_cmd = Command("git")
         :arg({ "rev-parse", "--show-toplevel" })
-        :cwd(tostring(p_cwd))
+        :cwd(p_cwd_path)
         :stdout(Command.PIPED)
 
     -- Ejecutar el comando 'git'
@@ -229,7 +229,7 @@ local function m_go_git_root_folder(p_cwd)
 
 end
 
-local function m_opentab(p_cwd, p_script_path, p_pane_wd)
+local function m_opentab(p_cwd_path, p_script_path, p_pane_wd)
 
 
     -- Creando los argumentos del comando
@@ -241,7 +241,7 @@ local function m_opentab(p_cwd, p_script_path, p_pane_wd)
     -- Generar el comando
     local l_cmd = Command(p_script_path)
         :arg(l_args)
-        :cwd(tostring(p_cwd))
+        :cwd(p_cwd_path)
         :stdout(Command.PIPED)
 
     ya.dbg("Before Command")
@@ -303,7 +303,7 @@ end
 
 
 
-local function m_opentab_with_selected_files(p_cwd, p_script_path, p_file_paths, p_pane_wd, p_editor_type)
+local function m_opentab_with_selected_files(p_cwd_path, p_script_path, p_file_paths, p_pane_wd, p_editor_type)
 
 
     -- Creando los argumentos del comando
@@ -331,7 +331,7 @@ local function m_opentab_with_selected_files(p_cwd, p_script_path, p_file_paths,
     -- Generar el comando
     local l_cmd = Command(p_script_path)
         :arg(l_args)
-        :cwd(tostring(p_cwd))
+        :cwd(p_cwd_path)
         :stdout(Command.PIPED)
 
     ya.dbg("Before Command")
@@ -406,8 +406,8 @@ end
 
 local function m_get_ui_info_sync(p_state, p_get_selected_files, p_get_hovered_file)
 
-    ya.dbg("p_get_selected_files : " .. tostring(p_get_selected_files))
-    ya.dbg("p_get_hovered_file   : " .. tostring(p_get_hovered_file))
+    --ya.dbg("p_get_selected_files : " .. tostring(p_get_selected_files))
+    --ya.dbg("p_get_hovered_file   : " .. tostring(p_get_hovered_file))
 
     -- El tab actual
     local l_current_tab = cx.active
@@ -430,11 +430,12 @@ local function m_get_ui_info_sync(p_state, p_get_selected_files, p_get_hovered_f
         local l_file = l_current_tab.current.hovered
         if l_file then
 
+            l_hovered_file = tostring(l_file.url)
+
             -- Si no es directorio
-            if not l_file.cha.is_dir then
-                l_hovered_file = tostring(l_file.url)
-                --l_hovered_file = tostring(l_file.url.path)
-            end
+            --if not l_file.cha.is_dir then
+            --    l_hovered_file = tostring(l_file.url)
+            --end
 
         end
     end
@@ -442,14 +443,14 @@ local function m_get_ui_info_sync(p_state, p_get_selected_files, p_get_hovered_f
 
 
     -- El folder de trabajo actual
-    local l_cwd = tostring(l_current_tab.current.cwd)
+    local l_cwd_url =l_current_tab.current.cwd
     --local l_cwd = l_current_tab.current.cwd
 
     -- Los archivos ocultos se muestran
     --local l_hidden_files_are_shown = l_current_tab.pref.show_hidden
 
     local l_ui_info = {
-        cwd = l_cwd,
+        cwd_url = l_cwd_url,
         selected_files = l_selected_files,
         hovered_file = l_hovered_file,
     }
@@ -470,8 +471,8 @@ local m_get_ui_info = ya.sync(m_get_ui_info_sync)
 local function m_get_plugin_state_sync(p_state)
 
     -- Establecer el valor por defecto al 'state'
-	if (p_state.cwd_root == nil) then
-		p_state.cwd_root = ""
+	if (p_state.root_wd == nil) then
+		p_state.root_wd = ""
 	end
 
 	if (p_state.script_path_1 == nil) then
@@ -484,7 +485,7 @@ local function m_get_plugin_state_sync(p_state)
 
     -- Devolver un copia del objeto 'state'
     local l_state = {
-        cwd_root = p_state.cwd_root,
+        root_wd = p_state.root_wd,
         script_path_1 = p_state.script_path_1,
         script_path_2 = p_state.script_path_2,
     }
@@ -532,11 +533,11 @@ local function m_read_args_1(p_job)
     local l_options= {}
 
     -- Opcion 'type'
-    --ya.dbg('args.type: ' .. tostring(l_args["type"]))
+    --ya.dbg('args.type: ' .. tostring(l_args["pathtype"]))
 
     if l_cmd_type == "editfiles" then
 
-        l_options.parent_type = l_args["type"]
+        l_options.open_path_type = l_args["pathtype"]
 
         -- Opcion 'editor'
         l_options.editor_type=0
@@ -571,15 +572,15 @@ local function m_read_args_1(p_job)
 
     elseif l_cmd_type == "newtab" then
 
-        l_options.parent_type = l_args["type"]
+        l_options.open_path_type = l_args["pathtype"]
 
     elseif l_cmd_type == "copycb" then
 
-        l_options.parent_type = l_args["type"]
+        l_options.open_path_type = l_args["pathtype"]
 
     elseif l_cmd_type == "gofolder" then
 
-        l_options.parent_type = l_args["type"]
+        l_options.open_path_type = l_args["pathtype"]
 
     end
 
@@ -621,7 +622,7 @@ local function m_read_args_2(p_args)
 
     if l_cmd_type == "editfiles" then
 
-        l_options.parent_type = l_args[2]
+        l_options.open_path_type = l_args[2]
 
         -- Opcion 'editor'
         l_options.editor_type=0
@@ -662,15 +663,15 @@ local function m_read_args_2(p_args)
 
     elseif l_cmd_type == "newtab" then
 
-        l_options.parent_type = l_args[2]
+        l_options.open_path_type = l_args[2]
 
     elseif l_cmd_type == "copycb" then
 
-        l_options.parent_type = l_args[2]
+        l_options.open_path_type = l_args[2]
 
     elseif l_cmd_type == "gofolder" then
 
-        l_options.parent_type = l_args[2]
+        l_options.open_path_type = l_args[2]
 
     end
 
@@ -688,14 +689,14 @@ local function m_get_flags_ui_info(p_cmd_type, p_options)
     -- Si se desea ir un folder determinado
     if p_cmd_type == "gofolder" then
 
-        if p_options.parent_type == "rootdir" then
+        if p_options.open_path_type == "rootwd" then
             l_flag_get_cwd = false
-        elseif p_options.parent_type == "rootgit" then
+        elseif p_options.open_path_type == "rootgit" then
             l_flag_get_cwd = true
-        elseif p_options.parent_type == "currentdir" then
+        elseif p_options.open_path_type == "thisdir" then
             l_flag_get_cwd = true
             l_flag_get_hovered_file = true
-        elseif p_options.parent_type == "parentdir" then
+        elseif p_options.open_path_type == "cwd" then
             l_flag_get_cwd = true
             l_flag_get_hovered_file = true
         end
@@ -714,9 +715,9 @@ local function m_get_flags_ui_info(p_cmd_type, p_options)
             l_flag_get_selected_files = true
         end
 
-        if p_options.parent_type == "currentdir" then
+        if p_options.open_path_type == "thisdir" then
             l_flag_get_hovered_file = true
-        elseif p_options.parent_type == "parentdir" then
+        elseif p_options.open_path_type == "cwd" then
             l_flag_get_hovered_file = true
         end
 
@@ -747,35 +748,35 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
     -- Salir el modo ....
 	ya.emit("escape", { visual = true })
 
+    local l_cwd_path = tostring(p_ui_info.cwd_url)
+    ya.dbg("l_cwd_path: " .. tostring(l_cwd_path))
 
     -- Si se desea ir un folder determinado
     if p_cmd_type == "gofolder" then
 
-        if p_options.parent_type == nil then
+        if p_options.open_path_type == nil then
             return
         end
 
         -- Si se desea ir al root working-dir
-        if p_options.parent_type == "rootdir" then
+        if p_options.open_path_type == "rootwd" then
 
-            --ya.dbg("cwd_root: " .. tostring(p_state.cwd_root))
-            if p_state.cwd_root == nil or p_state.cwd_root == "" then
+            --ya.dbg("root_wd: " .. tostring(p_state.root_wd))
+            if p_state.root_wd == nil or p_state.root_wd == "" then
 	            return ya.notify({ title = "go-fs (gofolder)", content = "Initial working directory is not defined", timeout = 5, level = "warn" })
             end
 
-            local url = Url(p_state.cwd_root)
+            local url = Url(p_state.root_wd)
 	    	ya.emit("cd", { url, raw = true })
             return
 
         end
 
         -- Si se desea ir al root git folder
-        if p_options.parent_type == "rootgit" then
+        if p_options.open_path_type == "rootgit" then
 
             -- Obtener informacion actual
-            local l_cwd = p_ui_info.cwd
-
-            local l_git_folder, l_message = m_go_git_root_folder(l_cwd)
+            local l_git_folder, l_message = m_go_git_root_folder(l_cwd_path)
             if l_message ~= nil then
 	            return ya.notify({ title = "go-fs (gofolder)", content = "It's not git folder (" .. l_message .. ")", timeout = 5, level = "error" })
             end
@@ -793,20 +794,21 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
 
         end
 
+        ya.err("El valor de 'p_options.open_path_type' no valido '" .. tostring(p_options.open_path_type) .. "'.")
+        return
+
     end
 
     -- Si se desea abrir un terminal editanto los archivos selected o hovered
     if p_cmd_type == "editfiles" then
 
-        if p_options.parent_type == nil then
+        if p_options.open_path_type == nil then
             return
         end
 
         -- Obtener informacion actual
-        local l_cwd = p_ui_info.cwd
         local l_selected_file_paths = p_ui_info.selected_files
         local l_hovered_file_path = p_ui_info.hovered_file
-        ya.dbg("l_cwd: " .. tostring(l_cwd))
 
         -- Obtener las rutas absolutas de los archivos seleccionados
         local l_paths = m_filter_files2(l_selected_file_paths, l_hovered_file_path, p_options.source)
@@ -819,38 +821,40 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
         -- Obtener el directorio de trabajo a usar
         local l_pane_wd = nil
         local l_message = nil
-        if p_options.parent_type == "rootdir" then
+        if p_options.open_path_type == "rootwd" then
 
             -- Validar si el root directorio
-            if p_state.cwd_root == nil or p_state.cwd_root == "" then
+            if p_state.root_wd == nil or p_state.root_wd == "" then
 	            return ya.notify({ title = "go-fs (editfiles)", content = "Initial working directory is not defined", timeout = 5, level = "warn" })
             end
-            l_pane_wd = p_state.cwd_root
+            l_pane_wd = p_state.root_wd
 
-        elseif p_options.parent_type == "rootgit" then
+        elseif p_options.open_path_type == "rootgit" then
 
-            l_pane_wd, l_message = m_go_git_root_folder(l_cwd)
+            l_pane_wd, l_message = m_go_git_root_folder(l_cwd_path)
             if l_message ~= nil then
 	            return ya.notify({ title = "go-fs (editfiles)", content = "It's not git folder (" .. l_message .. ")", timeout = 5, level = "error" })
             end
 
-        elseif p_options.parent_type == "currentdir" then
+        elseif p_options.open_path_type == "thisdir" then
 
             l_pane_wd, l_message = m_get_folder(l_hovered_file_path, false)
             if l_message ~= nil then
 	            return ya.notify({ title = "go-fs (editfiles)", content = "It's invalid hovered path (" .. l_message .. ")", timeout = 5, level = "error" })
             end
 
-        elseif p_options.parent_type == "parentdir" then
+        elseif p_options.open_path_type == "cwd" then
 
-            l_pane_wd, l_message = m_get_folder(l_hovered_file_path, true)
-            if l_message ~= nil then
-	            return ya.notify({ title = "go-fs (editfiles)", content = "It's invalid hovered path (" .. l_message .. ")", timeout = 5, level = "error" })
-            end
+            --l_pane_wd, l_message = m_get_folder(l_hovered_file_path, true)
+            --if l_message ~= nil then
+	        --    return ya.notify({ title = "go-fs (editfiles)", content = "It's invalid hovered path (" .. l_message .. ")", timeout = 5, level = "error" })
+            --end
+
+            l_pane_wd = l_cwd_path
 
         else
 
-            ya.err("El valor de 'p_options.parent_type' no valido '" .. tostring(p_options.parent_type) .. "'.")
+            ya.err("El valor de 'p_options.open_path_type' no valido '" .. tostring(p_options.open_path_type) .. "'.")
             return
 
         end
@@ -863,7 +867,7 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
         -- Abrir los archivos en un tab
         ya.dbg("p_state.script_path: " .. tostring(p_state.script_path_1))
         ya.dbg("l_pane_wd: " .. tostring(l_pane_wd))
-        l_message = m_opentab_with_selected_files(l_cwd, p_state.script_path_1, l_paths, l_pane_wd, p_options.editor_type)
+        l_message = m_opentab_with_selected_files(l_cwd_path, p_state.script_path_1, l_paths, l_pane_wd, p_options.editor_type)
         if l_message ~= nil then
 	        return ya.notify({ title = "go-fs (editfiles)", content = l_message, timeout = 5, level = "error" })
         end
@@ -875,49 +879,47 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
     -- Si se desea abrir un terminal en determino folder
     if p_cmd_type == "newtab" then
 
-        if p_options.parent_type == nil then
+        if p_options.open_path_type == nil then
             return
         end
-
-        -- Obtener informacion actual
-        local l_cwd = p_ui_info.cwd
-        ya.dbg("l_cwd: " .. tostring(l_cwd))
 
         -- Obtener el directorio de trabajo a usar
         local l_pane_wd = nil
         local l_message = nil
-        if p_options.parent_type == "rootdir" then
+        if p_options.open_path_type == "rootwd" then
 
             -- Validar si el root directorio
-            if p_state.cwd_root == nil or p_state.cwd_root == "" then
+            if p_state.root_wd == nil or p_state.root_wd == "" then
 	            return ya.notify({ title = "go-fs (newtab)", content = "Initial working directory is not defined", timeout = 5, level = "warn" })
             end
-            l_pane_wd = p_state.cwd_root
+            l_pane_wd = p_state.root_wd
 
-        elseif p_options.parent_type == "rootgit" then
+        elseif p_options.open_path_type == "rootgit" then
 
-            l_pane_wd, l_message = m_go_git_root_folder(l_cwd)
+            l_pane_wd, l_message = m_go_git_root_folder(l_cwd_path)
             if l_message ~= nil then
 	            return ya.notify({ title = "go-fs (newtab)", content = "It's not git folder (" .. l_message .. ")", timeout = 5, level = "error" })
             end
 
-        elseif p_options.parent_type == "currentdir" then
+        elseif p_options.open_path_type == "thisdir" then
 
             l_pane_wd, l_message = m_get_folder(l_hovered_file_path, false)
             if l_message ~= nil then
 	            return ya.notify({ title = "go-fs (newtab)", content = "It's invalid hovered path (" .. l_message .. ")", timeout = 5, level = "error" })
             end
 
-        elseif p_options.parent_type == "parentdir" then
+        elseif p_options.open_path_type == "cwd" then
 
-            l_pane_wd, l_message = m_get_folder(l_hovered_file_path, true)
-            if l_message ~= nil then
-	            return ya.notify({ title = "go-fs (newtab)", content = "It's invalid hovered path (" .. l_message .. ")", timeout = 5, level = "error" })
-            end
+            --l_pane_wd, l_message = m_get_folder(l_hovered_file_path, true)
+            --if l_message ~= nil then
+	        --    return ya.notify({ title = "go-fs (newtab)", content = "It's invalid hovered path (" .. l_message .. ")", timeout = 5, level = "error" })
+            --end
+
+            l_pane_wd = l_cwd_path
 
         else
 
-            ya.err("El valor de 'state.parent_type' no valido '" .. tostring(p_options.parent_type) .. "'.")
+            ya.err("El valor de 'state.open_path_type' no valido '" .. tostring(p_options.open_path_type) .. "'.")
             return
 
         end
@@ -930,7 +932,7 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
         -- Abrir los archivos en un tab
         ya.dbg("p_state.script_path: " .. tostring(p_state.script_path_2))
         ya.dbg("l_pane_wd: " .. tostring(l_pane_wd))
-        l_message = m_opentab(l_cwd, p_state.script_path_2, l_pane_wd)
+        l_message = m_opentab(l_cwd_path, p_state.script_path_2, l_pane_wd)
         if l_message ~= nil then
 	        return ya.notify({ title = "go-fs (newtab)", content = l_message, timeout = 5, level = "error" })
         end
@@ -938,15 +940,15 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
         return
 
     end
+
     -- Si se desea copiar al clipboard la ruta relativa del archivo actual (selected/hovered)
     if p_cmd_type == "copycb" then
 
-        if p_options.parent_type == nil then
+        if p_options.open_path_type == nil then
             return
         end
 
         -- Obtener informacion actual
-        local l_cwd = p_ui_info.cwd
         local l_hovered_file_path = p_ui_info.hovered_file
         if not l_hovered_file_path then
 	        return ya.notify({ title = "go-fs (copycb)", content = "You must set the cursor to a file or folder.", timeout = 5, level = "warn" })
@@ -955,20 +957,20 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
         local l_base_path = nil
 
         -- Si se desea ir al root working-dir
-        if p_options.parent_type == "rootdir" then
+        if p_options.open_path_type == "rootwd" then
 
-            --ya.dbg("cwd_root: " .. tostring(p_state.cwd_root))
-            if p_state.cwd_root == nil or p_state.cwd_root == "" then
+            --ya.dbg("root_wd: " .. tostring(p_state.root_wd))
+            if p_state.root_wd == nil or p_state.root_wd == "" then
 	            return ya.notify({ title = "go-fs (copycb)", content = "Initial working directory is not defined", timeout = 5, level = "warn" })
             end
 
-            l_base_path = p_state.cwd_root
+            l_base_path = p_state.root_wd
 
         -- Si se desea ir al root git folder
-        elseif p_options.parent_type == "rootgit" then
+        elseif p_options.open_path_type == "rootgit" then
 
 
-            local l_git_folder, l_message = m_go_git_root_folder(l_cwd)
+            local l_git_folder, l_message = m_go_git_root_folder(l_cwd_path)
             if l_message ~= nil then
 	            return ya.notify({ title = "go-fs (copycb)", content = "It's not git folder (" .. l_message .. ")", timeout = 5, level = "error" })
             end
@@ -980,6 +982,11 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
 
             ya.dbg("git_folder: " .. tostring(l_git_folder))
             l_base_path = l_git_folder
+
+        else
+
+            ya.err("El valor de 'p_options.open_path_type' no valido '" .. tostring(p_options.open_path_type) .. "'.")
+            return
 
         end
 
@@ -1017,8 +1024,8 @@ local function m_process_remote_event(p_args)
     ya.dbg("l_state  : " .. m_dump_table(l_state))
 
     local l_flag_get_cwd, l_flag_get_selected_files, l_flag_get_hovered_file = m_get_flags_ui_info(l_cmd_type, l_options)
-    ya.dbg("l_flag_get_selected_files : " .. tostring(l_flag_get_selected_files))
-    ya.dbg("l_flag_get_hovered_file   : " .. tostring(l_flag_get_hovered_file))
+    --ya.dbg("l_flag_get_selected_files : " .. tostring(l_flag_get_selected_files))
+    --ya.dbg("l_flag_get_hovered_file   : " .. tostring(l_flag_get_hovered_file))
     local l_ui_info = {}
     if l_flag_get_cwd then
         l_ui_info = m_get_ui_info(l_flag_get_selected_files, l_flag_get_hovered_file)
@@ -1051,8 +1058,8 @@ function mod.setup(p_state, p_args)
 	    return
 	end
 
-    if p_args.cwd_root ~= nil then
-        p_state.cwd_root = p_args.cwd_root
+    if p_args.root_wd ~= nil then
+        p_state.root_wd = p_args.root_wd
     end
 
 
@@ -1064,12 +1071,12 @@ function mod.setup(p_state, p_args)
     if p_args.script_path_2 ~= nil then
         p_state.script_path_2 = p_args.script_path_2
     end
-    --ya.dbg("cwd_root: " .. p_state.cwd_root)
+    --ya.dbg("root_wd: " .. p_state.root_wd)
 
 
     --2. Registrando el mensajes
     ps.sub_remote("go-fs", m_process_remote_event)
-    --ya.dbg("registro plugin (cwd: " .. p_state.cwd_root .. ")")
+    --ya.dbg("registro plugin (cwd: " .. p_state.root_wd .. ")")
 
 
 end
@@ -1085,14 +1092,16 @@ function mod.entry(p_self, p_job)
         return
     end
 
+    ya.dbg('l_cmd_type : ' .. tostring(l_cmd_type))
+    ya.dbg("l_options  : " .. m_dump_table(l_options))
 
     -- Obtener las opciones configurable del usuario usando los valores por defecto
     local l_state = m_get_plugin_state()
     ya.dbg("l_state  : " .. m_dump_table(l_state))
 
     local l_flag_get_cwd, l_flag_get_selected_files, l_flag_get_hovered_file = m_get_flags_ui_info(l_cmd_type, l_options)
-    ya.dbg("l_flag_get_selected_files : " .. tostring(l_flag_get_selected_files))
-    ya.dbg("l_flag_get_hovered_file   : " .. tostring(l_flag_get_hovered_file))
+    --ya.dbg("l_flag_get_selected_files : " .. tostring(l_flag_get_selected_files))
+    --ya.dbg("l_flag_get_hovered_file   : " .. tostring(l_flag_get_hovered_file))
     local l_ui_info = {}
     if l_flag_get_cwd then
         l_ui_info = m_get_ui_info(l_flag_get_selected_files, l_flag_get_hovered_file)

@@ -34,48 +34,58 @@ prepend_keymap = [
     #{ on = [ "T" ], run = "plugin toggle-pane max-preview", desc = "Maximize or restore the preview pane" },
 
     # Comando para copiar la ruta relativa de objeto actual selecionado (no usar los reservados 'c', 'd', 'f' y 'n')
-    { on = [ "c", "w" ], run = "plugin go-fs -- copycb --type=rootdir", desc = "Copy relative path (Inicial workdir)" },
-    { on = [ "c", "g" ], run = "plugin go-fs -- copycb --type=rootgit", desc = "Copy relative path (Root git)" },
+    { on = [ "c", "w" ], run = "plugin go-fs -- copycb --pathtype=rootwd" , desc = "Copy relative path (Root WD)" },
+    { on = [ "c", "g" ], run = "plugin go-fs -- copycb --pathtype=rootgit", desc = "Copy relative path (Root git)" },
 
     # Comandos de busqueda integrada en la vista de Yazi
-    { on = [ "f", "n" ], run = "search --via=fd", desc = "Search files by name    (fd)" },
-    { on = [ "f", "c" ], run = "search --via=rg", desc = "Search files by content (rg)" },
+    { on = [ "f", "x" ], run = "search --via=fd", desc = "Find files by name (basic)" },
+    { on = [ "f", "y" ], run = "search --via=rg", desc = "Find files by content (basic)" },
 
     # Comandos de busqueda externa usando 'fzf'
-    { on = [ "f", "d" ], run = "plugin fzf-fd -- d --tmux --height=80 --width=99", desc = "Search folders (fzf & fd)" },
-    { on = [ "f", "f" ], run = "plugin fzf-fd -- f --tmux --height=80 --width=99", desc = "Search files   (fzf & fd)" },
-    #{ on = [ "f", "w" ], run = "plugin fzf-rg", desc = "Search files by content (fzf & rg)" },
+    { on = [ "f", "w" ], run = "plugin fzf-fd -- file   --tmux --height=80 --width=99 --findpath=rootwd" , desc = "Find files (Root WD) & Select" },
+    { on = [ "f", "g" ], run = "plugin fzf-fd -- file   --tmux --height=80 --width=99 --findpath=rootgit", desc = "Find files (Root git) & Select" },
+    { on = [ "f", "c" ], run = "plugin fzf-fd -- file   --tmux --height=80 --width=99 --findpath=cwd"    , desc = "Find files (CWD) & Select" },
+    { on = [ "f", "d" ], run = "plugin fzf-fd -- folder --tmux --height=80 --width=99 --findpath=rootwd" , desc = "Find directories (Root WD) & Select" },
+    { on = [ "f", "1" ], run = "plugin fzf-fd -- folder --tmux --height=80 --width=99 --findpath=rootgit", desc = "Find directories (Root git) & Select" },
+    { on = [ "f", "2" ], run = "plugin fzf-fd -- folder --tmux --height=80 --width=99 --findpath=cwd"    , desc = "Find directories (CWD) & Select" },
 
-    # Comandos para editar archivos de texto (opcionalmente realizan una busqueda en los archivos de texto)
-    { on = [ "e", "w" ], run = "plugin go-fs -- editfiles --type=rootdir", desc = "Edit files (New TermTab, (Initial workdir)" },
-    { on = [ "e", "1" ], run = "plugin go-fs -- editfiles --type=rootdir --editor=vim" , desc = "Edit in VIM (New TermTab, Initial workdir)" },
-    { on = [ "e", "2" ], run = "plugin go-fs -- editfiles --type=rootdir --editor=nvim", desc = "Edit in NVIM (New TermTab, Initial workdir)" },
+    # Comandos para editar archivos de texto en una nueva ventana de la terminal (opcionalmente realizan una busqueda en los archivos de texto)
+    { on = [ "e", "w" ], run = "plugin fzf-rg -- rootwd --tmux --height=80 --width=99 --editor=vim --findpath=rootwd"   , desc = "Find content (Root WD) & Edit VIM (Root WD)" },
+    { on = [ "e", "1" ], run = "plugin fzf-rg -- rootwd --tmux --height=80 --width=99 --editor=nvim --findpath=rootwd"  , desc = "Find content (Root WD) & Edit NVIM (Root WD)" },
+    { on = [ "e", "g" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=vim --findpath=rootgit" , desc = "Find content (Root git) & Edit VIM (Root git)" },
+    { on = [ "e", "2" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=nvim --findpath=rootgit", desc = "Find content (Root git) & Edit NVIM (Root git)" },
+    { on = [ "e", "c" ], run = "plugin fzf-rg -- rootwd --tmux --height=80 --width=99 --editor=vim --findpath=cwd"      , desc = "Find content (CWD) & Edit VIM (Root WD)" },
+    { on = [ "e", "3" ], run = "plugin fzf-rg -- rootwd --tmux --height=80 --width=99 --editor=nvim --findpath=cwd"     , desc = "Find content (CWD) & Edit NVIM (Root WD)" },
+    { on = [ "e", "d" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=vim --findpath=cwd"     , desc = "Find content (CWD) & Edit VIM (Root git)" },
+    { on = [ "e", "4" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=nvim --findpath=cwd"    , desc = "Find content (CWD) & Edit NVIM (Root git)" },
 
-    { on = [ "e", "g" ], run = "plugin go-fs -- editfiles --type=rootgit", desc = "Edit files (New TermTab, Root git)" },
-    { on = [ "e", "3" ], run = "plugin go-fs -- editfiles --type=rootgit --editor=vim" , desc = "Edit in VIM (New TermTab, Root git)" },
-    { on = [ "e", "4" ], run = "plugin go-fs -- editfiles --type=rootgit --editor=nvim", desc = "Edit in NVIM (New TermTab, Root git)" },
+    { on = [ "e", "a" ], run = "plugin fzf-fd -- rootwd --tmux --height=80 --width=99 --editor=vim --findpath=rootwd"   , desc = "Find files (Root WD) & Edit VIM (Root WD)" },
+    { on = [ "e", "5" ], run = "plugin fzf-fd -- rootwd --tmux --height=80 --width=99 --editor=nvim --findpath=rootwd"  , desc = "Find files (Root WD) & Edit NVIM (Root WD)" },
+    { on = [ "e", "b" ], run = "plugin fzf-fd -- rootgit --tmux --height=80 --width=99 --editor=vim --findpath=rootgit" , desc = "Find files (Root git) & Edit VIM (Root git)" },
+    { on = [ "e", "6" ], run = "plugin fzf-fd -- rootgit --tmux --height=80 --width=99 --editor=nvim --findpath=rootgit", desc = "Find files (Root git) & Edit NVIM (Root git)" },
+    { on = [ "e", "e" ], run = "plugin fzf-fd -- rootwd --tmux --height=80 --width=99 --editor=vim --findpath=cwd"      , desc = "Find files (CWD) & Edit VIM (Root WD)" },
+    { on = [ "e", "7" ], run = "plugin fzf-fd -- rootwd --tmux --height=80 --width=99 --editor=nvim --findpath=cwd"     , desc = "Find files (CWD) & Edit NVIM (Root WD)" },
+    { on = [ "e", "f" ], run = "plugin fzf-fd -- rootgit --tmux --height=80 --width=99 --editor=vim --findpath=cwd"     , desc = "Find files (CWD) & Edit VIM (Root git)" },
+    { on = [ "e", "8" ], run = "plugin fzf-fd -- rootgit --tmux --height=80 --width=99 --editor=nvim --findpath=cwd"    , desc = "Find files (CWD) & Edit NVIM (Root git)" },
 
-    { on = [ "e", "a" ], run = "plugin fzf-rg -- rootdir --tmux --height=80 --width=99", desc = "Search & Edit files (New TermTab, Initial workdir)" },
-    { on = [ "e", "b" ], run = "plugin fzf-rg -- rootdir --tmux --height=80 --width=99 --editor=vim", desc = "Search & Edit VIM (New TermTab, Initial workdir)" },
-    { on = [ "e", "c" ], run = "plugin fzf-rg -- rootdir --tmux --height=80 --width=99 --editor=nvim", desc = "Search & Edit NVIM (New TermTab, Initial workdir)" },
+    { on = [ "e", "g" ], run = "plugin go-fs -- editfiles --pathtype=rootwd --editor=vim" , desc = "Edit current files VIM (Root WD)" },
+    { on = [ "e", "9" ], run = "plugin go-fs -- editfiles --pathtype=rootwd --editor=nvim", desc = "Edit current files NVIM (Root WD)" },
 
-    { on = [ "e", "d" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99", desc = "Search & Edit files (New TermTab, Root git)" },
-    { on = [ "e", "e" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=vim", desc = "Search & Edit VIM (New TermTab, Root git)" },
-    { on = [ "e", "f" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=nvim", desc = "Search & Edit NVIM (New TermTab, Root git)" },
-
+    { on = [ "e", "h" ], run = "plugin go-fs -- editfiles --pathtype=rootgit --editor=vim" , desc = "Edit current files VIM (Root git)" },
+    { on = [ "e", "0" ], run = "plugin go-fs -- editfiles --pathtype=rootgit --editor=nvim", desc = "Edit current files NVIM (Root git)" },
 
     # Comandos para ir a directorios especiales (no usar los reservados 'c', 'd', 'h', '<scape>' y 'f')
-    { on = [ "g", "1" ], run = "cd ~/.vim", desc = "Go VIM data folder" },
-    { on = [ "g", "2" ], run = "cd ~/.config/nvim", desc = "Go NoeVIM config folder" },
-    { on = [ "g", "3" ], run = "cd ~/.local/share/nvim", desc = "Go NoeVIM data   folder" },
+    { on = [ "g", "1" ], run = "cd ~/.vim", desc = "Go VIM data" },
+    { on = [ "g", "2" ], run = "cd ~/.config/nvim", desc = "Go NVIM config" },
+    { on = [ "g", "3" ], run = "cd ~/.local/share/nvim", desc = "Go NVIM data" },
     { on = [ "g", "4" ], run = "cd ~/.vim/pack", desc = "Go VIM packages" },
-    { on = [ "g", "5" ], run = "cd ~/.local/share/nvim/site/pack", desc = "Go NoeVIM packages" },
+    { on = [ "g", "5" ], run = "cd ~/.local/share/nvim/site/pack", desc = "Go NVIM packages" },
     #{ on = [ "g", "6" ], run = "cd /nas/lepc/data", desc = "Go /nas/lepc/data" },
     #{ on = [ "g", "7" ], run = "cd /tempo", desc = "Go /tempo" },
-    #{ on = [ "g", "8" ], run = "cd /dt2/vaults/notes", desc = "Go Obsidian vaults" },
 
-    { on = [ "g", "w" ], run = "plugin go-fs -- gofolder --type=rootdir", desc = "Go inicial workdir folder" },
-    { on = [ "g", "g" ], run = "plugin go-fs -- gofolder --type=rootgit", desc = "Go root git folder" },
+    { on = [ "g", "w" ], run = "plugin go-fs -- gofolder --pathtype=rootwd", desc = "Go Root WD folder" },
+    { on = [ "g", "g" ], run = "plugin go-fs -- gofolder --pathtype=rootgit", desc = "Go Root git folder" },
+    #{ on = [ "g", "n" ], run = "cd /dt2/vaults/notes", desc = "Go My Notes (Obsidian vaults)" },
 
 
     # --------------------------------------------------------------------------

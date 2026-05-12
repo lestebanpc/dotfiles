@@ -68,23 +68,25 @@ end
 
 
 -- Si un comando devuelve un conjunto de objetos  de lineas de rutas, genera un arreglo de rutas absolutas
-local function m_get_urls_of(p_cmd_output, p_cwd)
+local function m_get_urls_of(p_cmd_output, p_base_path)
 
-	local t = {}
+	local l_urls = {}
 
-	for line in p_cmd_output:gmatch("[^\r\n]+") do
+    local l_base_url = Url(p_base_path)
+    local l_item
+	for l_line in p_cmd_output:gmatch("[^\r\n]+") do
 
-		local u = Url(line)
+		local l_item = Url(l_line)
 
-		if u.is_absolute then
-		    t[#t + 1] = u
+		if l_item.is_absolute then
+            table.insert(l_urls, l_item)
 		else
-		    t[#t + 1] = p_cwd:join(u)
+            table.insert(l_urls, l_base_url:join(l_item))
 		end
 
 	end
 
-	return t
+	return l_urls
 
 end
 
@@ -92,12 +94,16 @@ end
 -- Construye el argumentos del comando de 'fd'
 -- Parametros:
 -- > Define el tipo de objeto a filtrar: 'd' si es directorio, 'f' si es un archivo
-local function m_get_fd_arguments(p_state, p_obj_type)
+local function m_get_fd_arguments(p_state, p_cmd_type)
 
 
     local l_type = ""
-    if p_obj_type ~= nil then
-        l_type = p_obj_type
+    if p_cmd_type ~= nil then
+        if p_cmd_type == "folder" then
+            l_type = 'd'
+        else
+            l_type = 'f'
+        end
     end
 
     local l_max_depth = p_state.fd_options.max_depth or 16
@@ -146,7 +152,7 @@ local function m_get_fd_arguments(p_state, p_obj_type)
 end
 
 -- Construye el argumentos del comando de 'fzf'
-local function m_get_fzf_arguments(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
+local function m_get_fzf_arguments(p_state, p_cwd_path, p_cmd_type, p_use_tmux, p_height, p_width)
 
     local l_is_multiple = p_state.fzf_options.is_multiple or false
 
@@ -182,8 +188,12 @@ local function m_get_fzf_arguments(p_state, p_cwd, p_obj_type, p_use_tmux, p_hei
     local l_prompt = ""
 
     local l_type = ""
-    if p_obj_type ~= nil then
-        l_type = p_obj_type
+    if p_cmd_type ~= nil then
+        if p_cmd_type == "folder" then
+            l_type = 'd'
+        else
+            l_type = 'f'
+        end
     end
 
     if l_type == 'd' then
@@ -244,9 +254,9 @@ local function m_get_fzf_arguments(p_state, p_cwd, p_obj_type, p_use_tmux, p_hei
 
     -- Argumento sobre el header a usar
     if l_header ~= nil and l_header ~= "" then
-        l_header = "WorkingDir: " .. tostring(p_cwd) .. ", " .. l_header
+        l_header = "WorkingDir: " .. tostring(p_cwd_path) .. ", " .. l_header
     else
-        l_header = "WorkingDir: " .. tostring(p_cwd)
+        l_header = "WorkingDir: " .. tostring(p_cwd_path)
     end
     table.insert(l_args, '--header')
     table.insert(l_args, l_header)
@@ -281,38 +291,90 @@ local function m_get_fzf_arguments(p_state, p_cwd, p_obj_type, p_use_tmux, p_hei
 
 end
 
+local function m_go_git_root_folder(p_cwd_path)
+
+    -- Generar el comando 'git'
+    local git_cmd = Command("git")
+        :arg({ "rev-parse", "--show-toplevel" })
+        :cwd(p_cwd_path)
+        :stdout(Command.PIPED)
+
+    -- Ejecutar el comando 'git'
+    local l_error = nil
+    local l_child = nil
+    local l_message = nil
+
+    l_child, l_error = git_cmd:spawn()
+    if not l_child then
+        l_message ="git failed to start: " .. tostring(l_error)
+        ya.err(l_message)
+        return nil, l_message
+    end
+
+    -- Esperar a que el comando termine de ejecutar y devuelva el STDOUT
+    local l_output = nil
+
+    l_output, l_error = l_child:wait_with_output()
+    if not l_output then
+        l_message = "git output error: " .. tostring(l_error)
+        ya.err(l_message)
+        return nil, l_message
+    end
+
+    --ya.dbg("l_output.status.success: " .. tostring(l_output.status.success))
+    --ya.dbg("l_output.status.code: " .. tostring(l_output.status.code))
+    --ya.dbg("l_output.stdout: " .. tostring(l_output.stdout))
+    --ya.dbg("l_output.stderr: " .. tostring(l_output.stderr))
+
+    -- Si el comando devolvio un codigo de error en su ejecucion
+    if not l_output.status.success then
+
+        l_message = nil
+        if l_output.status.code then
+            l_message = "git status-code: " .. tostring(l_output.status.code)
+        end
+
+        if l_output.stderr ~= nil and l_output.stderr ~= "" then
+
+            if l_message == nil then
+                l_message = "git error: " .. l_output.stderr
+            else
+                l_message = l_message .. ", git error: " .. l_output.stderr
+            end
+
+        end
+
+        ya.err("git status.code: " .. tostring(l_output.status.code))
+        ya.err("git stdout: " .. tostring(l_output.stdout))
+        ya.err("git stderr: " .. tostring(l_output.stderr))
+
+        return nil, l_message
+
+    end
+
+    l_git_folder = l_output.stdout:gsub("%s*$", "")
+    return l_git_folder, nil
+
+end
+
 
 
 ---------------------------------------------------------------------------------
 -- Funcion especificas de fd y fzf
 ---------------------------------------------------------------------------------
 
--- Funcion sincrona que se ejecutara por yazi para capturar algunos datos relevantes del estado actual de yazi.
-local m_get_current_state = ya.sync(function()
-
-	--local selected = {}
-	--for _, url in pairs(cx.active.selected) do
-	--	selected[#selected + 1] = url
-	--end
-
-	--return cx.active.current.cwd, selected
-	return cx.active.current.cwd
-
-end)
-
-
-local function m_run_fzf_fd(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
+local function m_run_fzf_fd(p_state, p_cwd_path, p_cmd_type, p_use_tmux, p_height, p_width)
 
     --1. Ejecutar el comando 'fd'
 
     -- Obtener los argumentos para ejecutar 'fd'
-    local l_args = m_get_fd_arguments(p_state, p_obj_type)
+    local l_args = m_get_fd_arguments(p_state, p_cmd_type)
     --ya.dbg("fd args: " .. m_dump_table(l_args))
 
     -- Generar el comando 'fd'
     local l_cmd = Command(m_command_fd)
         :arg(l_args)
-        :cwd(tostring(p_cwd))
+        :cwd(p_cwd_path)
         :stdout(Command.PIPED)
 
     -- Ejecutar el comando 'fd'
@@ -359,14 +421,14 @@ local function m_run_fzf_fd(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_
     --2. Ejecutar el comando 'fzf'
 
     --Obtener los argumentos para ejecutar 'fd'
-    l_args = m_get_fzf_arguments(p_state, p_cwd, p_obj_type, p_use_tmux, p_height, p_width)
+    l_args = m_get_fzf_arguments(p_state, p_cwd_path, p_cmd_type, p_use_tmux, p_height, p_width)
     --ya.dbg("fzf args: " .. m_dump_table(l_args))
 
     -- Generar el comando 'fzf'
     -- > Por ejemplo: fzf --info inline --layout reverse --height  80% --ansi --border --prompt "📁 Folder> " --header "WorDir: D:/Users/lucpea/.files"
     l_cmd = Command(m_command_fzf)
         :arg(l_args)
-        :cwd(tostring(p_cwd))
+        :cwd(p_cwd_path)
         :stdin(Command.PIPED)
         :stdout(Command.PIPED)
 
@@ -436,32 +498,25 @@ end
 local function m_read_args(p_job)
 
     if not p_job then
-        return nil, nil, nil, nil
+        return nil, nil, nil, nil, nil
     end
-
-    local width = nil
 
     local args = p_job.args or {}
     local nargs = #args
     --ya.dbg("args: " .. m_dump_table(args))
 
-    -- 1er argumento
-    local obj_type = nil
-    local data = nil
-	if nargs > 0 then
+    -- Leer el 1er argumento (tipo de subcomando)
+	if nargs <= 0 then
+        ya.dbg('No se define el subcomando')
+        return nil
+    end
 
-        data = args[1]
-        --ya.dbg("args[1]: " .. data)
+    local l_cmd_type = args[1]
+    --ya.dbg("args[1]: " .. l_cmd_type)
 
-        if data ~= nil and data ~= "" then
-            if data == "d" or data == "f" then
-                obj_type = data
-            else
-                obj_type = "d"
-                ya.err("El argumento nro 1 'type' solo puede ser 'd' o 'f', pero, tiene formato invalido '" .. data .. "'." )
-            end
-        end
-
+    if l_cmd_type == nil or l_cmd_type == "" then
+        ya.dbg('No se define el subcomando')
+        return nil
     end
 
     -- Opcion
@@ -519,7 +574,113 @@ local function m_read_args(p_job)
 
     end
 
-    return obj_type, use_tmux, height, width
+    -- Opcion
+    local l_editor_type=0
+    if args.editor then
+
+        data = tostring(args.editor)
+        if data == "vim" then
+            l_editor_type = 1
+        elseif data == "nvim" then
+            l_editor_type = 2
+        else
+            ya.err("La opcion '--editor' tiene formato invalido '" .. data .. "'." )
+        end
+
+    end
+
+    -- Opcion
+    local l_find_path_type = nil
+    if args.findpath then
+        l_find_path_type = tostring(args.findpath)
+    end
+
+    return l_cmd_type, use_tmux, height, width, l_editor_type, l_find_path_type
+
+end
+
+
+local function m_opentab_with_selected_files(p_cwd_path, p_script_path, p_selected_urls, p_pane_wd, p_editor_type)
+
+    -- Creando los argumentos del comando
+    local l_args = {
+        "-e",
+        tostring(p_editor_type),
+        "-w",
+        p_pane_wd,
+    }
+
+    local l_url = nil
+    for i = 1, #p_selected_urls do
+
+        l_url = p_selected_urls[i]
+
+        -- Convertir el objeto Url a string y adicionarlo en el arreglo de argumentos
+        table.insert(l_args, tostring(l_url))
+
+    end
+    --ya.dbg("l_args: " ..  m_dump_table(l_args, " "))
+
+
+    -- Generar el comando
+    local l_cmd = Command(p_script_path)
+        :arg(l_args)
+        :cwd(p_cwd_path)
+        :stdout(Command.PIPED)
+
+    --ya.dbg("Before Command")
+
+    -- Ejecutar el comando
+    local l_error = nil
+    local l_child = nil
+    local l_message = nil
+
+    l_child, l_error = l_cmd:spawn()
+    if not l_child then
+        l_message ="cmd failed to start: " .. tostring(l_error)
+        ya.err(l_message)
+        return l_message
+    end
+
+    --ya.dbg("Before spawn")
+
+    -- Esperar a que el comando termine de ejecutar y devuelva el STDOUT
+    local l_output = nil
+
+    l_output, l_error = l_child:wait_with_output()
+    if not l_output then
+        l_message = "cmd output error: " .. tostring(l_error)
+        ya.err(l_message)
+        return l_message
+    end
+
+    --ya.dbg("l_output.status.success: " .. tostring(l_output.status.success))
+    --ya.dbg("l_output.status.code: " .. tostring(l_output.status.code))
+    --ya.dbg("l_output.stdout: " .. tostring(l_output.stdout))
+    --ya.dbg("l_output.stderr: " .. tostring(l_output.stderr))
+
+    -- Si el comando devolvio un codigo de error en su ejecucion
+    if not l_output.status.success then
+
+        l_message = nil
+        if l_output.status.code then
+            l_message = "status-code: " .. tostring(l_output.status.code)
+        end
+
+        if l_message == nil then
+            l_message = "error during the execution '" .. p_script_path .. "'."
+        else
+            l_message = l_message .. ", error during the execution '" .. p_script_path .. "'."
+        end
+
+        ya.err(p_script_path .. " status-code: " .. tostring(l_output.status.code))
+        ya.err(p_script_path .. " stdout: " .. tostring(l_output.stdout))
+        ya.err(p_script_path .. " stderr: " .. tostring(l_output.stderr))
+        return l_message
+
+    end
+
+    return nil
 
 end
 
@@ -548,12 +709,12 @@ local function m_get_ui_info_sync()
 	--end
 
     -- El folder de trabajo actual
-    local l_cwd = l_current_tab.current.cwd
+    local l_cwd_url = l_current_tab.current.cwd
 
     -- Los archivos ocultos se muestran
     --local l_hidden_files_are_shown = l_current_tab.pref.show_hidden
 
-	return l_cwd
+	return l_cwd_url
 
 end
 
@@ -571,6 +732,16 @@ local function m_get_plugin_state_sync(p_state)
         p_state = {}
     end
 
+    -- Establecer los valores por defecto de campos generales
+	if (p_state.root_wd == nil) then
+		p_state.root_wd = ""
+	end
+
+	if (p_state.script_path == nil) then
+		p_state.script_path = ""
+	end
+
+    -- Estalecer los valores por defecto del comando 'fd'
     if p_state.fd_options == nil then
         p_state.fd_options = {}
     end
@@ -588,6 +759,7 @@ local function m_get_plugin_state_sync(p_state)
 	end
 
 
+    -- Estalecer los valores por defecto del comando 'fzf'
     if p_state.fzf_options == nil then
         p_state.fzf_options = {}
     end
@@ -657,6 +829,9 @@ local function m_get_plugin_state_sync(p_state)
     -- Devolver un copia del objeto 'state'
     local l_state = {
 
+        root_wd = p_state.root_wd,
+        script_path = p_state.script_path,
+
         -- Opciones de configuracion para el comando fzf
         fzf_options = {
 
@@ -723,13 +898,13 @@ local m_get_plugin_state = ya.sync(m_get_plugin_state_sync)
 ---------------------------------------------------------------------------------
 --
 
-function m_process_action_async(l_obj_type, l_use_tmux, l_height, l_width, l_state, l_cwd)
+function m_process_action_async(l_cmd_type, l_use_tmux, l_height, l_width, l_editor_type, l_find_path_type, l_state, l_cwd_url)
 
     -- Salir de modo ...
 	ya.emit("escape", { visual = true })
 
-    if l_cwd.scheme then
-	    if l_cwd.scheme.is_virtual then
+    if l_cwd_url.scheme then
+	    if l_cwd_url.scheme.is_virtual then
             ya.dbg("Not supported under virtual filesystems")
 	        return ya.notify({ title = "fzf-fd", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" })
 	    end
@@ -738,8 +913,38 @@ function m_process_action_async(l_obj_type, l_use_tmux, l_height, l_width, l_sta
     -- Ocultar la Yazi
 	local l_permit = ui.hide()
 
-    -- Ejecutar 'rg | fzf' y obtener el STDOUT del resultado
-    local l_output, l_message = m_run_fzf_fd(l_state, l_cwd, l_obj_type, l_use_tmux, l_height, l_width)
+    local l_cwd_path = tostring(l_cwd_url)
+    ya.dbg("l_cwd_path : " .. tostring(l_cwd_path))
+
+    -- Obtener la ruta donde se buscaran los archivos
+    local l_rootgit_path = nil
+    local l_message = nil
+
+    local l_find_path = l_cwd_path
+    if l_find_path_type == "rootwd" then
+
+        -- Validar si el 'root workingdir' esta habilitado
+        if l_state.root_wd == nil or l_state.root_wd == "" then
+	        return ya.notify({ title = "fzf-fd", content = "Initial working directory is not defined", timeout = 5, level = "warn" })
+        end
+        l_find_path = l_state.root_wd
+
+    elseif l_find_path_type == "rootgit" then
+
+        l_rootgit_path, l_message = m_go_git_root_folder(l_cwd_path)
+        if l_message ~= nil then
+	        return ya.notify({ title = "fzf-fd", content = l_message, timeout = 5, level = "error" })
+        end
+
+        l_find_path = l_rootgit_path
+
+    end
+
+    ya.dbg("l_find_path  : " .. tostring(l_find_path))
+
+    -- Ejecutar 'fd | fzf' y obtener el STDOUT del resultado
+    local l_output = nil
+    l_output, l_message = m_run_fzf_fd(l_state, l_find_path, l_cmd_type, l_use_tmux, l_height, l_width)
 
     -- Restaurar (mostrar) yazi
     if l_permit then
@@ -756,18 +961,74 @@ function m_process_action_async(l_obj_type, l_use_tmux, l_height, l_width, l_sta
 	if l_output == "" then
         return
     end
+    --ya.dbg("l_output  : " .. tostring(l_output))
 
     -- Convertir los STDOUT de ruta de los archivos seleccionados por fzf en objetos Url con rutas absolutas
-	local l_urls = m_get_urls_of(l_output, l_cwd)
+	local l_selected_urls = m_get_urls_of(l_output, l_find_path)
+    ya.dbg("l_selected_urls  : " .. m_dump_table(l_selected_urls))
 
-    -- Segun el tipo de Url, realizar tareas ...
-	if #l_urls == 1 then
-		local l_cha = fs.cha(l_urls[1])
-		ya.emit(l_cha and l_cha.is_dir and "cd" or "reveal", { l_urls[1], raw = true })
-	elseif #l_urls > 1 then
-		l_urls.state = "on"
-		ya.emit("toggle_all", l_urls)
-	end
+    -- Si solo se seleciona archivos/folderes
+    if l_cmd_type == "file" or l_cmd_type == "folder" then
+
+        -- Segun el tipo de Url, realizar tareas ...
+	    if #l_selected_urls == 1 then
+	    	local l_cha = fs.cha(l_selected_urls[1])
+	    	ya.emit(l_cha and l_cha.is_dir and "cd" or "reveal", { l_selected_urls[1], raw = true })
+	    elseif #l_selected_urls > 1 then
+	    	l_selected_urls.state = "on"
+	    	ya.emit("toggle_all", l_selected_urls)
+	    end
+
+        return
+    end
+
+    -- Si se edita archivos de texto creando una nueva ventana de la terminal
+
+    -- Obtener el directorio de trabajo a usar
+    local l_pane_wd = nil
+    l_message = nil
+
+    if l_cmd_type == "rootwd" then
+
+        -- Validar si el 'root workingdir' esta habilitado
+        if l_state.root_wd == nil or l_state.root_wd == "" then
+	        return ya.notify({ title = "fzf-fd", content = "Initial working directory is not defined", timeout = 5, level = "warn" })
+        end
+        l_pane_wd = l_state.root_wd
+
+    elseif l_cmd_type == "rootgit" then
+
+        if l_rootgit_path == nil or l_rootgit_path == "" then
+
+            l_pane_wd, l_message = m_go_git_root_folder(l_cwd_path)
+            if l_message ~= nil then
+	            return ya.notify({ title = "fzf-fd", content = l_message, timeout = 5, level = "error" })
+            end
+
+        else
+            l_pane_wd = l_rootgit_path
+        end
+
+    else
+
+        ya.err("El valor del subcomando no es valido '" .. tostring(l_options.open_type) .. "'.")
+        return
+
+    end
+
+    if l_pane_wd == nil or l_pane_wd == "" then
+        ya.dbg("No se ha definido el directorio a trabajo a usar")
+        return
+    end
+
+    -- Abrir los archivos en un tab
+    --ya.dbg("l_state.script_path: " .. tostring(l_state.script_path))
+    --ya.dbg("l_pane_wd: " .. tostring(l_pane_wd))
+	--ya.dbg("l_editor_type: " .. tostring(l_editor_type))
+    l_message = m_opentab_with_selected_files(l_cwd_path, l_state.script_path, l_selected_urls, l_pane_wd, l_editor_type)
+    if l_message ~= nil then
+	    return ya.notify({ title = "fzf-fd", content = l_message, timeout = 5, level = "error" })
+    end
 
 end
 
@@ -784,6 +1045,16 @@ function mod.setup(p_state, p_args)
 	    return
 	end
 
+    -- Establecer los valores de campos generales
+	if p_args.root_wd ~= nil then
+		p_state.root_wd = p_args.root_wd
+	end
+
+	if p_args.script_path ~= nil then
+		p_state.script_path = p_args.script_path
+    end
+
+    -- Establecer los valores del comando 'fd'
     if p_args.fd_options then
 
         if p_state.fd_options == nil then
@@ -796,6 +1067,7 @@ function mod.setup(p_state, p_args)
 
     end
 
+    -- Establecer valores del comando 'fzf'
     if p_args.fzf_options then
 
         if p_state.fzf_options == nil then
@@ -830,20 +1102,21 @@ end
 function mod.entry(p_self, p_job)
 
     -- Obtener los argumentos
-    local l_obj_type, l_use_tmux, l_height, l_width = m_read_args(p_job)
-    if l_obj_type == nil or l_obj_type == "" then
+    local l_cmd_type, l_use_tmux, l_height, l_width, l_editor_type, l_find_path_type = m_read_args(p_job)
+    if l_cmd_type == nil or l_cmd_type == "" then
         return
     end
 
+    ya.dbg("l_cmd_type  : " .. l_cmd_type)
 
     -- Obtener las opciones configurable del usuario usando los valores por defecto
     local l_state = m_get_plugin_state()
     ya.dbg("l_state  : " .. m_dump_table(l_state))
 
-    local l_cwd =  m_get_ui_info()
+    local l_cwd_url =  m_get_ui_info()
     --ya.dbg("l_ui_info: " .. m_dump_table(l_ui_info))
 
-    m_process_action_async(l_obj_type, l_use_tmux, l_height, l_width, l_state, l_cwd)
+    m_process_action_async(l_cmd_type, l_use_tmux, l_height, l_width, l_editor_type, l_find_path_type, l_state, l_cwd_url)
 
 end
 
