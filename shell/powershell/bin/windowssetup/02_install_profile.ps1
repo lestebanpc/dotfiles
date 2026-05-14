@@ -1481,9 +1481,20 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     if ($g_setup_pwsh_profile) {
 
         $l_status= m_create_folder "${document_path}" "PowerShell" $l_tag
-        $l_status= m_create_folder "${document_path}" "WindowsPowerShell" $l_tag
 
+        # Modulos del profile
+        $l_status= m_create_folder "${document_path}" "PowerShell\Modules" $l_tag
 
+        $l_target_link="${document_path}\PowerShell\Modules\MyTools"
+        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\bin\modules\MyTools"
+        if ($g_setup_access_type -eq 0) {
+            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        }
+        elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        }
+
+        # Profile
         $l_target_link="${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
         $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
 	    $l_source_filename='windows_x64.ps1'
@@ -1502,6 +1513,22 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
 
     if ($g_setup_winpwsh_profile) {
 
+        $l_status= m_create_folder "${document_path}" "WindowsPowerShell" $l_tag
+
+        # Modulos del profile
+        $l_status= m_create_folder "${document_path}" "WindowsPowerShell\Modules" $l_tag
+
+        $l_target_link="${document_path}\PowerShell\Modules\MyTools"
+        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\bin\modules\MyTools"
+        if ($g_setup_access_type -eq 0) {
+            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        }
+        elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        }
+
+        # Profile
+        $l_target_link="${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
 	    $l_target_link="${document_path}\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
         $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
 	    $l_source_filename='legacy_x64.ps1'
@@ -2126,14 +2153,14 @@ if(-not (Get-Variable g_setup_only_last_version -ErrorAction SilentlyContinue) )
 if(-not (Get-Variable g_setup_pwsh_profile -ErrorAction SilentlyContinue) ) {
     $g_setup_pwsh_profile= $true
 }
-Write-Host "Setup Powershell Profile File  : ${g_setup_pwsh_profile}" -ForegroundColor DarkGray
+Write-Host "Setup Powershell Profile       : ${g_setup_pwsh_profile}" -ForegroundColor DarkGray
 
 # Setup el archivo profile ('Microsoft.PowerShell_profile.ps1') de Windows Powershell.
 # Por defecto es '$true'.
 if(-not (Get-Variable g_setup_winpwsh_profile -ErrorAction SilentlyContinue) ) {
     $g_setup_winpwsh_profile= $true
 }
-Write-Host "Setup WinPowershell Profile File: ${g_setup_winpwsh_profile}" -ForegroundColor DarkGray
+Write-Host "Setup Win Powershell Profile   : ${g_setup_winpwsh_profile}" -ForegroundColor DarkGray
 
 
 # Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).
