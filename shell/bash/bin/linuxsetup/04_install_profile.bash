@@ -1301,14 +1301,57 @@ function _setup_user_profile() {
     # Si es un 'Desktop Server'
     if [ $g_enviroment_type -eq 1 ]; then
 
-        l_target_path=".config/foot"
         create_folderpath_on_home ".config" "foot"
+
+        l_target_path=".config/foot"
         l_target_link="foot.ini"
         l_source_path="${g_repo_name}/etc/foot"
         l_source_filename='foot_default.ini'
 
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
+
+    # Cualquier otro caso
+    else
+        printf 'Profile > No se realizara configuraciones para Foot.\n'
+    fi
+
+
+    #Archivo de configuración para el emulador de terminal Kitty
+
+    # Si es un 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        create_folderpath_on_home ".config" "kitty"
+
+        l_target_path=".config/kitty"
+        l_target_link="kitty.conf"
+        l_source_path="${g_repo_name}/etc/kitty"
+        l_source_filename='kitty.conf'
+
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+        l_target_path=".config/kitty"
+        l_target_link="keymappings.conf"
+        l_source_path="${g_repo_name}/etc/kitty"
+        l_source_filename='keymappings.conf'
+
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+        l_target_path=".config/kitty"
+        l_target_link="theme.conf"
+        l_source_path="${g_repo_name}/etc/kitty"
+        l_source_filename='theme_catppuccin_machiato.conf'
+
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+        copy_file_on_home "${g_repo_path}/etc/kitty" "custom_config_template_lnx.conf" ".config/kitty" "custom_config.conf" $l_flag_overwrites_file_modifiable "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
+               "$g_color_yellow1" "~/.config/kitty/custom_config.conf" "$g_color_reset"
 
     # Cualquier otro caso
     else

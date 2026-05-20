@@ -152,6 +152,21 @@ mod.warn_about_missing_glyphs = true
 -- The IME is useful for inputting kanji or other text that is not natively supported by the attached keyboard hardware.
 mod.use_ime = false
 
+-- Si su valor es 'true' (default), cuando el tamano de la fuente se incrementa/decrementa, la ventana tambien incrementa/decrementa
+-- su tamaño tanto horizontalmente como verticalmente.
+-- > Por defecto su valor es 'true'.
+-- > Si usa un 'Tiling Windows Manager', establezca el valor a 'false'.
+if m_custom_config.adjust_window_size_when_changing_font_size ~= nil then
+
+    if m_custom_config.adjust_window_size_when_changing_font_size then
+        mod.adjust_window_size_when_changing_font_size = true
+    else
+        mod.adjust_window_size_when_changing_font_size = false
+    end
+
+end
+
+
 
 ------------------------------------------------------------------------------------
 -- Setting> Windows> General
@@ -170,34 +185,44 @@ mod.window_frame = {
 
 -- Establecer el valor por defecto del estilo de ventana a usar.
 -- > 'm_custom_config.windows_style' define elstilo a usar en la ventana de la terminal y pede ser:
---    0 > Se establece el por defecto.
---    1 > Muestra el 'title bar' ocultando el 'tab bar' si existe solo 1 tab (estilo 'TITLE|RESIZE')
---    2 > Muestra el 'title bar' y siempre muestra el 'tab bar' (estilo 'TITLE|RESIZE')
---    3 > Solo muestra el 'tab bar' el cual incluyen los botones cerrar, maximizar, minimizar (estilo 'INTEGRATED_BUTTONS|RESIZE')
-if m_custom_config.windows_style == nil then
-    m_custom_config.windows_style = 0
-end
+--   0 > Se establece el por defecto.
+--   1 > NO muestra el 'title bar', SOLO muestra el 'tab bar' si existe mas de 1 tab y usando 'window_decorations' con 'NONE'.
+--   2 > NO muestra el 'title bar', SIEMPRE muestra el 'tab bar' y usando 'window_decorations' con 'NONE'.
+--   3 > NO muestra el 'title bar', SOLO muestra el 'tab bar' si existe mas de 1 tab y usando 'window_decorations' con 'RESIZE'.
+--   4 > NO muestra el 'title bar', SIEMPRE muestra el 'tab bar' y usando 'window_decorations' con 'RESIZE'.
+--   5 > NO muestra el 'title bar', SIEMPRE muestra el 'tab bar' y usando 'window_decorations' con 'INTEGRATED_BUTTONS|RESIZE'.
+--   6 > Muestra el 'title bar', SOLO muestra el 'tab bar' si existe mas de 1 tab y usando 'window_decorations' con 'TITLE|RESIZE'.
+--   7 > Muestra el 'title bar', SIEMPRE muestra el 'tab bar' y usando 'window_decorations' con 'TITLE|RESIZE'.
+if m_custom_config.windows_style ~= nil and m_custom_config.windows_style ~= 0 then
 
--- Configures whether the window has a title bar and/or resizable border.
--- > "NONE"
---   Disables titlebar and border (borderless mode), but causes problems with resizing and minimizing the window, so you probably want to use RESIZE
---   instead of NONE if you just want to remove the title bar.
--- > "TITLE"
---   Disable the resizable border and enable only the title bar.
--- > "RESIZE"
---   Disable the title bar but enable the resizable border
--- > "TITLE|RESIZE"
---   Enable titlebar and border. This is the default.
--- > "INTEGRATED_BUTTONS|RESIZE"
---   Place window management buttons (minimize, maximize, close) into the tab bar instead of showing a title bar.
---   Wayland error: see https://github.com/wez/wezterm/issues/4963
-if m_custom_config.windows_style == 1  or m_custom_config.windows_style == 2 then
-    mod.window_decorations = "TITLE|RESIZE"
-elseif m_custom_config.windows_style == 3 then
-    mod.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
+    -- Configures whether the window has a title bar and/or resizable border.
+    -- > "NONE"
+    --   Disables titlebar and border (borderless mode), but causes problems with resizing and minimizing the window, so you probably want to use RESIZE
+    --   instead of NONE if you just want to remove the title bar.
+    -- > "TITLE"
+    --   Disable the resizable border and enable only the title bar.
+    -- > "RESIZE"
+    --   Disable the title bar but enable the resizable border
+    -- > "TITLE|RESIZE"
+    --   Enable titlebar and border. This is the default.
+    -- > "INTEGRATED_BUTTONS|RESIZE"
+    --   Place window management buttons (minimize, maximize, close) into the tab bar instead of showing a title bar.
+    --   Wayland error: see https://github.com/wez/wezterm/issues/4963
+    --
+    if m_custom_config.windows_style == 1  or m_custom_config.windows_style == 2 then
+        mod.window_decorations = "NONE"
+    elseif m_custom_config.windows_style == 3  or m_custom_config.windows_style == 4 then
+        mod.window_decorations = "RESIZE"
+    elseif m_custom_config.windows_style == 6  or m_custom_config.windows_style == 7 then
+        mod.window_decorations = "TITLE|RESIZE"
+    elseif m_custom_config.windows_style == 5 then
 
-    if m_os_type == 0 and m_custom_config.use_gnome_style_buttons ~= nil and m_custom_config.use_gnome_style_buttons then
-        mod.integrated_title_button_style = "Gnome"
+        mod.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
+
+        if m_os_type == 0 and m_custom_config.use_gnome_style_buttons ~= nil and m_custom_config.use_gnome_style_buttons then
+            mod.integrated_title_button_style = "Gnome"
+        end
+
     end
 
 end
@@ -273,6 +298,30 @@ mod.exit_behavior = "Close"
 --mod.window_background_opacity = 0.99
 
 
+-- Indica si se requiere confirmacion cuando se intenta cerrar un tab (similara una ventana tmux)
+-- Sus valores puede ser:
+--  > "SmartPrompt"
+--    > Preguntar solo en algunos casos (default).
+--    > Muestra el prompt cuando WezTerm considera que cerrar podría interrumpir trabajo activo. Por ejemplo, esta ejecutando programas interactivo (vin, htop, etc.),
+--      procesos largos en curso, etc.
+--  > "AlwaysPrompt"
+--    > Siempre preguntar.
+--  > "NeverPrompt"
+--    > Nunca preguntar.
+if m_custom_config.close_confirmation ~= nil then
+
+    if m_custom_config.close_confirmation == 1 then
+        mod.window_close_confirmation = "AlwaysPrompt"
+    elseif m_custom_config.close_confirmation == 2 then
+        mod.window_close_confirmation = "NeverPrompt"
+    else
+        mod.window_close_confirmation = "SmartPrompt"
+    end
+
+end
+
+
+
 
 ------------------------------------------------------------------------------------
 -- Setting> Windows> Scroll
@@ -295,17 +344,22 @@ mod.enable_tab_bar = true
 
 -- Ocultar el 'tab bar' cuando solo se tiene un solo tab.
 -- > Default is false.
-if m_custom_config.windows_style == 3 or m_custom_config.windows_style == 2 then
+if m_custom_config.windows_style ~= 0 then
 
-    --Recomendado para estilo de tipo "INTEGRATED_BUTTONS|RESIZE"
-    mod.hide_tab_bar_if_only_one_tab = false
+    if m_custom_config.windows_style == 1 or m_custom_config.windows_style == 3 or m_custom_config.windows_style == 6 then
 
-elseif m_custom_config.windows_style == 1 then
+        -- Ocultar el 'tab bar' cuando solo hay uno.
+        mod.hide_tab_bar_if_only_one_tab = true
 
-    -- Ocultar el 'tab bar' cuando solo hay uno.
-    mod.hide_tab_bar_if_only_one_tab = true
+    elseif m_custom_config.windows_style == 1 then
+
+        -- Simpre mostrar el 'tab bar' (aun cuando solo hay uno).
+        mod.hide_tab_bar_if_only_one_tab = false
+
+    end
 
 end
+
 
 -- When tab_bar_at_bottom = true, the tab bar will be rendered at the bottom of the window rather than the top of the window.
 -- The default is false.

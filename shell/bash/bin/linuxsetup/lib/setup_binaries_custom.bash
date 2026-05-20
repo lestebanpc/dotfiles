@@ -122,6 +122,7 @@ declare -A gA_repos_artifact=(
         ['sesh']='joshmedeski/sesh'
         ['tmux-thumbs']='fcsonline/tmux-thumbs'
         ['wezterm']='wez/wezterm'
+        ['kitty']='kovidgoyal/kitty'
         ['cilium']='cilium/cilium-cli'
         ['rclone']="$g_empty_str"
         ['biome']='biomejs/biome'
@@ -269,7 +270,7 @@ declare -a ga_menuoption_repos=(
     "shellcheck,shfmt,marksman,luals,taplo,lemminx,flamelens,powershell_es"
     "ctags-win,ctags-nowin"
     "llama-swap"
-    "awscli,distrobox,github-cli,gitlab-cli,jp,opencode"
+    "awscli,distrobox,github-cli,gitlab-cli,jp,opencode,kitty"
     )
 
 # Tipos de archivos (usualmente binarios), que estan en el repositorio, segun el tipo de SO al cual pueden ser usados/ejecutados.
@@ -288,6 +289,7 @@ declare -A gA_repo_config_os_type=(
         ['roslyn-ls-win']=1
         ['roslyn-ls-lnx']=14
         ['wezterm']=1
+        ['kitty']=14
         ['k0s']=4
         ['runc']=6
         ['crun']=6
@@ -406,6 +408,7 @@ declare -A gA_main_arti_type=(
         ['ctags-nowin']=1
         ['marksman']=1
         ['wezterm']=1
+        ['kitty']=1
         ['qsv']=1
         ['powershell_es']=1
     )
@@ -572,6 +575,7 @@ declare -A gA_current_version_parameter4=(
     ['net-rt-aspnet']='dotnet'
     ['llvm']='llvm/bin'
     ['wezterm']='wezterm'
+    ['kitty']='kitty/bin'
     ['clangd']='lsp_servers/clangd/bin'
     ['cmake']='cmake/bin'
     ['powershell']='powershell'
@@ -2263,6 +2267,34 @@ function get_repo_artifacts() {
             fi
             ;;
 
+
+
+        kitty)
+
+            #No soportado para Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 2
+            fi
+
+            #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+            if [ $g_os_subtype_id -eq 1 ]; then
+                #No hay soporte para libc, solo musl
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("kitty-${p_repo_last_pretty_version}-arm64.txz")
+                else
+                    pna_artifact_names=("kitty-${p_repo_last_pretty_version}-x86_64.txz")
+                fi
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("kitty-${p_repo_last_pretty_version}-arm64.txz")
+                else
+                    pna_artifact_names=("kitty-${p_repo_last_pretty_version}-x86_64.txz")
+                fi
+            fi
+            pna_artifact_types=(23)
+            ;;
 
 
 
@@ -6071,7 +6103,7 @@ function _copy_artifact_files() {
                 'hicolor/128x128/apps/terminal-distrobox-icon.png'
                 'hicolor/256x256/apps/terminal-distrobox-icon.png'
                 )
-                copy_app_icon_files "${l_source_path}/icons" "la_app_icons"
+            copy_app_icon_files "${g_temp_path}/${l_source_path}/icons" "la_app_icons"
 
             #Copiando los archivos de al folder de tools:
             #Copiar los archivos de autocompletado
@@ -8677,6 +8709,7 @@ function _copy_artifact_files() {
             ;;
 
 
+
         wezterm)
 
             #A. Si son binarios Linux
@@ -8700,6 +8733,72 @@ function _copy_artifact_files() {
             #Debido que no existe relacion entre la version actual y la version de github, se almacenara la version github que se esta instalando
             save_prettyversion_on_tools "" "wezterm.info" "$p_repo_last_pretty_version" 1
             ;;
+
+
+
+        kitty)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #A. Si son binarios Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
+                return 40
+
+            fi
+
+
+            #B. Si son binarios Linux
+
+            # Creando el folder si no existe y limpiarlo si existe
+            create_or_clean_folder_on_tools 0 "kitty" 2 ""
+
+            # Descomprimiendo el archivo sin renombrar el folder
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "kitty" "" ""
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 40
+            fi
+
+            # Copiar los archivos de ayuda man para comando
+            copy_man_files "${g_tools_path}/kitty/share/man" 1
+            copy_man_files "${g_tools_path}/kitty/share/man" 5
+
+            # Copiando los iconos de la aplicacion
+            local la_app_icons=(
+                'hicolor/scalable/apps/kitty.svg'
+                ''
+                ''
+                ''
+                ''
+                ''
+                ''
+                ''
+                ''
+                ''
+                ''
+                'hicolor/256x256/apps/kitty.png'
+                )
+            copy_app_icon_files "${g_tools_path}/kitty/share/icons" "la_app_icons"
+
+            # Crear enlaces simbolicos en el '/usr/local/bin' o '~/.local/bin' (ruta 'PATH')
+            create_link_binary_file "kitty/bin" "kitty" "kitty"
+            create_link_binary_file "kitty/bin" "kitten" "kitten"
+
+
+            # Si desea crear los enlaces con en su Desktop
+            printf '%bSi desea mayor integracion con su Desktop puede realizar:\n' "$g_color_yellow1"
+            printf ' > Si kitty se instalo a nigel global (todos los usuarios):\n'
+            printf '  %bsudo cp %s %b%s%b\n' "$g_color_gray1" '~/.files/etc/kitty/desktop/system/kitty*.desktop' "$g_color_cian1" '/usr/local/share/applications' "$g_color_yellow1"
+            printf ' > Si kitty se instalo a nigel usuario:\n'
+            printf '  %bsudo cp %s %b%s%b\n' "$g_color_gray1" '~/.files/etc/kitty/desktop/local/kitty*.desktop' "$g_color_cian1" '~/.local/share/applications' "$g_color_reset"
+
+            ;;
+
 
 
 

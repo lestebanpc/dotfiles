@@ -134,7 +134,8 @@ local mod= {
     --------------------------------------------------------------------------------
 
     -- Solo valido para Linux. Si es 'true' se conectara a un compositor Wayland, caso contrario se considera un server X11.
-    -- > Si usa X11 en una distribucion que solo usa Wayland, revise que el compositor 'Xwayland' para X11 este activo:
+    -- > Si usa X11 en una distribucion que solo usa Wayland, revise que el compositor 'Xwayland' (que tambien implementa un X11 basico)
+    --   este activo:
     --   'ps -fea | grep Xwayland'
     -- > En 2026, el soporte a 'Wayland' aun esta en reconstruccion, por lo que el estilo de ventana funciona peor que el de X11.
     enable_wayland = false,
@@ -146,14 +147,24 @@ local mod= {
     color_scheme = 'Ayu Dark (Gogh)',
 
     -- Specifies the size of the font, measured in points. You may use fractional point sizes, such as 13.3, to fine tune the size.
-    -- The default font size is 12.0
+    -- > The default font size is 12.0
     font_size = 10.5,
+
+    -- Si su valor es 'true' (default), cuando el tamano de la fuente se incrementa/decrementa, la ventana tambien incrementa/decrementa
+    -- su tamaño tanto horizontalmente como verticalmente.
+    -- > Por defecto su valor es 'true'.
+    -- > Si usa un 'Tiling Windows Manager', establezca el valor a 'false'.
+    --adjust_window_size_when_changing_font_size = false,
 
     -- Estilo a usar en la ventana de la terminal
     --  0 > Se establece el por defecto.
-    --  1 > Muestra el 'title bar' ocultando el 'tab bar' si existe solo 1 tab (estilo 'TITLE|RESIZE')
-    --  2 > Muestra el 'title bar' y siempre muestra el 'tab bar' (estilo 'TITLE|RESIZE')
-    --  3 > Solo muestra el 'tab bar' el cual incluyen los botones cerrar, maximizar, minimizar (estilo 'INTEGRATED_BUTTONS|RESIZE')
+    --  1 > NO muestra el 'title bar', SOLO muestra el 'tab bar' si existe mas de 1 tab y usando 'window_decorations' con 'NONE'.
+    --  2 > NO muestra el 'title bar', SIEMPRE muestra el 'tab bar' y usando 'window_decorations' con 'NONE'.
+    --  3 > NO muestra el 'title bar', SOLO muestra el 'tab bar' si existe mas de 1 tab y usando 'window_decorations' con 'RESIZE'.
+    --  4 > NO muestra el 'title bar', SIEMPRE muestra el 'tab bar' y usando 'window_decorations' con 'RESIZE'.
+    --  5 > NO muestra el 'title bar', SIEMPRE muestra el 'tab bar' y usando 'window_decorations' con 'INTEGRATED_BUTTONS|RESIZE'.
+    --      > El 'title bar' siempre incluyen los botones cerrar, maximizar, minimizar.
+    --      > El 'title bar' siempre muestra los 'tab' aun cuando sea 1.
     --      > Limitaciones en Wayland
     --        > En 2026, aun esta en reconstruccion.
     --      > Limitaciones en X11
@@ -163,7 +174,24 @@ local mod= {
     --          https://gitlab.gnome.org/GNOME/mutter/-/issues/2912
     --        > En GNOME, no funciona el boton de minimizar
     --          https://github.com/wezterm/wezterm/issues/6086
-    windows_style = 3,
+    --  6 > Muestra el 'title bar', SOLO muestra el 'tab bar' si existe mas de 1 tab y usando 'window_decorations' con 'TITLE|RESIZE'.
+    --  7 > Muestra el 'title bar', SIEMPRE muestra el 'tab bar' y usando 'window_decorations' con 'TITLE|RESIZE'.
+    -- Si usa un 'Tiling Windows Manager', use la opcion '1' o '3'.
+    windows_style = 5,
+
+    -- Indica si se requiere confirmacion cuando se intenta cerrar un tab (similara una ventana tmux)
+    -- Sus valores puede ser:
+    --  > 0 (SmartPrompt)
+    --    > Preguntar solo en algunos casos (default).
+    --    > Muestra el prompt cuando WezTerm considera que cerrar podría interrumpir trabajo activo. Por ejemplo, esta ejecutando programas interactivo (vin, htop, etc.),
+    --      procesos largos en curso, etc.
+    --  > 1 (AlwaysPrompt)
+    --    > Siempre preguntar.
+    --  > 2 (NeverPrompt)
+    --    > Nunca preguntar.
+    -- Si usa un 'Tiling Windows Manager', use la opcion '0' o '2'.
+    --close_confirmation = 0,
+    --close_confirmation = 2,
 
     -- Ruta de los folderes de directorios personalizados (diferentes a la rutas reservadas del sistema) donde estan los archivos de fuentes.
     -- Usado cuando no tiene acceso a colocar archivos de fuentes en las rutas reservadas para el sistema o el usuario actual.
@@ -177,15 +205,22 @@ local mod= {
     --font_locator = "ConfigDirsOnly",
     font_locator = nil,
 
-    -- Define el 'leader key' a usar para el keymappings.
     -- > Si no define usara en el keymapping a 'Alt + a'.
-    -- > No use 'Ctrl + b' o 'Ctrl + a' si desea usar 'tmux'.
-    -- > En las ultimas versiones de Windows, muchas teclas que inicia con 'ALT' son procesado por el sistema operativo.
-    -- > En las ultimas versiones de GNome, 'Ctrl + Space' lo procesa el sistema operativo para selecionar el idioma y el teclado.
-    --   Si usa 'ULancher', por defecto sobrescribe este comportamiento y lo usa para ejecutarlo.
+    -- > Si va usar 'tmux' (localmente o a un servidor remoto), no use 'Ctrl + b' o 'Ctrl + a'.
+    -- > En Windows:
+    --   > La teclas que usa 'Alt' esta reservado para aplicaciones (no para el gestor de ventanas), por ejemplo para acciones
+    --     directas del menu de aplicación.
+    --   > Las ultimas versiones de windows tambien usan 'ALT' son selecionar ciertas partes del escritorio (sistema operativo),
+    --     debido a ello, en estas versiones no conviene usar 'Alt + a'.
+    --   > El sistema operativo no reserva 'Ctrl + Space', por lo puede ser usado como leader.
+    -- > En Linux:
+    --   > En GNome, por defecto, 'Ctrl + Space' esta reservado por el gestor de ventanas para selecionar el idioma y el teclado.
+    --   > La teclas que usa 'Alt' esta reservado para aplicaciones (no para el gestor de ventanas), por ejemplo para acciones
+    --     directas del menu de aplicación, por lo que si la aplicacion (como una terminal) no lo reserva, puede usarlo.
+    --   > Si usa 'ULancher', por defecto sobrescribe 'Ctrl + Space' y lo usa para mostrar su lanzador.
     leader_key = {
 
-        -- Si no se especifica, se usara 'Ctrl + Space'
+        -- Si no se especifica, se usara 'Alt + a'
         --mods = nil,
         --key = nil,
 

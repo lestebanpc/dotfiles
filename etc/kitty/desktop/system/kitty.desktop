@@ -1,0 +1,18 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Categories=System;TerminalEmulator;
+Keywords=shell;prompt;command;commandline;
+Icon=/usr/local/share/icons/hicolor/256x256/apps/kitty.png
+Exec=/usr/local/bin/kitty
+TryExec=kitty
+StartupNotify=true
+X-TerminalArgExec=--
+X-TerminalArgTitle=--title
+X-TerminalArgAppId=--class
+X-TerminalArgDir=--working-directory
+X-TerminalArgHold=--hold
+
+Name=kitty
+GenericName=Terminal emulator
+Comment=Fast, feature-rich, GPU based terminal

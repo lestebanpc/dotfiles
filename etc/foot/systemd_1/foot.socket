@@ -1,0 +1,9 @@
+[Unit]
+Description=Foot terminal socket
+
+[Socket]
+ListenStream=%t/foot_unused.sock
+SocketMode=0600
+
+[Install]
+WantedBy=sockets.target

@@ -34,8 +34,8 @@ prepend_keymap = [
     #{ on = [ "T" ], run = "plugin toggle-pane max-preview", desc = "Maximize or restore the preview pane" },
 
     # Comando para copiar la ruta relativa de objeto actual selecionado (no usar los reservados 'c', 'd', 'f' y 'n')
-    { on = [ "c", "w" ], run = "plugin go-fs -- copycb --type=rootwd", desc = "Copy relative path (Root WD)" },
-    { on = [ "c", "g" ], run = "plugin go-fs -- copycb --type=rootgit", desc = "Copy relative path (Root git)" },
+    { on = [ "c", "w" ], run = "plugin go-fs -- copycb --pathtype=rootwd", desc = "Copy relative path (Root WD)" },
+    { on = [ "c", "g" ], run = "plugin go-fs -- copycb --pathtype=rootgit", desc = "Copy relative path (Root git)" },
 
     # Comandos de busqueda integrada en la vista de Yazi
     { on = [ "f", "x" ], run = "search --via=fd", desc = "Find files (basic)" },
@@ -90,8 +90,8 @@ prepend_keymap = [
     { on = [ "g", "9" ], run = "cd C:", desc = "Go C:" },
     { on = [ "g", "0" ], run = "cd D:", desc = "Go D:" },
 
-    { on = [ "g", "w" ], run = "plugin go-fs -- gofolder --type=rootwd", desc = "Go Root WD folder" },
-    { on = [ "g", "g" ], run = "plugin go-fs -- gofolder --type=rootgit", desc = "Go Root git folder" },
+    { on = [ "g", "w" ], run = "plugin go-fs -- gofolder --pathtype=rootwd", desc = "Go Root WD folder" },
+    { on = [ "g", "g" ], run = "plugin go-fs -- gofolder --pathtype=rootgit", desc = "Go Root git folder" },
     #{ on = [ "g", "n" ], run = "cd D:/vaults/notes", desc = "Go My Notes (Obsidian vaults)" },
 
 

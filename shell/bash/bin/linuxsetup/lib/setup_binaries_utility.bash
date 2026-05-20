@@ -151,6 +151,37 @@ g_usage() {
 }
 
 
+
+
+# Valida el chechsum (hash de un archivo comprimido)
+function compare_checksum() {
+
+    local p_compressed_filename="$1"
+    local p_sha256_file="$2"
+
+    # Get the expected checksum
+    local l_expected_checksum=$(awk '{print $1}' "$p_sha256_file")
+
+    # Calculate actual checksum
+    printf "%bVerifying checksum...%b\n" "$g_color_gray1" "$g_color_reset"
+    local l_actual_checksum=$(sha256sum ${p_sha256_file} | awk '{print $1}')
+
+    # Compare checksums
+    if [ "$l_expected_checksum" != "$l_actual_checksum" ]; then
+        printf "%bError: Checksum verification failed%b\n" "$g_color_red1" "$g_color_reset"
+        printf "Expected: %s\n" "$l_expected_checksum"
+        printf "Got:      %s\n" "$l_actual_checksum"
+        printf "The downloaded file may be corrupted or tampered with\n"
+        return 1
+    fi
+
+    return 0
+
+}
+
+
+
+
 #Obtener el nombre del archivo comprimido sin su extensión
 #Parametros de entrada
 #  1> Nombre de archivo comprimido
@@ -347,13 +378,16 @@ function _dotnet_exist_version()
 #  > 'PATH_THAT_MUST_EXIST' es parte de la ruta del folder que debe existir y tener permisos de escritura, si no lo esta, arroajara el error 2.
 #  > 'PATH_THAT_MAYNOT_EXIST' es la parte de la ruta del folder que puede o no existir, por lo que requiere ser creada.
 #  > No se altero el permiso de los folderes existentes, solo de los nuevos a crear.
+#
 #Parametros de entrada> Argumentos y opciones
 #  1> Si es programa de window usar 1. Caso contrario es Linux (0)
 #  2> Ruta 'PATH_THAT_MUST_EXIST', relativa al folder tools, que debera existir.
 #  3> Ruta 'PATH_THAT_MAYNOT_EXIST', relativa al folder tools, que pueda que no exista por lo que se intentara crearlo.
 #     Para establecer los permisos correctos, se recomienda que el folder padra existe con el permiso correcto.
+#
 #Parametros de entrada> Variables globales
 # - 'g_tools_path', 'g_win_tools_path', 'g_runner_user', 'g_targethome_owner', 'g_targethome_group'
+#
 #Parametos de salida> Valor de retorno
 #  0> Se creo todo o parte de los subfolderes de la ruta indicada con exito.
 #  1> El folder ya existe y no se creo ningun folder.
@@ -458,7 +492,10 @@ function create_folderpath_on_tools() {
 
 
 
-#Crea folderes de programa si no existen y si existen puede limpiar el contenido de esos folderes
+# Si existe, siempre elimina o limpia el contenido de un subfolder de programa. Si no existe, crea el subfolder (tambie puede crear la ruta
+# base donde esta este subfolder).
+# A diferencia a 'clean_folder_on_tools', este puede crear el subfolder (de programa) si este no existe.
+#
 #Parametros de entrada> Argumentos:
 #  1> Tipo de target.
 #     0 - Si es un subfolder de programas esta en Linux (puede requerir permisos)
@@ -471,6 +508,7 @@ function create_folderpath_on_tools() {
 #     2 - Eliminar todo el subfolder y crearlo nuevamente antes del copiado
 #     3 - Renombrar la carpeta con el nombre indicado en el paremetro 5
 #  4> Solo si el parametro 4 es 3. Sufijo adicionar a la nombre del subfolder existenten
+#
 #Parametros de salida > Valor de retorno:
 #  0 - OK
 #  1 - No OK
@@ -673,8 +711,11 @@ function create_or_clean_folder_on_tools()
 }
 
 
-#Elimina/limpia un subfolder de programa y opcionalmente puede crear la ruta donde esta este subfolder (pero sin crear el subfolder)
-#Parametros de entrada> Argumentos:
+# Si existe, siempre elimina o limpia el contenido de un subfolder de programa. Pero si no existe, nunca lo crea (solo puede crear la ruta
+# base donde esta este subfolder).
+# A diferencia a 'create_or_clean_folder_on_tools', este no puede crear el subfolder (de programa).
+#
+# Parametros de entrada> Argumentos:
 #  1> Tipo de target.
 #     0 - Si es un subfolder de programas esta en Linux (puede requerir permisos)
 #     1 - Si es un subfolder de programas esta en Windows (NO requiere permisos y solo aplica en el windows asociado al WSL)
@@ -685,7 +726,8 @@ function create_or_clean_folder_on_tools()
 #     0 - Eliminar todo el subfolder
 #     1 - Renombrar la carpeta con el nombre indicado en el paremetro 5
 #  5> Solo si el parametro 4 es 2. Sufijo adicionar a la nombre del subfolder existentente
-#Parametros de salida > Valor de retorno:
+#
+# Parametros de salida > Valor de retorno:
 #  0 - OK
 #  1 - No OK
 function clean_folder_on_tools()
@@ -860,6 +902,7 @@ function clean_folder_on_tools()
 
 
 #Copia un archivo en la ruta de un programa con opcion de modificar su nombre.
+#
 #Parametros de entrada> Argumentos:
 #  01> Source path, relativo al folder temporal, donde esta el archivo a copiar.
 #  02> Source filename: representa el nombre del archivo binario a copiar.
@@ -873,6 +916,7 @@ function clean_folder_on_tools()
 #  06> Permisos a modificar (solo si el tipo de archivo es Linux)
 #      0 - No modifica el permiso del archivo (valor por defecto).
 #      1 - Establece permisos de ejecucion al archivo.
+#
 #Parametros de salida > Valor de retorno:
 #  0 - OK
 #  1 - No OK
@@ -981,6 +1025,7 @@ function copy_file_on_tools()
 
 
 #Copia un archivo o un conjunto de estos en la ruta de un programa conservando su nombre original.
+#
 #Parametros de entrada> Argumentos:
 #  01> Source path, relativo al folder temporal, donde esta el archivo a copiar.
 #  02> Source filename:
@@ -997,6 +1042,7 @@ function copy_file_on_tools()
 #  06> Permisos a modificar (solo si el tipo de archivo es Linux)
 #      0 - No modifica los permisos de los archivos (valor por defecto)
 #      1 - Establece permisos de ejecucion al archivo
+#
 #Parametros de salida > Valor de retorno:
 #  0 - OK
 #  1 - No OK
@@ -1122,12 +1168,14 @@ function copy_files_on_tools()
 
 
 #Copia archivos de ayuda desde la ruta de un programa.
+#
 #Parametros de entrada> Argumentos:
 #  01> Source path donde esta el archivo de ayuda a copiar.
 #  02> Tipo de ayuda a copiar
 #      1 - Para la ayuda man1 (archivos '*.1' o archivos '*.1.gz')
 #      5 - Para la ayuda man5 (archivos '*.5' o archivos '*.5.gz')
 #      7 - Para la ayuda man7 (archivos '*.7' o archivos '*.7.gz')
+#
 #Parametros de salida > Valor de retorno:
 #  0 - OK
 #  1 - No OK
@@ -1226,8 +1274,9 @@ function copy_man_files()
 
 
 #Copia una icono de una aplicaciones.
+#
 #Parametros de entrada> Argumentos:
-#  01> Ruta de la imagen a copiar relativo a carpeta de temporales.
+#  01> Ruta base de la imagen a copiar.
 #  02> Tipo de icono a copiar
 #      00 - Icono de resolucion escalable (usualmente un archivo de imagen vectorial '.svg')
 #      01 - Icono de resolucion 16x16
@@ -1245,6 +1294,7 @@ function copy_man_files()
 #      13 - Icono de resolucion 512X512
 #      14 - Icono de resolucion 720X720
 #      15 - Icono de resolucion 1024x1024
+#
 #Parametros de salida > Valor de retorno:
 #  0 - OK
 #  1 - No OK
@@ -1252,7 +1302,7 @@ function copy_app_icon_file()
 {
 
     #1. Argumentos
-    local p_source_image_file="${g_temp_path}/$1"
+    local p_source_image_file="$1"
 
     local p_icon_type=$2
     if [ $p_icon_type -lt 0 ] || [ $p_icon_type -gt 15 ]; then
@@ -1391,8 +1441,9 @@ function copy_app_icon_file()
 
 
 #Copia un grupo de icono de una aplicaciones.
+#
 #Parametros de entrada> Argumentos:
-#  01> Source path: Folder realativo al folder temporal donde se buscaran los archivos indicados en el siguiente parametro.
+#  01> Source path: Folder base donde se buscaran los archivos indicados en el siguiente parametro.
 #  02> Arreglo de la rutas (relativo al 'source path') de los iconos a copiar
 #      00 - Icono de resolucion escalable (usualmente un archivo de imagen vectorial '.svg')
 #      01 - Icono de resolucion 16x16
@@ -1410,6 +1461,7 @@ function copy_app_icon_file()
 #      13 - Icono de resolucion 512X512
 #      14 - Icono de resolucion 720X720
 #      15 - Icono de resolucion 1024x1024
+#
 #Parametros de salida > Valor de retorno:
 #  0 - OK
 #  1 - No OK
@@ -1467,6 +1519,7 @@ function copy_app_icon_files() {
 
 
 #Copia un fuentes en la ruta de fuentes
+#
 #Parametros de entrada> Argumentos:
 #  01> Source path, relativo al folder temporal, donde estan los archivos '*.otf' y '*.ttf'.
 #  02> Tipo de ruta target donde se movera el contenido:
@@ -1476,6 +1529,7 @@ function copy_app_icon_files() {
 #      Si no existe, el folderes se creara
 #  04> Flag '0' si se requiere actualizar el cache de fuentes del SO. Por defecto es '1' (false).
 #      Solo aplica para fuentes en Linux.
+#
 #Parametros de salida > Valor de retorno:
 #  0 - OK
 #  1 - No OK
@@ -2441,6 +2495,7 @@ _uncompress_file() {
 # - Modelo 1: El archivo comprimido solo contiene el contenido del programa. Esto se descomprime directamente en el subfolder de programa a configurar.
 # - Modelo 2: El archivo comprimido contiene un folder y recien dentro de ese folder esta el cotenido del programa. Esto de descomprime el folder programa,
 #             y luego si el folder no coindice con el nombre del subfolder del programa este se renombra a este programa.
+#
 #Parametros de entrada
 #  1> Target path type. Tipo de ruta base target donde se descomprime el archivo, puede ser:
 #     0 - Un subfolder del programas de Linux
@@ -2459,6 +2514,7 @@ _uncompress_file() {
 #     Solo es necesario cuando el comprimido genera un subfolder y se desea renombrarlo con este nombre.
 #  7> Prefijo (parte inicial) del nombre de subfolder autogenerado por la descomprención y la cual se desea renombrar.
 #     Solo es necesario cuando el comprimido genera un subfolder y se desea renombrarlo con este nombre.
+#
 #Parametros de salida
 #   > Valor de retorno:
 #      0 si es exitoso,

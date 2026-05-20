@@ -1,0 +1,9 @@
+[Unit]
+Description=Foot terminal server
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/foot --server
+#ExecStart=/usr/bin/foot --server=%t/foot_unused.sock
+Restart=on-failure

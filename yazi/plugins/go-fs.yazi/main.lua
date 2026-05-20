@@ -997,11 +997,16 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
 
         local l_url = Url(l_hovered_file_path)
         local l_relative_path = l_url:strip_prefix(l_base_path)
+        --ya.dbg('l_relative_path : ' .. tostring(l_relative_path))
+
+        -- Si no esta dentro de la ruta base, devolver la ruta absoluta formateada correctamente.
         if not l_relative_path then
-	        return ya.notify({ title = "go-fs (copycb)", content = "Error to obtain relative path", timeout = 5, level = "error" })
+	        --return ya.notify({ title = "go-fs (copycb)", content = "Error to obtain relative path", timeout = 5, level = "error" })
+            ya.clipboard(tostring(l_url))
+
         end
 
-        --ya.dbg('l_relative_path : ' .. tostring(l_relative_path))
+        -- Si esta dentro de la ruta base
         ya.clipboard(tostring(l_relative_path))
 
     end
