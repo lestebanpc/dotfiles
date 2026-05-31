@@ -124,7 +124,7 @@ fi
 
 # Ruta del tema de 'Oh-My-Posh' a usar.
 if [ -z "$g_prompt_theme" ] || [ ! -f "$g_prompt_theme" ]; then
-    g_prompt_theme=~/${g_repo_name}/etc/oh-my-posh/default_settings.json
+    g_prompt_theme=~/${g_repo_name}/etc/cli/oh-my-posh/default_settings.json
 fi
 
 # Usado por archivo de configuración de programas como TMUX, VIM, NeoVIM y CoC.

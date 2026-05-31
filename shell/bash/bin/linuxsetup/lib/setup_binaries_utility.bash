@@ -49,7 +49,6 @@ g_is_in_list() {
 g_get_repo_infos() {
 
     # Recorrer la lista de parametros identificados ....
-    local l_x=0
     local l_repo_infos=""
 
     local l_repo_id

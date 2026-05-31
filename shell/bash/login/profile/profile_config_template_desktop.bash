@@ -27,8 +27,8 @@
 #g_load_myfunc=0
 
 # Ruta del tema de 'Oh-My-Posh' usada para establecer el prompt a usar.
-# Si no se establecer (es vacio), se usara '~/${g_repo_name}/etc/oh-my-posh/default_settings.json'
-#g_prompt_theme=~/.files/etc/oh-my-posh/lepc-montys-blue1.json
+# Si no se establecer (es vacio), se usara '~/${g_repo_name}/etc/cli/oh-my-posh/default_settings.json'
+#g_prompt_theme=~/.files/etc/cli/oh-my-posh/lepc-montys-blue1.json
 
 # Folder donde se almacena los binarios de tipo comando.
 # - Si los comandos instalados por el script '~/${g_repo_name}/shell/bash/bin/linuxsetup/01_setup_binaries.bash'
@@ -36,12 +36,6 @@
 #   establecer la ruta correcta en dicha variable.
 # - Si no se especifica (es vacio), se considera la ruta estandar '/usr/local/bin'
 #g_lnx_bin_path='/usr/local/bin'
-
-# Folder base donde se encuentra la ruta de codigo.
-# > Usado para crear sesiones tmux usando 'fzf' + 'sesh' cuyo ruta es un subfolder de dicha carpeta.
-# > Si no se especifica se usara '~/code'
-# > Para mayor detalle, vease '~/.files/shell/bash/fun/fzf/fun_tmux_sesh.bash'
-#g_code_folder_path=~/code
 
 
 #-----------------------------------------------------------------------------------

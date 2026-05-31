@@ -1027,7 +1027,7 @@ function _setup_user_profile() {
     #Archivo de colores de la terminal usado por comandos basicos
     l_target_path=""
     l_target_link=".dircolors"
-    l_source_path="${g_repo_name}/etc/dircolors"
+    l_source_path="${g_repo_name}/etc/cli/dircolors"
 
     l_source_filename=''
     if [ $g_os_type -eq 1 ]; then
@@ -1173,7 +1173,7 @@ function _setup_user_profile() {
     #Archivo de configuración del GNU ReadLine
     l_target_path=""
     l_target_link=".inputrc"
-    l_source_path="${g_repo_name}/etc/readline"
+    l_source_path="${g_repo_name}/etc/cli/readline"
     l_source_filename='inputrc'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
@@ -1183,7 +1183,7 @@ function _setup_user_profile() {
     create_folderpath_on_home ".config" "gdu"
     l_target_path=".config/gdu"
     l_target_link="gdu.yaml"
-    l_source_path="${g_repo_name}/etc/gdu"
+    l_source_path="${g_repo_name}/etc/tui/gdu"
     l_source_filename='gdu_default.yaml'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
@@ -1193,7 +1193,7 @@ function _setup_user_profile() {
     #Archivo de configuración para LFTP
     l_target_path=""
     l_target_link=".lftprc"
-    l_source_path="${g_repo_name}/etc/lftp"
+    l_source_path="${g_repo_name}/etc/cli/lftp"
     l_source_filename='lftprc_default.conf'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
@@ -1204,14 +1204,14 @@ function _setup_user_profile() {
     create_folderpath_on_home ".config" "tmux"
     l_target_path=".config/tmux"
     l_target_link="tmux.conf"
-    l_source_path="${g_repo_name}/etc/tmux"
+    l_source_path="${g_repo_name}/etc/cli/tmux"
     l_source_filename='tmux.conf'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     l_source_filename='custom_config_template_1.conf'
-    copy_file_on_home "${g_repo_path}/etc/tmux" "$l_source_filename" ".config/tmux" "custom_config.conf" $l_flag_overwrites_file_modifiable "        > "
+    copy_file_on_home "${g_repo_path}/etc/cli/tmux" "$l_source_filename" ".config/tmux" "custom_config.conf" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de tmux.\n' \
            "$g_color_yellow1" "~/.config/tmux/custom_config.conf" "$g_color_reset"
@@ -1222,13 +1222,13 @@ function _setup_user_profile() {
     create_folderpath_on_home ".config/sesh" "shell"
     l_target_path=".config/sesh"
     l_target_link="sesh.toml"
-    l_source_path="${g_repo_name}/etc/sesh"
+    l_source_path="${g_repo_name}/etc/cli/sesh"
     l_source_filename='sesh_default.toml'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/etc/sesh" "custom_config_template_1.toml" ".config/sesh" "custom_config.toml" $l_flag_overwrites_file_modifiable "        > "
+    copy_file_on_home "${g_repo_path}/etc/cli/sesh" "custom_config_template_1.toml" ".config/sesh" "custom_config.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
            "$g_color_yellow1" "~/.config/sesh/custom_config.toml" "$g_color_reset"
@@ -1242,128 +1242,12 @@ function _setup_user_profile() {
     #l_status=$?
 
 
-    #Archivo de configuración para el emulador de terminal wezterm
-
-    # Es WSL
-    if [ $g_enviroment_type -eq 3 ]; then
-
-        create_folderpath_on_home ".config" "wezterm"
-
-        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_wsl_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrites_file_modifiable "        > "
-        l_status=$?
-        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
-               "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
-
-    # Si es contenedor distrobox
-    elif [ $g_enviroment_type -eq 2 ]; then
-
-        printf 'Profile > No se realizara configuraciones para Wezterm.\n'
-
-    # Si es un 'Desktop Server'
-    elif [ $g_enviroment_type -eq 1 ]; then
-
-        create_folderpath_on_home ".config" "wezterm"
-
-        l_target_path=".config/wezterm"
-        l_target_link="wezterm.lua"
-        l_source_path="${g_repo_name}/wezterm/local"
-        l_source_filename='wezterm.lua'
-
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-        l_target_path=".config/wezterm"
-        l_target_link="utils"
-        l_source_path="${g_repo_name}/wezterm/local/utils"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
-
-        copy_file_on_home "${g_repo_path}/wezterm/local" "custom_config_template_lnx.lua" ".config/wezterm" "custom_config.lua" $l_flag_overwrites_file_modifiable "        > "
-        l_status=$?
-        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
-               "$g_color_yellow1" "~/.config/wezterm/custom_config.lua" "$g_color_reset"
-
-    # Si es un 'Headless Server'
-    else
-
-        create_folderpath_on_home ".config" "wezterm"
-
-        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_lnx_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrites_file_modifiable "        > "
-        l_status=$?
-        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
-               "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
-
-
-    fi
-
-
-    #Archivo de configuración para el emulador de terminal foot
-
-    # Si es un 'Desktop Server'
-    if [ $g_enviroment_type -eq 1 ]; then
-
-        create_folderpath_on_home ".config" "foot"
-
-        l_target_path=".config/foot"
-        l_target_link="foot.ini"
-        l_source_path="${g_repo_name}/etc/foot"
-        l_source_filename='foot_default.ini'
-
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-    # Cualquier otro caso
-    else
-        printf 'Profile > No se realizara configuraciones para Foot.\n'
-    fi
-
-
-    #Archivo de configuración para el emulador de terminal Kitty
-
-    # Si es un 'Desktop Server'
-    if [ $g_enviroment_type -eq 1 ]; then
-
-        create_folderpath_on_home ".config" "kitty"
-
-        l_target_path=".config/kitty"
-        l_target_link="kitty.conf"
-        l_source_path="${g_repo_name}/etc/kitty"
-        l_source_filename='kitty.conf'
-
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-        l_target_path=".config/kitty"
-        l_target_link="keymappings.conf"
-        l_source_path="${g_repo_name}/etc/kitty"
-        l_source_filename='keymappings.conf'
-
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-        l_target_path=".config/kitty"
-        l_target_link="theme.conf"
-        l_source_path="${g_repo_name}/etc/kitty"
-        l_source_filename='theme_catppuccin_machiato.conf'
-
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-        copy_file_on_home "${g_repo_path}/etc/kitty" "custom_config_template_lnx.conf" ".config/kitty" "custom_config.conf" $l_flag_overwrites_file_modifiable "        > "
-        l_status=$?
-        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
-               "$g_color_yellow1" "~/.config/kitty/custom_config.conf" "$g_color_reset"
-
-    # Cualquier otro caso
-    else
-        printf 'Profile > No se realizara configuraciones para Foot.\n'
-    fi
-
 
     #Archivo de configuración para Lazygit
     l_target_path=".config/lazygit"
     create_folderpath_on_home ".config" "lazygit"
     l_target_link="config.yml"
-    l_source_path="${g_repo_name}/etc/lazygit"
+    l_source_path="${g_repo_name}/etc/tui/lazygit"
     l_source_filename='config_default.yaml'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
@@ -1430,131 +1314,40 @@ function _setup_user_profile() {
 
 
     #Archivo de configuración para cliente MDP 'rmpc'
+    l_target_path=".config/rmpc"
+    create_folderpath_on_home ".config" "rmpc"
 
-    # Si es un 'Desktop Server'
-    if [ $g_enviroment_type -eq 1 ]; then
+    l_target_link="config.ron"
+    l_source_path="${g_repo_name}/etc/tui/rmpc"
+    l_source_filename='config_default.ron'
 
-        l_target_path=".config/rmpc"
-        create_folderpath_on_home ".config" "rmpc"
-
-        l_target_link="config.ron"
-        l_source_path="${g_repo_name}/etc/rmpc"
-        l_source_filename='config_default.ron'
-
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-        create_folderpath_on_home ".config/rmpc" "themes"
-
-        l_target_path=".config/rmpc/themes"
-        l_target_link="theme_default.ron"
-        l_source_path="${g_repo_name}/etc/rmpc/themes"
-        l_source_filename='theme_default.ron'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-    else
-        printf 'Profile > No se realizara configuraciones para rmpc.\n'
-    fi
-
-    #Crear el enlace simbolico de comandos basicos
-    create_folderpath_on_home "" ".local/bin"
-    l_target_path=".local/bin"
-    l_target_link="osc52"
-    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-    l_source_filename='osc52.bash'
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
-    #Crear el enlace simbolico de comandos basicos
-    l_target_path=".local/bin"
-    l_target_link="tmux_run_cmd"
-    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-    l_source_filename='tmux_run_cmd.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_folderpath_on_home ".config/rmpc" "themes"
+
+    l_target_path=".config/rmpc/themes"
+    l_target_link="theme_default.ron"
+    l_source_path="${g_repo_name}/etc/tui/rmpc/themes"
+    l_source_filename='theme_default.ron'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
-
-    #Crear el enlace simbolico de comandos basicos
-    l_target_path=".local/bin"
-    l_target_link="wezterm_run_cmd"
-    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-    l_source_filename='wezterm_run_cmd.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-    l_status=$?
-
-    #Crear el enlace simbolico de comandos basicos
-    l_target_path=".local/bin"
-    l_target_link="go_files_new_termtab"
-    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-    l_source_filename='go_files_new_termtab.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-    l_status=$?
-
-    #Crear el enlace simbolico de comandos basicos
-    l_target_path=".local/bin"
-    l_target_link="go_folder_new_termtab"
-    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-    l_source_filename='go_folder_new_termtab.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-    l_status=$?
-
-    #Crear el enlace simbolico de comandos basicos
-    l_target_path=".local/bin"
-    l_target_link="fzf-tmux"
-    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-    l_source_filename='fzf-tmux.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-    l_status=$?
-
-
-
-    #Crear el enlace simbolico de comandos basicos
-    # Si es un 'Desktop Server'
-    if [ $g_enviroment_type -eq 1 ]; then
-
-        l_target_path=".local/bin"
-        l_target_link="sync_folder"
-        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-        l_source_filename='sync_folder.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-    else
-        printf 'Profile > No se establece en enlace simbolico asociado al comando "%bsync_folder%b".\n' "$g_color_gray1" "$g_color_reset"
-    fi
-
-
-
-    #Crear el enlace simbolico de comandos basicos
-    # Si es un 'Desktop Server'
-    if [ $g_enviroment_type -eq 1 ]; then
-
-        l_target_path=".local/bin"
-        l_target_link="mymusic"
-        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-        l_source_filename='mymusic.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-    else
-        printf 'Profile > No se establece en enlace simbolico asociado al comando "%bmymusic%b".\n' "$g_color_gray1" "$g_color_reset"
-    fi
 
 
     #Archivo de configuración de Git y sus archivo de connfiguracion personalzida.
     l_target_path=""
     l_target_link=".gitconfig"
-    l_source_path="${g_repo_name}/etc/git"
+    l_source_path="${g_repo_name}/etc/cli/git"
     l_source_filename='gitconfig_lnx.toml'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     create_folderpath_on_home ".config" "git"
-    copy_file_on_home "${g_repo_path}/etc/git" "user_main_template_lnx.toml" ".config/git" "user_main.toml" $l_flag_overwrites_file_modifiable "        > "
+    copy_file_on_home "${g_repo_path}/etc/cli/git" "user_main_template_lnx.toml" ".config/git" "user_main.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/etc/git" "user_work_template_lnx.toml" ".config/git" "user_mywork.toml" $l_flag_overwrites_file_modifiable "        > "
+    copy_file_on_home "${g_repo_path}/etc/cli/git" "user_work_template_lnx.toml" ".config/git" "user_mywork.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite los archivos "%b%s%b" y "%b%s%b" si desea personalizar las opciones a nivel global del usuario ("%b~/.gitconfig%b")\n' \
            "$g_color_yellow1" "~/.config/git/user_main.toml" "$g_color_reset" "$g_color_yellow1" "~/.config/git/user_mywork.toml" "$g_color_reset" \
@@ -1610,16 +1403,16 @@ function _setup_user_profile() {
     fi
 
 
-    copy_file_on_home "${g_repo_path}/etc/oh-my-posh" "$l_source_filename" "${g_repo_name}/etc/oh-my-posh" "default_settings.json" $l_flag_overwrites_file_modifiable "        > "
+    copy_file_on_home "${g_repo_path}/etc/cli/oh-my-posh" "$l_source_filename" "${g_repo_name}/etc/cli/oh-my-posh" "default_settings.json" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de oh-my-posh\n' \
-           "$g_color_yellow1" "~/.files/etc/oh-my-posh/default_settings.json" "$g_color_reset"
+           "$g_color_yellow1" "~/.files/etc/cli/oh-my-posh/default_settings.json" "$g_color_reset"
 
     #Archivo de configuración para el comando UrlScan (hecho en python)
     l_target_path=".config/urlscan"
     create_folderpath_on_home ".config" "urlscan"
     l_target_link="config.json"
-    l_source_path="${g_repo_name}/etc/urlscan"
+    l_source_path="${g_repo_name}/etc/cli/urlscan"
     l_source_filename='default_config.json'
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
@@ -1628,7 +1421,7 @@ function _setup_user_profile() {
     l_target_path=".config/nerdctl"
     create_folderpath_on_home ".config" "nerdctl"
     l_target_link="nerdctl.toml"
-    l_source_path="${g_repo_name}/etc/nerdctl"
+    l_source_path="${g_repo_name}/etc/cli/nerdctl"
     l_source_filename='config_default.toml'
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
@@ -1643,7 +1436,7 @@ function _setup_user_profile() {
         l_target_path=".config/containers"
         create_folderpath_on_home ".config" "containers"
         l_target_link="containers.conf"
-        l_source_path="${g_repo_name}/etc/podman"
+        l_source_path="${g_repo_name}/etc/cli/podman"
         l_source_filename='containers_default.toml'
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
@@ -1651,7 +1444,7 @@ function _setup_user_profile() {
         #Podman: Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
         l_target_path=".config/containers"
         l_target_link="registries.conf"
-        l_source_path="${g_repo_name}/etc/podman"
+        l_source_path="${g_repo_name}/etc/cli/podman"
         l_source_filename='registries_default.toml'
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
@@ -1659,7 +1452,7 @@ function _setup_user_profile() {
         #ContainerD: Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
         #l_target_path=".config/containerd"
         #l_target_link="config.toml"
-        #l_source_path="${g_repo_name}/etc/containerd"
+        #l_source_path="${g_repo_name}/etc/cli/containerd"
         #l_source_filename='config_overlay_default.toml'
         #create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         #l_status=$?
@@ -1669,7 +1462,7 @@ function _setup_user_profile() {
         l_target_path=".config/buildkit"
         create_folderpath_on_home ".config" "buildkit"
         l_target_link="buildkitd.toml"
-        l_source_path="${g_repo_name}/etc/buildkit"
+        l_source_path="${g_repo_name}/etc/cli/buildkit"
         l_source_filename='config_default.toml'
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
@@ -1678,15 +1471,326 @@ function _setup_user_profile() {
 
     #6. Creando el archivo de configuracion basado en un template
 
-    #Configuracion por defecto para un Cluster de Kubernates
-    create_folderpath_on_home "" ".kube"
-    copy_file_on_home "${g_repo_path}/etc/kubectl" "template_config.yaml" ".kube" "lepc_clusters.yaml" $l_flag_overwrites_file_modifiable "Profile > "
+    # Configuracion por defecto para un Cluster de Kubernates
+    #create_folderpath_on_home "" ".kube"
+    #copy_file_on_home "${g_repo_path}/etc/cli/kubectl" "template_config.yaml" ".kube" "lepc_clusters.yaml" $l_flag_overwrites_file_modifiable "Profile > "
+    #l_status=$?
+
+    # Archivo de configuración de SSH
+    create_folderpath_on_home "" ".ssh"
+    copy_file_on_home "${g_repo_path}/etc/cli/ssh" "template_linux_withpublickey.conf" ".ssh" "config" $l_flag_overwrites_file_modifiable "Profile > "
     l_status=$?
 
-    #Archivo de configuración de SSH
-    create_folderpath_on_home "" ".ssh"
-    copy_file_on_home "${g_repo_path}/etc/ssh" "template_linux_withpublickey.conf" ".ssh" "config" $l_flag_overwrites_file_modifiable "Profile > "
+    #Crear el enlace simbolico de comandos basicos
+    create_folderpath_on_home "" ".local/bin"
+    l_target_path=".local/bin"
+    l_target_link="osc52"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='osc52.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="tmux_run_cmd"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='tmux_run_cmd.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="go_files_new_termtab"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='go_files_new_termtab.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="go_folder_new_termtab"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='go_folder_new_termtab.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="fzf-tmux"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='fzf-tmux.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="s"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='tmux_session.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="gitu"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='git_utils.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
+
+    #Crear el enlace simbolico para 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        l_target_path=".local/bin"
+        l_target_link="wezterm_run_cmd"
+        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+        l_source_filename='wezterm_run_cmd.bash'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+    else
+        printf 'Profile > No se establece en enlace simbolico del comando "%bconnect_spice%b".\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+    #Crear el enlace simbolico para 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        l_target_path=".local/bin"
+        l_target_link="sync_folder"
+        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+        l_source_filename='sync_folder.bash'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+    else
+        printf 'Profile > No se establece en enlace simbolico del comando "%bsync_folder%b".\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+    #Crear el enlace simbolico para 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        l_target_path=".local/bin"
+        l_target_link="mymusic"
+        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+        l_source_filename='mymusic.bash'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+    else
+        printf 'Profile > No se establece en enlace simbolico del comando "%bmymusic%b".\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+    #Crear el enlace simbolico para 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        l_target_path=".local/bin"
+        l_target_link="connect_spice"
+        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+        l_source_filename='connect_spice.bash'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+    else
+        printf 'Profile > No se establece en enlace simbolico del comando "%bconnect_spice%b".\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+    #Crear el enlace simbolico para 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        l_target_path=".local/bin"
+        l_target_link="color_picker"
+        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+        l_source_filename='color_picker.bash'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+    else
+        printf 'Profile > No se establece en enlace simbolico del comando "%bcolor_picker%b".\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+
+
+
+
+
+    # Archivo de configuracion de satty (screenshoot) - Solo par 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        create_folderpath_on_home "" ".config/satty"
+        copy_file_on_home "${g_repo_path}/etc/gui/satty" "satty_default.toml" ".config/satty" "config.toml" $l_flag_overwrites_file_modifiable "        > "
+        l_status=$?
+
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
+               "$g_color_yellow1" "~/.config/satty/config.toml" "$g_color_reset"
+
+    else
+        printf 'Profile > No se configura "%bsatty%b" para un enviroment que no sea Desktop Server.\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+    # Archivo de configuracion de imv (visor imagenes) - Solo par 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        create_folderpath_on_home ".config" "imv"
+        l_target_path=".config/imv"
+        l_target_link="config"
+        l_source_path="${g_repo_name}/etc/gui/imv"
+        l_source_filename='imv_default.toml'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+    else
+        printf 'Profile > No se configura "%bimv%b" para un enviroment que no sea Desktop Server.\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+
+    # Archivo de configuracion de zathura (visor pdf) - Solo par 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        create_folderpath_on_home ".config" "zathura"
+        l_target_path=".config/zathura"
+        l_target_link="zathurarc"
+        l_source_path="${g_repo_name}/etc/gui/zathura"
+        l_source_filename='zathura_default.conf'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+    else
+        printf 'Profile > No se configura "%bzathura%b" para un enviroment que no sea Desktop Server.\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+
+    # Archivo de configuracion de mpv (video player) - Solo par 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        create_folderpath_on_home "" ".config/mpv"
+        copy_file_on_home "${g_repo_path}/etc/gui/mpv" "mpv_default.conf" ".config/mpv" "mpv.conf" $l_flag_overwrites_file_modifiable "        > "
+        l_status=$?
+
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
+               "$g_color_yellow1" "~/.config/mpv/mpv.conf" "$g_color_reset"
+
+    else
+        printf 'Profile > No se configura "%bmpv%b" para un enviroment que no sea Desktop Server.\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+
+
+    #Archivo de configuración para el emulador de terminal wezterm
+
+    # Es WSL
+    if [ $g_enviroment_type -eq 3 ]; then
+
+        create_folderpath_on_home ".config" "wezterm"
+
+        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_wsl_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrites_file_modifiable "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
+               "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
+
+    # Si es contenedor distrobox
+    elif [ $g_enviroment_type -eq 2 ]; then
+
+        printf 'Profile > No se realizara configuraciones para Wezterm.\n'
+
+    # Si es un 'Desktop Server'
+    elif [ $g_enviroment_type -eq 1 ]; then
+
+        create_folderpath_on_home ".config" "wezterm"
+
+        l_target_path=".config/wezterm"
+        l_target_link="wezterm.lua"
+        l_source_path="${g_repo_name}/wezterm/local"
+        l_source_filename='wezterm.lua'
+
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+        l_target_path=".config/wezterm"
+        l_target_link="utils"
+        l_source_path="${g_repo_name}/wezterm/local/utils"
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
+
+        copy_file_on_home "${g_repo_path}/wezterm/local" "custom_config_template_lnx.lua" ".config/wezterm" "custom_config.lua" $l_flag_overwrites_file_modifiable "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
+               "$g_color_yellow1" "~/.config/wezterm/custom_config.lua" "$g_color_reset"
+
+    # Si es un 'Headless Server'
+    else
+
+        create_folderpath_on_home ".config" "wezterm"
+
+        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_lnx_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrites_file_modifiable "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
+               "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
+
+
+    fi
+
+
+    #Archivo de configuración para el emulador de terminal foot
+
+    # Si es un 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        create_folderpath_on_home ".config" "foot"
+
+        l_target_path=".config/foot"
+        l_target_link="foot.ini"
+        l_source_path="${g_repo_name}/etc/gui/foot"
+        l_source_filename='foot_default.ini'
+
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+    # Cualquier otro caso
+    else
+        printf 'Profile > No se realizara configuraciones para Foot.\n'
+    fi
+
+
+    #Archivo de configuración para el emulador de terminal Kitty
+
+    # Si es un 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        create_folderpath_on_home ".config" "kitty"
+
+        l_target_path=".config/kitty"
+        l_target_link="kitty.conf"
+        l_source_path="${g_repo_name}/etc/gui/kitty"
+        l_source_filename='kitty.conf'
+
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+        l_target_path=".config/kitty"
+        l_target_link="keymappings.conf"
+        l_source_path="${g_repo_name}/etc/gui/kitty"
+        l_source_filename='keymappings.conf'
+
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+        l_target_path=".config/kitty"
+        l_target_link="theme.conf"
+        l_source_path="${g_repo_name}/etc/gui/kitty"
+        l_source_filename='theme_catppuccin_machiato.conf'
+
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+        copy_file_on_home "${g_repo_path}/etc/gui/kitty" "custom_config_template_lnx.conf" ".config/kitty" "custom_config.conf" $l_flag_overwrites_file_modifiable "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
+               "$g_color_yellow1" "~/.config/kitty/custom_config.conf" "$g_color_reset"
+
+    # Cualquier otro caso
+    else
+        printf 'Profile > No se realizara configuraciones para Foot.\n'
+    fi
 
 
 
@@ -3289,7 +3393,7 @@ g_usage() {
 _g_status=0
 
 # Parametros (argumentos) basicos del script
-gp_uninstall=1          #(0) Para instalar/actualizar
+#gp_uninstall=1          #(0) Para instalar/actualizar
                         #(1) Para desintalar
 
 # Tipo de ejecucion del script principal

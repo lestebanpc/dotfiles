@@ -14,8 +14,8 @@ $g_bin_path='D:\apps\cmds\bin'
 #$g_bin_path='C:\apps\cmds\bin'
 
 # Ruta del tema de 'Oh-My-Posh' usada para establecer el prompt a usar.
-$g_prompt_theme= "${env:USERPROFILE}\${g_repo_name}\etc\oh-my-posh\default_settings.json"
-#$g_prompt_theme= "${env:USERPROFILE}\${g_repo_name}\etc\oh-my-posh\lepc-montys-green1.json"
+$g_prompt_theme= "${env:USERPROFILE}\${g_repo_name}\etc\cli\oh-my-posh\default_settings.json"
+#$g_prompt_theme= "${env:USERPROFILE}\${g_repo_name}\etc\cli\oh-my-posh\lepc-montys-green1.json"
 
 
 #------------------------------------------------------------------------------------------------

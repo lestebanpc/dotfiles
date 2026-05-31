@@ -1,0 +1,165 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "blocks": [
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "segments": [
+        {
+          "type": "shell",
+          "style": "diamond",
+          "leading_diamond": "\ue0b6",
+          "template": "\uf120 {{ .Name }} ",
+          "foreground": "#b1b1b1",
+          "background": "#3b3b3b"
+        },
+        {
+          "type": "os",
+          "style": "powerline",
+          "template": " {{ .Icon }} {{ $parts := splitList \".\" .HostName }}{{ first $parts }} ",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "background": "#626262"
+        },
+        {
+          "type": "time",
+          "style": "powerline",
+          "template": " \udb81\udd1b {{ .CurrentDate | date .Format }} ",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "background": "#3b3b3b"
+        },
+        {
+          "type": "executiontime",
+          "style": "powerline",
+          "options": {
+            "always_enabled": true
+          },
+          "template": " \uf251 {{ .FormattedMs }} ",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "background": "#626262"
+        },
+        {
+          "type": "path",
+          "style": "powerline",
+          "options": {
+            "folder_icon": "\udb80\uddd8",
+            "folder_separator_icon": "<#000>\uf054</>",
+            "home_icon": "\uf4e2",
+            "style": "agnoster_short"
+          },
+          "template": " \uf114 {{ .Path }} ",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "background": "#3b3b3b"
+        },
+        {
+          "type": "git",
+          "style": "powerline",
+          "options": {
+            "fetch_status": true,
+            "fetch_upstream_icon": true,
+            "native_fallback": true
+          },
+          "leading_diamond": "\ue0b6",
+          "trailing_diamond": "\ue0b4",
+          "template": " {{ .UpstreamIcon }} {{ .HEAD }}{{ .BranchStatus }}{{ if .Working.Changed }} \uf044 {{ .Working.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }} \uf046 {{ .Staging.String }}{{ end }}{{ if gt .StashCount 0 }} \uf692 {{ .StashCount }}{{ end }} ",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "background": "#002800",
+          "background_templates": [
+            "{{ if .Working.Changed }}#973d46{{ end }}",
+            "{{ if .Staging.Changed }}#3f0001{{ end }}",
+            "{{ if and (gt .Ahead 0) (gt .Behind 0) }}#a35a00{{ end }}",
+            "{{ if gt .Ahead 0 }}#235284{{ end }}",
+            "{{ if gt .Behind 0 }}#84791b{{ end }}"
+          ]
+        },
+        {
+          "type": "go",
+          "style": "powerline",
+          "template": " \ue626 {{ .Full }}",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "background": "#18848e"
+        },
+        {
+          "type": "dotnet",
+          "style": "powerline",
+          "template": " \ue77f {{ .Full }}",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "background": "#406182"
+        },
+        {
+          "type": "node",
+          "style": "powerline",
+          "template": " \ue718 {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }} ",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "background": "#4d807f"
+        },
+        {
+          "type": "python",
+          "style": "powerline",
+          "template": " \ue235 {{ if .Venv }}{{ .Venv }}<#000000>\uf054</>{{ end }}{{ .Full }} ",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "background": "#4e2c5d"
+        },
+        {
+          "type": "kubectl",
+          "style": "powerline",
+          "template": " \udb84\udcfe {{if .Namespace}}{{.Namespace}}{{else}}default{{end}} ",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "background": "#626262"
+        },
+        {
+          "type": "aws",
+          "style": "powerline",
+          "template": " \ue7ad {{.Profile}}{{if .Region}}<#000>@</>{{.Region}}{{end}} ",
+          "foreground": "#b1b1b1",
+          "powerline_symbol": "\ue0b0",
+          "background": "#3b3b3b"
+        },
+        {
+          "type": "status",
+          "style": "diamond",
+          "options": {
+            "always_enabled": true
+          },
+          "trailing_diamond": "\ue0b4",
+          "template": " {{ if gt .Code 0 }}\uf467{{ else }}\uf42e{{ end }}",
+          "foreground": "#ffffff",
+          "powerline_symbol": "\ue0b0",
+          "background": "#015e6d",
+          "background_templates": ["{{ if gt .Code 0 }}red{{ end }}"]
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "segments": [
+        {
+          "type": "root",
+          "style": "plain",
+          "template": "\ue3bf ",
+          "foreground": "#259797"
+        },
+        {
+          "type": "text",
+          "style": "plain",
+          "template": "<#015e6d>\udb81\uded5</> {{.UserName}} <#015e6d>❯</>",
+          "foreground": "#259797"
+        }
+      ],
+      "newline": true
+    }
+  ],
+  "version": 3,
+  "shell_integration": true,
+  "final_space": true
+}

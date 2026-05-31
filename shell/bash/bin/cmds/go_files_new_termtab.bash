@@ -600,7 +600,7 @@ main() {
                         printf '[%bERROR%b] Valor de la opción "%b%s%b" es inválido: %b%s%b\n' "$g_color_red1" "$g_color_reset" \
                                "$g_color_gray1" "-p" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
                         _usage
-                        exit 3
+                        return 3
                     fi
 
                     if [ $2 -eq 1 ]; then
@@ -619,7 +619,7 @@ main() {
                     printf '[%bERROR%b] Valor de la opción "%b%s%b" es inválido: %b%s%b\n' "$g_color_red1" "$g_color_reset" \
                            "$g_color_gray1" "-e" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
                     _usage
-                    exit 3
+                    return 3
                 fi
 
                 if [ $2 -eq 1 ]; then

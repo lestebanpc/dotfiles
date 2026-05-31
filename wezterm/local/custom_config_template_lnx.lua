@@ -138,7 +138,9 @@ local mod= {
     --   este activo:
     --   'ps -fea | grep Xwayland'
     -- > En 2026, el soporte a 'Wayland' aun esta en reconstruccion, por lo que el estilo de ventana funciona peor que el de X11.
+    -- Si usa un 'Tiling Windows Manager' como 'Hyprland', use la opcion 'true' para tener una mejor experiencia de usuario.
     enable_wayland = false,
+    --enable_wayland = true,
 
     -- Si establece en false la navegacion solo lo puede hacer usando teclas para ingresa`r al modo copia, busqueda, copia rapida.
     enable_scrollbar = false,

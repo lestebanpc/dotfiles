@@ -27,8 +27,8 @@
 #$g_lnx_bin_path='/usr/local/bin'
 
 # Ruta del tema de 'Oh-My-Posh' usada para establecer el prompt a usar.
-# Si no se establecer (es vacio), se usara '~/${g_repo_name}/etc/oh-my-posh/default_settings.json'
-#$g_prompt_theme=~/.files/etc/oh-my-posh/lepc-montys-blue1.json
+# Si no se establecer (es vacio), se usara '~/${g_repo_name}/etc/cli/oh-my-posh/default_settings.json'
+#$g_prompt_theme=~/.files/etc/cli/oh-my-posh/lepc-montys-blue1.json
 
 
 #-----------------------------------------------------------------------------------

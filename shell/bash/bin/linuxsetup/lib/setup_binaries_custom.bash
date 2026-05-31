@@ -5268,11 +5268,11 @@ function _copy_artifact_files() {
                 #Instalación del tema
                 else
 
-                    mkdir -p ${g_repo_path}/etc/oh-my-posh/default
-                    cp -f ${g_temp_path}/${l_source_path}/*.json ${g_repo_path}/etc/oh-my-posh/default
+                    mkdir -p ${g_repo_path}/etc/cli/oh-my-posh/default
+                    cp -f ${g_temp_path}/${l_source_path}/*.json ${g_repo_path}/etc/cli/oh-my-posh/default
 
                     if [ $g_runner_is_target_user -ne 0 ]; then
-                        chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/oh-my-posh/default
+                        chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/cli/oh-my-posh/default
                     fi
 
                 fi
@@ -5291,8 +5291,8 @@ function _copy_artifact_files() {
 
                 #Instalación del tema
                 else
-                    mkdir -p "${g_win_etc_path}/oh-my-posh/default"
-                    cp -f ${g_temp_path}/${l_source_path}/*.json "${g_win_etc_path}/oh-my-posh/default"
+                    mkdir -p "${g_win_etc_path}/cli/oh-my-posh/default"
+                    cp -f ${g_temp_path}/${l_source_path}/*.json "${g_win_etc_path}/cli/oh-my-posh/default"
                 fi
             fi
             ;;

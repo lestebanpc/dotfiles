@@ -22,7 +22,7 @@ if(-not ${g_lnx_bin_path}) {
 
 # Tema por defecto de Oh-My-Posh:
 if(-not ${g_prompt_theme}) {
-    $g_prompt_theme= "${HOME}/${g_repo_name}/etc/oh-my-posh/default_settings.json"
+    $g_prompt_theme= "${HOME}/${g_repo_name}/etc/cli/oh-my-posh/default_settings.json"
 }
 
 $env:MY_REPO_PATH="${HOME}/${g_repo_name}"
