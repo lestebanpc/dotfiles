@@ -1532,11 +1532,86 @@ function _setup_user_profile() {
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
+    l_target_link="sysu"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='sys_utils.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="fileu"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='file_utils.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
     l_target_link="gitu"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='git_utils.bash'
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="k8su"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='k8s_utils.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
+    l_target_path=".local/bin"
+    l_target_link="nerdctlu"
+    l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    l_source_filename='nerdctl_utils.bash'
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
+
+    #Crear el enlace simbolico para 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        l_target_path=".local/bin"
+        l_target_link="hypru"
+        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+        l_source_filename='hyprland_utils.bash'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+    else
+        printf 'Profile > No se establece en enlace simbolico del comando "%bhypru%b".\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+    #Crear el enlace simbolico para 'Desktop Server'
+    if [ $g_enviroment_type -eq 1 ]; then
+
+        l_target_path=".local/bin"
+        l_target_link="mypc"
+        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+        l_source_filename='mypc_utils.bash'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+    else
+        printf 'Profile > No se establece en enlace simbolico del comando "%mypc%b".\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+    #Crear el enlace simbolico de comandos basicos para WSL
+    if [ $g_enviroment_type -eq 3 ]; then
+
+        l_target_path=".local/bin"
+        l_target_link="wslu"
+        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+        l_source_filename='wsl_utils.bash'
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_status=$?
+
+    else
+        printf 'Profile > No se establece en enlace simbolico del comando "%bwsl%b".\n' "$g_color_gray1" "$g_color_reset"
+    fi
 
 
     #Crear el enlace simbolico para 'Desktop Server'
@@ -1550,7 +1625,7 @@ function _setup_user_profile() {
         l_status=$?
 
     else
-        printf 'Profile > No se establece en enlace simbolico del comando "%bconnect_spice%b".\n' "$g_color_gray1" "$g_color_reset"
+        printf 'Profile > No se establece en enlace simbolico del comando "%bwezterm_run_cmd%b".\n' "$g_color_gray1" "$g_color_reset"
     fi
 
     #Crear el enlace simbolico para 'Desktop Server'
@@ -1565,48 +1640,6 @@ function _setup_user_profile() {
 
     else
         printf 'Profile > No se establece en enlace simbolico del comando "%bsync_folder%b".\n' "$g_color_gray1" "$g_color_reset"
-    fi
-
-    #Crear el enlace simbolico para 'Desktop Server'
-    if [ $g_enviroment_type -eq 1 ]; then
-
-        l_target_path=".local/bin"
-        l_target_link="mymusic"
-        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-        l_source_filename='mymusic.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-    else
-        printf 'Profile > No se establece en enlace simbolico del comando "%bmymusic%b".\n' "$g_color_gray1" "$g_color_reset"
-    fi
-
-    #Crear el enlace simbolico para 'Desktop Server'
-    if [ $g_enviroment_type -eq 1 ]; then
-
-        l_target_path=".local/bin"
-        l_target_link="connect_spice"
-        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-        l_source_filename='connect_spice.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-    else
-        printf 'Profile > No se establece en enlace simbolico del comando "%bconnect_spice%b".\n' "$g_color_gray1" "$g_color_reset"
-    fi
-
-    #Crear el enlace simbolico para 'Desktop Server'
-    if [ $g_enviroment_type -eq 1 ]; then
-
-        l_target_path=".local/bin"
-        l_target_link="color_picker"
-        l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-        l_source_filename='color_picker.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
-
-    else
-        printf 'Profile > No se establece en enlace simbolico del comando "%bcolor_picker%b".\n' "$g_color_gray1" "$g_color_reset"
     fi
 
 

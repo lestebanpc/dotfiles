@@ -13,19 +13,6 @@
 # Variables globales de configuracion general
 #-----------------------------------------------------------------------------------
 
-# Permite cargar capacidades adicionales (funciones ubicados en "~/${g_repo_name}/shell/bash/lib/mod_myfunc.bash") requeridas
-# cuando se esta en red local de 'my house'.
-# Entre las capacidades que se tiene son:
-#  > 'start_music' y 'stop_music'
-#    Permite montar la unidades de musica, establece acceso exlusivo de la tarjeta de sonido e iniciar el servidor MDP.
-#  > 'set_first_dns_server'
-#    Vuelve a establece el servidor DNS primario/local cuando se usa intefaces de red bridge y pierde comunicación.
-# Sus valores puede ser:
-#  > 0 Se importara dentro de profile la capacidades adicionales
-#  > Cualquier otro valor, no se cargara este script.
-#    Su valor por defecto es 1 (no se carga el script).
-#g_load_myfunc=0
-
 # Ruta del tema de 'Oh-My-Posh' usada para establecer el prompt a usar.
 # Si no se establecer (es vacio), se usara '~/${g_repo_name}/etc/cli/oh-my-posh/default_settings.json'
 #g_prompt_theme=~/.files/etc/cli/oh-my-posh/lepc-montys-blue1.json

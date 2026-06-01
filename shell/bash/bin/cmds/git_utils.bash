@@ -100,6 +100,88 @@ function m_get_os_type() {
 }
 
 
+# > Argumentos:
+#   1> URL del del repositorio remoto
+# > Valor de retorno
+#    0 - Repositorio GitHub
+#    1 - Repositorio GitLab
+#   99 - Repositorio desconocido
+m_get_http_url_of_gitrepo() {
+
+    #Ejemplos de input:
+    #Caso Github:
+    # > HTTPS         : https://github.com/dense-analysis/ale.git
+    # > SSH           : git@githuh.com:lestebanpc/dotfiles.git
+    # > SSH con alias : ghub-writer:lestebanpc/dotfiles.git
+    #Caso GitLab:
+    # > HTTPS         : https://gitlab.com/uc-cau/orbital/usaproject/ctacorrientes.git
+    # > SSH           : git@gitlab.com:uc-cau/orbital/usaproject/ctacorrientes.git
+    # > SSH con alias : glab-lestebanpc:uc-cau/orbital/usaproject/ctacorrientes.git
+
+    #Parametros
+    local l_remote_url=$1
+
+
+    #Obtener el host de la URL
+    local l_status=0
+    local l_tmp=${l_remote_url%.git}
+    local l_host
+    local l_path
+    local l_host_alias
+
+    #Si usa HTTPS
+    if [[ $l_remote_url =~ ^http ]]; then
+
+        l_tmp=${l_tmp#https://}
+        l_host=${l_tmp%%/*}
+        l_path=${l_tmp#*/}
+
+    #Si usa SSH
+    else
+
+        #Si no usa SSH alias
+        if [[ $l_remote_url =~ ^git@ ]]; then
+
+            l_tmp=${l_tmp#git@}
+            l_host=${l_tmp%:*}
+            l_path=${l_tmp#*:}
+
+        #Si usa un SSH alias
+        else
+
+            l_host_alias=${l_tmp%:*}
+            l_path=${l_tmp#*:}
+
+            l_host=$(ssh -G $l_host_alias | awk '$1 == "hostname" { print $2 }' 2> /dev/null)
+            if [ $? -ne 0 ]; then
+                l_status=99
+                l_host="$l_host_alias"
+            fi
+
+        fi
+    fi
+
+
+    #Determinar el tipo de repositorio segun el host
+    case "$l_host" in
+
+        github*)
+            l_status=0
+            ;;
+
+        gitlab*)
+            l_status=1
+            ;;
+
+    esac
+
+    #Mostar la URL HTTP
+    echo "https://${l_host}/${l_path}"
+    return $l_status
+}
+
+
+
 # Redefine this function to change the options
 m_fzf_cmd() {
 
@@ -189,7 +271,7 @@ m_get_remote_url() {
     fi
 
     #Obtener URL http del repositorio remoto
-    l_remote_url=$(get_http_url_of_gitrepo "$l_remote_url")
+    l_remote_url=$(m_get_http_url_of_gitrepo "$l_remote_url")
     local l_type_git=$?
     #if  [ $l_type_git -eq 99 ]; then
     #    return 3
@@ -372,6 +454,8 @@ list_objects() {
 m_usage_file() {
 
     local l_scmd_id='file'
+    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -449,6 +533,8 @@ controller_file() {
 m_usage_branch() {
 
     local l_scmd_id='branch'
+    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -528,6 +614,8 @@ controller_branch() {
 m_usage_tag() {
 
     local l_scmd_id='tag'
+    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -601,10 +689,12 @@ controller_tag() {
 m_usage_commit() {
 
     local l_scmd_id='commit'
+    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s %s%b [args]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '    %b%s %s%b [FILE]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
     printf '  > %b-h|--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -704,6 +794,8 @@ controller_commit() {
 m_usage_remote() {
 
     local l_scmd_id='remote'
+    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -780,6 +872,8 @@ controller_remote() {
 m_usage_stash() {
 
     local l_scmd_id='stash'
+    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -852,6 +946,8 @@ controller_stash() {
 m_usage_aechref() {
 
     local l_scmd_id='eachref'
+    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -1019,18 +1115,26 @@ m_get_subcmd_infos() {
 
 m_usage_global() {
 
+    local l_infos=""
+    l_infos=$(m_get_exported_functions)
+
     printf 'Usage:\n'
     printf '    %b%s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
     printf '    %b%s%b [SUBCOMMAND] [options] [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s%b -i FUNC_NAME [args]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
+
+    if [ ! -z "$l_infos" ]; then
+        printf '    %b%s%b -i FUNC_NAME [args]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
+    fi
 
     printf 'Las opciones globales usados son:\n'
     printf '  > %b-h|--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '  > %b-i FUNC_NAME%b Especifica el nombre de la funcion interna del script a ejecutar (uso interno y/o debugging).%b\n' \
-           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
-    local l_infos=$(m_get_exported_functions)
-    printf '    %bFUNC_NAME puede ser:%b %b\n\n' "$g_color_gray1" "$g_color_reset" "$l_infos"
+    if [ ! -z "$l_infos" ]; then
+
+        printf '  > %b-i FUNC_NAME%b Especifica el nombre de la funcion interna del script a ejecutar (uso interno y/o debugging).%b\n' \
+               "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+        printf '    %bFUNC_NAME puede ser:%b %b\n\n' "$g_color_gray1" "$g_color_reset" "$l_infos"
+    fi
 
     printf 'Los argumentos usados son:\n'
     printf '  > %bSUBCOMMAND%b es el nombre del subcomando. Estos pueden ser:%b\n' \

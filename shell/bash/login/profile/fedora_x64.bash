@@ -129,6 +129,8 @@ if [ -z "$g_session_src" ]; then
     elif [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
         g_session_src=2
     # Console Linux
+    #elif [[ $(tty) =~ ^/dev/tty[0-9]+$ ]]; then
+    #    g_session_src=1
     else
         g_session_src=1
     fi
@@ -272,62 +274,68 @@ export PATH
 # Comando> FZF
 #-----------------------------------------------------------------------------------
 
-# FZF> Variables de entorno
-export FZF_COMPLETION_PATH_OPTS="--walker=file,dir,hidden,follow"
-export FZF_COMPLETION_DIR_OPTS="--walker=dir,hidden,follow"
+if [ "$MY_SESSION_SRC" -ne 1 ]; then
 
-if [ ! -z "$TMUX" ] && [ "$TMUX_VERSION" -ge 330 ]; then
-    FZF_DEFAULT_OPTS="--tmux center,100%,80%
-        --layout=reverse --walker-skip=.git,node_modules
-        --info=inline --border
-        --color=bg+:#293739,bg:#0F0F0F,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"
-else
-    FZF_DEFAULT_OPTS="--height=80%
-        --layout=reverse --walker-skip=.git,node_modules
-        --info=inline --border
-        --color=bg+:#293739,bg:#0F0F0F,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"
+    # FZF> Variables de entorno
+    export FZF_COMPLETION_PATH_OPTS="--walker=file,dir,hidden,follow"
+    export FZF_COMPLETION_DIR_OPTS="--walker=dir,hidden,follow"
+
+    if [ ! -z "$TMUX" ] && [ "$TMUX_VERSION" -ge 330 ]; then
+        FZF_DEFAULT_OPTS="--tmux center,100%,80%
+            --layout=reverse --walker-skip=.git,node_modules
+            --info=inline --border
+            --color=bg+:#293739,bg:#0F0F0F,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"
+    else
+        FZF_DEFAULT_OPTS="--height=80%
+            --layout=reverse --walker-skip=.git,node_modules
+            --info=inline --border
+            --color=bg+:#293739,bg:#0F0F0F,border:#808080,spinner:#E6DB74,hl:#7E8E91,fg:#F8F8F2,header:#7E8E91,info:#A6E22E,pointer:#A6E22E,marker:#F92672,fg+:#F8F8F2,prompt:#F92672,hl+:#F92672"
+    fi
+    export FZF_DEFAULT_OPTS
+
+    export FZF_CTRL_R_OPTS="--prompt 'History> '
+        --preview 'echo {2..} | bat --color=always -pl sh'
+        --preview-window up:3:hidden:wrap
+        --bind 'ctrl-/:toggle-preview'
+        --bind 'ctrl-t:track+clear-query'
+        --bind 'ctrl-y:execute-silent(echo -n {2..} | wl-copy)+abort'
+        --header '(Ctrl+/) Toggle preview, (Ctrl+t) Clear query, (Ctrl+y) Copy command'
+        --color header:italic"
+
+    export FZF_CTRL_T_OPTS="--prompt 'Select> '
+        --bind 'ctrl-y:execute-silent(echo -n {} | wl-copy)+abort'
+        --header '(Ctrl+y) Copy file/folder path'
+        --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 4 {} | head -n 300; else bat --color=always --style=numbers,header-filename --line-range :500 {}; fi'"
+
+    export FZF_ALT_C_OPTS="--prompt 'Go to Folder> '
+        --bind 'ctrl-y:execute-silent(echo -n {} | wl-copy)+abort'
+        --header '(Ctrl+y) Copy folder path'
+        --preview 'eza --tree --color=always --icons always -L 4 {} | head -n 300'"
+
+    # FZF> El script "key bindings" y "fuzzy completion" (no puede ser modificado)
+    eval "$(fzf --bash)"
+
+    # FZF> El script "key bindings" y "fuzzy completion" (puede ser modificado)
+    #source ~/${g_repo_name}/shell/bash/login/autocomplete/fzf.bash
+    #source ~/${g_repo_name}/shell/bash/login/keybindings/fzf.bash
+
 fi
-export FZF_DEFAULT_OPTS
-
-export FZF_CTRL_R_OPTS="--prompt 'History> '
-    --preview 'echo {2..} | bat --color=always -pl sh'
-    --preview-window up:3:hidden:wrap
-    --bind 'ctrl-/:toggle-preview'
-    --bind 'ctrl-t:track+clear-query'
-    --bind 'ctrl-y:execute-silent(echo -n {2..} | wl-copy)+abort'
-    --header '(Ctrl+/) Toggle preview, (Ctrl+t) Clear query, (Ctrl+y) Copy command'
-    --color header:italic"
-
-export FZF_CTRL_T_OPTS="--prompt 'Select> '
-    --bind 'ctrl-y:execute-silent(echo -n {} | wl-copy)+abort'
-    --header '(Ctrl+y) Copy file/folder path'
-    --preview 'if [ -d {} ]; then eza --tree --color=always --icons always -L 4 {} | head -n 300; else bat --color=always --style=numbers,header-filename --line-range :500 {}; fi'"
-
-export FZF_ALT_C_OPTS="--prompt 'Go to Folder> '
-    --bind 'ctrl-y:execute-silent(echo -n {} | wl-copy)+abort'
-    --header '(Ctrl+y) Copy folder path'
-    --preview 'eza --tree --color=always --icons always -L 4 {} | head -n 300'"
-
-# FZF> El script "key bindings" y "fuzzy completion" (no puede ser modificado)
-eval "$(fzf --bash)"
-
-# FZF> El script "key bindings" y "fuzzy completion" (puede ser modificado)
-#source ~/${g_repo_name}/shell/bash/login/autocomplete/fzf.bash
-#source ~/${g_repo_name}/shell/bash/login/keybindings/fzf.bash
-
 
 #-----------------------------------------------------------------------------------
 # Comando> Otros
 #-----------------------------------------------------------------------------------
 
-# Oh-my-posh> Ejecutar el script de inicializacion segun el tema escogido
-eval "$(oh-my-posh --init --shell bash --config ${g_prompt_theme})"
-unset g_prompt_theme
+if [ "$MY_SESSION_SRC" -ne 1 ]; then
 
-# Zoxide> Ejecutar el script de inicializacion
-export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 4 {2} | head -n 300' --preview-window=down,70%"
-eval "$(zoxide init bash)"
+    # Oh-my-posh> Ejecutar el script de inicializacion segun el tema escogido
+    eval "$(oh-my-posh --init --shell bash --config ${g_prompt_theme})"
+    unset g_prompt_theme
 
+    # Zoxide> Ejecutar el script de inicializacion
+    export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 4 {2} | head -n 300' --preview-window=down,70%"
+    eval "$(zoxide init bash)"
+
+fi
 
 #-----------------------------------------------------------------------------------
 # Variable de entorno> Otros
@@ -350,7 +358,6 @@ export SYSTEMD_EDITOR="${SYSTEMD_EDITOR:-vim}"
 # Alias
 alias j!=jbang
 alias kc='kubectl'
-alias step-jwt='step crypto jwt'
 
 
 #-----------------------------------------------------------------------------------
