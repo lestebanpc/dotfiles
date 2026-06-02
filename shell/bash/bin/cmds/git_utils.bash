@@ -455,7 +455,7 @@ m_usage_file() {
 
     local l_scmd_id='file'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -534,7 +534,7 @@ m_usage_branch() {
 
     local l_scmd_id='branch'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -615,7 +615,7 @@ m_usage_tag() {
 
     local l_scmd_id='tag'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -690,7 +690,7 @@ m_usage_commit() {
 
     local l_scmd_id='commit'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -795,7 +795,7 @@ m_usage_remote() {
 
     local l_scmd_id='remote'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -873,7 +873,7 @@ m_usage_stash() {
 
     local l_scmd_id='stash'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -947,7 +947,7 @@ m_usage_aechref() {
 
     local l_scmd_id='eachref'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"

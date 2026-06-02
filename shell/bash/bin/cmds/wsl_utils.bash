@@ -63,7 +63,7 @@ m_usage_sshagent() {
 
     local l_scmd_id='sshagent'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     printf 'Usage:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
