@@ -22,7 +22,7 @@ declare -a ga_exported_functions=(
 #   > Funcion de ayuda del comando tiene el nombre 'm_usage_CMD-ID'.
 #   > Funcion de controlador del comando tiene el nombre 'controller_CMD-ID'.
 declare -A gA_subcmd_ids=(
-        ['connectvm']='Permite conectarse a una VM usandop SPICE'
+        ['connectvm']='Permite conectarse a una VM usando SPICE'
     )
 
 
@@ -363,7 +363,7 @@ m_get_subcmd_infos() {
 
     for l_scmd_id in "${!gA_subcmd_ids[@]}"; do
 
-        printf "    > %b%s%b\n" "$g_color_yellow1" "$l_scmd_id" "$g_color_reset"
+        printf "%b  > %b%s%b\n" "$g_color_gray1" "$g_color_yellow1" "$l_scmd_id" "$g_color_reset"
 
         # Obtener los alias del comando
         l_alias_list=''
@@ -384,12 +384,12 @@ m_get_subcmd_infos() {
 
         # Mostrar el alias
         if [ ! -z "$l_alias_list" ]; then
-            printf '      %bAlias: %b%b\n' "$g_color_gray1" "$l_alias_list" "$g_color_reset"
+            printf '    Alias: %b\n' "$l_alias_list"
         fi
 
         # Mostrar la descripcion
         l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-        printf "      %b%s%b\n" "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+        printf "    %b%s%b\n" "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     done
 
@@ -403,27 +403,26 @@ m_usage_global() {
     l_infos=$(m_get_exported_functions)
 
     printf 'Usage:\n'
-    printf '    %b%s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s%b [SUBCOMMAND] [options] [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s%b SUBCOMMAND%b [options] [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
     if [ ! -z "$l_infos" ]; then
-        printf '    %b%s%b -i FUNC_NAME [args]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
+        printf '    %b%s%b -i FUNC_NAME [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
     fi
 
-    printf 'Las opciones globales usados son:\n'
-    printf '  > %b-h|--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-
-    if [ ! -z "$l_infos" ]; then
-        printf '  > %b-i FUNC_NAME%b Especifica el nombre de la funcion interna del script a ejecutar (uso interno y/o debugging).%b\n' \
-               "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-        printf '    %bFUNC_NAME puede ser:%b %b\n\n' "$g_color_gray1" "$g_color_reset" "$l_infos"
-    fi
-
-    printf 'Los argumentos usados son:\n'
-    printf '  > %bSUBCOMMAND%b es el nombre del subcomando. Estos pueden ser:%b\n' \
+    printf '\nLas opciones globales usados son:\n'
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
+    if [ ! -z "$l_infos" ]; then
+        printf '%b  > %b-i FUNC_NAME%b Especifica el nombre de la funcion interna del script a ejecutar (uso interno y/o debugging).%b\n' \
+               "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+        printf '    %bFUNC_NAME puede ser:%b %b\n' "$g_color_gray1" "$g_color_reset" "$l_infos"
+    fi
+
+    printf '\nEl argumento principal es el nombre del subcomando %bSUBCOMMAND%b. Los cuales puede ser:\n' "$g_color_green1" "$g_color_reset"
     m_get_subcmd_infos
+    printf '\n'
 
 }
 
