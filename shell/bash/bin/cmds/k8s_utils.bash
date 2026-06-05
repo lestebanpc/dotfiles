@@ -98,21 +98,52 @@ declare -A gA_subcmd_alias=(
     )
 
 
-# Carpetas de archivos temporales ¿porque usar la memoria y no usar "/var/tmp/"?
-_g_tmp_data_path="/tmp/.files"
-if [ ! -d "$_g_tmp_data_path" ]; then
-    mkdir -p $_g_tmp_data_path
-fi
-
-# Identificador de una session interactiva (usuario y id por sesion)
-if [ -z "$_g_uid" ]; then
-    # ID del proceso del interprete shell actual (pueder ser bash o no)
-    _g_uid="$$"
+# Carpetas de archivos temporales
+g_tmpfile_path="${XDG_RUNTIME_DIR:-/tmp}/myfiles"
+if [ ! -d "$g_tmpfile_path" ]; then
+    mkdir -p "$g_tmpfile_path"
 fi
 
 
+# Se requiere tener:
+# > No colisiona entre usuarios.
+# > No colisiona entre sesiones simultáneas.
+m_get_tmpfile_suffix() {
 
-_g_data_object_json=""
+    local l_tty=$(tty | sed 's#^/dev/##; s#/##g')
+
+    # Usando
+    # > Se limpia automáticamente al cerrar la última sesión del usuario.
+    # > No dependes de políticas de limpieza de /tmp
+    local l_suffix=''
+    if [ ! -z "$XDG_RUNTIME_DIR" ]; then
+
+        if [ ! -z "$XDG_SESSION_ID" ]; then
+            l_suffix="ses${XDG_SESSION_ID}_${l_tty}"
+        else
+            l_suffix="${l_tty}_pid$$"
+        fi
+
+    else
+
+        local l_uid="${UID}"
+        if [ -z "$l_uid" ]; then
+            l_uid=$(id -u)
+        fi
+
+        if [ ! -z "$XDG_SESSION_ID" ]; then
+            l_suffix="uid${l_uid}_ses${XDG_SESSION_ID}_${l_tty}"
+        else
+            l_suffix="uid${l_uid}_${l_tty}_pid$$"
+        fi
+
+    fi
+
+    echo "$l_suffix"
+
+}
+
+g_tmpfile_suffix=$(m_get_tmpfile_suffix)
 
 
 #Plantilla de opciones usando en las acciones FZF, cuyo formato es "resource-type/[resource-name] -n=[namespace]"
@@ -121,13 +152,51 @@ _g_data_object_json=""
 _g_fzf_kc_options=""
 
 #Nombre del archivo de dato
-_g_fzf_kc_data_file=""
+_g_temfile_fullpath=""
 
+
+_g_data_object_json=""
 
 
 # -------------------------------------------------------------------------------------
 # General functions
 # -------------------------------------------------------------------------------------
+
+# Obtener los alias asociados del subcomando ID
+m_get_alias_by_subcmd_id() {
+
+    local p_scmd_id="$1"
+
+    if [ -z "$p_scmd_id" ]; then
+        return 0
+    fi
+
+    # Obtener los alias del comando
+    local l_alias_list=''
+    local l_alias
+    local l_id
+
+    for l_alias in "${!gA_subcmd_alias[@]}"; do
+
+        l_id="${gA_subcmd_alias[${l_alias}]}"
+
+        if [ "$l_id" = "$p_scmd_id" ]; then
+            if [ -z "$l_alias_list" ]; then
+                printf -v l_alias_list "'%b%s%b'" "$g_color_yellow1" "$l_alias" "$g_color_reset"
+            else
+                printf -v l_alias_list "%b, '%b%s%b'" "$l_alias_list" "$g_color_yellow1" "$l_alias" "$g_color_reset"
+            fi
+        fi
+
+    done
+
+    echo "$l_alias_list"
+    return 0
+
+}
+
+
+
 
 #Argumentos:
 #  1 > Si es 0, se muestra el default Namespace
@@ -583,7 +652,7 @@ _choose_and_show_logs() {
 
     #2.1. Obtener los nombres del contenedor si no se especifica
     local l_container
-    if [ -z "$3"]; then
+    if [ -z "$3" ]; then
         _choose_container_for_log
         l_container="$_g_container_name"
     else
@@ -2044,74 +2113,90 @@ m_usage_resource() {
 
     local l_scmd_id='resource'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
-    printf 'Usage:\n'
-    printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s %s%b [args]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    # Obtener los alias del comando
+    local l_alias_list
+    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+
+    # Mostrar el alias:
+    if [ ! -z "$l_alias_list" ]; then
+        printf '%bAlias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
+    fi
+
+
+    printf '\nUsage:\n'
+    printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-l LABEL_SELECTORS] [-f FIELD_SELECTORS] RESOURCE_NAME%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
-    printf '  > %b-h|--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-A%b Busca en todos los namespace del cluster.%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n\n" "$g_color_gray1" "$g_color_reset"
+
+    printf 'Los argumentos usados son:\n'
+    printf '%b  > %bRESOURCE_NAME%b nombre o tipo de recurso a buscar.%b\n\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
 
 }
 
 
 m_kc_resources() {
 
-    #1. Inicializar variables requeridas para fzf y awk
-    local l_resource_name="$1"
-    local l_awk_template="{print \"${l_resource_name}/\"\$1}"
-    _g_fzf_kc_options="${l_resource_name}/{1}"
+    #1. Argumentos
+    local p_resource_name="$1"
+    local p_flag_all_ns="$2"
+    local p_ns="$3"
+    local p_filter_label="$4"
+    local p_filter_field="$5"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-
-    #Ayuda
-    if [ -z "$1" ]; then
-        echo "Parametros invalidos. Use 'oc_resources --help' para ver mas detalle de su uso."
-        return 1
-    elif [ "$1" = "--help" ]; then
-        echo "Usar: "
-        echo "     kc_resources RESOURCE-KIND NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_resources --help"
-        echo "> Use '.' si desea no ingresar valor para el argumento."
-        echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
-        echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
-        echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
-        echo "  Ejemplo 'label1=value1,label2=value2'"
-        echo "> Argumento 'FILTER-FIELDS': Coloque el listado de los campos deseado (igual al valor de '--field-selector' de kubectl)."
-        echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
-        return 0
-    fi
-
-    #Resource KIND o Name
-    local l_cmd="kubectl get $1"
+    local l_awk_template="{print \"${p_resource_name}/\"\$1}"
+    _g_fzf_kc_options="${p_resource_name}/{1}"
+    local la_args=("get" "$p_resource_name")
 
     #Namespace
-    if [ ! -z "$2" ] && [ "$2" != "." ]; then
-        if [ "$2" = "--all" ]; then
-            l_cmd="${l_cmd} --all-namespaces"
-            l_awk_template="{print \"${l_resource_name}/\"\$2\" -n \"\$1}"
-            _g_fzf_kc_options="${l_resource_name}/{2} -n={1}"
-        else
-            l_cmd="${l_cmd} -n $2"
-            l_awk_template="{print \"${l_resource_name}/\"\$1\" -n $2\"}"
-            _g_fzf_kc_options="${l_resource_name}/{1} -n=$2"
-        fi
+    if [ ! -z "$p_ns" ]; then
+        la_args+=("-n" "$p_ns")
+        l_awk_template="{print \"${p_resource_name}/\"\$1\" -n $2\"}"
+        _g_fzf_kc_options="${p_resource_name}/{1} -n=$2"
+    elif [ "$p_flag_all_ns" -eq 0 ]; then
+        la_args+=("-A")
+        l_awk_template="{print \"${p_resource_name}/\"\$2\" -n \"\$1}"
+        _g_fzf_kc_options="${p_resource_name}/{2} -n={1}"
     fi
 
+
     #Labels
-    if [ ! -z "$3" ] &&  [ "$3" != "." ]; then
-        l_cmd="${l_cmd} -l $3"
+    if [ ! -z "$p_filter_label" ]; then
+        la_args+=("-l" "$p_filter_label")
     fi
 
     #Filed Selectors
-    if [ ! -z "$4" ] &&  [ "$4" != "." ]; then
-        l_cmd="${l_cmd} --field-selector $4"
+    if [ ! -z "$p_filter_field" ]; then
+        la_args+=("--field-selector" "$p_filter_field")
     fi
 
-    #echo "$_g_fzf_oc_pod_path"
-    #echo "$l_awk_template"
+    la_args+=("-o" "json")
+    #echo "Argumentos:" "${la_args[@]}"
 
+    #3. Obtener la data del cluster y almacenarlo en un archivo temporal
+    _g_temfile_fullpath="${g_tmpfile_path}/resource_${g_tmpfile_suffix}.json"
+
+    kubectl "${la_args[@]}" > $_g_temfile_fullpath
+    if [ $? -ne 0 ]; then
+        echo "Check the connection to k8s cluster"
+        return 1
+    fi
 
     # Si esta dentro de tmux >= 3.2, se usara 'tmux display-popup':
     # > Si se usa tmux >= 3.3 (se tiene soporte a bordes), se usara para ello 'fzf --tmux'
@@ -2126,6 +2211,7 @@ m_kc_resources() {
             l_fzf_size_args="-p ${g_fzf_popup_width},${g_fzf_popup_height} --"
         fi
     fi
+
 
     #3. Generar el reporte deseado con la data ingresada
     FZF_DEFAULT_COMMAND="$l_cmd" \
@@ -2144,6 +2230,11 @@ controller_resource() {
     #1. Validaciones previas
 
     #2. Procesar las opciones (siempre deben estar anstes de los argumentos)
+    local l_flag_all_ns=1
+    local l_ns
+    local l_filter_label
+    local l_filter_field
+
     while [ $# -gt 0 ]; do
 
         case "$1" in
@@ -2152,6 +2243,45 @@ controller_resource() {
                 m_usage_resource
                 return 0
                 ;;
+
+
+            -A)
+                l_flag_all_ns=0
+                ;;
+
+
+            -n)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requiere un valor especifico.\n' "$g_color_gray1" "-n" "$g_color_reset"
+                    return 3
+                fi
+
+                l_ns="$2"
+                shift 2
+                ;;
+
+
+            -l)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requiere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_label="$2"
+                shift 2
+                ;;
+
+
+            -f)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requiere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_field="$2"
+                shift 2
+                ;;
+
 
             -*)
                 printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
@@ -2171,9 +2301,14 @@ controller_resource() {
 
 
     #4. Leer los argumentos restantes
+    local l_resource_name="$1"
+    if [ -z "$l_resource_name" ]; then
+        printf 'El nombre de recurso "%b%s%b" debe ser especifico.\n' "$g_color_gray1" "$l_resource_name" "$g_color_reset"
+        return 3
+    fi
 
     #5. Ejecutando el comando
-    m_kc_resources "$@"
+    m_kc_resources "$l_resource_name" "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field"
     return 0
 
 }
@@ -2189,62 +2324,71 @@ m_usage_project() {
 
     local l_scmd_id='project'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
-    printf 'Usage:\n'
-    printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s %s%b [args]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    # Obtener los alias del comando
+    local l_alias_list
+    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+
+    # Mostrar el alias:
+    if [ ! -z "$l_alias_list" ]; then
+        printf '%bAlias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
+    fi
+
+
+    printf '\nUsage:\n'
+    printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
-    printf '  > %b-h|--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n\n" "$g_color_gray1" "$g_color_reset"
 
 }
 
+
 m_oc_projects() {
 
-    #1. Inicializar variables requeridas para fzf y awk
-    local l_awk_template='{print $1}'
-    local l_cmd_options="get project -o json"
-    _g_fzf_kc_data_file="${_g_tmp_data_path}/projects_${_g_uid}.json"
+    #1. Argumentos
+    local p_filter_label="$1"
+    local p_filter_field="$2"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-
-    #Ayuda
-    if [ "$1" = "--help" ]; then
-        echo "Usar: "
-        echo "     oc_projects FILTER-LABELS FILTER-FIELDS"
-        echo "     oc_projects --help"
-        echo "> Use '.' si desea no ingresar valor para el argumento."
-        echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
-        echo "  Ejemplo 'label1=value1,label2=value2'"
-        echo "> Argumento 'FILTER-FIELDS': Coloque el listado de los campos deseado (igual al valor de '--field-selector' de kubectl)."
-        echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
-        return 0
-    fi
+    local la_args=("get" "project")
 
     #Labels
-    if [ ! -z "$1" ] &&  [ "$1" != "." ]; then
-        l_cmd_options="${l_cmd_options} -l $1"
+    if [ ! -z "$p_filter_label" ]; then
+        la_args+=("-l" "$p_filter_label")
     fi
 
     #Filed Selectors
-    if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
-        l_cmd_options="${l_cmd_options} --field-selector $2"
+    if [ ! -z "$p_filter_field" ]; then
+        la_args+=("--field-selector" "$p_filter_field")
     fi
 
-    #echo "$l_cmd_options"
+    la_args+=("-o" "json")
+    #echo "Argumentos:" "${la_args[@]}"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    kubectl $l_cmd_options > $_g_fzf_kc_data_file
+    _g_temfile_fullpath="${g_tmpfile_path}/projects_${g_tmpfile_suffix}.json"
+
+    oc "${la_args[@]}" > $_g_temfile_fullpath
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
     fi
 
+
     #4. Generar el reporte deseado con la data ingresada
     local l_data
     local l_status
-    l_data=$(show_namespace_table "${_g_fzf_kc_data_file}" 0)
+    l_data=$(show_namespace_table "${_g_temfile_fullpath}" 0)
     l_status=$?
 
     if [ $l_status -eq 1 ]; then
@@ -2271,20 +2415,22 @@ m_oc_projects() {
         fi
     fi
 
+    local l_awk_template='{print $1}'
+
     #5. Mostrar el reporte
     echo "$l_data" |
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
         --prompt "Project> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-d (Set Default), CTRL-e (View Events)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_fzf_kc_data_file}' '{1}') > /dev/tty" \
-        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 0) > /dev/tty" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 0) > /dev/tty" \
         --bind "ctrl-d:execute-silent:oc project {1}" \
         --bind "ctrl-e:execute:bat --color=always --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
         --preview-window "right,60%" \
-        --preview "bash ${g_script_path} -i show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 0 | bat --color=always --style plain" |
+        --preview "bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 0 | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    rm -f $_g_fzf_kc_data_file
+    rm -f $_g_temfile_fullpath
 
 
 }
@@ -2296,6 +2442,9 @@ controller_project() {
     #1. Validaciones previas
 
     #2. Procesar las opciones (siempre deben estar anstes de los argumentos)
+    local l_filter_label
+    local l_filter_field
+
     while [ $# -gt 0 ]; do
 
         case "$1" in
@@ -2304,6 +2453,28 @@ controller_project() {
                 m_usage_project
                 return 0
                 ;;
+
+            -l)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_label="$2"
+                shift 2
+                ;;
+
+
+            -f)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_field="$2"
+                shift 2
+                ;;
+
 
             -*)
                 printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
@@ -2325,7 +2496,7 @@ controller_project() {
     #4. Leer los argumentos restantes
 
     #5. Ejecutando el comando
-    m_oc_projects "$@"
+    m_oc_projects "$l_filter_label" "$l_filter_field"
     return 0
 
 }
@@ -2341,62 +2512,71 @@ m_usage_namespace() {
 
     local l_scmd_id='namespace'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
-    printf 'Usage:\n'
-    printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s %s%b [args]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    # Obtener los alias del comando
+    local l_alias_list
+    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+
+    # Mostrar el alias:
+    if [ ! -z "$l_alias_list" ]; then
+        printf '%bAlias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
+    fi
+
+
+    printf '\nUsage:\n'
+    printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
-    printf '  > %b-h|--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n\n" "$g_color_gray1" "$g_color_reset"
 
 }
 
+
 m_kc_namespaces() {
 
-    #1. Inicializar variables requeridas para fzf y awk
-    local l_awk_template='{print $1}'
-    local l_cmd_options="get namespace -o json"
-    _g_fzf_kc_data_file="${_g_tmp_data_path}/namespaces_${_g_uid}.json"
+    #1. Argumentos
+    local p_filter_label="$1"
+    local p_filter_field="$2"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-
-    #Ayuda
-    if [ "$1" = "--help" ]; then
-        echo "Usar: "
-        echo "     kc_namespaces FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_namespaces --help"
-        echo "> Use '.' si desea no ingresar valor para el argumento."
-        echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
-        echo "  Ejemplo 'label1=value1,label2=value2'"
-        echo "> Argumento 'FILTER-FIELDS': Coloque el listado de los campos deseado (igual al valor de '--field-selector' de kubectl)."
-        echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
-        return 0
-    fi
+    local la_args=("get" "namespace")
 
     #Labels
-    if [ ! -z "$1" ] &&  [ "$1" != "." ]; then
-        l_cmd_options="${l_cmd_options} -l $1"
+    if [ ! -z "$p_filter_label" ]; then
+        la_args+=("-l" "$p_filter_label")
     fi
 
     #Filed Selectors
-    if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
-        l_cmd_options="${l_cmd_options} --field-selector $2"
+    if [ ! -z "$p_filter_field" ]; then
+        la_args+=("--field-selector" "$p_filter_field")
     fi
 
-    #echo "$l_cmd_options"
+    la_args+=("-o" "json")
+    #echo "Argumentos:" "${la_args[@]}"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    kubectl $l_cmd_options > $_g_fzf_kc_data_file
+    _g_temfile_fullpath="${g_tmpfile_path}/namespaces_${g_tmpfile_suffix}.json"
+
+    kubectl "${la_args[@]}" > $_g_temfile_fullpath
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
     fi
 
+
     #4. Generar el reporte deseado con la data ingresada
     local l_data
     local l_status
-    l_data=$(show_namespace_table "${_g_fzf_kc_data_file}" 1)
+    l_data=$(show_namespace_table "${_g_temfile_fullpath}" 1)
     l_status=$?
 
     if [ $l_status -eq 1 ]; then
@@ -2421,20 +2601,22 @@ m_kc_namespaces() {
         fi
     fi
 
+    local l_awk_template='{print $1}'
+
     #5. Mostrar el reporte
     echo "$l_data" |
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
         --prompt "Project> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTR-d (Set Default), CTRL-e (View Events)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_fzf_kc_data_file}' '{1}') > /dev/tty" \
-        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 1) > /dev/tty" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 1) > /dev/tty" \
         --bind "ctrl-d:execute-silent:kubectl config set-context --current --namespace={1}" \
         --bind "ctrl-e:execute:bat --color=always --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
         --preview-window "right,60%" \
-        --preview "bash ${g_script_path} -i show_namespace_info '${_g_fzf_kc_data_file}' '{1}' 1 | bat --color=always --style plain" |
+        --preview "bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 1 | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    rm -f $_g_fzf_kc_data_file
+    rm -f $_g_temfile_fullpath
 
 
 }
@@ -2445,6 +2627,9 @@ controller_namespace() {
     #1. Validaciones previas
 
     #2. Procesar las opciones (siempre deben estar anstes de los argumentos)
+    local l_filter_label
+    local l_filter_field
+
     while [ $# -gt 0 ]; do
 
         case "$1" in
@@ -2453,6 +2638,28 @@ controller_namespace() {
                 m_usage_namespace
                 return 0
                 ;;
+
+            -l)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_label="$2"
+                shift 2
+                ;;
+
+
+            -f)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_field="$2"
+                shift 2
+                ;;
+
 
             -*)
                 printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
@@ -2474,7 +2681,7 @@ controller_namespace() {
     #4. Leer los argumentos restantes
 
     #5. Ejecutando el comando
-    m_kc_namespaces "$@"
+    m_kc_namespaces "$l_filter_label" "$l_filter_field"
     return 0
 
 }
@@ -2490,73 +2697,85 @@ m_usage_pod() {
 
     local l_scmd_id='pod'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
-    printf 'Usage:\n'
-    printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s %s%b [args]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    # Obtener los alias del comando
+    local l_alias_list
+    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+
+    # Mostrar el alias:
+    if [ ! -z "$l_alias_list" ]; then
+        printf '%bAlias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
+    fi
+
+
+    printf '\nUsage:\n'
+    printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
-    printf '  > %b-h|--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-A%b Busca en todos los namespace del cluster.%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n\n" "$g_color_gray1" "$g_color_reset"
 
 }
 
+
 m_kc_pod() {
 
-    #1. Inicializar variables requeridas para fzf y awk
-    local l_awk_template='{print "pod/"$1" -n "$2}'
-    local l_cmd_options="get pod -o json"
-    _g_fzf_kc_data_file="${_g_tmp_data_path}/pods_${_g_uid}.json"
+    #1. Argumentos
+    local p_flag_all_ns="$1"
+    local p_ns="$2"
+    local p_filter_label="$3"
+    local p_filter_field="$4"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-
-    #Ayuda
-    if [ "$1" = "--help" ]; then
-        echo "Usar: "
-        echo "     kc_pods NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_pods --help"
-        echo "> Use '.' si desea no ingresar valor para el argumento."
-        echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
-        echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
-        echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
-        echo "  Ejemplo 'label1=value1,label2=value2'"
-        echo "> Argumento 'FILTER-FIELDS': Coloque el listado de los campos deseado (igual al valor de '--field-selector' de kubectl)."
-        echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
-        return 0
-    fi
+    local la_args=("get" "pod")
 
     #Namespace
-    if [ ! -z "$1" ] && [ "$1" != "." ]; then
-        if [ "$1" = "--all" ]; then
-            l_cmd_options="${l_cmd_options} --all-namespaces"
-        else
-            l_cmd_options="${l_cmd_options} -n $1"
-        fi
+    if [ ! -z "$p_ns" ]; then
+        la_args+=("-n" "$p_ns")
+    elif [ "$p_flag_all_ns" -eq 0 ]; then
+        la_args+=("-A")
     fi
 
+
     #Labels
-    if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
-        l_cmd_options="${l_cmd_options} -l $2"
+    if [ ! -z "$p_filter_label" ]; then
+        la_args+=("-l" "$p_filter_label")
     fi
 
     #Filed Selectors
-    if [ ! -z "$3" ] &&  [ "$3" != "." ]; then
-        l_cmd_options="${l_cmd_options} --field-selector $3"
+    if [ ! -z "$p_filter_field" ]; then
+        la_args+=("--field-selector" "$p_filter_field")
     fi
 
-    #echo "$l_cmd_options"
+    la_args+=("-o" "json")
+    #echo "Argumentos:" "${la_args[@]}"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    kubectl $l_cmd_options > $_g_fzf_kc_data_file
+    _g_temfile_fullpath="${g_tmpfile_path}/pods_${g_tmpfile_suffix}.json"
+
+    kubectl "${la_args[@]}" > $_g_temfile_fullpath
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
     fi
 
+
     #4. Generar el reporte deseado con la data ingresada
     local l_data
     local l_status
-    l_data=$(show_pods_table "${_g_fzf_kc_data_file}" 0)
+    l_data=$(show_pods_table "${_g_temfile_fullpath}" 0)
     l_status=$?
 
     if [ $l_status -eq 1 ]; then
@@ -2582,25 +2801,27 @@ m_kc_pod() {
         fi
     fi
 
+    local l_awk_template='{print "pod/"$1" -n "$2}'
+
     #5. Mostrar el reporte
     echo "$l_data" |
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Not-succeeded Pod> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-e (Exit & Terminal), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs), ALT-a (View all Pods), ATL-b (View Not-succeeded pods)\n' \
-        --bind "alt-a:change-prompt(Pod> )+reload:bash \"${g_script_path}\" -i show_pods_table \"${_g_fzf_kc_data_file}\" 1" \
-		--bind "alt-b:change-prompt(Not-succeeded Pod> )+reload:bash \"${g_script_path}\" -i show_pods_table \"${_g_fzf_kc_data_file}\" 0" \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-e:become:bash \"${g_script_path}\" -i open_terminal1 '{1}' '{2}' 'bash' 0 '${_g_fzf_kc_data_file}' > /dev/tty" \
-        --bind "ctrl-t:execute:bash \"${g_script_path}\" -i open_terminal1 '{1}' '{2}' 'bash' 1 '${_g_fzf_kc_data_file}' > /dev/tty" \
-        --bind "ctrl-l:execute(bash \"${g_script_path}\" -i show_log_pod '{1}' '{2}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
-        --bind "ctrl-p:become(bash \"${g_script_path}\" -i port_forward_pod '{1}' '{2}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
-        --bind "ctrl-x:become(bash \"${g_script_path}\" -i show_log_pod '{1}' '{2}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "alt-a:change-prompt(Pod> )+reload:bash \"${g_script_path}\" -i show_pods_table \"${_g_temfile_fullpath}\" 1" \
+		--bind "alt-b:change-prompt(Not-succeeded Pod> )+reload:bash \"${g_script_path}\" -i show_pods_table \"${_g_temfile_fullpath}\" 0" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_pod_info '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-e:become:bash \"${g_script_path}\" -i open_terminal1 '{1}' '{2}' 'bash' 0 '${_g_temfile_fullpath}' > /dev/tty" \
+        --bind "ctrl-t:execute:bash \"${g_script_path}\" -i open_terminal1 '{1}' '{2}' 'bash' 1 '${_g_temfile_fullpath}' > /dev/tty" \
+        --bind "ctrl-l:execute(bash \"${g_script_path}\" -i show_log_pod '{1}' '{2}' 1 10000 '${_g_temfile_fullpath}' > /dev/tty)" \
+        --bind "ctrl-p:become(bash \"${g_script_path}\" -i port_forward_pod '{1}' '{2}' '${_g_temfile_fullpath}' > /dev/tty)" \
+        --bind "ctrl-x:become(bash \"${g_script_path}\" -i show_log_pod '{1}' '{2}' 0 200 '${_g_temfile_fullpath}' > /dev/tty)" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${g_script_path} -i show_pod_info '${_g_fzf_kc_data_file}' '{1}' '{2}' | bat --color=always --style plain" |
+        --preview "bash ${g_script_path} -i show_pod_info '${_g_temfile_fullpath}' '{1}' '{2}' | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    rm -f $_g_fzf_kc_data_file
+    rm -f $_g_temfile_fullpath
 
 }
 
@@ -2610,6 +2831,11 @@ controller_pod() {
     #1. Validaciones previas
 
     #2. Procesar las opciones (siempre deben estar anstes de los argumentos)
+    local l_flag_all_ns=1
+    local l_ns
+    local l_filter_label
+    local l_filter_field
+
     while [ $# -gt 0 ]; do
 
         case "$1" in
@@ -2618,6 +2844,45 @@ controller_pod() {
                 m_usage_pod
                 return 0
                 ;;
+
+
+            -A)
+                l_flag_all_ns=0
+                ;;
+
+
+            -n)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-n" "$g_color_reset"
+                    return 3
+                fi
+
+                l_ns="$2"
+                shift 2
+                ;;
+
+
+            -l)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_label="$2"
+                shift 2
+                ;;
+
+
+            -f)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_field="$2"
+                shift 2
+                ;;
+
 
             -*)
                 printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
@@ -2639,10 +2904,11 @@ controller_pod() {
     #4. Leer los argumentos restantes
 
     #5. Ejecutando el comando
-    m_kc_pod "$@"
+    m_kc_pod "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field"
     return 0
 
 }
+
 
 
 
@@ -2655,73 +2921,85 @@ m_usage_container() {
 
     local l_scmd_id='container'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
-    printf 'Usage:\n'
-    printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s %s%b [args]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    # Obtener los alias del comando
+    local l_alias_list
+    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+
+    # Mostrar el alias:
+    if [ ! -z "$l_alias_list" ]; then
+        printf '%bAlias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
+    fi
+
+
+    printf '\nUsage:\n'
+    printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
-    printf '  > %b-h|--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-A%b Busca en todos los namespace del cluster.%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n\n" "$g_color_gray1" "$g_color_reset"
 
 }
 
+
 m_kc_containers() {
 
-    #1. Inicializar variables requeridas para fzf y awk
-    local l_awk_template='{print "pod/"$1" -n "$2" -c "$3}'
-    local l_cmd_options="get pod -o json"
-    _g_fzf_kc_data_file="${_g_tmp_data_path}/containers_${_g_uid}.json"
+    #1. Argumentos
+    local p_flag_all_ns="$1"
+    local p_ns="$2"
+    local p_filter_label="$3"
+    local p_filter_field="$4"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-
-    #Ayuda
-    if [ "$1" = "--help" ]; then
-        echo "Usar: "
-        echo "     kc_containers NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_containers --help"
-        echo "> Use '.' si desea no ingresar valor para el argumento."
-        echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
-        echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
-        echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
-        echo "  Ejemplo 'label1=value1,label2=value2'"
-        echo "> Argumento 'FILTER-FIELDS': Coloque el listado de los campos deseado (igual al valor de '--field-selector' de kubectl)."
-        echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
-        return 0
-    fi
+    local la_args=("get" "pod")
 
     #Namespace
-    if [ ! -z "$1" ] && [ "$1" != "." ]; then
-        if [ "$1" = "--all" ]; then
-            l_cmd_options="${l_cmd_options} --all-namespaces"
-        else
-            l_cmd_options="${l_cmd_options} -n $1"
-        fi
+    if [ ! -z "$p_ns" ]; then
+        la_args+=("-n" "$p_ns")
+    elif [ "$p_flag_all_ns" -eq 0 ]; then
+        la_args+=("-A")
     fi
 
+
     #Labels
-    if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
-        l_cmd_options="${l_cmd_options} -l $2"
+    if [ ! -z "$p_filter_label" ]; then
+        la_args+=("-l" "$p_filter_label")
     fi
 
     #Filed Selectors
-    if [ ! -z "$3" ] &&  [ "$3" != "." ]; then
-        l_cmd_options="${l_cmd_options} --field-selector $3"
+    if [ ! -z "$p_filter_field" ]; then
+        la_args+=("--field-selector" "$p_filter_field")
     fi
 
-    #echo "$l_cmd_options"
+    la_args+=("-o" "json")
+    #echo "Argumentos:" "${la_args[@]}"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    kubectl $l_cmd_options > $_g_fzf_kc_data_file
+    _g_temfile_fullpath="${g_tmpfile_path}/containers_${g_tmpfile_suffix}.json"
+
+    kubectl "${la_args[@]}" > $_g_temfile_fullpath
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
     fi
 
+
     #4. Generar el reporte deseado con la data ingresada
     local l_data
     local l_status
-    l_data=$(show_containers_table "${_g_fzf_kc_data_file}" 0)
+    l_data=$(show_containers_table "${_g_temfile_fullpath}" 0)
     l_status=$?
 
     if [ $l_status -eq 1 ]; then
@@ -2746,28 +3024,30 @@ m_kc_containers() {
         fi
     fi
 
+    local l_awk_template='{print "pod/"$1" -n "$2" -c "$3}'
+
     #5. Mostrar el reporte
     echo "$l_data" |
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Not-succeeded Pod's Container> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-e (Exit & Terminal), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs), ALT-a (View all Pods), ATL-b (View Not-succeeded pods)\n' \
-        --bind "alt-a:change-prompt(Pod's Container> )+reload:bash \"${g_script_path}\" -i show_containers_table \"${_g_fzf_kc_data_file}\" 1" \
-		--bind "alt-b:change-prompt(Not-succeeded Pod's Container> )+reload:bash \"${g_script_path}\" -i show_containers_table \"${_g_fzf_kc_data_file}\" 0" \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}') > /dev/tty" \
-        --bind "ctrl-e:become:bash \"${g_script_path}\" -i open_terminal2 '{1}' '{2}' '{3}' 'bash' 0 '${_g_fzf_kc_data_file}' > /dev/tty" \
-        --bind "ctrl-t:execute:bash \"${g_script_path}\" -i open_terminal2 '{1}' '{2}' '{3}' 'bash' 1 '${_g_fzf_kc_data_file}' > /dev/tty" \
-        --bind "ctrl-l:execute(bash \"${g_script_path}\" -i show_log_container '{1}' '{2}' '{3}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
-        --bind "ctrl-p:become(bash \"${g_script_path}\" -i port_forward_container '{1}' '{2}' '{3}' '{7}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
-        --bind "ctrl-x:become(bash \"${g_script_path}\" -i show_log_container '{1}' '{2}' '{3}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+        --bind "alt-a:change-prompt(Pod's Container> )+reload:bash \"${g_script_path}\" -i show_containers_table \"${_g_temfile_fullpath}\" 1" \
+		--bind "alt-b:change-prompt(Not-succeeded Pod's Container> )+reload:bash \"${g_script_path}\" -i show_containers_table \"${_g_temfile_fullpath}\" 0" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_container_info '${_g_temfile_fullpath}' '{1}' '{2}' '{3}') > /dev/tty" \
+        --bind "ctrl-e:become:bash \"${g_script_path}\" -i open_terminal2 '{1}' '{2}' '{3}' 'bash' 0 '${_g_temfile_fullpath}' > /dev/tty" \
+        --bind "ctrl-t:execute:bash \"${g_script_path}\" -i open_terminal2 '{1}' '{2}' '{3}' 'bash' 1 '${_g_temfile_fullpath}' > /dev/tty" \
+        --bind "ctrl-l:execute(bash \"${g_script_path}\" -i show_log_container '{1}' '{2}' '{3}' 1 10000 '${_g_temfile_fullpath}' > /dev/tty)" \
+        --bind "ctrl-p:become(bash \"${g_script_path}\" -i port_forward_container '{1}' '{2}' '{3}' '{7}' '${_g_temfile_fullpath}' > /dev/tty)" \
+        --bind "ctrl-x:become(bash \"${g_script_path}\" -i show_log_container '{1}' '{2}' '{3}' 0 200 '${_g_temfile_fullpath}' > /dev/tty)" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${g_script_path} -i show_container_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{3}' | bat --color=always --style plain" |
+        --preview "bash ${g_script_path} -i show_container_info '${_g_temfile_fullpath}' '{1}' '{2}' '{3}' | bat --color=always --style plain" |
     awk "$l_awk_template"
 
     #    --bind "ctrl-l:execute:bat --color=always --paging always --style plain  <(kubectl logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
-    #    --bind "ctrl-x:become(bash \"${g_script_path}\" show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_fzf_kc_data_file}' > /dev/tty)" \
+    #    --bind "ctrl-x:become(bash \"${g_script_path}\" show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_temfile_fullpath}' > /dev/tty)" \
 
-    rm -f $_g_fzf_kc_data_file
+    rm -f $_g_temfile_fullpath
 
 }
 
@@ -2777,6 +3057,11 @@ controller_container() {
     #1. Validaciones previas
 
     #2. Procesar las opciones (siempre deben estar anstes de los argumentos)
+    local l_flag_all_ns=1
+    local l_ns
+    local l_filter_label
+    local l_filter_field
+
     while [ $# -gt 0 ]; do
 
         case "$1" in
@@ -2785,6 +3070,45 @@ controller_container() {
                 m_usage_container
                 return 0
                 ;;
+
+
+            -A)
+                l_flag_all_ns=0
+                ;;
+
+
+            -n)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-n" "$g_color_reset"
+                    return 3
+                fi
+
+                l_ns="$2"
+                shift 2
+                ;;
+
+
+            -l)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_label="$2"
+                shift 2
+                ;;
+
+
+            -f)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_field="$2"
+                shift 2
+                ;;
+
 
             -*)
                 printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
@@ -2806,7 +3130,7 @@ controller_container() {
     #4. Leer los argumentos restantes
 
     #5. Ejecutando el comando
-    m_kc_containers "$@"
+    m_kc_containers "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field"
     return 0
 
 }
@@ -2822,66 +3146,75 @@ m_usage_deployment() {
 
     local l_scmd_id='deployment'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
-    printf 'Usage:\n'
-    printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s %s%b [args]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    # Obtener los alias del comando
+    local l_alias_list
+    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+
+    # Mostrar el alias:
+    if [ ! -z "$l_alias_list" ]; then
+        printf '%bAlias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
+    fi
+
+
+    printf '\nUsage:\n'
+    printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
-    printf '  > %b-h|--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-A%b Busca en todos los namespace del cluster.%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n\n" "$g_color_gray1" "$g_color_reset"
 
 }
 
+
 m_kc_deployments() {
 
-    #1. Inicializar variables requeridas para fzf y awk
-    #local l_awk_template='{print "deployment/"$1" -n "$2" | pod -n "$2"-l "$7}'
-    local l_awk_template='{print "deployment/"$1" -n "$2}'
-    local l_cmd_options="get deployment -o json"
-    _g_fzf_kc_data_file="${_g_tmp_data_path}/deployments_${_g_uid}.json"
+    #1. Argumentos
+    local p_flag_all_ns="$1"
+    local p_ns="$2"
+    local p_filter_label="$3"
+    local p_filter_field="$4"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-
-    #Ayuda
-    if [ "$1" = "--help" ]; then
-        echo "Usar: "
-        echo "     kc_deployments NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_deployments --help"
-        echo "> Use '.' si desea no ingresar valor para el argumento."
-        echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
-        echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
-        echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
-        echo "  Ejemplo 'label1=value1,label2=value2'"
-        echo "> Argumento 'FILTER-FIELDS': Coloque el listado de los campos deseado (igual al valor de '--field-selector' de kubectl)."
-        echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
-        return 0
-    fi
+    local la_args=("get" "deployment")
 
     #Namespace
-    if [ ! -z "$1" ] && [ "$1" != "." ]; then
-        if [ "$1" = "--all" ]; then
-            l_cmd_options="${l_cmd_options} --all-namespaces"
-        else
-            l_cmd_options="${l_cmd_options} -n $1"
-        fi
+    if [ ! -z "$p_ns" ]; then
+        la_args+=("-n" "$p_ns")
+    elif [ "$p_flag_all_ns" -eq 0 ]; then
+        la_args+=("-A")
     fi
 
 
     #Labels
-    if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
-        l_cmd_options="${l_cmd_options} -l $2"
+    if [ ! -z "$p_filter_label" ]; then
+        la_args+=("-l" "$p_filter_label")
     fi
 
     #Filed Selectors
-    if [ ! -z "$3" ] &&  [ "$3" != "." ]; then
-        l_cmd_options="${l_cmd_options} --field-selector $3"
+    if [ ! -z "$p_filter_field" ]; then
+        la_args+=("--field-selector" "$p_filter_field")
     fi
 
-    #echo "$l_cmd_options"
+    la_args+=("-o" "json")
+    #echo "Argumentos:" "${la_args[@]}"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    kubectl $l_cmd_options > $_g_fzf_kc_data_file
+    _g_temfile_fullpath="${g_tmpfile_path}/deployments_${g_tmpfile_suffix}.json"
+
+    kubectl "${la_args[@]}" > $_g_temfile_fullpath
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
@@ -2890,7 +3223,7 @@ m_kc_deployments() {
     #4. Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
     local l_data
     local l_status
-    l_data=$(show_deployment_table "${_g_fzf_kc_data_file}" 0)
+    l_data=$(show_deployment_table "${_g_temfile_fullpath}" 0)
     l_status=$?
 
     if [ $l_status -eq 1 ]; then
@@ -2916,25 +3249,28 @@ m_kc_deployments() {
         fi
     fi
 
+    #1. Inicializar variables requeridas para fzf y awk
+    #local l_awk_template='{print "deployment/"$1" -n "$2" | pod -n "$2"-l "$7}'
+    local l_awk_template='{print "deployment/"$1" -n "$2}'
 
     #5. Mostrar el reporte
     echo "$l_data" |
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Deployment> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View yaml), CTRL-b (View Preview), CTRL-d (View Revisions), CTRL-w (Watch pods)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
-        --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_dply_revision1 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_deployment_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}') > /dev/tty" \
+        --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_dply_revision1 '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${g_script_path} -i show_deployment_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | bat --color=always --style plain" |
+        --preview "bash ${g_script_path} -i show_deployment_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    rm -f ${_g_fzf_kc_data_file}
+    rm -f ${_g_temfile_fullpath}
 
     #    --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions), CTRL-l (View logs), CTRL-x (Exit & follow logs)\n' \
-    #    --bind "ctrl-l:execute(bash \"${g_script_path}\" show_log_dply '{1}' '{2}' 1 10000 '${_g_fzf_kc_data_file}' > /dev/tty)" \
-    #    --bind "ctrl-x:become(bash \"${g_script_path}\" show_log_dply '{1}' '{2}' 0 200 '${_g_fzf_kc_data_file}' > /dev/tty)" \
+    #    --bind "ctrl-l:execute(bash \"${g_script_path}\" show_log_dply '{1}' '{2}' 1 10000 '${_g_temfile_fullpath}' > /dev/tty)" \
+    #    --bind "ctrl-x:become(bash \"${g_script_path}\" show_log_dply '{1}' '{2}' 0 200 '${_g_temfile_fullpath}' > /dev/tty)" \
 
 }
 
@@ -2944,6 +3280,11 @@ controller_deployment() {
     #1. Validaciones previas
 
     #2. Procesar las opciones (siempre deben estar anstes de los argumentos)
+    local l_flag_all_ns=1
+    local l_ns
+    local l_filter_label
+    local l_filter_field
+
     while [ $# -gt 0 ]; do
 
         case "$1" in
@@ -2952,6 +3293,45 @@ controller_deployment() {
                 m_usage_deployment
                 return 0
                 ;;
+
+
+            -A)
+                l_flag_all_ns=0
+                ;;
+
+
+            -n)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-n" "$g_color_reset"
+                    return 3
+                fi
+
+                l_ns="$2"
+                shift 2
+                ;;
+
+
+            -l)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_label="$2"
+                shift 2
+                ;;
+
+
+            -f)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_field="$2"
+                shift 2
+                ;;
+
 
             -*)
                 printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
@@ -2973,7 +3353,7 @@ controller_deployment() {
     #4. Leer los argumentos restantes
 
     #5. Ejecutando el comando
-    m_kc_deployments "$@"
+    m_kc_deployments "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field"
     return 0
 
 }
@@ -2989,75 +3369,85 @@ m_usage_replicaset() {
 
     local l_scmd_id='replicaset'
     local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+    printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
-    printf 'Usage:\n'
-    printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s %s%b [args]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    # Obtener los alias del comando
+    local l_alias_list
+    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+
+    # Mostrar el alias:
+    if [ ! -z "$l_alias_list" ]; then
+        printf '%bAlias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
+    fi
+
+
+    printf '\nUsage:\n'
+    printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
-    printf '  > %b-h|--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-A%b Busca en todos los namespace del cluster.%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n\n" "$g_color_gray1" "$g_color_reset"
 
 }
 
+
 m_kc_replicaset() {
 
-    #1. Inicializar variables requeridas para fzf y awk
-    #local l_awk_template='{print "replicaset/"$1" -n "$2" | pod -n "$2"-l "$7}'
-    local l_awk_template='{print "replicaset/"$1" -n "$2}'
-    local l_cmd_options="get replicaset -o json"
-    _g_fzf_kc_data_file="${_g_tmp_data_path}/replicaset_${_g_uid}.json"
+    #1. Argumentos
+    local p_flag_all_ns="$1"
+    local p_ns="$2"
+    local p_filter_label="$3"
+    local p_filter_field="$4"
 
     #2. Procesar los argumentos y modificar las variables segun ello
-
-    #Ayuda
-    if [ "$1" = "--help" ]; then
-        echo "Usar: "
-        echo "     kc_replicasets NAMESPACE FILTER-LABELS FILTER-FIELDS"
-        echo "     kc_replicasets --help"
-        echo "> Use '.' si desea no ingresar valor para el argumento."
-        echo "> Argumento 'NAMESPACE'    : Coloque solo el nombre del namespace o use '--all' para establecer todos los namespaces. "
-        echo "  Si el recurso no posee namespace o no desea colocarlo, use '.'."
-        echo "> Argumento 'FILTER-LABELS': Coloque el listado de los labels deseado (igual al valor de '-l' o '--selector' de kubectl)."
-        echo "  Ejemplo 'label1=value1,label2=value2'"
-        echo "> Argumento 'FILTER-FIELDS': Coloque el listado de los campos deseado (igual al valor de '--field-selector' de kubectl)."
-        echo "  Ejemplo 'field1=value1,field2==value1,field2!=value'"
-        return 0
-    fi
+    local la_args=("get" "replicaset")
 
     #Namespace
-    if [ ! -z "$1" ] && [ "$1" != "." ]; then
-        if [ "$1" = "--all" ]; then
-            l_cmd_options="${l_cmd_options} --all-namespaces"
-        else
-            l_cmd_options="${l_cmd_options} -n $1"
-        fi
+    if [ ! -z "$p_ns" ]; then
+        la_args+=("-n" "$p_ns")
+    elif [ "$p_flag_all_ns" -eq 0 ]; then
+        la_args+=("-A")
     fi
 
 
     #Labels
-    if [ ! -z "$2" ] &&  [ "$2" != "." ]; then
-        l_cmd_options="${l_cmd_options} -l $2"
+    if [ ! -z "$p_filter_label" ]; then
+        la_args+=("-l" "$p_filter_label")
     fi
 
     #Filed Selectors
-    if [ ! -z "$3" ] &&  [ "$3" != "." ]; then
-        l_cmd_options="${l_cmd_options} --field-selector $3"
+    if [ ! -z "$p_filter_field" ]; then
+        la_args+=("--field-selector" "$p_filter_field")
     fi
 
-    #echo "$l_cmd_options"
+    la_args+=("-o" "json")
+    #echo "Argumentos:" "${la_args[@]}"
 
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
-    kubectl $l_cmd_options > $_g_fzf_kc_data_file
+    _g_temfile_fullpath="${g_tmpfile_path}/replicaset_${g_tmpfile_suffix}.json"
+
+    kubectl "${la_args[@]}" > $_g_temfile_fullpath
     if [ $? -ne 0 ]; then
         echo "Check the connection to k8s cluster"
         return 1
     fi
 
+
     #4. Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
     local l_data
     local l_status
-    l_data=$(show_replicasets_table "${_g_fzf_kc_data_file}" 0)
+    l_data=$(show_replicasets_table "${_g_temfile_fullpath}" 0)
     l_status=$?
 
     if [ $l_status -eq 1 ]; then
@@ -3083,23 +3473,25 @@ m_kc_replicaset() {
         fi
     fi
 
+    #local l_awk_template='{print "replicaset/"$1" -n "$2" | pod -n "$2"-l "$7}'
+    local l_awk_template='{print "replicaset/"$1" -n "$2}'
 
     #5. Mostrar el reporte
     echo "$l_data" |
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Active ReplicaSet> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nALT-a (View all rs), ATL-b (View rs with pods), CTRL-a (View yaml), CTRL-b (View Preview), CTRL-d (View Revisions), CTRL-w (Watch pods)\n' \
-        --bind "alt-a:change-prompt(All Replicaset> )+reload:bash \"${g_script_path}\" -i show_replicasets_table \"${_g_fzf_kc_data_file}\" 1" \
-		--bind "alt-b:change-prompt(Active Replicaset> )+reload:bash \"${g_script_path}\" -i show_replicasets_table \"${_g_fzf_kc_data_file}\" 0" \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}') > /dev/tty" \
-        --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_dply_revision2 '${_g_fzf_kc_data_file}' '{1}' '{2}') > /dev/tty" \
+        --bind "alt-a:change-prompt(All Replicaset> )+reload:bash \"${g_script_path}\" -i show_replicasets_table \"${_g_temfile_fullpath}\" 1" \
+		--bind "alt-b:change-prompt(Active Replicaset> )+reload:bash \"${g_script_path}\" -i show_replicasets_table \"${_g_temfile_fullpath}\" 0" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_replicaset_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}') > /dev/tty" \
+        --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_dply_revision2 '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${g_script_path} -i show_replicaset_info '${_g_fzf_kc_data_file}' '{1}' '{2}' '{9}' | bat --color=always --style plain" |
+        --preview "bash ${g_script_path} -i show_replicaset_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    rm -f ${_g_fzf_kc_data_file}
+    rm -f ${_g_temfile_fullpath}
 
 }
 
@@ -3109,6 +3501,11 @@ controller_replicaset() {
     #1. Validaciones previas
 
     #2. Procesar las opciones (siempre deben estar anstes de los argumentos)
+    local l_flag_all_ns=1
+    local l_ns
+    local l_filter_label
+    local l_filter_field
+
     while [ $# -gt 0 ]; do
 
         case "$1" in
@@ -3117,6 +3514,45 @@ controller_replicaset() {
                 m_usage_replicaset
                 return 0
                 ;;
+
+
+            -A)
+                l_flag_all_ns=0
+                ;;
+
+
+            -n)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-n" "$g_color_reset"
+                    return 3
+                fi
+
+                l_ns="$2"
+                shift 2
+                ;;
+
+
+            -l)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_label="$2"
+                shift 2
+                ;;
+
+
+            -f)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_field="$2"
+                shift 2
+                ;;
+
 
             -*)
                 printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
@@ -3138,7 +3574,7 @@ controller_replicaset() {
     #4. Leer los argumentos restantes
 
     #5. Ejecutando el comando
-    m_kc_replicaset "$@"
+    m_kc_replicaset "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field"
     return 0
 
 }
@@ -3209,23 +3645,9 @@ m_get_subcmd_infos() {
         printf "%b  > %b%s%b\n" "$g_color_gray1" "$g_color_yellow1" "$l_scmd_id" "$g_color_reset"
 
         # Obtener los alias del comando
-        l_alias_list=''
+        l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
 
-        for l_alias in "${!gA_subcmd_alias[@]}"; do
-
-            l_id="${gA_subcmd_alias[${l_alias}]}"
-
-            if [ "$l_id" = "$l_scmd_id" ]; then
-                if [ -z "$l_alias_list" ]; then
-                    printf -v l_alias_list "'%b%s%b'" "$g_color_yellow1" "$l_alias" "$g_color_reset"
-                else
-                    printf -v l_alias_list "%b, '%b%s%b'" "$l_alias_list" "$g_color_yellow1" "$l_alias" "$g_color_reset"
-                fi
-            fi
-
-        done
-
-        # Mostrar el alias
+        # Mostrar el alias:
         if [ ! -z "$l_alias_list" ]; then
             printf '    Alias: %b\n' "$l_alias_list"
         fi
@@ -3250,7 +3672,7 @@ m_usage_global() {
     printf '  %b%s%b SUBCOMMAND%b [options] [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
     if [ ! -z "$l_infos" ]; then
-        printf '    %b%s%b -i FUNC_NAME [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
+        printf '  %b%s%b -i FUNC_NAME [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
     fi
 
     printf '\nLas opciones globales usados son:\n'

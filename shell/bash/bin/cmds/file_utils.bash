@@ -17,7 +17,7 @@ g_color_red1="\x1b[31m"
 g_color_blue1="\x1b[34m"
 
 # Obtener la del script
-g_script_path="${BASH_SOURCE[0]}"
+#g_script_path="${BASH_SOURCE[0]}"
 
 g_cmd_name='fileu'
 
@@ -76,7 +76,7 @@ m_usage_list1() {
 }
 
 
-_g_fzf_fd=""
+_g_fd_cmd=""
 
 # Listar archivos/folderes de una carpeta.
 # - Argumentos :
@@ -92,13 +92,13 @@ m_list1() {
 
     #2. Generar el comando
     if [ $l_include -eq 0 ]; then
-        _g_fzf_fd="fd -H -I"
+        _g_fd_cmd="fd -H -I"
     else
-        _g_fzf_fd="fd -H -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
+        _g_fd_cmd="fd -H -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
     fi
-    [ ! -z "$1" ] && _g_fzf_fd="${_g_fzf_fd} . '$1'"
+    [ ! -z "$1" ] && _g_fd_cmd="${_g_fd_cmd} . '$1'"
 
-    #echo "$_g_fzf_fd"
+    #echo "$_g_fd_cmd"
 
 
     # Si esta dentro de tmux >= 3.2, se usara 'tmux display-popup':
@@ -116,10 +116,10 @@ m_list1() {
     fi
 
     #3. Usar FZF
-    FZF_DEFAULT_COMMAND="$_g_fzf_fd" \
+    FZF_DEFAULT_COMMAND="$_g_fd_cmd" \
     $l_fzf_cmd $l_fzf_size_args --prompt 'All> ' \
-        --bind "ctrl-d:change-prompt(📁 Directories> )+reload(${_g_fzf_fd} -t d)" \
-        --bind "ctrl-f:change-prompt(📄 Files> )+reload(${_g_fzf_fd} -t f)" \
+        --bind "ctrl-d:change-prompt(📁 Directories> )+reload(${_g_fd_cmd} -t d)" \
+        --bind "ctrl-f:change-prompt(📄 Files> )+reload(${_g_fd_cmd} -t f)" \
         --header $'CTRL-d (Search directories), CTRL-f (Search files)\n'
 
 }
@@ -282,8 +282,8 @@ m_usage_grep1() {
 
 }
 
-_g_fzf_rg_cmd=''
-_g_fzf_rg_initial_query=""
+_g_rg_cmd=''
+_g_rg_initial_query=""
 
 
 m_grep_open_vim() {
@@ -355,12 +355,12 @@ m_grep1() {
     fi
 
     #Anteponer el caracter de escape "\" a los caracteres especial de una cadena
-    _g_fzf_rg_initial_query=$(printf %q "$l_initial_query")
+    _g_rg_initial_query=$(printf %q "$l_initial_query")
 
     if [ ! -z "$l_path" ]; then
-        _g_fzf_rg_cmd="rg --column --line-number --no-heading --color=always --smart-case ${l_path} -e"
+        _g_rg_cmd="rg --column --line-number --no-heading --color=always --smart-case ${l_path} -e"
     else
-        _g_fzf_rg_cmd='rg --column --line-number --no-heading --color=always --smart-case -e'
+        _g_rg_cmd='rg --column --line-number --no-heading --color=always --smart-case -e'
     fi
 
     # Si esta dentro de tmux >= 3.2, se usara 'tmux display-popup':
@@ -378,14 +378,14 @@ m_grep1() {
     fi
 
     local l_status=0
-    local l_result=$(FZF_DEFAULT_COMMAND="${_g_fzf_rg_cmd} ${_g_fzf_rg_initial_query}" \
+    local l_result=$(FZF_DEFAULT_COMMAND="${_g_rg_cmd} ${_g_rg_initial_query}" \
     $l_fzf_cmd $l_fzf_size_args --ansi -m \
         --color "hl:-1:underline,hl+:-1:underline:reverse" \
         --header 'CTRL-r (ripgrep mode), CTRL-f (fzf mode), ENTER (Open in VIM)' \
-        --disabled --query "$_g_fzf_rg_initial_query" \
-        --bind "change:reload:sleep 0.1; $_g_fzf_rg_cmd {q} || true" \
+        --disabled --query "$_g_rg_initial_query" \
+        --bind "change:reload:sleep 0.1; $_g_rg_cmd {q} || true" \
         --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt(🔦 fzf> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-ra; cat /tmp/rg-fzf-fa)" \
-        --bind "ctrl-r:unbind(ctrl-r)+change-prompt(🔍 ripgrep> )+disable-search+reload($_g_fzf_rg_cmd {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-fa; cat /tmp/rg-fzf-ra)" \
+        --bind "ctrl-r:unbind(ctrl-r)+change-prompt(🔍 ripgrep> )+disable-search+reload($_g_rg_cmd {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-fa; cat /tmp/rg-fzf-ra)" \
         --bind "start:unbind(ctrl-r)" \
         --prompt '🔍 ripgrep> ' \
         --delimiter : \
@@ -491,12 +491,12 @@ m_grep2() {
     fi
 
     #Anteponer el caracter de escape "\" a los caracteres especial de una cadena
-    _g_fzf_rg_initial_query=$(printf %q "$l_initial_query")
+    _g_rg_initial_query=$(printf %q "$l_initial_query")
 
     if [ ! -z "$l_path" ]; then
-        _g_fzf_rg_cmd="rg --column --line-number --no-heading --color=always --smart-case ${l_path} -e"
+        _g_rg_cmd="rg --column --line-number --no-heading --color=always --smart-case ${l_path} -e"
     else
-        _g_fzf_rg_cmd='rg --column --line-number --no-heading --color=always --smart-case -e'
+        _g_rg_cmd='rg --column --line-number --no-heading --color=always --smart-case -e'
     fi
 
 
@@ -514,14 +514,14 @@ m_grep2() {
         fi
     fi
 
-    FZF_DEFAULT_COMMAND="${_g_fzf_rg_cmd} ${_g_fzf_rg_initial_query}" \
+    FZF_DEFAULT_COMMAND="${_g_rg_cmd} ${_g_rg_initial_query}" \
     $l_fzf_cmd $l_fzf_size_args --ansi \
         --color "hl:-1:underline,hl+:-1:underline:reverse" \
         --header 'CTRL-r (ripgrep mode), CTRL-f (fzf mode), ENTER (Exit & view file)' \
-        --disabled --query "$_g_fzf_rg_initial_query" \
-        --bind "change:reload:sleep 0.1; $_g_fzf_rg_cmd {q} || true" \
+        --disabled --query "$_g_rg_initial_query" \
+        --bind "change:reload:sleep 0.1; $_g_rg_cmd {q} || true" \
         --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt(🔦 fzf> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-rb; cat /tmp/rg-fzf-fb)" \
-        --bind "ctrl-r:unbind(ctrl-r)+change-prompt(🔍 ripgrep> )+disable-search+reload($_g_fzf_rg_cmd {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-fb; cat /tmp/rg-fzf-rb)" \
+        --bind "ctrl-r:unbind(ctrl-r)+change-prompt(🔍 ripgrep> )+disable-search+reload($_g_rg_cmd {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-fb; cat /tmp/rg-fzf-rb)" \
         --bind "start:unbind(ctrl-r)" \
         --prompt '🔍 ripgrep> ' \
         --delimiter : \
@@ -679,7 +679,7 @@ m_usage_global() {
     printf '  %b%s%b SUBCOMMAND%b [options] [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
     if [ ! -z "$l_infos" ]; then
-        printf '    %b%s%b -i FUNC_NAME [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
+        printf '  %b%s%b -i FUNC_NAME [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
     fi
 
     printf '\nLas opciones globales usados son:\n'

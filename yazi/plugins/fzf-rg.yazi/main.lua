@@ -279,6 +279,7 @@ local function m_get_fzf_arguments(p_state, p_cwd_path, p_initial_query, p_hidde
         table.insert(l_args, l_preview_window)
         table.insert(l_args, '--preview')
         table.insert(l_args, l_preview)
+        --table.insert(l_args, "bat --color=always --paging always --style=numbers,header-filename --highlight-line {2} {1}")
     end
 
     -- Argumento sobre el header a usar
