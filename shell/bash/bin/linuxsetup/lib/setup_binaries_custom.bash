@@ -6406,16 +6406,16 @@ function _copy_artifact_files() {
             copy_binary_file "${l_source_path}" "kubelet" 0 1
 
             #Desacargar archivos adicionales para su configuración
-            mkdir -p ${g_repo_path}/etc/kubelet/systemd
+            mkdir -p ${g_repo_path}/etc/cli/kubelet/systemd
             l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubelet/kubelet.service 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                printf 'Creando el archivo "%b~/.files/etc/kubelet/systemd/kubelet.service%b" ... \n' "$g_color_gray1" "$g_color_reset"
-                echo "$l_aux" | sed "s:/usr/bin:${g_lnx_bin_path}:g" > ${g_repo_path}/etc/kubelet/systemd/kubelet.service
+                printf 'Creando el archivo "%b~/.files/etc/cli/kubelet/systemd/kubelet.service%b" ... \n' "$g_color_gray1" "$g_color_reset"
+                echo "$l_aux" | sed "s:/usr/bin:${g_lnx_bin_path}:g" > ${g_repo_path}/etc/cli/kubelet/systemd/kubelet.service
 
                 #Fix permisos
                 if [ $g_runner_is_target_user -ne 0 ]; then
-                    chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/kubelet/
+                    chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/cli/kubelet/
                 fi
 
             fi
@@ -6441,16 +6441,16 @@ function _copy_artifact_files() {
             copy_binary_file "${l_source_path}" "kubeadm" 0 1
 
             #Desacargar archivos adicionales para su configuración
-            mkdir -p ${g_repo_path}/etc/kubeadm
+            mkdir -p ${g_repo_path}/etc/cli/kubeadm
             l_aux=$(curl -sL https://raw.githubusercontent.com/kubernetes/release/v0.16.2/cmd/krel/templates/latest/kubeadm/10-kubeadm.conf 2> /dev/null)
             l_status=$?
             if [ $l_status -eq 0 ]; then
-                printf 'Creando el archivo "%b~/.files/etc/kubeadm/10-kubeadm.conf%b" ... \n' "$g_color_gray1" "$g_color_reset"
-                echo "$l_aux" | sed "s:/usr/bin:${g_lnx_bin_path}:g" > ${g_repo_path}/etc/kubeadm/10-kubeadm.conf
+                printf 'Creando el archivo "%b~/.files/etc/cli/kubeadm/10-kubeadm.conf%b" ... \n' "$g_color_gray1" "$g_color_reset"
+                echo "$l_aux" | sed "s:/usr/bin:${g_lnx_bin_path}:g" > ${g_repo_path}/etc/cli/kubeadm/10-kubeadm.conf
 
                 #Fix permisos
                 if [ $g_runner_is_target_user -ne 0 ]; then
-                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/kubeadm/10-kubeadm.conf
+                    chown "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/cli/kubeadm/10-kubeadm.conf
                 fi
             fi
 
@@ -6854,13 +6854,13 @@ function _copy_artifact_files() {
             #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             copy_binary_file "${l_source_path}" "trivy" 0 1
 
-            mkdir -p ${g_repo_path}/etc/trivy/templates
-            echo "Copiando templates de \"contrib/*.tpl\" a \"~/.files/etc/trivy/templates/\" ..."
-            cp ${g_temp_path}/${l_source_path}/contrib/*.tpl ${g_repo_path}/etc/trivy/templates/
+            mkdir -p ${g_repo_path}/etc/cli/trivy/templates
+            echo "Copiando templates de \"contrib/*.tpl\" a \"~/.files/etc/cli/trivy/templates/\" ..."
+            cp ${g_temp_path}/${l_source_path}/contrib/*.tpl ${g_repo_path}/etc/cli/trivy/templates/
 
             #Fix permisos
             if [ $g_runner_is_target_user -ne 0 ]; then
-                chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/trivy/
+                chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/cli/trivy/
             fi
             ;;
 
@@ -6965,12 +6965,12 @@ function _copy_artifact_files() {
             copy_binary_file "${l_source_path}" "crun" 0 1
 
             #4. Desacargar el archivo de configuracion requerido por podman, el cual algunas instalaciones de podman no se encuentra ...
-            mkdir -p ${g_repo_path}/etc/podman
+            mkdir -p ${g_repo_path}/etc/cli/podman
 
             #/etc/containers/storage.conf (default: overlayfs)
             printf 'Descargando el archivo de configuracion requerido para "%s" con soporte a "Overlay" en "~/%s"\n' "/etc/containers/storage.conf" \
-                   ".files/etc/podman/storage_overlay_default.toml"
-            curl -fLo ${g_repo_path}/etc/podman/storage_overlay_default.toml \
+                   ".files/etc/cli/podman/storage_overlay_default.toml"
+            curl -fLo ${g_repo_path}/etc/cli/podman/storage_overlay_default.toml \
                  https://raw.githubusercontent.com/containers/podman/main/vendor/github.com/containers/storage/storage.conf
 
             #/etc/containers/storage.conf (btrfs)
@@ -6981,7 +6981,7 @@ function _copy_artifact_files() {
 
             #Fix permisos
             if [ $g_runner_is_target_user -ne 0 ]; then
-                chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/podman/
+                chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/cli/podman/
             fi
 
             #5. Si la unidad servicio 'podman' estaba iniciando y se detuvo, iniciarlo
@@ -7207,10 +7207,10 @@ function _copy_artifact_files() {
             copy_binary_file "${l_source_path}" "containerd" 0 1
 
             #Descargar archivo de configuracion como servicio a nivel system:
-            mkdir -p ${g_repo_path}/etc/containerd/systemd_root
+            mkdir -p ${g_repo_path}/etc/cli/containerd/systemd_root
 
-            printf 'Descargando el archivo de configuracion de "%s" a nivel system en "%s"\n' "containerd.service" "~/.files/etc/containerd/systemd_root/"
-            curl -fLo ${g_repo_path}/etc/containerd/systemd_root/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+            printf 'Descargando el archivo de configuracion de "%s" a nivel system en "%s"\n' "containerd.service" "~/.files/etc/cli/containerd/systemd_root/"
+            curl -fLo ${g_repo_path}/etc/cli/containerd/systemd_root/containerd.service https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
             #Descargar archivo de configuracion como servicio a nivel usuario: no se requiere.
             #debio a que al ejecutar crea el arcivo 'containerd-rootless-setuptool.sh install' lo crea
 
@@ -7234,7 +7234,7 @@ function _copy_artifact_files() {
 
             #Fix permisos
             if [ $g_runner_is_target_user -ne 0 ]; then
-                chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/containerd/
+                chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/cli/containerd/
             fi
 
             #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
@@ -7254,7 +7254,7 @@ function _copy_artifact_files() {
                        "$g_color_yellow1" "$g_color_reset"
                 printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" \
                        "containerd.service" "$g_color_yellow1" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/etc/containerd/systemd_root/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/etc/cli/containerd/systemd_root/containerd.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   sudo systemctl start containerd%b\n' "$g_color_yellow1" "$g_color_reset"
 
@@ -7291,24 +7291,24 @@ function _copy_artifact_files() {
             copy_binary_file "${l_source_path}" "buildctl" 0 1
 
             #Descargar archivo de configuracion como servicio a nivel system:
-            mkdir -p ${g_repo_path}/etc/buildkit/systemd_root
-            mkdir -p ${g_repo_path}/etc/buildkit/systemd_user
+            mkdir -p ${g_repo_path}/etc/cli/buildkit/systemd_root
+            mkdir -p ${g_repo_path}/etc/cli/buildkit/systemd_user
 
-            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.service" "~/.files/etc/buildkit/systemd_user/"
-            #curl -fLo ${g_repo_path}/.files/etc/buildkit/systemd_user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.service
-            curl -fLo ${g_repo_path}/etc/buildkit/systemd_user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit.service
-            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.socket" "~/.files/etc/buildkit/systemd_user/"
-            curl -fLo ${g_repo_path}/etc/buildkit/systemd_user/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.socket
+            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.service" "~/.files/etc/cli/buildkit/systemd_user/"
+            #curl -fLo ${g_repo_path}/.files/etc/cli/buildkit/systemd_user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.service
+            curl -fLo ${g_repo_path}/etc/cli/buildkit/systemd_user/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit.service
+            printf 'Descargando el archivo de configuracion de "%s" a nivel usuario en "%s"\n' "buildkit.socket" "~/.files/etc/cli/buildkit/systemd_user/"
+            curl -fLo ${g_repo_path}/etc/cli/buildkit/systemd_user/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/user/buildkit-proxy.socket
 
-            printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.service" "~/.files/etc/buildkit/systemd_root/"
-            curl -fLo ${g_repo_path}/etc/buildkit/systemd_root/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.service
-            printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.socket" "~/.files/etc/buildkit/systemd_root/"
-            curl -fLo ${g_repo_path}/etc/buildkit/systemd_root/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.socket
+            printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.service" "~/.files/etc/cli/buildkit/systemd_root/"
+            curl -fLo ${g_repo_path}/etc/cli/buildkit/systemd_root/buildkit.service https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.service
+            printf 'Descargando el archivo de configuracion de "%s" a nivel sistema en "%s"\n' "buildkit.socket" "~/.files/etc/cli/buildkit/systemd_root/"
+            curl -fLo ${g_repo_path}/etc/cli/buildkit/systemd_root/buildkit.socket https://raw.githubusercontent.com/moby/buildkit/master/examples/systemd/system/buildkit.socket
 
 
             #Fix permisos
             if [ $g_runner_is_target_user -ne 0 ]; then
-                chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/buildkit/
+                chown -R "${g_targethome_owner}:${g_targethome_group}" ${g_repo_path}/etc/cli/buildkit/
             fi
 
 
@@ -7329,8 +7329,8 @@ function _copy_artifact_files() {
                        "$g_color_yellow1" "$g_color_reset"
                 printf '%b2> Instalar en modo root%b (la unidad "%s" se ejecutara en modo system)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "buildkit.service" \
                        "$g_color_yellow1" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/etc/buildkit/systemd_root/buildkit.socket /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
-                printf '%b   sudo cp ~/.files/etc/buildkit/systemd_root/buildkit.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/etc/cli/buildkit/systemd_root/buildkit.socket /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
+                printf '%b   sudo cp ~/.files/etc/cli/buildkit/systemd_root/buildkit.service /usr/lib/systemd/system/%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   sudo systemctl daemon-reload%b\n' "$g_color_yellow1" "$g_color_reset"
                 printf '%b   sudo systemctl start buildkit.service%b\n' "$g_color_yellow1" "$g_color_reset"
 
@@ -8849,9 +8849,9 @@ function _copy_artifact_files() {
             # Si desea crear los enlaces con en su Desktop
             printf '%bSi desea mayor integracion con su Desktop puede realizar:\n' "$g_color_yellow1"
             printf ' > Si kitty se instalo a nigel global (todos los usuarios):\n'
-            printf '  %bsudo cp %s %b%s%b\n' "$g_color_gray1" '~/.files/etc/kitty/desktop/system/kitty*.desktop' "$g_color_cian1" '/usr/local/share/applications' "$g_color_yellow1"
+            printf '  %bsudo cp %s %b%s%b\n' "$g_color_gray1" '~/.files/etc/gui/kitty/desktop/system/kitty*.desktop' "$g_color_cian1" '/usr/local/share/applications' "$g_color_yellow1"
             printf ' > Si kitty se instalo a nigel usuario:\n'
-            printf '  %bsudo cp %s %b%s%b\n' "$g_color_gray1" '~/.files/etc/kitty/desktop/local/kitty*.desktop' "$g_color_cian1" '~/.local/share/applications' "$g_color_reset"
+            printf '  %bsudo cp %s %b%s%b\n' "$g_color_gray1" '~/.files/etc/gui/kitty/desktop/local/kitty*.desktop' "$g_color_cian1" '~/.local/share/applications' "$g_color_reset"
 
             ;;
 

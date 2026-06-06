@@ -1279,10 +1279,11 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
-    create_folderpath_on_home ".config" "yazi/flavors/catppuccin-mocha.yazi"
-    copy_file_on_home "${g_repo_path}/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" ".config/yazi/flavors/catppuccin-mocha.yazi" "flavor.toml" $l_flag_overwrites_file_modifiable "        > "
-    l_status=$?
-    copy_file_on_home "${g_repo_path}/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" ".config/yazi/flavors/catppuccin-mocha.yazi" "tmtheme.xml" $l_flag_overwrites_file_modifiable "        > "
+    create_folderpath_on_home ".config" "yazi/flavors"
+    l_target_path=".config/yazi/flavors"
+    l_target_link="catppuccin-mocha.yazi"
+    l_source_path="${g_repo_name}/yazi/flavors/catppuccin-mocha.yazi"
+    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
     l_status=$?
 
     copy_file_on_home "${g_repo_path}/yazi" "keymap_lnx.toml" ".config/yazi" "keymap.toml" $l_flag_overwrites_file_modifiable "        > "

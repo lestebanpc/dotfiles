@@ -279,7 +279,7 @@ local function m_get_fzf_arguments(p_state, p_cwd_path, p_initial_query, p_hidde
         table.insert(l_args, l_preview_window)
         table.insert(l_args, '--preview')
         table.insert(l_args, l_preview)
-        --table.insert(l_args, "bat --color=always --paging always --style=numbers,header-filename --highlight-line {2} {1}")
+        --table.insert(l_args, "bat --color=always --paging always --style=numbers,header-filename {1} --highlight-line {2}")
     end
 
     -- Argumento sobre el header a usar
@@ -812,11 +812,11 @@ local function m_get_plugin_state_sync(p_state)
 	end
 
 	if not p_state.fzf_options.preview then
-		p_state.fzf_options.preview = "bat --color=always --paging always --style=numbers,header-filename --highlight-line {2} {1}"
+		p_state.fzf_options.preview = "bat --color=always --style=numbers,header-filename {1} --highlight-line {2}"
 	end
 
 	if not p_state.fzf_options.preview_window then
-		p_state.fzf_options.preview_window = "down,60%"
+		p_state.fzf_options.preview_window = "up,60%,border-bottom,+{2}+3/3,~3"
 	end
 
 	if p_state.fzf_options.header == nil then

@@ -582,6 +582,10 @@ function m_create_all_symboliclinks($p_flag_overwrites_ln) {
             source_path     = "${env:USERPROFILE}\.files\vim\ftplugin\cocide"
         },
         [PSCustomObject]@{
+            target_link     = "${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi"
+            source_path     = "${env:USERPROFILE}\.files\yazi\flavors\catppuccin-mocha.yazi"
+        },
+        [PSCustomObject]@{
             target_link     = "${env:APPDATA}\yazi\config\plugins\fzf-fd.yazi"
             source_path     = "${env:USERPROFILE}\.files\yazi\plugins\fzf-fd.yazi"
         },
@@ -1654,16 +1658,15 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     }
     Write-Host "            > Edite '${env:APPDATA}\yazi\config\init.lua' si desea modificar las opciones Wezterm."
 
-    $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\flavor.toml"
-    $l_source_path="${env:USERPROFILE}\.files\yazi\flavors\catppuccin-mocha.yazi"
-    $l_source_filename='flavor.toml'
-    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
 
-    $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi\tmtheme.xml"
+    $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi"
     $l_source_path="${env:USERPROFILE}\.files\yazi\flavors\catppuccin-mocha.yazi"
-    $l_source_filename='tmtheme.xml'
-    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
-
+    if ($g_setup_access_type -eq 0) {
+        $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    }
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+        $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    }
 
     $l_target_link="${env:APPDATA}\yazi\config\plugins\fzf-fd.yazi"
     $l_source_path="${env:USERPROFILE}\.files\yazi\plugins\fzf-fd.yazi"

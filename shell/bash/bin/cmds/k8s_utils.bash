@@ -154,8 +154,11 @@ _g_fzf_kc_options=""
 #Nombre del archivo de dato
 _g_temfile_fullpath=""
 
-
 _g_data_object_json=""
+
+_g_use_cache_before=1
+_g_preserve_cache_after=1
+
 
 
 # -------------------------------------------------------------------------------------
@@ -946,7 +949,7 @@ _show_pod_info() {
 
 
     printf '\n%bVariables de contenedores principales:%b\n' "$g_color_cyan1" "$g_color_reset"
-    l_jq_query='[ '"${l_root}"'spec.containers[] | { name: .name, env: .env[]? } | { CONTAINER: .name, VARIABLE: .env.name, TYPE: (if .env.value? != null then "VALUE" elif .env.valueFrom?.fieldRef != null then "FROM-FIELDREF" elif .env.valueFrom?.secretKeyRef != null then "FROM-SECRET-REF" else "UNKNOWN" end), VALUE: (if .env.value? != null then .env.value? elif .env.valueFrom?.fieldRef != null then .env.valueFrom?.fieldRef.fieldPath elif .env.valueFrom?.secretKeyRef != null then "[SecretName: \(.env.valueFrom?.secretKeyRef.name)] \(.env.valueFrom?.secretKeyRef.key)" else "..." end) }]'
+    l_jq_query='[ '"${l_root}"'spec.containers[] | { name: .name, env: .env[]? } | { CONTAINER: .name, VARIABLE: .env.name, TYPE: (if .env.value? != null then "VALUE" elif .env.valueFrom?.fieldRef != null then "FROM-FIELDREF" elif .env.valueFrom?.secretKeyRef != null then "FROM-SECRET-REF" elif .env.valueFrom?.configMapKeyRef != null then "FROM-CFGMAP-REF" else "UNKNOWN" end), VALUE: (if .env.value? != null then .env.value? elif .env.valueFrom?.fieldRef != null then .env.valueFrom?.fieldRef.fieldPath elif .env.valueFrom?.secretKeyRef != null then "[SecretName: \(.env.valueFrom?.secretKeyRef.name)] \(.env.valueFrom?.secretKeyRef.key)" elif .env.valueFrom?.configMapKeyRef != null then "[ConfigMap: \(.env.valueFrom?.configMapKeyRef.name)] \(.env.valueFrom?.configMapKeyRef.key)" else "..." end) }]'
 
     l_data=$(echo "$_g_data_object_json" | jq "$l_jq_query")
     if [ $? -eq 0 ]; then
@@ -2192,10 +2195,16 @@ m_kc_resources() {
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
     _g_temfile_fullpath="${g_tmpfile_path}/resource_${g_tmpfile_suffix}.json"
 
-    kubectl "${la_args[@]}" > $_g_temfile_fullpath
-    if [ $? -ne 0 ]; then
-        echo "Check the connection to k8s cluster"
-        return 1
+    if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
+
+        oc "${la_args[@]}" > "$_g_temfile_fullpath"
+        if [ $? -ne 0 ]; then
+            echo "Check the connection to k8s cluster"
+            return 1
+        fi
+
+    else
+        printf 'Cache file: "%b%s%b"\n' "$g_color_gray1" "$_g_temfile_fullpath" "$g_color_reset"
     fi
 
     # Si esta dentro de tmux >= 3.2, se usara 'tmux display-popup':
@@ -2221,6 +2230,10 @@ m_kc_resources() {
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(oc get ${_g_fzf_kc_options} -o yaml) > /dev/tty" \
         --bind 'ctrl-r:reload:$FZF_DEFAULT_COMMAND' |
     awk "$l_awk_template"
+
+    if [ "$_g_preserve_cache_after" -ne 0 ]; then
+        rm -f "${_g_temfile_fullpath}"
+    fi
 
 }
 
@@ -2378,10 +2391,16 @@ m_oc_projects() {
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
     _g_temfile_fullpath="${g_tmpfile_path}/projects_${g_tmpfile_suffix}.json"
 
-    oc "${la_args[@]}" > $_g_temfile_fullpath
-    if [ $? -ne 0 ]; then
-        echo "Check the connection to k8s cluster"
-        return 1
+    if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
+
+        oc "${la_args[@]}" > "$_g_temfile_fullpath"
+        if [ $? -ne 0 ]; then
+            echo "Check the connection to k8s cluster"
+            return 1
+        fi
+
+    else
+        printf 'Cache file: "%b%s%b"\n' "$g_color_gray1" "$_g_temfile_fullpath" "$g_color_reset"
     fi
 
 
@@ -2430,7 +2449,10 @@ m_oc_projects() {
         --preview "bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 0 | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    rm -f $_g_temfile_fullpath
+
+    if [ "$_g_preserve_cache_after" -ne 0 ]; then
+        rm -f "${_g_temfile_fullpath}"
+    fi
 
 
 }
@@ -2566,12 +2588,17 @@ m_kc_namespaces() {
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
     _g_temfile_fullpath="${g_tmpfile_path}/namespaces_${g_tmpfile_suffix}.json"
 
-    kubectl "${la_args[@]}" > $_g_temfile_fullpath
-    if [ $? -ne 0 ]; then
-        echo "Check the connection to k8s cluster"
-        return 1
-    fi
+    if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
 
+        kubectl "${la_args[@]}" > "$_g_temfile_fullpath"
+        if [ $? -ne 0 ]; then
+            echo "Check the connection to k8s cluster"
+            return 1
+        fi
+
+    else
+        printf 'Cache file: "%b%s%b"\n' "$g_color_gray1" "$_g_temfile_fullpath" "$g_color_reset"
+    fi
 
     #4. Generar el reporte deseado con la data ingresada
     local l_data
@@ -2616,8 +2643,10 @@ m_kc_namespaces() {
         --preview "bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 1 | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    rm -f $_g_temfile_fullpath
 
+    if [ "$_g_preserve_cache_after" -ne 0 ]; then
+        rm -f "${_g_temfile_fullpath}"
+    fi
 
 }
 
@@ -2765,10 +2794,16 @@ m_kc_pod() {
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
     _g_temfile_fullpath="${g_tmpfile_path}/pods_${g_tmpfile_suffix}.json"
 
-    kubectl "${la_args[@]}" > $_g_temfile_fullpath
-    if [ $? -ne 0 ]; then
-        echo "Check the connection to k8s cluster"
-        return 1
+    if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
+
+        kubectl "${la_args[@]}" > "$_g_temfile_fullpath"
+        if [ $? -ne 0 ]; then
+            echo "Check the connection to k8s cluster"
+            return 1
+        fi
+
+    else
+        printf 'Cache file: "%b%s%b"\n' "$g_color_gray1" "$_g_temfile_fullpath" "$g_color_reset"
     fi
 
 
@@ -2821,7 +2856,9 @@ m_kc_pod() {
         --preview "bash ${g_script_path} -i show_pod_info '${_g_temfile_fullpath}' '{1}' '{2}' | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    rm -f $_g_temfile_fullpath
+    if [ "$_g_preserve_cache_after" -ne 0 ]; then
+        rm -f "${_g_temfile_fullpath}"
+    fi
 
 }
 
@@ -2989,12 +3026,17 @@ m_kc_containers() {
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
     _g_temfile_fullpath="${g_tmpfile_path}/containers_${g_tmpfile_suffix}.json"
 
-    kubectl "${la_args[@]}" > $_g_temfile_fullpath
-    if [ $? -ne 0 ]; then
-        echo "Check the connection to k8s cluster"
-        return 1
-    fi
+    if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
 
+        kubectl "${la_args[@]}" > "$_g_temfile_fullpath"
+        if [ $? -ne 0 ]; then
+            echo "Check the connection to k8s cluster"
+            return 1
+        fi
+
+    else
+        printf 'Cache file: "%b%s%b"\n' "$g_color_gray1" "$_g_temfile_fullpath" "$g_color_reset"
+    fi
 
     #4. Generar el reporte deseado con la data ingresada
     local l_data
@@ -3047,7 +3089,10 @@ m_kc_containers() {
     #    --bind "ctrl-l:execute:bat --color=always --paging always --style plain  <(kubectl logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
     #    --bind "ctrl-x:become(bash \"${g_script_path}\" show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_temfile_fullpath}' > /dev/tty)" \
 
-    rm -f $_g_temfile_fullpath
+    if [ "$_g_preserve_cache_after" -ne 0 ]; then
+        rm -f "${_g_temfile_fullpath}"
+    fi
+
 
 }
 
@@ -3214,10 +3259,16 @@ m_kc_deployments() {
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
     _g_temfile_fullpath="${g_tmpfile_path}/deployments_${g_tmpfile_suffix}.json"
 
-    kubectl "${la_args[@]}" > $_g_temfile_fullpath
-    if [ $? -ne 0 ]; then
-        echo "Check the connection to k8s cluster"
-        return 1
+    if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
+
+        kubectl "${la_args[@]}" > "$_g_temfile_fullpath"
+        if [ $? -ne 0 ]; then
+            echo "Check the connection to k8s cluster"
+            return 1
+        fi
+
+    else
+        printf 'Cache file: "%b%s%b"\n' "$g_color_gray1" "$_g_temfile_fullpath" "$g_color_reset"
     fi
 
     #4. Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
@@ -3266,7 +3317,9 @@ m_kc_deployments() {
         --preview "bash ${g_script_path} -i show_deployment_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    rm -f ${_g_temfile_fullpath}
+    if [ "$_g_preserve_cache_after" -ne 0 ]; then
+        rm -f "${_g_temfile_fullpath}"
+    fi
 
     #    --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View yaml), CTRL-b (Preview in full-screen), CTRL-d (View revisions), CTRL-l (View logs), CTRL-x (Exit & follow logs)\n' \
     #    --bind "ctrl-l:execute(bash \"${g_script_path}\" show_log_dply '{1}' '{2}' 1 10000 '${_g_temfile_fullpath}' > /dev/tty)" \
@@ -3437,10 +3490,16 @@ m_kc_replicaset() {
     #3. Obtener la data del cluster y almacenarlo en un archivo temporal
     _g_temfile_fullpath="${g_tmpfile_path}/replicaset_${g_tmpfile_suffix}.json"
 
-    kubectl "${la_args[@]}" > $_g_temfile_fullpath
-    if [ $? -ne 0 ]; then
-        echo "Check the connection to k8s cluster"
-        return 1
+    if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
+
+        kubectl "${la_args[@]}" > "$_g_temfile_fullpath"
+        if [ $? -ne 0 ]; then
+            echo "Check the connection to k8s cluster"
+            return 1
+        fi
+
+    else
+        printf 'Cache file: "%b%s%b"\n' "$g_color_gray1" "$_g_temfile_fullpath" "$g_color_reset"
     fi
 
 
@@ -3491,7 +3550,9 @@ m_kc_replicaset() {
         --preview "bash ${g_script_path} -i show_replicaset_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    rm -f ${_g_temfile_fullpath}
+    if [ "$_g_preserve_cache_after" -ne 0 ]; then
+        rm -f "${_g_temfile_fullpath}"
+    fi
 
 }
 
@@ -3649,7 +3710,7 @@ m_get_subcmd_infos() {
 
         # Mostrar el alias:
         if [ ! -z "$l_alias_list" ]; then
-            printf '    Alias: %b\n' "$l_alias_list"
+            printf '%b    Alias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
         fi
 
         # Mostrar la descripcion
@@ -3678,6 +3739,12 @@ m_usage_global() {
     printf '\nLas opciones globales usados son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-u%b Usa un cache de la consulta anterior y existente. No vuelve a realizar la consulta (no hace caso a los filtros de busqueda).%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '    %b%s%b\n' "$g_color_gray1" "Por defecto, siempre siempre realiza la consulta y lo almacena en un archivo como cache." "$g_color_reset"
+    printf '%b  > %b-p%b Preserva el cache de la consulta despues de presentar/usar la consulta.%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '    %b%s%b\n' "$g_color_gray1" "Por defecto, el resultado de la consulta que esta en un archivo como cache, siempre se elimina despues de usarlo." "$g_color_reset"
 
     if [ ! -z "$l_infos" ]; then
         printf '%b  > %b-i FUNC_NAME%b Especifica el nombre de la funcion interna del script a ejecutar (uso interno y/o debugging).%b\n' \
@@ -3735,6 +3802,17 @@ main() {
             -h|--help|help)
                 m_usage_global
                 return 0
+                ;;
+
+            -u)
+                _g_use_cache_before=0
+                shift 1
+                ;;
+
+
+            -p)
+                _g_preserve_cache_after=0
+                shift 1
                 ;;
 
             -i)

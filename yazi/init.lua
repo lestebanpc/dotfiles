@@ -191,10 +191,10 @@ t_plugin:setup({
         binds = {},
 
         -- Comando de preview para archivos, directorio y otros
-        --preview = "bat --color=always --paging always --style=numbers,header-filename --highlight-line {2} {1}",
+        --preview = "bat --color=always --style=numbers,header-filename {1} --highlight-line {2}",
 
         -- Estilo de la ventana preview
-        --preview_window = "down,60%",
+		--preview_window = "up,60%,border-bottom,+{2}+3/3,~3",
 
         -- Arreglo de cadenas que representa los argumento adicionales del comando:
         -- > Si es una opcion con valor, colocar el nombre y su valor como elementos separado del arreglo.
