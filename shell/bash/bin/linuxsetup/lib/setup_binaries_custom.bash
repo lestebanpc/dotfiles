@@ -155,6 +155,7 @@ declare -A gA_repos_artifact=(
         ['gitlab-cli']='gitlab-org/cli'
         ['resvg']='linebender/resvg'
         ['gdu']='dundee/gdu'
+        ['scrcpy']='Genymobile/scrcpy'
     )
 
 # Diccionario de los repositorios que tiene un repositorio de versiones diferente al repositorio de artefactos.
@@ -271,7 +272,7 @@ declare -a ga_menuoption_repos=(
     "shellcheck,shfmt,marksman,luals,taplo,lemminx,flamelens,powershell_es"
     "ctags-win,ctags-nowin"
     "llama-swap"
-    "awscli,eksctl,distrobox,github-cli,gitlab-cli,jp,opencode,kitty"
+    "awscli,eksctl,distrobox,github-cli,gitlab-cli,jp,opencode,kitty,scrcpy"
     )
 
 # Tipos de archivos (usualmente binarios), que estan en el repositorio, segun el tipo de SO al cual pueden ser usados/ejecutados.
@@ -412,6 +413,7 @@ declare -A gA_main_arti_type=(
         ['kitty']=1
         ['qsv']=1
         ['powershell_es']=1
+        ['scrcpy']=1
     )
 
 # Define las formas de obtener la version actual (version amigable del repositorio instalada) de un repositorio
@@ -494,7 +496,7 @@ declare -A gA_current_version_method_type=(
     )
 
 
-# Parametros usasdos para calcular la version actual (instalada) del repositorio.
+# Parametros usados para calcular la version actual (instalada) del repositorio.
 # Su valor depdende el metodo usado para obtener la version actual.
 # > Si es '3', no usa parametros.
 # > Si es '2', es el nombre del archivo donde se almacena la version del programa.
@@ -586,6 +588,7 @@ declare -A gA_current_version_parameter4=(
     ['taplo']='lsp_servers/toml_ls'
     ['async-profiler']='async_profiler/bin'
     ['qsv']='qsv'
+    ['scrcpy']='scrcpy'
     )
 
 
@@ -2297,6 +2300,38 @@ function get_repo_artifacts() {
             fi
             pna_artifact_types=(23)
             ;;
+
+
+        scrcpy)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("scrcpy-win64-v4.0.zip")
+                else
+                    pna_artifact_names=("scrcpy-win64-v4.0.zip")
+                fi
+                pna_artifact_types=(21)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("scrcpy-linux-x86_64-v4.0.tar.gz")
+                    else
+                        pna_artifact_names=("scrcpy-linux-x86_64-v4.0.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("scrcpy-linux-x86_64-v4.0.tar.gz")
+                    else
+                        pna_artifact_names=("scrcpy-linux-x86_64-v4.0.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(20)
+            fi
+            ;;
+
 
 
 
@@ -7659,6 +7694,55 @@ function _copy_artifact_files() {
                 export PATH=${g_tools_path}/protoc/bin:$PATH
             fi
             ;;
+
+
+        scrcpy)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+
+            #A. Si es WSL de Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+
+                #Limpiando el folder si existe (si no existe, solo puede crear la ruta base lo crea)
+                clean_folder_on_tools 1 "" "scrcpy" 0 ""
+
+                #Descomprimir
+                uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "scrcpy" "scrcpy-"
+                l_status=$?
+                if [ $l_status -ne 0 ]; then
+                    return 40
+                fi
+
+                return 0
+
+            fi
+
+            #B. Si es Linux
+
+            #Limpiando el folder si existe (si no existe, solo puede crear la ruta base lo crea)
+            clean_folder_on_tools 0 "" "scrcpy" 0 ""
+
+            #Descomprimir
+            uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "scrcpy" "scrcpy-"
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                return 40
+            fi
+
+
+            #Validar si 'scrcpy' esta en el PATH
+            echo "$PATH" | grep "${g_tools_path}/scrcpy" &> /dev/null
+            l_status=$?
+            if [ $l_status -ne 0 ]; then
+                printf '%b%s %s esta instalado pero no esta en el $PATH del usuario%b. Se recomienda que se adicione en forma permamente en su profile\n' \
+                    "$g_color_yellow1" "scrcpy"  "$p_repo_last_pretty_version" "$g_color_reset"
+                printf 'Adicionando a la sesion actual: PATH=$PATH:%s/scrcpy/bin\n' "${g_tools_path}"
+                export PATH="$PATH:${g_tools_path}/scrcpy"
+            fi
+            ;;
+
 
 
         omnisharp-ls)

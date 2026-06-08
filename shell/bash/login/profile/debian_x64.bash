@@ -138,14 +138,22 @@ if [ -z "$g_session_src" ]; then
     # Si se usa sesion remota SSH (ya se de un 'desktop server' o 'headless server')
     if [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_CLIENT" ]; then
         g_session_src=0
-    # Si se usa sesion  dentro del escritorio del servidor (local desktop o remote desktop)
+    # Si se usa sesion dentro del escritorio del servidor (local desktop o remote desktop)
     elif [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
         g_session_src=2
-    # Console Linux
-    #elif [[ $(tty) =~ ^/dev/tty[0-9]+$ ]]; then
-    #    g_session_src=1
-    else
+    elif [ "$XDG_SESSION_TYPE" = 'wayland' ] || [ "$XDG_SESSION_TYPE" = 'x11' ]; then
+        g_session_src=2
+    # Si es un dispositivo android (por defecto, nunca tiene acceso una 'console linux')
+    elif [ -n "$ANDROID_DATA" ]; then
+        g_session_src=2
+    # Si es la 'consola linux'.
+    elif [ "$XDG_SESSION_TYPE" = 'tty' ] ||  [ "$TERM" = 'linux' ]; then
         g_session_src=1
+    elif [[ $(tty) =~ ^/dev/tty[0-9]+$ ]]; then
+        g_session_src=1
+    # Caso contrario, no es 'console linux'
+    else
+        g_session_src=2
     fi
 
 fi

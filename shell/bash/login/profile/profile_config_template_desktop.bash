@@ -86,7 +86,7 @@ g_enviroment_type=1
 
 
 #-----------------------------------------------------------------------------------
-# Variables de entorno basicos
+# Variables de entorno (requeridos por el profile)
 #-----------------------------------------------------------------------------------
 
 # Variables de entorno comunes y usuados por varios programas
@@ -146,7 +146,26 @@ g_enviroment_type=1
 
 
 #-----------------------------------------------------------------------------------
-# My custom alias
+# Variables de entorno (personalizacion)
+#-----------------------------------------------------------------------------------
+
+# Modificar la variable de entorno PATH
+#[ -d "${MY_TOOLS_PATH}/scrcpy" ] && PATH="$PATH:${MY_TOOLS_PATH}/scrcpy"
+#[ -d "${MY_TOOLS_PATH}/mytool/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/mytool/bin"
+#[ -d "${HOME}/mytool/bin" ] && PATH="$PATH:${HOME}/mytool/bin"
+
+#export PATH
+
+
+#-----------------------------------------------------------------------------------
+# Alias
 #-----------------------------------------------------------------------------------
 
 #alias kc='kubectl'
+
+
+#-----------------------------------------------------------------------------------
+# Otros
+#-----------------------------------------------------------------------------------
+
+# Otros

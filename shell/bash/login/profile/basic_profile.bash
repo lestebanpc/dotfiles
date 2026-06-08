@@ -77,12 +77,26 @@ g_lnx_bin_path='/usr/local/bin'
 #  > 0 Si se usa sesion remota SSH (ya se de un 'desktop server' o 'headless server').
 #  > 1 Si se realiza una sesion local usando 'Console Linux'.
 #  > 2 Si se usa sesion dentro del escritorio del servidor (ya sea local desktop o remote desktop).
+#
+# Si es una conexion remota por SSH
 if [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_CLIENT" ]; then
     export MY_SESSION_SRC=0
+# Si se usa sesion dentro del escritorio del servidor (local desktop o remote desktop)
 elif [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
     export MY_SESSION_SRC=2
-else
+elif [ "$XDG_SESSION_TYPE" = 'wayland' ] || [ "$XDG_SESSION_TYPE" = 'x11' ]; then
+    export MY_SESSION_SRC=2
+# Si es un dispositivo android (por defecto, nunca tiene acceso una 'console linux')
+elif [ -n "$ANDROID_DATA" ]; then
+    export MY_SESSION_SRC=2
+# Si es la 'consola linux'.
+elif [ "$XDG_SESSION_TYPE" = 'tty' ] ||  [ "$TERM" = 'linux' ]; then
     export MY_SESSION_SRC=1
+elif [[ $(tty) =~ ^/dev/tty[0-9]+$ ]]; then
+    export MY_SESSION_SRC=1
+# Caso contrario, no es 'console linux'
+else
+    export MY_SESSION_SRC=2
 fi
 
 # Ruta del folder donde se ubican comandos personalizado del usuario.

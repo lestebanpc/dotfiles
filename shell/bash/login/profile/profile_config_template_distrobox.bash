@@ -89,7 +89,7 @@ g_enviroment_type=2
 
 
 #-----------------------------------------------------------------------------------
-# Variables de entorno basicos
+# Variables de entorno (requeridos por el profile)
 #-----------------------------------------------------------------------------------
 
 # Variables de entorno comunes y usuados por varios programas
@@ -149,20 +149,27 @@ g_enviroment_type=2
 
 
 #-----------------------------------------------------------------------------------
-# Eliminar variables de entorno para que se puedan recalcular
+# Variables de entorno (personalizacion)
 #-----------------------------------------------------------------------------------
+
+# Modificar la variable de entorno PATH
+#[ -d "${MY_TOOLS_PATH}/scrcpy" ] && PATH="$PATH:${MY_TOOLS_PATH}/scrcpy"
+#[ -d "${MY_TOOLS_PATH}/mytool/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/mytool/bin"
+#[ -d "${HOME}/mytool/bin" ] && PATH="$PATH:${HOME}/mytool/bin"
+
+#export PATH
 
 # Establecer el directorio de datos de tmux. No usar el default ('/tmp') debido a que es usado por host.
 export TMUX_TMPDIR="/var/tmp"
 
-# Variables autogeneradas por el profile del host
+# Limpiar variables autogeneradas por el profile del host
 unset MY_REPO_PATH
 
-# Variables autogeneradas por tmux
+# Limpiar variables autogeneradas por tmux
 unset TMUX
 unset TMUX_PANE
 
-# Variables autogeneradas y usados por oh-my-tmux
+# Limpiar variables autogeneradas y usados por oh-my-tmux
 unset TMUX_PROGRAM
 unset TMUX_VERSION
 unset TMUX_SOCKET
@@ -173,7 +180,14 @@ unset TMUX_SET_CLIPBOARD
 
 
 #-----------------------------------------------------------------------------------
-# My custom alias
+# Alias
 #-----------------------------------------------------------------------------------
 
 #alias kc='kubectl'
+
+
+#-----------------------------------------------------------------------------------
+# Otros
+#-----------------------------------------------------------------------------------
+
+# Otros
