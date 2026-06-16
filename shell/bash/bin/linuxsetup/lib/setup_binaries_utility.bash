@@ -1583,7 +1583,7 @@ function copy_font_files()
 
     fi
 
-    #3. Si son binarios Linux
+    #3. Si son archivos en Linux
     local l_runner_is_lnx_base_owner=1
     if [ $(( g_lnx_base_options & 1 )) -eq 1 ]; then
         l_runner_is_lnx_base_owner=0
@@ -1682,6 +1682,120 @@ function copy_font_files()
     fi
 
     return 0
+
+}
+
+
+#Copia un archivo del una aplicacion/programa en la ruta por defecto de Linux.
+#Parametros de entrada> Argumentos:
+#  01> Source path, relativo al folder temporal, donde esta el archivo a copiar.
+#  02> Source filename:
+#      - Si parametro '03' es '1', representa el nombre del archivo binario a copiar.
+#      - Si parametro '03' es '0', representa el parte inical del los archivo binario a copiar.
+#  03> Si es '1' (su valor por defecto), se copia solo un archivo y el indicado en el parametro 2.
+#      Si es '0', se copia todos los archivos que inicien con lo indicado por el parametro 2.
+#  04> Destino: Nombre del folder donde el app almacena archivos que no sean comandos ni iconos.
+#      Si no existe, este folder es creado
+#Parametros de salida > Valor de retorno:
+#  0 - OK
+#  1 - No OK
+function copy_file_to_apppath()
+{
+
+    #1. Argumentos
+    local p_source_path="${g_temp_path}/$1"
+    local p_source_filename="$2"
+
+    local p_use_pattern=1
+    if [ "$3" = "0" ]; then
+        p_use_pattern=0
+    fi
+
+    if [ -z "$4" ]; then
+        return 1
+    fi
+    local l_target_path="${g_lnx_nonbin_path}/$4"
+
+    #2. Si son para Windows
+    #if [ $p_is_lnx_file -eq 1 ]; then
+    #    return 1
+    #fi
+
+    #3. Si son archivos para Linux
+    local l_runner_is_lnx_base_owner=1
+    if [ $(( g_lnx_base_options & 1 )) -eq 1 ]; then
+        l_runner_is_lnx_base_owner=0
+    fi
+
+    #3.1. Si el usuario runner tiene los permisos necesarios para la instalación (sin requerir sudo)
+    #     Solo se puede dar en estos 2 posibles escenarios:
+    #     - Si el runner es root en modo de suplantacion del usuario objetivo.
+    #     - Si el runner es el owner de la carpeta de comandos (el cual a su vez, es usuario objetivo).
+    if [ $g_runner_is_target_user -ne 0 ] || [ $l_runner_is_lnx_base_owner -eq 0 ]; then
+
+        #Si no existe las carpetas destino, crearlo
+        if [ ! -d "$l_target_path" ]; then
+
+            printf 'Creando el folder "%b%s%b" para archivos de la aplicacion ...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+            mkdir -pm 755 "${l_target_path}"
+
+            #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
+            if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_lnx_base_owner -eq 0 ]; then
+                chown "${g_targethome_owner}:${g_targethome_group}" ${l_target_path}
+            fi
+
+        fi
+
+        #Copiar los archivos
+        printf 'Copiando el archivo "%b%s%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "${p_source_path}/${p_source_filename}" \
+               "$g_color_reset" "$g_color_gray1" "${l_target_path}/" "$g_color_reset"
+
+        if [ $p_use_pattern -eq 0 ]; then
+            cp ${p_source_path}/${p_source_filename}* "${l_target_path}/"
+            #chmod +r ${g_lnx_bin_path}/${p_source_filename}*
+        else
+            cp "${p_source_path}/${p_source_filename}" "${l_target_path}/"
+            #chmod +r "${g_lnx_bin_path}/${p_source_filename}"
+        fi
+
+        #Si el runner es root en modo suplantacion del usuario objetivo y el owner de la carpeta es el usuario objetivo.
+        if [ $g_runner_is_target_user -ne 0 ] && [ $l_runner_is_lnx_base_owner -eq 0 ]; then
+            if [ $p_use_pattern -eq 0 ]; then
+                chown "${g_targethome_owner}:${g_targethome_group}" ${l_target_path}/${p_source_filename}*
+            else
+                chown "${g_targethome_owner}:${g_targethome_group}" "${l_target_path}/${p_source_filename}"
+            fi
+        fi
+
+        return 0
+
+    fi
+
+    #3.1. Si el usuario runner solo puede realizar la instalación usando sudo para root.
+    #     - Este escenario solo puede ser: el runner es el usuario objetivo y el owner del folder de los comandos es root.
+
+    #Copiar los archivos
+    printf 'Copiando el archivo "%b%s%b" a la carpeta "%b%s%b" ...\n' "$g_color_gray1" "${p_source_path}/${p_source_filename}" \
+           "$g_color_reset" "$g_color_gray1" "${l_target_path}/" "$g_color_reset"
+
+    #Si no existe las carpetas destino, crearlo
+    if [ ! -d "$l_target_path" ]; then
+
+        printf 'Creando el folder "%b%s%b" para las binarios...\n' "$g_color_gray1" "$l_target_path" "$g_color_reset"
+        sudo mkdir -pm 755 "${l_target_path}"
+
+    fi
+
+    if [ $p_use_pattern -eq 0 ]; then
+        sudo cp ${p_source_path}/${p_source_filename}* "${l_target_path}/"
+        #sudo chmod +r ${l_target_path}/${p_source_filename}*
+    else
+        sudo cp "${p_source_path}/${p_source_filename}" "${l_target_path}/"
+        #sudo chmod +r "${l_target_path}/${p_source_filename}"
+    fi
+
+    return 0
+
 
 }
 

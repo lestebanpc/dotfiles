@@ -2329,6 +2329,7 @@ function get_repo_artifacts() {
                     fi
                 fi
                 pna_artifact_types=(20)
+                #pna_artifact_types=(10)
             fi
             ;;
 
@@ -7698,17 +7699,16 @@ function _copy_artifact_files() {
 
         scrcpy)
 
-            #Ruta local de los artefactos
-            l_source_path="${p_repo_id}/${p_artifact_index}"
-
-
             #A. Si es WSL de Windows
             if [ $p_is_win_binary -eq 0 ]; then
 
-                #Limpiando el folder si existe (si no existe, solo puede crear la ruta base lo crea)
+                # Ruta local de los artefactos
+                l_source_path="${p_repo_id}/${p_artifact_index}"
+
+                # Limpiando el folder si existe (si no existe, solo puede crear la ruta base lo crea)
                 clean_folder_on_tools 1 "" "scrcpy" 0 ""
 
-                #Descomprimir
+                # Descomprimir
                 uncompress_on_folder 1 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "scrcpy" "scrcpy-"
                 l_status=$?
                 if [ $l_status -ne 0 ]; then
@@ -7719,20 +7719,71 @@ function _copy_artifact_files() {
 
             fi
 
-            #B. Si es Linux
+            #B. Si es Linux (NO USAR, el compilado obtenido del release, busca los archivos necesarios en la misma carpeta)
 
-            #Limpiando el folder si existe (si no existe, solo puede crear la ruta base lo crea)
+            ## Ruta local de los artefactos
+            #l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
+
+            ## Copiando el binario en una ruta del path
+            #copy_binary_file "${l_source_path}" "scrcpy"  0 1
+            ##copy_binary_file "${l_source_path}" "adb"     0 1
+
+            ## Copiar los archivos de ayuda man para comando
+            #copy_man_files "${g_temp_path}/${l_source_path}" 1
+
+            ## Copiando los iconos de la aplicacion
+            #local -a la_app_icons=(
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    'scrcpy.png'
+            #    )
+            #copy_app_icon_files "${g_temp_path}/${l_source_path}" "la_app_icons"
+
+            #la_app_icons=(
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    ''
+            #    'disconnected.png'
+            #    )
+            #copy_app_icon_files "${g_temp_path}/${l_source_path}" "la_app_icons"
+
+            ## Copiando otros archivos no ejecutables de la aplicacion
+            #copy_file_to_apppath "${l_source_path}" "scrcpy-server" 1 "scrcpy"
+
+
+            #B. Si es Linux (usar)
+
+            # Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            # Limpiando el folder si existe (si no existe, solo puede crear la ruta base lo crea)
             clean_folder_on_tools 0 "" "scrcpy" 0 ""
 
-            #Descomprimir
+            # Descomprimir
             uncompress_on_folder 0 "$l_source_path" "$p_artifact_filename" $((p_artifact_type - 20)) "" "scrcpy" "scrcpy-"
             l_status=$?
             if [ $l_status -ne 0 ]; then
                 return 40
             fi
 
-
-            #Validar si 'scrcpy' esta en el PATH
+            # Validar si 'scrcpy' esta en el PATH
             echo "$PATH" | grep "${g_tools_path}/scrcpy" &> /dev/null
             l_status=$?
             if [ $l_status -ne 0 ]; then

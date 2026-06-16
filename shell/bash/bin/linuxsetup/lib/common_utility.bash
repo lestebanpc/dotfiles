@@ -1585,19 +1585,19 @@ function g_lnx_paths() {
 
     #1er intento: OK> Se tiene los permisos correctos
     if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
+
         if [ -z "$l_lnx_base_path" ]; then
             g_lnx_base_path="/usr/local"
-            g_lnx_bin_path="/usr/local/bin"
-            g_lnx_man_path="/usr/local/share/man"
-            g_lnx_fonts_path="/usr/local/share/fonts"
-            g_lnx_icons_path="/usr/local/share/icons"
         else
             g_lnx_base_path="$l_lnx_base_path"
-            g_lnx_bin_path="${g_lnx_base_path}/bin"
-            g_lnx_man_path="${g_lnx_base_path}/share/man"
-            g_lnx_fonts_path="${g_lnx_base_path}/share/fonts"
-            g_lnx_icons_path="${g_lnx_base_path}/share/icons"
         fi
+
+        g_lnx_bin_path="${g_lnx_base_path}/bin"
+        g_lnx_nonbin_path="${g_lnx_base_path}/share"
+        g_lnx_man_path="${g_lnx_nonbin_path}/man"
+        g_lnx_fonts_path="${g_lnx_nonbin_path}/fonts"
+        g_lnx_icons_path="${g_lnx_nonbin_path}/icons"
+
         g_lnx_base_options=$_g_lnx_base_options
         g_lnx_base_owner="$_g_lnx_base_owner"
         g_lnx_base_group="$_g_lnx_base_group"
@@ -1680,15 +1680,21 @@ function g_lnx_paths() {
 
         #Intento del folder del sistema: OK> Se tiene los permisos correctos
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
+
             g_lnx_base_path="/usr/local"
-            g_lnx_bin_path="/usr/local/bin"
-            g_lnx_man_path="/usr/local/share/man"
-            g_lnx_fonts_path="/usr/local/share/fonts"
-            g_lnx_icons_path="/usr/local/share/icons"
+
+            g_lnx_bin_path="${g_lnx_base_path}/bin"
+            g_lnx_nonbin_path="${g_lnx_base_path}/share"
+            g_lnx_man_path="${g_lnx_nonbin_path}/man"
+            g_lnx_fonts_path="${g_lnx_nonbin_path}/fonts"
+            g_lnx_icons_path="${g_lnx_nonbin_path}/icons"
+
             g_lnx_base_options=$_g_lnx_base_options
             g_lnx_base_owner="$_g_lnx_base_owner"
             g_lnx_base_group="$_g_lnx_base_group"
+
             return 0
+
         fi
 
         # - Si la carpeta existe, pero no tiene el owner correcto.
@@ -1753,15 +1759,20 @@ function g_lnx_paths() {
 
         #Intento del folder '~/.local': OK> Se tiene los permisos correctos
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
+
             g_lnx_base_path="${la_additional_attemps[$l_atttemp_id]}"
+
             g_lnx_bin_path="${g_lnx_base_path}/bin"
-            g_lnx_man_path="${g_lnx_base_path}/share/man"
-            g_lnx_fonts_path="${g_lnx_base_path}/share/fonts"
-            g_lnx_icons_path="${g_lnx_base_path}/share/icons"
+            g_lnx_nonbin_path="${g_lnx_base_path}/share"
+            g_lnx_man_path="${g_lnx_nonbin_path}/man"
+            g_lnx_fonts_path="${g_lnx_nonbin_path}/fonts"
+            g_lnx_icons_path="${g_lnx_nonbin_path}/icons"
+
             g_lnx_base_options=$_g_lnx_base_options
             g_lnx_base_owner="$_g_lnx_base_owner"
             g_lnx_base_group="$_g_lnx_base_group"
             return 0
+
         fi
 
         # - Si la carpeta existe, pero no tiene el owner correcto.

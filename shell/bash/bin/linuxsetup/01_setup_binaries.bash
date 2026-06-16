@@ -4186,28 +4186,34 @@ g_lnx_base_group=''
 #     Este caso, el root realizará la configuracion requerida para el usuario objetivo (usando sudo), nunca realizara configuración para el propio usuario root.
 g_runner_is_target_user=0
 
-# Validar los requisitos que debe cumplir el script de instalación:
-# Folder donde se almacena los binarios. Su valor es autogenerado por "g_lnx_paths" y puede ser:
+# Folder donde se almacena los binarios ejecutables de la aplicacion. Su valor es autogenerado por "g_lnx_paths" y puede ser:
 #  - "${g_lnx_base_path}/bin"
 #  - "/usr/local/bin"
 #  - "~/.local/bin"
 g_lnx_bin_path=''
 
+# Folder donde se almacena archivos que no son binarios ejecutables de la la aplicacion que no son binarios.
+# Su valor es autogenerado por "g_lnx_paths" y puede ser:
+#  - "${g_lnx_base_path}/share"
+#  - "/usr/local/share"
+#  - "~/.local/share"
+g_lnx_nonbin_path=''
+
 # Folder donde se almacena los subfolderes './man1/', './man5/' y './man7/' donde estan los archivos de ayuda man1, man5 y man7.
 # Su valor es autogenerado por "g_lnx_paths" y puede ser:
-#  - "${g_lnx_base_path}/man/man1"  "${g_lnx_base_path}/man/man5"  "${g_lnx_base_path}/man/man7"
+#  - "${g_lnx_nonbin_path}/man/man1"  "${g_lnx_nonbin_path}/man/man5"  "${g_lnx_nonbin_path}/man/man7"
 #  - "/usr/local/share/man/man1"    "/usr/local/share/man/man5"    "/usr/local/share/man/man7"
 #  - "~/.local/share/man/man1"      "~/.local/share/man/man1"      "~/.local/share/man/man1"
 g_lnx_man_path=''
 
 # Folder donde se almacena los archivos fuentes. Su valor es autogenerado por "g_lnx_paths" y puede ser:
-#  - "${g_lnx_base_path}/share/fonts"
+#  - "${g_lnx_nonbin_path}/fonts"
 #  - "/usr/local/share/fonts"
 #  - "~/.local/local/share/fonts"
 g_lnx_fonts_path=''
 
 # Folder donde se almacena los archivos fuentes. Su valor es autogenerado por "g_lnx_paths" y puede ser:
-#  - "${g_lnx_base_path}/share/icons"
+#  - "${g_lnx_nonbin_path}/share/icons"
 #  - "/usr/local/share/icons"
 #  - "~/.local/share/fonts"
 g_lnx_icons_path=''

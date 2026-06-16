@@ -155,12 +155,14 @@
 #Folder base donde se almacena el comando y sus archivos afines.
 # - El valor solo se tomara en cuenta si es un valor valido (el folder existe y debe tener permisos e escritura), dentro
 #   de este folder se creara/usara la siguiente estructura de folderes:
-#     > "${g_lnx_base_path}/bin"            : subfolder donde se almacena los comandos.
-#     > "${g_lnx_base_path}/share/man/man1" : subfolder donde se almacena archivos de ayuda man1.
-#     > "${g_lnx_base_path}/share/man/man5" : subfolder donde se almacena archivos de ayuda man5.
-#     > "${g_lnx_base_path}/share/man/man7" : subfolder donde se almacena archivos de ayuda man7.
-#     > "${g_lnx_base_path}/share/fonts"    : subfolder donde se almacena las fuentes.
-#     > "${g_lnx_base_path}/share/icons"    : subfolder donde se almacena los iconos o imagenes usuados por programas GUI.
+#     > "${g_lnx_base_path}/bin"             : subfolder donde se almacena los binarios ejecutables de la aplicacion.
+#     > "${g_lnx_base_path}/share"           : subfolder donde se almacena archivos no ejecutables de la aplicacion.
+#     > "${g_lnx_base_path}/share/man/man1"  : subfolder donde se almacena archivos de ayuda man1.
+#     > "${g_lnx_base_path}/share/man/man5"  : subfolder donde se almacena archivos de ayuda man5.
+#     > "${g_lnx_base_path}/share/man/man7"  : subfolder donde se almacena archivos de ayuda man7.
+#     > "${g_lnx_base_path}/share/fonts"     : subfolder donde se almacena las fuentes.
+#     > "${g_lnx_base_path}/share/icons"     : subfolder donde se almacena los iconos o imagenes usuados por programas GUI.
+#     > "${g_lnx_base_path}/share/<appname>" : subfolder donde se almacena otros archivos que usa la aplicacion.
 # - Si no es un valor valido, la funcion "g_lnx_paths" asignara un sus posibles valores (segun orden de prioridad):
 #     > Si tiene permisos administrativos, usara los folderes predeterminado para todos los usuarios:
 #        - "/usr/local/bin"             : subfolder donde se almacena los comandos.
