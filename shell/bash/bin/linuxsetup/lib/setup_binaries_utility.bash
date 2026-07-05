@@ -62,15 +62,15 @@ g_get_repo_infos() {
 
         if [ -z "$l_repo_infos" ]; then
             if [ "$l_repo_name" = "$g_empty_str" ]; then
-                printf -v l_repo_infos "'%b%s%b'" "$g_color_yellow1" "$l_repo_id" "$g_color_reset"
+                printf -v l_repo_infos "    > '%b%s%b'" "$g_color_yellow1" "$l_repo_id" "$g_color_reset"
             else
-                printf -v l_repo_infos "'%b%s%b' ('%b%s%b')" "$g_color_yellow1" "$l_repo_id" "$g_color_reset" "$g_color_gray1" "$l_repo_name" "$g_color_reset"
+                printf -v l_repo_infos "    > '%b%s%b' ('%b%s%b')" "$g_color_yellow1" "$l_repo_id" "$g_color_reset" "$g_color_gray1" "$l_repo_name" "$g_color_reset"
             fi
         else
             if [ "$l_repo_name" = "$g_empty_str" ]; then
-                printf -v l_repo_infos "%b, '%b%s%b'" "$l_repo_infos" "$g_color_yellow1" "$l_repo_id" "$g_color_reset"
+                printf -v l_repo_infos "%b\n    > '%b%s%b'" "$l_repo_infos" "$g_color_yellow1" "$l_repo_id" "$g_color_reset"
             else
-                printf -v l_repo_infos "%b, '%b%s%b' ('%b%s%b')" "$l_repo_infos" "$g_color_yellow1" "$l_repo_id" "$g_color_reset" "$g_color_gray1" "$l_repo_name" "$g_color_reset"
+                printf -v l_repo_infos "%b\n    > '%b%s%b' ('%b%s%b')" "$l_repo_infos" "$g_color_yellow1" "$l_repo_id" "$g_color_reset" "$g_color_gray1" "$l_repo_name" "$g_color_reset"
             fi
         fi
 
@@ -84,6 +84,13 @@ g_get_repo_infos() {
 
 g_usage() {
 
+    # Parametros
+    local p_show_repo_infos=1
+    if [ "$1" = "0" ]; then
+        p_show_repo_infos=0
+    fi
+
+    # Uso
     printf 'Usage:\n'
     printf '  > %bDesintalar repositorios mostrando el menú de opciones%b:\n' "$g_color_cian1" "$g_color_reset"
     printf '    %b%s/bash/bin/linuxsetup/01_setup_binaries.bash uninstall\n%b' "$g_color_yellow1" "$g_shell_path" "$g_color_reset"
@@ -143,10 +150,11 @@ g_usage() {
            "$g_color_gray1" "$g_color_reset"
     printf '  > %bSETUP_ONLYLAST_VERSION %bpor defecto es 1 (false). Solo si ingresa 0 se instala/actualiza la ultima versión.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
-    printf '\nAdicionalmente:\n'
-    local l_repo_infos=$(g_get_repo_infos)
-    printf '  > %bEl ID de un repositorio pueden ser: %b%b\n\n' "$g_color_gray1" "$l_repo_infos" "$g_color_reset"
-
+    if [ "$p_show_repo_infos" -eq 0 ]; then
+        printf '\nAdicionalmente:\n'
+        local l_repo_infos=$(g_get_repo_infos)
+        printf '  > %bEl ID de un repositorio pueden ser: %b\n%b\n' "$g_color_gray1" "$g_color_reset" "$l_repo_infos"
+    fi
 }
 
 

@@ -26,12 +26,8 @@ actions-on-enter = ["save-to-clipboard"]
 #actions-on-right-click = []
 #actions-on-escape = ["exit"]
 
-# Exit directly after copy/save action.
-# >  Does not apply to save as
-early-exit = true
-
-# Exit directly after save as
-early-exit-save-as = true
+# Exit directly after some action.
+early-exit = ["copy", "save", "save-as"]
 
 #[font]
 #family = "Inter"

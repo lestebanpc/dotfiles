@@ -12,13 +12,14 @@
 #      $XDG_CONFIG_HOME/containers/storage.conf (If XDG_CONFIG_HOME is set)
 # See man 5 containers-storage.conf for more information
 # The "container storage" table contains all of the server options.
+
 [storage]
 
 # Default Storage Driver, Must be set for proper operation.
 driver = "btrfs"
 
 # Temporary storage location
-runroot = "/run/containers/storage"
+#runroot = "/run/containers/storage"
 
 # Primary Read/Write location of container storage
 # When changing the graphroot location on an SELINUX system, you must
@@ -26,7 +27,7 @@ runroot = "/run/containers/storage"
 # following commands:
 # semanage fcontext -a -e /var/lib/containers/storage /NEWSTORAGEPATH
 # restorecon -R -v /NEWSTORAGEPATH
-graphroot = "/var/lib/containers/storage"
+#graphroot = "/var/lib/containers/storage"
 
 # Optional alternate location of image store if a location separate from the
 # container store is required. If set, it must be different than graphroot.
@@ -43,13 +44,13 @@ graphroot = "/var/lib/containers/storage"
 # option should remain disabled in most configurations.
 # transient_store = true
 
-[storage.options]
+#[storage.options]
 # Storage options to be passed to underlying storage drivers
 
 # AdditionalImageStores is used to pass paths to additional Read/Only image stores
 # Must be comma separated list.
-additionalimagestores = [
-]
+#additionalimagestores = [
+#]
 
 # Allows specification of how storage is populated when pulling images. This
 # option can speed the pulling process of images compressed with format
@@ -76,7 +77,7 @@ additionalimagestores = [
 #     format compatible with partial pulls in order to take advantage
 #     of local deduplication and hard linking.  It is an expensive
 #     operation so it is not enabled by default.
-pull_options = {enable_partial_images = "true", use_hard_links = "false", ostree_repos=""}
+#pull_options = {enable_partial_images = "true", use_hard_links = "false", ostree_repos=""}
 
 # Remap-UIDs/GIDs is the mapping from UIDs/GIDs as they should appear inside of
 # a container, to the UIDs/GIDs as they should appear outside of the container,
@@ -114,7 +115,7 @@ pull_options = {enable_partial_images = "true", use_hard_links = "false", ostree
 # Auto-userns-max-size is the maximum size for a user namespace created automatically.
 # auto-userns-max-size=65536
 
-[storage.options.overlay]
+#[storage.options.overlay]
 # ignore_chown_errors can be set to allow a non privileged user running with
 # a single UID within a user namespace to run containers. The user can pull
 # and use any image even those with multiple uids.  Note multiple UIDs will be
@@ -131,7 +132,7 @@ pull_options = {enable_partial_images = "true", use_hard_links = "false", ostree
 #mount_program = "/usr/bin/fuse-overlayfs"
 
 # mountopt specifies comma separated list of extra mount options
-mountopt = "nodev"
+#mountopt = "nodev"
 
 # Set to skip a PRIVATE bind mount on the storage home directory.
 # skip_mount_home = "false"
@@ -175,7 +176,7 @@ mountopt = "nodev"
 #
 # force_mask = ""
 
-[storage.options.thinpool]
+#[storage.options.thinpool]
 # Storage Options for thinpool
 
 # autoextend_percent determines the amount by which pool needs to be

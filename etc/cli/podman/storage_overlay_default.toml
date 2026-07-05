@@ -11,13 +11,14 @@
 #      $XDG_CONFIG_HOME/containers/storage.conf (if XDG_CONFIG_HOME is set)
 # See man 5 containers-storage.conf for more information
 # The "storage" table contains all of the server options.
+
 [storage]
 
 # Default storage driver, must be set for proper operation.
 driver = "overlay"
 
 # Temporary storage location
-runroot = "/run/containers/storage"
+#runroot = "/run/containers/storage"
 
 # Priority list for the storage drivers that will be tested one
 # after the other to pick the storage driver if it is not defined.
@@ -29,7 +30,7 @@ runroot = "/run/containers/storage"
 # following commands:
 # semanage fcontext -a -e /var/lib/containers/storage /NEWSTORAGEPATH
 # restorecon -R -v /NEWSTORAGEPATH
-graphroot = "/var/lib/containers/storage"
+#graphroot = "/var/lib/containers/storage"
 
 # Optional alternate location of image store if a location separate from the
 # container store is required. If set, it must be different than graphroot.
@@ -46,16 +47,16 @@ graphroot = "/var/lib/containers/storage"
 # option should remain disabled in most configurations.
 # transient_store = true
 
-[storage.options]
+#[storage.options]
 # Storage options to be passed to underlying storage drivers
 
 # AdditionalImageStores is used to pass paths to additional Read/Only image stores
 # Must be comma separated list.
-additionalimagestores = [
-]
+#additionalimagestores = [
+#]
 
 # Options controlling how storage is populated when pulling images.
-[storage.options.pull_options]
+#[storage.options.pull_options]
 # Enable the "zstd:chunked" feature, which allows partial pulls, reusing
 # content that already exists on the system. This is disabled by default,
 # and must be explicitly enabled to be used. For more on zstd:chunked, see
@@ -113,7 +114,7 @@ additionalimagestores = [
 # Auto-userns-max-size is the maximum size for a user namespace created automatically.
 # auto-userns-max-size=65536
 
-[storage.options.overlay]
+#[storage.options.overlay]
 # ignore_chown_errors can be set to allow a non privileged user running with
 # a single UID within a user namespace to run containers. The user can pull
 # and use any image even those with multiple uids.  Note multiple UIDs will be
@@ -131,7 +132,7 @@ additionalimagestores = [
 #mount_program = "/usr/bin/fuse-overlayfs"
 
 # mountopt specifies comma separated list of extra mount options
-mountopt = "nodev"
+#mountopt = "nodev"
 
 # Set to skip a PRIVATE bind mount on the storage home directory.
 # This is a "string bool": "false" | "true" (cannot be native TOML boolean)

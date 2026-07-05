@@ -2375,8 +2375,8 @@ function create_filelink_on_home() {
     if [ -h "$l_target_fulllink" ] && [ -f "$l_target_fulllink" ]; then
         if [ $p_override_target_link -eq 0 ]; then
             ln -snf "$l_source_fullfilename" "$l_target_fulllink"
-            printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$l_target_fulllink" "$g_color_gray1" "$l_source_fullfilename" \
-                   "$g_color_reset"
+            printf "%sEl enlace simbolico '%b%s%b' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$g_color_gray1" "$l_target_fulllink" "$g_color_reset" \
+                   "$g_color_gray1" "$l_source_fullfilename" "$g_color_reset"
             l_status=1
 
             #Si el runner es root en modo suplantacion del usuario objetivo
@@ -2386,12 +2386,13 @@ function create_filelink_on_home() {
 
         else
             l_aux=$(readlink "$l_target_fulllink")
-            printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$l_target_fulllink" "$g_color_gray1" "$l_aux" "$g_color_reset"
+            printf "%sEl enlace simbolico '%b%s%b' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$g_color_gray1" "$l_target_fulllink" "$g_color_reset" \
+                   "$g_color_gray1" "$l_aux" "$g_color_reset"
             l_status=0
         fi
     else
         ln -snf "$l_source_fullfilename" "$l_target_fulllink"
-        printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$l_target_fulllink" "$g_color_gray1" "$l_source_fullfilename" \
+        printf "%sEl enlace simbolico '%b%s%b' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$g_color_gray1" "$l_target_fulllink" "$g_color_reset" "$g_color_gray1" "$l_source_fullfilename" \
                "$g_color_reset"
         l_status=2
 
@@ -2457,7 +2458,8 @@ function create_folderlink_on_home() {
     if [ -h "$l_target_fulllink" ] && [ -d "$l_target_fulllink" ]; then
         if [ $p_override_target_link -eq 0 ]; then
             ln -snf "${p_source_path}/" "$l_target_fulllink"
-            printf "%sEl enlace simbolico '%s' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$l_target_fulllink" "$g_color_gray1" "$p_source_path" "$g_color_reset"
+            printf "%sEl enlace simbolico '%b%s%b' se ha re-creado %b(ruta real '%s')%b\n" "$p_tag" "$g_color_gray1" "$l_target_fulllink" "$g_color_reset" \
+                   "$g_color_gray1" "$p_source_path" "$g_color_reset"
             l_status=1
 
             #Si el runner es root en modo suplantacion del usuario objetivo
@@ -2467,12 +2469,14 @@ function create_folderlink_on_home() {
 
         else
             l_aux=$(readlink "$l_target_fulllink")
-            printf "%sEl enlace simbolico '%s' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$l_target_fulllink" "$g_color_gray1" "$l_aux" "$g_color_reset"
+            printf "%sEl enlace simbolico '%b%s%b' ya existe %b(ruta real '%s')%b\n" "$p_tag" "$g_color_gray1" "$l_target_fulllink" "$g_color_reset" \
+                   "$g_color_gray1" "$l_aux" "$g_color_reset"
             l_status=0
         fi
     else
         ln -snf "${p_source_path}/" "$l_target_fulllink"
-        printf "%sEl enlace simbolico '%s' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$l_target_fulllink" "$g_color_gray1" "$p_source_path" "$g_color_reset"
+        printf "%sEl enlace simbolico '%b%s%b' se ha creado %b(ruta real '%s')%b\n" "$p_tag" "$g_color_gray1" "$l_target_fulllink" "$g_color_reset" \
+               "$g_color_gray1" "$p_source_path" "$g_color_reset"
         l_status=2
 
         #Si el runner es root en modo suplantacion del usuario objetivo

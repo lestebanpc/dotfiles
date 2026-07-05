@@ -4123,7 +4123,7 @@ if [ -z "$1" ]; then
     gp_type_calling=0
 else
     if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-        g_usage
+        g_usage 0
         exit 0
     elif [[ "$1" =~ ^[0-9]+$ ]]; then
         gp_type_calling=$1
@@ -4132,14 +4132,14 @@ else
         gp_type_calling=0
     else
         printf 'Argumentos invalidos.\n\n'
-        g_usage
+        g_usage 1
         exit 110
     fi
 fi
 
 if [ $gp_type_calling -lt 0 ] || [ $gp_type_calling -gt 4 ]; then
     printf 'Argumentos invalidos.\n\n'
-    g_usage
+    g_usage 1
     exit 110
 fi
 

@@ -1,5 +1,5 @@
 #Obteniedo de '/etc/containers/registries.conf'
-#Info: 
+#Info:
 
 
 # # An array of host[:port] registries to try when pulling an unqualified image, in order.
@@ -9,7 +9,7 @@
 # # The "prefix" field is used to choose the relevant [[registry]] TOML table;
 # # (only) the TOML table with the longest match for the input image name
 # # (taking into account namespace/repo/tag/digest separators) is used.
-# # 
+# #
 # # The prefix can also be of the form: *.example.com for wildcard subdomain
 # # matching.
 # #
@@ -61,6 +61,7 @@
 # # 3. internal-registry-for-example.net/bar/image:latest
 # # in order, and use the first one that exists.
 
+
+
 [registries.search]
 registries = ['registry.access.redhat.com', 'registry.redhat.io', 'docker.io', 'mcr.microsoft.com', 'quay.io']
-

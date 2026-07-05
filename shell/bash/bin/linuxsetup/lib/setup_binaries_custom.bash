@@ -156,6 +156,8 @@ declare -A gA_repos_artifact=(
         ['resvg']='linebender/resvg'
         ['gdu']='dundee/gdu'
         ['scrcpy']='Genymobile/scrcpy'
+        ['satty']='Satty-org/Satty'
+        ['spotify-player']='aome510/spotify-player'
     )
 
 # Diccionario de los repositorios que tiene un repositorio de versiones diferente al repositorio de artefactos.
@@ -272,7 +274,7 @@ declare -a ga_menuoption_repos=(
     "shellcheck,shfmt,marksman,luals,taplo,lemminx,flamelens,powershell_es"
     "ctags-win,ctags-nowin"
     "llama-swap"
-    "awscli,eksctl,distrobox,github-cli,gitlab-cli,jp,opencode,kitty,scrcpy"
+    "awscli,eksctl,distrobox,github-cli,gitlab-cli,jp,opencode,kitty,scrcpy,satty,spotify-player"
     )
 
 # Tipos de archivos (usualmente binarios), que estan en el repositorio, segun el tipo de SO al cual pueden ser usados/ejecutados.
@@ -309,6 +311,7 @@ declare -A gA_repo_config_os_type=(
         ['kubelet']=6
         ['fzf']=7
         ['distrobox']=12
+        ['satty']=12
         ['rust']=14
         ['butane']=14
         ['awscli']=14
@@ -336,6 +339,7 @@ declare -A gA_repo_config_proc_type=(
         ['tmux-fingers']=1
         ['tmux-thumbs']=1
         ['wezterm']=1
+        ['satty']=1
     )
 
 # Rempresenta el tipo de artefacto principal asociado al repositorio.
@@ -528,6 +532,7 @@ declare -A gA_current_version_parameter1=(
     ['tailspin']='tspin'
     ['github-cli']='gh'
     ['gitlab-cli']='glab'
+    ['spotify-player']='spotify_player'
     )
 
 
@@ -2273,6 +2278,37 @@ function get_repo_artifacts() {
             ;;
 
 
+        spotify-player)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("spotify_player-x86_64-pc-windows-msvc.zip")
+                else
+                    pna_artifact_names=("spotify_player-x86_64-pc-windows-msvc.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("spotify_player-aarch64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("spotify_player-x86_64-unknown-linux-gnu.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("spotify_player-aarch64-unknown-linux-gnu.tar.gz")
+                    else
+                        pna_artifact_names=("spotify_player-x86_64-unknown-linux-gnu.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
+
 
         kitty)
 
@@ -2334,6 +2370,27 @@ function get_repo_artifacts() {
             ;;
 
 
+
+        satty)
+
+            #No soportado para Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 2
+            fi
+
+            #No soportado para arm-64
+            if [ "$g_os_architecture_type" = "aarch64" ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 2
+            fi
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            pna_artifact_names=("satty-x86_64-unknown-linux-gnu.tar.gz")
+            pna_artifact_types=(10)
+            ;;
 
 
 
@@ -3652,15 +3709,15 @@ function get_repo_artifacts() {
                 #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
                 if [ $g_os_subtype_id -eq 1 ]; then
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("lemminx-linux.zip")
+                        pna_artifact_names=("lemminx-linux-aarch_64.zip")
                     else
-                        pna_artifact_names=("lemminx-linux.zip")
+                        pna_artifact_names=("lemminx-linux-x86_64.zip")
                     fi
                 else
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("lemminx-linux.zip")
+                        pna_artifact_names=("lemminx-linux-aarch_64.zip")
                     else
-                        pna_artifact_names=("lemminx-linux.zip")
+                        pna_artifact_names=("lemminx-linux-x86_64.zip")
                     fi
                 fi
                 pna_artifact_types=(11)
@@ -5102,6 +5159,8 @@ function _copy_artifact_files() {
             fi
             ;;
 
+
+
         less)
 
             if [ $p_is_win_binary -ne 0 ]; then
@@ -5119,6 +5178,7 @@ function _copy_artifact_files() {
             copy_binary_file "${l_source_path}" "less.exe" 1 1
             copy_binary_file "${l_source_path}" "lesskey.exe" 1 1
             ;;
+
 
         butane)
 
@@ -5559,6 +5619,29 @@ function _copy_artifact_files() {
             ;;
 
 
+
+        spotify-player)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -ne 0 ]; then
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "spotify_player" 0 1
+
+            else
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "spotify_player.exe" 1 1
+
+            fi
+            ;;
+
+
+
+
         shfmt)
 
             #Ruta local de los artefactos
@@ -5907,6 +5990,72 @@ function _copy_artifact_files() {
 
             #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
             ;;
+
+
+        satty)
+
+            #A. No se soportado por Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
+                return 40
+            fi
+
+            #B. Si es Linux (no WSL)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            copy_binary_file "${l_source_path}" "satty" 0 1
+
+            #Copiar los archivos de ayuda man para comando
+            copy_man_files "${g_temp_path}/${l_source_path}/man" 1
+
+            #Copiar los archivos de autocompletado
+            create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+            #create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+            create_folderpath_on_tools 0 'shell/autocomplete' 'others'
+
+            copy_file_on_tools "${l_source_path}/completions" "satty.bash"   0 "shell/autocomplete/bash"       "satty.bash"  0
+            copy_file_on_tools "${l_source_path}/completions" "_satty"       0 "shell/autocomplete/zsh"        "satty.zsh"   0
+            copy_file_on_tools "${l_source_path}/completions" "satty.fish"   0 "shell/autocomplete/fish"       "satty.fish"  0
+            copy_file_on_tools "${l_source_path}/completions" "satty.ts"     0 "shell/autocomplete/others"     "satty.ts"    0
+            copy_file_on_tools "${l_source_path}/completions" "satty.elv"    0 "shell/autocomplete/others"     "satty.elv"   0
+            copy_file_on_tools "${l_source_path}/completions" "satty.nu"     0 "shell/autocomplete/others"     "satty.nu"    0
+
+            #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+            #create_folderpath_on_tools 0 'shell/keybindings' 'others'
+
+            # Copiando los iconos de la aplicacion
+            local -a la_app_icons=(
+                'satty.svg'
+                ''
+                ''
+                ''
+                ''
+                ''
+                ''
+                ''
+                ''
+                ''
+                ''
+                ''
+                )
+            copy_app_icon_files "${g_temp_path}/${l_source_path}/assets" "la_app_icons"
+
+            ## Copiando otros archivos no ejecutables de la aplicacion
+            copy_file_to_apppath "${l_source_path}" "satty.desktop" 1 "applications"
+            ;;
+
 
 
         jwt)
@@ -7276,7 +7425,7 @@ function _copy_artifact_files() {
             #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
             if [ $l_status -eq 0 ]; then
 
-                printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' \
+                printf 'Para finalizar la instalación dl artefacto de "%s", se recomienda crear una unidad systemd "%s" para gestionar su inicio y detención.\n' \
                        "$p_repo_id" "containerd.service"
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
                 printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "containerd.service" \
@@ -7351,7 +7500,7 @@ function _copy_artifact_files() {
             #5. Si no esta instalado como unidad de systemd, indicar el procedimiento:
             if [ $l_status -eq 0 ]; then
 
-                printf 'El artefacto de "%s" aun no esta aun esta instalada. Se recomiendo crear una unidad systemd "%s" para gestionar su inicio y detención.\n' \
+                printf 'Para finalizar la configuración del artefacto de "%s", se recomienda crear una unidad systemd "%s" para gestionar su inicio y detención.\n' \
                        "$p_repo_id" "buildkit.service"
                 printf 'Para instalar "%s" tiene 2 opciones:\n' "$p_repo_id"
                 printf '%b1> Instalar en modo rootless%b (la unidad "%s" se ejecutara en modo user)%b:%b\n' "$g_color_yellow1" "$g_color_gray1" "buildkit.service" \

@@ -253,18 +253,18 @@
 
 
 
-#[network]
+[network]
 
 # Path to directory where CNI plugin binaries are located.
 #
-#cni_plugin_dirs = [
-#  "/var/opt/tools/cni_plugins",
-#  "/opt/cni/bin",
-#  "/usr/local/libexec/cni",
-#  "/usr/libexec/cni",
-#  "/usr/local/lib/cni",
-#  "/usr/lib/cni",
-#]
+cni_plugin_dirs = [
+  "/var/opt/tools/cni_plugins",
+  "/opt/cni/bin",
+  "/usr/local/libexec/cni",
+  "/usr/libexec/cni",
+  "/usr/local/lib/cni",
+  "/usr/lib/cni",
+]
 
 # The network name of the default CNI network to attach pods to.
 #

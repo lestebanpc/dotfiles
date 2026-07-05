@@ -785,7 +785,7 @@ function _setup_nvim_files() {
     local l_source_path
     local l_source_filename
     local l_target_path
-    local l_target_link
+    local l_target_filename
 
     #Configurar NeoVIM como IDE (Developer)
     if [ $p_flag_developer -eq 0 ]; then
@@ -794,73 +794,73 @@ function _setup_nvim_files() {
         create_folderpath_on_home "" ".local/share/eclipse/jdtls"
 
         l_target_path=".config/nvim"
-        l_target_link="coc-settings.json"
+        l_target_filename="coc-settings.json"
         l_source_path="${g_repo_name}/nvim"
         l_source_filename='coc-settings_linux.json'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
 
         l_target_path=".config/nvim"
-        l_target_link="init.vim"
+        l_target_filename="init.vim"
         l_source_path="${g_repo_name}/nvim"
         l_source_filename='init_ide.vim'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".config/nvim"
-        l_target_link="lua"
+        l_target_filename="lua"
         l_source_path="${g_repo_name}/nvim/lua"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".config/nvim"
-        l_target_link="setting"
+        l_target_filename="setting"
         l_source_path="${g_repo_name}/vim/setting"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
         #El codigo open/close asociado a los 'file types'
         l_target_path=".config/nvim"
-        l_target_link="ftplugin"
+        l_target_filename="ftplugin"
         l_source_path="${g_repo_name}/nvim/ftplugin/commonide"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
 
         #Para el codigo open/close asociado a los 'file types' de CoC
         l_target_path=".config/nvim/rte_cocide"
-        l_target_link="ftplugin"
+        l_target_filename="ftplugin"
         l_source_path="${g_repo_name}/nvim/ftplugin/cocide"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
 
         #Para el codigo open/close asociado a los 'file types' que no sean CoC
         l_target_path=".config/nvim/rte_nativeide"
-        l_target_link="ftplugin"
+        l_target_filename="ftplugin"
         l_source_path="${g_repo_name}/nvim/ftplugin/nativeide"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
     #Configurar NeoVIM como Editor
     else
 
         l_target_path=".config/nvim"
-        l_target_link="init.vim"
+        l_target_filename="init.vim"
         l_source_path="${g_repo_name}/nvim"
         l_source_filename='init_editor.vim'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".config/nvim"
-        l_target_link="setting"
+        l_target_filename="setting"
         l_source_path="${g_repo_name}/vim/setting"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".config/nvim"
-        l_target_link="lua"
+        l_target_filename="lua"
         l_source_path="${g_repo_name}/nvim/lua"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
 
         #El codigo open/close asociado a los 'file types' como Editor
         l_target_path=".config/nvim"
-        l_target_link="ftplugin"
+        l_target_filename="ftplugin"
         l_source_path="${g_repo_name}/nvim/ftplugin/editor"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "NeoVIM > " $p_flag_overwrites_file_notmodifiable
 
     fi
 
@@ -900,55 +900,55 @@ function _setup_vim_files() {
     local l_source_path
     local l_source_filename
     local l_target_path
-    local l_target_link
+    local l_target_filename
 
     #Configurar VIM como IDE (Developer)
     if [ $p_flag_developer -eq 0 ]; then
 
         #Creando enlaces simbolicos
         l_target_path=".vim"
-        l_target_link="coc-settings.json"
+        l_target_filename="coc-settings.json"
         l_source_path="${g_repo_name}/vim"
         l_source_filename='coc-settings_linux.json'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "VIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".vim"
-        l_target_link="setting"
+        l_target_filename="setting"
         l_source_path="${g_repo_name}/vim/setting"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "VIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".vim"
-        l_target_link="ftplugin"
+        l_target_filename="ftplugin"
         l_source_path="${g_repo_name}/vim/ftplugin/cocide"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "VIM > " $p_flag_overwrites_file_notmodifiable
 
 
         l_target_path=""
-        l_target_link=".vimrc"
+        l_target_filename=".vimrc"
         l_source_path="${g_repo_name}/vim"
         l_source_filename='vimrc_ide.vim'
 
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "VIM > " $p_flag_overwrites_file_notmodifiable
 
 
     #Configurar VIM como Editor basico
     else
 
         l_target_path=".vim"
-        l_target_link="setting"
+        l_target_filename="setting"
         l_source_path="${g_repo_name}/vim/setting"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "VIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=".vim"
-        l_target_link="ftplugin"
+        l_target_filename="ftplugin"
         l_source_path="${g_repo_name}/vim/ftplugin/editor"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "VIM > " $p_flag_overwrites_file_notmodifiable
 
         l_target_path=""
-        l_target_link=".vimrc"
+        l_target_filename=".vimrc"
         l_source_path="${g_repo_name}/vim"
         l_source_filename='vimrc_editor.vim'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "VIM > " $p_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "VIM > " $p_flag_overwrites_file_notmodifiable
 
 
     fi
@@ -1019,14 +1019,14 @@ function _setup_user_profile() {
 
     #4. Creando enlaces simbolico dependientes del tipo de distribución Linux
     local l_target_path
-    local l_target_link
+    local l_target_filename
     local l_source_path
     local l_source_filename
     local l_status
 
     #Archivo de colores de la terminal usado por comandos basicos
     l_target_path=""
-    l_target_link=".dircolors"
+    l_target_filename=".dircolors"
     l_source_path="${g_repo_name}/etc/cli/dircolors"
 
     l_source_filename=''
@@ -1046,14 +1046,14 @@ function _setup_user_profile() {
     fi
 
     if [ ! -z "$l_source_filename" ]; then
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
     fi
 
     #Archivos de configuración de PowerShell
     l_target_path=".config/powershell"
     create_folderpath_on_home "" "$l_target_path"
-    l_target_link="Microsoft.PowerShell_profile.ps1"
+    l_target_filename="Microsoft.PowerShell_profile.ps1"
     l_source_path="${g_repo_name}/shell/powershell/login/linuxprofile"
     if [ $g_os_subtype_id -eq 1 ]; then
         if [ "$g_os_architecture_type" = "aarch64" ]; then
@@ -1087,12 +1087,12 @@ function _setup_user_profile() {
         fi
     fi
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Creando el profile del interprete shell
     l_target_path=""
-    l_target_link=".bashrc"
+    l_target_filename=".bashrc"
     l_source_path="${g_repo_name}/shell/bash/login/profile"
 
     if [ $g_os_subtype_id -eq 1 ]; then
@@ -1127,7 +1127,7 @@ function _setup_user_profile() {
         fi
     fi
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     # Para WSL copiar el archivo de configuracion del profile
@@ -1172,42 +1172,42 @@ function _setup_user_profile() {
 
     #Archivo de configuración del GNU ReadLine
     l_target_path=""
-    l_target_link=".inputrc"
+    l_target_filename=".inputrc"
     l_source_path="${g_repo_name}/etc/cli/readline"
     l_source_filename='inputrc'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Archivo de GDU (Go Disk Usage)
     create_folderpath_on_home ".config" "gdu"
     l_target_path=".config/gdu"
-    l_target_link="gdu.yaml"
+    l_target_filename="gdu.yaml"
     l_source_path="${g_repo_name}/etc/tui/gdu"
     l_source_filename='gdu_default.yaml'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
 
     #Archivo de configuración para LFTP
     l_target_path=""
-    l_target_link=".lftprc"
+    l_target_filename=".lftprc"
     l_source_path="${g_repo_name}/etc/cli/lftp"
     l_source_filename='lftprc_default.conf'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
 
     #Crear el enlace de TMUX (no usaramos '~/.tmux.conf', usaramos '~/.config/tmux/tmux.conf')
     create_folderpath_on_home ".config" "tmux"
     l_target_path=".config/tmux"
-    l_target_link="tmux.conf"
+    l_target_filename="tmux.conf"
     l_source_path="${g_repo_name}/etc/cli/tmux"
     l_source_filename='tmux.conf'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     l_source_filename='custom_config_template_1.conf'
@@ -1221,11 +1221,11 @@ function _setup_user_profile() {
     create_folderpath_on_home ".config" "sesh"
     create_folderpath_on_home ".config/sesh" "shell"
     l_target_path=".config/sesh"
-    l_target_link="sesh.toml"
+    l_target_filename="sesh.toml"
     l_source_path="${g_repo_name}/etc/cli/sesh"
     l_source_filename='sesh_default.toml'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     copy_file_on_home "${g_repo_path}/etc/cli/sesh" "custom_config_template_1.toml" ".config/sesh" "custom_config.toml" $l_flag_overwrites_file_modifiable "        > "
@@ -1234,11 +1234,11 @@ function _setup_user_profile() {
            "$g_color_yellow1" "~/.config/sesh/custom_config.toml" "$g_color_reset"
 
     #l_target_path=".config/sesh/shell"
-    #l_target_link="tmx_upload_movies.bash"
+    #l_target_filename="tmx_upload_movies.bash"
     #l_source_path="${g_repo_name}/shell/bash/bin/tmux_layout"
     #l_source_filename='tmx_upload_movies.bash'
 
-    #create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrites_file_notmodifiable
+    #create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "        > " $l_flag_overwrites_file_notmodifiable
     #l_status=$?
 
 
@@ -1246,11 +1246,11 @@ function _setup_user_profile() {
     #Archivo de configuración para Lazygit
     l_target_path=".config/lazygit"
     create_folderpath_on_home ".config" "lazygit"
-    l_target_link="config.yml"
+    l_target_filename="config.yml"
     l_source_path="${g_repo_name}/etc/tui/lazygit"
     l_source_filename='config_default.yaml'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
 
@@ -1260,30 +1260,30 @@ function _setup_user_profile() {
 
     # Si es un 'Desktop Server' y es Distrobox
     if [ $g_enviroment_type -eq 1 ] || [ $g_enviroment_type -eq 2 ]; then
-        l_target_link="yazi.toml"
+        l_target_filename="yazi.toml"
         l_source_path="${g_repo_name}/yazi"
         l_source_filename='yazi_desktop.toml'
     else
-        l_target_link="yazi.toml"
+        l_target_filename="yazi.toml"
         l_source_path="${g_repo_name}/yazi"
         l_source_filename='yazi_headless.toml'
     fi
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
-    l_target_link="theme.toml"
+    l_target_filename="theme.toml"
     l_source_path="${g_repo_name}/yazi"
     l_source_filename='theme.toml'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     create_folderpath_on_home ".config" "yazi/flavors"
     l_target_path=".config/yazi/flavors"
-    l_target_link="catppuccin-mocha.yazi"
+    l_target_filename="catppuccin-mocha.yazi"
     l_source_path="${g_repo_name}/yazi/flavors/catppuccin-mocha.yazi"
-    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
+    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "Profile > " $p_flag_overwrites_file_notmodifiable
     l_status=$?
 
     copy_file_on_home "${g_repo_path}/yazi" "keymap_lnx.toml" ".config/yazi" "keymap.toml" $l_flag_overwrites_file_modifiable "        > "
@@ -1299,59 +1299,59 @@ function _setup_user_profile() {
     create_folderpath_on_home ".config" "yazi/plugins"
 
     l_target_path=".config/yazi/plugins"
-    l_target_link="fzf-fd.yazi"
+    l_target_filename="fzf-fd.yazi"
     l_source_path="${g_repo_name}/yazi/plugins/fzf-fd.yazi"
-    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
+    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "Profile > " $p_flag_overwrites_file_notmodifiable
 
     l_target_path=".config/yazi/plugins"
-    l_target_link="fzf-rg.yazi"
+    l_target_filename="fzf-rg.yazi"
     l_source_path="${g_repo_name}/yazi/plugins/fzf-rg.yazi"
-    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
+    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "Profile > " $p_flag_overwrites_file_notmodifiable
 
     l_target_path=".config/yazi/plugins"
-    l_target_link="go-fs.yazi"
+    l_target_filename="go-fs.yazi"
     l_source_path="${g_repo_name}/yazi/plugins/go-fs.yazi"
-    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
+    create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "Profile > " $p_flag_overwrites_file_notmodifiable
 
 
     #Archivo de configuración para cliente MDP 'rmpc'
     l_target_path=".config/rmpc"
     create_folderpath_on_home ".config" "rmpc"
 
-    l_target_link="config.ron"
+    l_target_filename="config.ron"
     l_source_path="${g_repo_name}/etc/tui/rmpc"
     l_source_filename='config_default.ron'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     create_folderpath_on_home ".config/rmpc" "themes"
 
     l_target_path=".config/rmpc/themes"
-    l_target_link="theme_default.ron"
+    l_target_filename="theme_default.ron"
     l_source_path="${g_repo_name}/etc/tui/rmpc/themes"
     l_source_filename='theme_default.ron'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "        > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "        > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Archivo de configuración para cliente ncspot (spotify client)
     l_target_path=".config/ncspot"
     create_folderpath_on_home ".config" "ncspot"
 
-    l_target_link="config.toml"
+    l_target_filename="config.toml"
     l_source_path="${g_repo_name}/etc/tui/ncspot"
     l_source_filename='config_default.toml'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Archivo de configuración de Git y sus archivo de connfiguracion personalzida.
     l_target_path=""
-    l_target_link=".gitconfig"
+    l_target_filename=".gitconfig"
     l_source_path="${g_repo_name}/etc/cli/git"
     l_source_filename='gitconfig_lnx.toml'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     create_folderpath_on_home ".config" "git"
@@ -1413,70 +1413,96 @@ function _setup_user_profile() {
 
     fi
 
-
     copy_file_on_home "${g_repo_path}/etc/cli/oh-my-posh" "$l_source_filename" "${g_repo_name}/etc/cli/oh-my-posh" "default_settings.json" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de oh-my-posh\n' \
            "$g_color_yellow1" "~/.files/etc/cli/oh-my-posh/default_settings.json" "$g_color_reset"
 
+
     #Archivo de configuración para el comando UrlScan (hecho en python)
     l_target_path=".config/urlscan"
     create_folderpath_on_home ".config" "urlscan"
-    l_target_link="config.json"
+    l_target_filename="config.json"
     l_source_path="${g_repo_name}/etc/cli/urlscan"
     l_source_filename='default_config.json'
 
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
+
     #NerdCtl: Configuración de un CLI de alto nivel del 'Container Runtime' 'ContainerD'
     l_target_path=".config/nerdctl"
     create_folderpath_on_home ".config" "nerdctl"
-    l_target_link="nerdctl.toml"
+    l_target_filename="nerdctl.toml"
     l_source_path="${g_repo_name}/etc/cli/nerdctl"
     l_source_filename='config_default.toml'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
 
-    #NerdCtl/ContainerD y Podman para el usuario root, no almacena su configuración en su home, lo almacena en '/etc'
-    #Para usuario root, la configuracion es manual. Solo e configura automaticamente para modo rootless.
-    #Permitir solo cuando el runner no es root o es root pero en modo suplantacion del usuario objetivo.
+    # NerdCtl/ContainerD y Podman para el usuario root, no almacena su configuración en su home, lo almacena en '/etc'
+    # Para usuario root, la configuracion es manual. Solo e configura automaticamente para modo rootless.
+    # Permitir solo cuando el runner no es root o es root pero en modo suplantacion del usuario objetivo.
     if [ $g_runner_id -ne 0 ] || [ $g_runner_is_target_user -ne 0 ]; then
 
-        #Podman: Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
-        l_target_path=".config/containers"
         create_folderpath_on_home ".config" "containers"
-        l_target_link="containers.conf"
-        l_source_path="${g_repo_name}/etc/cli/podman"
-        l_source_filename='containers_default.toml'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
-        l_status=$?
 
-        #Podman: Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
+        # Podman: Configuración principal de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
         l_target_path=".config/containers"
-        l_target_link="registries.conf"
-        l_source_path="${g_repo_name}/etc/cli/podman"
-        l_source_filename='registries_default.toml'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        l_target_filename="containers.conf"
+        l_source_path="${g_repo_path}/etc/cli/podman"
+        l_source_filename='containers_cni.toml'
+        copy_file_on_home "${l_source_path}" "${l_source_filename}" "${l_target_path}" "${l_target_filename}" $l_flag_overwrites_file_modifiable "Profile > "
         l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones a nivel usuario de "%b%s%b")\n' \
+               "$g_color_yellow1" "~/${l_target_path}/${l_target_filename}" "$g_color_reset" "$g_color_gray1" "podman" "$g_color_reset"
 
-        #ContainerD: Configuración de un 'Container Runtime' 'ContainerD' (en modo 'rootless')
-        #l_target_path=".config/containerd"
-        #l_target_link="config.toml"
-        #l_source_path="${g_repo_name}/etc/cli/containerd"
-        #l_source_filename='config_overlay_default.toml'
-        #create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        # Podman: Configuración de los registros de imagenes de un 'Container Runtime'/CLI de alto nivel (en modo 'rootless')
+        l_target_path=".config/containers"
+        l_target_filename="registries.conf"
+        l_source_path="${g_repo_path}/etc/cli/podman"
+        l_source_filename='registries_default.toml'
+        copy_file_on_home "${l_source_path}" "${l_source_filename}" "${l_target_path}" "${l_target_filename}" $l_flag_overwrites_file_modifiable "        > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones a nivel usuario de "%b%s%b")\n' \
+               "$g_color_yellow1" "~/${l_target_path}/${l_target_filename}" "$g_color_reset" "$g_color_gray1" "podman" "$g_color_reset"
+
+        # Podman: Configuración de storage usado por el 'Container Runtime' (en modo 'rootless')
+        #l_target_path=".config/containers"
+        #l_target_filename="storage.conf"
+        #l_source_path="${g_repo_path}/etc/cli/podman"
+        #l_source_filename='storage_overlay_default.toml'
+        #copy_file_on_home "${l_source_path}" "${l_source_filename}" "${l_target_path}" "${l_target_filename}" $l_flag_overwrites_file_modifiable "        > "
         #l_status=$?
+        #printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones a nivel usuario de "%b%s%b")\n' \
+        #       "$g_color_yellow1" "~/${l_target_path}/${l_target_filename}" "$g_color_reset" "$g_color_gray1" "podman" "$g_color_reset"
 
+        # Podman: BuildAh
+
+
+        # ContainerD: Configuración principal de un 'Container Runtime' de alto nivel (en modo 'rootless')
+        create_folderpath_on_home ".config" "containerd"
+
+        l_target_path=".config/containerd"
+        l_target_filename="config.toml"
+        l_source_path="${g_repo_path}/etc/cli/containerd"
+        l_source_filename='config_overlay_cni.toml'
+        copy_file_on_home "${l_source_path}" "${l_source_filename}" "${l_target_path}" "${l_target_filename}" $l_flag_overwrites_file_modifiable "Profile > "
+        l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones a nivel usuario de "%b%s%b")\n' \
+               "$g_color_yellow1" "~/${l_target_path}/${l_target_filename}" "$g_color_reset" "$g_color_gray1" "containerd" "$g_color_reset"
 
         #ContainerD: Configuración del backend de compilacion de imagenes 'BuildKit' (en modo 'rootless')
-        l_target_path=".config/buildkit"
         create_folderpath_on_home ".config" "buildkit"
-        l_target_link="buildkitd.toml"
-        l_source_path="${g_repo_name}/etc/cli/buildkit"
+
+        l_target_path=".config/buildkit"
+        l_target_filename="buildkitd.toml"
+        l_source_path="${g_repo_path}/etc/cli/buildkit"
         l_source_filename='config_default.toml'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        copy_file_on_home "${l_source_path}" "${l_source_filename}" "${l_target_path}" "${l_target_filename}" $l_flag_overwrites_file_modifiable "Profile > "
         l_status=$?
+        printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones a nivel usuario de "%b%s%b")\n' \
+               "$g_color_yellow1" "~/${l_target_path}/${l_target_filename}" "$g_color_reset" "$g_color_gray1" "buildkitd" "$g_color_reset"
+
 
     fi
 
@@ -1495,98 +1521,98 @@ function _setup_user_profile() {
     #Crear el enlace simbolico de comandos basicos
     create_folderpath_on_home "" ".local/bin"
     l_target_path=".local/bin"
-    l_target_link="osc52"
+    l_target_filename="osc52"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='osc52.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="tmux_run_cmd"
+    l_target_filename="tmux_run_cmd"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='tmux_run_cmd.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="go_files_new_termtab"
+    l_target_filename="go_files_new_termtab"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='go_files_new_termtab.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="go_folder_new_termtab"
+    l_target_filename="go_folder_new_termtab"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='go_folder_new_termtab.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="fzf-tmux"
+    l_target_filename="fzf-tmux"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='fzf-tmux.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="s"
+    l_target_filename="s"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='tmux_session.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="sysu"
+    l_target_filename="sysu"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='sys_utils.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="fileu"
+    l_target_filename="fileu"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='file_utils.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="gitu"
+    l_target_filename="gitu"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='git_utils.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="k8su"
+    l_target_filename="k8su"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='k8s_utils.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="nerdctlu"
+    l_target_filename="nerdctlu"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='nerdctl_utils.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_link="springu"
+    l_target_filename="springu"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
     l_source_filename='spring_utils.bash'
-    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
 
@@ -1594,10 +1620,10 @@ function _setup_user_profile() {
     if [ $g_enviroment_type -eq 1 ]; then
 
         l_target_path=".local/bin"
-        l_target_link="hypru"
+        l_target_filename="hypru"
         l_source_path="${g_repo_name}/shell/bash/bin/cmds"
         l_source_filename='hyprland_utils.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     else
@@ -1608,24 +1634,24 @@ function _setup_user_profile() {
     if [ $g_enviroment_type -eq 1 ]; then
 
         l_target_path=".local/bin"
-        l_target_link="mypc"
+        l_target_filename="mypc"
         l_source_path="${g_repo_name}/shell/bash/bin/cmds"
         l_source_filename='mypc_utils.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     else
-        printf 'Profile > No se establece en enlace simbolico del comando "%mypc%b".\n' "$g_color_gray1" "$g_color_reset"
+        printf 'Profile > No se establece en enlace simbolico del comando "%bmypc%b".\n' "$g_color_gray1" "$g_color_reset"
     fi
 
     #Crear el enlace simbolico de comandos basicos para WSL
     if [ $g_enviroment_type -eq 3 ]; then
 
         l_target_path=".local/bin"
-        l_target_link="wslu"
+        l_target_filename="wslu"
         l_source_path="${g_repo_name}/shell/bash/bin/cmds"
         l_source_filename='wsl_utils.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     else
@@ -1637,10 +1663,10 @@ function _setup_user_profile() {
     if [ $g_enviroment_type -eq 1 ]; then
 
         l_target_path=".local/bin"
-        l_target_link="wezterm_run_cmd"
+        l_target_filename="wezterm_run_cmd"
         l_source_path="${g_repo_name}/shell/bash/bin/cmds"
         l_source_filename='wezterm_run_cmd.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     else
@@ -1651,10 +1677,10 @@ function _setup_user_profile() {
     if [ $g_enviroment_type -eq 1 ]; then
 
         l_target_path=".local/bin"
-        l_target_link="sync_folder"
+        l_target_filename="sync_folder"
         l_source_path="${g_repo_name}/shell/bash/bin/cmds"
         l_source_filename='sync_folder.bash'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     else
@@ -1685,10 +1711,10 @@ function _setup_user_profile() {
 
         create_folderpath_on_home ".config" "imv"
         l_target_path=".config/imv"
-        l_target_link="config"
+        l_target_filename="config"
         l_source_path="${g_repo_name}/etc/gui/imv"
         l_source_filename='imv_default.toml'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     else
@@ -1701,10 +1727,10 @@ function _setup_user_profile() {
 
         create_folderpath_on_home ".config" "zathura"
         l_target_path=".config/zathura"
-        l_target_link="zathurarc"
+        l_target_filename="zathurarc"
         l_source_path="${g_repo_name}/etc/gui/zathura"
         l_source_filename='zathura_default.conf'
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     else
@@ -1751,17 +1777,17 @@ function _setup_user_profile() {
         create_folderpath_on_home ".config" "wezterm"
 
         l_target_path=".config/wezterm"
-        l_target_link="wezterm.lua"
+        l_target_filename="wezterm.lua"
         l_source_path="${g_repo_name}/wezterm/local"
         l_source_filename='wezterm.lua'
 
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
         l_target_path=".config/wezterm"
-        l_target_link="utils"
+        l_target_filename="utils"
         l_source_path="${g_repo_name}/wezterm/local/utils"
-        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_link" "Profile > " $p_flag_overwrites_file_notmodifiable
+        create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "Profile > " $p_flag_overwrites_file_notmodifiable
 
         copy_file_on_home "${g_repo_path}/wezterm/local" "custom_config_template_lnx.lua" ".config/wezterm" "custom_config.lua" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
@@ -1790,11 +1816,11 @@ function _setup_user_profile() {
         create_folderpath_on_home ".config" "foot"
 
         l_target_path=".config/foot"
-        l_target_link="foot.ini"
+        l_target_filename="foot.ini"
         l_source_path="${g_repo_name}/etc/gui/foot"
         l_source_filename='foot_default.ini'
 
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
     # Cualquier otro caso
@@ -1811,27 +1837,27 @@ function _setup_user_profile() {
         create_folderpath_on_home ".config" "kitty"
 
         l_target_path=".config/kitty"
-        l_target_link="kitty.conf"
+        l_target_filename="kitty.conf"
         l_source_path="${g_repo_name}/etc/gui/kitty"
         l_source_filename='kitty.conf'
 
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
         l_target_path=".config/kitty"
-        l_target_link="keymappings.conf"
+        l_target_filename="keymappings.conf"
         l_source_path="${g_repo_name}/etc/gui/kitty"
         l_source_filename='keymappings.conf'
 
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
         l_target_path=".config/kitty"
-        l_target_link="theme.conf"
+        l_target_filename="theme.conf"
         l_source_path="${g_repo_name}/etc/gui/kitty"
         l_source_filename='theme_catppuccin_machiato.conf'
 
-        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_link" "Profile > " $l_flag_overwrites_file_notmodifiable
+        create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
         copy_file_on_home "${g_repo_path}/etc/gui/kitty" "custom_config_template_lnx.conf" ".config/kitty" "custom_config.conf" $l_flag_overwrites_file_modifiable "        > "
