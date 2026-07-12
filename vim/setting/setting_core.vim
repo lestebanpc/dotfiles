@@ -59,19 +59,33 @@ else
     let s:has_clipboard = v:false
 endif
 
-"Determinar si se usa TMUX
+"Determinar si se usa TMUX.
 let g:use_tmux = v:false
-let g:use_tmux_higher_330 = v:false
 
-if (g:os_type != 0) && exists('$TMUX')
+if g:os_type != 0
 
-    let g:use_tmux = v:true
-    if exists('$TMUX_VERSION') && str2nr($TMUX_VERSION) >= 330
-        let g:use_tmux_higher_330 = v:true
+    " Esta variable de entorno se hereda en todos los procesos hijos excepto en algunos como 'sudo', 'su', 'podman', etc.
+    " Esta variable de entorno, por defecto, nunca se replica a servidor remoto cuando se usan: 'ssh', etc.
+    if exists('$TMUX')
+        let g:use_tmux = v:true
+    " En tmux es usar usar 'TERM' con 'tmux-256color' la cual puede ser propagado en comandos como 'sudo' y 'su'
+    elseif $TERM =~ '^tmux-'
+        let g:use_tmux = v:true
     endif
 
 endif
 
+"Si se usa tmux, por defecto se considera que es una version >= 3.30 (soporte a tmux popup)
+let g:use_tmux_higher_330 = v:true
+
+if g:use_tmux
+
+    " La variable de entorno 'TMUX_VERSION' es calculado si se usa mi script de inicializacion de tmux
+    if !exists('$TMUX_VERSION') || str2nr($TMUX_VERSION) < 330
+        let g:use_tmux_higher_330 = v:false
+    endif
+
+endif
 
 "Path del home del usuario
 if g:os_type == 0

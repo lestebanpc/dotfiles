@@ -848,7 +848,8 @@ declare -A gA_spice_aspect_ratios=(
         ['8:5']='Muestra en un ventana float con relacion de aspecto 8:5 en el workspace actual.'
     )
 
-g_default_spice_aspect_ratio='16:9'
+g_default_spice_aspect_ratio=''
+#g_default_spice_aspect_ratio='16:9'
 
 
 
@@ -915,7 +916,11 @@ m_connect_spice() {
 
         l_title="SPICE fullscreen - Port ${p_port}"
     else
-        l_title="SPICE screen ${p_screen_type} - Port ${p_port}"
+        if [ -z "$p_screen_type" ]; then
+            l_title="SPICE normal screen - Port ${p_port}"
+        else
+            l_title="SPICE screen ${p_screen_type} - Port ${p_port}"
+        fi
     fi
 
     # Validar si el puerto SPICE esta en escucha

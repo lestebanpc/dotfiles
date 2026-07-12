@@ -90,7 +90,7 @@ elif [ "$XDG_SESSION_TYPE" = 'wayland' ] || [ "$XDG_SESSION_TYPE" = 'x11' ]; the
 elif [ -n "$ANDROID_DATA" ]; then
     export MY_SESSION_SRC=2
 # Si es la 'consola linux'.
-elif [ "$XDG_SESSION_TYPE" = 'tty' ] ||  [ "$TERM" = 'linux' ]; then
+elif [ "$TERM" = 'linux' ]; then
     export MY_SESSION_SRC=1
 elif [[ $(tty) =~ ^/dev/tty[0-9]+$ ]]; then
     export MY_SESSION_SRC=1

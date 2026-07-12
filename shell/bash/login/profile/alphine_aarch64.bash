@@ -120,7 +120,7 @@ if [ -z "$g_session_src" ]; then
     elif [ -n "$ANDROID_DATA" ]; then
         g_session_src=2
     # Si es la 'consola linux'.
-    elif [ "$XDG_SESSION_TYPE" = 'tty' ] ||  [ "$TERM" = 'linux' ]; then
+    elif [ "$TERM" = 'linux' ]; then
         g_session_src=1
     elif [[ $(tty) =~ ^/dev/tty[0-9]+$ ]]; then
         g_session_src=1
