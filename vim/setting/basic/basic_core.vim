@@ -84,7 +84,7 @@ endif
 
 "En Windows no existe TMUX (Solo en Linux, incluyendo: WSL, solo en Linux y MacOS)
 
-if g:use_tmux
+if g:use_local_tmux
 
     "1. Package UI> Crear paneles TMUX desde VIM
     packadd vimux
@@ -673,7 +673,7 @@ let $FZF_DEFAULT_OPTS="--layout=reverse --info=inline"
 let $FZF_DEFAULT_COMMAND="fd -H -t f -E '.git' -E 'node_modules' -E '*.swp' -E '*.un~'"
 
 " Layout de FZF, define el tamaño y posicion del popup, usando la variable global 'g:fzf_layout'
-if g:use_tmux && g:use_tmux_higher_330
+if g:use_local_tmux && g:use_tmux_higher_330
 	" Si se usa TMUX, usar el 'tmux popup', definiendo el valor de la opcion '--tmux'
     " Su valor es la misma que la opcion: [center|top|bottom|left|right][,SIZE[%]][,SIZE[%]]
     let g:fzf_layout = { 'tmux': 'center,99%,80%' }

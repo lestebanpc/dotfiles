@@ -115,7 +115,7 @@ Se usa los siguientes keymappings para escribir en el clipboard:
 
 VIM define las siguientes variables de entorno y variables globales VIM:
 
-- `CLIPBOARD`
+- `CLIPBOARD_MODE`
     - El mecanismo usado para escribir en el clipboard.
     - Variable global VIM equivalente: `g:clipboard_writer_mode`
     - Sus valores:
@@ -135,9 +135,9 @@ VIM define las siguientes variables de entorno y variables globales VIM:
                 - `contour`
                 - `iTerm.app`
         - Si VIM esta dentro de TMUX (tmux sobrescribe `TERM_PROGRAM` a `tmux` y `TERM` suele ser `tmux-256color`).
-            - TMUX cuando inicia su servidor auto-calcula la variable de entorno `TMUX_SET_CLIPBOARD`, el cual define como TMUX escribe en el clipboard del SO.
-                - Este valor puede ser modificado manualmente usando la variable de entorno `SET_CLIPBOARD` antes de ejecutar tmux.
-            - Si `TMUX_SET_CLIPBOARD` es `1`, VIM usara OSC-52.
+            - TMUX cuando inicia su servidor auto-calcula la variable de entorno `TMUX_CLIPBOARD_MODE`, el cual define como TMUX escribe en el clipboard del SO.
+                - Este valor puede ser modificado manualmente usando la variable de entorno `CLIPBOARD_MODE` antes de ejecutar tmux.
+            - Si `TMUX_CLIPBOARD_MODE` es `1`, VIM usara OSC-52.
     - Si no sorporta OSC-52, se buscara un backend del clipboard instalado.
 
 
@@ -159,7 +159,7 @@ VIM define las siguientes variables de entorno y variables globales VIM:
 
 ```bash
 # Forzar el uso de un comando externo para escribir en el clipboard
-CLIPBOARD=2 vim
+CLIPBOARD_MODE=2 vim
 
 # Una forma de hacerlo es colocando en el profile (afectando a todo el usuario)
 vim ~/.custom_profile.bash
@@ -167,11 +167,11 @@ vim ~/.custom_profile.bash
 
 ```bash
 #1. Forzar el uso de OSC-52 en vim para escribir en el clipboard
-CLIPBOARD=2 vim
+CLIPBOARD_MODE=2 vim
 
 #2. Forzar el uso de OSC-52 en tmux/vim definiendo las variables de entorno antes de iniciar tmux/vim
 TERM_PROGRAM='foot'
-SET_CLIPBOARD=1
+CLIPBOARD_MODE=1
 
 # Una forma de hacerlo es colocando en el profile (afectando a todo el usuario)
 #cp ~/.files/shell/bash/login/profile/profile_config_template_basic_local.bash ~/.custom_profile.bash
@@ -215,10 +215,10 @@ vim ~/.custom_profile.bash
 
 ```bash
 #1. NO enmascarar
-CLIPBOARD=1 OSC52_FORMAT=0 vim
+CLIPBOARD_MODE=1 OSC52_FORMAT=0 vim
 
 #2. Enmascarar para TMUX
-CLIPBOARD=1 OSC52_FORMAT=1 vim
+CLIPBOARD_MODE=1 OSC52_FORMAT=1 vim
 OSC52_FORMAT=1 vim
 ```
 

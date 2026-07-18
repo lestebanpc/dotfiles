@@ -158,6 +158,7 @@ declare -A gA_repos_artifact=(
         ['scrcpy']='Genymobile/scrcpy'
         ['satty']='Satty-org/Satty'
         ['spotify-player']='aome510/spotify-player'
+        ['stylua']='JohnnyMorganz/StyLua'
     )
 
 # Diccionario de los repositorios que tiene un repositorio de versiones diferente al repositorio de artefactos.
@@ -271,7 +272,7 @@ declare -a ga_menuoption_repos=(
     "rust,rust-analyzer"
     "go"
     "uv"
-    "shellcheck,shfmt,marksman,luals,taplo,lemminx,flamelens,powershell_es"
+    "shellcheck,shfmt,marksman,luals,stylua,taplo,lemminx,flamelens,powershell_es"
     "ctags-win,ctags-nowin"
     "llama-swap"
     "awscli,eksctl,distrobox,github-cli,gitlab-cli,jp,opencode,kitty,scrcpy,satty,spotify-player"
@@ -2274,6 +2275,38 @@ function get_repo_artifacts() {
                     fi
                 fi
                 pna_artifact_types=(13)
+            fi
+            ;;
+
+
+
+        stylua)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("stylua-windows-x86_64.zip")
+                else
+                    pna_artifact_names=("stylua-windows-x86_64.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("stylua-linux-aarch64-musl.zip")
+                    else
+                        pna_artifact_names=("stylua-linux-aarch64.zip")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("stylua-linux-x86_64-musl.zip")
+                    else
+                        pna_artifact_names=("stylua-linux-x86_64.zip")
+                    fi
+                fi
+                pna_artifact_types=(11)
             fi
             ;;
 
@@ -5614,6 +5647,26 @@ function _copy_artifact_files() {
 
                 #Copiar el comando
                 copy_binary_file "${l_source_path}/bin" "gh.exe" 1 1
+
+            fi
+            ;;
+
+
+        stylua)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Renombrar el binario antes de copiarlo
+            if [ $p_is_win_binary -ne 0 ]; then
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "stylua" 0 1
+
+            else
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "stylua.exe" 1 1
 
             fi
             ;;

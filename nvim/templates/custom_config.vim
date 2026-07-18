@@ -17,8 +17,8 @@
 "  > Acciones de escritura al clipboard usanbdo el valor de los registros VIM.
 "  > EScritura automatica al clipboard despues de realizar el yank (si esta habilitado 'g:yank_to_clipboard').
 " El valor real, se obtendra segun orden de prioridad:
-"  > El valor definido por la variable de entorno 'CLIPBOARD'
-"    Ejemplo : 'CLIPBOARD=1 vim'
+"  > El valor definido por la variable de entorno 'CLIPBOARD_MODE'
+"    Ejemplo : 'CLIPBOARD_MODE=1 vim'
 "  > El valor definido por esta variable VIM 'g:clipboard_writer_mode'.
 " Sus valores es un entero y puden ser:
 "  > '1', si se implementa el mecanismo de uso OSC 52
@@ -75,7 +75,7 @@
 
 
 " Por defecto el comando para escribir al clipboard siempre es calculado automaticamente cuando la variable
-" 'g:clipboard_writer_mode' o 'CLIPBOARD' es 2
+" 'g:clipboard_writer_mode' o 'CLIPBOARD_MODE' es 2
 " > Este busca si existe comandos 'wl-copy', 'xclip' o 'xsel' en ese orden.
 " > El comando a usarse se debera indicar las opciones/argumentos requeridos de usar el texto desde STDIN.
 " En algunos casos, puede elegir otro comando o no usar el orden preestablecido, modifique esta variable.

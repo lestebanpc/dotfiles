@@ -350,7 +350,7 @@ local fzf_lua_conf = {
     },
 }
 
-if vim.g.use_tmux and vim.g.use_tmux_higher_330 then
+if vim.g.use_local_tmux and vim.g.use_tmux_higher_330 then
     fzf_lua_conf.fzf_opts["--tmux"] = "center,99%,80%"
 end
 

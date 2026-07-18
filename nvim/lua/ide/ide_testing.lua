@@ -141,7 +141,7 @@ dap.listeners.before.event_exited["dapui_config"] = function()
 
 
 --3. External terminal
-if vim.g.use_tmux then
+if vim.g.use_local_tmux then
 
     --dap.defaults.fallback.external_terminal = {
     --    command = 'tmux',

@@ -31,38 +31,46 @@ local mod = {}
 -- Main Logic
 ------------------------------------------------------------------------------------
 
--- Monitor principal: Samsumng C34H89x (3440x1440)
+-- Monitor principal : Samsumng Odyssey G75F HNTL200016
+-- Resolucion Fisica : 5120x2160
+-- Escala            : 1.25
+-- Resolucion Logica : 4096x1728
 hl.monitor({
     output = "DP-1",
+
+    -- Posicion en el lienzo logico de hyprland (usa la resolucion logica)
     position = "0x0",
-    scale = 1,
-
-    --mode = "preferred",
-    mode = "3440x1440@99.982",
-
-    -- VRR (Variable Refresh Rate) usando por  FreeSync/G-Sync del monitor.
-    -- > '0' Deshabilita el adaptive sync para ese monitor, '1' lo habilita.
-    vrr = 0,
-
-})
-
--- Monitor secundario: Porpoise HT-1730XT (2560x1440)
-hl.monitor({
-    output = "HDMI-A-1",
-    position = "3440x0",
     scale = 1.25,
 
-    --mode = "preferred",
-    mode = "2560x1440@59.951",
+    mode = "preferred",
+    --mode = "5120x2160@179.99",
+    --mode = "5120x2160@120.00",
+    --mode = "5120x2160@59.98",
+
+    -- VRR (Variable Refresh Rate) usando por  FreeSync/G-Sync del monitor.
+    -- > '0' Deshabilita el adaptive sync para ese monitor, '1' lo habilita.
+    vrr = 0,
+
+})
+
+-- Monitor secundario: Porpoise HT-1730XT
+-- Resolucion Fisica : 2560x1440
+-- Escala            : 1.25
+-- Resolucion Logica : 2048x1152
+hl.monitor({
+    output = "HDMI-A-1",
+
+    -- Posicion en el lienzo logico de hyprland (usa la resolucion logica)
+    position = "4096x0",
+    scale = 1.25,
+
+    mode = "preferred",
+    --mode = "2560x1440@59.951",
 
     -- VRR (Variable Refresh Rate) usando por  FreeSync/G-Sync del monitor.
     -- > '0' Deshabilita el adaptive sync para ese monitor, '1' lo habilita.
     vrr = 0,
 })
-
--- Opcionales:
--- hl.monitor({ output = "DP-1", mode = "3440x1440@99.982", position = "0x0", scale = 1, vrr = 0 })
--- hl.monitor({ output = "HDMI-A-1", mode = "2560x1440@59.951", position = "3440x0", scale = 1.25, vrr = 0 })
 
 
 

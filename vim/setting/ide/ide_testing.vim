@@ -62,7 +62,7 @@ endif
 
 packadd vim-test
 
-if g:use_tmux
+if g:use_local_tmux
     let test#strategy = "vimux"
 endif
 

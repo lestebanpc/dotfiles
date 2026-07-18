@@ -42,10 +42,10 @@ Durante la ejecución del servidor tmux, se *crea automáticamente* las siguient
 
 Antes de la creación del servidor tmux, se usa las variables de entorno (si existen):
 
-- `SET_CLIPBOARD`
-    - Define como se calculara el modo en que TMUX de acceder al clipboard  (`TMUX_SET_CLIPBOARD`).
+- `CLIPBOARD_MODE`
+    - Define como se calculara el modo en que TMUX de acceder al clipboard  (`TMUX_CLIPBOARD_MODE`).
     - Valores:
-        - Si no se define, se calculara automáticamente el modo en que TMUX de acceder al clipboard (`TMUX_SET_CLIPBOARD`).
+        - Si no se define, se calculara automáticamente el modo en que TMUX de acceder al clipboard (`TMUX_CLIPBOARD_MODE`).
         - `0`, si usa `set-clipboard off` (desactivar el escribir al clipboard).
         - `1`, si usa `set-clipboard on` y usar el `OSC52` para escribir en el clipboard.
         - `2`, si usa `set-clipboard external` y usar comandos externos para escribir en el clipboard.
@@ -64,7 +64,7 @@ Antes de la creación del servidor tmux, se usa las variables de entorno (si exi
 
 ```bash
 # Forzar el uso de OSC52 en tmux
-export SET_CLIPBOARD=1
+export CLIPBOARD_MODE=1
 
 # Indicar que es un tmux anidado
 export TMUX_NESTED=0
@@ -90,9 +90,9 @@ Durante la ejecución del servidor tmux, se *crea automáticamente* las siguient
 - `TMUX_VERSION`
     - Version de TMUX entero y comparable, por ejemplo `3.2a` convierte a `320`, `2.56` convierte a `256`, `2.506` convierte a `250`.
 
-- `TMUX_SET_CLIPBOARD`
+- `TMUX_CLIPBOARD_MODE`
     - Es un valor auto-calculado e indica el modo en que TMUX de acceder al clipboard.
-    - Su valor se calcula usando lo enviado en la variable `SET_CLIPBOARD`.
+    - Su valor se calcula usando lo enviado en la variable `CLIPBOARD_MODE`.
     - Sus valores posibles son:
         - Si no se determinar el valor adecuado
         - `0`, si usa `set-clipboard off` (desactivar el escribir al clipboard).
@@ -111,7 +111,7 @@ El script de configuración de tmux usado, por defecto intenta calcular el mejor
 - Intenta determinar si su terminal soporta OSC-52. Si su terminal lo soporta ejecuta `set-clipboard on`.
 - Si su terminal no lo soporta, busca un comando de backend de clipboard instalado. Si lo encuentra, usa `set-clipboard external`.
 
-Si por algún motivo, el mecanismo automático no es deseado o no encuentra el valor correcto, puede establecer el valor correcto de la variable de entorno `SET_CLIPBOARD` antes iniciar la creación del servidor tmux (creación de la 1ra sesión tmux) y establecer:
+Si por algún motivo, el mecanismo automático no es deseado o no encuentra el valor correcto, puede establecer el valor correcto de la variable de entorno `CLIPBOARD_MODE` antes iniciar la creación del servidor tmux (creación de la 1ra sesión tmux) y establecer:
 - Si no se especifica intentara calcular el valor automáticamente:
 - `0`, si usa `set-clipboard off` (desactivar el escribir al clipboard).
 - `1`, si usa `set-clipboard on` y usar el `OSC52` para escribir en el clipboard.
@@ -119,10 +119,10 @@ Si por algún motivo, el mecanismo automático no es deseado o no encuentra el v
 
 ```bash
 # Forzar el uso de OSC52 en tmux
-SET_CLIPBOARD=1 tmux new-session -s main -n w01
+CLIPBOARD_MODE=1 tmux new-session -s main -n w01
 
 # Forzar el uso de OSC52 en tmux
-export SET_CLIPBOARD=1
+export CLIPBOARD_MODE=1
 tmux new-session -s main -n w01
 ```
 

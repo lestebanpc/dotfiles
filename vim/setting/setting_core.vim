@@ -59,18 +59,20 @@ else
     let s:has_clipboard = v:false
 endif
 
-"Determinar si se usa TMUX.
-let g:use_tmux = v:false
+"Determinar si se usa TMUX localmente.
+let g:use_local_tmux = v:false
 
 if g:os_type != 0
 
-    " Esta variable de entorno se hereda en todos los procesos hijos excepto en algunos como 'sudo', 'su', 'podman', etc.
-    " Esta variable de entorno, por defecto, nunca se replica a servidor remoto cuando se usan: 'ssh', etc.
+    " La variable de entorno TMUX especifica el socket IPC, pero esta variable no es visible (no se hereda o
+    " propaga en todos los escenarios), por ejemplo:
+    " > Si tmux y vim estan localmente, pero en diferente namespace en contenedores ('podman').
+    " > Si tmux y vim estan localmente, pero por seguridad no se heredan: 'sudo', 'su'
+    " > Si vim esta remotamente, usando 'ssh' esta variable no se propaga.
+    " La variable 'TMUX' es necesario para que se pueda acceder al CLI del servidor tmux.
+    " La variablme 'TERM' usualmente si se hereda/propaga en algunos proceso como 'sudo', 'su', 'ssh', etc.
     if exists('$TMUX')
-        let g:use_tmux = v:true
-    " En tmux es usar usar 'TERM' con 'tmux-256color' la cual puede ser propagado en comandos como 'sudo' y 'su'
-    elseif $TERM =~ '^tmux-'
-        let g:use_tmux = v:true
+        let g:use_local_tmux = v:true
     endif
 
 endif
@@ -78,7 +80,7 @@ endif
 "Si se usa tmux, por defecto se considera que es una version >= 3.30 (soporte a tmux popup)
 let g:use_tmux_higher_330 = v:true
 
-if g:use_tmux
+if g:use_local_tmux
 
     " La variable de entorno 'TMUX_VERSION' es calculado si se usa mi script de inicializacion de tmux
     if !exists('$TMUX_VERSION') || str2nr($TMUX_VERSION) < 330
@@ -198,7 +200,7 @@ set shiftwidth=4
 
 "8. Establecer el titulo en la barra de terminal (cuando VIM esta ejecutandose)
 "   TMUX sobrescribe el titulo de la barra de estado.
-if !g:use_tmux
+if !g:use_local_tmux
 
     set title
 
@@ -576,12 +578,12 @@ if g:clipboard_writer_mode != 1 && g:clipboard_writer_mode != 2
     let s:terminal_use_osc54 = v:false
 
     "Si esta ejecutando sobre tmux
-    if g:use_tmux
+    if g:use_local_tmux
 
-        "Si usa el archivo de configuracion './tmux/tmux.conf', se establece la variable de entorno 'TMUX_SET_CLIPBOARD'
+        "Si usa el archivo de configuracion './tmux/tmux.conf', se establece la variable de entorno 'TMUX_CLIPBOARD_MODE'
         "con valor 1 o 2, si se configurado tmux con soporte a OSC 52
-        if ($TMUX_SET_CLIPBOARD == 1) || ($TMUX_SET_CLIPBOARD == 2)
-        "if $TMUX_SET_CLIPBOARD == 1
+        if ($TMUX_CLIPBOARD_MODE == 1) || ($TMUX_CLIPBOARD_MODE == 2)
+        "if $TMUX_CLIPBOARD_MODE == 1
             let s:terminal_use_osc54 = v:true
         endif
 
@@ -668,7 +670,7 @@ if !exists("g:clipboard_writer_cmd")
 
                     let g:clipboard_writer_cmd='xclip -i -selection clipboard'
 
-                elseif executable('xclip')
+                elseif executable('xsel')
 
                     let g:clipboard_writer_cmd='xsel -i -b'
 
@@ -778,14 +780,19 @@ endif
 " Si el modo de escritura del clipboard es usando OSC-52, determinar el formato a usar.
 if g:clipboard_writer_mode == 1
 
-    " Si se debe calcular el valor automaticamente
+    " Si no se define se debe calcular el valor automaticamente
     if g:clipboard_osc52_format != 0 && g:clipboard_osc52_format != 1 && g:clipboard_osc52_format != 2
 
-        "Si no define o tiene otro valor, se calucara automaticamente su valor. Solo use esta opcion cuando VIM/NeoVIM
-        "se ejecuta de manera local la terminal, si lo ejecuta de manera remota, por ejemplo esta dentro programa ssh
-        "o dentro de un contenedor, se recomianda establecer el valor si esta dentro de tmux o de una terminal GNU '$TERM'
-        "a screen.
-        if g:use_tmux
+        " Si tmux se usa tmux (localmente o remotamente respecto a vim) se usara el formato '2':
+        " > Si VIM/NeoVIM ve el proceso tmux (socket IPC definido en la variable 'TMUX'), 'g:use_local_tmux' es 'v:true'.
+        " > La variable 'TMUX' no se hereda en todos los proceso hijos como 'sudo', 'su', 'podman', pero si hereda 'TERM'.
+        " > La variable 'TMUX' no se propaga remotamente cuando se usa 'ssh', pero si propaga 'TERM'.
+        " En caso que se calcula de manera incorrecta, se recomienda establecer el valor si esta dentro de tmux o de una
+        " terminal GNU screen.
+        if g:use_local_tmux
+            let g:clipboard_osc52_format = 2
+        " En tmux se usa 'TERM' con 'tmux-256color', la cual puede ser propagado en comandos como 'sudo', 'su', 'ssh'
+        elseif $TERM =~ '^tmux-'
             let g:clipboard_osc52_format = 2
         elseif match($TERM, 'screen') > -1
             let g:clipboard_osc52_format = 1

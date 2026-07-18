@@ -114,8 +114,8 @@ endif
 "  > Acciones de escritura al clipboard usanbdo el valor de los registros VIM.
 "  > Escritura automatica al clipboard despues de realizar el yank (si esta habilitado 'g:yank_to_clipboard').
 " El valor real, se obtendra segun orden de prioridad:
-"  > El valor definido por la variable de entorno 'CLIPBOARD'
-"    Ejemplo : 'CLIPBOARD=1 vim'
+"  > El valor definido por la variable de entorno 'CLIPBOARD_MODE'
+"    Ejemplo : 'CLIPBOARD_MODE=1 vim'
 "  > El valor definido por esta variable VIM 'g:clipboard_writer_mode'.
 " Sus valores es un entero y puden ser:
 "  > '1', si se implementa el mecanismo de uso OSC 52
@@ -132,11 +132,11 @@ endif
 "      > Implementar el mecanismo de uso comandos externo del gestion de clipboard
 " Con fines practicos, internamete se usara el valor '9' para representar que se desea que el mecanismo
 " de determacion del clipboard de VIM/NeoVIM se realize automaticamente.
-if $CLIPBOARD != ''
+if $CLIPBOARD_MODE != ''
 
-    if $CLIPBOARD == 1
+    if $CLIPBOARD_MODE == 1
         let g:clipboard_writer_mode = 1
-    elseif $CLIPBOARD == 2
+    elseif $CLIPBOARD_MODE == 2
         let g:clipboard_writer_mode = 2
     else
         let g:clipboard_writer_mode = 9

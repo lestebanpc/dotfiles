@@ -53,26 +53,18 @@
 #   escribir al clipboard ('paste').
 #env:TERM_PROGRAM='foot'
 
-# La variable de entorno 'SET_CIPBOARD' define el mecanismo de escritura de clipboard que se usara en 'tmux':
-# > 0 : No habilita la escritura en el clipboard.
-# > 1 : Habilita la escritura usando el caracter de escape ANSI OSC-52 (la terminal debe soportarlo)
-# > 2 : Habilita la escritura usando comandos externos (requiere tener instalado 'xsel', 'xclip' or 'wl-copy').
-# >   : Se determina automaticamente el mecanismo a usar.
-# Su no se define (valor ''), se determinara automaticamente el mecanismo a usar.
-#env:SET_CLIPBOARD=1
-
-# La variable de entorno 'CIPBOARD' define el mecanismo de escritura de clipboard en un programa CLI.
-# Actualmente, solo es usado por VIM/NeoVIM y su soporte incluye:
-#  > Acciones de escritura al clipboard usanbdo el valor de los registros VIM.
-#  > Escritura automatica al clipboard despues de realizar el yank (si esta habilitado la variable 'g:yank_to_clipboard'
-#    o 'YANK_TO_CB').
-# Los valores de la variable 'CLIPBOARD' son:
-#  > 1 : Implementar un mecanismo usando OSC-52 (la terminal debe soportarlo).
-#  > 2 : Implementar un mecanismo usando comandos externos de gestion de clipboard.
-#  > 9 : Determinar automaticamente el mecanismo a usar.
-# Si no se define, su valor depende de la variable VIM 'g:clipboard_osc52_format', si este no se define, el mecanismo
-# es de escritura se descrubira automaticamente.
-#env:CLIPBOARD=0
+# La variable de entorno 'CIPBOARD' define el mecanismo de escritura de clipboard que usara un determino programa CLI.
+# > Los valores de la variable 'CLIPBOARD_MODE' son:
+#   > 0 : No habilita la escritura en el clipboard.
+#   > 1 : Implementar un mecanismo usando OSC-52 (la terminal debe soportarlo).
+#   > 2 : Implementar un mecanismo usando comandos externos de gestion de clipboard.
+#   > 9 : Determinar automaticamente el mecanismo a usar.
+# > Actualmente, los programas que lo usan son: VIM, NeoVIM y TMUX
+#   > En VIM/NeoVIM, si no se define (o su valor es ''), el modo de escritura depende del valor de la variable VIM
+#     'g:clipboard_writer_mode', y si este no se define, el modo de escritura se calculara automaticamente.
+#   > En VIM/NeoVIM, si no se define (o su valor es ''), el modo de escritura depende del valor de opcion a nivel server
+#     de tmux '@clipboard_writer_mode', y si este no se define, el modo de escritura se calculara automaticamente.
+#env:CLIPBOARD_MODE=1
 
 # La variable de entorno 'YANK_TO_CB' es usado por VIM/NeoVIM, el es usado cuando se realize un 'yank' (en forma interactiva)
 # este se pueda se copie automaticamente al clipboard.

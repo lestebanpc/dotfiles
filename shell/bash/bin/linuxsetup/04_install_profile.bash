@@ -1560,10 +1560,18 @@ function _setup_user_profile() {
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
+    #l_target_path=".local/bin"
+    #l_target_filename="s"
+    #l_source_path="${g_repo_name}/shell/bash/bin/cmds"
+    #l_source_filename='tmux_session.bash'
+    #create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
+    #l_status=$?
+
+    #Crear el enlace simbolico de comandos basicos
     l_target_path=".local/bin"
-    l_target_filename="s"
+    l_target_filename="tmuxu"
     l_source_path="${g_repo_name}/shell/bash/bin/cmds"
-    l_source_filename='tmux_session.bash'
+    l_source_filename='tmux_utils.bash'
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 

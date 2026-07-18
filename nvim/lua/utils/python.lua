@@ -358,7 +358,7 @@ function M.test_nearest_method()
     }
 
 
-    if vim.g.use_tmux then
+    if vim.g.use_local_tmux then
         config.console = 'externalTerminal'
     end
 
@@ -412,7 +412,7 @@ function M.test_nearest_class()
     }
 
 
-    if vim.g.use_tmux then
+    if vim.g.use_local_tmux then
         config.console = 'externalTerminal'
     end
 
@@ -445,7 +445,7 @@ function M.debug_selected_code()
     }
 
 
-    if vim.g.use_tmux then
+    if vim.g.use_local_tmux then
         config.console = 'externalTerminal'
     end
 

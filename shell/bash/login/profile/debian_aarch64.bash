@@ -377,6 +377,7 @@ export SYSTEMD_EDITOR="${SYSTEMD_EDITOR:-vim}"
 # Alias
 alias j!=jbang
 alias kc='kubectl'
+alias s='tmuxu new_session'
 
 
 #-----------------------------------------------------------------------------------

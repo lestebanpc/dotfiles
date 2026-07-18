@@ -112,6 +112,12 @@ hl.config({
         },
     },
 
+    misc = {
+        disable_hyprland_logo = true,
+        disable_splash_rendering = true,
+    },
+
+    -- Layout 'dwindle'
     dwindle = {
         preserve_split = true,
 
@@ -123,17 +129,15 @@ hl.config({
         force_split = 2,
     },
 
+    -- Layout 'master'
     master = {
         mfact = 0.5,
     },
 
-    misc = {
-        disable_hyprland_logo = true,
-        disable_splash_rendering = true,
-    },
-
+    -- Layout 'scrolling'
     scrolling = {
         direction = "right",
+        column_width = 0.333,
     },
 })
 
