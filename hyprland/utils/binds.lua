@@ -237,8 +237,8 @@ hl.bind("SUPER + SHIFT + K",     hl.dsp.window.move({ direction = "u" }))
 hl.bind("SUPER + SHIFT + L",     m_window_move_right)
 
 
--- Swapping
-local function m_swap_right()
+-- Swapping y otros
+local function m_swap_next()
 
     -- Obtener el workspace actual
     local workspace = hl.get_active_special_workspace() or hl.get_active_workspace()
@@ -252,8 +252,11 @@ local function m_swap_right()
         -- Swap (intercambia) la posicion de los 2 ventanas split actual dentro del arbol dwindle
         hl.dispatch(hl.dsp.layout("swapsplit"))
     elseif layout == "scrolling" then
-        -- Swap (intercambiar) el orden de la columna/ventana actual con su columna/ventana a la derecha
-        hl.dispatch(hl.dsp.layout("swapcol r"))
+        -- Si la ventana actual es una ventana secundaria de la columna, crea una nueva columna a la derecha y mueve
+        -- la ventana actual a dicha columna (como ventana principal).
+        -- > Si la ventana es la única de la columna, no se realiza ningún cambio visual.
+        -- > Se enfoca la ventana movida en la columna actual.
+        hl.dispatch(hl.dsp.layout("expel"))
     elseif layout == "master" then
         -- Swap intercambia la ventana actual con la siguiente del segun el layout master.
         hl.dispatch(hl.dsp.layout("swapnext"))
@@ -261,7 +264,7 @@ local function m_swap_right()
 
 end
 
-local function m_swap_left()
+local function m_swap_previous()
 
     -- Obtener el workspace actual
     local workspace = hl.get_active_special_workspace() or hl.get_active_workspace()
@@ -275,8 +278,9 @@ local function m_swap_left()
         -- Swap (intercambia) la posicion de los 2 ventanas split actual dentro del arbol dwindle
         hl.dispatch(hl.dsp.layout("swapsplit"))
     elseif layout == "scrolling" then
-        -- Swap (intercambiar) el orden de la columna/ventana actual con su columna/ventana a la derecha
-        hl.dispatch(hl.dsp.layout("swapcol l"))
+        -- Mueve la ventana principal (superior) de la columna de la derecha a la columna actual.
+        -- > Se enfoca la ventana movida en la columna actual.
+        hl.dispatch(hl.dsp.layout("consume"))
     elseif layout == "master" then
         -- Swap intercambia la ventana anterior con la siguiente del segun el layout master.
         hl.dispatch(hl.dsp.layout("swapprev"))
@@ -284,8 +288,8 @@ local function m_swap_left()
 
 end
 
-hl.bind("SUPER + SHIFT + P",  m_swap_left)
-hl.bind("SUPER + SHIFT + N", m_swap_right)
+hl.bind("SUPER + SHIFT + P",  m_swap_previous)
+hl.bind("SUPER + SHIFT + N", m_swap_next)
 
 
 

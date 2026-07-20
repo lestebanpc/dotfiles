@@ -18,7 +18,8 @@ annotation-size-factor = 0.65
 # Filename to use for saving action. Omit to disable saving to file.
 # > Might contain format specifiers: https://docs.rs/chrono/latest/chrono/format/strftime/index.html
 # > Can contain leading tilde (~) for home directory
-output-filename = "~/Pictures/screenshots/satty-%Y-%m-%d_%H:%M:%S.png"
+output-filename = "~/images/screenshots/satty-%Y-%m-%d_%H:%M:%S.png"
+#output-filename = "~/Pictures/screenshots/satty-%Y-%m-%d_%H:%M:%S.png"
 
 # Actions to trigger on Enter key (order is important)
 # > Possible values: save-to-clipboard, save-to-file, save-to-file-as, copy-filepath-to-clipboard, exit

@@ -1450,7 +1450,7 @@ function _setup_user_profile() {
         l_target_path=".config/containers"
         l_target_filename="containers.conf"
         l_source_path="${g_repo_path}/etc/cli/podman"
-        l_source_filename='containers_cni.toml'
+        l_source_filename='containers_default.toml'
         copy_file_on_home "${l_source_path}" "${l_source_filename}" "${l_target_path}" "${l_target_filename}" $l_flag_overwrites_file_modifiable "Profile > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones a nivel usuario de "%b%s%b")\n' \
