@@ -1,9 +1,13 @@
 # Sesiones especificas para el usuario
 
 [[session]]
+name = "config wezterm"
+path = "~/.config/wezterm"
+startup_command = "vim wezterm.lua custom_config.lua"
+
+[[session]]
 name = "downloads"
 path = "/dt9/tmp/downloads"
-
 
 [[session]]
 name = "upload movies"

@@ -39,11 +39,6 @@ path = "~/.config/nvim"
 name = "nvim data"
 path = "~/.local/share/nvim"
 
-[[session]]
-name = "config wezterm"
-path = "~/.config/wezterm"
-startup_command = "vim wezterm.lua custom_config.lua"
-
 # Cambir el preview
 [[session]]
 name = "config ssh"

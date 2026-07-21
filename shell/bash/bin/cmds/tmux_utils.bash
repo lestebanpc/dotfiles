@@ -853,7 +853,7 @@ m_new_or_choose_tmux_session() {
     # Obtener el folder donde estan los proyectos git
     local l_git_path=''
 
-    if [ ! -z "$2" ] && [ -d "$1" ]; then
+    if [ ! -z "$2" ] && [ -d "$2" ]; then
         l_git_path="$2"
     fi
 

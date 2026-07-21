@@ -26,7 +26,7 @@ _make_tmux_layout() {
 
     # Crear la nueva ventana
     local l_window_id=''
-    local l_working_dir='/tempo/download'
+    local l_working_dir='/dt9/tmp/downloads'
 
     l_window_id=$(tmux new-window -c "$l_working_dir" -dn 'download' -PF "#{window_id}")
 
@@ -34,7 +34,7 @@ _make_tmux_layout() {
     tmux send-keys -t "${l_window_id}" 'pwd' Enter
 
     # Crear un nuevo panel sin convertirlo en activo (opcion '-d')
-    l_working_dir='/tempo/download/movies'
+    l_working_dir='/dt9/tmp/downloads/movies'
     if [ ! -d "$l_working_dir" ]; then
         mkdir $l_working_dir
     fi

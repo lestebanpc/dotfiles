@@ -146,6 +146,7 @@ g_enviroment_type=2
 #   - Por script `~/.local/bin/tmuxu`
 #     > El comando `s` (alias de `tmuxu new_session`) usa dicha valor si no se especifica las opción `-g GIT_FOLDER`.
 # > Si no se define, se valor sera: '~/code'
+#unset MY_GIT_PATH
 export MY_GIT_PATH="/home/lucianoepc/code"
 
 # Variable usado para definir la ruta del folder padre donde estan los repositorios git.
@@ -153,6 +154,7 @@ export MY_GIT_PATH="/home/lucianoepc/code"
 #   - Por script `~/.local/bin/tmuxu`
 #     > El comando `s` (alias de `tmuxu new_session`) usa dicha valor si no se especifica las opción `-w WORK_FOLDER`.
 # > Si no se define, se valor sera: '~/works' o '~/work' (en ese orden de prioridad).
+#unset MY_WORK_PATH
 export MY_WORK_PATH="/home/lucianoepc/works"
 
 
