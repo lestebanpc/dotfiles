@@ -832,30 +832,43 @@ m_new_or_choose_tmux_session() {
     #Obtener el folder donde estan los archivos de trabajo.
     local l_work_path=''
 
-    if [ ! -z "$1" ]; then
+    if [ ! -z "$1" ] && [ -d "$1" ]; then
         l_work_path="$1"
-    else
-        if [ -d "$HOME/works" ]; then
+    fi
+
+    if [ -z "$l_work_path" ]; then
+
+        if [ ! -z "$MY_WORK_PATH" ] && [ -d "$MY_WORK_PATH" ]; then
+            l_work_path="$MY_WORK_PATH"
+        elif [ -d "$HOME/works" ]; then
             l_work_path="$HOME/works"
         elif [ -d "$HOME/work" ]; then
             l_work_path="$HOME/work"
         else
             l_work_path="$HOME"
         fi
+
     fi
 
     # Obtener el folder donde estan los proyectos git
     local l_git_path=''
 
-    if [ ! -z "$2" ]; then
+    if [ ! -z "$2" ] && [ -d "$1" ]; then
         l_git_path="$2"
-    else
-        if [ -d "$HOME/code" ]; then
+    fi
+
+    if [ -z "$l_git_path" ]; then
+
+        if [ ! -z "$MY_GIT_PATH" ] && [ -d "$MY_GIT_PATH" ]; then
+            l_work_path="$MY_GIT_PATH"
+        elif [ -d "$HOME/code" ]; then
             l_git_path="$HOME/code"
         else
             l_git_path="$HOME"
         fi
+
     fi
+
 
     # Escoger el nombre de la sesion o la ruta de inicio de la sesion
     local l_title=''

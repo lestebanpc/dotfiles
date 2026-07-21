@@ -330,6 +330,7 @@ local mod= {
     -- Ruta del folder donde buscar los repositorios git, donde se encuentra diferentes proyectos 'git', usados para crear un workspace asociado
     -- a path del dominio local y dominios tipos unix (asociados servidor IPC locales).
     -- > Se puede usar '~' al inicio para representar el 'home directory' del usuario actual y local.
+    -- > Si no se especifica se usara el definido en la variable de entorno 'MY_GIT_PATH' del host y si este no tiene valor, sera 'nil'.
     root_git_folder = nil,
     --root_git_folder = '~/code',
     --root_git_folder = 'D:/works/mywork/code',
@@ -341,6 +342,7 @@ local mod= {
     --   estos dominios existentes)
     -- > Se puede usar '~' al inicio para representar el 'home directory' del usuario por defecto de la distribucion WSL/distrobox remota.
     -- > Se puede usar '@' al inicio para representar el 'home directory' del usuario actual y local.
+    -- > Si no se especifica se usara el definido en la variable de entorno 'MY_GIT_PATH' del contenedor y si este no tiene valor, sera 'nil'.
     external_root_git_folder = nil,
     --external_root_git_folder = '@/code',
     --external_root_git_folder = '~/code',

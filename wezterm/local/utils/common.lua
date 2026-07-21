@@ -592,12 +592,28 @@ function mod.run_script(p_script, p_os_type, p_distribution_name)
 end
 
 
-function mod.get_home_dir(p_os_type, p_distribution_name)
+function mod.get_env(p_var_name, p_os_type, p_distribution_name)
 
-    if p_distribution_name == nil or p_distribution_name == '' then
-        return mm_wezterm.home_dir
+    if p_var_name == nil or p_var_name == '' then
+        return nil
     end
 
+    -- Si no define la distribucion, se considera una variable del dominio local
+    if p_distribution_name == nil or p_distribution_name == '' then
+
+        local l_value = nil
+        if p_var_name == 'HOME' then
+            l_value = mm_wezterm.home_dir
+        else
+            l_value = os.getenv(p_var_name)
+        end
+
+		--mm_wezterm.log_info("p_var_name (" .. p_var_name .. "): " .. l_value)
+        return l_value
+
+    end
+
+    -- Si se define una distribucion
     local l_args = nil
     local l_use_wsl = false
 
@@ -605,7 +621,7 @@ function mod.get_home_dir(p_os_type, p_distribution_name)
 
         l_args = {
             'wsl.exe', '-d', p_distribution_name, '--',
-            'bash', '-c', 'echo $HOME',
+            'bash', '-c', 'echo $' .. p_var_name,
         }
         l_use_wsl = true
 
@@ -616,14 +632,24 @@ function mod.get_home_dir(p_os_type, p_distribution_name)
             'distrobox', 'enter', '-n', p_distribution_name, '--',
             'bash',
             '-c',
-            'echo $HOME',
+            'echo $' .. p_var_name,
         }
 
     end
 
     -- Si no es una Linux ni Windows
     if l_args == nil then
-        return mm_wezterm.home_dir
+
+        local l_value = nil
+        if p_var_name == 'HOME' then
+            l_value = mm_wezterm.home_dir
+        else
+            l_value = os.getenv(p_var_name)
+        end
+
+		--mm_wezterm.log_info("p_var_name (" .. p_var_name .. "): " .. l_value)
+        return l_value
+
     end
 
     ---@type boolean, string?, string?

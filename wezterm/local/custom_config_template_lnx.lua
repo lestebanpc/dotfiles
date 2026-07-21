@@ -139,8 +139,8 @@ local mod= {
     --   'ps -fea | grep Xwayland'
     -- > En 2026, el soporte a 'Wayland' aun esta en reconstruccion, por lo que el estilo de ventana funciona peor que el de X11.
     -- Si usa un 'Tiling Windows Manager' como 'Hyprland', use la opcion 'true' para tener una mejor experiencia de usuario.
-    enable_wayland = false,
-    --enable_wayland = true,
+    --enable_wayland = false,
+    enable_wayland = true,
 
     -- Si establece en false la navegacion solo lo puede hacer usando teclas para ingresa`r al modo copia, busqueda, copia rapida.
     enable_scrollbar = false,
@@ -156,7 +156,7 @@ local mod= {
     -- su tamaño tanto horizontalmente como verticalmente.
     -- > Por defecto su valor es 'true'.
     -- > Si usa un 'Tiling Windows Manager', establezca el valor a 'false'.
-    --adjust_window_size_when_changing_font_size = false,
+    adjust_window_size_when_changing_font_size = false,
 
     -- Estilo a usar en la ventana de la terminal
     --  0 > Se establece el por defecto.
@@ -179,8 +179,8 @@ local mod= {
     --  6 > Muestra el 'title bar', SOLO muestra el 'tab bar' si existe mas de 1 tab y usando 'window_decorations' con 'TITLE|RESIZE'.
     --  7 > Muestra el 'title bar', SIEMPRE muestra el 'tab bar' y usando 'window_decorations' con 'TITLE|RESIZE'.
     -- Si usa un 'Tiling Windows Manager', use la opcion '1' o '3'.
-    windows_style = 7,
-    --windows_style = 1,
+    windows_style = 1,
+    --windows_style = 7,
 
     -- Solo usado cuando 'windows_style' es 3 (cuando se crea los botones dinamicamente) y cuando use GNOME.
     -- Si es 'false', se usa el estilo de botones similar a Windows (comportamiento por defecto).
@@ -337,6 +337,7 @@ local mod= {
     -- Ruta del folder donde buscar los repositorios git, donde se encuentra diferentes proyectos 'git', usados para crear un workspace asociado
     -- a path del dominio local y dominios tipos unix (asociados servidor IPC locales).
     -- > Se puede usar '~' al inicio para representar el 'home directory' del usuario actual y local.
+    -- > Si no se especifica se usara el definido en la variable de entorno 'MY_GIT_PATH' del host y si este no tiene valor, sera 'nil'.
     --root_git_folder = nil,
     root_git_folder = '~/code',
     --root_git_folder = '~/works/mywork/code',
@@ -348,6 +349,7 @@ local mod= {
     --   estos dominios existentes)
     -- > Se puede usar '~' al inicio para representar el 'home directory' del usuario por defecto de la distribucion WSL/distrobox remota.
     -- > Se puede usar '@' al inicio para representar el 'home directory' del usuario actual y local.
+    -- > Si no se especifica se usara el definido en la variable de entorno 'MY_GIT_PATH' del contenedor y si este no tiene valor, sera 'nil'.
     external_root_git_folder = '@/code',
     --external_root_git_folder = nil,
     --external_root_git_folder = '~/code',

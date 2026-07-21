@@ -504,7 +504,15 @@ function mod.setup(p_tags, p_load_local_builtin_tags, p_load_external_builtin_ta
             m_custom.root_git_folder = p_root_git_folder
         end
     else
-        m_custom.root_git_folder = nil
+
+        local l_path = os.getenv("MY_GIT_PATH")
+
+        if p_root_git_folder ~= nil and p_root_git_folder ~= '' then
+            m_custom.root_git_folder = l_path
+        else
+            m_custom.root_git_folder = nil
+        end
+
     end
     m_custom.external_root_git_folder = p_external_root_git_folder
     m_custom.fd_path = p_fd_path
@@ -863,7 +871,7 @@ local function m_get_tags_of_domain(p_domain_info, p_is_local)
                     if string.sub(l_real_path, 1, 1) == '~' then
 
                         if l_home_dir == nil then
-                            l_home_dir = mm_udomain.get_home_directory_of_domain1(p_domain_info)
+                            l_home_dir = mm_udomain.get_env_of_domain1('HOME', p_domain_info)
                         end
 
                         if l_home_dir ~= nil and l_home_dir ~= '' then
@@ -1022,28 +1030,50 @@ local function m_get_git_folders(p_domain_info)
         l_root_folder = m_custom.root_git_folder
     end
 
-    -- Validar que se definio un folder git
-    if l_root_folder == nil or l_root_folder == '' then
-	    mm_wezterm.log_error("It does not define the git base path.")
-    end
 
-    -- Si el folder externo inicia con '~', expandirlo
-    if p_domain_info.domain_category ~= 'local' then
+    -- Si un folder del dominio local
+    if p_domain_info.domain_category == 'local' then
 
-        local l_initial_char = string.sub(l_root_folder, 1, 1)
-        local l_home_dir = nil
-
-        if l_initial_char == '~' then
-            l_home_dir = mm_udomain.get_home_directory_of_domain1(p_domain_info)
-        elseif l_initial_char == '@' then
-            l_home_dir = mm_wezterm.home_dir
+        -- Mostrar advertencia si no se definio la ruta del folder git
+        if l_root_folder == nil or l_root_folder == '' then
+	        mm_wezterm.log_error("It does not define the git base path.")
         end
-        --mm_wezterm.log_info(l_home_dir)
 
-        if l_home_dir ~= nil and l_home_dir ~= '' then
+    -- Si un folder del dominio remoto
+    else
+
+        -- Si no define el valor, usar el valor de la variable de entorno 'MY_GIT_PATH'
+        if l_root_folder == nil or l_root_folder == '' then
+            l_root_folder = mm_udomain.get_env_of_domain1('MY_GIT_PATH', p_domain_info)
+        end
+
+        -- Expandir '~' y/o '@' si se requiere realizarlo
+        if l_root_folder == nil or l_root_folder == '' then
+
+            -- Si el folder externo inicia con '~', expandirlo
+            local l_initial_char = string.sub(l_root_folder, 1, 1)
+            local l_home_dir = nil
+
+            if l_initial_char == '~' then
+                l_home_dir = mm_udomain.get_env_of_domain1('HOME', p_domain_info)
+            elseif l_initial_char == '@' then
+                l_home_dir = mm_wezterm.home_dir
+            end
+            --mm_wezterm.log_info(l_home_dir)
+
+            if l_home_dir ~= nil and l_home_dir ~= '' then
                 l_root_folder = l_home_dir .. string.sub(l_root_folder,2)
+            end
+            --mm_wezterm.log_info(l_root_folder)
+
         end
+
         --mm_wezterm.log_info(l_root_folder)
+
+        -- Mostrar advertencia si no se definio la ruta del folder git
+        if l_root_folder == nil or l_root_folder == '' then
+	        mm_wezterm.log_error("It does not define the git base path.")
+        end
 
     end
     --mm_wezterm.log_info(l_root_folder)
@@ -1355,7 +1385,7 @@ local function m_add_choices_of_domain(p_choices, p_tags, p_folders, p_use_zoxid
     end
 
     -- 2. Obtener el 'home dir' asociado al dominio
-    local l_home_dir = mm_udomain.get_home_directory_of_domain1(p_domain_info)
+    local l_home_dir = mm_udomain.get_env_of_domain1('HOME', p_domain_info)
     --mm_wezterm.log_info(l_home_dir)
     --mm_wezterm.log_info(p_folders)
 

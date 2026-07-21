@@ -137,6 +137,22 @@
 # es 1 ('false').
 #export YANK_TO_CB=1
 
+# Variable usado para definir la ruta del folder padre donde estan los repositorios git.
+# > Usos :
+#   - Por WezTerm
+#     > Listar los folderes git para crear workspace wezterm usando dicha ruta.
+#   - Por script `~/.local/bin/tmuxu`
+#     > El comando `s` (alias de `tmuxu new_session`) usa dicha valor si no se especifica las opción `-g GIT_FOLDER`.
+# > Si no se define, se valor sera: '~/code'
+#export MY_GIT_PATH="$HOME/code"
+
+# Variable usado para definir la ruta del folder padre donde estan los repositorios git.
+# > Usos :
+#   - Por script `~/.local/bin/tmuxu`
+#     > El comando `s` (alias de `tmuxu new_session`) usa dicha valor si no se especifica las opción `-w WORK_FOLDER`.
+# > Si no se define, se valor sera: '~/works' o '~/work' (en ese orden de prioridad).
+#export MY_WORK_PATH="$HOME/works"
+
 
 #-----------------------------------------------------------------------------------
 # Variables de entorno (personalizacion)

@@ -1264,46 +1264,47 @@ function mod.get_domain_info(p_domain_name)
 end
 
 
-function mod.get_home_directory_of_domain1(p_domain_info)
+function mod.get_env_of_domain1(p_env_name, p_domain_info)
 
-    -- Si esta en el cache, devolverlo
-    local l_home_dir = m_domain_home_dirs[p_domain_info.name]
-    if l_home_dir ~= nil then
-        return l_home_dir
+    if p_env_name == 'HOME' then
+
+        -- Si esta en el cache, devolverlo
+        local l_home_dir = m_domain_home_dirs[p_domain_info.name]
+        if l_home_dir ~= nil then
+            return l_home_dir
+        end
+
     end
 
-    -- Si NO esta en el cache, obtenerlo
-    if p_domain_info.domain_category == 'local' then
-        l_home_dir = mm_wezterm.home_dir
-        return l_home_dir
-    end
-
+    -- Obtener la distribucion asociado al dominio
     local l_distribution = nil
     if p_domain_info.domain_category == 'wsl' then
         l_distribution = p_domain_info.data.distribution
     elseif p_domain_info.domain_category == 'distrobox' then
         l_distribution = p_domain_info.ex_data.name
-    else
-        return nil
     end
 
-    -- 4. Obtener el 'home dir' asociado al dominio
-    l_home_dir = mm_ucommon.get_home_dir(m_os_type, l_distribution)
-    m_domain_home_dirs[p_domain_info.name] = l_home_dir
+    -- Obtener la variable de entorno
+    local l_env_value = mm_ucommon.get_env(p_env_name, m_os_type, l_distribution)
 
-    return l_home_dir
+    -- Alacenarlo en el cache
+    if p_env_name == 'HOME' then
+        m_domain_home_dirs[p_domain_info.name] = l_env_value
+    end
+
+    return l_env_value
 
 end
 
 
-function mod.get_home_directory_of_domain2(p_domain_name)
+function mod.get_env_of_domain2(p_env_name, p_domain_name)
 
     local l_domain_info = mod.get_domain_info(p_domain_name)
     if l_domain_info == nil then
         return nil
     end
 
-    return mod.get_home_directory_of_domain1(l_domain_info)
+    return mod.get_env_of_domain1(p_env_name, l_domain_info)
 
 end
 
