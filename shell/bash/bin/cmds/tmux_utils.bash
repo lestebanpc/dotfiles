@@ -860,7 +860,7 @@ m_new_or_choose_tmux_session() {
     if [ -z "$l_git_path" ]; then
 
         if [ ! -z "$MY_GIT_PATH" ] && [ -d "$MY_GIT_PATH" ]; then
-            l_work_path="$MY_GIT_PATH"
+            l_git_path="$MY_GIT_PATH"
         elif [ -d "$HOME/code" ]; then
             l_git_path="$HOME/code"
         else
@@ -872,7 +872,7 @@ m_new_or_choose_tmux_session() {
 
     # Escoger el nombre de la sesion o la ruta de inicio de la sesion
     local l_title=''
-    printf -v l_title "%bSession%b: (%bctrl+t%b) show active, (%bctrl+i%b) show configured, (%bctrl+d%b) kill.\n%bSession + Zoxide%b folders: (%bctrl+a%b). %bZoxide%b folders: (%bctrl+x%b).\n%bSubfolders%b of %b%s%b: (%bctrl+g%b) git, %bSubfolders%b of %b%s%b: (%bctrl+f%b) work" \
+    printf -v l_title "%bSession%b: (%bctrl+t%b) show active, (%bctrl+i%b) show configured, (%bctrl+d%b) kill.\n%bSession + Zoxide%b folders: (%bctrl+a%b). %bZoxide%b folders: (%bctrl+x%b).\n%bGit%b folders %b%s%b: (%bctrl+g%b), %bWork%b folders %b%s%b: (%bctrl+f%b)" \
            "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
            "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" "$g_color_green1" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
            "$g_color_green1" "$g_color_reset" "$g_color_cian1" "${l_git_path/#$HOME/\~}" "$g_color_reset" "$g_color_cian1" "$g_color_reset" \
