@@ -139,8 +139,8 @@ local mod= {
     --   'ps -fea | grep Xwayland'
     -- > En 2026, el soporte a 'Wayland' aun esta en reconstruccion, por lo que el estilo de ventana funciona peor que el de X11.
     -- Si usa un 'Tiling Windows Manager' como 'Hyprland', use la opcion 'true' para tener una mejor experiencia de usuario.
-    --enable_wayland = false,
     enable_wayland = true,
+    --enable_wayland = false,
 
     -- Si establece en false la navegacion solo lo puede hacer usando teclas para ingresa`r al modo copia, busqueda, copia rapida.
     enable_scrollbar = false,
@@ -150,7 +150,8 @@ local mod= {
 
     -- Specifies the size of the font, measured in points. You may use fractional point sizes, such as 13.3, to fine tune the size.
     -- > The default font size is 12.0
-    font_size = 10.5,
+    font_size = 10,
+    --font_size = 10.5,
 
     -- Si su valor es 'true' (default), cuando el tamano de la fuente se incrementa/decrementa, la ventana tambien incrementa/decrementa
     -- su tamaño tanto horizontalmente como verticalmente.
@@ -191,8 +192,8 @@ local mod= {
     -- Sus valores puede ser:
     --  > 0 (SmartPrompt)
     --    > Preguntar solo en algunos casos (default).
-    --    > Muestra el prompt cuando WezTerm considera que cerrar podría interrumpir trabajo activo. Por ejemplo, esta ejecutando programas interactivo (vin, htop, etc.),
-    --      procesos largos en curso, etc.
+    --    > Muestra el prompt cuando WezTerm considera que cerrar podría interrumpir trabajo activo. Por ejemplo, esta ejecutando programas
+    --      interactivo (vin, htop, etc.), procesos largos en curso, etc.
     --  > 1 (AlwaysPrompt)
     --    > Siempre preguntar.
     --  > 2 (NeverPrompt)
@@ -669,7 +670,7 @@ mod.exec_domain_datas = nil
 mod.workspace_tags = {
     {
         name = 'download',
-        fullpath = '/tempo/download',
+        fullpath = '/dt9/tmp/downloads',
         domain_category = 'local',
     },
 }

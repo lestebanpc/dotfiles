@@ -514,7 +514,11 @@ function mod.setup(p_tags, p_load_local_builtin_tags, p_load_external_builtin_ta
         end
 
     end
+    --mm_wezterm.log_info("m_custom.root_git_folder : " .. m_custom.root_git_folder)
+
     m_custom.external_root_git_folder = p_external_root_git_folder
+    --mm_wezterm.log_info("m_custom.external_root_git_folder : " .. m_custom.external_root_git_folder)
+
     m_custom.fd_path = p_fd_path
     m_custom.zoxide_path = p_zoxide_path
     m_custom.zoxide_args = p_zoxide_args
@@ -1031,6 +1035,9 @@ local function m_get_git_folders(p_domain_info)
     end
 
 
+    --mm_wezterm.log_info("Root GIT folder: " .. l_root_folder)
+    --mm_wezterm.log_info("Domain Category: " .. p_domain_info.domain_category)
+
     -- Si un folder del dominio local
     if p_domain_info.domain_category == 'local' then
 
@@ -1048,7 +1055,7 @@ local function m_get_git_folders(p_domain_info)
         end
 
         -- Expandir '~' y/o '@' si se requiere realizarlo
-        if l_root_folder == nil or l_root_folder == '' then
+        if l_root_folder ~= nil and l_root_folder ~= '' then
 
             -- Si el folder externo inicia con '~', expandirlo
             local l_initial_char = string.sub(l_root_folder, 1, 1)
@@ -1083,7 +1090,7 @@ local function m_get_git_folders(p_domain_info)
 
     if not l_exist_commnad then
 
-        if l_distribution == nil and l_distribution == '' then
+        if l_distribution == nil or l_distribution == '' then
 	    	mm_wezterm.log_error("Command 'fd' is not installed.")
         else
 	    	mm_wezterm.log_error("Command 'fd' on '" .. l_distribution .. "' is not installed.")
