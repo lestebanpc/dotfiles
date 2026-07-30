@@ -1,12 +1,12 @@
 #!/bin/bash
 
 #
-# Para habilitar su uso genere el arcivo '~/.custom_profile.bash':
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_local.bash ~/.custom_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_remote.bash ~/.custom_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_distrobox.bash ~/.custom_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_wsl.bash ~/.custom_profile.bash
-#  vim ~/.custom_profile.bash
+# Para habilitar su uso genere el arcivo '~/.config_profile.bash':
+#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_local.bash ~/.config_profile.bash
+#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_remote.bash ~/.config_profile.bash
+#  cp ~/.files/shell/bash/login/profile/profile_config_template_distrobox.bash ~/.config_profile.bash
+#  cp ~/.files/shell/bash/login/profile/profile_config_template_wsl.bash ~/.config_profile.bash
+#  vim ~/.config_profile.bash
 #
 
 #-----------------------------------------------------------------------------------
@@ -159,15 +159,8 @@ export MY_WORK_PATH="/home/lucianoepc/works"
 
 
 #-----------------------------------------------------------------------------------
-# Variables de entorno (personalizacion)
+# Limpiar variables de entorno
 #-----------------------------------------------------------------------------------
-
-# Modificar la variable de entorno PATH
-#[ -d "${MY_TOOLS_PATH}/scrcpy" ] && PATH="$PATH:${MY_TOOLS_PATH}/scrcpy"
-#[ -d "${MY_TOOLS_PATH}/mytool/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/mytool/bin"
-#[ -d "${HOME}/mytool/bin" ] && PATH="$PATH:${HOME}/mytool/bin"
-
-#export PATH
 
 # Establecer el directorio de datos de tmux. No usar el default ('/tmp') debido a que es usado por host.
 export TMUX_TMPDIR="/var/tmp"
@@ -187,17 +180,3 @@ unset TMUX_CONF
 unset TMUX_CUSTOM_CONF
 
 unset TMUX_CLIPBOARD_MODE
-
-
-#-----------------------------------------------------------------------------------
-# Alias
-#-----------------------------------------------------------------------------------
-
-#alias kc='kubectl'
-
-
-#-----------------------------------------------------------------------------------
-# Otros
-#-----------------------------------------------------------------------------------
-
-# Otros

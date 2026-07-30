@@ -72,6 +72,13 @@ m_create_windowrule({ class = "firefox", title = "Picture-in-Picture" }, { float
 -- Zoom
 m_create_windowrule({ class = "zoom" }, { float = true })
 
+-- DMS windows floating by default
+-- ! Hyprland doesn't size these windows correctly so disabling by default here
+-- windowrule = float on, match:class ^(org.quickshell)$
+hl.layer_rule({ match = { namespace = "quickshell" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "^dms:.*" }, no_anim = true })
+
+
 
 ------------------------------------------------------------------------------------
 -- Windows Rule> Aplicaciones basicas

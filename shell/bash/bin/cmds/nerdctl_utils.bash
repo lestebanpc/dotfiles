@@ -43,6 +43,7 @@ declare -A gA_subcmd_alias=(
 # Expresiones regulares de sustitucion mas usuadas para las versiones
 # > La version 'x.y.z' esta la inicio o despues de caracteres no numericos
 declare -r g_regexp_sust_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
+declare -r g_regexp_sust_version2='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
 
 
 
@@ -130,7 +131,7 @@ m_start_nerdctl() {
        printf 'El programa "%b%s%b" no esta instalado.\n' "$g_color_gray1" "containerd" "$g_color_reset"
        return 2
     else
-       l_version=$(echo "$l_version" | sed "$g_regexp_sust_version1")
+       l_version=$(echo "$l_version" | sed "$g_regexp_sust_version2")
        printf 'El programa "%b%s%b" con la versión "%b%s%b" esta instalado.\n' "$g_color_gray1" "containerd" "$g_color_reset" \
               "$g_color_gray1" "$l_version" "$g_color_reset"
     fi
@@ -183,6 +184,7 @@ m_start_nerdctl() {
            "$g_color_cian1" "$l_tag_mode" "$g_color_reset"
 
     #3. Iniciando la unidad systemd
+    local -i l_crt_is_started=1
     if [ $p_root_mode -ne 0 ]; then
         if systemctl --user is-active containerd.service 2>&1 > /dev/null; then
             printf 'La unidad systemd %b%s%b ya esta iniciado.\n' "$g_color_gray1" "containerd.service" "$g_color_reset"
@@ -190,6 +192,7 @@ m_start_nerdctl() {
             printf 'La unidad systemd %b%s%b se esta iniciando: "%b%s%b".\n' "$g_color_cian1" "containerd.service" "$g_color_reset" \
                    "$g_color_gray1" "systemctl --user start containerd.service" "$g_color_reset"
             systemctl --user start containerd.service
+            l_crt_is_started=0
         fi
     else
         if systemctl is-active containerd.service 2>&1 > /dev/null; then
@@ -199,10 +202,12 @@ m_start_nerdctl() {
                 printf 'La unidad systemd %b%s%b se esta iniciando: "%b%s%b".\n' "$g_color_cian1" "containerd.service" "$g_color_reset" \
                        "$g_color_gray1" "systemctl start containerd.service" "$g_color_reset"
                 systemctl start containerd.service
+                l_crt_is_started=0
             else
                 printf 'La unidad systemd %b%s%b se esta iniciando: "%b%s%b".\n' "$g_color_cian1" "containerd.service" "$g_color_reset" \
                        "$g_color_gray1" "sudo systemctl start containerd.service" "$g_color_reset"
                 sudo systemctl start containerd.service
+                l_crt_is_started=0
             fi
         fi
     fi
@@ -216,7 +221,13 @@ m_start_nerdctl() {
             if systemctl --user is-active buildkit.service 2>&1 > /dev/null; then
                 printf 'La unidad systemd %b%s%b ya esta iniciado.\n' "$g_color_gray1" "buildkit.service" "$g_color_reset"
             else
-                sleep 1
+
+                # Esperar un poco hasta que el CRT se inicialize
+                if [ $l_crt_is_started -eq 0 ]; then
+                    printf 'Esperando unos %b%s%b segundos...\n' "$g_color_gray1" "2" "$g_color_reset"
+                    sleep 2
+                fi
+
                 printf 'La unidad systemd %b%s%b se esta iniciando: "%b%s%b".\n' "$g_color_cian1" "buildkit.service" "$g_color_reset" \
                        "$g_color_gray1" "systemctl --user start buildkit.service" "$g_color_reset"
                 systemctl --user start buildkit.service
@@ -225,7 +236,13 @@ m_start_nerdctl() {
             if systemctl is-active buildkit.service 2>&1 > /dev/null; then
                 printf 'La unidad systemd %b%s%b ya esta iniciado.\n' "$g_color_gray1" "buildkit.service" "$g_color_reset"
             else
-                sleep 1
+
+                # Esperar un poco hasta que el CRT inicialize
+                if [ $l_crt_is_started -eq 0 ]; then
+                    printf 'Esperando unos %b%s%b segundos...\n' "$g_color_gray1" "1" "$g_color_reset"
+                    sleep 1
+                fi
+
                 if [ $l_runner_id -eq 0 ]; then
                     printf 'La unidad systemd %b%s%b se esta iniciando: "%b%s%b".\n' "$g_color_cian1" "buildkit.service" "$g_color_reset" \
                            "$g_color_gray1" "systemctl start buildkit.service" "$g_color_reset"
@@ -339,15 +356,28 @@ m_stop_nerdctl() {
            "$g_color_gray1" "$l_tag_mode" "$g_color_reset"
 
     #2. Deteniendo las unidades systemd
+    local -i l_buildkit_is_stopped=1
 
     if [ $p_root_mode -ne 0 ]; then
+
         if systemctl --user is-active buildkit.service 2>&1 > /dev/null; then
             printf 'La unidad systemd %b%s%b se esta deteniendo: "%b%s%b".\n' "$g_color_cian1" "buildkit.service" "$g_color_reset" \
                    "$g_color_gray1" "systemctl --user stop buildkit.service" "$g_color_reset"
             systemctl --user stop buildkit.service
+            l_buildkit_is_stopped=0
         else
             printf 'La unidad systemd %b%s%b ya esta detenido.\n' "$g_color_gray1" "buildkit.service" "$g_color_reset"
         fi
+
+        # No existe en rootless
+        #if systemctl --user is-active buildkit.socket 2>&1 > /dev/null; then
+        #    printf 'La unidad systemd %b%s%b se esta deteniendo: "%b%s%b".\n' "$g_color_cian1" "buildkit.socket" "$g_color_reset" \
+        #           "$g_color_gray1" "systemctl --user stop buildkit.socket" "$g_color_reset"
+        #    systemctl --user stop buildkit.socket
+        #else
+        #    printf 'La unidad systemd %b%s%b ya esta deteniendo.\n' "$g_color_gray1" "buildkit.socket" "$g_color_reset"
+        #fi
+
     else
 
         if systemctl is-active buildkit.service 2>&1 > /dev/null; then
@@ -355,10 +385,12 @@ m_stop_nerdctl() {
                 printf 'La unidad systemd %b%s%b se esta deteniendo: "%b%s%b".\n' "$g_color_cian1" "buildkit.service" "$g_color_reset" \
                        "$g_color_gray1" "systemctl stop buildkit.service" "$g_color_reset"
                 systemctl stop buildkit.service
+                l_buildkit_is_stopped=0
             else
                 printf 'La unidad systemd %b%s%b se esta deteniendo: "%b%s%b".\n' "$g_color_cian1" "buildkit.service" "$g_color_reset" \
                        "$g_color_gray1" "sudo systemctl stop buildkit.service" "$g_color_reset"
                 sudo systemctl stop buildkit.service
+                l_buildkit_is_stopped=0
             fi
         else
             printf 'La unidad systemd %b%s%b ya esta deteniendo.\n' "$g_color_gray1" "buildkit.service" "$g_color_reset"
@@ -367,7 +399,7 @@ m_stop_nerdctl() {
         if systemctl is-active buildkit.socket 2>&1 > /dev/null; then
             if [ $l_runner_id -eq 0 ]; then
                 printf 'La unidad systemd %b%s%b se esta deteniendo: "%b%s%b".\n' "$g_color_cian1" "buildkit.socket" "$g_color_reset" \
-                       "$g_color_gray1" "systemctl stop containerd.socket" "$g_color_reset"
+                       "$g_color_gray1" "systemctl stop buildkit.socket" "$g_color_reset"
                 systemctl stop buildkit.socket
             else
                 printf 'La unidad systemd %b%s%b se esta deteniendo: "%b%s%b".\n' "$g_color_cian1" "buildkit.socket" "$g_color_reset" \
@@ -375,22 +407,36 @@ m_stop_nerdctl() {
                 sudo systemctl stop buildkit.socket
             fi
         else
-            printf 'La unidad systemd %b%s%b ya esta deteniendo.\n' "$g_color_gray1" "containerd.socket" "$g_color_reset"
+            printf 'La unidad systemd %b%s%b ya esta deteniendo.\n' "$g_color_gray1" "builkit.socket" "$g_color_reset"
         fi
 
     fi
 
     if [ $p_root_mode -ne 0 ]; then
         if systemctl --user is-active containerd.service 2>&1 > /dev/null; then
-            sleep 1
+
+            # Esperar un poco hasta que el builkit finalize
+            if [ $l_buildkit_is_stopped -eq 0 ]; then
+                printf 'Esperando unos %b%s%b segundos...\n' "$g_color_gray1" "2" "$g_color_reset"
+                sleep 2
+            fi
+
             printf 'La unidad systemd %b%s%b se esta deteniendo: "%b%s%b".\n' "$g_color_cian1" "containerd.service" "$g_color_reset" \
                    "$g_color_gray1" "systemctl --user stop containerd.service" "$g_color_reset"
             systemctl --user stop containerd.service
+
         else
             printf 'La unidad systemd %b%s%b ya esta detenido.\n' "$g_color_gray1" "containerd.service" "$g_color_reset"
         fi
     else
         if systemctl is-active containerd.service 2>&1 > /dev/null; then
+
+            # Esperar un poco hasta que el builkit finalize
+            if [ $l_buildkit_is_stopped -eq 0 ]; then
+                printf 'Esperando unos %b%s%b segundos...\n' "$g_color_gray1" "1" "$g_color_reset"
+                sleep 1
+            fi
+
             if [ $l_runner_id -eq 0 ]; then
                 printf 'La unidad systemd %b%s%b se esta deteniendo: "%b%s%b".\n' "$g_color_cian1" "containerd.service" "$g_color_reset" \
                        "$g_color_gray1" "systemctl stop containerd.service" "$g_color_reset"
@@ -400,6 +446,7 @@ m_stop_nerdctl() {
                        "$g_color_gray1" "sudo systemctl stop containerd.service" "$g_color_reset"
                 sudo systemctl stop containerd.service
             fi
+
         else
             printf 'La unidad systemd %b%s%b ya esta deteniendo.\n' "$g_color_gray1" "containerd.service" "$g_color_reset"
         fi

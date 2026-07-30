@@ -54,6 +54,9 @@ declare -A gA_subcmd_ids=(
         ['container']='Lista los contenedor de los pod dentro de un namespace'
         ['deployment']='Lista los deployments de un determinado namespace'
         ['replicaset']='Lista los deployments de un determinado namespace'
+        ['logs']='Obtiene los logs de pod de un namespace y los almacena en archivos de texto'
+        #['delete']='Elimina pod de un namespace, descargado antes sus archivos logs'
+        ['restart']='Reinicia los pod de deployment(s) de un namespace, descargando antes sus archivos logs'
     )
 
 
@@ -104,6 +107,7 @@ if [ ! -d "$g_tmpfile_path" ]; then
     mkdir -p "$g_tmpfile_path"
 fi
 
+declare -r g_max_length_line=110
 
 # Se requiere tener:
 # > No colisiona entre usuarios.
@@ -156,14 +160,27 @@ _g_temfile_fullpath=""
 
 _g_data_object_json=""
 
-_g_use_cache_before=1
-_g_preserve_cache_after=1
+declare -i _g_use_cache_before=1
+declare -i _g_preserve_cache_after=1
 
-
+declare -i _g_use_one_object=1
 
 # -------------------------------------------------------------------------------------
 # General functions
 # -------------------------------------------------------------------------------------
+
+#Parametros de entrada:
+#  1 > caracter de la cual esta formada la linea
+#  2 > Tamaño de caracteres la linea
+#  3 > Color de la linea
+print_line() {
+
+    printf '%b' "$3"
+    #Usar -- para no se interprete como linea de comandos y puede crearse lienas con - (usado en opcion de un comando)
+    printf -- "${1}%.0s" $(seq $2)
+    printf '%b\n' "$g_color_reset"
+
+}
 
 # Obtener los alias asociados del subcomando ID
 m_get_alias_by_subcmd_id() {
@@ -227,6 +244,429 @@ _fzf_kc_get_context_info() {
         fi
     fi
 }
+
+
+m_get_pod_logs() {
+
+    #1. Argumentos
+    local p_pod_name="$1"
+    local p_pod_ns="$2"
+    local p_path_dir="$3"
+
+    local -i p_flag_show_timestamp=1
+    if [ "$4" = "0" ]; then
+        p_flag_show_timestamp=0
+    fi
+
+    local -i p_flag_save_json=1
+    if [ "$5" = "0" ]; then
+        p_flag_save_json=0
+    fi
+
+    local -i p_flag_save_all_main=1
+    if [ "$6" = "0" ]; then
+        p_flag_save_all_main=0
+    fi
+
+    local -i p_flag_save_all_init=1
+    if [ "$7" = "0" ]; then
+        p_flag_save_all_init=0
+    fi
+
+    local -i p_flag_save_all_ephemeral=1
+    if [ "$8" = "0" ]; then
+        p_flag_save_all_ephemeral=0
+    fi
+
+    local -i p_file_sufix_nodename=1
+    if [ "$9" = "0" ]; then
+        p_file_sufix_nodename=0
+    fi
+
+    local -i p_file_sufix_containername=0
+    if [ "${10}" != "0" ]; then
+        p_file_sufix_containername=1
+    fi
+
+    local -i p_file_sufix_time=1
+    if [ "${11}" = "0" ]; then
+        p_file_sufix_time=0
+    fi
+
+    #2. Obtener el descriptor json del pod
+    local l_data_json
+    local -i l_status=0
+    l_data_json=$(kubectl get pod -n "$p_pod_ns" "$p_pod_name" -o json 2> /dev/null)
+    l_status=$?
+
+    if [ $l_status -ne 0 ] || [ -z "$l_data_json" ]; then
+        printf 'No se puede obtener el descriptor del pod "%b%s%b/%b%s%b".\n' "$g_color_gray1" "$p_pod_ns" "$g_color_reset" \
+                "$g_color_gray1" "$p_pod_name" "$g_color_reset"
+        return 1
+    fi
+
+    #3. Obtener el sufijo fijo del pod
+    local l_suffix_begin=''
+    local l_tmp
+
+    # Obtener el nombre del nodo donde esta el pod
+    l_tmp=$(echo "$l_data_json" | jq -r '.spec.nodeName')
+
+    if [ ! -z "$l_tmp" ]; then
+
+        printf '  NodeName         : %b%s%b\n' "$g_color_gray1" "$l_tmp" "$g_color_reset"
+
+        if [ $p_file_sufix_nodename -eq 0 ]; then
+            l_suffix_begin="_${l_tmp}"
+        fi
+
+    fi
+
+    local l_suffix_end=''
+    if [ $p_file_sufix_time -eq 0 ]; then
+        l_suffix_end="_$(date +'%Y%m%d_%H%M')"
+    fi
+
+    if [ $p_flag_show_timestamp -eq 0 ]; then
+        printf '  Features         : %bshow timestamps%b\n' "$g_color_gray1" "$g_color_reset"
+    else
+        printf '  Features         : not %bshow timestamps%b\n' "$g_color_gray1" "$g_color_reset"
+    fi
+
+
+    #4. Obtener los contenedores principales
+    local -a la_containers_main=()
+
+    # Obtener el contenedor por defecto
+    l_tmp=$(echo "$l_data_json" | jq -r '.metadata.annotations."kubectl.kubernetes.io/default-container"')
+    l_status=$?
+    if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ] && [ "$l_tmp" != "null" ]; then
+        printf '  Default Container: %b%s%b\n' "$g_color_gray1" "$l_tmp" "$g_color_reset"
+        la_containers_main=(${l_tmp})
+    else
+        l_tmp=""
+    fi
+
+    #echo "l_flag_save_all_main: ${p_flag_save_all_main}"
+
+    if [ -z "$l_tmp" ] || [ $p_flag_save_all_main -eq 0 ]; then
+        l_tmp=$(echo "$l_data_json" | jq -r '.spec.containers[].name')
+        la_containers_main=(${l_tmp})
+    fi
+
+    #5. Obtener los contenedores de inicializacion
+    local -a la_containers_init=()
+    if [ $p_flag_save_all_init -eq 0 ]; then
+        l_tmp=$(echo "$l_data_json" | jq -r '.spec.initContainers[]?.name')
+        l_status=$?
+
+        if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ] && [ "$l_tmp" != "null" ]; then
+            la_containers_init=(${l_tmp})
+        fi
+    fi
+
+    #6. Obtener los contenedores epheremal
+    local -a la_containers_ephemeral=()
+    if [ $p_flag_save_all_ephemeral -eq 0 ]; then
+        l_tmp=$(echo "$l_data_json" | jq -r '.spec.ephemeralContainers[]?.name')
+        l_status=$?
+
+        if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ] && [ "$l_tmp" != "null" ]; then
+            la_containers_ephemeral=(${l_tmp})
+        fi
+    fi
+
+    #7. Almacenar el descriptor
+    local l_filename
+    if [ $p_flag_save_json -eq 0 ]; then
+
+        l_filename="${p_pod_name}${l_suffix_begin}${l_suffix_end}.json"
+        if [ ! -z "$p_path_dir" ]; then
+            l_filename="${p_path_dir}/${l_filename}"
+        fi
+
+        printf '  Descriptor       : %b%s%b\n' "$g_color_gray1" "$l_filename" "$g_color_reset"
+        echo "$l_data_json" > "$l_filename"
+        #echo "$l_data_json" | jq "." > "$l_filename"
+
+    fi
+
+
+    #8. Mostrar los log de los contenedores
+    local l_container_name
+
+    local -i l_i=0
+    local -i l_n=0
+    l_n=${#la_containers_main[@]}
+
+    # Mostrar los logs de los contenedores principales
+    local l_container_json2
+    local l_jq_query2='.status?.containerStatuses[]? | select(.name == $container)'
+    local l_restart_count=0
+
+    if [ $l_n -gt 0 ]; then
+
+        if [ $p_flag_save_all_main -eq 0 ]; then
+            printf '  > Main Containers     : %b%s%b (%ball%b)\n' "$g_color_gray1" "$l_n" "$g_color_reset" \
+                   "$g_color_gray1" "$g_color_reset"
+        else
+            l_n=1
+            printf '  > Main Containers     : %b%s%b (%bonly-one%b)\n' "$g_color_gray1" "$l_n" "$g_color_reset" \
+                   "$g_color_gray1" "$g_color_reset"
+        fi
+
+        for((l_i = 0; l_i < l_n; l_i++)); do
+
+            # Obtener el contenedor
+            l_container_name="${la_containers_main[$l_i]}"
+            if [ -z "$l_container_name" ]; then
+                continue
+            fi
+
+            printf '    Container name      : %b%s%b\n' "$g_color_gray1" "$l_container_name" "$g_color_reset"
+
+            # Obtener el estado del contenedor
+            l_container_json2=$(echo "$l_data_json" | jq --arg container "$l_container_name" "$l_jq_query2")
+            l_status=$?
+
+            if [ $l_status -eq 0 ] && [ ! -z "$l_data_json" ] && [ "$l_data_json" != "null" ]; then
+
+                # Nombre de la imagen (usando tag)
+                l_tmp=$(echo "$l_container_json2" | jq -r '.image')
+                l_status=$?
+
+                if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+                    printf '    Image               : %b%s%b\n' "$g_color_gray1" "$l_tmp" "$g_color_reset"
+                fi
+
+                # Nombre de la imagen (usando hash)
+                l_tmp=$(echo "$l_container_json2" | jq -r '.imageID')
+                l_status=$?
+
+                if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+                    printf '    Image ID            : %b%s%b\n' "$g_color_gray1" "$l_tmp" "$g_color_reset"
+                fi
+
+                # Reinicios del contenedor
+                l_tmp=$(echo "$l_container_json2" | jq -r '.restartCount')
+                l_status=$?
+
+                l_restart_count=0
+
+                if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+
+                    l_restart_count="$l_tmp"
+                    if [ "$l_restart_count" != "0"  ]; then
+                        printf '    Restart Count       : %b%s%b\n' "$g_color_gray1" "$l_restart_count" "$g_color_reset"
+                    fi
+                fi
+
+            fi
+
+            # Obtener el nombre de archivo del log
+            if [ $p_file_sufix_containername -eq 0 ]; then
+                l_filename="${p_pod_name}${l_suffix_begin}_${l_container_name}${l_suffix_end}"
+            else
+                l_filename="${p_pod_name}${l_suffix_begin}${l_suffix_end}"
+            fi
+
+            if [ ! -z "$p_path_dir" ]; then
+                l_filename="${p_path_dir}/${l_filename}"
+            fi
+            printf '    Log filename        : %b%s%b\n' "$g_color_gray1" "${l_filename}.log" "$g_color_reset"
+
+            # Mostrar el log del contenedor
+            if [ $p_flag_show_timestamp -eq 0 ]; then
+                printf '    %bkubectl logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
+                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
+            else
+                printf '    %bkubectl logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
+                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}.log"
+            fi
+
+            # Si el numero de reinicios es mayor a 0 y el estado actual es diferente a 'Completed' o 'Running', almacenar el log '--previous' o '-p'
+
+        done
+
+    fi
+
+    # Mostrar los logs de los contenedores de inicializacion
+    l_n=${#la_containers_init[@]}
+
+    if [ $l_n -gt 0 ]; then
+
+        printf '  > Init Containers     : %b%s%b\n' "$g_color_gray1" "$l_n" "$g_color_reset"
+
+        l_jq_query2='.status?.initContainerStatuses[]? | select(.name == $container)'
+
+        for((l_i = 0; l_i < l_n; l_i++)); do
+
+            # Obtener el contenedor
+            l_container_name="${la_containers_init[$l_i]}"
+            if [ -z "$l_container_name" ]; then
+                continue
+            fi
+
+            printf '    Container name      : %b%s%b\n' "$g_color_gray1" "$l_container_name" "$g_color_reset"
+
+            # Obtener el estado del contenedor
+            l_container_json2=$(echo "$l_data_json" | jq --arg container "$l_container_name" "$l_jq_query2")
+            l_status=$?
+
+            if [ $l_status -eq 0 ] && [ ! -z "$l_data_json" ] && [ "$l_data_json" != "null" ]; then
+
+                # Nombre de la imagen (usando tag)
+                l_tmp=$(echo "$l_container_json2" | jq -r '.image')
+                l_status=$?
+
+                if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+                    printf '    Image               : %b%s%b\n' "$g_color_gray1" "$l_tmp" "$g_color_reset"
+                fi
+
+                # Nombre de la imagen (usando hash)
+                l_tmp=$(echo "$l_container_json2" | jq -r '.imageID')
+                l_status=$?
+
+                if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+                    printf '    Image ID            : %b%s%b\n' "$g_color_gray1" "$l_tmp" "$g_color_reset"
+                fi
+
+                # Reinicios del contenedor
+                l_tmp=$(echo "$l_container_json2" | jq -r '.restartCount')
+                l_status=$?
+
+                l_restart_count=0
+
+                if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+
+                    l_restart_count="$l_tmp"
+                    if [ "$l_restart_count" != "0"  ]; then
+                        printf '    Restart Count       : %b%s%b\n' "$g_color_gray1" "$l_restart_count" "$g_color_reset"
+                    fi
+                fi
+
+            fi
+
+            # Obtener el nombre de archivo del log
+            if [ $p_file_sufix_containername -eq 0 ]; then
+                l_filename="${p_pod_name}${l_suffix_begin}_${l_container_name}${l_suffix_end}"
+            else
+                l_filename="${p_pod_name}${l_suffix_begin}${l_suffix_end}"
+            fi
+
+            if [ ! -z "$p_path_dir" ]; then
+                l_filename="${p_path_dir}/${l_filename}"
+            fi
+            printf '    Log filename        : %b%s%b\n' "$g_color_gray1" "${l_filename}.log" "$g_color_reset"
+
+            # Mostrar el log del contenedor
+            if [ $p_flag_show_timestamp -eq 0 ]; then
+                printf '    %bkubectl logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
+                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
+            else
+                printf '    %bkubectl logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
+                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}.log"
+            fi
+
+            # Si el numero de reinicios es mayor a 0 y el estado actual es diferente a 'Completed' o 'Running', almacenar el log '--previous' o '-p'
+
+        done
+
+    fi
+
+    # Mostrar los logs de los contenedores de inicializacion
+    l_n=${#la_containers_ephemeral[@]}
+
+    if [ $l_n -gt 0 ]; then
+
+        printf '  > Ephemeral containers: %b%s%b\n' "$g_color_gray1" "$l_n" "$g_color_reset"
+
+        l_jq_query2='.status?.ephemeralContainerStatuses[]? | select(.name == $container)'
+        for((l_i = 0; l_i < l_n; l_i++)); do
+
+            # Obtener el contenedor
+            l_container_name="${la_containers_ephemeral[$l_i]}"
+            if [ -z "$l_container_name" ]; then
+                continue
+            fi
+
+            printf '    Container name      : %b%s%b\n' "$g_color_gray1" "$l_container_name" "$g_color_reset"
+
+            # Obtener el estado del contenedor
+            l_container_json2=$(echo "$l_data_json" | jq --arg container "$l_container_name" "$l_jq_query2")
+            l_status=$?
+
+            if [ $l_status -eq 0 ] && [ ! -z "$l_data_json" ] && [ "$l_data_json" != "null" ]; then
+
+                # Nombre de la imagen (usando tag)
+                l_tmp=$(echo "$l_container_json2" | jq -r '.image')
+                l_status=$?
+
+                if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+                    printf '    Image               : %b%s%b\n' "$g_color_gray1" "$l_tmp" "$g_color_reset"
+                fi
+
+                # Nombre de la imagen (usando hash)
+                l_tmp=$(echo "$l_container_json2" | jq -r '.imageID')
+                l_status=$?
+
+                if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+                    printf '    Image ID            : %b%s%b\n' "$g_color_gray1" "$l_tmp" "$g_color_reset"
+                fi
+
+                # Reinicios del contenedor
+                l_tmp=$(echo "$l_container_json2" | jq -r '.restartCount')
+                l_status=$?
+
+                l_restart_count=0
+
+                if [ $l_status -eq 0 ] && [ ! -z "$l_tmp" ]; then
+
+                    l_restart_count="$l_tmp"
+                    if [ "$l_restart_count" != "0"  ]; then
+                        printf '    Restart Count       : %b%s%b\n' "$g_color_gray1" "$l_restart_count" "$g_color_reset"
+                    fi
+                fi
+
+            fi
+
+            # Obtener el nombre de archivo del log
+            if [ $p_file_sufix_containername -eq 0 ]; then
+                l_filename="${p_pod_name}${l_suffix_begin}_${l_container_name}${l_suffix_end}"
+            else
+                l_filename="${p_pod_name}${l_suffix_begin}${l_suffix_end}"
+            fi
+
+            if [ ! -z "$p_path_dir" ]; then
+                l_filename="${p_path_dir}/${l_filename}"
+            fi
+            printf '    Log filename        : %b%s%b\n' "$g_color_gray1" "${l_filename}.log" "$g_color_reset"
+
+            # Mostrar el log del contenedor
+            if [ $p_flag_show_timestamp -eq 0 ]; then
+                printf '    %bkubectl logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
+                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
+            else
+                printf '   %bkubectl logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
+                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}.log"
+            fi
+
+            # Si el numero de reinicios es mayor a 0 y el estado actual es diferente a 'Completed' o 'Running', almacenar el log '--previous' o '-p'
+
+        done
+
+    fi
+
+    return 0
+
+}
+
 
 
 
@@ -309,17 +749,40 @@ open_terminal1() {
         l_mode_exit=0
     fi
 
+    local -i p_use_one_object=1
+    if [ "$6" = "0"  ]; then
+        p_use_one_object=0
+    fi
+
+    # Si la data tiene un conjunto de items, obtener solo uno de ellos
+    local l_jq_query
+    local l_data_object_json
+
+    if [ $p_use_one_object -ne 0 ]; then
+
+        l_jq_query='[.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | { containers: .spec.containers, statuses: .status.containerStatuses } | { container: .containers[], statuses: .statuses } | .container.name as $name | { spec: .container, status: (.statuses[] | select(.name == $name)) } | select(.status.started) ]'
+
+        l_data_object_json=$(jq --arg objName "$1" --arg objNS "$2" "$l_jq_query" "$5" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf "Error al obtener la data de los contenedores del pod.\n"
+            return 1
+        fi
+
+    else
+
+        l_jq_query='[ { containers: .spec.containers, statuses: .status.containerStatuses } | { container: .containers[], statuses: .statuses } | .container.name as $name | { spec: .container, status: (.statuses[] | select(.name == $name)) } | select(.status.started) ]'
+
+        l_data_object_json=$(cat "$5" | jq "$l_jq_query" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf "Error al obtener la data de los contenedores del pod.\n"
+            return 1
+        fi
+
+    fi
+
     #1. Obtener informacion de los contenedores del pod que tiene puertos (y luego limpiar esta data temporal)
 
     #Obtener el arreglo de los contenedores habilitados ({ spec: .spec.containers[x], status: .status.containerStatuses[x] } donde x esta vinculado al mismo contenedor).
-    local l_jq_query='[.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | { containers: .spec.containers, statuses: .status.containerStatuses } | { container: .containers[], statuses: .statuses } | .container.name as $name | { spec: .container, status: (.statuses[] | select(.name == $name)) } | select(.status.started) ]'
-
-    local l_data_object_json
-    l_data_object_json=$(jq --arg objName "$1" --arg objNS "$2" "$l_jq_query" "$5" 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        printf "Error al obtener la data de los contenedores del pod.\n"
-        return 1
-    fi
 
     if [ "$l_data_object_json" = "[]" ]; then
         printf "No existe contenedores en ejecución en el pod.\n"
@@ -435,17 +898,36 @@ open_terminal2() {
         l_mode_exit=0
     fi
 
-    #1. Obtener informacion de los contenedores del pod que tiene puertos (y luego limpiar esta data temporal)
+    local -i p_use_one_object=1
+    if [ "$7" = "0"  ]; then
+        p_use_one_object=0
+    fi
+
+    # Si la data tiene un conjunto de items, obtener solo uno de ellos
+    local l_jq_query
+    local l_data_object_json
 
     #Obtener el objeto del contenedores si esta iniciado ({ spec: .spec.containers[x], status: .status.containerStatuses[x] } donde x esta vinculado al mismo contenedor).
-    #Validar si existe y esta en ejecución
-    local l_jq_query='.items[] | select (.metadata.name == $podName and .metadata.namespace == $objNS) | { containers: .spec.containers, statuses: .status.containerStatuses } | { container: .containers[], statuses: .statuses } | .container.name as $name | { spec: .container, status: (.statuses[] | select(.name == $name)) } | select(.status.started and .spec.name == $conName)'
+    if [ $p_use_one_object -ne 0 ]; then
 
-    local l_data_object_json
-    l_data_object_json=$(jq --arg podName "$1" --arg conName "$3" --arg objNS "$2" "$l_jq_query" "$6" 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        printf "Error al obtener la data de los contenedores del pod.\n"
-        return 1
+        l_jq_query='.items[] | select (.metadata.name == $podName and .metadata.namespace == $objNS) | { containers: .spec.containers, statuses: .status.containerStatuses } | { container: .containers[], statuses: .statuses } | .container.name as $name | { spec: .container, status: (.statuses[] | select(.name == $name)) } | select(.status.started and .spec.name == $conName)'
+
+        l_data_object_json=$(jq --arg podName "$1" --arg conName "$3" --arg objNS "$2" "$l_jq_query" "$6" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf "Error al obtener la data de los contenedores del pod.\n"
+            return 1
+        fi
+
+    else
+
+        l_jq_query='{ containers: .spec.containers, statuses: .status.containerStatuses } | { container: .containers[], statuses: .statuses } | .container.name as $name | { spec: .container, status: (.statuses[] | select(.name == $name)) } | select(.status.started and .spec.name == $conName)'
+
+        l_data_object_json=$(cat "$6" | jq --arg conName "$3" "$l_jq_query" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf "Error al obtener la data de los contenedores del pod.\n"
+            return 1
+        fi
+
     fi
 
     if [ -z "$l_data_object_json" ] || [ "$l_data_object_json" = "null" ]; then
@@ -734,17 +1216,33 @@ show_log_dply() {
         l_mode_exit_follow=0
     fi
 
-    #1. Obtener informacion de los contenedores del pod que tiene puertos (y luego limpiar esta data temporal)
-
-    #Obtener el arrgelo de los contenedores habilitados
-    local l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | .spec.template.spec.containers'
-
-    #local l_data_object_json
-    _g_data_object_json=$(jq --arg objName "$1" --arg objNS "$2" "$l_jq_query" "$5" 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        printf "Error al obtener la data de los contenedores del deployment.\n"
-        return 1
+    local -i p_use_one_object=1
+    if [ "$6" = "0"  ]; then
+        p_use_one_object=0
     fi
+
+    # Obtener el arreglo de los contenedores habilitados
+    local l_jq_query
+
+    # Si la data tiene un conjunto de items, obtener solo uno de ellos
+    if [ $p_use_one_object -ne 0 ]; then
+
+        l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | .spec.template.spec.containers'
+        _g_data_object_json=$(jq --arg objName "$1" --arg objNS "$2" "$l_jq_query" "$5" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf "Error al obtener la data de los contenedores del deployment.\n"
+            return 1
+        fi
+
+    else
+        l_jq_query='.spec.template.spec.containers'
+        _g_data_object_json=$(cat "$5" | jq "$l_jq_query" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf "Error al obtener la data de los contenedores del deployment.\n"
+            return 1
+        fi
+    fi
+
 
     if [ "$_g_data_object_json" = "[]" ]; then
         printf "No existe contenedores habilitados en el deployment.\n"
@@ -777,16 +1275,33 @@ show_log_pod() {
         l_mode_exit_follow=0
     fi
 
-    #1. Obtener informacion de los contenedores del pod que tiene puertos (y luego limpiar esta data temporal)
+    local -i p_use_one_object=1
+    if [ "$6" = "0"  ]; then
+        p_use_one_object=0
+    fi
 
-    #Obtener el arrgelo de los contenedores habilitados
-    local l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | .spec.containers'
+    # Obtener el arreglo de los contenedores habilitados
+    local l_jq_query
 
-    #local l_data_object_json
-    _g_data_object_json=$(jq --arg objName "$1" --arg objNS "$2" "$l_jq_query" "$5" 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        printf "Error al obtener la data de los contenedores del pod.\n"
-        return 1
+    # Si la data tiene un conjunto de items, obtener solo uno de ellos
+    if [ $p_use_one_object -ne 0 ]; then
+
+        l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | .spec.containers'
+        _g_data_object_json=$(jq --arg objName "$1" --arg objNS "$2" "$l_jq_query" "$5" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf "Error al obtener la data de los contenedores del pod.\n"
+            return 1
+        fi
+
+    else
+
+        l_jq_query='.spec.containers'
+        _g_data_object_json=$(cat "$5" | jq "$l_jq_query" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf "Error al obtener la data de los contenedores del pod.\n"
+            return 1
+        fi
+
     fi
 
     if [ "$_g_data_object_json" = "[]" ]; then
@@ -842,20 +1357,38 @@ show_log_container() {
 #Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos
 #  2 > El nombre objeto
-#  3 > El nombre namespace (si el objeto esta vinculado a un namespace)
+#  4 > El nombre namespace (si el objeto esta vinculado a un namespace)
 show_object_yaml() {
 
-    local l_jq_query='.items[] | select (.metadata.name == $objName'
-    if [ -z "$3" ]; then
-        l_jq_query="${l_jq_query})"
-    else
-        l_jq_query="${l_jq_query} and .metadata.namespace == \$objNS)"
+    local -i p_use_one_object=1
+    if [ "$3" = "0"  ]; then
+        p_use_one_object=0
     fi
 
-    local l_data_yaml=""
-    l_data_yaml=$(jq --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null | yq -p json -o yaml 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        return 1
+    # Si la data tiene un conjunto de items, obtener solo uno de ellos
+    local l_jq_query
+    local l_data
+    local -i l_status=0
+    local l_data_yaml
+
+    if [ $p_use_one_object -ne 0 ]; then
+
+        if [ -z "$4" ]; then
+            l_jq_query='.items[] | select (.metadata.name == $objName)'
+            l_data_yaml=$(jq --arg objName "$2" "$l_jq_query" "$1" 2> /dev/null | yq -p json -o yaml 2> /dev/null)
+            l_status=$?
+        else
+            l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS)'
+            l_data_yaml=$(jq --arg objName "$2" --arg objNS "$4" "$l_jq_query" "$1" 2> /dev/null | yq -p json -o yaml 2> /dev/null)
+            l_status=$?
+        fi
+
+        if [ $l_status -ne 0 ]; then
+            return 1
+        fi
+
+    else
+        l_data_yaml=$(cat "$1" | yq -p json -o yaml 2> /dev/null)
     fi
 
     echo "$l_data_yaml"
@@ -1047,13 +1580,26 @@ _show_pod_info() {
 #  4 > Las etiquetas para busqueda de pods
 show_deployment_info() {
 
-    local l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS)'
-    #local l_data_object_json=""
-    local l_data=""
+    local -i p_use_one_object=1
+    if [ "$5" = "0"  ]; then
+        p_use_one_object=0
+    fi
 
-    _g_data_object_json=$(jq --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        return 1
+    # Si la data tiene un conjunto de items, obtener solo uno de ellos
+    local l_jq_query
+    local l_data
+
+    if [ $p_use_one_object -ne 0 ]; then
+
+        l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS)'
+
+        _g_data_object_json=$(jq --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
+
+    else
+        _g_data_object_json=$(cat "$1")
     fi
 
 
@@ -1118,13 +1664,26 @@ show_deployment_info() {
 #  4 > Las etiquetas para busqueda de pods
 show_replicaset_info() {
 
-    local l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS)'
-    #local l_data_object_json=""
-    local l_data=""
+    local -i p_use_one_object=1
+    if [ "$5" = "0"  ]; then
+        p_use_one_object=0
+    fi
 
-    _g_data_object_json=$(jq --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        return 1
+    # Si la data tiene un conjunto de items, obtener solo uno de ellos
+    local l_jq_query
+    local l_data
+
+    if [ $p_use_one_object -ne 0 ]; then
+
+        l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS)'
+
+        _g_data_object_json=$(jq --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
+
+    else
+        _g_data_object_json=$(cat "$1")
     fi
 
 
@@ -1179,13 +1738,26 @@ show_replicaset_info() {
 #  3 > El nombre namespace
 show_pod_info() {
 
-    local l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS)'
-    #local l_data_object_json=""
-    local l_data=""
+    local -i p_use_one_object=1
+    if [ "$4" = "0"  ]; then
+        p_use_one_object=0
+    fi
 
-    _g_data_object_json=$(jq --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        return 1
+    # Si la data tiene un conjunto de items, obtener solo uno de ellos
+    local l_jq_query
+    local l_data
+
+    if [ $p_use_one_object -ne 0 ]; then
+
+        l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS)'
+
+        _g_data_object_json=$(jq --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
+
+    else
+        _g_data_object_json=$(cat "$1")
     fi
 
 
@@ -1209,13 +1781,25 @@ show_pod_info() {
 #  4 > El nonbre del contenedor
 show_container_info() {
 
-    local l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS)'
-    #local l_data_object_json=""
-    local l_data=""
+    local -i p_use_one_object=1
+    if [ "$5" = "0"  ]; then
+        p_use_one_object=0
+    fi
 
-    _g_data_object_json=$(jq --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        return 1
+    # Si la data tiene un conjunto de items, obtener solo uno de ellos
+    local l_jq_query
+
+    if [ $p_use_one_object -ne 0 ]; then
+
+        l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS)'
+
+        _g_data_object_json=$(jq --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
+
+    else
+        _g_data_object_json=$(cat "$1")
     fi
 
 
@@ -1459,16 +2043,36 @@ _port_forward() {
 #  3 > La ruta del archivo de datos
 port_forward_pod() {
 
-    #1. Obtener informacion de los contenedores del pod que tiene puertos (y luego limpiar esta data temporal)
+    local -i p_use_one_object=1
+    if [ "$4" = "0"  ]; then
+        p_use_one_object=0
+    fi
 
-    #Obtener el arrgelo de los contenedores habilitados
-    local l_jq_query='[.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | .spec.containers[] | select((.ports//[]) | any(.protocol == "TCP" and .containerPort > 0))]'
-
+    # Obtener el arreglo de los contenedores habilitados
+    local l_jq_query
     local l_data_object_json
-    l_data_object_json=$(jq --arg objName "$1" --arg objNS "$2" "$l_jq_query" "$3" 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        printf "Error al obtener la data de los contenedores del pod.\n"
-        return 1
+
+    # Si la data tiene un conjunto de items, obtener solo uno de ellos
+    if [ $p_use_one_object -ne 0 ]; then
+
+        l_jq_query='[.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | .spec.containers[] | select((.ports//[]) | any(.protocol == "TCP" and .containerPort > 0))]'
+
+        l_data_object_json=$(jq --arg objName "$1" --arg objNS "$2" "$l_jq_query" "$3" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf "Error al obtener la data de los contenedores del pod.\n"
+            return 1
+        fi
+
+    else
+
+        l_jq_query='[ .spec.containers[] | select((.ports//[]) | any(.protocol == "TCP" and .containerPort > 0))]'
+
+        l_data_object_json=$(cat "$3" | jq "$l_jq_query" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf "Error al obtener la data de los contenedores del pod.\n"
+            return 1
+        fi
+
     fi
 
     if [ "$l_data_object_json" = "[]" ]; then
@@ -1856,27 +2460,26 @@ _show_compare_revision() {
 
 
 #Parametros (argumentos y opciones) de entrada:
-#  1 > La ruta del archivo de datos
-#  2 > El nombre deployment
-#  3 > El nombre namespace
+#  1 > El nombre deployment
+#  2 > El nombre namespace
 show_dply_revision1() {
 
     #1. Información basica del Deployment
     #¿Why show a TAB in the beginning?
     printf '\n'
-    printf '%bDeployment         :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$2"
-    printf '%bNamespace          :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$3"
+    printf '%bDeployment         :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$1"
+    printf '%bNamespace          :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$2"
 
     #2. Obtener información del los replicaset asociado a las revisiones dle deployment
     local l_data_json=""
-    l_data_json=$(kubectl get replicaset -n ${3} -o json 2> /dev/null)
+    l_data_json=$(kubectl get replicaset -n ${2} -o json 2> /dev/null)
     if [ $? -ne 0 ]; then
         printf '%b\tNo se puede conectarse con el cluster de Kubernates, revise la conexión.%b\n' "$g_color_gray1" "$g_color_reset"
         return 1
     fi
 
     local l_jq_query='[.items[] | select(any(.metadata.ownerReferences[]; .kind == "Deployment" and .name == $objName)) ] | sort_by(.metadata.annotations."deployment.kubernetes.io/revision") | reverse'
-    _g_data_object_json=$(echo "$l_data_json" | jq --arg objName "$2" "$l_jq_query" 2> /dev/null)
+    _g_data_object_json=$(echo "$l_data_json" | jq --arg objName "$1" "$l_jq_query" 2> /dev/null)
     if [ $? -ne 0 ]; then
         printf '%b\tError al obtener la data de los ReplicaSet.%b\n' "$g_color_gray1" "$g_color_reset"
         return 2
@@ -1899,6 +2502,11 @@ show_dply_revision1() {
 #  3 > El nombre namespace
 show_dply_revision2() {
 
+    local -i p_use_one_object=1
+    if [ "$4" = "0"  ]; then
+        p_use_one_object=0
+    fi
+
     #1. Información basica del Deployment
     #¿Why show a TAB in the beginning?
     printf '\n'
@@ -1906,13 +2514,28 @@ show_dply_revision2() {
     printf '%bNamespace          :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$3"
 
     #2. Obtener informacion del replicaset: ¿tiene como owner un deployment?
-    local l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | { owner: (.metadata.ownerReferences[]? | select(.kind == "Deployment") | .name), revision: .metadata.annotations."deployment.kubernetes.io/revision", creationTime: .metadata.creationTimestamp } | "\(.owner)|\(.revision)|\(.creationTime)"'
-    local l_data=""
+    local l_jq_query
+    local l_data
 
-    l_data=$(jq -r --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        printf '%b\tError al obtener información del replicaset.%b\n' "$g_color_gray1" "$g_color_reset"
-        return 1
+    if [ $p_use_one_object -ne 0 ]; then
+
+        l_jq_query='.items[] | select (.metadata.name == $objName and .metadata.namespace == $objNS) | { owner: (.metadata.ownerReferences[]? | select(.kind == "Deployment") | .name), revision: .metadata.annotations."deployment.kubernetes.io/revision", creationTime: .metadata.creationTimestamp } | "\(.owner)|\(.revision)|\(.creationTime)"'
+
+        l_data=$(jq -r --arg objName "$2" --arg objNS "$3" "$l_jq_query" "$1" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf '%b\tError al obtener información del replicaset.%b\n' "$g_color_gray1" "$g_color_reset"
+            return 1
+        fi
+
+    else
+
+        l_jq_query='{ owner: (.metadata.ownerReferences[]? | select(.kind == "Deployment") | .name), revision: .metadata.annotations."deployment.kubernetes.io/revision", creationTime: .metadata.creationTimestamp } | "\(.owner)|\(.revision)|\(.creationTime)"'
+
+        l_data=$(cat "$1" | jq -r "$l_jq_query" 2> /dev/null)
+        if [ $? -ne 0 ]; then
+            printf '%b\tError al obtener información del replicaset.%b\n' "$g_color_gray1" "$g_color_reset"
+            return 1
+        fi
     fi
 
     local IFS='|'
@@ -1934,11 +2557,26 @@ show_dply_revision2() {
     printf '%bDeployment         :%b %s\n' "$g_color_cyan1" "$g_color_reset" "$l_deployment_name"
 
     #2. Obtener información del los replicaset asociado a las revisiones dle deployment
-    local l_jq_query='[.items[] | select(any(.metadata.ownerReferences[]; .kind == "Deployment" and .name == $objName)) ] | sort_by(.metadata.annotations."deployment.kubernetes.io/revision") | reverse'
-    _g_data_object_json=$(jq --arg objName "$l_deployment_name" "$l_jq_query" "$1" 2> /dev/null)
-    if [ $? -ne 0 ]; then
-        printf '%b\tError al obtener la data de las revisiones.%b\n' "$g_color_gray1" "$g_color_reset"
-        return 4
+    if [ $p_use_one_object -ne 0 ]; then
+
+        l_jq_query='[.items[] | select(any(.metadata.ownerReferences[]; .kind == "Deployment" and .name == $objName)) ] | sort_by(.metadata.annotations."deployment.kubernetes.io/revision") | reverse'
+        _g_data_object_json=$(jq --arg objName "$l_deployment_name" "$l_jq_query" "$1" 2> /dev/null)
+
+        if [ $? -ne 0 ]; then
+            printf '%b\tError al obtener la data de las revisiones.%b\n' "$g_color_gray1" "$g_color_reset"
+            return 4
+        fi
+
+    else
+
+        l_jq_query='[ . | select(any(.metadata.ownerReferences[]; .kind == "Deployment" and .name == $objName)) ] | sort_by(.metadata.annotations."deployment.kubernetes.io/revision") | reverse'
+        _g_data_object_json=$(cat "$1" | jq --arg objName "$l_deployment_name" "$l_jq_query" 2> /dev/null)
+
+        if [ $? -ne 0 ]; then
+            printf '%b\tError al obtener la data de las revisiones.%b\n' "$g_color_gray1" "$g_color_reset"
+            return 4
+        fi
+
     fi
 
     if [ -z "$_g_data_object_json" ] || [ "$_g_data_object_json" = "null" ] || [ "$_g_data_object_json" = "[]" ]; then
@@ -1956,10 +2594,19 @@ show_dply_revision2() {
 #Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos de los replicaset.
 #  2 > Flag '0' para mostrar solo las replicaset con pods, caso contrario muestra todos.
+#  3 > Flag '0' si se trata de un solo objeto (no tiene '.items[]')
 show_replicasets_table() {
 
-    #Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
+    local -i p_use_one_object=1
+    if [ "$3" = "0"  ]; then
+        p_use_one_object=0
+    fi
+
+    #Generar el reporte deseado con la data ingresada
     local l_jq_query='[.items[] | '
+    if [ $p_use_one_object -eq 0 ]; then
+        l_jq_query='[ . | '
+    fi
 
     if [ "$2" = "0" ]; then
         l_jq_query="${l_jq_query}"'select(.spec.replicas > 0) | '
@@ -1988,10 +2635,19 @@ show_replicasets_table() {
 #Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos de los pods.
 #  2 > Flag '0' para mostrar solo los pod que no terminen 'Succeeded' (Not-succeeded), caso contrario muestra todos.
+#  3 > Flag '0' si se trata de un solo objeto (no tiene '.items[]')
 show_pods_table() {
+
+    local -i p_use_one_object=1
+    if [ "$3" = "0"  ]; then
+        p_use_one_object=0
+    fi
 
     #Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
     local l_jq_query='[.items[] | '
+    if [ $p_use_one_object -eq 0 ]; then
+        l_jq_query='[ . | '
+    fi
 
     if [ "$2" = "0" ]; then
         l_jq_query="${l_jq_query}"'select(.status.phase != "Succeeded") | '
@@ -2020,10 +2676,19 @@ show_pods_table() {
 #Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos de los pods.
 #  2 > Flag '0' para mostrar solo los pod que no terminen 'Succeeded' (Not-succeeded), caso contrario muestra todos.
+#  3 > Flag '0' si se trata de un solo objeto (no tiene '.items[]')
 show_containers_table() {
+
+    local -i p_use_one_object=1
+    if [ "$3" = "0"  ]; then
+        p_use_one_object=0
+    fi
 
     #Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
     local l_jq_query='[.items[] | '
+    if [ $p_use_one_object -eq 0 ]; then
+        l_jq_query='[ . | '
+    fi
 
     if [ "$2" = "0" ]; then
         l_jq_query="${l_jq_query}"'select(.status.phase != "Succeeded") | '
@@ -2052,10 +2717,21 @@ show_containers_table() {
 
 #Parametros (argumentos y opciones) de entrada:
 #  1 > La ruta del archivo de datos de los pods.
+#  2 > Flag '0' si se trata de un solo objeto (no tiene '.items[]')
 show_deployment_table() {
 
+    local -i p_use_one_object=1
+    if [ "$2" = "0"  ]; then
+        p_use_one_object=0
+    fi
+
+    local l_jq_query='[.items[] | '
+    if [ $p_use_one_object -eq 0 ]; then
+        l_jq_query='[ . | '
+    fi
+
     #Generar el reporte deseado con la data ingresada
-    local l_jq_query='[.items[] | (reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: .status.readyReplicas, availableReplicas: .status.availableReplicas, updatedReplicas: .status.updatedReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), lastTransitionTime: (.status.conditions[] | select(.type=="Progressing") | .lastTransitionTime) } | { NAME: .name, NAMESPACE: .namespace, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", "UP-TO-DATE": .updatedReplicas, AVAILABLE: .availableReplicas, INITIAL: .lastTransitionTime, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels, OWNERS: (if .owners == "" then "-" else .owners end)}]'
+    local l_jq_query="$l_jq_query"'(reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")) as $labels | { name: .metadata.name, namespace: .metadata.namespace, revision: .metadata.annotations."deployment.kubernetes.io/revision", desiredReplicas: .spec.replicas, currentReplicas: .status.replicas, readyReplicas: .status.readyReplicas, availableReplicas: .status.availableReplicas, updatedReplicas: .status.updatedReplicas, owners: ([.metadata.ownerReferences[]? | "\(.kind)/\(.name)"] | join(", ")), lastTransitionTime: (.status.conditions[] | select(.type=="Progressing") | .lastTransitionTime) } | { NAME: .name, NAMESPACE: .namespace, DESIRED: .desiredReplicas, READY: "\(.readyReplicas)/\(.currentReplicas)", "UP-TO-DATE": .updatedReplicas, AVAILABLE: .availableReplicas, INITIAL: .lastTransitionTime, REVISION: .revision, "SELECTOR-MATCH-LABELS": $labels, OWNERS: (if .owners == "" then "-" else .owners end)}]'
 
     local l_data=""
     l_data=$(jq "$l_jq_query" "${1}" 2> /dev/null)
@@ -2441,7 +3117,7 @@ m_oc_projects() {
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
         --prompt "Project> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-d (Set Default), CTRL-e (View Events)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}') > /dev/tty" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' 1) > /dev/tty" \
         --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 0) > /dev/tty" \
         --bind "ctrl-d:execute-silent:oc project {1}" \
         --bind "ctrl-e:execute:bat --color=always --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
@@ -2635,7 +3311,7 @@ m_kc_namespaces() {
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..1 \
         --prompt "Project> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTR-d (Set Default), CTRL-e (View Events)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}') > /dev/tty" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' 1) > /dev/tty" \
         --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 1) > /dev/tty" \
         --bind "ctrl-d:execute-silent:kubectl config set-context --current --namespace={1}" \
         --bind "ctrl-e:execute:bat --color=always --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
@@ -2709,6 +3385,7 @@ controller_namespace() {
 
     #4. Leer los argumentos restantes
 
+
     #5. Ejecutando el comando
     m_kc_namespaces "$l_filter_label" "$l_filter_field"
     return 0
@@ -2740,21 +3417,28 @@ m_usage_pod() {
 
     printf '\nUsage:\n'
     printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" \
+           "$g_color_gray1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas opciones para filtrar los pods:\n'
     printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
            "$g_color_gray1" "$g_color_reset"
     printf '%b  > %b-A%b Busca en todos los namespace del cluster.%b\n' "$g_color_gray1" "$g_color_green1" \
            "$g_color_gray1" "$g_color_reset"
-    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
-           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" \
+           "$g_color_green1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
     printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
-    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
-           "$g_color_gray1" "$g_color_reset"
-    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas argumentos puede ser:\n'
+    printf '%b  > %bOBJECT_NAME%b Nombre del objeto de recurso "Pod".%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -2766,6 +3450,8 @@ m_kc_pod() {
     local p_ns="$2"
     local p_filter_label="$3"
     local p_filter_field="$4"
+    local p_object_name="$5"
+
 
     #2. Procesar los argumentos y modificar las variables segun ello
     local la_args=("get" "pod")
@@ -2777,15 +3463,24 @@ m_kc_pod() {
         la_args+=("-A")
     fi
 
+    # Filtros
+    if [ -z "$p_object_name" ]; then
 
-    #Labels
-    if [ ! -z "$p_filter_label" ]; then
-        la_args+=("-l" "$p_filter_label")
-    fi
+        _g_use_one_object=1
 
-    #Filed Selectors
-    if [ ! -z "$p_filter_field" ]; then
-        la_args+=("--field-selector" "$p_filter_field")
+        # Filtro de Labels
+        if [ ! -z "$p_filter_label" ]; then
+            la_args+=("-l" "$p_filter_label")
+        fi
+
+        # Filtro de Filed Selectors
+        if [ ! -z "$p_filter_field" ]; then
+            la_args+=("--field-selector" "$p_filter_field")
+        fi
+
+    else
+        _g_use_one_object=0
+        la_args+=("$p_object_name")
     fi
 
     la_args+=("-o" "json")
@@ -2810,7 +3505,7 @@ m_kc_pod() {
     #4. Generar el reporte deseado con la data ingresada
     local l_data
     local l_status
-    l_data=$(show_pods_table "${_g_temfile_fullpath}" 0)
+    l_data=$(show_pods_table "${_g_temfile_fullpath}" 0 "$_g_use_one_object")
     l_status=$?
 
     if [ $l_status -eq 1 ]; then
@@ -2843,17 +3538,17 @@ m_kc_pod() {
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Not-succeeded Pod> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-e (Exit & Terminal), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs), ALT-a (View all Pods), ATL-b (View Not-succeeded pods)\n' \
-        --bind "alt-a:change-prompt(Pod> )+reload:bash \"${g_script_path}\" -i show_pods_table \"${_g_temfile_fullpath}\" 1" \
-		--bind "alt-b:change-prompt(Not-succeeded Pod> )+reload:bash \"${g_script_path}\" -i show_pods_table \"${_g_temfile_fullpath}\" 0" \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_pod_info '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-e:become:bash \"${g_script_path}\" -i open_terminal1 '{1}' '{2}' 'bash' 0 '${_g_temfile_fullpath}' > /dev/tty" \
-        --bind "ctrl-t:execute:bash \"${g_script_path}\" -i open_terminal1 '{1}' '{2}' 'bash' 1 '${_g_temfile_fullpath}' > /dev/tty" \
-        --bind "ctrl-l:execute(bash \"${g_script_path}\" -i show_log_pod '{1}' '{2}' 1 10000 '${_g_temfile_fullpath}' > /dev/tty)" \
-        --bind "ctrl-p:become(bash \"${g_script_path}\" -i port_forward_pod '{1}' '{2}' '${_g_temfile_fullpath}' > /dev/tty)" \
-        --bind "ctrl-x:become(bash \"${g_script_path}\" -i show_log_pod '{1}' '{2}' 0 200 '${_g_temfile_fullpath}' > /dev/tty)" \
+        --bind "alt-a:change-prompt(Pod> )+reload:bash \"${g_script_path}\" -i show_pods_table \"${_g_temfile_fullpath}\" 1 ${_g_use_one_object}" \
+		--bind "alt-b:change-prompt(Not-succeeded Pod> )+reload:bash \"${g_script_path}\" -i show_pods_table \"${_g_temfile_fullpath}\" 0 ${_g_use_one_object}" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' ${_g_use_one_object} '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_pod_info '${_g_temfile_fullpath}' '{1}' '{2}' ${_g_use_one_object}) > /dev/tty" \
+        --bind "ctrl-e:become:bash \"${g_script_path}\" -i open_terminal1 '{1}' '{2}' 'sh' 0 '${_g_temfile_fullpath}' ${_g_use_one_object} > /dev/tty" \
+        --bind "ctrl-t:execute:bash \"${g_script_path}\" -i open_terminal1 '{1}' '{2}' 'sh' 1 '${_g_temfile_fullpath}' ${_g_use_one_object} > /dev/tty" \
+        --bind "ctrl-l:execute(bash \"${g_script_path}\" -i show_log_pod '{1}' '{2}' 1 10000 '${_g_temfile_fullpath}' ${_g_use_one_object} > /dev/tty)" \
+        --bind "ctrl-p:become(bash \"${g_script_path}\" -i port_forward_pod '{1}' '{2}' '${_g_temfile_fullpath}' ${_g_use_one_object} > /dev/tty)" \
+        --bind "ctrl-x:become(bash \"${g_script_path}\" -i show_log_pod '{1}' '{2}' 0 200 '${_g_temfile_fullpath}' ${_g_use_one_object} > /dev/tty)" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${g_script_path} -i show_pod_info '${_g_temfile_fullpath}' '{1}' '{2}' | bat --color=always --style plain" |
+        --preview "bash ${g_script_path} -i show_pod_info '${_g_temfile_fullpath}' '{1}' '{2}' ${_g_use_one_object} | bat --color=always --style plain" |
     awk "$l_awk_template"
 
     if [ "$_g_preserve_cache_after" -ne 0 ]; then
@@ -2939,9 +3634,24 @@ controller_pod() {
 
 
     #4. Leer los argumentos restantes
+    local l_object_name=""
+
+    if [ ! -z "$1" ]; then
+        if [ ! -z "$l_filter_label" ] || [ ! -z "$l_filter_field" ]; then
+            printf '[%bERROR%b] Opción "%b%%%b" y/o "%b%s%b" no puede usarse cuando se especifica el argumento "%b%s%b".\n\n' \
+                   "$g_color_red1" "$g_color_reset" "$g_color_gray1" "-l" "$g_color_reset" \
+                   "$g_color_gray1" "-f" "$g_color_reset" "$g_color_gray1" "$1" "$g_color_reset"
+            m_usage_pod
+            return 3
+        fi
+
+        l_object_name="$1"
+    fi
+
+
 
     #5. Ejecutando el comando
-    m_kc_pod "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field"
+    m_kc_pod "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field" "$l_object_name"
     return 0
 
 }
@@ -2974,19 +3684,25 @@ m_usage_container() {
     printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
     printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
 
-    printf 'Las opciones usados son:\n'
+    printf 'Las opciones generales son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas opciones para filtrar los pods:\n'
     printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
            "$g_color_gray1" "$g_color_reset"
     printf '%b  > %b-A%b Busca en todos los namespace del cluster.%b\n' "$g_color_gray1" "$g_color_green1" \
            "$g_color_gray1" "$g_color_reset"
-    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
-           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" \
+           "$g_color_green1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
     printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
-    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
-           "$g_color_gray1" "$g_color_reset"
-    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas argumentos puede ser:\n'
+    printf '%b  > %bOBJECT_NAME%b Nombre del objeto de recurso "Pod".%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -2998,6 +3714,8 @@ m_kc_containers() {
     local p_ns="$2"
     local p_filter_label="$3"
     local p_filter_field="$4"
+    local p_object_name="$5"
+
 
     #2. Procesar los argumentos y modificar las variables segun ello
     local la_args=("get" "pod")
@@ -3009,15 +3727,24 @@ m_kc_containers() {
         la_args+=("-A")
     fi
 
+    # Filtros
+    if [ -z "$p_object_name" ]; then
 
-    #Labels
-    if [ ! -z "$p_filter_label" ]; then
-        la_args+=("-l" "$p_filter_label")
-    fi
+        _g_use_one_object=1
 
-    #Filed Selectors
-    if [ ! -z "$p_filter_field" ]; then
-        la_args+=("--field-selector" "$p_filter_field")
+        # Filtro de Labels
+        if [ ! -z "$p_filter_label" ]; then
+            la_args+=("-l" "$p_filter_label")
+        fi
+
+        # Filtro de Filed Selectors
+        if [ ! -z "$p_filter_field" ]; then
+            la_args+=("--field-selector" "$p_filter_field")
+        fi
+
+    else
+        _g_use_one_object=0
+        la_args+=("$p_object_name")
     fi
 
     la_args+=("-o" "json")
@@ -3041,7 +3768,7 @@ m_kc_containers() {
     #4. Generar el reporte deseado con la data ingresada
     local l_data
     local l_status
-    l_data=$(show_containers_table "${_g_temfile_fullpath}" 0)
+    l_data=$(show_containers_table "${_g_temfile_fullpath}" 0 "${_g_use_one_object}")
     l_status=$?
 
     if [ $l_status -eq 1 ]; then
@@ -3073,17 +3800,17 @@ m_kc_containers() {
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Not-succeeded Pod's Container> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTRL-e (Exit & Terminal), CTRL-t (Bash Terminal), CTRL-l (View log), CTRL-p (Exit & Port-Forward), CTRL-x (Exit & follow logs), ALT-a (View all Pods), ATL-b (View Not-succeeded pods)\n' \
-        --bind "alt-a:change-prompt(Pod's Container> )+reload:bash \"${g_script_path}\" -i show_containers_table \"${_g_temfile_fullpath}\" 1" \
-		--bind "alt-b:change-prompt(Not-succeeded Pod's Container> )+reload:bash \"${g_script_path}\" -i show_containers_table \"${_g_temfile_fullpath}\" 0" \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_container_info '${_g_temfile_fullpath}' '{1}' '{2}' '{3}') > /dev/tty" \
-        --bind "ctrl-e:become:bash \"${g_script_path}\" -i open_terminal2 '{1}' '{2}' '{3}' 'bash' 0 '${_g_temfile_fullpath}' > /dev/tty" \
-        --bind "ctrl-t:execute:bash \"${g_script_path}\" -i open_terminal2 '{1}' '{2}' '{3}' 'bash' 1 '${_g_temfile_fullpath}' > /dev/tty" \
+        --bind "alt-a:change-prompt(Pod's Container> )+reload:bash \"${g_script_path}\" -i show_containers_table \"${_g_temfile_fullpath}\" 1 ${_g_use_one_object}" \
+		--bind "alt-b:change-prompt(Not-succeeded Pod's Container> )+reload:bash \"${g_script_path}\" -i show_containers_table \"${_g_temfile_fullpath}\" 0 ${_g_use_one_object}" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' ${_g_use_one_object} '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_container_info '${_g_temfile_fullpath}' '{1}' '{2}' '{3}' ${_g_use_one_object}) > /dev/tty" \
+        --bind "ctrl-e:become:bash \"${g_script_path}\" -i open_terminal2 '{1}' '{2}' '{3}' 'sh' 0 '${_g_temfile_fullpath}' ${_g_use_one_object} > /dev/tty" \
+        --bind "ctrl-t:execute:bash \"${g_script_path}\" -i open_terminal2 '{1}' '{2}' '{3}' 'sh' 1 '${_g_temfile_fullpath}' ${_g_use_one_object} > /dev/tty" \
         --bind "ctrl-l:execute(bash \"${g_script_path}\" -i show_log_container '{1}' '{2}' '{3}' 1 10000 '${_g_temfile_fullpath}' > /dev/tty)" \
         --bind "ctrl-p:become(bash \"${g_script_path}\" -i port_forward_container '{1}' '{2}' '{3}' '{7}' '${_g_temfile_fullpath}' > /dev/tty)" \
         --bind "ctrl-x:become(bash \"${g_script_path}\" -i show_log_container '{1}' '{2}' '{3}' 0 200 '${_g_temfile_fullpath}' > /dev/tty)" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${g_script_path} -i show_container_info '${_g_temfile_fullpath}' '{1}' '{2}' '{3}' | bat --color=always --style plain" |
+        --preview "bash ${g_script_path} -i show_container_info '${_g_temfile_fullpath}' '{1}' '{2}' '{3}' ${_g_use_one_object} | bat --color=always --style plain" |
     awk "$l_awk_template"
 
     #    --bind "ctrl-l:execute:bat --color=always --paging always --style plain  <(kubectl logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
@@ -3173,9 +3900,24 @@ controller_container() {
 
 
     #4. Leer los argumentos restantes
+    local l_object_name=""
+
+    if [ ! -z "$1" ]; then
+        if [ ! -z "$l_filter_label" ] || [ ! -z "$l_filter_field" ]; then
+            printf '[%bERROR%b] Opción "%b%%%b" y/o "%b%s%b" no puede usarse cuando se especifica el argumento "%b%s%b".\n\n' \
+                   "$g_color_red1" "$g_color_reset" "$g_color_gray1" "-l" "$g_color_reset" \
+                   "$g_color_gray1" "-f" "$g_color_reset" "$g_color_gray1" "$1" "$g_color_reset"
+            m_usage_container
+            return 3
+        fi
+
+        l_object_name="$1"
+    fi
+
+
 
     #5. Ejecutando el comando
-    m_kc_containers "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field"
+    m_kc_containers "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field" "$l_object_name"
     return 0
 
 }
@@ -3207,19 +3949,25 @@ m_usage_deployment() {
     printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
     printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
 
-    printf 'Las opciones usados son:\n'
+    printf 'Las opciones generales son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas opciones para filtrar los deployment:\n'
     printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
            "$g_color_gray1" "$g_color_reset"
     printf '%b  > %b-A%b Busca en todos los namespace del cluster.%b\n' "$g_color_gray1" "$g_color_green1" \
            "$g_color_gray1" "$g_color_reset"
-    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
-           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
     printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
-    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
-           "$g_color_gray1" "$g_color_reset"
-    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas argumentos puede ser:\n'
+    printf '%b  > %bOBJECT_NAME%b Nombre del objeto de recurso "Deployment".%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -3231,6 +3979,8 @@ m_kc_deployments() {
     local p_ns="$2"
     local p_filter_label="$3"
     local p_filter_field="$4"
+    local p_object_name="$5"
+
 
     #2. Procesar los argumentos y modificar las variables segun ello
     local la_args=("get" "deployment")
@@ -3242,15 +3992,24 @@ m_kc_deployments() {
         la_args+=("-A")
     fi
 
+    # Filtros
+    if [ -z "$p_object_name" ]; then
 
-    #Labels
-    if [ ! -z "$p_filter_label" ]; then
-        la_args+=("-l" "$p_filter_label")
-    fi
+        _g_use_one_object=1
 
-    #Filed Selectors
-    if [ ! -z "$p_filter_field" ]; then
-        la_args+=("--field-selector" "$p_filter_field")
+        # Filtro de Labels
+        if [ ! -z "$p_filter_label" ]; then
+            la_args+=("-l" "$p_filter_label")
+        fi
+
+        # Filtro de Filed Selectors
+        if [ ! -z "$p_filter_field" ]; then
+            la_args+=("--field-selector" "$p_filter_field")
+        fi
+
+    else
+        _g_use_one_object=0
+        la_args+=("$p_object_name")
     fi
 
     la_args+=("-o" "json")
@@ -3274,7 +4033,7 @@ m_kc_deployments() {
     #4. Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
     local l_data
     local l_status
-    l_data=$(show_deployment_table "${_g_temfile_fullpath}" 0)
+    l_data=$(show_deployment_table "${_g_temfile_fullpath}" "${_g_use_one_object}")
     l_status=$?
 
     if [ $l_status -eq 1 ]; then
@@ -3309,12 +4068,12 @@ m_kc_deployments() {
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..2 \
         --prompt "Deployment> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View yaml), CTRL-b (View Preview), CTRL-d (View Revisions), CTRL-w (Watch pods)\n' \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_deployment_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}') > /dev/tty" \
-        --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_dply_revision1 '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' ${_g_use_one_object} '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_deployment_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' ${_g_use_one_object}) > /dev/tty" \
+        --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_dply_revision1 '{1}' '{2}') > /dev/tty" \
         --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${g_script_path} -i show_deployment_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' | bat --color=always --style plain" |
+        --preview "bash ${g_script_path} -i show_deployment_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' ${_g_use_one_object} | bat --color=always --style plain" |
     awk "$l_awk_template"
 
     if [ "$_g_preserve_cache_after" -ne 0 ]; then
@@ -3404,9 +4163,24 @@ controller_deployment() {
 
 
     #4. Leer los argumentos restantes
+    local l_object_name=""
+
+    if [ ! -z "$1" ]; then
+        if [ ! -z "$l_filter_label" ] || [ ! -z "$l_filter_field" ]; then
+            printf '[%bERROR%b] Opción "%b%%%b" y/o "%b%s%b" no puede usarse cuando se especifica el argumento "%b%s%b".\n\n' \
+                   "$g_color_red1" "$g_color_reset" "$g_color_gray1" "-l" "$g_color_reset" \
+                   "$g_color_gray1" "-f" "$g_color_reset" "$g_color_gray1" "$1" "$g_color_reset"
+            m_usage_deployment
+            return 3
+        fi
+
+        l_object_name="$1"
+    fi
+
+
 
     #5. Ejecutando el comando
-    m_kc_deployments "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field"
+    m_kc_deployments "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field" "$l_object_name"
     return 0
 
 }
@@ -3436,21 +4210,28 @@ m_usage_replicaset() {
 
     printf '\nUsage:\n'
     printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" \
+           "$g_color_gray1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas opciones para filtrar los replicaset:\n'
     printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
            "$g_color_gray1" "$g_color_reset"
     printf '%b  > %b-A%b Busca en todos los namespace del cluster.%b\n' "$g_color_gray1" "$g_color_green1" \
            "$g_color_gray1" "$g_color_reset"
-    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
-           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
     printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
-    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
-           "$g_color_gray1" "$g_color_reset"
-    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas argumentos puede ser:\n'
+    printf '%b  > %bOBJECT_NAME%b Nombre del objeto de recurso "ReplicaSet".%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
 }
 
@@ -3462,6 +4243,8 @@ m_kc_replicaset() {
     local p_ns="$2"
     local p_filter_label="$3"
     local p_filter_field="$4"
+    local p_object_name="$5"
+
 
     #2. Procesar los argumentos y modificar las variables segun ello
     local la_args=("get" "replicaset")
@@ -3473,15 +4256,24 @@ m_kc_replicaset() {
         la_args+=("-A")
     fi
 
+    # Filtros
+    if [ -z "$p_object_name" ]; then
 
-    #Labels
-    if [ ! -z "$p_filter_label" ]; then
-        la_args+=("-l" "$p_filter_label")
-    fi
+        _g_use_one_object=1
 
-    #Filed Selectors
-    if [ ! -z "$p_filter_field" ]; then
-        la_args+=("--field-selector" "$p_filter_field")
+        # Filtro de Labels
+        if [ ! -z "$p_filter_label" ]; then
+            la_args+=("-l" "$p_filter_label")
+        fi
+
+        # Filtro de Filed Selectors
+        if [ ! -z "$p_filter_field" ]; then
+            la_args+=("--field-selector" "$p_filter_field")
+        fi
+
+    else
+        _g_use_one_object=0
+        la_args+=("$p_object_name")
     fi
 
     la_args+=("-o" "json")
@@ -3506,7 +4298,7 @@ m_kc_replicaset() {
     #4. Generar el reporte deseado con la data ingresada (por ahora solo muestra los '.spec.replicas' no sea 0)
     local l_data
     local l_status
-    l_data=$(show_replicasets_table "${_g_temfile_fullpath}" 0)
+    l_data=$(show_replicasets_table "${_g_temfile_fullpath}" 0 "${_g_use_one_object}")
     l_status=$?
 
     if [ $l_status -eq 1 ]; then
@@ -3540,14 +4332,14 @@ m_kc_replicaset() {
     $l_fzf_cmd $l_fzf_size_args --info=inline --layout=reverse --header-lines=2 -m --nth=..3 \
         --prompt "Active ReplicaSet> " \
         --header "$(_fzf_kc_get_context_info 1)"$'\nALT-a (View all rs), ATL-b (View rs with pods), CTRL-a (View yaml), CTRL-b (View Preview), CTRL-d (View Revisions), CTRL-w (Watch pods)\n' \
-        --bind "alt-a:change-prompt(All Replicaset> )+reload:bash \"${g_script_path}\" -i show_replicasets_table \"${_g_temfile_fullpath}\" 1" \
-		--bind "alt-b:change-prompt(Active Replicaset> )+reload:bash \"${g_script_path}\" -i show_replicasets_table \"${_g_temfile_fullpath}\" 0" \
-        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_replicaset_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}') > /dev/tty" \
-        --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_dply_revision2 '${_g_temfile_fullpath}' '{1}' '{2}') > /dev/tty" \
+        --bind "alt-a:change-prompt(All Replicaset> )+reload:bash \"${g_script_path}\" -i show_replicasets_table \"${_g_temfile_fullpath}\" 1 ${_g_use_one_object}" \
+		--bind "alt-b:change-prompt(Active Replicaset> )+reload:bash \"${g_script_path}\" -i show_replicasets_table \"${_g_temfile_fullpath}\" 0 ${_g_use_one_object}" \
+        --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' ${_g_use_one_object} '{2}') > /dev/tty" \
+        --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_replicaset_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' ${_g_use_one_object}) > /dev/tty" \
+        --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_dply_revision2 '${_g_temfile_fullpath}' '{1}' '{2}' ${_g_use_one_object}) > /dev/tty" \
         --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
-        --preview "bash ${g_script_path} -i show_replicaset_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' | bat --color=always --style plain" |
+        --preview "bash ${g_script_path} -i show_replicaset_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' ${_g_use_one_object} | bat --color=always --style plain" |
     awk "$l_awk_template"
 
     if [ "$_g_preserve_cache_after" -ne 0 ]; then
@@ -3633,12 +4425,985 @@ controller_replicaset() {
 
 
     #4. Leer los argumentos restantes
+    local l_object_name=""
+
+    if [ ! -z "$1" ]; then
+        if [ ! -z "$l_filter_label" ] || [ ! -z "$l_filter_field" ]; then
+            printf '[%bERROR%b] Opción "%b%%%b" y/o "%b%s%b" no puede usarse cuando se especifica el argumento "%b%s%b".\n\n' \
+                   "$g_color_red1" "$g_color_reset" "$g_color_gray1" "-l" "$g_color_reset" \
+                   "$g_color_gray1" "-f" "$g_color_reset" "$g_color_gray1" "$1" "$g_color_reset"
+            m_usage_replicaset
+            return 3
+        fi
+
+        l_object_name="$1"
+    fi
+
 
     #5. Ejecutando el comando
-    m_kc_replicaset "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field"
+    m_kc_replicaset "$l_flag_all_ns" "$l_ns" "$l_filter_label" "$l_filter_field" "$l_object_name"
     return 0
 
 }
+
+
+
+
+# -------------------------------------------------------------------------------------
+# Subcomand Controller> logs
+# -------------------------------------------------------------------------------------
+
+m_usage_logs() {
+
+    local l_scmd_id='logs'
+    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+
+    # Obtener los alias del comando
+    local l_alias_list
+    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+
+    # Mostrar el alias:
+    if [ ! -z "$l_alias_list" ]; then
+        printf '%bAlias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
+    fi
+
+
+    printf '\nUsage:\n'
+    printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" \
+           "$g_color_gray1" "$g_color_reset"
+
+    printf 'Las opciones generales son:\n'
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas opciones para filtrar los pods:\n'
+    printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas opciones usados para almacenar el log de los pods:\n'
+    printf '%b  > %b-d%b FOLDER_PATH%b Ruta del folder donde se almacenara los archivos logs.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+
+    printf '%b  > %b-T%b Flag que muestra el timestamps en cada linea del archivo log. Por defecto no se muestra.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '%b  > %b-j%b Flag para almacenar el descriptor json del pod. Por defecto se almacena el descriptor.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-m%b Flag para almacenar los logs de todos los contenedor principales del pod. Por defecto solo se almacena el contenedor por defecto.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-i%b Flag para almacenar los logs de todos los contenedores de inicialización del pod. Por defecto no se almacena logs de estos contenedores.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-e%b Flag para almacenar los logs de todos los contenedores efimeros del pod. Por defecto no se almacena logs de estos contenedores.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-x%b Flag para usar, en el sufijo del nombre del log, el nombre nodo. Por defecto no se adiciona al nombre de del log.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-y%b Flag para NO usar, en el sufijo del nombre del log, el nombre contenedor. Por defecto se adiciona al nombre del contenedor.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-z%b Flag para usar, en el sufijo del nombre del log, una marca de tiempo "yyyyMMdd_HHMM". Por defecto no se adiciona al nombre de del log.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas argumentos puede ser:\n'
+    printf '%b  > %bOBJECT_NAME%b Nombre del objeto de recurso "Pod".%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+}
+
+
+m_kc_logs() {
+
+    #1. Argumentos
+    local p_ns="$1"
+    local p_filter_label="$2"
+    local p_filter_field="$3"
+
+    local p_object_name="$4"
+    local p_path_dir="$5"
+
+    local -i p_flag_show_timestamp=1
+    if [ "$6" = "0" ]; then
+        p_flag_show_timestamp=0
+    fi
+
+    local -i p_flag_save_json=1
+    if [ "$7" = "0" ]; then
+        p_flag_save_json=0
+    fi
+
+    local -i p_flag_save_all_main=1
+    if [ "$8" = "0" ]; then
+        p_flag_save_all_main=0
+    fi
+
+    local -i p_flag_save_all_init=1
+    if [ "$9" = "0" ]; then
+        p_flag_save_all_init=0
+    fi
+
+    local -i p_flag_save_all_ephemeral=1
+    if [ "${10}" = "0" ]; then
+        p_flag_save_all_ephemeral=0
+    fi
+
+    local -i p_file_sufix_nodename=1
+    if [ "${11}" = "0" ]; then
+        p_file_sufix_nodename=0
+    fi
+
+    local -i p_file_sufix_containername=0
+    if [ "${12}" != "0" ]; then
+        p_file_sufix_containername=1
+    fi
+
+    local -i p_file_sufix_time=1
+    if [ "${13}" = "0" ]; then
+        p_file_sufix_time=0
+    fi
+
+    #echo "l_flag_save_all_main > ${p_flag_save_all_main}"
+
+    #2. Procesar los argumentos y modificar las variables segun ello
+    local la_args=("get" "pods")
+
+    #Filtro de Namespace
+    if [ ! -z "$p_ns" ]; then
+        la_args+=("-n" "$p_ns")
+    fi
+
+
+    # Filtros
+    if [ -z "$p_object_name" ]; then
+
+        # Filtro de Labels
+        if [ ! -z "$p_filter_label" ]; then
+            la_args+=("-l" "$p_filter_label")
+        fi
+
+        # Filtro de Filed Selectors
+        if [ ! -z "$p_filter_field" ]; then
+            la_args+=("--field-selector" "$p_filter_field")
+        fi
+
+    else
+        la_args+=("$p_object_name")
+    fi
+
+    la_args+=("-o" "json")
+    #echo "Argumentos:" "${la_args[@]}"
+
+    #3. Filtro jq para obtener el listado de pod ordenados por el controlador del pod
+    local l_filter='[.items[] | { name: .metadata.name, ns: .metadata.namespace, owner: (.metadata.ownerReferences[0]? | if . == null then "" else "\(.kind)/\(.name)" end) }] | sort_by(.owner, .name) | .[] | "\(.name)|\(.ns)|\(.owner)"'
+
+    if [ ! -z "$p_object_name" ]; then
+        l_filter='{ name: .metadata.name, ns: .metadata.namespace, owner: (.metadata.ownerReferences[0]? | if . == null then "" else "\(.kind)/\(.name)" end) } |  "\(.name)|\(.ns)|\(.owner)"'
+    fi
+
+    #4. Obtener los pods (ordenados por el nombre del controlador de pods)
+    local -i l_status=0
+    local l_data=''
+
+    l_data=$(kubectl "${la_args[@]}" | jq -r "$l_filter")
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+
+        printf "Ocurrio un error a listar los pod.\n"
+        if [ ! -z "$l_data" ]; then
+            printf "Detail: %s\n" "$l_data"
+        fi
+
+        return 1
+    fi
+
+    if [ -z "$l_data" ] || [ "$l_data" = 'null' ]; then
+        printf "No se encuentra pod disponibles.\n"
+        return 0
+    fi
+
+    #5. Si es un pod especifico
+    local l_pod_name
+    local l_pod_ns
+    local l_pod_owner
+
+    if [ ! -z "$p_object_name" ]; then
+
+        IFS='|' read -r l_pod_name l_pod_ns l_pod_owner <<< "$l_data"
+
+        printf '> Pod name         : %b%s%b\n' "$g_color_blue1" "$l_pod_name" "$g_color_reset"
+
+        if [ ! -z "$l_pod_owner" ]; then
+            printf '  Pod controller   : %b%s%b\n' "$g_color_gray1" "$l_pod_owner" "$g_color_reset"
+        fi
+
+        m_get_pod_logs "$l_pod_name" "$l_pod_ns" "$p_path_dir" "$p_flag_show_timestamp" "$p_flag_save_json" "$p_flag_save_all_main" \
+                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_sufix_nodename" "$p_file_sufix_containername" \
+                       "$p_file_sufix_time"
+
+        return 0
+
+    fi
+
+    #6. Si es un conjuntos de pod
+    local l_n
+    l_n=$(echo "$l_data" | wc -l)
+    printf 'Guardando el log de %b%s%b pod(s) disponibles ...\n' "$g_color_gray1" "$l_n" "$g_color_reset"
+
+    local l_pod_owner_previous
+    local -i l_i=0
+    local -i l_j=0
+
+    # Incluir un contador y un resumen final
+    while IFS='|' read -r l_pod_name l_pod_ns l_pod_owner; do
+
+        ((l_i++))
+        if [ -z "$l_pod_name" ]; then
+            continue
+        fi
+
+        printf '> Pod name         : (%b%s%b/%b%s%b) %b%s%b\n' "$g_color_gray1" "$l_i" "$g_color_reset" \
+               "$g_color_gray1" "$l_n" "$g_color_reset" "$g_color_blue1" "$l_pod_name" "$g_color_reset"
+
+
+        if [ -z "$l_pod_owner_previous" ] || [ "$l_pod_owner" != "$l_pod_owner_previous" ]; then
+            ((l_j++))
+        fi
+
+        if [ ! -z "$l_pod_owner" ]; then
+            printf '  Pod controller   : (%b%s%b) %b%s%b\n' "$g_color_gray1" "$l_j" "$g_color_reset" \
+                   "$g_color_gray1" "$l_pod_owner" "$g_color_reset"
+        fi
+
+        m_get_pod_logs "$l_pod_name" "$l_pod_ns" "$p_path_dir" "$p_flag_show_timestamp" "$p_flag_save_json" "$p_flag_save_all_main" \
+                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_sufix_nodename" "$p_file_sufix_containername" \
+                       "$p_file_sufix_time"
+
+        l_pod_owner_previous="$l_pod_owner"
+
+    done <<< "$l_data"
+
+    return 0
+
+}
+
+
+
+controller_logs() {
+
+    #1. Validaciones previas
+
+    #2. Procesar las opciones (siempre deben estar anstes de los argumentos)
+    local l_ns
+    local l_filter_label
+    local l_filter_field
+
+    local l_path_dir=""
+
+    local -i l_flag_show_timestamp=1
+    local -i l_flag_save_json=1
+    local -i l_flag_save_all_main=1
+    local -i l_flag_save_all_init=1
+    local -i l_flag_save_all_ephemeral=1
+    local -i l_file_sufix_nodename=1
+    local -i l_file_sufix_containername=0
+    local -i l_file_sufix_time=1
+
+    while [ $# -gt 0 ]; do
+
+        case "$1" in
+
+            -h|--help)
+                m_usage_logs
+                return 0
+                ;;
+
+
+            -n)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-n" "$g_color_reset"
+                    return 3
+                fi
+
+                l_ns="$2"
+                shift 2
+                ;;
+
+
+            -l)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_label="$2"
+                shift 2
+                ;;
+
+
+            -f)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_field="$2"
+                shift 2
+                ;;
+
+
+            -d)
+                if [ -z "$2" ]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" no puede ser vacio.\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-d" "$g_color_reset"
+                    m_usage_logs
+                    return 3
+                fi
+
+                if [ ! -d "$2" ]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" es inválido "%b%s%b". Debe ser un folder valido.\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-d" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
+                    return 3
+                fi
+
+                l_path_dir="$2"
+                shift 2
+                ;;
+
+
+            -T)
+                l_flag_show_timestamp=0
+                shift 1
+                ;;
+
+            -j)
+                l_flag_save_json=0
+                shift 1
+                ;;
+
+            -m)
+                l_flag_save_all_main=0
+                shift 1
+                ;;
+
+            -i)
+                l_flag_save_all_init=0
+                shift 1
+                ;;
+
+            -e)
+                l_flag_save_all_ephemeral=0
+                shift 1
+                ;;
+
+
+            -x)
+                l_file_sufix_nodename=0
+                shift 1
+                ;;
+
+            -y)
+                l_file_sufix_containername=1
+                shift 1
+                ;;
+
+            -z)
+                l_file_sufix_time=0
+                shift 1
+                ;;
+
+
+            -*)
+                printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$1" "$g_color_reset"
+                m_usage_logs
+                return 3
+                ;;
+
+            *)
+                #Si son argumentos, salir y continuar
+                break
+                ;;
+
+        esac
+
+    done
+
+
+    #4. Leer los argumentos restantes
+    local l_object_name=""
+
+    if [ ! -z "$1" ]; then
+        if [ ! -z "$l_filter_label" ] || [ ! -z "$l_filter_field" ]; then
+            printf '[%bERROR%b] Opción "%b%%%b" y/o "%b%s%b" no puede usarse cuando se especifica el argumento "%b%s%b".\n\n' \
+                   "$g_color_red1" "$g_color_reset" "$g_color_gray1" "-l" "$g_color_reset" \
+                   "$g_color_gray1" "-f" "$g_color_reset" "$g_color_gray1" "$1" "$g_color_reset"
+            m_usage_restart
+            return 3
+        fi
+
+        l_object_name="$1"
+    fi
+
+
+    #5. Ejecutando el comando
+    m_kc_logs "$l_ns" "$l_filter_label" "$l_filter_field" "$l_object_name" "$l_path_dir" "$l_flag_show_timestamp" "$l_flag_save_json" \
+              "$l_flag_save_all_main" "$l_flag_save_all_init" "$l_flag_save_all_ephemeral" "$l_file_sufix_nodename" \
+              "$l_file_sufix_containername" "$l_file_sufix_time"
+    return 0
+
+}
+
+
+
+# -------------------------------------------------------------------------------------
+# Subcomand Controller> restart
+# -------------------------------------------------------------------------------------
+
+m_usage_restart() {
+
+    local l_scmd_id='restart'
+    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+
+    # Obtener los alias del comando
+    local l_alias_list
+    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+
+    # Mostrar el alias:
+    if [ ! -z "$l_alias_list" ]; then
+        printf '%bAlias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
+    fi
+
+
+    printf '\nUsage:\n'
+    printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS] [-t RESOURCE] %b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE] [-t RESOURCE] OBJECT_NAME%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" \
+           "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas opciones generales son:\n'
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas opciones para filtrar el Deployment/DaemonSet/StatufulSet:\n'
+    printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-l%b LABEL_SELECTORS%b Fitro de objetos en servidor basado en las label del objeto.%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'label1=value1,label2=value2'.%b\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-f%b FIELD_SELECTORS%b Fitro de objetos en servidor basado en las nombre de algunos field especiales del objeto.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf "%b    Ejemplos: 'field1=value1,field2==value1,field2!=value'.%b\n" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-t%b RESOURCE%b Tipo de controller long-lived. Su valor puede ser "deployment", "daemonset" o "statufulset".%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf "%b    Si no se especifica su valor por defecto es 'deployment'.%b\n" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas opciones usados para almacenar el log de los pods:\n'
+    printf '%b  > %b-d%b FOLDER_PATH%b Ruta del folder donde se almacenara los archivos logs.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
+           "$g_color_gray1" "$g_color_reset"
+
+    printf '%b  > %b-T%b Flag que muestra el timestamps en cada linea del archivo log. Por defecto no se muestra.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '%b  > %b-j%b Flag para almacenar el descriptor json del pod. Por defecto se almacena el descriptor.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-m%b Flag para almacenar los logs de todos los contenedor principales del pod. Por defecto solo se almacena el contenedor por defecto.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-i%b Flag para almacenar los logs de todos los contenedores de inicialización del pod. Por defecto no se almacena logs de estos contenedores.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-e%b Flag para almacenar los logs de todos los contenedores efimeros del pod. Por defecto no se almacena logs de estos contenedores.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-x%b Flag para usar, en el sufijo del nombre del log, el nombre nodo. Por defecto no se adiciona al nombre de del log.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-y%b Flag para NO usar, en el sufijo del nombre del log, el nombre contenedor. Por defecto se adiciona al nombre del contenedor.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-z%b Flag para usar, en el sufijo del nombre del log, una marca de tiempo "yyyyMMdd_HHMM". Por defecto no se adiciona al nombre de del log.%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas argumentos puede ser:\n'
+    printf '%b  > %bOBJECT_NAME%b Nombre del objeto de recurso de tipo "-t" (deployment, daemonset, statefulset).%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+}
+
+
+m_kc_restart() {
+
+    #1. Argumentos
+    local p_ns="$1"
+    local p_filter_label="$2"
+    local p_filter_field="$3"
+
+    # Valores:
+    # > 0 - Si es un deployment
+    # > 1 - Si es un daemonset
+    # > 2 - Si es un statefulset
+    local -i p_resource_type=0
+    if [ ! -z "$4" ]; then
+        p_resource_type="$4"
+    fi
+
+    local p_object_name="$5"
+
+    local p_path_dir="$6"
+
+    local -i p_flag_show_timestamp=1
+    if [ "$7" = "0" ]; then
+        p_flag_show_timestamp=0
+    fi
+
+    local -i p_flag_save_json=1
+    if [ "$8" = "0" ]; then
+        p_flag_save_json=0
+    fi
+
+    local -i p_flag_save_all_main=1
+    if [ "$9" = "0" ]; then
+        p_flag_save_all_main=0
+    fi
+
+    local -i p_flag_save_all_init=1
+    if [ "${10}" = "0" ]; then
+        p_flag_save_all_init=0
+    fi
+
+    local -i p_flag_save_all_ephemeral=1
+    if [ "${11}" = "0" ]; then
+        p_flag_save_all_ephemeral=0
+    fi
+
+    local -i p_file_sufix_nodename=1
+    if [ "${12}" = "0" ]; then
+        p_file_sufix_nodename=0
+    fi
+
+    local -i p_file_sufix_containername=0
+    if [ "${13}" != "0" ]; then
+        p_file_sufix_containername=1
+    fi
+
+    local -i p_file_sufix_time=1
+    if [ "${14}" = "0" ]; then
+        p_file_sufix_time=0
+    fi
+
+
+    #2. Procesar los argumentos y modificar las variables segun ello
+    local la_args=("get")
+
+    # Filtro de Namespace
+    if [ ! -z "$p_ns" ]; then
+        la_args+=("-n" "$p_ns")
+    fi
+
+    # Tipo de recurso
+    local l_resource=''
+    if [ $p_resource_type -eq 0 ]; then
+        l_resource="Deployment"
+        la_args+=("deployment")
+    elif [ $p_resource_type -eq 1 ]; then
+        l_resource="Daemonset"
+        la_args+=("daemonset")
+    else
+        l_resource="Statefulset"
+        la_args+=("statefulset")
+    fi
+
+
+    # Filtros
+    if [ -z "$p_object_name" ]; then
+
+        # Filtro de Labels
+        if [ ! -z "$p_filter_label" ]; then
+            la_args+=("-l" "$p_filter_label")
+        fi
+
+        # Filtro de Filed Selectors
+        if [ ! -z "$p_filter_field" ]; then
+            la_args+=("--field-selector" "$p_filter_field")
+        fi
+
+    else
+
+        la_args+=("$p_object_name")
+
+    fi
+
+    la_args+=("-o" "json")
+    #echo "Argumentos:" "${la_args[@]}"
+
+
+    #3. Filtro jq para obtener el listado de controladores (ordenados por su controlador)
+    local l_filter
+
+    if [ ! -z "$p_object_name" ]; then
+        l_filter='{ name: .metadata.name, ns: .metadata.namespace, owner: (.metadata.ownerReferences[0]? | if . == null then "" else "\(.kind)/\(.name)" end) } | "\(.name)|\(.ns)|\(.owner)"'
+    else
+        l_filter='[.items[] | { name: .metadata.name, ns: .metadata.namespace, owner: (.metadata.ownerReferences[0]? | if . == null then "" else "\(.kind)/\(.name)" end) }] | sort_by(.owner, .name) | .[] | "\(.name)|\(.ns)|\(.owner)"'
+    fi
+
+
+    #4. Obtener listado de controladroes (ordenados por el nombre de su controlador)
+    local -i l_status=0
+    local l_data=''
+
+    l_data=$(kubectl "${la_args[@]}" | jq -r "$l_filter")
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+
+        printf "Ocurrio un error a listar los %s.\n" "$l_resource"
+        if [ ! -z "$l_data" ]; then
+            printf "Detail: %s\n" "$l_data"
+        fi
+
+        return 1
+    fi
+
+    if [ -z "$l_data" ]; then
+        printf "No se encuentra %s disponibles.\n" "$l_resource"
+        return 0
+    fi
+
+
+    #5. Si solo se analiza a un controlador
+    local l_rs_name
+    local l_rs_ns
+    local l_rs_owner
+
+    local l_data_json
+    local l_tmp
+    local l_jq_query1
+    l_jq_query1='reduce (.spec.selector.matchLabels | to_entries[]) as $i (""; . + (if . != "" then "," else "" end) + "\($i.key)=\($i.value)")'
+
+    if [ ! -z "$p_object_name" ]; then
+
+        # Informnacion generar del controllador
+        IFS='|' read -r l_rs_name l_rs_ns l_rs_owner <<< "$l_data"
+
+        printf '%s name        : %b%s%b\n' "$l_resource" "$g_color_blue1" "$l_rs_name" "$g_color_reset"
+        if [ ! -z "$l_rs_owner" ]; then
+            printf '%s controller  : %b%s%b\n' "$l_resource" "$g_color_gray1" "$l_rs_owner" "$g_color_reset"
+        #else
+        #    printf '%s controller  : %b%s%b\n' "$l_resource" "$g_color_gray1" "none" "$g_color_reset"
+        fi
+
+        # Obtener el descriptor del controlador
+        #echo "$l_rs_ns $l_resource $l_rs_name"
+        l_data_json=$(kubectl get -n "$l_rs_ns" "$l_resource" "$l_rs_name" -o json)
+        l_status=$?
+
+        if [ $l_status -ne 0 ] || [ -z "$l_data_json" ] || [ "$l_data_json" = 'null' ]; then
+            printf 'No se puedo obtener el descriptor del %s.\n' "$l_resource"
+            return 3
+        fi
+
+
+        # Obtener el selector de pods
+        l_tmp=$(echo "$l_data_json" | jq -r "$l_jq_query1")
+        l_status=$?
+
+        if [ $l_status -ne 0 ] || [ -z "$l_tmp" ] || [ "$l_tmp" = 'null' ]; then
+            printf 'El %s no tiene definido un selector de pods.\n' "$l_resource"
+            return 3
+        fi
+
+        printf '%s pod selector: "%b%s%b"\n' "$l_resource" "$g_color_gray1" "$l_tmp" "$g_color_reset"
+
+        printf '\n'
+
+        # Obtener los pod segun este selector
+        m_kc_logs "$l_rs_ns" "$l_tmp" "" "" "$p_path_dir" "$p_flag_show_timestamp" "$p_flag_save_json" "$p_flag_save_all_main" \
+                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_sufix_nodename" "$p_file_sufix_containername" \
+                       "$p_file_sufix_time"
+
+        printf '\n'
+
+        # Realizar un restart de controlador
+        printf 'Restart el %s: %bkubectl rollout restart%b -n "%s" "%s/%s"%b\n' "$l_resource" "$g_color_green1" \
+               "$g_color_gray1" "$l_rs_ns" "$l_resource" "$l_rs_name"  "$g_color_reset"
+        #kubectl rollout restart -n "$l_rs_ns" "${l_resource}/${l_rs_name}"
+
+        printf '\n'
+
+        return 0
+
+    fi
+
+    #6. Si se analiza a un conjuntos de controladores
+    local l_n
+    l_n=$(echo "$l_data" | wc -l)
+    printf '%s(s) disponibles : %b%s%b\n\n' "$l_resource" "$g_color_gray1" "$l_n" "$g_color_reset"
+
+    #5. Procesar los pod
+    local -i l_i=0
+
+    # Incluir un contador y un resumen final
+    while IFS='|' read -r l_rs_name l_rs_ns l_rs_owner; do
+
+        ((l_i++))
+        if [ -z "$l_rs_name" ]; then
+            continue
+        fi
+
+        print_line '─' $g_max_length_line  "$g_color_gray1"
+        printf '(%b%s%b/%b%s%b) %s "%b%s%b"\n' "$g_color_gray1" "$l_i" "$g_color_reset" \
+               "$g_color_gray1" "$l_n" "$g_color_reset" "$l_resource" "$g_color_gray1" "$l_rs_name" "$g_color_reset"
+        print_line '─' $g_max_length_line  "$g_color_gray1"
+
+        printf 'Name        : %b%s%b\n' "$g_color_blue1" "$l_rs_name" "$g_color_reset"
+        if [ ! -z "$l_rs_owner" ]; then
+            printf 'Controller  : %b%s%b\n' "$g_color_gray1" "$l_rs_owner" "$g_color_reset"
+        #else
+        #    printf 'Controller  : %b%s%b\n' "$g_color_gray1" "none" "$g_color_reset"
+        fi
+
+        # Obtener el descriptor del controlador
+        l_data_json=$(kubectl get -n "$l_rs_ns" "$l_resource" "$l_rs_name" -o json)
+        l_status=$?
+
+        if [ $l_status -ne 0 ] || [ -z "$l_data_json" ] || [ "$l_data_json" = 'null' ]; then
+            printf 'No se puedo obtener el descriptor del %s.\n' "$l_resource"
+            continue
+        fi
+
+        # Obtener el selector de pods
+        l_tmp=$(echo "$l_data_json" | jq -r "$l_jq_query1")
+        l_status=$?
+
+        if [ $l_status -ne 0 ] || [ -z "$l_tmp" ] || [ "$l_tmp" = 'null' ]; then
+            printf 'El %s no tiene definido un selector de pods.\n' "$l_resource"
+            continue
+        fi
+
+        printf 'Pod selector: "%b%s%b"\n' "$g_color_gray1" "$l_tmp" "$g_color_reset"
+
+        printf '\n'
+
+        # Obtener los pod segun este selector
+        m_kc_logs "$l_rs_ns" "$l_tmp" "" "" "$p_path_dir" "$p_flag_show_timestamp" "$p_flag_save_json" "$p_flag_save_all_main" \
+                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_sufix_nodename" "$p_file_sufix_containername" \
+                       "$p_file_sufix_time"
+
+        printf '\n'
+
+        # Realizar un restart de controlador
+        printf 'Restart el %s: %bkubectl rollout restart%b -n "%s" "%s/%s"%b\n' "$l_resource" "$g_color_green1" \
+               "$g_color_gray1" "$l_rs_ns" "$l_resource" "$l_rs_name"  "$g_color_reset"
+        #kubectl rollout restart -n "$l_rs_ns" "${l_resource}/${l_rs_name}"
+
+        printf '\n'
+
+    done <<< "$l_data"
+
+    return 0
+
+}
+
+
+
+controller_restart() {
+
+    #1. Validaciones previas
+
+    #2. Procesar las opciones (siempre deben estar anstes de los argumentos)
+    local l_ns
+    local l_filter_label
+    local l_filter_field
+
+    # Valores:
+    # > 0 - Si es un deployment
+    # > 1 - Si es un daemonset
+    # > 2 - Si es un statefulset
+    local -i l_resource_type=0
+
+    local l_path_dir=""
+
+    local -i l_flag_show_timestamp=1
+    local -i l_flag_save_json=1
+    local -i l_flag_save_all_main=1
+    local -i l_flag_save_all_init=1
+    local -i l_flag_save_all_ephemeral=1
+    local -i l_file_sufix_nodename=1
+    local -i l_file_sufix_containername=0
+    local -i l_file_sufix_time=1
+
+    while [ $# -gt 0 ]; do
+
+        case "$1" in
+
+            -h|--help)
+                m_usage_restart
+                return 0
+                ;;
+
+
+            -n)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-n" "$g_color_reset"
+                    return 3
+                fi
+
+                l_ns="$2"
+                shift 2
+                ;;
+
+
+            -l)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_label="$2"
+                shift 2
+                ;;
+
+
+            -f)
+                if [ -z "$2" ]; then
+                    printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    return 3
+                fi
+
+                l_filter_field="$2"
+                shift 2
+                ;;
+
+
+            -t)
+                if [ -z "$2" ]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" no puede ser vacio.\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-t" "$g_color_reset"
+                    m_usage_restart
+                    return 3
+                fi
+
+                if [ "$2" == "deployment" ]; then
+                    l_resource_type=0
+                elif [ "$2" == "daemonset" ]; then
+                    l_resource_type=1
+                elif [ "$2" == "statefulset" ]; then
+                    l_resource_type=2
+                else
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" es "%b%s%b". Este solo puede ser "deployment", "daemonset" o "statefulset".\n' \
+                           "$g_color_red1" "$g_color_reset" "$g_color_gray1" "-t" "$g_color_reset" "$g_color_gray1" "$2" \
+                           "$g_color_reset"
+                    m_usage_restart
+                    return 3
+                fi
+
+                shift 2
+                ;;
+
+            -d)
+                if [ -z "$2" ]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" no puede ser vacio.\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-d" "$g_color_reset"
+                    m_usage_restart
+                    return 3
+                fi
+
+                if [ ! -d "$2" ]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" es inválido "%b%s%b". Debe ser un folder valido.\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-d" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
+                    return 3
+                fi
+
+                l_path_dir="$2"
+                shift 2
+                ;;
+
+
+            -T)
+                l_flag_show_timestamp=0
+                shift 1
+                ;;
+
+            -j)
+                l_flag_save_json=0
+                shift 1
+                ;;
+
+            -m)
+                l_flag_save_all_main=0
+                shift 1
+                ;;
+
+            -i)
+                l_flag_save_all_init=0
+                shift 1
+                ;;
+
+            -e)
+                l_flag_save_all_ephemeral=0
+                shift 1
+                ;;
+
+
+            -x)
+                l_file_sufix_nodename=0
+                shift 1
+                ;;
+
+            -y)
+                l_file_sufix_containername=1
+                shift 1
+                ;;
+
+            -z)
+                l_file_sufix_time=0
+                shift 1
+                ;;
+
+
+            -*)
+                printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$1" "$g_color_reset"
+                m_usage_restart
+                return 3
+                ;;
+
+            *)
+                #Si son argumentos, salir y continuar
+                break
+                ;;
+
+        esac
+
+    done
+
+
+    #4. Leer los argumentos restantes
+    local l_object_name=""
+
+    if [ ! -z "$1" ]; then
+        if [ ! -z "$l_filter_label" ] || [ ! -z "$l_filter_field" ]; then
+            printf '[%bERROR%b] Opción "%b%%%b" y/o "%b%s%b" no puede usarse cuando se especifica el argumento "%b%s%b".\n\n' \
+                   "$g_color_red1" "$g_color_reset" "$g_color_gray1" "-l" "$g_color_reset" \
+                   "$g_color_gray1" "-f" "$g_color_reset" "$g_color_gray1" "$1" "$g_color_reset"
+            m_usage_restart
+            return 3
+        fi
+
+        l_object_name="$1"
+    fi
+
+    #5. Ejecutando el comando
+    m_kc_restart "$l_ns" "$l_filter_label" "$l_filter_field" "$l_resource_type" "$l_object_name" "$l_path_dir" "$l_flag_show_timestamp" \
+              "$l_flag_save_json" "$l_flag_save_all_main" "$l_flag_save_all_init" "$l_flag_save_all_ephemeral" "$l_file_sufix_nodename" \
+              "$l_file_sufix_containername" "$l_file_sufix_time"
+    return 0
+
+}
+
 
 
 

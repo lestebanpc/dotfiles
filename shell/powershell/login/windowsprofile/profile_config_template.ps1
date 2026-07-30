@@ -1,7 +1,7 @@
 #
-# Para habilitar su uso genere el arcivo '~/.config/powershell/custom_profile.ps1':
-#  cp ~/.files/shell/powershell/login/windowsprofile/custom_profile_template.ps1 "${env:USERPROFILE}/custom_profile.ps1"
-#  vim "${env:USERPROFILE}/custom_profile.ps1"
+# Si es Powershell Core o Windows Powershell, puede crear el archivo de inicializacion del profile:
+#  cp ~/.files/shell/powershell/login/windowsprofile/profile_config_template.ps1 "${env:USERPROFILE}/config_profile.ps1"
+#  vim "${env:USERPROFILE}/config_profile.ps1"
 #
 
 #-----------------------------------------------------------------------------------

@@ -226,7 +226,7 @@ declare -A gA_repos_type=(
         ['MeanderingProgrammer/render-markdown.nvim']=2
         ['HakonHarnes/img-clip.nvim']=3
         ['iamcco/markdown-preview.nvim']=3
-        ['obsidian-nvim/obsidian.nvim']=3
+        #['obsidian-nvim/obsidian.nvim']=3
         ['nvim-lua/plenary.nvim']=4
         ['nvim-treesitter/nvim-treesitter-context']=5
         ['stevearc/aerial.nvim']=5
@@ -290,7 +290,7 @@ declare -A gA_repos_scope=(
         ['MeanderingProgrammer/render-markdown.nvim']=2
         ['HakonHarnes/img-clip.nvim']=2
         ['iamcco/markdown-preview.nvim']=2
-        ['obsidian-nvim/obsidian.nvim']=2
+        #['obsidian-nvim/obsidian.nvim']=2
         ['hrsh7th/cmp-nvim-lsp']=2
         ['hrsh7th/cmp-buffer']=2
         ['hrsh7th/cmp-path']=2
@@ -1133,37 +1133,34 @@ function _setup_user_profile() {
     # Para WSL copiar el archivo de configuracion del profile
     if [ $g_enviroment_type -eq 3 ]; then
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_wsl.bash" "" ".custom_profile.bash" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_wsl.bash" "" ".config_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-              "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
+              "$g_color_yellow1" "~/.config_profile.bash" "$g_color_reset"
 
     # Si es contenedor distrobox
     elif [ $g_enviroment_type -eq 2 ]; then
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_distrobox.bash" "" ".custom_profile.bash" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_distrobox.bash" "" ".config_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-              "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
+              "$g_color_yellow1" "~/.config_profile.bash" "$g_color_reset"
 
     # Si es un 'Desktop server'
     elif [ $g_enviroment_type -eq 1 ]; then
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_desktop.bash" "" ".custom_profile.bash" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_desktop.bash" "" ".config_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-              "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
+              "$g_color_yellow1" "~/.config_profile.bash" "$g_color_reset"
 
     # Si es un 'Headless server'
     else
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_headless.bash" "" ".custom_profile.bash" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_headless.bash" "" ".config_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-              "$g_color_yellow1" "~/.custom_profile.bash" "$g_color_reset"
-
-        #printf 'Profile > Si desea restablecer los valores por defecto, use: "%bcp ~/.files/shell/bash/login/profile/profile_config_template_headless.bash %b~/.custom_profile.bash%b"\n' \
-        #      "$g_color_gray1" "$g_color_yellow1" "$g_color_reset"
+              "$g_color_yellow1" "~/.config_profile.bash" "$g_color_reset"
 
     fi
 

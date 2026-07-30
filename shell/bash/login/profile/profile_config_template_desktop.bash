@@ -1,12 +1,12 @@
 #!/bin/bash
 
 #
-# Para habilitar su uso genere el arcivo '~/.custom_profile.bash':
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_local.bash ~/.custom_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_remote.bash ~/.custom_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_distrobox.bash ~/.custom_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_wsl.bash ~/.custom_profile.bash
-#  vim ~/.custom_profile.bash
+# Para habilitar su uso genere el arcivo '~/.config_profile.bash':
+#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_local.bash ~/.config_profile.bash
+#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_remote.bash ~/.config_profile.bash
+#  cp ~/.files/shell/bash/login/profile/profile_config_template_distrobox.bash ~/.config_profile.bash
+#  cp ~/.files/shell/bash/login/profile/profile_config_template_wsl.bash ~/.config_profile.bash
+#  vim ~/.config_profile.bash
 #
 
 #-----------------------------------------------------------------------------------
@@ -151,29 +151,3 @@ g_enviroment_type=1
 #     > El comando `s` (alias de `tmuxu new_session`) usa dicha valor si no se especifica las opción `-w WORK_FOLDER`.
 # > Si no se define, se valor sera: '~/works' o '~/work' (en ese orden de prioridad).
 #export MY_WORK_PATH="$HOME/works"
-
-
-#-----------------------------------------------------------------------------------
-# Variables de entorno (personalizacion)
-#-----------------------------------------------------------------------------------
-
-# Modificar la variable de entorno PATH
-#[ -d "${MY_TOOLS_PATH}/scrcpy" ] && PATH="$PATH:${MY_TOOLS_PATH}/scrcpy"
-#[ -d "${MY_TOOLS_PATH}/mytool/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/mytool/bin"
-#[ -d "${HOME}/mytool/bin" ] && PATH="$PATH:${HOME}/mytool/bin"
-
-#export PATH
-
-
-#-----------------------------------------------------------------------------------
-# Alias
-#-----------------------------------------------------------------------------------
-
-#alias kc='kubectl'
-
-
-#-----------------------------------------------------------------------------------
-# Otros
-#-----------------------------------------------------------------------------------
-
-# Otros

@@ -3,7 +3,7 @@
 ################################################################################################
 
 #01. Search for commit with FZF preview and copy hash
-#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+#. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 #    > [CTRL + y]    - Ver el detalle de commit y navegar en sus paginas
 #    > [ENTER]       - Copiar el hash del commit en portapapeles de windows
 #    > [SHIFT + ↓/↑] - Cambio de pagina en la vista de preview
@@ -38,11 +38,3 @@ function glog()
         --print-query
         #--print-query | grep -o '[a-f0-9]\{7\}'
 }
-
-
-
-################################################################################################
-# K8S Functions
-################################################################################################
-
-

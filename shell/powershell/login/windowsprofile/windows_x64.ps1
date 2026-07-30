@@ -2,9 +2,9 @@
 # Personalizacion de la terminal
 #------------------------------------------------------------------------------------------------
 
-# Cargar la información:
-if(Test-Path "${env:USERPROFILE}/custom_profile.ps1") {
-    . "${env:USERPROFILE}/custom_profile.ps1"
+# Cargar parametros del profile
+if(Test-Path "${env:USERPROFILE}/config_profile.ps1") {
+    . "${env:USERPROFILE}/config_profile.ps1"
 }
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT
@@ -32,12 +32,12 @@ if((-not ${g_bin_path}) -or (Test-Path "$g_bin_path")) {
 # Variable de entorno PATH
 #------------------------------------------------------------------------------------------------
 
-#Si path no contiene la ruta de comandos, adicionarlos.
+# Si path no contiene la ruta de comandos, adicionarlos.
 if(-not ("$env:PATH" -match ";?$($g_bin_path.Replace("\", "\\"));?")) {
     $env:PATH= "${g_bin_path};${env:PATH}"
 }
 
-#Establecer los otros valores ...
+# Establecer los otros valores ...:
 
 
 #------------------------------------------------------------------------------------------------
@@ -50,14 +50,14 @@ $PSStyle.FileInfo.Directory="`e[44;30m"
 
 
 #------------------------------------------------------------------------------------------------
-#Comando Oh-My-Posh
+# Comando Oh-My-Posh
 #------------------------------------------------------------------------------------------------
 
 oh-my-posh init pwsh --config "${g_prompt_theme}" | Invoke-Expression
 
 
 #------------------------------------------------------------------------------------------------
-#Comando FZF (fzf.exe)
+# Comando FZF (fzf.exe)
 #------------------------------------------------------------------------------------------------
 
 $env:FZF_COMPLETION_PATH_OPTS = "--walker=file,dir,hidden,follow"
@@ -73,24 +73,54 @@ $env:FZF_CTRL_R_OPTS = "--prompt 'History> '"
 $env:FZF_CTRL_T_OPTS = "--prompt 'Select> ' --preview 'if exist {}\ ( eza --tree --color=always --icons always -L 5 {} ) else ( bat --color=always --style=numbers,header-filename --line-range :500 {} )'"
 $env:FZF_ALT_C_OPTS  = "--prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {}'"
 
-#Sobrescribir 'Ctrl+t' y 'Ctrl+r' para usar FZF para el listado de archivos y el historial.
-#Requiere tener instalado el modulo 'PSFzf' ("Install-Module -Name PSFzf -Scope AllUsers").
+# Sobrescribir 'Ctrl+t' y 'Ctrl+r' para usar FZF para el listado de archivos y el historial.
+# Requiere tener instalado el modulo 'PSFzf' ("Install-Module -Name PSFzf -Scope AllUsers").
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
 
 
 #------------------------------------------------------------------------------------------------
-#Comando Zoxide (zoxide.exe)
+# Comando Zoxide (zoxide.exe)
 #------------------------------------------------------------------------------------------------
 
-#Personalizar el uso comando 'zi'
+# Personalizar el uso comando 'zi'
 $env:_ZO_FZF_OPTS="${env:FZF_DEFAULT_OPTS} --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 5 {2}' --preview-window=down,70%"
 
-#Inicializacion de zoxide: crea el alias del comando 'zi' y 'z'
+# Inicializacion de zoxide: crea el alias del comando 'zi' y 'z'
 Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
 
 #------------------------------------------------------------------------------------------------
-#Funciones personalizadas del usuario
+# Comando> Yazi (yazi.exe)
 #------------------------------------------------------------------------------------------------
 
-. "${env:USERPROFILE}\${g_repo_name}\shell\powershell\login\windowsprofile\custom_modules.ps1"
+# Wrapper que abre yazi y se mueve al ultimo directorio navegado
+function y {
+
+    # Crea un un archivo temporal creeado y luego lo almacena su ruta en la variable 'l_tmp'
+    $tmp = (New-TemporaryFile).FullName
+
+    # Ejecuta el comando yazi, ignorando cualquier alias o función que también se llame yazi.
+    # > '--cwd-file' cuando cierra yazi, escribe el 'working directory' actual de yazi en este archivo temporal ($tmp).
+    yazi.exe $args --cwd-file="$tmp"
+
+    # Leer el contenido de archivo temporal y lo almacena en '$cwd'
+    $cwd = Get-Content -Path $tmp -Encoding UTF8
+
+    # Si el 'working directory' no es vacio y no es diferente del actual, ejecuta el comando interno 'cd' (omite alias y funciones)
+    if (-not [String]::IsNullOrEmpty($cwd) -and $cwd -ne $PWD.Path) {
+        Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
+    }
+
+    # Elimina el archivo temporal
+    Remove-Item -Path $tmp
+}
+
+
+#------------------------------------------------------------------------------------------------
+# Personalizacion del profile
+#------------------------------------------------------------------------------------------------
+
+# Cargar parametros del profile
+if(Test-Path "${env:USERPROFILE}/custom_profile.ps1") {
+    . "${env:USERPROFILE}/custom_profile.ps1"
+}

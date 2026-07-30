@@ -376,9 +376,16 @@ alias s='tmuxu new_session'
 
 
 #-----------------------------------------------------------------------------------
-# Funciones> Otros
+# Personalizacion
 #-----------------------------------------------------------------------------------
 
-# Funciones basicas
-# shellcheck source=/home/lucianoepc/.files/shell/bash/login/profile/custom_modules.bash
-source "${HOME}/${g_repo_name}/shell/bash/login/profile/custom_modules.bash"
+# Modificar la variable de entorno PATH
+#[ -d "${MY_TOOLS_PATH}/scrcpy" ] && PATH="$PATH:${MY_TOOLS_PATH}/scrcpy"
+#[ -d "${MY_TOOLS_PATH}/mytool/bin" ] && PATH="$PATH:${MY_TOOLS_PATH}/mytool/bin"
+#[ -d "${HOME}/mytool/bin" ] && PATH="$PATH:${HOME}/mytool/bin"
+
+# Socket IPC del servidor MDP
+#export MPD_HOST=/run/mpd/socket
+
+#export PATH
+#alias kc='kubectl'

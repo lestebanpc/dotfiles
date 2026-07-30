@@ -97,13 +97,13 @@ shopt -s checkwinsize
 
 
 #-----------------------------------------------------------------------------------
-# Variables globales obtenidos del archivo de configuración '~/.custom_profile.bash'
+# Variables globales y entornos de inicializacion '~/.config_profile.bash'
 #-----------------------------------------------------------------------------------
 
-# Obtener los parametros del archivos de configuración
-if [ -f "${HOME}/.custom_profile.bash" ]; then
+# Obtener los parametros del profile del usuario
+if [ -f "${HOME}/.config_profile.bash" ]; then
     # shellcheck source=/home/lucianoepc/.custom_profile.bash
-    . "${HOME}/.custom_profile.bash"
+    . "${HOME}/.config_profile.bash"
 fi
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT
@@ -354,6 +354,29 @@ if [ "$MY_SESSION_SRC" -ne 1 ]; then
     export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --prompt 'Go to Folder> ' --preview 'eza --tree --color=always --icons always -L 4 {2} | head -n 300' --preview-window=down,70%"
     eval "$(zoxide init bash)"
 
+    # Yazi> Wrapper que abre yazi y se mueve al ultimo directorio navegado
+    function y() {
+
+        # Crea un un archivo temporal creeado como empieza 'yazi-cwd' seguido de 6 caracteres aleatorios (ejemplo: '/tmp/yazi-cwd.ABC123')
+        # Luego lo almacena su ruta en la variable 'l_tmp'
+        local l_tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+
+        # Ejecuta el comando yazi, ignorando cualquier alias o función que también se llame yazi.
+        # > '--cwd-file' cuando cierra yazi, escribe el 'working directory' actual de yazi en este archivo temporal ($tmp).
+    	command yazi "$@" --cwd-file="$l_tmp"
+
+        # Leer el contenido del archivo temporal sin usar sepradores de lineas (campos), en modo raw y usando con delimitador el caracter nulo.
+        # Luego escribir en la variable 'l_cwd'
+        local l_cwd
+    	IFS= read -r -d '' l_cwd < "$l_tmp"
+
+        # Si el 'working directory' no es vacio y no es diferente del actual, ejecuta el comando interno 'cd' (omite alias y funciones)
+    	[ -n "$l_cwd" ] && [ "$l_cwd" != "$PWD" ] && builtin cd -- "$l_cwd"
+
+        # Elimina el archivo temporal
+    	rm -f -- "$l_tmp"
+    }
+
 fi
 
 #-----------------------------------------------------------------------------------
@@ -381,9 +404,10 @@ alias s='tmuxu new_session'
 
 
 #-----------------------------------------------------------------------------------
-# Funciones> Otros
+# Personalizacion
 #-----------------------------------------------------------------------------------
 
-# Funciones basicas
-# shellcheck source=/home/lucianoepc/.files/shell/bash/login/profile/custom_modules.bash
-source "${HOME}/${g_repo_name}/shell/bash/login/profile/custom_modules.bash"
+# Personalizar el profile del usuario
+if [ -f "${HOME}/.custom_profile.bash" ]; then
+    . "${HOME}/.custom_profile.bash"
+fi

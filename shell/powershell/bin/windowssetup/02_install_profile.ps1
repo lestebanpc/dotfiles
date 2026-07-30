@@ -62,7 +62,7 @@ $gd_repos_type= @{
         'MeanderingProgrammer/render-markdown.nvim' = 2
         'HakonHarnes/img-clip.nvim' = 3
         'iamcco/markdown-preview.nvim' = 3
-        'obsidian-nvim/obsidian.nvim' = 3
+        #'obsidian-nvim/obsidian.nvim' = 3
         'nvim-lua/plenary.nvim' = 4
         'nvim-treesitter/nvim-treesitter-context' = 5
         'stevearc/aerial.nvim' = 5
@@ -126,7 +126,7 @@ $gd_repos_scope= @{
         'MeanderingProgrammer/render-markdown.nvim' = 2
         'HakonHarnes/img-clip.nvim' = 2
         'iamcco/markdown-preview.nvim' = 2
-        'obsidian-nvim/obsidian.nvim' = 2
+        #'obsidian-nvim/obsidian.nvim' = 2
         'hrsh7th/cmp-nvim-lsp' = 2
         'hrsh7th/cmp-buffer' = 2
         'hrsh7th/cmp-path' = 2
@@ -1490,7 +1490,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
         $l_status= m_create_folder "${document_path}" "PowerShell\Modules" $l_tag
 
         $l_target_link="${document_path}\PowerShell\Modules\MyTools"
-        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\bin\modules\MyTools"
+        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\modules\windows\MyTools"
         if ($g_setup_access_type -eq 0) {
             $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
@@ -1523,7 +1523,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
         $l_status= m_create_folder "${document_path}" "WindowsPowerShell\Modules" $l_tag
 
         $l_target_link="${document_path}\PowerShell\Modules\MyTools"
-        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\bin\modules\MyTools"
+        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\modules\windows\MyTools"
         if ($g_setup_access_type -eq 0) {
             $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }

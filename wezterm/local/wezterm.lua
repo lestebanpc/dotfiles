@@ -132,11 +132,27 @@ end
 -- when resolving text into glyphs the first font in the list is consulted, and if the glyph isn't present in that font, WezTerm proceeds to the next font in the fallback list.
 mod.font = mm_wezterm.font_with_fallback({
     {
+        -- Familia de la fuente
         family= "JetBrainsMono Nerd Font Mono",
+
+        -- Variante de la fuente que define grosor a usado en los caracteres
         weight= "Light", -- "Thin", "ExtraLigth", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold"
+
+        -- Variante de la fuente que define el ancho de los caracteres
         stretch= "Normal",
+
+        -- Mostrar cursiva
         --italic = false,
-        harfbuzz_features= {"calt=1", "clig=1", "liga=1"},
+
+        -- Características procesadas por el 'Text Shaper' (libreria 'HarfBuzz')
+        harfbuzz_features= {
+            -- Ligaduras estándar
+            "liga=1",
+            -- Ligaduras contextuales
+            "clig=1",
+            -- Sustituciones contextuales
+            "calt=1",
+        },
     },
     "Incosolata LGC Nerd Font Mono",
   })

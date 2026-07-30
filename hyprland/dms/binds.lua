@@ -342,10 +342,10 @@ hl.bind("SUPER + code:20", hl.dsp.window.resize({ x = -100, y = 0, relative = tr
 hl.bind("SUPER + code:21", hl.dsp.window.resize({ x = 100, y = 0, relative = true }), { repeating = true })
 
 -- Manual Sizing
-hl.bind("SUPER + minus",  hl.dsp.window.resize({ x = -1, y = 0, relative = true }), { repeating = true })
-hl.bind("SUPER + equal",  hl.dsp.window.resize({ x = 1, y = 0, relative = true }), { repeating = true })
-hl.bind("SUPER + SHIFT + minus", hl.dsp.window.resize({ x = 0, y = -1, relative = true }), { repeating = true })
-hl.bind("SUPER + SHIFT + equal", hl.dsp.window.resize({ x = 0, y = 1, relative = true }), { repeating = true })
+hl.bind("SUPER + SHIFT + minus",  hl.dsp.window.resize({ x = -1, y = 0, relative = true }), { repeating = true })
+hl.bind("SUPER + SHIFT + equal",  hl.dsp.window.resize({ x = 1, y = 0, relative = true }), { repeating = true })
+hl.bind("SUPER + minus", hl.dsp.window.resize({ x = 0, y = -1, relative = true }), { repeating = true })
+hl.bind("SUPER + equal", hl.dsp.window.resize({ x = 0, y = 1, relative = true }), { repeating = true })
 
 
 
@@ -353,7 +353,7 @@ hl.bind("SUPER + SHIFT + equal", hl.dsp.window.resize({ x = 0, y = 1, relative =
 -- Keybindings> System Application Launchers
 ------------------------------------------------------------------------------------
 
---
+-- Aplicaciones GUI DMS
 hl.bind("SUPER + Space",   hl.dsp.exec_cmd("dms ipc call spotlight toggle"))
 hl.bind("SUPER + V",       hl.dsp.exec_cmd("dms ipc call clipboard toggle"))
 hl.bind("SUPER + comma",   hl.dsp.exec_cmd("dms ipc call settings focusOrToggle"))
@@ -410,12 +410,6 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("dms ipc call brightness decrem
 
 -- User launchers
 hl.bind("SUPER + T", hl.dsp.exec_cmd("footclient"))
-
--- Color picker (Copiar al clipboard el RGB en formato hexadecimal, ejemplo 'FF8040')
---hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("dms color pick -o \"{0}{1}{2}\" -a"))
-
--- Optional: if you use submaps later
--- hl.bind("SUPER + Escape", hl.dsp.submap("reset"))
 
 
 
