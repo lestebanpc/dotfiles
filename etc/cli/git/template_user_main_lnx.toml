@@ -26,23 +26,25 @@
     log3-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n          %C(white)%s%C(reset)%n        %C(dim white)- %an <%ae> %C(reset) %C(dim white)(committer: %cn <%ce>)%C(reset)'
 
 
-# Usuario de personal alternativo
+## Usuario de personal alternativo
 #[includeIf "gitdir:~/code/myoutlook1/"]
 #    path = user_myoutlook1.toml
 
-#[includeIf "gitdir:/dt3/code/myoutlook1/"]
+##[includeIf "gitdir:/dt3/code/myoutlook1/"]
 #    path = user_myoutlook1.toml
 
-# Usuario de work BP
+
+## Usuario de trabajo de la empresa work1
 #[includeIf "gitdir:~/code/work1/"]
 #    path = user_work1.toml
 
-#[includeIf "gitdir:/dt3/code/work1/"]
+##[includeIf "gitdir:/dt3/code/work1/"]
 #    path = user_work1.toml
 
-# Usuario de work Progrez
+
+## Usuario de trabajo de la empresa work2
 #[includeIf "gitdir:~/code/work2/"]
 #    path = user_work2.toml
-#
+
 #[includeIf "gitdir:/dt3/code/work2/"]
 #    path = user_work2.toml

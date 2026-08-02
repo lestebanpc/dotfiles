@@ -2,7 +2,7 @@
 
 # Para habilitar el uso de este archivo de configurar, deberará:
 # > Copiarlo en la ruta:
-#   cp ~/.files/shell/bash/bin/linuxsetup/lib/setup_config_template.bash ~/.files/shell/bash/bin/linuxsetup/.setup_config.bash
+#   cp ~/.files/shell/bash/bin/linuxsetup/lib/template_initial_setup.bash ~/.files/shell/bash/bin/linuxsetup/.initial_setup.bash
 # > Descomentar y cambiar los valores deseados
 #
 #
@@ -259,7 +259,7 @@
 #      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
 #      > No estan diseñados para que se conecten remotamente por ssh.
 #      > Ejemplo: La VM ligera WSL2 que esta integrada con Windows en modo escritorio.
-#g_enviroment_type=0
+g_enviroment_type=1
 
 
 # Definir si se descarga y configuracion plugins de AI (AI Completion, AI Chatbot, AI Agent, etc.).

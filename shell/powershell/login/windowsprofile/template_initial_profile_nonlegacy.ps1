@@ -1,7 +1,7 @@
 #
-# Si es Powershell Core o Windows Powershell, puede crear el archivo de inicializacion del profile:
-#  cp ~/.files/shell/powershell/login/windowsprofile/profile_config_template.ps1 "${env:USERPROFILE}/config_profile.ps1"
-#  vim "${env:USERPROFILE}/config_profile.ps1"
+# > En Powershell Core
+#   cp ~/.files/shell/powershell/login/windowsprofile/template_initial_profile_nonlegacy.ps1 "${env:USERPROFILE}/initial_profile.ps1"
+#   vim "${env:USERPROFILE}/initial_profile.ps1"
 #
 
 #-----------------------------------------------------------------------------------

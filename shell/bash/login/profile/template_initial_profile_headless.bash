@@ -1,12 +1,12 @@
 #!/bin/bash
 
 #
-# Para habilitar su uso genere el arcivo '~/.config_profile.bash':
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_local.bash ~/.config_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_remote.bash ~/.config_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_distrobox.bash ~/.config_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_wsl.bash ~/.config_profile.bash
-#  vim ~/.config_profile.bash
+# Para habilitar su uso genere el arcivo '~/.initial_profile.bash':
+#  cp ~/.files/shell/bash/login/profile/template_initial_profiley_desktop.bash ~/.initial_profile.bash
+#  cp ~/.files/shell/bash/login/profile/template_initial_profiley_headless.bash ~/.initial_profile.bash
+#  cp ~/.files/shell/bash/login/profile/template_initial_profiley_distrobox.bash ~/.initial_profile.bash
+#  cp ~/.files/shell/bash/login/profile/template_initial_profiley_wsl.bash ~/.initial_profile.bash
+#  vim ~/.initial_profile.bash
 #
 
 

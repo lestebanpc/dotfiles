@@ -728,10 +728,10 @@ function show_menu() {
 
 
 # Cargar la información:
-if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1") {
+if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/initial_setup.ps1") {
 
-    . "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1"
-    Write-Host "Config File                    : ${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1" -ForegroundColor DarkGray
+    . "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/initial_setup.ps1"
+    Write-Host "Config File                    : ${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/initial_setup.ps1" -ForegroundColor DarkGray
 
     #Fix the bad entry values
 

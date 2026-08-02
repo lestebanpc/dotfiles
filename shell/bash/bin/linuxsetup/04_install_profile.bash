@@ -1133,34 +1133,34 @@ function _setup_user_profile() {
     # Para WSL copiar el archivo de configuracion del profile
     if [ $g_enviroment_type -eq 3 ]; then
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_wsl.bash" "" ".config_profile.bash" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "template_initial_profile_wsl.bash" "" ".initial_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-              "$g_color_yellow1" "~/.config_profile.bash" "$g_color_reset"
+              "$g_color_yellow1" "~/.initial_profile.bash" "$g_color_reset"
 
     # Si es contenedor distrobox
     elif [ $g_enviroment_type -eq 2 ]; then
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_distrobox.bash" "" ".config_profile.bash" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "template_initial_profile_distrobox.bash" "" ".initial_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-              "$g_color_yellow1" "~/.config_profile.bash" "$g_color_reset"
+              "$g_color_yellow1" "~/.initial_profile.bash" "$g_color_reset"
 
     # Si es un 'Desktop server'
     elif [ $g_enviroment_type -eq 1 ]; then
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_desktop.bash" "" ".config_profile.bash" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "template_initial_profile_desktop.bash" "" ".initial_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-              "$g_color_yellow1" "~/.config_profile.bash" "$g_color_reset"
+              "$g_color_yellow1" "~/.initial_profile.bash" "$g_color_reset"
 
     # Si es un 'Headless server'
     else
 
-        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "profile_config_template_headless.bash" "" ".config_profile.bash" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/shell/bash/login/profile" "template_initial_profile_headless.bash" "" ".initial_profile.bash" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de profile bash de la distribución WSL\n' \
-              "$g_color_yellow1" "~/.config_profile.bash" "$g_color_reset"
+              "$g_color_yellow1" "~/.initial_profile.bash" "$g_color_reset"
 
     fi
 
@@ -1207,7 +1207,7 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
-    l_source_filename='custom_config_template_1.conf'
+    l_source_filename='template_custom_config_1.conf'
     copy_file_on_home "${g_repo_path}/etc/cli/tmux" "$l_source_filename" ".config/tmux" "custom_config.conf" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de tmux.\n' \
@@ -1225,7 +1225,7 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/etc/cli/sesh" "custom_config_template_1.toml" ".config/sesh" "custom_config.toml" $l_flag_overwrites_file_modifiable "        > "
+    copy_file_on_home "${g_repo_path}/etc/cli/sesh" "template_custom_config_1.toml" ".config/sesh" "custom_config.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
            "$g_color_yellow1" "~/.config/sesh/custom_config.toml" "$g_color_reset"
@@ -1283,12 +1283,12 @@ function _setup_user_profile() {
     create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "Profile > " $p_flag_overwrites_file_notmodifiable
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/yazi" "keymap_lnx.toml" ".config/yazi" "keymap.toml" $l_flag_overwrites_file_modifiable "        > "
+    copy_file_on_home "${g_repo_path}/yazi" "template_keymap_lnx.toml" ".config/yazi" "keymap.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
            "$g_color_yellow1" "~/.config/yazi/keymap.toml" "$g_color_reset"
 
-    copy_file_on_home "${g_repo_path}/yazi" "init.lua" ".config/yazi" "init.lua" $l_flag_overwrites_file_modifiable "        > "
+    copy_file_on_home "${g_repo_path}/yazi" "template_init.lua" ".config/yazi" "init.lua" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
            "$g_color_yellow1" "~/.config/yazi/init.lua" "$g_color_reset"
@@ -1352,10 +1352,10 @@ function _setup_user_profile() {
     l_status=$?
 
     create_folderpath_on_home ".config" "git"
-    copy_file_on_home "${g_repo_path}/etc/cli/git" "user_main_template_lnx.toml" ".config/git" "user_main.toml" $l_flag_overwrites_file_modifiable "        > "
+    copy_file_on_home "${g_repo_path}/etc/cli/git" "template_user_main_lnx.toml" ".config/git" "user_main.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/etc/cli/git" "user_work_template_lnx.toml" ".config/git" "user_mywork.toml" $l_flag_overwrites_file_modifiable "        > "
+    copy_file_on_home "${g_repo_path}/etc/cli/git" "template_user_work_lnx.toml" ".config/git" "user_mywork.toml" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite los archivos "%b%s%b" y "%b%s%b" si desea personalizar las opciones a nivel global del usuario ("%b~/.gitconfig%b")\n' \
            "$g_color_yellow1" "~/.config/git/user_main.toml" "$g_color_reset" "$g_color_yellow1" "~/.config/git/user_mywork.toml" "$g_color_reset" \
@@ -1512,7 +1512,7 @@ function _setup_user_profile() {
 
     # Archivo de configuración de SSH
     create_folderpath_on_home "" ".ssh"
-    copy_file_on_home "${g_repo_path}/etc/cli/ssh" "template_linux_withpublickey.conf" ".ssh" "config" $l_flag_overwrites_file_modifiable "Profile > "
+    copy_file_on_home "${g_repo_path}/etc/cli/ssh" "template_config_withpublickey_lnx.conf" ".ssh" "config" $l_flag_overwrites_file_modifiable "Profile > "
     l_status=$?
 
     #Crear el enlace simbolico de comandos basicos
@@ -1766,7 +1766,7 @@ function _setup_user_profile() {
 
         create_folderpath_on_home ".config" "wezterm"
 
-        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_wsl_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/wezterm/remote" "template_wezterm_wsl_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
                "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
@@ -1794,7 +1794,7 @@ function _setup_user_profile() {
         l_source_path="${g_repo_name}/wezterm/local/utils"
         create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "Profile > " $p_flag_overwrites_file_notmodifiable
 
-        copy_file_on_home "${g_repo_path}/wezterm/local" "custom_config_template_lnx.lua" ".config/wezterm" "custom_config.lua" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/wezterm/local" "template_custom_config_lnx.lua" ".config/wezterm" "custom_config.lua" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
                "$g_color_yellow1" "~/.config/wezterm/custom_config.lua" "$g_color_reset"
@@ -1804,7 +1804,7 @@ function _setup_user_profile() {
 
         create_folderpath_on_home ".config" "wezterm"
 
-        copy_file_on_home "${g_repo_path}/wezterm/remote" "wezterm_template_lnx_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/wezterm/remote" "template_wezterm_lnx_1.lua" ".config/wezterm" "wezterm.lua" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
                "$g_color_yellow1" "~/.config/wezterm/wezterm.lua" "$g_color_reset"
@@ -1865,7 +1865,7 @@ function _setup_user_profile() {
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
-        copy_file_on_home "${g_repo_path}/etc/gui/kitty" "custom_config_template_lnx.conf" ".config/kitty" "custom_config.conf" $l_flag_overwrites_file_modifiable "        > "
+        copy_file_on_home "${g_repo_path}/etc/gui/kitty" "template_custom_config_lnx.conf" ".config/kitty" "custom_config.conf" $l_flag_overwrites_file_modifiable "        > "
         l_status=$?
         printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de Wezterm\n' \
                "$g_color_yellow1" "~/.config/kitty/custom_config.conf" "$g_color_reset"
@@ -3445,13 +3445,13 @@ g_usage() {
     printf '  > %bTARGET_HOME_PATH %bRuta base donde el home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %b> El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio "g_repo_name".%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bREPO_NAME %bNombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario. Este valor se obtendra segun orden prioridad:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %b> El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si ninguno de los anteriores se establece, se usara el valor ".files".%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bCALLING_TYPE%b Es 0 si se muestra un menu, caso contrario es 1 si es interactivo y 2 si es no-interactivo.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
@@ -3547,12 +3547,12 @@ g_is_credential_storage_externally=1
 # 3. Variables globales cuyos valor puede ser modificados el usuario
 
 # Obtener los parametros del archivos de configuración
-if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
+if [ -f "${g_shell_path}/bash/bin/linuxsetup/.initial_setup.bash" ]; then
 
     # Obtener los valores por defecto de las variables
-    # shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/setup_config_template.bash
-    . ${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash
-    printf '%bConfig File           : "%s"%b\n' "$g_color_gray1" "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" "$g_color_reset"
+    # shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/template_initial_setup.bash
+    . "${g_shell_path}/bash/bin/linuxsetup/.initial_setup.bash"
+    printf '%bConfig File           : "%s"%b\n' "$g_color_gray1" "${g_shell_path}/bash/bin/linuxsetup/.initial_setup.bash" "$g_color_reset"
 
     # Corregir algunos valores ingresados
     # ...
@@ -3562,11 +3562,11 @@ fi
 # Nombre del repositorio git o la ruta relativa del repositorio git respecto al home de usuario OBJETIVO (al cual se desea configurar el profile del usuario).
 # Este valor se obtendra segun orden prioridad:
 # - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+# - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
 # - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 #
 # Calcular el valor efectivo de 'g_repo_name'.
-# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
+# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.initial_setup.bash'
 if [ $gp_type_calling -eq 0 ]; then
     if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
         g_repo_name="$3"
@@ -3585,12 +3585,12 @@ fi
 # Ruta del home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git.
 # Este valor se obtendra segun orden prioridad:
 # - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+# - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
 # - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
 # - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
 #
 # Calcular el valor efectivo de 'g_repo_name'.
-# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
+# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.initial_setup.bash'
 if [ $gp_type_calling -eq 0 ]; then
     if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
         g_targethome_path="$2"
@@ -3676,13 +3676,13 @@ if [ $gp_type_calling -eq 0 ]; then
     # 1> Tipo de configuración: 0 (instalación con un menu interactivo).
     # 2> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
     #    - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
     # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     #    Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 
     # Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
@@ -3708,13 +3708,13 @@ else
     # 2> Opciones de menu a ejecutar: entero positivo.
     # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
     #    - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
     # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     #    Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
     # 5> El estado de la credencial almacenada para el sudo.
     _gp_menu_options=0

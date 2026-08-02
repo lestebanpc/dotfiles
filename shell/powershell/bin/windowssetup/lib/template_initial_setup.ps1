@@ -1,7 +1,7 @@
 #
-# Para habilitar su uso genere el arcivo '${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1':
-#  cp ~/.files/shell/powershell/bin/windowssetup/lib/setup_config_template.ps1 "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1"
-#  vim "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1"
+# > Para personalizar los scripts de instalacion cree el archivo 'initial_setup.ps1':
+#   cp ~/.files/shell/powershell/bin/windowssetup/lib/template_initial_setup.ps1 "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/initial_setup.ps1"
+#   vim "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/initial_setup.ps1"
 #
 
 

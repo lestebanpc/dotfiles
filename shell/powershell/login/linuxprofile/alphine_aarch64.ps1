@@ -2,11 +2,9 @@
 # Personalizacion de la terminal
 #------------------------------------------------------------------------------------------------
 
-# Cargar la información:
-if(Test-Path "${HOME}/.config/powershell/custom_profile.ps1") {
-    . "${HOME}/.config/powershell/custom_profile.ps1"
-if(Test-Path "${HOME}/.config/powershell/profile_config.ps1") {
-    . "${HOME}/.config/powershell/profile_config.ps1"
+# Cargar variables que permiten inicializar el profile
+if(Test-Path "${HOME}/.config/powershell/.initial_profile.ps1") {
+    . "${HOME}/.config/powershell/.initial_profile.ps1"
 }
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT
@@ -249,4 +247,7 @@ $PSStyle.FileInfo.Directory="`e[44;30m"
 # Funciones personalizado del usuario
 #------------------------------------------------------------------------------------------------
 
-. "${HOME}/${g_repo_name}/shell/powershell/login/linuxprofile/custom_modules.ps1"
+# Cargar logica personalizada del profile
+if(Test-Path "${HOME}/.config/powershell/.custom_profile.ps1") {
+    . "${HOME}/.config/powershell/.custom_profile.ps1"
+}

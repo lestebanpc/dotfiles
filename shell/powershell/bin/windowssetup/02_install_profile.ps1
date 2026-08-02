@@ -1460,12 +1460,12 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
 
     $l_target_link="${env:USERPROFILE}\.config\git\user_main.toml"
     $l_source_path="${env:USERPROFILE}\.files\etc\cli\git"
-    $l_source_filename="user_main_template_win.toml"
+    $l_source_filename="template_user_main_win.toml"
     $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
 
     $l_target_link="${env:USERPROFILE}\.config\git\user_mywork.toml"
     $l_source_path="${env:USERPROFILE}\.files\etc\cli\git"
-    $l_source_filename="user_work_template_win.toml"
+    $l_source_filename="template_user_work_win.toml"
     $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
     Write-Host "${g_tag_empty}Edite '~\.config\git\user_main.toml' y '~\.config\git\user_mywork.toml' si desea crear modificar las opciones de '~/.gitignore'."
 
@@ -1475,7 +1475,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
 
     $l_target_link="${env:USERPROFILE}\.ssh\config"
     $l_source_path="${env:USERPROFILE}\.files\etc\cli\ssh"
-    $l_source_filename='template_windows_withpublickey.conf'
+    $l_source_filename='template_config_withpublickey_win.conf'
     $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
 
 
@@ -1582,7 +1582,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
 
     $l_target_link="${env:USERPROFILE}\.config\wezterm\custom_config.lua"
     $l_source_path="${env:USERPROFILE}\.files\wezterm\local"
-    $l_source_filename='custom_config_template_win.lua'
+    $l_source_filename='template_custom_config_win.lua'
     $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
 
 
@@ -1642,14 +1642,14 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
 
     $l_target_link="${env:APPDATA}\yazi\config\keymap.toml"
     $l_source_path="${env:USERPROFILE}\.files\yazi"
-    $l_source_filename='keymap_win.toml'
+    $l_source_filename='template_keymap_win.toml'
     $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
     Write-Host "            > Edite '${env:APPDATA}\yazi\config\keymap.toml' si desea modificar las opciones Wezterm."
 
 
     $l_target_link="${env:APPDATA}\yazi\config\init.lua"
     $l_source_path="${env:USERPROFILE}\.files\yazi"
-    $l_source_filename='init.lua'
+    $l_source_filename='template_init.lua'
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
@@ -2109,10 +2109,10 @@ function show_menu() {
 
 
 # Cargar la parametros globales modificables por el usuario
-if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1") {
+if(Test-Path "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/initial_setup.ps1") {
 
-    . "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1"
-    Write-Host "Config File                    : ${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/.setup_config.ps1" -ForegroundColor DarkGray
+    . "${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/initial_setup.ps1"
+    Write-Host "Config File                    : ${env:USERPROFILE}/.files/shell/powershell/bin/windowssetup/initial_setup.ps1" -ForegroundColor DarkGray
 
     #Fix the bad entry values
 

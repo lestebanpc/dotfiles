@@ -35,11 +35,16 @@
     log3-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n          %C(white)%s%C(reset)%n        %C(dim white)- %an <%ae> %C(reset) %C(dim white)(committer: %cn <%ce>)%C(reset)'
 
 
-# Usuario de personal alternativo
+## Usuario de personal alternativo
 #[includeIf "gitdir/i:c:/code/mygmail2/"]
 #    path = user_mygmail2.toml
 
 
-# Usuario de trabajo 'mywork'
+## Usuario de trabajo 'work1'
 #[includeIf "gitdir/i:c:/code/work1/"]
 #    path = user_work1.toml
+
+
+## Usuario de trabajo 'work2'
+#[includeIf "gitdir/i:c:/code/work2/"]
+#    path = user_work2.toml

@@ -856,13 +856,13 @@ g_usage() {
     printf '  > %bTARGET_HOME_PATH %bRuta base donde el home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %b> El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio "g_repo_name".%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bREPO_NAME %bNombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario. Este valor se obtendra segun orden prioridad:%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '    %b> El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")%b\n' "$g_color_gray1" "$g_color_reset"
-    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
+    printf '    %b> El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)%b\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b> Si ninguno de los anteriores se establece, se usara el valor ".files".%b\n' "$g_color_gray1" "$g_color_reset"
     printf '  > %bSUDO-STORAGE-OPTIONS %bes el estado actual de la credencial almacenada para el sudo. Use -1 o un non-integer, si las credenciales aun no se han almacenado.%b\n' \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -952,24 +952,26 @@ g_is_credential_storage_externally=1
 # 3. Variables globales cuyos valor puede ser modificados el usuario
 
 # Obtener los parametros del archivos de configuración
-if [ -f "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" ]; then
+if [ -f "${g_shell_path}/bash/bin/linuxsetup/.initial_setup.bash" ]; then
 
-    #Obtener los valores por defecto de las variables
-    . ${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash
-    printf '%bConfig File           : "%s"%b\n' "$g_color_gray1" "${g_shell_path}/bash/bin/linuxsetup/.setup_config.bash" "$g_color_reset"
+    # Obtener los valores por defecto de las variables
+    # shellcheck source=/home/lucianoepc/.files/shell/bash/bin/linuxsetup/lib/template_initial_setup.bash
+    . "${g_shell_path}/bash/bin/linuxsetup/.initial_setup.bash"
+    printf '%bConfig File           : "%s"%b\n' "$g_color_gray1" "${g_shell_path}/bash/bin/linuxsetup/.initial_setup.bash" "$g_color_reset"
 
-    #Corregir algunos valaores
-    #...
+    # Corregir algunos valores ingresados
+    # ...
+
 fi
 
 # Nombre del repositorio git o la ruta relativa del repositorio git respecto al home de usuario OBJETIVO (al cual se desea configurar el profile del usuario).
 # Este valor se obtendra segun orden prioridad:
 # - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+# - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
 # - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 #
 # Calcular el valor efectivo de 'g_repo_name'.
-# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
+# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.initial_setup.bash'
 if [ $gp_type_calling -eq 0 ]; then
     if [ ! -z "$3" ] && [ "$3" != "EMPTY" ]; then
         g_repo_name="$3"
@@ -988,12 +990,12 @@ fi
 # Ruta del home del usuario OBJETIVO al cual se configurara su profile y donde esta el repositorio git.
 # Este valor se obtendra segun orden prioridad:
 # - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-# - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+# - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
 # - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
 # - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
 #
 # Calcular el valor efectivo de 'g_repo_name'.
-# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.setup_config.bash'
+# > La prioridad siempre es el valor enviado como argumento, luego el valor del archivo de configuración './linuxsetup/.initial_setup.bash'
 if [ $gp_type_calling -eq 0 ]; then
     if [ ! -z "$2" ] && [ "$2" != "EMPTY" ]; then
         g_targethome_path="$2"
@@ -1025,13 +1027,13 @@ if [ $gp_type_calling -eq 0 ]; then
     # 1> Tipo de llamado: 0 (usar un menu interactivo).
     # 2> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
     #    - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
     # 3> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     #    Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
 
     # Validar los requisitos (0 debido a que siempre se ejecuta de modo interactivo)
@@ -1057,13 +1059,13 @@ else
     # 2> Opciones de menu a ejecutar: entero positivo.
     # 3> Ruta base del home del usuario al cual se configurara su profile y donde esta el repositorio git. Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se la ruta sera calculado en base de la ruta del script de instalación y el nombre del repositorio 'g_repo_name'.
     #    - Si no se puede cacluar este valor, se detendra el proceso de instalación/actualización
     # 4> Nombre del repositorio git o la ruta relativa del repositorio git respecto al home al cual se desea configurar el profile del usuario.
     #    Este valor se obtendra segun orden prioridad:
     #    - El valor especificado como argumento del script de instalación (debe ser diferente de vacio o "EMPTY")
-    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.setup_config.bash" (debe ser diferente de vacio)
+    #    - El valor ingresado en el archivo de configuracion "./linuxsetup/.initial_setup.bash" (debe ser diferente de vacio)
     #    - Si ninguno de los anteriores se establece, se usara el valor '.files'.
     # 5> El estado de la credencial almacenada para el sudo.
     _gp_menu_options=0

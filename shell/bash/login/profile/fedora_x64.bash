@@ -86,13 +86,13 @@ fi
 
 
 #-----------------------------------------------------------------------------------
-# Variables globales y entornos de inicializacion '~/.config_profile.bash'
+# Variables globales y entornos de inicializacion '~/.initial_profile.bash'
 #-----------------------------------------------------------------------------------
 
 # Obtener los parametros del profile del usuario
-if [ -f "${HOME}/.config_profile.bash" ]; then
-    # shellcheck source=/home/lucianoepc/.custom_profile.bash
-    . "${HOME}/.config_profile.bash"
+if [ -f "${HOME}/.initial_profile.bash" ]; then
+    # shellcheck source=/home/lucianoepc/.initial_profile.bash
+    . "${HOME}/.initial_profile.bash"
 fi
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT

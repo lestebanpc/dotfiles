@@ -1,12 +1,12 @@
 #!/bin/bash
 
 #
-# Para habilitar su uso genere el arcivo '~/.config_profile.bash':
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_local.bash ~/.config_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_basic_remote.bash ~/.config_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_distrobox.bash ~/.config_profile.bash
-#  cp ~/.files/shell/bash/login/profile/profile_config_template_wsl.bash ~/.config_profile.bash
-#  vim ~/.config_profile.bash
+# Para habilitar su uso genere el arcivo '~/.initial_profile.bash':
+#  cp ~/.files/shell/bash/login/profile/template_initial_profiley_desktop.bash ~/.initial_profile.bash
+#  cp ~/.files/shell/bash/login/profile/template_initial_profiley_headless.bash ~/.initial_profile.bash
+#  cp ~/.files/shell/bash/login/profile/template_initial_profiley_distrobox.bash ~/.initial_profile.bash
+#  cp ~/.files/shell/bash/login/profile/template_initial_profiley_wsl.bash ~/.initial_profile.bash
+#  vim ~/.initial_profile.bash
 #
 
 #-----------------------------------------------------------------------------------
@@ -35,14 +35,14 @@
 #g_repo_name='.files'
 
 # Folder base donde se almacena los subfolderes de los programas.
-# - Si no es un valor valido (no existe o es vacio), su valor sera el valor por defecto "/var/opt/tools"
-# - Si es un directorio valido se Convertira en la variable de entorno 'MY_TOOLS_PATH' usado en la configuración
-#   de programas como TMUX.
+# - Si no es un valor valido (no existe o es vacio), su valor sera el valor por defecto "/var/opt/tools".
+# - Si es un directorio valido, se valor sera usadoo para definir la  variable de entorno de usuario 'MY_TOOLS_PATH'
+# - Esta variable es usado en la configuración de programas como TMUX, VIM o NeoVIM.
 #g_tools_path='/var/opt/tools'
 
-# Tipo de origen de la sesion del profile.
+# Tipo de origin de la sesion del profile.
 # > Usando esta variable se determina el valor de la variable de entorno del usuario 'MY_SESSION_SRC'.
-# Sus valores puede ser:
+# Sus valores son:
 #  > 0 Si se usa sesion remota SSH (ya se de un 'desktop server' o 'headless server').
 #  > 1 Si se realiza una sesion local usando 'Console Linux'.
 #  > 2 Si se usa sesion dentro del escritorio del servidor (ya sea local desktop o remote desktop).
@@ -77,12 +77,27 @@
 #      > Ejemplo: Contenedores Distrobox o Toolbox en Linux.
 #  > 3 Los script de ejecutan en un VM local dentro de un 'Desktop Server' tiene acceso a la GPU del servidor.
 #      > Los script de ejecutan dentro de proceso remoto de un 'Desktop Server' (dentro de una VM) pero que tiene acceso a GPU
-#        y programadas GUI del servidor.
+#        y progrmadas GUI del servidor.
 #      > Aparte de tener acceso a la GPU tiene acceso a todo lo necesario para interactuar con estos (como bus de mensajes).
 #      > No estan diseñados para que se conecten remotamente por ssh.
 #      > Ejemplo: La VM ligera WSL2 que esta integrada con Windows en modo escritorio.
 #  > Si no se define, su valor por defecto es '0' (Headless Server).
-g_enviroment_type=1
+g_enviroment_type=3
+
+
+#-----------------------------------------------------------------------------------
+# Variables globales de configuracion para Linux WSL
+#-----------------------------------------------------------------------------------
+
+# Folder base, donde se almacena el programas, comando y afines usados por Windows.
+# - Si no se ingresa un valor valido o no existe, se asignara su valor por defecto "/mnt/c/tools" (es decir "c:\apps").
+# - En este folder almacena la siguiente estructura de folderes donde estan:
+#     > "${g_win_base_path}/tools"     : subfolder donde se almacena los subfolder de los programas.
+#     > "${g_win_base_path}/cmds/bin" : subfolder donde se almacena los comandos.
+#     > "${g_win_base_path}/cmds/doc" : subfolder donde se almacena documentacion del comando.
+#     > "${g_win_base_path}/cmds/etc" : subfolder donde se almacena archivos adicionales del comando.
+#     > "${g_win_base_path}/fonts" : subfolder donde se almacena los archivos de fuentes tipograficas.
+#$g_win_base_path='/mnt/d/apps'
 
 
 #-----------------------------------------------------------------------------------
@@ -95,11 +110,9 @@ g_enviroment_type=1
 #export SYSTEMD_EDITOR="vim"
 
 # La variable de entorno 'TMUX_NESTED' es usado por 'tmux' e indica si el tmux actual se ejecuta dentro de otro tmux padre.
-# Es usado para:
-#  > Definir para cambiar el prefijo de 'CTRL + b' (root tmux)  a 'Ctrl + a' (nested tmux).
-# Sus valores son:
-#  > 0 ('true' ), es un 'nested tmux' (el tmux se ejecuta dentro de otro tmux en una mismo emulador de terminal).
-#  > 1 ('false'), es un 'root tmux'.
+# Es usado para definir para cambiar el prefijo de 'CTRL + b' (root tmux)  a 'Ctrl + a' (nested tmux).
+#   > 0 ('true' ), es un 'nested tmux' (el tmux se ejecuta dentro de otro tmux en una mismo emulador de terminal).
+#   > 1 ('false'), es un 'root tmux'.
 # Si no se define, su valor por defecto es 1 ('false'), es decir el tmux no esta dentro de otro.
 #export TMUX_NESTED=1
 

@@ -2,9 +2,9 @@
 # Personalizacion de la terminal
 #------------------------------------------------------------------------------------------------
 
-# Cargar la información:
-if(Test-Path "${env:USERPROFILE}/custom_profile.ps1") {
-    . "${env:USERPROFILE}/custom_profile.ps1"
+# Cargar parametros generales del profile
+if(Test-Path "${env:USERPROFILE}/initial_profile_legacy.ps1") {
+    . "${env:USERPROFILE}/initial_profile_legacy.ps1"
 }
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT
@@ -120,7 +120,7 @@ function y {
 # Personalizacion del profile
 #------------------------------------------------------------------------------------------------
 
-# Cargar parametros del profile
-if(Test-Path "${env:USERPROFILE}/custom_profile_win.ps1") {
-    . "${env:USERPROFILE}/custom_profile_win.ps1"
+# Cargar logica personalizada del profile
+if(Test-Path "${env:USERPROFILE}/custom_profile_legacy.ps1") {
+    . "${env:USERPROFILE}/custom_profile_legacy.ps1"
 }
