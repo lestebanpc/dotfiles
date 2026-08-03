@@ -618,9 +618,10 @@ function mod.get_equivalent_fullpath(p_workspace_name, p_domain_info)
             return l_workspace_info.fullpath
         end
 
-        -- En una distribucion distrobox el home del usuario se monta en el mismo lugar dentro del contenedor
+        -- En una distribucion distrobox
         if p_domain_info.domain_category == 'distrobox' then
 
+            -- El home del usuario se monta en el mismo lugar dentro del contenedor
             l_is_subfolder = mm_ucommon.is_subfolder_of_home_dir(l_workspace_info.fullpath)
             if l_is_subfolder then
                 return l_workspace_info.fullpath
@@ -630,9 +631,10 @@ function mod.get_equivalent_fullpath(p_workspace_name, p_domain_info)
 
         end
 
-        -- En una distribucion WSL siempre se monta los discos del SO Windows en '/mnt/'
+        -- En una distribucion WSL
         if p_domain_info.domain_category == 'wsl' then
 
+            -- Siempre se monta los discos del SO Windows en '/mnt/'
             l_is_subfolder = mm_ucommon.is_wsl_subfolder_of_windows_disk(l_workspace_info.fullpath)
             if l_is_subfolder then
                 return l_workspace_info.fullpath

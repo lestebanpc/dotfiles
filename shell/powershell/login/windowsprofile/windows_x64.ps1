@@ -3,8 +3,8 @@
 #------------------------------------------------------------------------------------------------
 
 # Cargar parametros iniciales del profile
-if(Test-Path "${env:USERPROFILE}/initial_profile.ps1") {
-    . "${env:USERPROFILE}/initial_profile.ps1"
+if(Test-Path "${env:USERPROFILE}\initial_profile.ps1") {
+    . "${env:USERPROFILE}\initial_profile.ps1"
 }
 
 # Nombre del repositorio GIT o ruta relativa desde el HOME del repositorio GIT
@@ -13,17 +13,17 @@ if(-not ${g_repo_name}) {
 }
 
 # Tema por defecto de Oh-My-Posh:
-if((-not ${g_prompt_theme}) -or (Test-Path "$g_prompt_theme")) {
-    $g_prompt_theme= "${env:USERPROFILE}/${g_repo_name}/etc/cli/oh-my-posh/default_settings.json"
+if((-not ${g_prompt_theme}) -or -not (Test-Path "$g_prompt_theme")) {
+    $g_prompt_theme= "${env:USERPROFILE}\${g_repo_name}\etc\cli\oh-my-posh\default_settings.json"
 }
 
 # Ruta del folder base donde estan los subfolderes del los programas (1 o mas comandos y otros archivos).
-if((-not ${g_tools_path}) -or (Test-Path "$g_tools_path")) {
+if((-not ${g_tools_path}) -or -not (Test-Path "$g_tools_path")) {
     $g_tools_path= 'C:\apps\tools'
 }
 
 # Ruta del folder donde se ubican comandos personalizado del usuario.
-if((-not ${g_bin_path}) -or (Test-Path "$g_bin_path")) {
+if((-not ${g_bin_path}) -or -not (Test-Path "$g_bin_path")) {
     $g_bin_path= 'C:\apps\cmds\bin'
 }
 
@@ -121,6 +121,6 @@ function y {
 #------------------------------------------------------------------------------------------------
 
 # Carga de logica personalizada del profile
-if(Test-Path "${env:USERPROFILE}/custom_profile.ps1") {
-    . "${env:USERPROFILE}/custom_profile.ps1"
+if(Test-Path "${env:USERPROFILE}\custom_profile.ps1") {
+    . "${env:USERPROFILE}\custom_profile.ps1"
 }

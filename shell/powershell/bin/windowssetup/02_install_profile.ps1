@@ -1002,7 +1002,7 @@ function m_setup_nvim_files($p_flag_developer, $p_flag_overwrites_file_notmodifi
     }
 
     # Creando los enlaces simbolicos
-    $l_target_link= ""
+    $l_target_path= ""
     $l_source_path= ""
     $l_source_filename= ""
     $l_tag= "NeoVIM (IDE)> "
@@ -1012,78 +1012,78 @@ function m_setup_nvim_files($p_flag_developer, $p_flag_overwrites_file_notmodifi
 
         $l_status= m_create_folder "${env:LOCALAPPDATA}" "nvim" $l_tag
 
-        $l_target_link="${env:LOCALAPPDATA}\nvim\init.vim"
+        $l_target_path="${env:LOCALAPPDATA}\nvim\init.vim"
         $l_source_path="${env:USERPROFILE}\.files\nvim"
         $l_source_filename="init_ide.vim"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
-        $l_target_link="${env:LOCALAPPDATA}\nvim\coc-settings.json"
+        $l_target_path="${env:LOCALAPPDATA}\nvim\coc-settings.json"
         $l_source_path="${env:USERPROFILE}\.files\nvim"
         $l_source_filename="coc-settings_windows.json"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
-        $l_target_link="${env:LOCALAPPDATA}\nvim\setting"
+        $l_target_path="${env:LOCALAPPDATA}\nvim\setting"
         $l_source_path="${env:USERPROFILE}\.files\vim\setting"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
-        $l_target_link="${env:LOCALAPPDATA}\nvim\lua"
+        $l_target_path="${env:LOCALAPPDATA}\nvim\lua"
         $l_source_path="${env:USERPROFILE}\.files\nvim\lua"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         #El codigo open\close asociado a los 'file types'
-        $l_target_link="${env:LOCALAPPDATA}\nvim\ftplugin"
+        $l_target_path="${env:LOCALAPPDATA}\nvim\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\nvim\ftplugin\commonide"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         #Para el codigo open/close asociado a los 'file types' de CoC
         $l_status= m_create_folder "${env:LOCALAPPDATA}" "nvim\rte_cocide" $l_tag
 
-        $l_target_link="${env:LOCALAPPDATA}\nvim\rte_cocide\ftplugin"
+        $l_target_path="${env:LOCALAPPDATA}\nvim\rte_cocide\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\nvim\ftplugin\cocide"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
         #Para el codigo open/close asociado a los 'file types' que no sean CoC
         $l_status= m_create_folder "${env:LOCALAPPDATA}" "nvim\rte_nativeide" $l_tag
 
-        $l_target_link="${env:LOCALAPPDATA}\nvim\rte_nativeide\ftplugin"
+        $l_target_path="${env:LOCALAPPDATA}\nvim\rte_nativeide\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\nvim\ftplugin\nativeide"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
@@ -1100,44 +1100,44 @@ function m_setup_nvim_files($p_flag_developer, $p_flag_overwrites_file_notmodifi
 
         $l_status= m_create_folder "${env:LOCALAPPDATA}" "nvim" $l_tag
 
-        $l_target_link="${env:LOCALAPPDATA}\nvim\init.vim"
+        $l_target_path="${env:LOCALAPPDATA}\nvim\init.vim"
         $l_source_path="${env:USERPROFILE}\.files\nvim"
         $l_source_filename="init_editor.vim"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
-        $l_target_link="${env:LOCALAPPDATA}\nvim\setting"
+        $l_target_path="${env:LOCALAPPDATA}\nvim\setting"
         $l_source_path="${env:USERPROFILE}\.files\vim\setting"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
-        $l_target_link="${env:LOCALAPPDATA}\nvim\lua"
+        $l_target_path="${env:LOCALAPPDATA}\nvim\lua"
         $l_source_path="${env:USERPROFILE}\.files\nvim\lua"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
         #El codigo open\close asociado a los 'file types' como Editor
-        $l_target_link="${env:LOCALAPPDATA}\nvim\ftplugin"
+        $l_target_path="${env:LOCALAPPDATA}\nvim\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\nvim\ftplugin\editor"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
@@ -1248,7 +1248,7 @@ function m_setup_vim_files($p_flag_developer, $p_flag_overwrites_file_notmodifia
     }
 
     # Creando los enlaces simbolicos
-    $l_target_link= ""
+    $l_target_path= ""
     $l_source_path= ""
     $l_source_filename= ""
     $l_tag= "VIM    (IDE)> "
@@ -1258,44 +1258,44 @@ function m_setup_vim_files($p_flag_developer, $p_flag_overwrites_file_notmodifia
     if ($p_flag_developer) {
 
         #Creando enlaces simbolicos
-        $l_target_link="${env:USERPROFILE}\.vimrc"
+        $l_target_path="${env:USERPROFILE}\.vimrc"
         $l_source_path="${env:USERPROFILE}\.files\vim"
         $l_source_filename="vimrc_ide.vim"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         $l_status= m_create_folder "${env:USERPROFILE}" "vimfiles" $l_tag
 
-        $l_target_link="${env:USERPROFILE}\vimfiles\coc-settings.json"
+        $l_target_path="${env:USERPROFILE}\vimfiles\coc-settings.json"
         $l_source_path="${env:USERPROFILE}\.files\vim"
         $l_source_filename="coc-settings_windows.json"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
-        $l_target_link="${env:USERPROFILE}\vimfiles\setting"
+        $l_target_path="${env:USERPROFILE}\vimfiles\setting"
         $l_source_path="${env:USERPROFILE}\.files\vim\setting"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
-        $l_target_link="${env:USERPROFILE}\vimfiles\ftplugin"
+        $l_target_path="${env:USERPROFILE}\vimfiles\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\vim\ftplugin\cocide"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
 
@@ -1303,35 +1303,35 @@ function m_setup_vim_files($p_flag_developer, $p_flag_overwrites_file_notmodifia
     # Configurar VIM como Editor basico
     else {
 
-        $l_target_link="${env:USERPROFILE}\.vimrc"
+        $l_target_path="${env:USERPROFILE}\.vimrc"
         $l_source_path="${env:USERPROFILE}\.files\vim"
         $l_source_filename="vimrc_editor.vim"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
         }
 
         $l_status= m_create_folder "${env:USERPROFILE}" "vimfiles" $l_tag
 
-        $l_target_link="${env:USERPROFILE}\vimfiles\setting"
+        $l_target_path="${env:USERPROFILE}\vimfiles\setting"
         $l_source_path="${env:USERPROFILE}\.files\vim\setting"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
         }
 
 
-        $l_target_link="${env:USERPROFILE}\vimfiles\ftplugin"
+        $l_target_path="${env:USERPROFILE}\vimfiles\ftplugin"
         $l_source_path="${env:USERPROFILE}\.files\vim\ftplugin\editor"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
         }
         else {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "VIM    (IDE)> " $p_flag_overwrites_file_notmodifiable
         }
 
 
@@ -1438,7 +1438,7 @@ function m_config_vim($p_input_options, $p_flag_developer, $p_flag_overwrites_fi
 function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmodifiable, $p_flag_overwrites_file_modifiable) {
 
     # Creando enlaces simbolico dependientes del tipo de distribución Linux
-    $l_target_link= ""
+    $l_target_path= ""
     $l_source_path= ""
     $l_source_filename= ""
     $l_tag= "General     > "
@@ -1446,37 +1446,37 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
 
 
     #Archivo de configuracion de Git
-    $l_target_link="${env:USERPROFILE}\.gitconfig"
+    $l_target_path="${env:USERPROFILE}\.gitconfig"
     $l_source_path="${env:USERPROFILE}\.files\etc\cli\git"
 	$l_source_filename='gitconfig_win.toml'
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
     $l_status= m_create_folder "${env:USERPROFILE}" ".config\git" $l_tag
 
-    $l_target_link="${env:USERPROFILE}\.config\git\user_main.toml"
+    $l_target_path="${env:USERPROFILE}\.config\git\user_main.toml"
     $l_source_path="${env:USERPROFILE}\.files\etc\cli\git"
     $l_source_filename="template_user_main_win.toml"
-    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
+    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_modifiable
 
-    $l_target_link="${env:USERPROFILE}\.config\git\user_mywork.toml"
+    $l_target_path="${env:USERPROFILE}\.config\git\user_mywork.toml"
     $l_source_path="${env:USERPROFILE}\.files\etc\cli\git"
     $l_source_filename="template_user_work_win.toml"
-    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
+    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_modifiable
     Write-Host "${g_tag_empty}Edite '~\.config\git\user_main.toml' y '~\.config\git\user_mywork.toml' si desea crear modificar las opciones de '~/.gitignore'."
 
 
     #Archivo de configuracion de SSH
     $l_status= m_create_folder "${env:USERPROFILE}" ".ssh" $l_tag
 
-    $l_target_link="${env:USERPROFILE}\.ssh\config"
+    $l_target_path="${env:USERPROFILE}\.ssh\config"
     $l_source_path="${env:USERPROFILE}\.files\etc\cli\ssh"
     $l_source_filename='template_config_withpublickey_win.conf'
-    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
+    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_modifiable
 
 
     #Archivos de configuracion de PowerShell
@@ -1489,25 +1489,38 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
         # Modulos del profile
         $l_status= m_create_folder "${document_path}" "PowerShell\Modules" $l_tag
 
-        $l_target_link="${document_path}\PowerShell\Modules\MyTools"
+        $l_target_path="${document_path}\PowerShell\Modules\MyTools"
         $l_source_path="${env:USERPROFILE}\.files\shell\powershell\modules\windows\MyTools"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         # Profile
-        $l_target_link="${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
+        $l_target_path="${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
         $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
 	    $l_source_filename='windows_x64.ps1'
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
+
+        # Archivo de inicializacion del profile
+        $l_target_path="${env:USERPROFILE}\initial_profile.ps1"
+        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
+        $l_source_filename='template_initial_profile_nonlegacy.ps1'
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_modifiable
+
+        # Archivo de personalizacion del profile
+        $l_target_path="${env:USERPROFILE}\custom_profile.ps1"
+        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
+        $l_source_filename='template_custom_profile_nonlegacy.ps1'
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_modifiable
+
 
     }
     else {
@@ -1522,26 +1535,38 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
         # Modulos del profile
         $l_status= m_create_folder "${document_path}" "WindowsPowerShell\Modules" $l_tag
 
-        $l_target_link="${document_path}\PowerShell\Modules\MyTools"
+        $l_target_path="${document_path}\PowerShell\Modules\MyTools"
         $l_source_path="${env:USERPROFILE}\.files\shell\powershell\modules\windows\MyTools"
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-            $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
 
         # Profile
-        $l_target_link="${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
-	    $l_target_link="${document_path}\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
+        $l_target_path="${document_path}\PowerShell\Microsoft.PowerShell_profile.ps1"
+	    $l_target_path="${document_path}\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
         $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
 	    $l_source_filename='legacy_x64.ps1'
         if ($g_setup_access_type -eq 0) {
-            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
         elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+            $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
         }
+
+        # Archivo de inicializacion del profile
+        $l_target_path="${env:USERPROFILE}\initial_profile_legacy.ps1"
+        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
+        $l_source_filename='template_initial_profile_legacy.ps1'
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_modifiable
+
+        # Archivo de personalizacion del profile
+        $l_target_path="${env:USERPROFILE}\custom_profile_legacy.ps1"
+        $l_source_path="${env:USERPROFILE}\.files\shell\powershell\login\windowsprofile"
+        $l_source_filename='template_custom_profile_legacy.ps1'
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_modifiable
 
     }
     else {
@@ -1551,66 +1576,66 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
 
 
     # Configuracion de 'oh-my-posh'
-    $l_target_link="${env:USERPROFILE}\.files\etc\cli\oh-my-posh\default_settings.json"
+    $l_target_path="${env:USERPROFILE}\.files\etc\cli\oh-my-posh\default_settings.json"
     $l_source_path="${env:USERPROFILE}\.files\etc\cli\oh-my-posh"
     $l_source_filename='lepc-montys-cyan1.json'
-    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "General     > " $p_flag_overwrites_file_modifiable
+    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "General     > " $p_flag_overwrites_file_modifiable
     Write-Host "            > Edite '${env:USERPROFILE}\.files\etc\cli\oh-my-posh\default_settings.json' si desea modificar las opciones Wezterm."
 
 
     # Configuracion de wezterm
     $l_status= m_create_folder "${env:USERPROFILE}" ".config\wezterm" $l_tag
 
-    $l_target_link="${env:USERPROFILE}\.config\wezterm\wezterm.lua"
+    $l_target_path="${env:USERPROFILE}\.config\wezterm\wezterm.lua"
     $l_source_path="${env:USERPROFILE}\.files\wezterm\local"
 	$l_source_filename='wezterm.lua'
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
-    $l_target_link="${env:USERPROFILE}\.config\wezterm\utils"
+    $l_target_path="${env:USERPROFILE}\.config\wezterm\utils"
     $l_source_path="${env:USERPROFILE}\.files\wezterm\local\utils"
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
-    $l_target_link="${env:USERPROFILE}\.config\wezterm\custom_config.lua"
+    $l_target_path="${env:USERPROFILE}\.config\wezterm\custom_config.lua"
     $l_source_path="${env:USERPROFILE}\.files\wezterm\local"
     $l_source_filename='template_custom_config_win.lua'
-    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
+    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_modifiable
 
 
     #Configuracion por Lazygit
     $l_status= m_create_folder "${env:LOCALAPPDATA}" "lazygit" $l_tag
 
-    $l_target_link="${env:LOCALAPPDATA}\lazygit\config.yml"
+    $l_target_path="${env:LOCALAPPDATA}\lazygit\config.yml"
     $l_source_path="${env:USERPROFILE}\.files\etc\tui\lazygit"
     $l_source_filename='config_default.yaml'
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
 
     #Configuracion por GDU (Go Disk Usage)
     $l_status= m_create_folder "${env:USERPROFILE}" ".config\gdu" $l_tag
 
-    $l_target_link="${env:USERPROFILE}\.config\gdu\gdu.yaml"
+    $l_target_path="${env:USERPROFILE}\.config\gdu\gdu.yaml"
     $l_source_path="${env:USERPROFILE}\.files\etc\tui\gdu"
     $l_source_filename='gdu_default.yaml'
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
 
@@ -1619,80 +1644,80 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
     $l_status= m_create_folder "${env:APPDATA}\yazi\config" "flavors" $l_tag
     $l_status= m_create_folder "${env:APPDATA}\yazi\config" "plugins" $l_tag
 
-    $l_target_link="${env:APPDATA}\yazi\config\yazi.toml"
+    $l_target_path="${env:APPDATA}\yazi\config\yazi.toml"
     $l_source_path="${env:USERPROFILE}\.files\yazi"
     $l_source_filename='yazi_desktop.toml'
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
 
-    $l_target_link="${env:APPDATA}\yazi\config\theme.toml"
+    $l_target_path="${env:APPDATA}\yazi\config\theme.toml"
     $l_source_path="${env:USERPROFILE}\.files\yazi"
     $l_source_filename='theme.toml'
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
-    $l_target_link="${env:APPDATA}\yazi\config\keymap.toml"
+    $l_target_path="${env:APPDATA}\yazi\config\keymap.toml"
     $l_source_path="${env:USERPROFILE}\.files\yazi"
     $l_source_filename='template_keymap_win.toml'
-    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_modifiable
+    $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_modifiable
     Write-Host "            > Edite '${env:APPDATA}\yazi\config\keymap.toml' si desea modificar las opciones Wezterm."
 
 
-    $l_target_link="${env:APPDATA}\yazi\config\init.lua"
+    $l_target_path="${env:APPDATA}\yazi\config\init.lua"
     $l_source_path="${env:USERPROFILE}\.files\yazi"
     $l_source_filename='template_init.lua'
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     Write-Host "            > Edite '${env:APPDATA}\yazi\config\init.lua' si desea modificar las opciones Wezterm."
 
 
-    $l_target_link="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi"
+    $l_target_path="${env:APPDATA}\yazi\config\flavors\catppuccin-mocha.yazi"
     $l_source_path="${env:USERPROFILE}\.files\yazi\flavors\catppuccin-mocha.yazi"
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
-    $l_target_link="${env:APPDATA}\yazi\config\plugins\fzf-fd.yazi"
+    $l_target_path="${env:APPDATA}\yazi\config\plugins\fzf-fd.yazi"
     $l_source_path="${env:USERPROFILE}\.files\yazi\plugins\fzf-fd.yazi"
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
-    $l_target_link="${env:APPDATA}\yazi\config\plugins\fzf-rg.yazi"
+    $l_target_path="${env:APPDATA}\yazi\config\plugins\fzf-rg.yazi"
     $l_source_path="${env:USERPROFILE}\.files\yazi\plugins\fzf-rg.yazi"
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
-    $l_target_link="${env:APPDATA}\yazi\config\plugins\go-fs.yazi"
+    $l_target_path="${env:APPDATA}\yazi\config\plugins\go-fs.yazi"
     $l_source_path="${env:USERPROFILE}\.files\yazi\plugins\go-fs.yazi"
     if ($g_setup_access_type -eq 0) {
-        $l_status= m_copy_folder "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_copy_folder "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
     elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
-        $l_status= m_create_folder_link "$l_source_path" "$l_target_link" "$l_tag" $p_flag_overwrites_file_notmodifiable
+        $l_status= m_create_folder_link "$l_source_path" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
 }

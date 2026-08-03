@@ -25,8 +25,6 @@
 --exclude=shell/fish/login/autocomplete
 --exclude=shell/fish/login/keybindings
 --exclude=shell/powershell/login/autocomplete
---exclude=shell/powershell/hlogin/keybindings
+--exclude=shell/powershell/login/keybindings
 --exclude=shell/others/login/autocomplete
---exclude=shell/others/hlogin/keybindings
-
-
+--exclude=shell/others/login/keybindings

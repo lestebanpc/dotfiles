@@ -22,10 +22,10 @@ keys/secret/
 keys/shared/
 
 # Archivo de configuracion para los archivos de setup del SO y el profile del usuario
-shell/bash/bin/linuxsetup/.setup_config.bash
-shell/bash/bin/termuxsetup/.setup_config.bash
-shell/powershell/bin/linuxsetup/.setup_config.ps1
-shell/powershell/bin/windowssetup/.setup_config.ps1
+shell/bash/bin/linuxsetup/.initial_setup.bash
+shell/bash/bin/termuxsetup/.initial_setup.bash
+shell/powershell/bin/linuxsetup/.initial_setup.ps1
+shell/powershell/bin/windowssetup/initial_setup.ps1
 
 # Archivo de configuracion como tema de 'oh-my-posh'
 etc/cli/oh-my-posh/default_settings.json
