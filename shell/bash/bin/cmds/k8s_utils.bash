@@ -11,7 +11,7 @@ g_fzf_popup_width='99%'
 g_color_reset="\x1b[0m"
 g_color_green1="\x1b[32m"
 g_color_gray1="\x1b[90m"
-g_color_cian1="\x1b[36m"
+g_color_cyan1="\x1b[36m"
 g_color_yellow1="\x1b[33m"
 g_color_red1="\x1b[31m"
 g_color_blue1="\x1b[34m"
@@ -42,11 +42,26 @@ declare -a ga_exported_functions=(
         "open_terminal2"
     )
 
-# Diccionario de sbucomandos. La key es 'id del subcomando' y value es 'la descripcion del subcomando'.
+# Diccionario de subcomandos de nivel 1.
+# > La key es 'id del subcomando' y value es 'la descripcion del subcomando'.
 # > Segun el ID de subcomando, se debe tener 2 funciones bash cuyo nombre tiene dicho ID
 #   > Funcion de ayuda del comando tiene el nombre 'm_usage_CMD-ID'.
-#   > Funcion de controlador del comando tiene el nombre 'controller_CMD-ID'.
+#   > Funcion de controlador del comando tiene el nombre 'm_controller_CMD-ID'.
 declare -A gA_subcmd_ids=(
+        ['get']='Lista los objetos de un recurso k8s especifico'
+        ['logs']='Obtiene los logs de pod de un namespace y los almacena en archivos de texto'
+        #['delete']='Elimina pod de un namespace, descargado antes sus archivos logs'
+        ['restart']='Reinicia los pod de deployment(s) de un namespace, descargando antes sus archivos logs'
+    )
+
+# Diccionario de alias de subcomandos de nivel 1.
+# > La key es 'alias' y value es 'ID del subcomando'.
+declare -A gA_subcmd_alias=(
+    )
+
+# Diccionario de subcomandos de nivel 2: Subcomandos para el subcomando 'get'
+# > La key es 'id del subcomando' y value es 'la descripcion del subcomando'.
+declare -A gA_get_subcmd_ids=(
         ['resource']='Lista los objeto de un recurso k8s especifico'
         ['project']='Lista los proyectos de cluster openshift'
         ['namespace']='Lista los namespaces de un cluster k8s'
@@ -54,13 +69,9 @@ declare -A gA_subcmd_ids=(
         ['container']='Lista los contenedor de los pod dentro de un namespace'
         ['deployment']='Lista los deployments de un determinado namespace'
         ['replicaset']='Lista los deployments de un determinado namespace'
-        ['logs']='Obtiene los logs de pod de un namespace y los almacena en archivos de texto'
-        #['delete']='Elimina pod de un namespace, descargado antes sus archivos logs'
-        ['restart']='Reinicia los pod de deployment(s) de un namespace, descargando antes sus archivos logs'
     )
 
-
-# Diccionario de sbucomandos. La key es 'alias' y value es 'ID del subcomando'.
+#
 # > Para 'kubectl', en caso de existir, se usara el "short-names" del recursos:
 #    componentstatuses          = cs
 #    configmaps                 = cm
@@ -93,7 +104,9 @@ declare -A gA_subcmd_ids=(
 #    scheduledscalers           = ss
 #    priorityclasses            = pc
 #    storageclasses             = sc
-declare -A gA_subcmd_alias=(
+#
+# Diccionario de alias de subcomandos de nivel 1: Alias de subcomandos para el subcomando 'get'
+declare -A gA_get_subcmd_alias=(
         ['ns']='namespace'
         ['po']='pod'
         ['deploy']='deployment'
@@ -109,9 +122,39 @@ fi
 
 declare -r g_max_length_line=110
 
-# Se requiere tener:
-# > No colisiona entre usuarios.
-# > No colisiona entre sesiones simultáneas.
+
+# Sufijo unico del nombre del archivo temporal unico que almacena la data de los subcomando get.
+# > El archivo se caracteriza por:
+#   > No colisiona entre usuarios.
+#   > No colisiona entre sesiones simultáneas.
+# > Se calcula cuando se ejecuta un subcomando 'get'.
+g_tmpfile_suffix=""
+
+
+#Plantilla de opciones usando en las acciones FZF, cuyo formato es "resource-type/[resource-name] -n=[namespace]"
+#  > "[resource-name]" puede ser el nombre del recurso o "{n}" donde n es el numero de campo donde se obtendra.
+#  > "[namespace]" puede ser el nombre del namespace o "{n}" donde n es el numero de campo donde se obtendra.
+_g_fzf_kc_options=""
+
+#Nombre del archivo de dato
+_g_temfile_fullpath=""
+
+_g_data_object_json=""
+
+declare -i _g_use_cache_before=1
+declare -i _g_preserve_cache_after=1
+
+declare -i _g_use_one_object=1
+
+
+# -------------------------------------------------------------------------------------
+# General functions > Genericas
+# -------------------------------------------------------------------------------------
+
+# Sufijo unico del nombre del archivo temporal unico que almacena la data de los subcomando get.
+# > El archivo se caracteriza por:
+#   > No colisiona entre usuarios.
+#   > No colisiona entre sesiones simultáneas.
 m_get_tmpfile_suffix() {
 
     local l_tty=$(tty | sed 's#^/dev/##; s#/##g')
@@ -147,26 +190,9 @@ m_get_tmpfile_suffix() {
 
 }
 
-g_tmpfile_suffix=$(m_get_tmpfile_suffix)
-
-
-#Plantilla de opciones usando en las acciones FZF, cuyo formato es "resource-type/[resource-name] -n=[namespace]"
-#  > "[resource-name]" puede ser el nombre del recurso o "{n}" donde n es el numero de campo donde se obtendra.
-#  > "[namespace]" puede ser el nombre del namespace o "{n}" donde n es el numero de campo donde se obtendra.
-_g_fzf_kc_options=""
-
-#Nombre del archivo de dato
-_g_temfile_fullpath=""
-
-_g_data_object_json=""
-
-declare -i _g_use_cache_before=1
-declare -i _g_preserve_cache_after=1
-
-declare -i _g_use_one_object=1
 
 # -------------------------------------------------------------------------------------
-# General functions
+# General functions > Show Menu
 # -------------------------------------------------------------------------------------
 
 #Parametros de entrada:
@@ -185,20 +211,24 @@ print_line() {
 # Obtener los alias asociados del subcomando ID
 m_get_alias_by_subcmd_id() {
 
-    local p_scmd_id="$1"
-
-    if [ -z "$p_scmd_id" ]; then
+    if [ -z "$1" ]; then
         return 0
     fi
+    local -n rA_subcmd_alias="$1"
+
+    if [ -z "$2" ]; then
+        return 0
+    fi
+    local p_scmd_id="$2"
 
     # Obtener los alias del comando
     local l_alias_list=''
     local l_alias
     local l_id
 
-    for l_alias in "${!gA_subcmd_alias[@]}"; do
+    for l_alias in "${!rA_subcmd_alias[@]}"; do
 
-        l_id="${gA_subcmd_alias[${l_alias}]}"
+        l_id="${rA_subcmd_alias[${l_alias}]}"
 
         if [ "$l_id" = "$p_scmd_id" ]; then
             if [ -z "$l_alias_list" ]; then
@@ -216,7 +246,51 @@ m_get_alias_by_subcmd_id() {
 }
 
 
+m_get_subcmd_infos() {
 
+    if [ -z "$1" ]; then
+        return 0
+    fi
+    local -n rA_subcmd_ids="$1"
+
+    local p_varname_subcmd_alias="$2"
+
+    local l_scmd_id
+    local l_scmd_description
+    local l_alias
+    local l_alias_list
+    local l_id
+
+    for l_scmd_id in "${!rA_subcmd_ids[@]}"; do
+
+        printf "%b  > %b%s%b\n" "$g_color_gray1" "$g_color_yellow1" "$l_scmd_id" "$g_color_reset"
+
+        # Obtener los alias del comando
+        if [ ! -z "$p_varname_subcmd_alias" ]; then
+
+            l_alias_list=$(m_get_alias_by_subcmd_id "$p_varname_subcmd_alias" "$l_scmd_id")
+
+            # Mostrar el alias:
+            if [ ! -z "$l_alias_list" ]; then
+                printf '%b    Alias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
+            fi
+
+        fi
+
+        # Mostrar la descripcion
+        l_scmd_description="${rA_subcmd_ids[${l_scmd_id}]}"
+        printf "    %b%s%b\n" "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+
+    done
+
+
+}
+
+
+
+# -------------------------------------------------------------------------------------
+# General functions > kubectl utils
+# -------------------------------------------------------------------------------------
 
 #Argumentos:
 #  1 > Si es 0, se muestra el default Namespace
@@ -2791,12 +2865,12 @@ show_namespace_table() {
 m_usage_resource() {
 
     local l_scmd_id='resource'
-    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    local l_scmd_description="${gA_get_subcmd_ids[${l_scmd_id}]}"
     printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     # Obtener los alias del comando
     local l_alias_list
-    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+    l_alias_list=$(m_get_alias_by_subcmd_id "gA_get_subcmd_alias" "$l_scmd_id")
 
     # Mostrar el alias:
     if [ ! -z "$l_alias_list" ]; then
@@ -2806,9 +2880,10 @@ m_usage_resource() {
 
     printf '\nUsage:\n'
     printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '  %b%s %s%b [-l LABEL_SELECTORS] [-f FIELD_SELECTORS] RESOURCE_NAME%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-l LABEL_SELECTORS] [-f FIELD_SELECTORS] %bRESOURCE_NAME%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" \
+           "$g_color_gray1" "$g_color_green1" "$g_color_reset"
 
-    printf 'Las opciones usados son:\n'
+    printf '\nLas opciones usados son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
     printf '%b  > %b-n%b NAMESPACE%b Nombre del namespace. Si no se especifica se usara el actual.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_yellow1" \
@@ -2914,7 +2989,7 @@ m_kc_resources() {
 }
 
 
-controller_resource() {
+m_controller_get_resource() {
 
     #1. Validaciones previas
 
@@ -3012,12 +3087,12 @@ controller_resource() {
 m_usage_project() {
 
     local l_scmd_id='project'
-    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    local l_scmd_description="${gA_get_subcmd_ids[${l_scmd_id}]}"
     printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     # Obtener los alias del comando
     local l_alias_list
-    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+    l_alias_list=$(m_get_alias_by_subcmd_id "gA_get_subcmd_alias" "$l_scmd_id")
 
     # Mostrar el alias:
     if [ ! -z "$l_alias_list" ]; then
@@ -3135,7 +3210,7 @@ m_oc_projects() {
 
 
 
-controller_project() {
+m_controller_get_project() {
 
     #1. Validaciones previas
 
@@ -3209,12 +3284,12 @@ controller_project() {
 m_usage_namespace() {
 
     local l_scmd_id='namespace'
-    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    local l_scmd_description="${gA_get_subcmd_ids[${l_scmd_id}]}"
     printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     # Obtener los alias del comando
     local l_alias_list
-    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+    l_alias_list=$(m_get_alias_by_subcmd_id "gA_get_subcmd_alias" "$l_scmd_id")
 
     # Mostrar el alias:
     if [ ! -z "$l_alias_list" ]; then
@@ -3327,7 +3402,7 @@ m_kc_namespaces() {
 }
 
 
-controller_namespace() {
+m_controller_get_namespace() {
 
     #1. Validaciones previas
 
@@ -3402,12 +3477,12 @@ controller_namespace() {
 m_usage_pod() {
 
     local l_scmd_id='pod'
-    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    local l_scmd_description="${gA_get_subcmd_ids[${l_scmd_id}]}"
     printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     # Obtener los alias del comando
     local l_alias_list
-    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+    l_alias_list=$(m_get_alias_by_subcmd_id "gA_get_subcmd_alias" "$l_scmd_id")
 
     # Mostrar el alias:
     if [ ! -z "$l_alias_list" ]; then
@@ -3417,8 +3492,10 @@ m_usage_pod() {
 
     printf '\nUsage:\n'
     printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" \
-           "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n' "$g_color_yellow1" \
+           "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A]%b OBJECT_NAME%b\n' "$g_color_yellow1" \
+           "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_green1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
@@ -3558,7 +3635,7 @@ m_kc_pod() {
 }
 
 
-controller_pod() {
+m_controller_get_pod() {
 
     #1. Validaciones previas
 
@@ -3667,12 +3744,12 @@ controller_pod() {
 m_usage_container() {
 
     local l_scmd_id='container'
-    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    local l_scmd_description="${gA_get_subcmd_ids[${l_scmd_id}]}"
     printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     # Obtener los alias del comando
     local l_alias_list
-    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+    l_alias_list=$(m_get_alias_by_subcmd_id "gA_get_subcmd_alias" "$l_scmd_id")
 
     # Mostrar el alias:
     if [ ! -z "$l_alias_list" ]; then
@@ -3682,9 +3759,12 @@ m_usage_container() {
 
     printf '\nUsage:\n'
     printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n' "$g_color_yellow1" "$g_cmd_name" \
+           "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A]%b OBJECT_NAME%b\n' "$g_color_yellow1" \
+           "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_green1" "$g_color_reset"
 
-    printf 'Las opciones generales son:\n'
+    printf '\nLas opciones generales son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
@@ -3824,7 +3904,7 @@ m_kc_containers() {
 }
 
 
-controller_container() {
+m_controller_get_container() {
 
     #1. Validaciones previas
 
@@ -3932,12 +4012,12 @@ controller_container() {
 m_usage_deployment() {
 
     local l_scmd_id='deployment'
-    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    local l_scmd_description="${gA_get_subcmd_ids[${l_scmd_id}]}"
     printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     # Obtener los alias del comando
     local l_alias_list
-    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+    l_alias_list=$(m_get_alias_by_subcmd_id "gA_get_subcmd_alias" "$l_scmd_id")
 
     # Mostrar el alias:
     if [ ! -z "$l_alias_list" ]; then
@@ -3947,9 +4027,12 @@ m_usage_deployment() {
 
     printf '\nUsage:\n'
     printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n' "$g_color_yellow1" "$g_cmd_name" \
+           "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A]%b OBJECT_NAME%b\n' "$g_color_yellow1" \
+           "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_green1" "$g_color_reset"
 
-    printf 'Las opciones generales son:\n'
+    printf '\nLas opciones generales son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
@@ -4087,7 +4170,7 @@ m_kc_deployments() {
 }
 
 
-controller_deployment() {
+m_controller_get_deployment() {
 
     #1. Validaciones previas
 
@@ -4195,12 +4278,12 @@ controller_deployment() {
 m_usage_replicaset() {
 
     local l_scmd_id='replicaset'
-    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    local l_scmd_description="${gA_get_subcmd_ids[${l_scmd_id}]}"
     printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
 
     # Obtener los alias del comando
     local l_alias_list
-    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+    l_alias_list=$(m_get_alias_by_subcmd_id "gA_get_subcmd_alias" "$l_scmd_id")
 
     # Mostrar el alias:
     if [ ! -z "$l_alias_list" ]; then
@@ -4210,8 +4293,10 @@ m_usage_replicaset() {
 
     printf '\nUsage:\n'
     printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" \
+    printf '  %b%s %s%b [-n NAMESPACE | -A] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" \
            "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A]%b OBJECT_NAME%b\n' "$g_color_yellow1" \
+           "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_green1" "$g_color_reset"
 
     printf 'Las opciones usados son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
@@ -4349,7 +4434,7 @@ m_kc_replicaset() {
 }
 
 
-controller_replicaset() {
+m_controller_get_replicaset() {
 
     #1. Validaciones previas
 
@@ -4461,7 +4546,7 @@ m_usage_logs() {
 
     # Obtener los alias del comando
     local l_alias_list
-    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+    l_alias_list=$(m_get_alias_by_subcmd_id "gA_get_subcmd_alias" "$l_scmd_id")
 
     # Mostrar el alias:
     if [ ! -z "$l_alias_list" ]; then
@@ -4471,10 +4556,12 @@ m_usage_logs() {
 
     printf '\nUsage:\n'
     printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '  %b%s %s%b [-n NAMESPACE] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" \
+    printf '  %b%s %s%b [-n NAMESPACE] [-l LABEL_SELECTORS] [-f FIELD_SELECTORS]%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" \
            "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [-n NAMESPACE | -A]%b OBJECT_NAME%b\n' "$g_color_yellow1" \
+           "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_green1" "$g_color_reset"
 
-    printf 'Las opciones generales son:\n'
+    printf '\nLas opciones generales son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
@@ -4694,7 +4781,7 @@ m_kc_logs() {
 
 
 
-controller_logs() {
+m_controller_logs() {
 
     #1. Validaciones previas
 
@@ -4873,7 +4960,7 @@ m_usage_restart() {
 
     # Obtener los alias del comando
     local l_alias_list
-    l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
+    l_alias_list=$(m_get_alias_by_subcmd_id "gA_subcmd_alias" "$l_scmd_id")
 
     # Mostrar el alias:
     if [ ! -z "$l_alias_list" ]; then
@@ -5129,7 +5216,7 @@ m_kc_restart() {
         # Realizar un restart de controlador
         printf 'Restart el %s: %bkubectl rollout restart%b -n "%s" "%s/%s"%b\n' "$l_resource" "$g_color_green1" \
                "$g_color_gray1" "$l_rs_ns" "$l_resource" "$l_rs_name"  "$g_color_reset"
-        #kubectl rollout restart -n "$l_rs_ns" "${l_resource}/${l_rs_name}"
+        kubectl rollout restart -n "$l_rs_ns" "${l_resource}/${l_rs_name}"
 
         printf '\n'
 
@@ -5140,7 +5227,22 @@ m_kc_restart() {
     #6. Si se analiza a un conjuntos de controladores
     local l_n
     l_n=$(echo "$l_data" | wc -l)
-    printf '%s(s) disponibles : %b%s%b\n\n' "$l_resource" "$g_color_gray1" "$l_n" "$g_color_reset"
+    printf '%s(s) disponibles : %b%s%b\n' "$l_resource" "$g_color_gray1" "$l_n" "$g_color_reset"
+
+    if [ ! -z "$l_n" ] && [ "$l_n" -gt 0 ]; then
+
+        local l_in_option
+        printf '¿Desea reiniciar %b%s%b %ss%b? %bNo [%bn%b], Yes [y]%b' "$g_color_cyan1" "$l_n" "$g_color_gray1" \
+               "$l_resource" "$g_color_reset" "$g_color_gray1" "$g_color_cyan1" "$g_color_gray1" "$g_color_reset"
+        read -rei "n" -p ": " l_in_option
+
+        if [ "$l_in_option" != "y" ] && [ "$l_in_option" != "Y" ]; then
+            return 0
+        fi
+
+    fi
+
+    printf '\n'
 
     #5. Procesar los pod
     local -i l_i=0
@@ -5197,7 +5299,7 @@ m_kc_restart() {
         # Realizar un restart de controlador
         printf 'Restart el %s: %bkubectl rollout restart%b -n "%s" "%s/%s"%b\n' "$l_resource" "$g_color_green1" \
                "$g_color_gray1" "$l_rs_ns" "$l_resource" "$l_rs_name"  "$g_color_reset"
-        #kubectl rollout restart -n "$l_rs_ns" "${l_resource}/${l_rs_name}"
+        kubectl rollout restart -n "$l_rs_ns" "${l_resource}/${l_rs_name}"
 
         printf '\n'
 
@@ -5209,7 +5311,7 @@ m_kc_restart() {
 
 
 
-controller_restart() {
+m_controller_restart() {
 
     #1. Validaciones previas
 
@@ -5407,6 +5509,133 @@ controller_restart() {
 
 
 
+# -------------------------------------------------------------------------------------
+# Subcomand Controller> get
+# -------------------------------------------------------------------------------------
+
+m_usage_get() {
+
+    local l_scmd_id='get'
+    local l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s.%b\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+
+    # Obtener los alias del comando
+    local l_alias_list
+    l_alias_list=$(m_get_alias_by_subcmd_id "gA_subcmd_alias" "$l_scmd_id")
+
+    # Mostrar el alias:
+    if [ ! -z "$l_alias_list" ]; then
+        printf '%bAlias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
+    fi
+
+
+    printf '\nUsage:\n'
+    printf '  %b%s %s%b -h | --help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b [options]%b SUBCOMMAND%b [options] [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas opciones globales usados son:\n'
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-u%b Usa un cache de la consulta anterior y existente. No vuelve a realizar la consulta (no hace caso a los filtros de busqueda).%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '    %b%s%b\n' "$g_color_gray1" "Por defecto, siempre siempre realiza la consulta y lo almacena en un archivo como cache." "$g_color_reset"
+    printf '%b  > %b-p%b Preserva el cache de la consulta despues de presentar/usar la consulta.%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
+    printf '    %b%s%b\n' "$g_color_gray1" "Por defecto, el resultado de la consulta que esta en un archivo como cache, siempre se elimina despues de usarlo." \
+           "$g_color_reset"
+
+    printf '\nEl argumento principal es el nombre del subcomando %bSUBCOMMAND%b. Los cuales puede ser:\n' "$g_color_green1" "$g_color_reset"
+    m_get_subcmd_infos "gA_get_subcmd_ids" "gA_get_subcmd_alias"
+    printf '\n'
+
+}
+
+
+
+m_controller_get() {
+
+    #1. Validaciones previas
+
+    #2. Procesar las opciones (siempre deben estar anstes de los argumentos)
+    while [ $# -gt 0 ]; do
+
+        case "$1" in
+
+            -h|--help)
+                m_usage_get
+                return 0
+                ;;
+
+
+            -u)
+                _g_use_cache_before=0
+                shift 1
+                ;;
+
+
+            -p)
+                _g_preserve_cache_after=0
+                shift 1
+                ;;
+
+
+            -*)
+                printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$1" "$g_color_reset"
+                m_usage_get
+                return 3
+                ;;
+
+            *)
+                #Si son argumentos, salir y continuar
+                break
+                ;;
+
+        esac
+
+    done
+
+
+    #3. Procesar el 1er argumentos (nombre del subcomando o alias)
+    if [ -z "$1" ]; then
+        printf '[%bERROR%b] Se debe especificarse un subcomando.\n\n' "$g_color_red1" "$g_color_reset"
+        m_usage_global
+        return 3
+    fi
+
+    # Identificar si es un alias
+    local l_scmd_id="${gA_get_subcmd_alias[${1}]:-}"
+
+    # Validar si es un ID de subcomando valido
+    if [ -z "$l_scmd_id" ]; then
+        l_scmd_id="$1"
+    fi
+
+    local l_scmd_description="${gA_get_subcmd_ids[${l_scmd_id}]:-}"
+
+    if [ -z "$l_scmd_description" ]; then
+        printf '[%bERROR%b] El subcomando ingresado "%b%s%b" no es valida\n\n' "$g_color_red1" "$g_color_reset" \
+               "$g_color_gray1" "$l_scmd_id" "$g_color_reset"
+        m_usage_get
+        return 3
+    fi
+
+    shift
+
+    #4. Nombre del sufijo unico del nombre del archivo temporal unico que almacena la data de los subcomando get.
+    if [ -z "$g_tmpfile_suffix" ]; then
+        g_tmpfile_suffix=$(m_get_tmpfile_suffix)
+    fi
+
+    #5. Ejecutando el controlador principal del subcomando
+    "m_controller_get_${l_scmd_id}" "$@"
+    return 0
+
+}
+
+
+
 
 
 # -------------------------------------------------------------------------------------
@@ -5457,37 +5686,6 @@ m_is_function_exported() {
 
 }
 
-
-m_get_subcmd_infos() {
-
-    local l_scmd_id
-    local l_scmd_description
-    local l_alias
-    local l_alias_list
-    local l_id
-
-    for l_scmd_id in "${!gA_subcmd_ids[@]}"; do
-
-        printf "%b  > %b%s%b\n" "$g_color_gray1" "$g_color_yellow1" "$l_scmd_id" "$g_color_reset"
-
-        # Obtener los alias del comando
-        l_alias_list=$(m_get_alias_by_subcmd_id "$l_scmd_id")
-
-        # Mostrar el alias:
-        if [ ! -z "$l_alias_list" ]; then
-            printf '%b    Alias: %b%b\n' "$g_color_gray1" "$g_color_reset" "$l_alias_list"
-        fi
-
-        # Mostrar la descripcion
-        l_scmd_description="${gA_subcmd_ids[${l_scmd_id}]}"
-        printf "    %b%s%b\n" "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
-
-    done
-
-
-}
-
-
 m_usage_global() {
 
     local l_infos=""
@@ -5504,12 +5702,6 @@ m_usage_global() {
     printf '\nLas opciones globales usados son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
-    printf '%b  > %b-u%b Usa un cache de la consulta anterior y existente. No vuelve a realizar la consulta (no hace caso a los filtros de busqueda).%b\n' "$g_color_gray1" "$g_color_green1" \
-           "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s%b\n' "$g_color_gray1" "Por defecto, siempre siempre realiza la consulta y lo almacena en un archivo como cache." "$g_color_reset"
-    printf '%b  > %b-p%b Preserva el cache de la consulta despues de presentar/usar la consulta.%b\n' "$g_color_gray1" "$g_color_green1" \
-           "$g_color_gray1" "$g_color_reset"
-    printf '    %b%s%b\n' "$g_color_gray1" "Por defecto, el resultado de la consulta que esta en un archivo como cache, siempre se elimina despues de usarlo." "$g_color_reset"
 
     if [ ! -z "$l_infos" ]; then
         printf '%b  > %b-i FUNC_NAME%b Especifica el nombre de la funcion interna del script a ejecutar (uso interno y/o debugging).%b\n' \
@@ -5518,7 +5710,7 @@ m_usage_global() {
     fi
 
     printf '\nEl argumento principal es el nombre del subcomando %bSUBCOMMAND%b. Los cuales puede ser:\n' "$g_color_green1" "$g_color_reset"
-    m_get_subcmd_infos
+    m_get_subcmd_infos "gA_subcmd_ids" "gA_subcmd_alias"
     printf '\n'
 
 }
@@ -5646,7 +5838,7 @@ main() {
     shift
 
     #5. Ejecutando el controlador principal del subcomando
-    "controller_${l_scmd_id}" "$@"
+    "m_controller_${l_scmd_id}" "$@"
     return 0
 
 }

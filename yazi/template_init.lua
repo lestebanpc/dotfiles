@@ -69,14 +69,17 @@ end
 --
 local t_plugin = nil
 
--- Plugin built-in 'zoxide.lua'
--- Plugin built-in 'fzf.lua'
+-- Plugin built-in 'session' que permite copiar/mover archivos desde multiples instancias Yazi.
+-- > Cada yank realizado emite un mensaje DDS con todas los instancias con los archivos marcadas.
+-- > Una instancia puede copiar/mover dichos archivos y se informa a todos DDS que yank fue complatado.
+t_plugin = require("session")
+
+t_plugin:setup {
+    sync_yanked = true,
+}
 
 -- Plugin built-in 'zoxide.lua'
---t_plugin = require("zoxide")
---t_plugin:setup({
---	update_db = true,
---})
+-- Plugin built-in 'fzf.lua'
 
 
 --------------------------------------------------------------------------------------
