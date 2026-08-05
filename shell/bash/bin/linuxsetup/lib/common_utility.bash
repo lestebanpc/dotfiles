@@ -453,6 +453,11 @@ function _try_fix_tools_path() {
 
                 fi
 
+                # Si el que ejecuta es un usuario root, este tiene permiso de escribir en todos los folderes del sistema
+                if [ "$g_runner_id" -eq 0 ]; then
+                    return 0
+                fi
+
                 #Cualquier otor caso, rechazar el folder ingresado
                 return 4
 
@@ -1337,7 +1342,7 @@ function get_tools_path() {
         #Intento del folder '/var/opt/tools': OK> Se tiene los permisos correctos
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
             g_tools_path="${la_additional_attemps[$l_atttemp_id]}"
-            g_tools_options=$_g_tools_options
+            g_tools_options="$_g_tools_options"
             g_tools_owner="$_g_tools_owner"
             g_tools_group="$_g_tools_group"
             return 0
@@ -1394,7 +1399,7 @@ function get_tools_path() {
         #Intento del folder '/var/tools': OK> Se tiene los permisos correctos
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
             g_tools_path="${la_additional_attemps[$l_atttemp_id]}"
-            g_tools_options=$_g_tools_options
+            g_tools_options="$_g_tools_options"
             g_tools_owner="$_g_tools_owner"
             g_tools_group="$_g_tools_group"
             return 0
@@ -1462,7 +1467,7 @@ function get_tools_path() {
         #Intento del folder '~/tools': OK> Se tiene los permisos correctos
         if [ $l_status -ge 0 ] && [ $l_status -le 2 ]; then
             g_tools_path="${la_additional_attemps[$l_atttemp_id]}"
-            g_tools_options=$_g_tools_options
+            g_tools_options="$_g_tools_options"
             g_tools_owner="$_g_tools_owner"
             g_tools_group="$_g_tools_group"
             return 0

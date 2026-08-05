@@ -2521,7 +2521,8 @@ function g_install_repository() {
     #Mostrar el status de la instalacion en Linux
     ra_install_repo_status[0]=$l_status_process_lnx
 
-    #5. Iniciar la configuración en Windows:
+
+    #5. Iniciar la configuración en Windows (descarga de binarios para Windows):
     local l_status_process_win
     l_is_win_binary=0
 

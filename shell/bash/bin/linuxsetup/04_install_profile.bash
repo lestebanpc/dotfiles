@@ -542,7 +542,7 @@ function _download_vim_packages() {
         fi
 
         # Si esta en modo basico/editor y estan en el indice para folder de IDE
-        if [ $p_flag_developer -ne 0 ] && [ $l_i -ge 3 ]; then
+        if [ $p_flag_developer -ne 0 ] && [ $l_i -ge 4 ]; then
             break
         fi
 
@@ -597,6 +597,13 @@ function _download_vim_packages() {
             if [ $g_enviroment_type -eq 0 ]; then
                 printf '%s > Paquete (%s) "%b%s%b": Ha sigo excluido para su descarga (%bg_enviroment_type%b es %s)\n' "$l_tag" "${l_repo_type}" \
                        "$g_color_gray1" "${l_repo_git}" "$g_color_reset"  "$g_color_gray1" "$g_color_reset" "$g_enviroment_type"
+                continue
+            fi
+
+            # Si el usuario que ejecuta es el usuario rooto y es el usuario objetivo es root (root nunca se requiere plugins de escritorio)
+            if [ $g_runner_id -eq 0 ] && [ $g_runner_is_target_user -eq 0 ]; then
+                printf '%s > Paquete (%s) "%b%s%b": Ha sigo excluido para su descarga (El usuario %broot%b es el usuario objetivo y no requiere GUI)\n' "$l_tag" "${l_repo_type}" \
+                       "$g_color_gray1" "${l_repo_git}" "$g_color_reset"  "$g_color_gray1" "$g_color_reset"
                 continue
             fi
 

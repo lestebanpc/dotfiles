@@ -207,7 +207,7 @@
 
 # Listado de ID de repositorios (separados por comas) que son excluidos de la actualización de binarios windows.
 # Solo si esta en Windows y esta ejecutando el script sobre WSL2.
-#g_win_non_updated_repo_ids=''
+#g_win_non_updated_repo_ids='vim,neovim'
 
 ##############################################################################################
 # Usado por los script "01_setup_binaries.bash", "05_update_profile.bash"
