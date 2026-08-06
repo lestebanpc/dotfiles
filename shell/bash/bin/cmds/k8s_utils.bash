@@ -568,10 +568,10 @@ m_get_pod_logs() {
             if [ "$l_restart_count" -gt 0 ]; then
 
                 if [ $p_flag_show_timestamp -eq 0 ]; then
-                    ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}_previous.log" 2> /dev/null
+                    ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" -p --timestamps > "${l_filename}_previous.log" 2> /dev/null
                     l_status=$?
                 else
-                    ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}_previous.log" 2> /dev/null
+                    ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" -p > "${l_filename}_previous.log" 2> /dev/null
                     l_status=$?
                 fi
 
@@ -579,10 +579,10 @@ m_get_pod_logs() {
 
                     printf '    Previous log        : %b%s%b\n' "$g_color_gray1" "${l_filename}_previous.log" "$g_color_reset"
                     if [ $p_flag_show_timestamp -eq 0 ]; then
-                        printf '    %b%s logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
+                        printf '    %b%s logs%b -n "%s" "%s" -c "%s" -p --timestamps > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                                "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}_previous.log" "$g_color_reset"
                     else
-                        printf '    %b%s logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
+                        printf '    %b%s logs%b -n "%s" "%s" -c "%s" -p > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                                "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}_previous.log" "$g_color_reset"
                     fi
 
