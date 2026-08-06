@@ -19,6 +19,9 @@ g_color_blue1="\x1b[34m"
 # Obtener la del script
 g_script_path="${BASH_SOURCE[0]}"
 
+
+g_kubectl_cmd="kubectl"
+
 g_cmd_name='k8su'
 
 declare -a ga_exported_functions=(
@@ -297,7 +300,7 @@ m_get_subcmd_infos() {
 _fzf_kc_get_context_info() {
 
     #TODO mejorar para obtener la URL del servidor, nombre del usuario, ...
-    local l_data=$(kubectl config current-context)
+    local l_data=$(${g_kubectl_cmd} config current-context)
     local l_tmp="${l_data//// }"
     local l_items=($l_tmp)
     local l_n=${#l_items[@]}
@@ -370,7 +373,7 @@ m_get_pod_logs() {
     #2. Obtener el descriptor json del pod
     local l_data_json
     local -i l_status=0
-    l_data_json=$(kubectl get pod -n "$p_pod_ns" "$p_pod_name" -o json 2> /dev/null)
+    l_data_json=$(${g_kubectl_cmd} get pod -n "$p_pod_ns" "$p_pod_name" -o json 2> /dev/null)
     l_status=$?
 
     if [ $l_status -ne 0 ] || [ -z "$l_data_json" ]; then
@@ -551,16 +554,44 @@ m_get_pod_logs() {
 
             # Mostrar el log del contenedor
             if [ $p_flag_show_timestamp -eq 0 ]; then
-                printf '    %bkubectl logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                printf '    %b%s logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                        "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
-                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
+                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
             else
-                printf '    %bkubectl logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                printf '    %b%s logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                        "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
-                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}.log"
+                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}.log"
             fi
 
+            # TODO Improvement
             # Si el numero de reinicios es mayor a 0 y el estado actual es diferente a 'Completed' o 'Running', almacenar el log '--previous' o '-p'
+            if [ "$l_restart_count" -gt 0 ]; then
+
+                if [ $p_flag_show_timestamp -eq 0 ]; then
+                    ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}_previous.log" 2> /dev/null
+                    l_status=$?
+                else
+                    ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}_previous.log" 2> /dev/null
+                    l_status=$?
+                fi
+
+                if [ $l_status -eq 0 ]; then
+
+                    printf '    Previous log        : %b%s%b\n' "$g_color_gray1" "${l_filename}_previous.log" "$g_color_reset"
+                    if [ $p_flag_show_timestamp -eq 0 ]; then
+                        printf '    %b%s logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
+                               "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}_previous.log" "$g_color_reset"
+                    else
+                        printf '    %b%s logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
+                               "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}_previous.log" "$g_color_reset"
+                    fi
+
+                else
+                    printf '    Previous log        : %b%s%b\n' "$g_color_gray1" "none" "$g_color_reset"
+                fi
+
+            fi
+
 
         done
 
@@ -637,13 +668,13 @@ m_get_pod_logs() {
 
             # Mostrar el log del contenedor
             if [ $p_flag_show_timestamp -eq 0 ]; then
-                printf '    %bkubectl logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                printf '    %b%s logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                        "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
-                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
+                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
             else
-                printf '    %bkubectl logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                printf '    %b%s logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                        "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
-                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}.log"
+                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}.log"
             fi
 
             # Si el numero de reinicios es mayor a 0 y el estado actual es diferente a 'Completed' o 'Running', almacenar el log '--previous' o '-p'
@@ -722,13 +753,13 @@ m_get_pod_logs() {
 
             # Mostrar el log del contenedor
             if [ $p_flag_show_timestamp -eq 0 ]; then
-                printf '    %bkubectl logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                printf '    %b%s logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                        "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
-                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
+                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
             else
-                printf '   %bkubectl logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_color_gray1" \
+                printf '   %b%s logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                        "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
-                kubectl logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}.log"
+                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}.log"
             fi
 
             # Si el numero de reinicios es mayor a 0 y el estado actual es diferente a 'Completed' o 'Running', almacenar el log '--previous' o '-p'
@@ -798,10 +829,10 @@ _exec_cmd() {
         l_options="${l_options} -- $4"
     fi
 
-    printf 'Commnad   : "%bkubectl exec %s%b"\n\n' "$l_color_2" "${l_options}" "$g_color_reset"
+    printf 'Commnad   : "%b%s exec %s%b"\n\n' "$l_color_2" "$g_kubectl_cmd" "${l_options}" "$g_color_reset"
 
     #2. Ejecutar el comando
-    kubectl exec ${l_options}
+    ${g_kubectl_cmd} exec ${l_options}
 
     return 0
 
@@ -1083,10 +1114,10 @@ _show_log() {
         l_options="--since=$7 ${l_options}"
     fi
 
-    printf 'Commnad   : "%bkubectl logs %s%b"\n\n' "$l_color_2" "${l_options}" "$g_color_reset"
+    printf 'Commnad   : "%b%s logs %s%b"\n\n' "$l_color_2" "$g_kubectl_cmd" "${l_options}" "$g_color_reset"
 
     #2. Ejecutar el comando
-    kubectl logs ${l_options}
+    ${g_kubectl_cmd} logs ${l_options}
 
     return 0
 
@@ -2101,10 +2132,10 @@ _port_forward() {
     fi
 
 
-    printf 'Command   : "%bkubectl port-forward %s%b"\n\n' "$l_color_2" "$l_options" "$g_color_reset"
+    printf 'Command   : "%b%s port-forward %s%b"\n\n' "$l_color_2" "$g_kubectl_cmd" "$l_options" "$g_color_reset"
 
     #2. Ejecutar el comando
-    kubectl port-forward ${l_options}
+    ${g_kubectl_cmd} port-forward ${l_options}
     return 0
 
 
@@ -2546,7 +2577,7 @@ show_dply_revision1() {
 
     #2. Obtener información del los replicaset asociado a las revisiones dle deployment
     local l_data_json=""
-    l_data_json=$(kubectl get replicaset -n ${2} -o json 2> /dev/null)
+    l_data_json=$(${g_kubectl_cmd} get replicaset -n ${2} -o json 2> /dev/null)
     if [ $? -ne 0 ]; then
         printf '%b\tNo se puede conectarse con el cluster de Kubernates, revise la conexión.%b\n' "$g_color_gray1" "$g_color_reset"
         return 1
@@ -3195,7 +3226,7 @@ m_oc_projects() {
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' 1) > /dev/tty" \
         --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 0) > /dev/tty" \
         --bind "ctrl-d:execute-silent:oc project {1}" \
-        --bind "ctrl-e:execute:bat --color=always --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
+        --bind "ctrl-e:execute:bat --color=always --paging always --style plain <(${g_kubectl_cmd} get event -n={1}) > /dev/tty" \
         --preview-window "right,60%" \
         --preview "bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 0 | bat --color=always --style plain" |
     awk "$l_awk_template"
@@ -3341,7 +3372,7 @@ m_kc_namespaces() {
 
     if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
 
-        kubectl "${la_args[@]}" > "$_g_temfile_fullpath"
+        ${g_kubectl_cmd} "${la_args[@]}" > "$_g_temfile_fullpath"
         if [ $? -ne 0 ]; then
             echo "Check the connection to k8s cluster"
             return 1
@@ -3388,8 +3419,8 @@ m_kc_namespaces() {
         --header "$(_fzf_kc_get_context_info 1)"$'\nCTRL-a (View pod yaml), CTRL-b (View Preview), CTR-d (Set Default), CTRL-e (View Events)\n' \
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' 1) > /dev/tty" \
         --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 1) > /dev/tty" \
-        --bind "ctrl-d:execute-silent:kubectl config set-context --current --namespace={1}" \
-        --bind "ctrl-e:execute:bat --color=always --paging always --style plain <(kubectl get event -n={1}) > /dev/tty" \
+        --bind "ctrl-d:execute-silent:${g_kubectl_cmd} config set-context --current --namespace={1}" \
+        --bind "ctrl-e:execute:bat --color=always --paging always --style plain <(${g_kubectl_cmd} get event -n={1}) > /dev/tty" \
         --preview-window "right,60%" \
         --preview "bash ${g_script_path} -i show_namespace_info '${_g_temfile_fullpath}' '{1}' 1 | bat --color=always --style plain" |
     awk "$l_awk_template"
@@ -3568,7 +3599,7 @@ m_kc_pod() {
 
     if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
 
-        kubectl "${la_args[@]}" > "$_g_temfile_fullpath"
+        ${g_kubectl_cmd} "${la_args[@]}" > "$_g_temfile_fullpath"
         if [ $? -ne 0 ]; then
             echo "Check the connection to k8s cluster"
             return 1
@@ -3835,7 +3866,7 @@ m_kc_containers() {
 
     if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
 
-        kubectl "${la_args[@]}" > "$_g_temfile_fullpath"
+        ${g_kubectl_cmd} "${la_args[@]}" > "$_g_temfile_fullpath"
         if [ $? -ne 0 ]; then
             echo "Check the connection to k8s cluster"
             return 1
@@ -3893,7 +3924,7 @@ m_kc_containers() {
         --preview "bash ${g_script_path} -i show_container_info '${_g_temfile_fullpath}' '{1}' '{2}' '{3}' ${_g_use_one_object} | bat --color=always --style plain" |
     awk "$l_awk_template"
 
-    #    --bind "ctrl-l:execute:bat --color=always --paging always --style plain  <(kubectl logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
+    #    --bind "ctrl-l:execute:bat --color=always --paging always --style plain  <(${g_kubectl_cmd} logs {1} -n={2} -c={3} --tail=10000 --timestamps) > /dev/tty" \
     #    --bind "ctrl-x:become(bash \"${g_script_path}\" show_log 0 0 200 '{1}' '-n={2}' '-c={3}' '${_g_temfile_fullpath}' > /dev/tty)" \
 
     if [ "$_g_preserve_cache_after" -ne 0 ]; then
@@ -4103,7 +4134,7 @@ m_kc_deployments() {
 
     if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
 
-        kubectl "${la_args[@]}" > "$_g_temfile_fullpath"
+        ${g_kubectl_cmd} "${la_args[@]}" > "$_g_temfile_fullpath"
         if [ $? -ne 0 ]; then
             echo "Check the connection to k8s cluster"
             return 1
@@ -4154,7 +4185,7 @@ m_kc_deployments() {
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' ${_g_use_one_object} '{2}') > /dev/tty" \
         --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_deployment_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' ${_g_use_one_object}) > /dev/tty" \
         --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_dply_revision1 '{1}' '{2}') > /dev/tty" \
-        --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
+        --bind "ctrl-w:execute:${g_kubectl_cmd} get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
         --preview "bash ${g_script_path} -i show_deployment_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' ${_g_use_one_object} | bat --color=always --style plain" |
     awk "$l_awk_template"
@@ -4369,7 +4400,7 @@ m_kc_replicaset() {
 
     if [ "$_g_use_cache_before" -ne 0 ] || [ ! -f "$_g_temfile_fullpath" ]; then
 
-        kubectl "${la_args[@]}" > "$_g_temfile_fullpath"
+        ${g_kubectl_cmd} "${la_args[@]}" > "$_g_temfile_fullpath"
         if [ $? -ne 0 ]; then
             echo "Check the connection to k8s cluster"
             return 1
@@ -4422,7 +4453,7 @@ m_kc_replicaset() {
         --bind "ctrl-a:execute:vim -c 'set filetype=yaml' <(bash ${g_script_path} -i show_object_yaml '${_g_temfile_fullpath}' '{1}' ${_g_use_one_object} '{2}') > /dev/tty" \
         --bind "ctrl-b:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_replicaset_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' ${_g_use_one_object}) > /dev/tty" \
         --bind "ctrl-d:execute:bat --color=always --paging always --style plain <(bash ${g_script_path} -i show_dply_revision2 '${_g_temfile_fullpath}' '{1}' '{2}' ${_g_use_one_object}) > /dev/tty" \
-        --bind "ctrl-w:execute:kubectl get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
+        --bind "ctrl-w:execute:${g_kubectl_cmd} get pod -n={2} -l='{9}' -w -o wide > /dev/tty" \
         --preview-window "down,border-top,70%" \
         --preview "bash ${g_script_path} -i show_replicaset_info '${_g_temfile_fullpath}' '{1}' '{2}' '{9}' ${_g_use_one_object} | bat --color=always --style plain" |
     awk "$l_awk_template"
@@ -4696,7 +4727,7 @@ m_kc_logs() {
     local -i l_status=0
     local l_data=''
 
-    l_data=$(kubectl "${la_args[@]}" | jq -r "$l_filter")
+    l_data=$(${g_kubectl_cmd} "${la_args[@]}" | jq -r "$l_filter")
     l_status=$?
 
     if [ $l_status -ne 0 ]; then
@@ -5141,7 +5172,7 @@ m_kc_restart() {
     local -i l_status=0
     local l_data=''
 
-    l_data=$(kubectl "${la_args[@]}" | jq -r "$l_filter")
+    l_data=$(${g_kubectl_cmd} "${la_args[@]}" | jq -r "$l_filter")
     l_status=$?
 
     if [ $l_status -ne 0 ]; then
@@ -5184,7 +5215,7 @@ m_kc_restart() {
 
         # Obtener el descriptor del controlador
         #echo "$l_rs_ns $l_resource $l_rs_name"
-        l_data_json=$(kubectl get -n "$l_rs_ns" "$l_resource" "$l_rs_name" -o json)
+        l_data_json=$(${g_kubectl_cmd} get -n "$l_rs_ns" "$l_resource" "$l_rs_name" -o json)
         l_status=$?
 
         if [ $l_status -ne 0 ] || [ -z "$l_data_json" ] || [ "$l_data_json" = 'null' ]; then
@@ -5214,9 +5245,9 @@ m_kc_restart() {
         printf '\n'
 
         # Realizar un restart de controlador
-        printf 'Restart el %s: %bkubectl rollout restart%b -n "%s" "%s/%s"%b\n' "$l_resource" "$g_color_green1" \
+        printf 'Restart el %s: %b%s rollout restart%b -n "%s" "%s/%s"%b\n' "$l_resource" "$g_color_green1" "$g_kubectl_cmd" \
                "$g_color_gray1" "$l_rs_ns" "$l_resource" "$l_rs_name"  "$g_color_reset"
-        kubectl rollout restart -n "$l_rs_ns" "${l_resource}/${l_rs_name}"
+        ${g_kubectl_cmd} rollout restart -n "$l_rs_ns" "${l_resource}/${l_rs_name}"
 
         printf '\n'
 
@@ -5268,7 +5299,7 @@ m_kc_restart() {
         fi
 
         # Obtener el descriptor del controlador
-        l_data_json=$(kubectl get -n "$l_rs_ns" "$l_resource" "$l_rs_name" -o json)
+        l_data_json=$(${g_kubectl_cmd} get -n "$l_rs_ns" "$l_resource" "$l_rs_name" -o json)
         l_status=$?
 
         if [ $l_status -ne 0 ] || [ -z "$l_data_json" ] || [ "$l_data_json" = 'null' ]; then
@@ -5297,9 +5328,9 @@ m_kc_restart() {
         printf '\n'
 
         # Realizar un restart de controlador
-        printf 'Restart el %s: %bkubectl rollout restart%b -n "%s" "%s/%s"%b\n' "$l_resource" "$g_color_green1" \
+        printf 'Restart el %s: %b%s rollout restart%b -n "%s" "%s/%s"%b\n' "$l_resource" "$g_color_green1" "$g_kubectl_cmd" \
                "$g_color_gray1" "$l_rs_ns" "$l_resource" "$l_rs_name"  "$g_color_reset"
-        kubectl rollout restart -n "$l_rs_ns" "${l_resource}/${l_rs_name}"
+        "$g_kubectl_cmd" rollout restart -n "$l_rs_ns" "${l_resource}/${l_rs_name}"
 
         printf '\n'
 
@@ -5693,7 +5724,8 @@ m_usage_global() {
 
     printf 'Usage:\n'
     printf '  %b%s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
-    printf '  %b%s%b SUBCOMMAND%b [options] [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s%b -o%b SUBCOMMAND%b [options] [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
     if [ ! -z "$l_infos" ]; then
         printf '  %b%s%b -i FUNC_NAME [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$g_color_gray1" "$g_color_reset"
@@ -5702,6 +5734,11 @@ m_usage_global() {
     printf '\nLas opciones globales usados son:\n'
     printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
            "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '%b  > %b-o%b Obliga usar solo el comando "oc". No usa el comando "kubectl".%b\n' \
+           "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '%b    Si define la variable de entorno %bUSE_OC=0%b tambien se usara el comando "oc". Este tiene menor prioridad que la opción "-o"%b\n' \
+           "$g_color_gray1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
 
     if [ ! -z "$l_infos" ]; then
         printf '%b  > %b-i FUNC_NAME%b Especifica el nombre de la funcion interna del script a ejecutar (uso interno y/o debugging).%b\n' \
@@ -5743,14 +5780,15 @@ main() {
        return 2
     fi
 
-    if ! command -v kubectl 2> /dev/null 1>&2; then
-       printf 'El comando "%b%s%b" no esta instalado.\n' "$g_color_gray1" "kubectl" "$g_color_reset"
-       return 2
-    fi
-
 
     #2. Procesar las opciones globales
     local l_func_name=""
+    local -i l_use_only_oc=1
+
+    if [ "$USE_OC" = "0" ]; then
+        l_use_only_oc=0
+    fi
+
 
     while [ $# -gt 0 ]; do
 
@@ -5759,6 +5797,12 @@ main() {
             -h|--help|help)
                 m_usage_global
                 return 0
+                ;;
+
+
+            -o)
+                l_use_only_oc=0
+                shift 1
                 ;;
 
             -u)
@@ -5802,6 +5846,27 @@ main() {
         esac
 
     done
+
+
+    if [ $l_use_only_oc -eq 0 ]; then
+
+        g_kubectl_cmd="oc"
+
+        if ! command -v oc 2> /dev/null 1>&2; then
+            printf 'El comando "%b%s%b" no esta instalado.\n' "$g_color_gray1" "oc" "$g_color_reset"
+            return 2
+        fi
+
+    else
+
+        g_kubectl_cmd="kubectl"
+
+        if ! command -v kubectl 2> /dev/null 1>&2; then
+            printf 'El comando "%b%s%b" no esta instalado.\n' "$g_color_gray1" "kubectl" "$g_color_reset"
+            return 2
+        fi
+
+    fi
 
 
     #3. Si es una funcion exportada, invocarlo
