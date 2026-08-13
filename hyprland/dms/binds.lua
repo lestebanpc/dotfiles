@@ -60,7 +60,7 @@ hl.bind("SUPER + SHIFT + CTRL + L",     hl.dsp.window.move({ monitor = "r" }))
 --1. Workspace Management
 
 -- Rename current workspace
-hl.bind("CTRL + SHIFT + R", hl.dsp.exec_cmd("dms ipc call workspace-rename open"))
+hl.bind("SUPER + semicolon", hl.dsp.exec_cmd("dms ipc call workspace-rename open"))
 
 -- Switch a previos/next workspace
 hl.bind("SUPER + Page_Down", hl.dsp.focus({ workspace = "e+1" }))
@@ -121,7 +121,7 @@ local function m_rotate()
 
 end
 
-hl.bind("SUPER + R", m_rotate)
+hl.bind("SUPER + period", m_rotate)
 
 
 --2. Focus Navigation (within same workspace)

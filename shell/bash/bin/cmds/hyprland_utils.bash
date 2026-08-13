@@ -25,6 +25,7 @@ declare -A gA_global_subcmd_ids=(
         ['spice']='Permite gestionar de ventanas de remote-viewer: conectarse a una VM usando SPICE, cambiar el size de la ventana.'
         #['rdp']='Permite gestionar de ventanas de sdl-freerdp: conectarse a una equipo remoto usando RDP, cambiar el size de la ventana.'
         ['android']='Permite gestionar de ventanas de scrcpy: screen mirrow a una dispositivo android, cambiar el size de la ventana.'
+        ['recorder']='Permite grabar la pantalla o una region de la pantalla incluyendo el audio del microfono y/o sistema.'
     )
 
 
@@ -41,8 +42,63 @@ declare -A gA_spice_targets=(
         ['vmphoenix']='127.0.0.1:5930'
     )
 
+# Carpetas de archivos temporales
+g_tmpfile_path="${XDG_RUNTIME_DIR:-/tmp}/myfiles"
+if [ ! -d "$g_tmpfile_path" ]; then
+    mkdir -p "$g_tmpfile_path"
+fi
+
+
+
 # -------------------------------------------------------------------------------------
-# General functions
+# General functions > Genericas
+# -------------------------------------------------------------------------------------
+
+# Sufijo unico del nombre del archivo temporal unico que almacena la data de los subcomando get.
+# > El archivo se caracteriza por:
+#   > No colisiona entre usuarios.
+#   > No colisiona entre sesiones simultáneas.
+m_get_tmpfile_suffix() {
+
+    local l_tty=$(tty | sed 's#^/dev/##; s#/##g')
+
+    # Usando
+    # > Se limpia automáticamente al cerrar la última sesión del usuario.
+    # > No dependes de políticas de limpieza de /tmp
+    local l_suffix=''
+    if [ ! -z "$XDG_RUNTIME_DIR" ]; then
+
+        if [ ! -z "$XDG_SESSION_ID" ]; then
+            l_suffix="ses${XDG_SESSION_ID}_${l_tty}"
+        else
+            l_suffix="${l_tty}_pid$$"
+        fi
+
+    else
+
+        local l_uid="${UID}"
+        if [ -z "$l_uid" ]; then
+            l_uid=$(id -u)
+        fi
+
+        if [ ! -z "$XDG_SESSION_ID" ]; then
+            l_suffix="uid${l_uid}_ses${XDG_SESSION_ID}_${l_tty}"
+        else
+            l_suffix="uid${l_uid}_${l_tty}_pid$$"
+        fi
+
+    fi
+
+    echo "$l_suffix"
+
+}
+
+
+
+
+
+# -------------------------------------------------------------------------------------
+# General functions > Menu
 # -------------------------------------------------------------------------------------
 
 
@@ -340,6 +396,727 @@ m_compare_split_windows() {
 # Exported functions
 # -------------------------------------------------------------------------------------
 
+
+
+
+# -------------------------------------------------------------------------------------
+# Subcomando> Recorder > utility
+# -------------------------------------------------------------------------------------
+#
+# > Aunque se use PipeWire, por comptabilidad a PulseAudio, existen tanto lo objetos definidos por ambos modelos.
+# > El comando 'wl-screenrec', a la opción '--audio-device' se debe inidicar el nombre de un 'audio source' y
+#   no se usa el nombre de 'node' con solo 'output ports'.
+# > En PipeWire existen 'audio node' las cuales tiene 'ports'.
+#   > Un nodo que solo tiene 'output ports' (microfono, etc.) es un 'audio source' de PulseAudio.
+#   > Un nodo que solo tiene 'input ports' (audifono, parlantes, etc.) es un 'audio skin' de PulseAudio.
+# > En PipeWire un 'link' permite enviar el audio de un 'output port' a un 'input port' de otro nodo.
+# > En PulseAudio, algunos 'skin' pueden ofrecer 'skin monitor' (usualmente tiene el nombre del skin con el prefijo
+#   '.monitor'), el cual es un 'audio source' que ofrece el audio capturado por el skin.
+# > En PulseAudio existe modulo de audio que permiten realizar ciertas operaciones:
+#   > Modulo de audio 'lookback' que permite unir un 'source' con un 'skin' (similar a un 'link' de PipeWire)
+#   > Modulo de audio 'null skin' el cual es un skin virtual que cuenta con un 'skin monitor'.
+#
+
+# Diccionario de subcomandos. La key es 'id del subcomando' y value es 'la descripcion del subcomando'.
+# > Segun el ID de subcomando, se debe tener 2 funciones bash cuyo nombre tiene dicho ID
+#   > Funcion de ayuda del comando tiene el nombre 'm_usage_SUBCMD-ID_SUBCMD-ID'.
+#   > Funcion de controlador del comando tiene el nombre 'controller_SUBCMD-ID_SUBCMD-ID'.
+declare -A gA_recorder_subcmd_ids=(
+        ['start']='Permite iniciar la grabacion.'
+        ['stop']='Permite deterner la grabacion actual.'
+        ['start_or_stop']='Permite iniciar o detener la grabacion actual.'
+    )
+
+declare -A gA_recorder_subcmd_alias=(
+    )
+
+
+# Prefijo del archivo de log, data general y data con el PID
+g_recorder_file_prefix="wl-screenrec"
+
+# Recording videos
+g_recorder_path="${HOME}/videos/general"
+
+# Virtual skin
+g_virtual_sink_name='recorder_mix_skin'
+
+
+m_is_recorder_running() {
+
+    # Validar si el descriptor existe
+    if [ ! -f "${g_tmpfile_path}/${g_recorder_file_prefix}.pid" ]; then
+        return 1
+    fi
+
+    # Obtener el PID del proceso
+    local l_pid=$(cat "${g_tmpfile_path}/${g_recorder_file_prefix}.pid")
+
+    # Validar si el PID de recorder se le pude enviar señales (se envia la señal de prueba 0)
+    if kill -0 "$l_pid" 2>/dev/null; then
+        echo "$l_pid"
+        return 0
+    fi
+
+    return 1
+}
+
+
+m_create_mixer_skin() {
+
+    local p_skin_name="$1"
+    local p_source_name_in1="$2"
+    local p_source_name_in2="$3"
+    local -n r_am_id_nullskin="$4"
+    local -n r_am_id_loopback_1="$5"
+    local -n r_am_id_loopback_2="$6"
+
+    # Si es el audio del sistema y el audio del microfono
+    local l_id_nullskin
+    local l_id_loopback_1
+    local l_id_loopback_2
+    local -i l_status=0
+
+    # Crear un skin virtual (modulo de audio null-skin)
+    l_id_nullskin=$(pactl load-module module-null-sink sink_name="$p_skin_name")
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        printf '%b[%bERROR%b]%b No se puede crear el mixer virutal skin (%bstatus code: %s%b)\n' "$g_color_gray1" "$g_color_red1" \
+               "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_status" "$g_color_reset"
+        return 1
+    fi
+
+    printf 'Audio module (mixer skin)      : %b%s%b (ID: %b%s%b)\n' "$g_color_gray1" "$p_skin_name" "$g_color_reset" \
+           "$g_color_gray1" "$l_id_nullskin" "$g_color_reset"
+
+    # Enlazar el monitor del audio sistema con el sink virtual (modulo de audio loopback)
+    l_id_loopback_1=$(pactl load-module module-loopback source="$p_source_name_in1" sink="$p_skin_name")
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        printf '%b[%bERROR%b]%b No se puede conectar el source "%b%s%b" con el skin virtual (%bstatus code: %s%b)\n' \
+               "$g_color_gray1" "$g_color_red1" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$p_source_name_in1" "$g_color_reset" \
+               "$g_color_gray1" "$l_status" "$g_color_reset"
+        pactl unload-module "$l_id_nullskin" 2>/dev/null
+        return 1
+    fi
+
+    printf 'Audio module loopback          : %b%s%b -> %b%s%b (ID: %b%s%b)\n'  "$g_color_gray1" "$p_source_name_in1" "$g_color_reset" \
+           "$g_color_gray1" "$p_skin_name" "$g_color_reset" "$g_color_gray1" "$l_id_loopback_1" "$g_color_reset"
+
+    # Enlazar el microfono con el sink virtual (modulo de audio loopback)
+    l_id_loopback_2=$(pactl load-module module-loopback source="$p_source_name_in2" sink="$p_skin_name")
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        printf '%b[%bERROR%b]%b No se puede conectar el source "%b%s%b" con el skin virtual (%bstatus code: %s%b)\n' \
+               "$g_color_gray1" "$g_color_red1" "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$p_source_name_in2" "$g_color_reset" \
+               "$g_color_gray1" "$l_status" "$g_color_reset"
+        pactl unload-module "$l_id_nullskin" 2>/dev/null
+        pactl unload-module "$l_id_loopback_1" 2>/dev/null
+        return 1
+    fi
+
+    printf 'Audio module loopback          : %b%s%b -> %b%s%b (ID: %b%s%b)\n'  "$g_color_gray1" "$p_source_name_in2" "$g_color_reset" \
+           "$g_color_gray1" "$p_skin_name" "$g_color_reset" "$g_color_gray1" "$l_id_loopback_2" "$g_color_reset"
+
+    # Devolver como source el monitor del skin virtual
+    r_am_id_nullskin="$l_id_nullskin"
+    r_am_id_loopback_1="$l_id_loopback_1"
+    r_am_id_loopback_2="$l_id_loopback_2"
+    return 0
+
+}
+
+m_get_source_audio() {
+
+    # Argumentos
+    local -i p_use_default_microphone=1
+    if [ "$1" -eq 0 ]; then
+        p_use_default_microphone=0
+    fi
+
+    local -i p_use_audio_system=1
+    if [ "$2" -eq 0 ]; then
+        p_use_audio_system=0
+    fi
+
+    local -n r_source_audio="$3"
+
+    # Obtener el default source y skin
+    local -i l_status=0
+
+    local l_default_source
+    if [ $p_use_default_microphone -eq 0 ]; then
+
+        l_default_source=$(pactl get-default-source)
+        l_status=$?
+
+        if [ $l_status -ne 0 ]; then
+            printf '%b[%bERROR%b]%b No se puede obtener del default source (%bstatus code: %s%b)\n' "$g_color_gray1" "$g_color_red1" \
+               "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_status" "$g_color_reset"
+            return 1
+        fi
+
+    fi
+
+    local l_default_sink
+    if [ $p_use_audio_system -eq 0 ]; then
+
+        l_default_sink=$(pactl get-default-sink)
+        l_status=$?
+
+        if [ $l_status -ne 0 ]; then
+            printf '%b[%bERROR%b]%b No se puede obtener del default sink (%bstatus code: %s%b)\n' "$g_color_gray1" "$g_color_red1" \
+               "$g_color_gray1" "$g_color_reset" "$g_color_gray1" "$l_status" "$g_color_reset"
+            return 1
+        fi
+
+    fi
+
+    # Si NO se usa el microfono y NO el audio del sistema
+    if [ $p_use_default_microphone -eq 1 ] && [ $p_use_audio_system -eq 1 ]; then
+        printf 'Source audio                   : %b%s%b\n' "$g_color_gray1" "None" "$g_color_reset"
+        r_source_audio=""
+        return 0
+    fi
+
+    # Si se usa el microfono y NO el audio del sistema
+    if [ $p_use_default_microphone -eq 0 ] && [ $p_use_audio_system -ne 0 ]; then
+        printf 'Source audio (microphone)      : %b%s%b\n' "$g_color_gray1" "$l_default_source" "$g_color_reset"
+        r_source_audio="$l_default_source"
+        return 0
+    fi
+
+    # Si es el audio del sistema pero NO el audio del microfono
+    if [ $p_use_default_microphone -ne 0 ] && [ $p_use_audio_system -eq 0 ]; then
+        printf 'Source audio (of system audio) : %b%s%b\n' "$g_color_gray1" "${l_default_sink}.monitor" "$g_color_reset"
+        r_source_audio="${l_default_sink}.monitor"
+        return 0
+    fi
+
+    # Si es el audio del sistema y el audio del microfono crean un skin virtual que haga de mixer
+    local l_am_id_nullskin
+    local l_am_id_loopback_sys
+    local l_am_id_loopback_mic
+
+    m_create_mixer_skin "$g_virtual_sink_name" "${l_default_sink}.monitor" "$l_default_source" "l_am_id_nullskin" "l_am_id_loopback_sys" "l_am_id_loopback_mic"
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        return 2
+    fi
+
+    echo "$l_am_id_nullskin $l_am_id_loopback_sys $l_am_id_loopback_mic" > "${g_tmpfile_path}/${g_recorder_file_prefix}.data"
+
+    # Devolver como source el monitor del skin virtual
+    r_source_audio="${g_virtual_sink_name}.monitor"
+    return 0
+
+}
+
+
+m_cleanup_audio_modules() {
+
+    if [ ! -f "${g_tmpfile_path}/${g_recorder_file_prefix}.data" ]; then
+       return 0
+    fi
+
+    # Obtener la data (1ra linea)
+    # shellcheck disable=SC2046
+    local l_data=$(head -n 1 "${g_tmpfile_path}/${g_recorder_file_prefix}.data")
+    if [ -z "$l_data" ]; then
+        return 0
+    fi
+
+    local la_ids=(${l_data})
+
+    local l_id
+    for l_id in "${la_ids[@]}"; do
+        if [ -n "${l_id}" ]; then
+            printf 'Unload el modulo de audio: %bpactl unload-module "%s"%b\n' "$g_color_gray1" "$l_id" "$g_color_reset"
+            pactl unload-module "$l_id" 2>/dev/null
+        fi
+    done
+
+    rm -f "${g_tmpfile_path}/${g_recorder_file_prefix}.data"
+}
+
+
+
+m_recorder_start() {
+
+    # Argumentos
+    local -i p_use_default_microphone=1
+    if [ "$1" -eq 0 ]; then
+        p_use_default_microphone=0
+    fi
+
+    local -i p_use_audio_system=1
+    if [ "$2" -eq 0 ]; then
+        p_use_audio_system=0
+    fi
+
+    # Solo se debe ejecutar 1 sola grabacion por usuario
+    local -i l_status=0
+    local l_pid
+
+    l_pid=$(m_is_recorder_running)
+    l_status=$?
+
+    if [ ! -z "$l_pid" ]; then
+        notify-send -t 5000 -i "media-record" "Recorder (wl-screenrec)" "Ya hay una grabación en curso\nPID: ${l_pid}"
+        return 0
+    fi
+
+    #echo "l_pid: ${l_pid}"
+
+    # Selección de área
+    local l_region
+    l_region=$(slurp)
+    l_status=$?
+
+    if [ $l_status -ne 0 ] || [ -z "$l_region" ]; then
+        notify-send -t 5000  -i "media-record" "Recorder (wl-screenrec)" "❌ Grabación cancelada: No se seleccionó área"
+        return 1
+    fi
+
+    # Obtener el output de audio
+    local l_audio_source=""
+    m_get_source_audio $p_use_default_microphone $p_use_audio_system "l_audio_source"
+    l_status=$?
+
+    if [ $l_status -ne 0 ]; then
+        notify-send -t 5000 -i "media-record" "Recorder (wl-screenrec)" "❌ Grabación cancelada: No obtuvo el audio source"
+        return 2
+    fi
+
+    # Iniciar grabación
+    local l_sufix=$(date +'%Y%m%d_%H%M%S')
+
+    #4. Creando el comando a ejecutar
+    local l_log_file="${g_tmpfile_path}/${g_recorder_file_prefix}.log"
+    local l_video_file="${HOME}/videos/general/recorder_${l_sufix}.mkv"
+
+    #5. Ejecutando el comando
+    printf '\n'
+    printf 'Grabando video "%b%s%b" ...\n' "$g_color_gray1" "$l_video_file" "$g_color_reset"
+
+    if [ -z "$l_audio_source" ]; then
+
+        printf '%bsetsid %bwl-screenrec %b--low-power=off -g "%s" --max-fps %s -f "%s" > "%s" 2>&1 &%b\n' "$g_color_green1" "$g_color_cian1" "$g_color_gray1" \
+              "$l_region" "60" "$l_video_file" "$l_log_file" "$g_color_reset"
+
+        setsid wl-screenrec --low-power=off -g "$l_region" --max-fps 60 -f "$l_video_file" > "${l_log_file}" 2>&1 &
+        l_pid=$!
+
+    else
+
+        printf '%bsetsid %bwl-screenrec %b--low-power=off --audio --audio-device="%s" -g "%s" --max-fps %s -f "%s" > "%s" 2>&1 &%b\n' \
+              "$g_color_green1" "$g_color_cian1" "$g_color_gray1" "$l_audio_source" \
+              "$l_region" "60" "$l_video_file" "$l_log_file" "$g_color_reset"
+
+        setsid wl-screenrec --low-power=off --audio --audio-device="$l_audio_source" -g "$l_region" --max-fps 60 \
+               -f "$l_video_file" > "${l_log_file}" 2>&1 &
+        l_pid=$!
+
+    fi
+
+    echo "$l_pid" > "${g_tmpfile_path}/${g_recorder_file_prefix}.pid"
+    printf '\nSe ha lanzado %bwl-screenrec%b en background:\n' "$g_color_gray1" "$g_color_reset"
+    printf ' PID: %b%s%b\n' "$g_color_gray1" "$l_pid" "$g_color_reset"
+    printf ' Log: %b%s%b\n' "$g_color_gray1" "$l_log_file" "$g_color_reset"
+
+    notify-send -t 5000 -i "media-record" "Recorder (wl-screenrec)" "🎥 Grabando ...\nPID: ${l_pid}\nFile: ${l_video_file}\nLog: ${l_log_file}"
+    return 0
+
+}
+
+
+m_recorder_stop() {
+
+    # Solo se debe ejecutar 1 sola grabacion por usuario
+    if ! [ -f "${g_tmpfile_path}/${g_recorder_file_prefix}.pid" ]; then
+        notify-send -t 3000 -i "media-record" "Recorder (wl-screenrec)" "No hay grabación en curso."
+        m_cleanup_audio_modules
+        return 0
+    fi
+
+    local -i l_status=0
+    local l_pid
+    l_pid=$(cat "${g_tmpfile_path}/${g_recorder_file_prefix}.pid")
+
+    if kill -0 "$l_pid" 2>/dev/null; then
+        kill -SIGINT "$l_pid" 2>/dev/null || kill -TERM "$l_pid" 2>/dev/null || true
+    fi
+
+    rm -f "${g_tmpfile_path}/${g_recorder_file_prefix}.pid"
+
+    # Espera breve para flush de archivo
+    sleep 0.5
+
+    m_cleanup_audio_modules
+
+    notify-send -t 3000 -i "media-record" "Recorder (wl-screenrec)" "⏹️Grabación detenida.\nVideo guardado en ~/videos/general/"
+
+}
+
+
+m_recorder_start_or_stop() {
+
+    # Argumentos
+    local -i p_use_default_microphone=1
+    if [ "$1" -eq 0 ]; then
+        p_use_default_microphone=0
+    fi
+
+    local -i p_use_audio_system=1
+    if [ "$2" -eq 0 ]; then
+        p_use_audio_system=0
+    fi
+
+
+    local -i l_status=0
+    local l_pid
+
+    l_pid=$(m_is_recorder_running)
+    l_status=$?
+
+    if [ ! -z "$l_pid" ]; then
+        m_recorder_stop
+    else
+        m_recorder_start $p_use_default_microphone $p_use_audio_system
+    fi
+}
+
+
+
+# -------------------------------------------------------------------------------------
+# Subcomando> Recorder > Stop > Controller
+# -------------------------------------------------------------------------------------
+
+
+m_usage_recorder_stop() {
+
+    local l_scmd_id='stop'
+    local l_scmd_description="${gA_recorder_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+
+    printf 'Usage:\n'
+    printf '    %b%s recorder %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '    %b%s recorder %s%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_reset"
+
+    printf 'Las opciones usados son:\n'
+    printf '  > %b-h%b o %b--help%b Permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
+
+}
+
+
+# Funcion principal de entrada
+# > Valores de retorno:
+#   (0) OK
+#   (1) No se tienen los comandos requeridos para ejecutar el script.
+#   (3) Opciones ingresados son invalidos.
+#   (4) No se han ingresado argumentos.
+#
+m_controller_recorder_stop() {
+
+    #1. Validaciones previas
+
+    #2. Procesar las opciones globales
+    while [ $# -gt 0 ]; do
+
+        case "$1" in
+
+            -h|--help|help)
+                m_usage_recorder_stop
+                return 0
+                ;;
+
+
+            -*)
+                printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$1" "$g_color_reset"
+                m_usage_recorder_stop
+                return 3
+                ;;
+
+            *)
+                #Si son argumentos, salir y continuar
+                break
+                ;;
+
+        esac
+
+    done
+
+
+    #4. Procesar el 1er argumentos (nombre del subcomando)
+
+    #5. Ejecutando el controlador principal del subcomando
+    m_recorder_stop
+    return 0
+
+}
+
+
+
+# -------------------------------------------------------------------------------------
+# Subcomando> Recorder > Start > Controller
+# -------------------------------------------------------------------------------------
+
+m_usage_recorder_start() {
+
+    local l_scmd_id='start'
+    local l_scmd_description="${gA_recorder_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+
+    printf 'Usage:\n'
+    printf '    %b%s recorder %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '    %b%s recorder %s%b -m -s%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+
+    printf 'Las opciones usados son:\n'
+    printf '  > %b-h%b o %b--help%b Permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
+
+    printf '  > %b-m%b Incluye el audio del nodo de audio de entrada por defecto del sistema (ejemplo: microfono).%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %b-s%b Incluye el audio del nodo de audio sistema.%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+}
+
+
+# Funcion principal de entrada
+# > Valores de retorno:
+#   (0) OK
+#   (1) No se tienen los comandos requeridos para ejecutar el script.
+#   (3) Opciones ingresados son invalidos.
+#   (4) No se han ingresado argumentos.
+#
+m_controller_recorder_start() {
+
+    #1. Validaciones previas
+    local -i p_use_default_microphone=1
+    local -i p_use_audio_system=1
+
+    #2. Procesar las opciones globales
+    while [ $# -gt 0 ]; do
+
+        case "$1" in
+
+            -h|--help|help)
+                m_usage_recorder_start
+                return 0
+                ;;
+
+            -m)
+                p_use_default_microphone=0
+                shift 1
+                ;;
+
+            -s)
+                p_use_audio_system=0
+                shift 1
+                ;;
+
+
+
+            -*)
+                printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$1" "$g_color_reset"
+                m_usage_recorder_start
+                return 3
+                ;;
+
+            *)
+                #Si son argumentos, salir y continuar
+                break
+                ;;
+
+        esac
+
+    done
+
+
+    #4. Procesar el 1er argumentos (nombre del subcomando)
+
+
+    #5. Ejecutando el controlador principal del subcomando
+    m_recorder_start $p_use_default_microphone $p_use_audio_system
+    return 0
+
+}
+
+
+# -------------------------------------------------------------------------------------
+# Subcomando> Recorder > Start or Stop > Controller
+# -------------------------------------------------------------------------------------
+
+m_usage_recorder_start_or_stop() {
+
+    local l_scmd_id='start_or_stop'
+    local l_scmd_description="${gA_recorder_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+
+    printf 'Usage:\n'
+    printf '    %b%s recorder %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '    %b%s recorder %s%b -m -s%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+
+    printf 'Las opciones usados son:\n'
+    printf '  > %b-h%b o %b--help%b Permite mostrar la ayuda del comando.%b\n' "$g_color_green1" "$g_color_gray1" "$g_color_green1" \
+           "$g_color_gray1" "$g_color_reset"
+
+    printf '  > %b-m%b Incluye el audio del nodo de audio de entrada por defecto del sistema (ejemplo: microfono).%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+    printf '  > %b-s%b Incluye el audio del nodo de audio sistema.%b\n' \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+}
+
+
+# Funcion principal de entrada
+# > Valores de retorno:
+#   (0) OK
+#   (1) No se tienen los comandos requeridos para ejecutar el script.
+#   (3) Opciones ingresados son invalidos.
+#   (4) No se han ingresado argumentos.
+#
+m_controller_recorder_start_or_stop() {
+
+    #1. Validaciones previas
+    local -i p_use_default_microphone=1
+    local -i p_use_audio_system=1
+
+    #2. Procesar las opciones globales
+    while [ $# -gt 0 ]; do
+
+        case "$1" in
+
+            -h|--help|help)
+                m_usage_recorder_start_or_stop
+                return 0
+                ;;
+
+            -m)
+                p_use_default_microphone=0
+                shift 1
+                ;;
+
+            -s)
+                p_use_audio_system=0
+                shift 1
+                ;;
+
+
+
+            -*)
+                printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$1" "$g_color_reset"
+                m_usage_recorder_start_or_stop
+                return 3
+                ;;
+
+            *)
+                #Si son argumentos, salir y continuar
+                break
+                ;;
+
+        esac
+
+    done
+
+
+    #4. Procesar el 1er argumentos (nombre del subcomando)
+
+
+    #5. Ejecutando el controlador principal del subcomando
+    m_recorder_start_or_stop $p_use_default_microphone $p_use_audio_system
+    return 0
+
+}
+
+
+# -------------------------------------------------------------------------------------
+# Subcomand > Recorder > Main Controller
+# -------------------------------------------------------------------------------------
+
+m_usage_recorder() {
+
+    local l_scmd_id='recorder'
+    local l_scmd_description="${gA_global_subcmd_ids[${l_scmd_id}]}"
+    printf '%b%s%b\n\n' "$g_color_gray1" "$l_scmd_description" "$g_color_reset"
+
+    printf 'Usage:\n'
+    printf '  %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
+    printf '  %b%s %s%b SUBCOMMAND%b [options] [args]%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nLas opciones globales usados son:\n'
+    printf '%b  > %b-h%b o %b--help%b permite mostrar la ayuda del comando.%b\n' "$g_color_gray1" "$g_color_green1" "$g_color_gray1" \
+           "$g_color_green1" "$g_color_gray1" "$g_color_reset"
+
+    printf '\nEl argumento principal es el nombre del subcomando %bSUBCOMMAND%b. Los cuales puede ser:\n' "$g_color_green1" "$g_color_reset"
+    m_get_subcmd_infos "gA_recorder_subcmd_ids" "gA_recorder_subcmd_alias"
+    printf '\n'
+
+}
+
+
+# Funcion principal de entrada
+# > Valores de retorno:
+#   (0) OK
+#   (1) No se tienen los comandos requeridos para ejecutar el script.
+#   (3) Opciones ingresados son invalidos.
+#   (4) No se han ingresado argumentos.
+#
+m_controller_recorder() {
+
+    #1. Validaciones previas
+
+    #2. Procesar las opciones globales
+    while [ $# -gt 0 ]; do
+
+        case "$1" in
+
+            -h|--help|help)
+                m_usage_recorder
+                return 0
+                ;;
+
+
+            -*)
+                printf '[%bERROR%b] Opción "%b%s%b" no es es valido.\n\n' "$g_color_red1" "$g_color_reset" \
+                       "$g_color_gray1" "$1" "$g_color_reset"
+                m_usage_recorder
+                return 3
+                ;;
+
+            *)
+                #Si son argumentos, salir y continuar
+                break
+                ;;
+
+        esac
+
+    done
+
+
+    #4. Procesar el 1er argumentos (nombre del subcomando)
+    if [ -z "$1" ]; then
+        printf '[%bERROR%b] Se debe especificarse un subcomando.\n\n' "$g_color_red1" "$g_color_reset"
+        m_usage_recorder
+        return 3
+    fi
+
+    local l_scmd_id="$1"
+    shift
+
+    #5. Ejecutando el controlador principal del subcomando
+    "m_controller_recorder_${l_scmd_id}" "$@"
+    return 0
+
+}
 
 
 

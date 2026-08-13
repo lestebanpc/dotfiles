@@ -4216,7 +4216,7 @@ g_lnx_fonts_path=''
 # Folder donde se almacena los archivos fuentes. Su valor es autogenerado por "g_lnx_paths" y puede ser:
 #  - "${g_lnx_nonbin_path}/share/icons"
 #  - "/usr/local/share/icons"
-#  - "~/.local/share/fonts"
+#  - "~/.local/share/icons"
 g_lnx_icons_path=''
 
 # Define el tipo de ruta escogido para los comandos. Su valor, es CALCULADO por "g_lnx_paths". Su valor puede ser 0 o la suma binario

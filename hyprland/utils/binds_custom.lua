@@ -30,6 +30,12 @@ local mod = {}
 -- Keybindings> System Application Launchers
 ------------------------------------------------------------------------------------
 
+-- Iniciar/Detener la grabacion de la pantalla incluyendo el sonido del sistema
+hl.bind("SUPER + R", hl.dsp.exec_cmd("~/.local/bin/hypru recorder start_or_stop -s"))
+
+-- Iniciar/Detener la grabacion de la pantalla incluyendo el sonido del sistema y el del microfono
+hl.bind("SUPER + SHIFT + R", hl.dsp.exec_cmd("~/.local/bin/hypru recorder start_or_stop -m -s"))
+
 -- Color picker (Copiar al clipboard el RGB en formato hexadecimal, ejemplo 'FF8040')
 --hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("dms color pick -o \"{0}{1}{2}\" -a"))
 

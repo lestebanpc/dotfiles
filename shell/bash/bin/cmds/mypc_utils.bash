@@ -145,7 +145,8 @@ m_usage_music() {
     printf 'Usage:\n'
     printf '  > Ayuda:\n'
     printf '    %b%s %s%b -h|--help%b\n' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
-    printf '  > Iniciar (%bmontar carpetas NFS de musica, configurar uso exclusivo de tarjeta de sonido, iniciar el servidor MDP%b):\n' "$g_color_gray1" "$g_color_reset"
+    printf '  > Iniciar (%bmontar carpetas NFS de musica, configurar uso exclusivo de tarjeta de sonido, iniciar el servidor MDP%b):\n' \
+           "$g_color_gray1" "$g_color_reset"
     printf '    %b%s %s%b start\n%b' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
     printf '  > Detener (%bdetener el servidor MDP, desmontar carpetas NFS de musica%b):\n' "$g_color_gray1" "$g_color_reset"
     printf '    %b%s %s%b stop\n%b' "$g_color_yellow1" "$g_cmd_name" "$l_scmd_id" "$g_color_gray1" "$g_color_reset"
@@ -276,7 +277,7 @@ m_start_music() {
         printf 'Se la seccion "%b%s%b" de nombre "%b%s%b" en el archivo "%b%s%b" no tiene el campo "%b%s%b".\n' \
                "$g_color_gray1" "audio_output" "$g_color_reset" "$g_color_gray1" "ALSA Hi-Fi DAC" "$g_color_reset" \
                "$g_color_gray1" "/etc/mpd.conf" "$g_color_reset" "$g_color_gray1" "device" "$g_color_reset"
-        printf "Valide que la sección tiene el formato siguiente:\n" "$g_color_gray1"
+        printf "Valide que la sección tiene el formato siguiente:\n"
 
         printf "%b#\n" "$g_color_yellow1"
         printf "# ALSA output:\n"
@@ -366,7 +367,12 @@ m_start_music() {
         sudo mount /nas/music/5.1
     fi
 
-    #7. Iniciando el domonio mdp
+    #7. Establecer el por defecto para PCM por PipeWire
+    #   > DAC 'Topping D50s' deja de ser el nodo skin por defecto
+    #   > DAC la interfaz de audio pasaria a ser el nodo skin por defecto
+
+
+    #8. Iniciando el domonio mdp
     if systemctl is-active mpd.service 2>&1 > /dev/null; then
         if [ "$l_device_value" = "$l_device_new_value" ]; then
             printf 'El demonio MDP "%bMusic Player Daemon%b" ya esta iniciado.\n' "$g_color_cian1" "$g_color_reset"
@@ -399,7 +405,11 @@ m_stop_music() {
         printf 'El demonio MDP "%bMusic Player Daemon%b" ya esta detenido.\n' "$g_color_gray1" "$g_color_reset"
     fi
 
-    #3. Desmontando los punto de montaje de musica
+    #3. Reestablecer el DAC por defecto para PCM por PipeWire
+    #   > DAC 'Topping D50s' pasa a ser el nodo skin por defecto
+    #   > DAC la interfaz de audio dejaria de ser el nodo skin por defecto
+
+    #4. Desmontando los punto de montaje de musica
     if cat /proc/mounts | grep '/nas/music/2.0' 2>&1 > /dev/null; then
         printf 'Desmontando el punto de montaje "%b%s%b"...\n' "$g_color_gray1" "/nas/music/2.0" "$g_color_reset"
         sudo umount /nas/music/2.0

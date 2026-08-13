@@ -2376,9 +2376,9 @@ function get_repo_artifacts() {
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_is_win_binary -eq 0 ]; then
                 if [ "$g_os_architecture_type" = "aarch64" ]; then
-                    pna_artifact_names=("scrcpy-win64-v4.0.zip")
+                    pna_artifact_names=("scrcpy-win64-v${p_repo_last_pretty_version}.zip")
                 else
-                    pna_artifact_names=("scrcpy-win64-v4.0.zip")
+                    pna_artifact_names=("scrcpy-win64-v${p_repo_last_pretty_version}.zip")
                 fi
                 pna_artifact_types=(21)
             else
@@ -2386,15 +2386,15 @@ function get_repo_artifacts() {
                 if [ $g_os_subtype_id -eq 1 ]; then
                     #No hay soporte para libc, solo musl
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("scrcpy-linux-x86_64-v4.0.tar.gz")
+                        pna_artifact_names=("scrcpy-linux-x86_64-v${p_repo_last_pretty_version}.tar.gz")
                     else
-                        pna_artifact_names=("scrcpy-linux-x86_64-v4.0.tar.gz")
+                        pna_artifact_names=("scrcpy-linux-x86_64-v${p_repo_last_pretty_version}.tar.gz")
                     fi
                 else
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("scrcpy-linux-x86_64-v4.0.tar.gz")
+                        pna_artifact_names=("scrcpy-linux-x86_64-v${p_repo_last_pretty_version}.tar.gz")
                     else
-                        pna_artifact_names=("scrcpy-linux-x86_64-v4.0.tar.gz")
+                        pna_artifact_names=("scrcpy-linux-x86_64-v${p_repo_last_pretty_version}.tar.gz")
                     fi
                 fi
                 pna_artifact_types=(20)
