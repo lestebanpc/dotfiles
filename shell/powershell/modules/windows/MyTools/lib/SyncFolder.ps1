@@ -45,6 +45,9 @@ $script:Colors = @{
     BrightCyan = "`e[96m"
 }
 
+# Ruta de
+$script:NoteFilterFile = "obsidian_filter.txt"
+
 
 function Write-ColoredMessage {
     param(
@@ -175,6 +178,20 @@ function Invoke-RcloneSync {
     } else {
         Write-ColoredMessage "Path1 is remote: $remoteDesc" "Cyan"
         Write-ColoredMessage "Path2 is local : Path '$LocalPath'." "Cyan"
+    }
+
+    if ($OperationType -ne 2) {
+
+        # Si lo que se sincroniza son vaults de Obsidian
+        if (($RemoteName -like 'onote*') -or ($RemoteName -like 'gnote*')) {
+
+            $filterFile = "${env:USERPROFILE}\.config\rclone\$script:NoteFilterFile"
+
+            if (Test-Path -Path $filterFile -PathType Leaf) {
+                Write-Host "Filters of Obsidian vault: `"$filterFile`""
+                $options += "--filter-from", $filterFile
+            }
+        }
     }
 
     # Construir opciones de rclone

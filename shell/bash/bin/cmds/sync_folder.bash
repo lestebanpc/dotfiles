@@ -14,7 +14,7 @@ g_color_red1="\x1b[31m"
 g_color_blue1="\x1b[34m"
 
 declare -r g_regexp_sust_version1='s/[^0-9]*\([0-9]\+\.[0-9.]\+\).*/\1/'
-
+declare -r g_note_filter_file='obsidian_filter.txt'
 
 _g_sync_folder () {
 
@@ -29,9 +29,9 @@ _g_sync_folder () {
     local p_rclone_entry_id="$1"
     local p_local_path="$2"
     local p_remote_path="$3"
-    local p_operation_type=$4
-    local p_path_position=$5
-    local p_flag_dry_run=$6
+    local -i p_operation_type=$4
+    local -i p_path_position=$5
+    local -i p_flag_dry_run=$6
 
     local p_homologation_mode
     local p_conflict_winner
@@ -57,7 +57,7 @@ _g_sync_folder () {
         printf 'El binario %brclone%b no esta instalado o configurado.\n' "$g_color_gray1" "$g_color_reset"
         return 4
     else
-        l_version=$(echo "$l_aux" | head -n 1 | sed ${g_regexp_sust_version1})
+        l_version=$(echo "$l_aux" | head -n 1 | sed "${g_regexp_sust_version1}")
     fi
 
     if [ -z "$l_version" ]; then
@@ -105,7 +105,8 @@ _g_sync_folder () {
 
     if [ "$l_remote_type" = 'drive' ]; then
         printf -v l_remote_desc 'Type "%b%s%b", Name "%b%s%b", Folder ID "%b%s%b", Path "%b%s%b"' "$g_color_gray1" "$l_remote_type" "$g_color_reset" \
-               "$g_color_gray1" "$p_rclone_entry_id" "$g_color_reset" "$g_color_gray1" "$l_root_folder_id" "$g_color_reset" "$g_color_gray1" "$p_remote_path" "$g_color_reset"
+               "$g_color_gray1" "$p_rclone_entry_id" "$g_color_reset" "$g_color_gray1" "$l_root_folder_id" "$g_color_reset" "$g_color_gray1" \
+               "$p_remote_path" "$g_color_reset"
     else
         printf -v l_remote_desc 'Type "%b%s%b", Name "%b%s%b", Path "%b%s%b"' "$g_color_gray1" "$l_remote_type" "$g_color_reset" \
                "$g_color_gray1" "${p_rclone_entry_id}" "$g_color_reset" "$g_color_gray1" "$p_remote_path" "$g_color_reset"
@@ -121,51 +122,79 @@ _g_sync_folder () {
                "$g_color_gray1" "$p_local_path" "$g_color_reset"
     fi
 
+
     #5. Obtener los opciones a usar en rclone
+    local -a la_options=("-MvP" "--modify-window" "2s")
     local l_options="-MvP --modify-window 2s"
 
     if [ "$l_remote_type" = 'drive' ]; then
+        la_options+=("--drive-skip-gdocs")
         l_options="${l_options} --drive-skip-gdocs"
     fi
 
     if [ $p_flag_dry_run -eq 0 ]; then
+        la_options+=("--dry-run")
         l_options="${l_options} --dry-run"
     fi
 
     l_aux=''
     if [ $p_operation_type -eq 0 ]; then
 
-        #Sincronización bidireccional
+        # Sincronización bidireccional
         l_aux="sincronización bidireccional"
+        la_options+=("--compare" "size,modtime,checksum")
         l_options="${l_options} --compare size,modtime,checksum"
+
         if [ ! -z "$p_flag_force" ] && [ $p_flag_force -eq 0 ]; then
+            la_options+=("--force")
             l_options="${l_options} --force"
         fi
 
         if [ ! -z "$p_conflict_winner" ]; then
+            la_options+=("--conflict-resolve" "$p_conflict_winner")
             l_options="${l_options} --conflict-resolve ${p_conflict_winner}"
         fi
 
         if [ ! -z "$p_losser_action" ]; then
+            la_options+=("--conflict-loser" "$p_losser_action")
             l_options="${l_options} --conflict-loser ${p_losser_action}"
         fi
 
     elif [ $p_operation_type -eq 1 ]; then
 
-        #Homologación
+        # Homologación
         l_aux="homologación"
+        la_options+=("--compare" "size,modtime,checksum" "--resync")
         l_options="${l_options} --compare size,modtime,checksum --resync"
+
         if [ ! -z "$p_homologation_mode" ]; then
+            la_options+=("--resync-mode" "$p_homologation_mode")
             l_options="${l_options} --resync-mode ${p_homologation_mode}"
         fi
 
     elif [ $p_operation_type -ne 2 ]; then
 
-        #Sincronización unidireccional
+        # Sincronización unidireccional
         l_aux="sincronización undireccional"
     fi
 
-    #6.Obteniendo los parametros de rclone
+    # Si se usa 'bisync'
+    if [ $p_operation_type -ne 2 ]; then
+
+        # Si lo que se sincroniza son vaults de obsidian
+        if [[ "$p_rclone_entry_id" == onote* ]] || [[ "$p_rclone_entry_id" == gnote* ]]; then
+            if [ -f "${HOME}/.config/rclone/${g_note_filter_file}" ]; then
+
+                printf 'Filters of Obsidian %bvault%b: "%b%s%b".\n' "$g_color_gray1" "$g_color_reset" "$g_color_gray1" \
+                       "${HOME}/.config/rclone/${g_note_filter_file}" "$g_color_reset"
+                la_options+=("--filter-from" "${HOME}/.config/rclone/${g_note_filter_file}")
+                l_options="${l_options} --filter-from '${HOME}/.config/rclone/${g_note_filter_file}'"
+
+            fi
+        fi
+    fi
+
+    #6. Obteniendo los parametros de rclone
     local l_parameters
     local l_real_remote_path
     if [ "$l_remote_type" = 'drive' ]; then
@@ -176,7 +205,7 @@ _g_sync_folder () {
 
     if [ $p_operation_type -eq 0 ]; then
 
-        #Sincronización bidireccional
+        # Sincronización bidireccional
         if [ $p_path_position -ne 0 ]; then
             l_parameters="bisync ${p_local_path} ${l_real_remote_path}"
         else
@@ -185,7 +214,7 @@ _g_sync_folder () {
 
     elif [ $p_operation_type -eq 1 ]; then
 
-        #Homologación
+        # Homologación
         if [ $p_path_position -ne 0 ]; then
             l_parameters="bisync ${p_local_path} ${l_real_remote_path}"
         else
@@ -194,7 +223,7 @@ _g_sync_folder () {
 
     elif [ $p_operation_type -eq 2 ]; then
 
-        #Sincronización unidireccional
+        # Sincronización unidireccional
         if [ $p_path_position -ne 0 ]; then
             l_parameters="sync ${p_local_path} ${l_real_remote_path}"
         else
@@ -222,8 +251,8 @@ _g_sync_folder () {
         fi
     fi
 
-   printf 'Ejecutando "%brclone %s %s%b"\n\n' "$g_color_gray1" "$l_parameters" "$l_options" "$g_color_reset"
-   rclone $l_parameters $l_options
+   printf 'Ejecutando: %brclone %s %s%b\n\n' "$g_color_gray1" "$l_parameters" "$l_options" "$g_color_reset"
+   rclone $l_parameters "${la_options[@]}"
 
 }
 

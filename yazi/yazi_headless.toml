@@ -18,20 +18,6 @@
 #     > El controlador del plugin que procesa este evento, internamente tiene la logica para obtener los 'selected item' y
 #       los 'hovered items'.
 
-open_nontext_file_1 = [
-    # Para Windows
-	{ run = 'start "" %1', desc = "Open by defualt", for = "windows", orphan = true },
-
-    # Para Android (Termux)
-	{ run = 'termux-open "$1"', desc = "Open by default", for = "android" },
-
-    # Para MacOS
-	{ run = 'open "$@"', desc = "Open by default", for = "macos" },
-
-    # Para Linux y Unix
-	{ run = 'xdg-open "$1"', desc = "Open by default", for = "linux" },
-]
-
 edit_text_file_1 = [
     # Para Windows
 	{ run = '%EDITOR% %*', desc = "Edit in Yazi", for = "windows", block = true },
@@ -69,38 +55,6 @@ edit_text_file_2 = [
 	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "selected" "$@"' , desc = "Edit selected in NVIM (New TermTab, Root git)", for = "linux" },
 	{ run = 'code "$@"', desc = "Edit in VSCode", for = "unix", orphan = true },
 ]
-
-#open_image_file = [
-#    # Para Windows
-#    # Para Android (Termux)
-#    # Para MacOS
-#
-#    # Para Linux y Unix
-#	{ run = 'krita "$1"', desc = "Open by Krita", for = "linux" },
-#	{ run = 'gimp "$1"', desc = "Open by Gimp", for = "linux" },
-#]
-
-#play_video_file = [
-#    # Para Windows
-#	{ run = 'mediainfo %1 & pause', block = true, desc = "Show media info", for = "windows" },
-#
-#    # Para Android (Termux)
-#    # Para MacOS
-#
-#    # Para Linux y Unix
-#	{ run = 'mediainfo "$1"; echo "Press enter to exit"; read _', block = true, desc = "Show media info", for = "unix" },
-#]
-
-#open_folder = [
-#    # Para Windows
-#	{ run = 'code %1', desc = "Open in VSCode", for = "windows", orphan = true },
-#
-#    # Para Android (Termux)
-#    # Para MacOS
-#
-#    # Para Linux y Unix
-#	{ run = 'code "$1"', desc = "Open in VSCode", for = "unix", orphan = true },
-#]
 
 common_1 = [
     # Para Windows
@@ -187,9 +141,6 @@ rules = [
 	# Folder> Folder en Windows
 	{ mime = "folder/local", use = [ "common_1", "common_2" ] },
 
-    # File> Draw.IO (xml file that should be treated as binary)
-    #{ url = "*.drawio", use = [ "open_nontext_file_1", "common_1", "common_2" ] },
-
 	# File> Text
 	{ mime = "text/*", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2", "common_3" ] },
 
@@ -199,12 +150,6 @@ rules = [
 	# File> JSON
 	{ mime = "application/{json,ndjson}", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2", "common_3" ] },
 	{ mime = "*/javascript", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2", "common_3" ] },
-
-	# File> Image
-	#{ mime = "image/*", use = [ "open_nontext_file_1", "open_image_file", "common_1", "common_3", "common_2" ] },
-
-	# File> Media
-	#{ mime = "{audio,video}/*", use = [ "open_nontext_file_1", "play_video_file", "common_1", "common_3",  "common_2" ] },
 
     # File> Office document
 	{ mime = "application/{msword,ms-excel,ms-powerpoint}", use = [ "common_1", "common_3", "common_2" ] },

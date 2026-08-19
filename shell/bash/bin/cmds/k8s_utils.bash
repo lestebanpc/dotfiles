@@ -355,20 +355,34 @@ m_get_pod_logs() {
         p_flag_save_all_ephemeral=0
     fi
 
-    local -i p_file_sufix_nodename=1
+    local -i p_file_suffix_nodename=1
     if [ "$9" = "0" ]; then
-        p_file_sufix_nodename=0
+        p_file_suffix_nodename=0
     fi
 
-    local -i p_file_sufix_containername=0
+    local -i p_file_suffix_containername=0
     if [ "${10}" != "0" ]; then
-        p_file_sufix_containername=1
+        p_file_suffix_containername=1
     fi
 
-    local -i p_file_sufix_time=1
-    if [ "${11}" = "0" ]; then
-        p_file_sufix_time=0
+    local p_file_suffix_time="${11}"
+
+
+    local -i p_since_type=0
+    if [ "${12}" != "0" ]; then
+        p_since_type=1
     fi
+
+    local p_since_value=""
+    if [ ! -z "${13}" ]; then
+        p_since_value="${13}"
+    fi
+
+    local -i p_tail_new_lines=-1
+    if [ ! -z "${14}" ]; then
+        p_tail_new_lines="${14}"
+    fi
+
 
     #2. Obtener el descriptor json del pod
     local l_data_json
@@ -393,15 +407,15 @@ m_get_pod_logs() {
 
         printf '  NodeName         : %b%s%b\n' "$g_color_gray1" "$l_tmp" "$g_color_reset"
 
-        if [ $p_file_sufix_nodename -eq 0 ]; then
+        if [ $p_file_suffix_nodename -eq 0 ]; then
             l_suffix_begin="_${l_tmp}"
         fi
 
     fi
 
     local l_suffix_end=''
-    if [ $p_file_sufix_time -eq 0 ]; then
-        l_suffix_end="_$(date +'%Y%m%d_%H%M')"
+    if [ ! -z "$p_file_suffix_time" ]; then
+        l_suffix_end="_${p_file_suffix_time}"
     fi
 
     if [ $p_flag_show_timestamp -eq 0 ]; then
@@ -476,6 +490,50 @@ m_get_pod_logs() {
     local -i l_n=0
     l_n=${#la_containers_main[@]}
 
+
+    local l_options_1=''
+    local l_options_2=''
+    if [ $p_flag_show_timestamp -eq 0 ]; then
+
+        if [ ! -z "$l_options_1" ]; then
+            l_options_1="${l_options_1} --timestamps"
+        else
+            l_options_1="--timestamps"
+        fi
+
+        if [ ! -z "$l_options_2" ]; then
+            l_options_2="${l_options_2} --timestamps"
+        else
+            l_options_2="--timestamps"
+        fi
+
+    fi
+
+    if [ $p_tail_new_lines -gt 0 ]; then
+        if [ ! -z "$l_options_1" ]; then
+            l_options_1="${l_options_1} --tail ${p_tail_new_lines}"
+        else
+            l_options_1="--tail ${p_tail_new_lines}"
+        fi
+    fi
+
+    if [ ! -z "$p_since_value" ]; then
+        if [ ! -z "$l_options_1" ]; then
+            if [ $p_since_type -eq 0 ]; then
+                l_options_1="${l_options_1} --since ${p_since_value}"
+            else
+                l_options_1="${l_options_1} --since-time ${p_since_value}"
+            fi
+        else
+            if [ $p_since_type -eq 0 ]; then
+                l_options_1="--since ${p_since_value}"
+            else
+                l_options_1="--since-time ${p_since_value}"
+            fi
+        fi
+    fi
+
+
     # Mostrar los logs de los contenedores principales
     local l_container_json2
     local l_jq_query2='.status?.containerStatuses[]? | select(.name == $container)'
@@ -541,7 +599,7 @@ m_get_pod_logs() {
             fi
 
             # Obtener el nombre de archivo del log
-            if [ $p_file_sufix_containername -eq 0 ]; then
+            if [ $p_file_suffix_containername -eq 0 ]; then
                 l_filename="${p_pod_name}${l_suffix_begin}_${l_container_name}${l_suffix_end}"
             else
                 l_filename="${p_pod_name}${l_suffix_begin}${l_suffix_end}"
@@ -553,10 +611,10 @@ m_get_pod_logs() {
             printf '    Log filename        : %b%s%b\n' "$g_color_gray1" "${l_filename}.log" "$g_color_reset"
 
             # Mostrar el log del contenedor
-            if [ $p_flag_show_timestamp -eq 0 ]; then
-                printf '    %b%s logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
-                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
-                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
+            if [ ! -z "$l_options_1" ]; then
+                printf '    %b%s logs%b -n "%s" "%s" -c "%s" %s > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
+                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$l_options_1" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
+                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" $l_options_1 > "${l_filename}.log"
             else
                 printf '    %b%s logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                        "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
@@ -567,8 +625,8 @@ m_get_pod_logs() {
             # Si el numero de reinicios es mayor a 0 y el estado actual es diferente a 'Completed' o 'Running', almacenar el log '--previous' o '-p'
             if [ "$l_restart_count" -gt 0 ]; then
 
-                if [ $p_flag_show_timestamp -eq 0 ]; then
-                    ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" -p --timestamps > "${l_filename}_previous.log" 2> /dev/null
+                if [ ! -z "$l_options_2" ]; then
+                    ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" -p "$l_options_2" > "${l_filename}_previous.log" 2> /dev/null
                     l_status=$?
                 else
                     ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" -p > "${l_filename}_previous.log" 2> /dev/null
@@ -578,9 +636,9 @@ m_get_pod_logs() {
                 if [ $l_status -eq 0 ]; then
 
                     printf '    Previous log        : %b%s%b\n' "$g_color_gray1" "${l_filename}_previous.log" "$g_color_reset"
-                    if [ $p_flag_show_timestamp -eq 0 ]; then
-                        printf '    %b%s logs%b -n "%s" "%s" -c "%s" -p --timestamps > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
-                               "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}_previous.log" "$g_color_reset"
+                    if [ ! -z "$l_options_2" ]; then
+                        printf '    %b%s logs%b -n "%s" "%s" -c "%s" -p %s > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
+                               "$p_pod_ns" "$p_pod_name" "$l_container_name" "$l_options_2" "$g_color_blue1" "${l_filename}_previous.log" "$g_color_reset"
                     else
                         printf '    %b%s logs%b -n "%s" "%s" -c "%s" -p > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                                "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}_previous.log" "$g_color_reset"
@@ -588,6 +646,7 @@ m_get_pod_logs() {
 
                 else
                     printf '    Previous log        : %b%s%b\n' "$g_color_gray1" "none" "$g_color_reset"
+                    rm "${l_filename}_previous.log"
                 fi
 
             fi
@@ -655,7 +714,7 @@ m_get_pod_logs() {
             fi
 
             # Obtener el nombre de archivo del log
-            if [ $p_file_sufix_containername -eq 0 ]; then
+            if [ $p_file_suffix_containername -eq 0 ]; then
                 l_filename="${p_pod_name}${l_suffix_begin}_${l_container_name}${l_suffix_end}"
             else
                 l_filename="${p_pod_name}${l_suffix_begin}${l_suffix_end}"
@@ -667,10 +726,10 @@ m_get_pod_logs() {
             printf '    Log filename        : %b%s%b\n' "$g_color_gray1" "${l_filename}.log" "$g_color_reset"
 
             # Mostrar el log del contenedor
-            if [ $p_flag_show_timestamp -eq 0 ]; then
-                printf '    %b%s logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
-                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
-                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
+            if [ ! -z "$l_options_1" ]; then
+                printf '    %b%s logs%b -n "%s" "%s" -c "%s" %s > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
+                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$l_options_1" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
+                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" $l_options_1 > "${l_filename}.log"
             else
                 printf '    %b%s logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                        "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
@@ -740,7 +799,7 @@ m_get_pod_logs() {
             fi
 
             # Obtener el nombre de archivo del log
-            if [ $p_file_sufix_containername -eq 0 ]; then
+            if [ $p_file_suffix_containername -eq 0 ]; then
                 l_filename="${p_pod_name}${l_suffix_begin}_${l_container_name}${l_suffix_end}"
             else
                 l_filename="${p_pod_name}${l_suffix_begin}${l_suffix_end}"
@@ -752,12 +811,12 @@ m_get_pod_logs() {
             printf '    Log filename        : %b%s%b\n' "$g_color_gray1" "${l_filename}.log" "$g_color_reset"
 
             # Mostrar el log del contenedor
-            if [ $p_flag_show_timestamp -eq 0 ]; then
-                printf '    %b%s logs%b -n "%s" "%s" -c "%s" --timestamps > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
-                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
-                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" --timestamps > "${l_filename}.log"
+            if [ ! -z "$l_options_1" ]; then
+                printf '    %b%s logs%b -n "%s" "%s" -c "%s" %s > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
+                       "$p_pod_ns" "$p_pod_name" "$l_container_name" "$l_options_1" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
+                ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" $l_options_1 > "${l_filename}.log"
             else
-                printf '   %b%s logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
+                printf '    %b%s logs%b -n "%s" "%s" -c "%s" > %b%s%b\n' "$g_color_blue1" "$g_kubectl_cmd" "$g_color_gray1" \
                        "$p_pod_ns" "$p_pod_name" "$l_container_name" "$g_color_blue1" "${l_filename}.log" "$g_color_reset"
                 ${g_kubectl_cmd} logs -n "$p_pod_ns" "$p_pod_name" -c "$l_container_name" > "${l_filename}.log"
             fi
@@ -4628,6 +4687,18 @@ m_usage_logs() {
     printf '%b  > %b-z%b Flag para usar, en el sufijo del nombre del log, una marca de tiempo "yyyyMMdd_HHMM". Por defecto no se adiciona al nombre de del log.%b\n' \
            "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
 
+    printf '\nLas opciones para filtrar la lineas de los logs de los contenedores (no aplica previous container):\n'
+    printf '%b  > %b-p%b SINCE_DATE_TYPE%b Tipo de filtro para seleccionar lineas de log apartir de un tiempo determinado. Sus valores:%b\n' "$g_color_gray1" \
+           "$g_color_green1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf "%b    > %b0%b Si se usa la duracion (valor por defecto). Ejemplo de su valor: '5s', '2m', '3h', etc.%b\n" "$g_color_gray1" "$g_color_yellow1"  \
+           "$g_color_gray1" "$g_color_reset"
+    printf "%b    > %b1%b Si se usa la duracion. Ejemplo de su valor: '2026-08-18T03:20:00-05:00', '2026-08-18T03:20:00.859Z'.%b\n" \
+           "$g_color_gray1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-q%b SINCE_DATE_VALUE%b Valor tiempo de filtro segun el tipo: duracion (tipo 0) y fecha (tipo 1).%b\n' "$g_color_gray1" "$g_color_green1" \
+           "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+    printf '%b  > %b-t%b TAIL_LAST_LINES%b Define el numero que representa las ultimas lineas (tail) de log que se debe mostrar.%b\n' "$g_color_gray1" \
+           "$g_color_green1" "$g_color_yellow1" "$g_color_gray1" "$g_color_reset"
+
     printf '\nLas argumentos puede ser:\n'
     printf '%b  > %bOBJECT_NAME%b Nombre del objeto de recurso "Pod".%b\n' \
            "$g_color_gray1" "$g_color_green1" "$g_color_gray1" "$g_color_reset"
@@ -4670,21 +4741,32 @@ m_kc_logs() {
         p_flag_save_all_ephemeral=0
     fi
 
-    local -i p_file_sufix_nodename=1
+    local -i p_file_suffix_nodename=1
     if [ "${11}" = "0" ]; then
-        p_file_sufix_nodename=0
+        p_file_suffix_nodename=0
     fi
 
-    local -i p_file_sufix_containername=0
+    local -i p_file_suffix_containername=0
     if [ "${12}" != "0" ]; then
-        p_file_sufix_containername=1
+        p_file_suffix_containername=1
     fi
 
-    local -i p_file_sufix_time=1
+    local -i p_file_suffix_time=1
     if [ "${13}" = "0" ]; then
-        p_file_sufix_time=0
+        p_file_suffix_time=0
     fi
 
+    local -i p_since_type=0
+    if [ "${14}" != "0" ]; then
+        p_since_type=1
+    fi
+
+    local p_since_value="${15}"
+
+    local -i p_tail_new_lines=-1
+    if [ ! -z "${16}" ]; then
+        p_tail_new_lines="${16}"
+    fi
     #echo "l_flag_save_all_main > ${p_flag_save_all_main}"
 
     #2. Procesar los argumentos y modificar las variables segun ello
@@ -4750,6 +4832,11 @@ m_kc_logs() {
     local l_pod_ns
     local l_pod_owner
 
+    local l_file_suffix_time=''
+    if [ $p_file_suffix_time -eq 0 ]; then
+        l_file_suffix_time=$(date +'%Y%m%d_%H%M')
+    fi
+
     if [ ! -z "$p_object_name" ]; then
 
         IFS='|' read -r l_pod_name l_pod_ns l_pod_owner <<< "$l_data"
@@ -4761,8 +4848,8 @@ m_kc_logs() {
         fi
 
         m_get_pod_logs "$l_pod_name" "$l_pod_ns" "$p_path_dir" "$p_flag_show_timestamp" "$p_flag_save_json" "$p_flag_save_all_main" \
-                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_sufix_nodename" "$p_file_sufix_containername" \
-                       "$p_file_sufix_time"
+                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_suffix_nodename" "$p_file_suffix_containername" \
+                       "$l_file_suffix_time" "$p_since_type" "$p_since_value" "$p_tail_new_lines"
 
         return 0
 
@@ -4799,8 +4886,8 @@ m_kc_logs() {
         fi
 
         m_get_pod_logs "$l_pod_name" "$l_pod_ns" "$p_path_dir" "$p_flag_show_timestamp" "$p_flag_save_json" "$p_flag_save_all_main" \
-                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_sufix_nodename" "$p_file_sufix_containername" \
-                       "$p_file_sufix_time"
+                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_suffix_nodename" "$p_file_suffix_containername" \
+                       "$l_file_suffix_time" "$p_since_type" "$p_since_value" "$p_tail_new_lines"
 
         l_pod_owner_previous="$l_pod_owner"
 
@@ -4828,9 +4915,12 @@ m_controller_logs() {
     local -i l_flag_save_all_main=1
     local -i l_flag_save_all_init=1
     local -i l_flag_save_all_ephemeral=1
-    local -i l_file_sufix_nodename=1
-    local -i l_file_sufix_containername=0
-    local -i l_file_sufix_time=1
+    local -i l_file_suffix_nodename=1
+    local -i l_file_suffix_containername=0
+    local -i l_file_suffix_time=1
+    local -i l_since_type=0
+    local l_since_value=""
+    local -i p_tail_new_lines=-1
 
     while [ $# -gt 0 ]; do
 
@@ -4845,6 +4935,7 @@ m_controller_logs() {
             -n)
                 if [ -z "$2" ]; then
                     printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-n" "$g_color_reset"
+                    m_usage_logs
                     return 3
                 fi
 
@@ -4856,6 +4947,7 @@ m_controller_logs() {
             -l)
                 if [ -z "$2" ]; then
                     printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    m_usage_logs
                     return 3
                 fi
 
@@ -4867,6 +4959,7 @@ m_controller_logs() {
             -f)
                 if [ -z "$2" ]; then
                     printf 'La opción "%b%s%b" requere un valor especifico.\n' "$g_color_gray1" "-l" "$g_color_reset"
+                    m_usage_logs
                     return 3
                 fi
 
@@ -4886,6 +4979,7 @@ m_controller_logs() {
                 if [ ! -d "$2" ]; then
                     printf '[%bERROR%b] Valor de la opción "%b%s%b" es inválido "%b%s%b". Debe ser un folder valido.\n' "$g_color_red1" "$g_color_reset" \
                            "$g_color_gray1" "-d" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
+                    m_usage_logs
                     return 3
                 fi
 
@@ -4921,18 +5015,70 @@ m_controller_logs() {
 
 
             -x)
-                l_file_sufix_nodename=0
+                l_file_suffix_nodename=0
                 shift 1
                 ;;
 
             -y)
-                l_file_sufix_containername=1
+                l_file_suffix_containername=1
                 shift 1
                 ;;
 
             -z)
-                l_file_sufix_time=0
+                l_file_suffix_time=0
                 shift 1
+                ;;
+
+
+            -p)
+                if [ -z "$2" ]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" no puede ser vacio.\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-p" "$g_color_reset"
+                    m_usage_logs
+                    return 3
+                fi
+
+                if [ "$2" != "0" ] && [ "$2" != "1" ]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" es inválido "%b%s%b". Debe ser 0 o 1.\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-p" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
+                    m_usage_logs
+                    return 3
+                fi
+
+                l_since_type="$2"
+                shift 2
+                ;;
+
+
+            -q)
+                if [ -z "$2" ]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" no puede ser vacio.\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-q" "$g_color_reset"
+                    m_usage_logs
+                    return 3
+                fi
+
+                l_since_value="$2"
+                shift 2
+                ;;
+
+            -t)
+                if [ -z "$2" ]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" no puede ser vacio.\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-t" "$g_color_reset"
+                    m_usage_logs
+                    return 3
+                fi
+
+                if [[ ! "$2" =~ ^[0-9]+$ ]]; then
+                    printf '[%bERROR%b] Valor de la opción "%b%s%b" es inválido "%b%s%b". Debe ser 0 o 1.\n' "$g_color_red1" "$g_color_reset" \
+                           "$g_color_gray1" "-t" "$g_color_reset" "$g_color_gray1" "$2" "$g_color_reset"
+                    m_usage_logs
+                    return 3
+                fi
+
+                l_tail_new_lines="$2"
+                shift 2
                 ;;
 
 
@@ -4971,8 +5117,8 @@ m_controller_logs() {
 
     #5. Ejecutando el comando
     m_kc_logs "$l_ns" "$l_filter_label" "$l_filter_field" "$l_object_name" "$l_path_dir" "$l_flag_show_timestamp" "$l_flag_save_json" \
-              "$l_flag_save_all_main" "$l_flag_save_all_init" "$l_flag_save_all_ephemeral" "$l_file_sufix_nodename" \
-              "$l_file_sufix_containername" "$l_file_sufix_time"
+              "$l_flag_save_all_main" "$l_flag_save_all_init" "$l_flag_save_all_ephemeral" "$l_file_suffix_nodename" \
+              "$l_file_suffix_containername" "$l_file_suffix_time" "$l_since_type" "$l_since_value" "$l_tail_new_lines"
     return 0
 
 }
@@ -5097,19 +5243,19 @@ m_kc_restart() {
         p_flag_save_all_ephemeral=0
     fi
 
-    local -i p_file_sufix_nodename=1
+    local -i p_file_suffix_nodename=1
     if [ "${12}" = "0" ]; then
-        p_file_sufix_nodename=0
+        p_file_suffix_nodename=0
     fi
 
-    local -i p_file_sufix_containername=0
+    local -i p_file_suffix_containername=0
     if [ "${13}" != "0" ]; then
-        p_file_sufix_containername=1
+        p_file_suffix_containername=1
     fi
 
-    local -i p_file_sufix_time=1
+    local -i p_file_suffix_time=1
     if [ "${14}" = "0" ]; then
-        p_file_sufix_time=0
+        p_file_suffix_time=0
     fi
 
 
@@ -5190,6 +5336,10 @@ m_kc_restart() {
         return 0
     fi
 
+    local l_file_suffix_time=''
+    if [ $p_file_suffix_time -eq 0 ]; then
+        l_file_suffix_time=$(date +'%Y%m%d_%H%M')
+    fi
 
     #5. Si solo se analiza a un controlador
     local l_rs_name
@@ -5239,8 +5389,8 @@ m_kc_restart() {
 
         # Obtener los pod segun este selector
         m_kc_logs "$l_rs_ns" "$l_tmp" "" "" "$p_path_dir" "$p_flag_show_timestamp" "$p_flag_save_json" "$p_flag_save_all_main" \
-                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_sufix_nodename" "$p_file_sufix_containername" \
-                       "$p_file_sufix_time"
+                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_suffix_nodename" "$p_file_suffix_containername" \
+                       "$l_file_suffix_time"
 
         printf '\n'
 
@@ -5322,8 +5472,8 @@ m_kc_restart() {
 
         # Obtener los pod segun este selector
         m_kc_logs "$l_rs_ns" "$l_tmp" "" "" "$p_path_dir" "$p_flag_show_timestamp" "$p_flag_save_json" "$p_flag_save_all_main" \
-                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_sufix_nodename" "$p_file_sufix_containername" \
-                       "$p_file_sufix_time"
+                       "$p_flag_save_all_init" "$p_flag_save_all_ephemeral" "$p_file_suffix_nodename" "$p_file_suffix_containername" \
+                       "$l_file_suffix_time"
 
         printf '\n'
 
@@ -5364,9 +5514,9 @@ m_controller_restart() {
     local -i l_flag_save_all_main=1
     local -i l_flag_save_all_init=1
     local -i l_flag_save_all_ephemeral=1
-    local -i l_file_sufix_nodename=1
-    local -i l_file_sufix_containername=0
-    local -i l_file_sufix_time=1
+    local -i l_file_suffix_nodename=1
+    local -i l_file_suffix_containername=0
+    local -i l_file_suffix_time=1
 
     while [ $# -gt 0 ]; do
 
@@ -5482,17 +5632,17 @@ m_controller_restart() {
 
 
             -x)
-                l_file_sufix_nodename=0
+                l_file_suffix_nodename=0
                 shift 1
                 ;;
 
             -y)
-                l_file_sufix_containername=1
+                l_file_suffix_containername=1
                 shift 1
                 ;;
 
             -z)
-                l_file_sufix_time=0
+                l_file_suffix_time=0
                 shift 1
                 ;;
 
@@ -5531,8 +5681,8 @@ m_controller_restart() {
 
     #5. Ejecutando el comando
     m_kc_restart "$l_ns" "$l_filter_label" "$l_filter_field" "$l_resource_type" "$l_object_name" "$l_path_dir" "$l_flag_show_timestamp" \
-              "$l_flag_save_json" "$l_flag_save_all_main" "$l_flag_save_all_init" "$l_flag_save_all_ephemeral" "$l_file_sufix_nodename" \
-              "$l_file_sufix_containername" "$l_file_sufix_time"
+              "$l_flag_save_json" "$l_flag_save_all_main" "$l_flag_save_all_init" "$l_flag_save_all_ephemeral" "$l_file_suffix_nodename" \
+              "$l_file_suffix_containername" "$l_file_suffix_time"
     return 0
 
 }

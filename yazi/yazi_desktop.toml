@@ -23,13 +23,13 @@ open_nontext_file_1 = [
 	{ run = 'start "" %1', desc = "Open by defualt", for = "windows", orphan = true },
 
     # Para Android (Termux)
-	{ run = 'termux-open "$1"', desc = "Open by default", for = "android" },
+	{ run = 'termux-open "$1"', desc = "Open by default", for = "android", orphan = true  },
 
     # Para MacOS
-	{ run = 'open "$@"', desc = "Open by default", for = "macos" },
+	{ run = 'open "$@"', desc = "Open by default", for = "macos", orphan = true  },
 
     # Para Linux y Unix
-	{ run = 'xdg-open "$1"', desc = "Open by default", for = "linux" },
+	{ run = 'xdg-open "$1"', desc = "Open by default", for = "linux", orphan = true  },
 ]
 
 
@@ -77,8 +77,8 @@ open_image_file = [
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = 'krita "$1"', desc = "Open by Krita", for = "linux" },
-	{ run = 'gimp "$1"', desc = "Open by Gimp", for = "linux" },
+	{ run = 'krita "$1"', desc = "Open by Krita", for = "linux", orphan = true  },
+	{ run = 'gimp "$1"', desc = "Open by Gimp", for = "linux", orphan = true  },
 ]
 
 play_video_file = [
