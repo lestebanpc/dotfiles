@@ -1,0 +1,114 @@
+# Default values: 'https://github.com/sxyazi/yazi/blob/shipped/yazi-config/preset/keymap-default.toml'
+# Path:
+#    ~/.config/yazi/keymap.toml        (Unix-like systems)
+#    %AppData%\yazi\config\keymap.toml (Windows)
+#
+# A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
+#:schema https://yazi-rs.github.io/schemas/keymap.json
+
+[mgr]
+prepend_keymap = [
+
+    #{ on = "<C-Esc>", run = "escape --select", desc = "Clear all selected files" },
+
+    # --------------------------------------------------------------------------
+    # Anulando keymappings
+    # --------------------------------------------------------------------------
+
+    # Se anula el keymapping built-in "f" ('filtrado de vista actual de yazi'). Se remplazara por "s".
+    { on = "f", run = "noop" },
+
+    # Se anula el keymapping built-in "S" ('busqueda de archivos por su contenido dentro de yazi'). Se remplazara por "s, c".
+    { on = "S", run = "noop" },
+
+    # Se anula el keymapping built-in "Ctrl + a" ('toggle all') para dejar libre a uso tmux. Se remplazara por "A"
+    { on = "<C-a>", run = "noop" },
+
+    # Se anula el "g + d" ('Go ~/Donwloads'). Util si la ruta por defecto es un enlace simbolico o una ruta personalizada.
+    #{ on = [ "g", "d" ], run = "noop" },
+
+    # --------------------------------------------------------------------------
+    # Nuevos keymappings
+    # --------------------------------------------------------------------------
+
+    # Toogle (maximiza/restaura) el zoom del panel 'preview' (oculta/muestra los paneles 'parent' y 'current')
+    # > Requiere el plugin 'toogle-pane'
+    #   > Info                : https://github.com/dawsers/toggle-view.yazi/blob/master/init.lua
+    #   > Descarga del plugin : ya pkg add yazi-rs/plugins:toggle-pane
+    #{ on = [ "T" ], run = "plugin toggle-pane max-preview", desc = "Maximize or restore the preview pane" },
+
+    # Comando para copiar la ruta relativa de objeto actual selecionado (no usar los reservados 'c', 'd', 'f' y 'n')
+    { on = [ "c", "w" ], run = "plugin go-fs -- copycb --pathtype=rootwd --source=both"    , desc = "Copy current path (Root WD)" },
+    { on = [ "c", "g" ], run = "plugin go-fs -- copycb --pathtype=rootgit --source=both"   , desc = "Copy current path (Root git)" },
+    { on = [ "c", "1" ], run = "plugin go-fs -- copycb --pathtype=rootwd --source=hovered" , desc = "Copy hovered path (Root WD)" },
+    { on = [ "c", "2" ], run = "plugin go-fs -- copycb --pathtype=rootgit --source=hovered", desc = "Copy hovered path (Root git)" },
+
+    # Comandos de busqueda externa usando 'fzf' y se redefine el por defecto
+    { on = [ "f", "w" ], run = "plugin fzf-fd -- file   --tmux --height=80 --width=99 --findpath=rootwd" , desc = "Find files (Root WD) & Select" },
+    { on = [ "f", "g" ], run = "plugin fzf-fd -- file   --tmux --height=80 --width=99 --findpath=rootgit", desc = "Find files (Root git) & Select" },
+    { on = [ "f", "c" ], run = "plugin fzf-fd -- file   --tmux --height=80 --width=99 --findpath=cwd"    , desc = "Find files (CWD) & Select" },
+    { on = [ "f", "x" ], run = "search --via=fd", desc = "Find files by name (basic)" },
+
+    { on = [ "f", "f" ], run = "plugin fzf-rg -- file   --tmux --height=80 --width=99 --findpath=rootwd" , desc = "Find content (Root WD) & Select" },
+    { on = [ "f", "1" ], run = "plugin fzf-rg -- file   --tmux --height=80 --width=99 --findpath=rootgit", desc = "Find content (Root git) & Select" },
+    { on = [ "f", "2" ], run = "plugin fzf-rg -- file   --tmux --height=80 --width=99 --findpath=cwd"    , desc = "Find content (CWD) & Select" },
+    { on = [ "f", "3" ], run = "search --via=rg", desc = "Find files by content (basic)" },
+
+    { on = [ "f", "d" ], run = "plugin fzf-fd -- folder --tmux --height=80 --width=99 --findpath=rootwd" , desc = "Find directories (Root WD) & Select" },
+    { on = [ "f", "4" ], run = "plugin fzf-fd -- folder --tmux --height=80 --width=99 --findpath=rootgit", desc = "Find directories (Root git) & Select" },
+    { on = [ "f", "5" ], run = "plugin fzf-fd -- folder --tmux --height=80 --width=99 --findpath=cwd"    , desc = "Find directories (CWD) & Select" },
+
+    # Comandos para editar archivos de texto en una nueva ventana de la terminal (opcionalmente realizan una busqueda en los archivos de texto)
+    { on = [ "e", "w" ], run = "plugin fzf-rg -- rootwd --tmux --height=80 --width=99 --editor=vim --findpath=rootwd"   , desc = "Find content (Root WD) & Edit VIM (Root WD)" },
+    { on = [ "e", "g" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=vim --findpath=rootgit" , desc = "Find content (Root git) & Edit VIM (Root git)" },
+    { on = [ "e", "c" ], run = "plugin fzf-rg -- rootwd --tmux --height=80 --width=99 --editor=vim --findpath=cwd"      , desc = "Find content (CWD) & Edit VIM (Root WD)" },
+    { on = [ "e", "d" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=vim --findpath=cwd"     , desc = "Find content (CWD) & Edit VIM (Root git)" },
+
+    { on = [ "e", "e" ], run = "plugin fzf-fd -- rootwd --tmux --height=80 --width=99 --editor=vim --findpath=rootwd"   , desc = "Find files (Root WD) & Edit VIM (Root WD)" },
+    { on = [ "e", "a" ], run = "plugin fzf-fd -- rootgit --tmux --height=80 --width=99 --editor=vim --findpath=rootgit" , desc = "Find files (Root git) & Edit VIM (Root git)" },
+    { on = [ "e", "b" ], run = "plugin fzf-fd -- rootwd --tmux --height=80 --width=99 --editor=vim --findpath=cwd"      , desc = "Find files (CWD) & Edit VIM (Root WD)" },
+    { on = [ "e", "f" ], run = "plugin fzf-fd -- rootgit --tmux --height=80 --width=99 --editor=vim --findpath=cwd"     , desc = "Find files (CWD) & Edit VIM (Root git)" },
+
+    { on = [ "e", "h" ], run = "plugin go-fs -- editfiles --pathtype=rootwd --editor=vim" , desc = "Edit current files VIM (Root WD)" },
+    { on = [ "e", "i" ], run = "plugin go-fs -- editfiles --pathtype=rootgit --editor=vim" , desc = "Edit current files VIM (Root git)" },
+
+    { on = [ "E", "w" ], run = "plugin fzf-rg -- rootwd --tmux --height=80 --width=99 --editor=nvim --findpath=rootwd"  , desc = "Find content (Root WD) & Edit NVIM (Root WD)" },
+    { on = [ "E", "g" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=nvim --findpath=rootgit", desc = "Find content (Root git) & Edit NVIM (Root git)" },
+    { on = [ "E", "c" ], run = "plugin fzf-rg -- rootwd --tmux --height=80 --width=99 --editor=nvim --findpath=cwd"     , desc = "Find content (CWD) & Edit NVIM (Root WD)" },
+    { on = [ "E", "d" ], run = "plugin fzf-rg -- rootgit --tmux --height=80 --width=99 --editor=nvim --findpath=cwd"    , desc = "Find content (CWD) & Edit NVIM (Root git)" },
+
+    { on = [ "E", "e" ], run = "plugin fzf-fd -- rootwd --tmux --height=80 --width=99 --editor=nvim --findpath=rootwd"  , desc = "Find files (Root WD) & Edit NVIM (Root WD)" },
+    { on = [ "E", "a" ], run = "plugin fzf-fd -- rootgit --tmux --height=80 --width=99 --editor=nvim --findpath=rootgit", desc = "Find files (Root git) & Edit NVIM (Root git)" },
+    { on = [ "E", "b" ], run = "plugin fzf-fd -- rootwd --tmux --height=80 --width=99 --editor=nvim --findpath=cwd"     , desc = "Find files (CWD) & Edit NVIM (Root WD)" },
+    { on = [ "E", "f" ], run = "plugin fzf-fd -- rootgit --tmux --height=80 --width=99 --editor=nvim --findpath=cwd"    , desc = "Find files (CWD) & Edit NVIM (Root git)" },
+
+    { on = [ "E", "h" ], run = "plugin go-fs -- editfiles --pathtype=rootwd --editor=nvim", desc = "Edit current files NVIM (Root WD)" },
+    { on = [ "E", "i" ], run = "plugin go-fs -- editfiles --pathtype=rootgit --editor=nvim", desc = "Edit current files NVIM (Root git)" },
+
+    # Comandos para ir a directorios especiales (no usar los reservados 'c', 'd', 'h', '<scape>' y 'f')
+    #{ on = [ "g", "d" ], run = "cd /run/host/dt9/tmp/downloads", desc = "Go Donwloads (/run/host/dt9/tmp/downloads)" },
+    { on = [ "g", "1" ], run = "cd ~/.vim", desc = "Go VIM data" },
+    { on = [ "g", "2" ], run = "cd ~/.config/nvim", desc = "Go NVIM config" },
+    { on = [ "g", "3" ], run = "cd ~/.local/share/nvim", desc = "Go NVIM data" },
+    { on = [ "g", "4" ], run = "cd ~/.vim/pack", desc = "Go VIM packages" },
+    { on = [ "g", "5" ], run = "cd ~/.local/share/nvim/site/pack", desc = "Go NVIM packages" },
+    #{ on = [ "g", "6" ], run = "cd /run/host/nas/lepc/data", desc = "Go /run/host/nas/lepc/data" },
+    #{ on = [ "g", "7" ], run = "cd /run/host/dt9/tmp", desc = "Go /dt9/tmp" },
+
+    { on = [ "g", "w" ], run = "plugin go-fs -- gofolder --pathtype=rootwd", desc = "Go Root WD folder" },
+    { on = [ "g", "g" ], run = "plugin go-fs -- gofolder --pathtype=rootgit", desc = "Go Root git folder" },
+    #{ on = [ "g", "n" ], run = "cd ~/vaults/notes", desc = "Go My Notes (Obsidian vaults)" },
+    #{ on = [ "g", "v" ], run = "cd ~/vaults", desc = "Go Synchronizable Vaults)" },
+
+
+    # --------------------------------------------------------------------------
+    # Redefiniendo keymappings predeterminados
+    # --------------------------------------------------------------------------
+
+    # Se redefine el 'filtrado de vista actual de yazi' (el keymapping por defecto usa "f").
+    { on = "s", run = "filter --smart", desc = "Filter files" },
+
+    # Se redefine el 'toggle all' (el keymapping por defecto usa "A").
+    { on = "A",   run = "toggle_all --state=on", desc = "Select all files" },
+
+]

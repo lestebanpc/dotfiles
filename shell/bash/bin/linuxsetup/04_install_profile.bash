@@ -1175,30 +1175,30 @@ function _setup_user_profile() {
     #5. Creando enlaces simbolico independiente del tipo de distribución Linux
 
     #Archivo de configuración del GNU ReadLine
-    l_target_path=""
-    l_target_filename=".inputrc"
     l_source_path="${g_repo_name}/etc/cli/readline"
     l_source_filename='inputrc'
+    l_target_path=""
+    l_target_filename=".inputrc"
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Archivo de GDU (Go Disk Usage)
     create_folderpath_on_home ".config" "gdu"
-    l_target_path=".config/gdu"
-    l_target_filename="gdu.yaml"
     l_source_path="${g_repo_name}/etc/tui/gdu"
     l_source_filename='gdu_default.yaml'
+    l_target_path=".config/gdu"
+    l_target_filename="gdu.yaml"
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
 
     #Archivo de configuración para LFTP
-    l_target_path=""
-    l_target_filename=".lftprc"
     l_source_path="${g_repo_name}/etc/cli/lftp"
     l_source_filename='lftprc_default.conf'
+    l_target_path=""
+    l_target_filename=".lftprc"
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
@@ -1206,10 +1206,10 @@ function _setup_user_profile() {
 
     #Crear el enlace de TMUX (no usaramos '~/.tmux.conf', usaramos '~/.config/tmux/tmux.conf')
     create_folderpath_on_home ".config" "tmux"
-    l_target_path=".config/tmux"
-    l_target_filename="tmux.conf"
     l_source_path="${g_repo_name}/etc/cli/tmux"
     l_source_filename='tmux.conf'
+    l_target_path=".config/tmux"
+    l_target_filename="tmux.conf"
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
@@ -1224,10 +1224,10 @@ function _setup_user_profile() {
     # Archivo de configuracion de 'sesh' (comando que gestiona sesiones para TMUX)
     create_folderpath_on_home ".config" "sesh"
     create_folderpath_on_home ".config/sesh" "shell"
-    l_target_path=".config/sesh"
-    l_target_filename="sesh.toml"
     l_source_path="${g_repo_name}/etc/cli/sesh"
     l_source_filename='sesh_default.toml'
+    l_target_path=".config/sesh"
+    l_target_filename="sesh.toml"
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
@@ -1248,11 +1248,11 @@ function _setup_user_profile() {
 
 
     #Archivo de configuración para Lazygit
-    l_target_path=".config/lazygit"
     create_folderpath_on_home ".config" "lazygit"
-    l_target_filename="config.yml"
     l_source_path="${g_repo_name}/etc/tui/lazygit"
     l_source_filename='config_default.yaml'
+    l_target_path=".config/lazygit"
+    l_target_filename="config.yml"
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
@@ -1264,96 +1264,113 @@ function _setup_user_profile() {
 
     # Si es un 'Desktop Server' y es Distrobox
     if [ $g_enviroment_type -eq 1 ] || [ $g_enviroment_type -eq 2 ]; then
-        l_target_filename="yazi.toml"
         l_source_path="${g_repo_name}/yazi"
         l_source_filename='yazi_desktop_1.toml'
-    else
         l_target_filename="yazi.toml"
+    else
         l_source_path="${g_repo_name}/yazi"
         l_source_filename='yazi_headless.toml'
+        l_target_filename="yazi.toml"
     fi
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
-    l_target_filename="theme.toml"
     l_source_path="${g_repo_name}/yazi"
     l_source_filename='theme.toml'
+    l_target_filename="theme.toml"
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     create_folderpath_on_home ".config" "yazi/flavors"
+    l_source_path="${g_repo_name}/yazi/flavors/catppuccin-mocha.yazi"
     l_target_path=".config/yazi/flavors"
     l_target_filename="catppuccin-mocha.yazi"
-    l_source_path="${g_repo_name}/yazi/flavors/catppuccin-mocha.yazi"
     create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "Profile > " $p_flag_overwrites_file_notmodifiable
     l_status=$?
 
-    copy_file_on_home "${g_repo_path}/yazi" "template_keymap_lnx.toml" ".config/yazi" "keymap.toml" $l_flag_overwrites_file_modifiable "        > "
+
+    # Si es WSL
+    if [ $g_enviroment_type -eq 3 ]; then
+        l_source_filename="template_keymap_wsl.toml"
+    # Si es contenedor distrobox
+    elif [ $g_enviroment_type -eq 2 ]; then
+        l_source_filename="template_keymap_distrobox.toml"
+    # Si es un 'Desktop server'
+    elif [ $g_enviroment_type -eq 1 ]; then
+        l_source_filename="template_keymap_lnx.toml"
+    # Si es un 'Headless server'
+    else
+        l_source_filename="template_keymap_lnx.toml"
+    fi
+    l_target_filename="keymap.toml"
+    copy_file_on_home "${g_repo_path}/yazi" "$l_source_filename" ".config/yazi" "$l_target_filename" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
            "$g_color_yellow1" "~/.config/yazi/keymap.toml" "$g_color_reset"
 
-    copy_file_on_home "${g_repo_path}/yazi" "template_init.lua" ".config/yazi" "init.lua" $l_flag_overwrites_file_modifiable "        > "
+    l_source_filename="template_init.lua"
+    l_target_filename="init.lua"
+    copy_file_on_home "${g_repo_path}/yazi" "$l_source_filename" ".config/yazi" "$l_target_filename" $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar sesh.\n' \
            "$g_color_yellow1" "~/.config/yazi/init.lua" "$g_color_reset"
 
     create_folderpath_on_home ".config" "yazi/plugins"
 
+    l_source_path="${g_repo_name}/yazi/plugins/fzf-fd.yazi"
     l_target_path=".config/yazi/plugins"
     l_target_filename="fzf-fd.yazi"
-    l_source_path="${g_repo_name}/yazi/plugins/fzf-fd.yazi"
     create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "Profile > " $p_flag_overwrites_file_notmodifiable
 
+    l_source_path="${g_repo_name}/yazi/plugins/fzf-rg.yazi"
     l_target_path=".config/yazi/plugins"
     l_target_filename="fzf-rg.yazi"
-    l_source_path="${g_repo_name}/yazi/plugins/fzf-rg.yazi"
     create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "Profile > " $p_flag_overwrites_file_notmodifiable
 
+    l_source_path="${g_repo_name}/yazi/plugins/go-fs.yazi"
     l_target_path=".config/yazi/plugins"
     l_target_filename="go-fs.yazi"
-    l_source_path="${g_repo_name}/yazi/plugins/go-fs.yazi"
     create_folderlink_on_home "$l_source_path" "$l_target_path" "$l_target_filename" "Profile > " $p_flag_overwrites_file_notmodifiable
 
 
     #Archivo de configuración para cliente MDP 'rmpc'
-    l_target_path=".config/rmpc"
     create_folderpath_on_home ".config" "rmpc"
 
-    l_target_filename="config.ron"
     l_source_path="${g_repo_name}/etc/tui/rmpc"
     l_source_filename='config_default.ron'
+    l_target_path=".config/rmpc"
+    l_target_filename="config.ron"
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     create_folderpath_on_home ".config/rmpc" "themes"
 
-    l_target_path=".config/rmpc/themes"
-    l_target_filename="theme_default.ron"
     l_source_path="${g_repo_name}/etc/tui/rmpc/themes"
     l_source_filename='theme_default.ron'
+    l_target_path=".config/rmpc/themes"
+    l_target_filename="theme_default.ron"
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "        > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Archivo de configuración para cliente ncspot (spotify client)
-    l_target_path=".config/ncspot"
     create_folderpath_on_home ".config" "ncspot"
 
-    l_target_filename="config.toml"
     l_source_path="${g_repo_name}/etc/tui/ncspot"
     l_source_filename='config_default.toml'
+    l_target_path=".config/ncspot"
+    l_target_filename="config.toml"
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
     #Archivo de configuración de Git y sus archivo de connfiguracion personalzida.
-    l_target_path=""
-    l_target_filename=".gitconfig"
     l_source_path="${g_repo_name}/etc/cli/git"
     l_source_filename='gitconfig_lnx.toml'
+    l_target_path=""
+    l_target_filename=".gitconfig"
 
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
@@ -1416,8 +1433,10 @@ function _setup_user_profile() {
         fi
 
     fi
+    l_target_filename="default_settings.json"
 
-    copy_file_on_home "${g_repo_path}/etc/cli/oh-my-posh" "$l_source_filename" "${g_repo_name}/etc/cli/oh-my-posh" "default_settings.json" $l_flag_overwrites_file_modifiable "        > "
+    copy_file_on_home "${g_repo_path}/etc/cli/oh-my-posh" "$l_source_filename" "${g_repo_name}/etc/cli/oh-my-posh" "$l_target_filename" \
+                      $l_flag_overwrites_file_modifiable "        > "
     l_status=$?
     printf 'Profile > Edite el archivo "%b%s%b" si desea personalizar las opciones de oh-my-posh\n' \
            "$g_color_yellow1" "~/.files/etc/cli/oh-my-posh/default_settings.json" "$g_color_reset"
@@ -1848,26 +1867,26 @@ function _setup_user_profile() {
 
         create_folderpath_on_home ".config" "kitty"
 
-        l_target_path=".config/kitty"
-        l_target_filename="kitty.conf"
         l_source_path="${g_repo_name}/etc/gui/kitty"
         l_source_filename='kitty.conf'
+        l_target_path=".config/kitty"
+        l_target_filename="kitty.conf"
 
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
-        l_target_path=".config/kitty"
-        l_target_filename="keymappings.conf"
         l_source_path="${g_repo_name}/etc/gui/kitty"
         l_source_filename='keymappings.conf'
+        l_target_path=".config/kitty"
+        l_target_filename="keymappings.conf"
 
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
 
-        l_target_path=".config/kitty"
-        l_target_filename="theme.conf"
         l_source_path="${g_repo_name}/etc/gui/kitty"
         l_source_filename='theme_catppuccin_machiato.conf'
+        l_target_path=".config/kitty"
+        l_target_filename="theme.conf"
 
         create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
         l_status=$?
