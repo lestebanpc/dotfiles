@@ -115,7 +115,8 @@ local function m_get_files_of_rg_output(p_rg_output, p_base_path)
             -- Crear URL absoluta
             l_url_file = Url(l_item_file)
             if not l_url_file.is_absolute then
-                l_url_file = l_base_url:join(l_url_file)
+                --l_url_file = l_base_url:join(l_url_file)
+                l_url_file = l_base_url:resolve(l_url_file)
             end
 
             l_full_path = tostring(l_url_file)
@@ -144,6 +145,29 @@ local function m_get_files_of_rg_output(p_rg_output, p_base_path)
 
 end
 
+
+local function m_get_files_of_info(p_fileinfo)
+
+    if p_fileinfo == nil then
+        return nil
+    end
+
+    local l_files= {}
+    local l_n = #p_fileinfo
+    local l_i = 0
+    local l_url
+    local l_item
+
+    for l_i = 1, l_n do
+
+        l_item = p_fileinfo[l_i]
+        l_url = Url(l_item.full_path)
+        table.insert(l_files, fs.file(l_url))
+    end
+
+    return l_files
+
+end
 
 -- Construye el argumentos del comando de 'rg'
 -- Parametros:
@@ -347,8 +371,8 @@ end
 local m_get_current_state = ya.sync(function()
 
 	--local selected = {}
-	--for _, url in pairs(cx.active.selected) do
-	--	selected[#selected + 1] = url
+	--for _, l_file in pairs(cx.active.selected) do
+	--	selected[#selected + 1] = l_file.url
 	--end
 
 	--return cx.active.current.cwd, selected
@@ -502,20 +526,39 @@ local function m_opentab_with_selected_files(p_cwd_path, p_script_path, p_info_f
     -- Si el comando devolvio un codigo de error en su ejecucion
     if not l_output.status.success then
 
+        local l_aux=""
+        local l_script_name = p_script_path:match("([^/]+)$")
         l_message = nil
+
         if l_output.status.code then
-            l_message = "status-code: " .. tostring(l_output.status.code)
+
+            l_aux = tostring(l_output.status.code)
+            if l_output.status.code == 1 then
+                l_message = "No se tienen los comandos requeridos para ejecutar el script.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 2 then
+                l_message = "Se debe ejecutar sobre un multiplexor como TMUX o WezTerm.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 3 then
+                l_message = "Opciones ingresadas son invalidas.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 4 then
+                l_message = "No se han ingresado los archivos.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 5 then
+                l_message = "El 1er argumento no es un archivo valido.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 6 then
+                l_message = "El 1er argumento no es un archivo valido.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            else
+                l_message = "Ocurrio un error en la ejecucion del script.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            end
+
         end
 
         if l_message == nil then
-            l_message = "error during the execution '" .. p_script_path .. "'."
-        else
-            l_message = l_message .. ", error during the execution '" .. p_script_path .. "'."
+            l_message = "Ocurrio un error en la ejecucion del script.\nScript: " .. l_script_name
         end
 
-        ya.err(p_script_path .. " status-code: " .. tostring(l_output.status.code))
-        ya.err(p_script_path .. " stdout: " .. tostring(l_output.stdout))
-        ya.err(p_script_path .. " stderr: " .. tostring(l_output.stderr))
+        ya.err("Script Path : " .. p_script_path)
+        ya.err("Status Code : " .. tostring(l_output.status.code))
+        ya.err("StdOut      : " .. tostring(l_output.stdout))
+        ya.err("StdErr      : " .. tostring(l_output.stderr))
         return l_message
 
     end
@@ -717,8 +760,8 @@ local function m_get_ui_info_sync()
 
     -- Las URLs de lo objetos selecionados
 	--local l_selected = {}
-	--for _, url in pairs(l_current_tab.selected) do
-	--	l_selected[#l_selected + 1] = url
+	--for _, l_file in pairs(l_current_tab.selected) do
+	--	l_selected[#l_selected + 1] = l_file.url
 	--end
 
     -- El folder de trabajo actual
@@ -907,11 +950,13 @@ local m_get_plugin_state = ya.sync(m_get_plugin_state_sync)
 function m_process_action_async(l_cmd_type, l_use_tmux, l_height, l_width, l_editor_type, l_find_path_type, l_state, l_ui_info)
 
 
+    --1. Inicializar
+
     -- Salir de modo ...
 	ya.emit("escape", { visual = true })
 
-    if l_ui_info.cwd_url.scheme then
-	    if l_ui_info.cwd_url.scheme.is_virtual then
+    if l_ui_info.cwd_url.spec then
+	    if l_ui_info.cwd_url.spec.is_virtual then
             ya.dbg("Not supported under virtual filesystems")
 	        return ya.notify({ title = "fzf-rg", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" })
 	    end
@@ -1007,7 +1052,34 @@ function m_process_action_async(l_cmd_type, l_use_tmux, l_height, l_width, l_edi
     --ya.dbg("l_info_files  : " .. m_dump_table(l_info_files))
 
 
-    --4. Ejecutar el script que abre vim y los archivos selecionados
+    --4. Operacion: Selecionar archivos/folderes
+    if l_cmd_type == "file" then
+
+        -- Codigo obtenido de https://github.com/sxyazi/yazi/blob/main/yazi-plugin/preset/plugins/fzf.lua
+        local l_cha = nil
+        local l_n = #l_info_files
+	    if l_n == 1 then
+
+            local l_url = Url(l_item_file[1].full_path)
+
+	    	l_cha = fs.cha(l_url)
+	    	ya.emit(l_cha and l_cha.is_dir and "cd" or "reveal", { l_url, raw = true })
+
+	    elseif l_n > 1 then
+
+            -- Se realizar evento por evento
+            local l_selected_files = m_get_files_of_info(l_info_files)
+
+	    	l_selected_files.state = "on"
+	    	ya.emit("toggle_all", l_selected_files)
+
+	    end
+
+        return
+    end
+
+
+    --5. Operacion: Editar los archivos selecionados
 
     -- Obtener el directorio de trabajo a usar
     local l_pane_wd = nil

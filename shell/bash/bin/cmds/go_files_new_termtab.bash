@@ -728,7 +728,7 @@ main() {
             l_status=$?
 
             if [ $l_status -ne 0 ]; then
-                return 2
+                return 3
             fi
             #printf "la_nbrlines: "
             #printf '"%s"\n' "${la_nbrlines[@]}"
@@ -778,7 +778,7 @@ main() {
     m_get_cmd_to_exec $l_is_text_file "$l_viewer_cmd" "la_files" "la_nbrlines" "l_cmd_to_exec"
 
     if [ -z "$l_cmd_to_exec" ]; then
-        return 2
+        return 3
     fi
     #echo "l_cmd_to_exec: ${l_cmd_to_exec}"
 

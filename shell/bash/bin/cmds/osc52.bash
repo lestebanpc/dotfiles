@@ -183,7 +183,7 @@ main() {
             t)
                 l_aux="${OPTARG}"
                 if [ "$l_aux" != "0" ] && [ "$l_aux" != "1" ] && [ "$l_aux" != "2" ]; then
-                    _usage "Option '-t' has invalid value '%s'." "$l_aux"
+                    _usage "Option '-t' has invalid value '${l_aux}'."
                     return 9
                 fi
                 l_format=$l_aux

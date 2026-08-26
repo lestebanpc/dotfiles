@@ -159,6 +159,7 @@ declare -A gA_repos_artifact=(
         ['satty']='Satty-org/Satty'
         ['spotify-player']='aome510/spotify-player'
         ['stylua']='JohnnyMorganz/StyLua'
+        ['oauth2c']='SecureAuthCorp/oauth2c'
     )
 
 # Diccionario de los repositorios que tiene un repositorio de versiones diferente al repositorio de artefactos.
@@ -457,6 +458,7 @@ declare -A gA_current_version_method_type=(
     ['shellcheck']=1
     ['pgo']=2
     ['k0s']=1
+    ['yazi']=1
     ['omnisharp-ls']=3
     ['roslyn-ls-lnx']=2
     ['roslyn-ls-win']=2
@@ -498,6 +500,7 @@ declare -A gA_current_version_method_type=(
     ['wezterm']=2
     ['powershell_es']=2
     ['llama-swap']=1
+    ['oauth2c']=1
     )
 
 
@@ -555,6 +558,7 @@ declare -A gA_current_version_parameter2=(
     ['net-rt-core']='--list-runtimes version'
     ['net-rt-aspnet']='--list-runtimes version'
     ['rmpc']='version'
+    ['oauth2c']='version'
     )
 
 
@@ -566,6 +570,7 @@ declare -A gA_current_version_parameter2=(
 #   > (1) Redirige el STDERR al STDOUT ('2>&1')
 declare -A gA_current_version_parameter3=(
     ['grpcurl']=1
+    ['oauth2c']=1
     )
 
 
@@ -1597,12 +1602,28 @@ function _get_repo_current_pretty_version2() {
 
     case "$p_repo_id" in
 
+        yazi)
+
+            l_result=$(echo "$p_data" | grep 'Version:' | head -n 1)
+
+            l_result=$(echo "$l_result" | sed "$g_regexp_sust_version1")
+            l_status=0
+            ;;
+
+
         delta)
 
             # Solo para Windows
             #l_result=$(echo "$l_result" | tr '\n' '' | cut -d ' ' -f 2)
             l_result=$(echo "$p_data" | cut -d ' ' -f 2 | head -n 1)
             l_result=$(echo "$l_result" | sed "$g_regexp_sust_version1")
+            l_status=0
+            ;;
+
+
+        oauth2c)
+
+            l_result=$(echo "$p_data" | sed "$g_regexp_sust_version5")
             l_status=0
             ;;
 
@@ -2913,6 +2934,36 @@ function get_repo_artifacts() {
                     else
                         pna_artifact_names=("ripgrep-${p_repo_last_pretty_version}-x86_64-unknown-linux-musl.tar.gz")
                         #pna_artifact_names=("ripgrep-${p_repo_last_pretty_version}-x86_64-unknown-linux-gnu.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
+
+        oauth2c)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("oauth2c_${p_repo_last_pretty_version}_Windows_arm64.tar.gz")
+                else
+                    pna_artifact_names=("oauth2c_${p_repo_last_pretty_version}_Windows_x86_64.tar.gz")
+                fi
+                pna_artifact_types=(10)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("oauth2c_${p_repo_last_pretty_version}_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("oauth2c_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("oauth2c_${p_repo_last_pretty_version}_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("oauth2c_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
                     fi
                 fi
                 pna_artifact_types=(10)
@@ -5137,6 +5188,27 @@ function _copy_artifact_files() {
 
             fi
             ;;
+
+
+        oauth2c)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -ne 0 ]; then
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "oauth2c" 0 1
+
+            else
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "oauth2c.exe" 1 1
+
+            fi
+            ;;
+
 
 
 

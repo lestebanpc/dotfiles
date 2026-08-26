@@ -68,7 +68,7 @@ end
 
 
 -- Si un comando devuelve un conjunto de objetos  de lineas de rutas, genera un arreglo de rutas absolutas
-local function m_get_urls_of(p_cmd_output, p_base_path)
+local function m_get_urls_of_string(p_cmd_output, p_base_path)
 
 	local l_urls = {}
 
@@ -76,12 +76,13 @@ local function m_get_urls_of(p_cmd_output, p_base_path)
     local l_item
 	for l_line in p_cmd_output:gmatch("[^\r\n]+") do
 
-		local l_item = Url(l_line)
+		l_item = Url(l_line)
 
 		if l_item.is_absolute then
             table.insert(l_urls, l_item)
 		else
-            table.insert(l_urls, l_base_url:join(l_item))
+            table.insert(l_urls, l_base_url:resolve(l_item))
+            --table.insert(l_urls, l_base_url:join(l_item))
 		end
 
 	end
@@ -89,6 +90,26 @@ local function m_get_urls_of(p_cmd_output, p_base_path)
 	return l_urls
 
 end
+
+
+local function m_get_files_of_urls(p_urls)
+
+    if p_urls == nil then
+        return nil
+    end
+
+    local l_files= {}
+    local l_n = #p_urls
+    local l_i = 0
+
+    for l_i = 1, l_n do
+        table.insert(l_files, fs.file(p_urls[l_i]))
+    end
+
+    return l_files
+
+end
+
 
 
 -- Construye el argumentos del comando de 'fd'
@@ -662,20 +683,39 @@ local function m_opentab_with_selected_files(p_cwd_path, p_script_path, p_select
     -- Si el comando devolvio un codigo de error en su ejecucion
     if not l_output.status.success then
 
+        local l_aux=""
+        local l_script_name = p_script_path:match("([^/]+)$")
         l_message = nil
+
         if l_output.status.code then
-            l_message = "status-code: " .. tostring(l_output.status.code)
+
+            l_aux = tostring(l_output.status.code)
+            if l_output.status.code == 1 then
+                l_message = "No se tienen los comandos requeridos para ejecutar el script.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 2 then
+                l_message = "Se debe ejecutar sobre un multiplexor como TMUX o WezTerm.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 3 then
+                l_message = "Opciones ingresadas son invalidas.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 4 then
+                l_message = "No se han ingresado los archivos.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 5 then
+                l_message = "El 1er argumento no es un archivo valido.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 6 then
+                l_message = "El 1er argumento no es un archivo valido.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            else
+                l_message = "Ocurrio un error en la ejecucion del script.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            end
+
         end
 
         if l_message == nil then
-            l_message = "error during the execution '" .. p_script_path .. "'."
-        else
-            l_message = l_message .. ", error during the execution '" .. p_script_path .. "'."
+            l_message = "Ocurrio un error en la ejecucion del script.\nScript: " .. l_script_name
         end
 
-        ya.err(p_script_path .. " status-code: " .. tostring(l_output.status.code))
-        ya.err(p_script_path .. " stdout: " .. tostring(l_output.stdout))
-        ya.err(p_script_path .. " stderr: " .. tostring(l_output.stderr))
+        ya.err("Script Path : " .. p_script_path)
+        ya.err("Status Code : " .. tostring(l_output.status.code))
+        ya.err("StdOut      : " .. tostring(l_output.stdout))
+        ya.err("StdErr      : " .. tostring(l_output.stderr))
         return l_message
 
     end
@@ -704,8 +744,8 @@ local function m_get_ui_info_sync()
 
     -- Las URLs de lo objetos selecionados
 	--local l_selected = {}
-	--for _, url in pairs(l_current_tab.selected) do
-	--	l_selected[#l_selected + 1] = url
+	--for _, l_file in pairs(l_current_tab.selected) do
+	--	l_selected[#l_selected + 1] = l_file.url
 	--end
 
     -- El folder de trabajo actual
@@ -900,11 +940,13 @@ local m_get_plugin_state = ya.sync(m_get_plugin_state_sync)
 
 function m_process_action_async(l_cmd_type, l_use_tmux, l_height, l_width, l_editor_type, l_find_path_type, l_state, l_cwd_url)
 
+    --1. Inicialziar
+
     -- Salir de modo ...
 	ya.emit("escape", { visual = true })
 
-    if l_cwd_url.scheme then
-	    if l_cwd_url.scheme.is_virtual then
+    if l_cwd_url.spec then
+	    if l_cwd_url.spec.is_virtual then
             ya.dbg("Not supported under virtual filesystems")
 	        return ya.notify({ title = "fzf-fd", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" })
 	    end
@@ -916,7 +958,7 @@ function m_process_action_async(l_cmd_type, l_use_tmux, l_height, l_width, l_edi
     local l_cwd_path = tostring(l_cwd_url)
     ya.dbg("l_cwd_path : " .. tostring(l_cwd_path))
 
-    -- Obtener la ruta donde se buscaran los archivos
+    --2. Obtener la ruta donde se buscaran los archivos
     local l_rootgit_path = nil
     local l_message = nil
 
@@ -942,7 +984,7 @@ function m_process_action_async(l_cmd_type, l_use_tmux, l_height, l_width, l_edi
 
     ya.dbg("l_find_path  : " .. tostring(l_find_path))
 
-    -- Ejecutar 'fd | fzf' y obtener el STDOUT del resultado
+    --3. Ejecutar 'fd | fzf' y obtener los archivos a procesar
     local l_output = nil
     l_output, l_message = m_run_fzf_fd(l_state, l_find_path, l_cmd_type, l_use_tmux, l_height, l_width)
 
@@ -964,25 +1006,36 @@ function m_process_action_async(l_cmd_type, l_use_tmux, l_height, l_width, l_edi
     --ya.dbg("l_output  : " .. tostring(l_output))
 
     -- Convertir los STDOUT de ruta de los archivos seleccionados por fzf en objetos Url con rutas absolutas
-	local l_selected_urls = m_get_urls_of(l_output, l_find_path)
+	local l_selected_urls = m_get_urls_of_string(l_output, l_find_path)
     ya.dbg("l_selected_urls  : " .. m_dump_table(l_selected_urls))
 
-    -- Si solo se seleciona archivos/folderes
+
+    --4. Operacion: Selecionar archivos/folderes
     if l_cmd_type == "file" or l_cmd_type == "folder" then
 
-        -- Segun el tipo de Url, realizar tareas ...
-	    if #l_selected_urls == 1 then
-	    	local l_cha = fs.cha(l_selected_urls[1])
+        -- Codigo obtenido de https://github.com/sxyazi/yazi/blob/main/yazi-plugin/preset/plugins/fzf.lua
+        local l_cha = nil
+        local l_n = #l_selected_urls
+	    if l_n == 1 then
+
+	    	l_cha = fs.cha(l_selected_urls[1])
 	    	ya.emit(l_cha and l_cha.is_dir and "cd" or "reveal", { l_selected_urls[1], raw = true })
-	    elseif #l_selected_urls > 1 then
-	    	l_selected_urls.state = "on"
-	    	ya.emit("toggle_all", l_selected_urls)
+
+	    elseif l_n > 1 then
+
+            -- Se realizar evento por evento
+            local l_selected_files = m_get_files_of_urls(l_selected_urls)
+
+	    	l_selected_files.state = "on"
+	    	ya.emit("toggle_all", l_selected_files)
+
 	    end
 
         return
     end
 
-    -- Si se edita archivos de texto creando una nueva ventana de la terminal
+
+    --5. Operacion: Editar archivos de texto creando una nueva ventana de la terminal
 
     -- Obtener el directorio de trabajo a usar
     local l_pane_wd = nil

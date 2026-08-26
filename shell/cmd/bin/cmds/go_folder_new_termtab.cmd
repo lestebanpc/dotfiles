@@ -225,11 +225,11 @@ if /I "!ARG!"=="-p" (
     echo "ok2"
     if "!VAL!"=="" (
         echo [ERROR] Opcion -p requiere un valor ^(1 o 2^)
-        exit /b 1
+        exit /b 3
     )
     if /I not "!VAL!"=="1" if /I not "!VAL!"=="2" (
         echo [ERROR] Valor invalido para -p: !VAL! ^(debe ser 1 o 2^)
-        exit /b 1
+        exit /b 3
     )
     if /I "!VAL!"=="1" set "OPTION_P=1" & set "WORKING_DIR_SRC=1"
     if /I "!VAL!"=="2" set "OPTION_P=2" & set "WORKING_DIR_SRC=2"
@@ -241,11 +241,11 @@ rem -w <path>
 if /I "!ARG!"=="-w" (
     if "!VAL!"=="" (
         echo [ERROR] Opcion -w requiere un directorio
-        exit /b 1
+        exit /b 3
     )
     if not exist "!VAL!\\" (
         echo [ERROR] Directorio no existe: !VAL!
-        exit /b 1
+        exit /b 3
     )
     set "OPTION_W=!VAL!"
     set "WORKING_DIR_SRC=0"
@@ -263,7 +263,7 @@ rem Opcion desconocida: primer caracter '-'
 if "!ARG:~0,1!"=="-" (
     echo [ERROR] Opcion desconocida: !ARG!
     call :USAGE
-    exit /b 1
+    exit /b 3
 )
 
 
@@ -291,7 +291,7 @@ rem ---------------------------------------------------------------------
 rem Validaciones iniciales
 rem ---------------------------------------------------------------------
 call :CHECK_DEPENDENCIES
-if errorlevel 1 exit /b 1
+if errorlevel 1 exit /b 2
 
 rem ---------------------------------------------------------------------
 rem Procesar la ruta de entrada
@@ -408,7 +408,7 @@ set "PANE_ID="
 call :CREATE_WEZTERM_PANE "!WORKING_DIR!"
 if "!PANE_ID!"=="" (
     echo [!color_red!ERROR!color_reset!] No se pudo crear panel en WezTerm
-    exit /b 1
+    exit /b 8
 )
 
 echo [!color_green!OK!color_reset!] Panel creado con ID: !PANE_ID!

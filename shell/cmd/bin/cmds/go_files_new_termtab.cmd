@@ -442,7 +442,7 @@ rem echo "WORKING_DIR_SRC: !WORKING_DIR_SRC!"
 
 rem 1. Verificar WezTerm
 call :CHECK_WEZTERM
-if errorlevel 1 exit /b 1
+if errorlevel 1 exit /b 2
 
 rem 2. Validar primer archivo
 set "FIRST_FILE=!ARG_1!"
@@ -454,7 +454,7 @@ if not exist "!FIRST_FILE!" (
 rem Verificar si es directorio
 if exist "!FIRST_FILE!\" (
     echo [ERROR] Primer argumento no puede ser un directorio: !FIRST_FILE!
-    exit /b 1
+    exit /b 3
 )
 
 rem 3. Determinar tipo de archivo
@@ -568,7 +568,7 @@ if !FILES_COUNT! gtr 1 (
 :FILES_DONE
 if !VALID_FILE_COUNT! equ 0 (
     echo [ERROR] No hay archivos validos para mostrar
-    exit /b 1
+    exit /b 3
 )
 
 echo [DEBUG] Archivos a procesar: !VALID_FILE_COUNT!
@@ -677,7 +677,7 @@ rem 1. Crear nuevo panel
 call :CREATE_WEZTERM_PANE "!WORKING_DIR!"
 if "!PANE_ID!"=="" (
     echo [ERROR] No se pudo crear panel en WezTerm
-    exit /b 1
+    exit /b 7
 )
 
 echo [INFO] Panel creado con ID: !PANE_ID!
@@ -686,7 +686,7 @@ rem 2. Ejecutar comando en el panel
 call :SEND_TO_PANE "!PANE_ID!"
 if errorlevel 1 (
     echo [ERROR] No se pudo ejecutar comando en el panel
-    exit /b 1
+    exit /b 7
 )
 
 echo [INFO] Comando ejecutado exitosamente
@@ -699,4 +699,4 @@ rem ---------------------------------------------------------------------
 
 :ERROR
 echo [ERROR] Error inesperado en la ejecucion
-exit /b 1
+exit /b 9

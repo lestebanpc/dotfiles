@@ -129,6 +129,52 @@ local function m_filter_files2(p_selected_paths, p_hovered_file_path, p_source)
 end
 
 
+local function m_get_relative_path_of(p_paths, p_base_path)
+
+    if p_paths == nil then
+        return nil
+    end
+
+    local l_result = ""
+
+    local l_n = #p_paths
+    local l_i = 1
+    local l_path
+    local l_url
+    local l_relative_path
+
+    for l_i = 1, l_n do
+
+        l_path = p_paths[l_i]
+        l_url = Url(l_path)
+
+        -- Obtener la ruta ralativa
+        l_relative_path = l_url:strip_prefix(p_base_path)
+
+        -- Si no esta dentro de la ruta base, devolver la ruta absoluta formateada correctamente.
+        if not l_relative_path then
+            l_relative_path = tostring(l_url)
+        else
+            l_relative_path = tostring(l_relative_path)
+        end
+
+        if l_n == 1 then
+            l_result = l_relative_path
+        else
+            if l_i == 1 then
+                l_result = '"' .. l_relative_path .. '"'
+            else
+                l_result = l_result .. ' "' .. l_relative_path .. '"'
+            end
+        end
+
+    end
+
+    return l_result
+
+end
+
+
 local function m_get_folder(p_hovered_file_path, p_get_parent)
 
     if p_hovered_file_path then
@@ -278,20 +324,39 @@ local function m_opentab(p_cwd_path, p_script_path, p_pane_wd)
     -- Si el comando devolvio un codigo de error en su ejecucion
     if not l_output.status.success then
 
+        local l_aux=""
+        local l_script_name = p_script_path:match("([^/]+)$")
         l_message = nil
+
         if l_output.status.code then
-            l_message = "status-code: " .. tostring(l_output.status.code)
+
+            l_aux = tostring(l_output.status.code)
+            if l_output.status.code == 1 then
+                l_message = "No se tienen los comandos requeridos para ejecutar el script.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 2 then
+                l_message = "Se debe ejecutar sobre un multiplexor como TMUX o WezTerm.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 3 then
+                l_message = "Opciones ingresadas son invalidas.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 4 then
+                l_message = "No se han ingresado los archivos.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 5 then
+                l_message = "El 1er argumento no es un archivo valido.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 6 then
+                l_message = "El 1er argumento no es un archivo valido.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            else
+                l_message = "Ocurrio un error en la ejecucion del script.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            end
+
         end
 
         if l_message == nil then
-            l_message = "error during the execution '" .. p_script_path .. "'."
-        else
-            l_message = l_message .. ", error during the execution '" .. p_script_path .. "'."
+            l_message = "Ocurrio un error en la ejecucion del script.\nScript: " .. l_script_name
         end
 
-        ya.err(p_script_path .. " status-code: " .. tostring(l_output.status.code))
-        ya.err(p_script_path .. " stdout: " .. tostring(l_output.stdout))
-        ya.err(p_script_path .. " stderr: " .. tostring(l_output.stderr))
+        ya.err("Script Path : " .. p_script_path)
+        ya.err("Status Code : " .. tostring(l_output.status.code))
+        ya.err("StdOut      : " .. tostring(l_output.stdout))
+        ya.err("StdErr      : " .. tostring(l_output.stderr))
         return l_message
 
     end
@@ -368,27 +433,150 @@ local function m_opentab_with_selected_files(p_cwd_path, p_script_path, p_file_p
     -- Si el comando devolvio un codigo de error en su ejecucion
     if not l_output.status.success then
 
+        local l_aux=""
+        local l_script_name = p_script_path:match("([^/]+)$")
         l_message = nil
+
         if l_output.status.code then
-            l_message = "status-code: " .. tostring(l_output.status.code)
+
+            l_aux = tostring(l_output.status.code)
+            if l_output.status.code == 1 then
+                l_message = "No se tienen los comandos requeridos para ejecutar el script.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 2 then
+                l_message = "Se debe ejecutar sobre un multiplexor como TMUX o WezTerm.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 3 then
+                l_message = "Opciones ingresadas son invalidas.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 4 then
+                l_message = "No se han ingresado los archivos.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 5 then
+                l_message = "El 1er argumento no es un archivo valido.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            elseif l_output.status.code == 6 then
+                l_message = "El 1er argumento no es un archivo valido.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            else
+                l_message = "Ocurrio un error en la ejecucion del script.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+            end
+
         end
 
         if l_message == nil then
-            l_message = "error during the execution '" .. p_script_path .. "'."
-        else
-            l_message = l_message .. ", error during the execution '" .. p_script_path .. "'."
+            l_message = "Ocurrio un error en la ejecucion del script.\nScript: " .. l_script_name
         end
 
-        ya.err(p_script_path .. " status-code: " .. tostring(l_output.status.code))
-        ya.err(p_script_path .. " stdout: " .. tostring(l_output.stdout))
-        ya.err(p_script_path .. " stderr: " .. tostring(l_output.stderr))
+        ya.err("Script Path : " .. p_script_path)
+        ya.err("Status Code : " .. tostring(l_output.status.code))
+        ya.err("StdOut      : " .. tostring(l_output.stdout))
+        ya.err("StdErr      : " .. tostring(l_output.stderr))
+
+
         return l_message
 
     end
 
+    -- TODO escribir en la consola
+    --print(l_output.stdout)
     return nil
 
 end
+
+
+---- TODO: Cambiar a una logica nativa de lua
+--local function m_copy_clipboard_osc52(p_text, p_script_path, p_cwd_path, p_use_tmux)
+--
+--
+--    -- Creando los argumentos del comando
+--    local l_args = {
+--        "-i",
+--    }
+--
+--    if p_use_tmux then
+--        table.insert(l_args, "-t")
+--        table.insert(l_args, "2")
+--    end
+--
+--    -- Generar el comando
+--    local l_cmd = Command(p_script_path)
+--        :arg(l_args)
+--        :cwd(p_cwd_path)
+--        :stdin(Command.PIPED)
+--        :stdout(Command.PIPED)
+--
+--    ya.dbg("Before Command")
+--
+--    -- Ejecutar el comando
+--    local l_error = nil
+--    local l_child = nil
+--    local l_message = nil
+--
+--    l_child, l_error = l_cmd:spawn()
+--    if not l_child then
+--        l_message ="cmd failed to start: " .. tostring(l_error)
+--        ya.err(l_message)
+--        return l_message
+--    end
+--
+--    ya.dbg("Before spawn")
+--
+--    -- Escribir en el STDOUT
+--    local l_status
+--    l_status, l_error = l_child:write_all(p_text)
+--    if not l_status then
+--        l_message ="can't not write to STDIN: " .. tostring(l_error)
+--        ya.err(l_message)
+--        return l_message
+--    end
+--
+--    l_child:flush()
+--    ya.dbg("Before flush")
+--
+--    -- Esperar a que el comando termine de ejecutar y devuelva el STDOUT
+--    local l_output = nil
+--    l_output, l_error = l_child:wait_with_output()
+--
+--    if not l_output then
+--        l_message = "cmd output error: " .. tostring(l_error)
+--        ya.err(l_message)
+--        return l_message
+--    end
+--
+--    ya.dbg("l_output.status.success: " .. tostring(l_output.status.success))
+--    ya.dbg("l_output.status.code: " .. tostring(l_output.status.code))
+--    ya.dbg("l_output.stdout: " .. tostring(l_output.stdout))
+--    ya.dbg("l_output.stderr: " .. tostring(l_output.stderr))
+--
+--    -- Si el comando devolvio un codigo de error en su ejecucion
+--    if not l_output.status.success then
+--
+--        local l_aux=""
+--        local l_script_name = p_script_path:match("([^/]+)$")
+--        l_message = nil
+--
+--        if l_output.status.code then
+--
+--            l_aux = tostring(l_output.status.code)
+--            if l_output.status.code == 9 then
+--                l_message = "Parametros ingresadas son incorrectos.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+--            else
+--                l_message = "Ocurrio un error en la ejecucion del script.\nStatus: " .. l_aux .. ", Script: " .. l_script_name
+--            end
+--
+--        end
+--
+--        if l_message == nil then
+--            l_message = "Ocurrio un error en la ejecucion del script.\nScript: " .. l_script_name
+--        end
+--
+--        ya.err("Script Path : " .. p_script_path)
+--        ya.err("Status Code : " .. tostring(l_output.status.code))
+--        ya.err("StdOut      : " .. tostring(l_output.stdout))
+--        ya.err("StdErr      : " .. tostring(l_output.stderr))
+--        return l_message
+--
+--    end
+--
+--    return nil
+--
+--end
+
 
 
 
@@ -417,14 +605,14 @@ local function m_get_ui_info_sync(p_state, p_get_selected_files, p_get_hovered_f
     if p_get_selected_files then
 
 	    l_selected_files = {}
-	    for _, l_url in pairs(l_current_tab.selected) do
-            table.insert(l_selected_files, tostring(l_url))
-            --table.insert(l_selected_files, l_url)
+	    for _, l_file in pairs(l_current_tab.selected) do
+            table.insert(l_selected_files, tostring(l_file.url))
+            --table.insert(l_selected_files, l_file.url)
         end
 
     end
 
-    -- Si no nada selecionado, usa el elemento mostrado en el cursor actual ('hovered element')
+    -- Obtener la ruta del elemento mostrado en el cursor actual ('hovered element')
     local l_hovered_file = nil
     if p_get_hovered_file then
         local l_file = l_current_tab.current.hovered
@@ -471,23 +659,41 @@ local m_get_ui_info = ya.sync(m_get_ui_info_sync)
 local function m_get_plugin_state_sync(p_state)
 
     -- Establecer el valor por defecto al 'state'
-	if (p_state.root_wd == nil) then
+	if p_state.root_wd == nil then
 		p_state.root_wd = ""
 	end
 
-	if (p_state.script_path_1 == nil) then
+	--if p_state.use_tmux == nil then
+	--	p_state.use_tmux = false
+    --end
+
+	if p_state.script_path_1 == nil then
 		p_state.script_path_1 = ""
 	end
 
-	if (p_state.script_path_2 == nil) then
+	if p_state.script_path_2 == nil then
 		p_state.script_path_2 = ""
 	end
+
+	--if p_state.script_path_3 == nil then
+	--	p_state.script_path_3 = ""
+	--end
+
+	--if p_state.use_osc52 == nil then
+	--	p_state.use_osc52 = false
+    --elseif p_state.use_osc52 == true and p_state.script_path_3 == "" then
+    --    p_state.use_osc52 = false
+	--end
+
 
     -- Devolver un copia del objeto 'state'
     local l_state = {
         root_wd = p_state.root_wd,
+        --use_tmux = p_state.use_tmux,
+        --use_osc52 = p_state.use_osc52,
         script_path_1 = p_state.script_path_1,
         script_path_2 = p_state.script_path_2,
+        --script_path_3 = p_state.script_path_3,
     }
 
     return l_state
@@ -577,6 +783,17 @@ local function m_read_args_1(p_job)
     elseif l_cmd_type == "copycb" then
 
         l_options.open_path_type = l_args["pathtype"]
+
+        -- Opcion 'source' el cual puede ser:
+        -- 'both'     > Primero busca los archivos selecionados, si no existe usa el archivo hovered actual.
+        -- 'hovered'  > Solo se considera el archivo hovered actual.
+        -- 'selected' > Solo se considera el archivo selecionados.
+        l_options.source = l_args["source"]
+
+        if l_options.source == nil or l_options.source == "" then
+            l_options.source = "both"
+        end
+
 
     elseif l_cmd_type == "gofolder" then
 
@@ -669,6 +886,22 @@ local function m_read_args_2(p_args)
 
         l_options.open_path_type = l_args[2]
 
+        -- Opcion 'source' el cual puede ser:
+        -- 'both'     > Primero busca los archivos selecionados, si no existe usa el archivo hovered actual.
+        -- 'hovered'  > Solo se considera el archivo hovered actual.
+        -- 'selected' > Solo se considera el archivo selecionados.
+        if nargs >= 3 then
+
+            l_options.source = tostring(l_args[3])
+            ya.dbg('args[3]: ' .. tostring(l_args[3]))
+            if l_options.source == nil or l_options.source == "" then
+                l_options.source = "both"
+            end
+
+        else
+            l_options.source = "both"
+        end
+
     elseif l_cmd_type == "gofolder" then
 
         l_options.open_path_type = l_args[2]
@@ -730,7 +963,7 @@ local function m_get_flags_ui_info(p_cmd_type, p_options)
     elseif p_cmd_type == "copycb" then
 
         l_flag_get_cwd = true
-        l_flag_get_selected_files = false
+        l_flag_get_selected_files = true
         l_flag_get_hovered_file = true
 
     end
@@ -745,13 +978,15 @@ end
 local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
 
 
+    --1. Inicialziacion
+
     -- Salir el modo ....
 	ya.emit("escape", { visual = true })
 
     local l_cwd_path = tostring(p_ui_info.cwd_url)
     ya.dbg("l_cwd_path: " .. tostring(l_cwd_path))
 
-    -- Si se desea ir un folder determinado
+    --2. Operacion: Ir un folder determinado
     if p_cmd_type == "gofolder" then
 
         if p_options.open_path_type == nil then
@@ -799,7 +1034,7 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
 
     end
 
-    -- Si se desea abrir un terminal editanto los archivos selected o hovered
+    --3. Operacion: Editar archivos (selected or hovered) en una nuevo tab
     if p_cmd_type == "editfiles" then
 
         if p_options.open_path_type == nil then
@@ -816,7 +1051,7 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
         if not l_paths or #l_paths < 1 then
             return ya.notify({ title = "go-fs (editfiles)", content = "You must have atleast 1 selected/hovered file.", timeout = 5, level = "warn" })
         end
-        ya.dbg("l_paths: " .. m_dump_table(l_paths, " "))
+        --ya.dbg("l_paths: " .. m_dump_table(l_paths, " "))
 
         -- Obtener el directorio de trabajo a usar
         local l_pane_wd = nil
@@ -876,7 +1111,7 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
 
     end
 
-    -- Si se desea abrir un terminal en determino folder
+    --4. Operacion: Nuevo tab de una terminal en determino folder
     if p_cmd_type == "newtab" then
 
         if p_options.open_path_type == nil then
@@ -941,19 +1176,27 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
 
     end
 
-    -- Si se desea copiar al clipboard la ruta relativa del archivo actual (selected/hovered)
+    --5. Copiar la ruta relativa de los archivos (selected, hovered) al clipboard
     if p_cmd_type == "copycb" then
 
         if p_options.open_path_type == nil then
             return
         end
 
-        -- Obtener informacion actual
+        --A. Obtener informacion la ruta de archivos a procesar
+        local l_message = nil
+        local l_selected_file_paths = p_ui_info.selected_files
         local l_hovered_file_path = p_ui_info.hovered_file
-        if not l_hovered_file_path then
-	        return ya.notify({ title = "go-fs (copycb)", content = "You must set the cursor to a file or folder.", timeout = 5, level = "warn" })
-        end
 
+        -- Obtener las rutas absolutas de los archivos seleccionados
+        local l_paths = m_filter_files2(l_selected_file_paths, l_hovered_file_path, p_options.source)
+
+        if not l_paths or #l_paths < 1 then
+            return ya.notify({ title = "go-fs (copycb)", content = "You must have atleast 1 selected/hovered file.", timeout = 5, level = "warn" })
+        end
+        --ya.dbg("l_paths: " .. m_dump_table(l_paths, " "))
+
+        --B. Obtener el directorio base a trabajar
         local l_base_path = nil
 
         -- Si se desea ir al root working-dir
@@ -970,7 +1213,8 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
         elseif p_options.open_path_type == "rootgit" then
 
 
-            local l_git_folder, l_message = m_go_git_root_folder(l_cwd_path)
+            local l_git_folder
+            l_git_folder, l_message = m_go_git_root_folder(l_cwd_path)
             if l_message ~= nil then
 	            return ya.notify({ title = "go-fs (copycb)", content = "It's not git folder (" .. l_message .. ")", timeout = 5, level = "error" })
             end
@@ -990,25 +1234,39 @@ local function m_process_action_async(p_cmd_type, p_options, p_state, p_ui_info)
 
         end
 
-        --ya.dbg('l_base_path         : ' .. tostring(l_base_path))
-        --ya.dbg('l_hovered_file_path : ' .. tostring(l_hovered_file_path))
+        ya.dbg('l_base_path         : ' .. tostring(l_base_path))
         if l_base_path == nil or l_base_path == "" then
             return
         end
 
-        local l_url = Url(l_hovered_file_path)
-        local l_relative_path = l_url:strip_prefix(l_base_path)
-        --ya.dbg('l_relative_path     : ' .. tostring(l_relative_path))
+        --C. Obtener la rutas relativas de los archivos a procesar
+        local l_all_relative_paths = m_get_relative_path_of(l_paths, l_base_path)
 
-        -- Si no esta dentro de la ruta base, devolver la ruta absoluta formateada correctamente.
-        if not l_relative_path then
-	        --return ya.notify({ title = "go-fs (copycb)", content = "Error to obtain relative path", timeout = 5, level = "error" })
-            ya.clipboard(tostring(l_url))
-            return
+        if l_all_relative_paths == nil or l_all_relative_paths == "" then
+	        return ya.notify({ title = "go-fs (copycb)", content = "Error to obtain relative paths", timeout = 5, level = "error" })
         end
+        ya.dbg("l_all_relative_paths: " .. l_all_relative_paths)
 
         -- Si esta dentro de la ruta base
-        ya.clipboard(tostring(l_relative_path))
+        ya.clipboard(l_all_relative_paths)
+
+        --if not p_state.use_osc52 then
+        --    ya.clipboard(l_all_relative_paths)
+        --else
+
+        --    l_message = m_copy_clipboard_osc52(l_all_relative_paths, p_state.script_path_3, l_cwd_path, p_state.use_tmux)
+        --    if l_message ~= nil then
+	    --        return ya.notify({ title = "go-fs (copycb)", content = "Not copy clipboard. " .. l_message, timeout = 5, level = "error" })
+        --    end
+        --end
+
+        -- Informar en caso de exito
+        local l_n = #l_paths
+        if l_n == 1 then
+	        return ya.notify({ title = "go-fs (copycb)", content = "La ruta de 1 archivo se copio al clipboard." , timeout = 5, level = "info" })
+        end
+
+	    return ya.notify({ title = "go-fs (copycb)", content = "La ruta de " .. tostring(l_n) .. " archivos se copiaron al clipboard." , timeout = 5, level = "info" })
 
     end
 
@@ -1030,8 +1288,10 @@ local function m_process_remote_event(p_args)
     ya.dbg("l_state  : " .. m_dump_table(l_state))
 
     local l_flag_get_cwd, l_flag_get_selected_files, l_flag_get_hovered_file = m_get_flags_ui_info(l_cmd_type, l_options)
+    --ya.dbg("l_flag_get_cwd : " .. tostring(l_flag_get_cwd))
     --ya.dbg("l_flag_get_selected_files : " .. tostring(l_flag_get_selected_files))
     --ya.dbg("l_flag_get_hovered_file   : " .. tostring(l_flag_get_hovered_file))
+
     local l_ui_info = {}
     if l_flag_get_cwd then
         l_ui_info = m_get_ui_info(l_flag_get_selected_files, l_flag_get_hovered_file)
@@ -1068,6 +1328,13 @@ function mod.setup(p_state, p_args)
         p_state.root_wd = p_args.root_wd
     end
 
+    --if p_args.use_tmux ~= nil then
+    --    p_state.use_tmux = p_args.use_tmux
+    --end
+
+    --if p_args.use_osc52 ~= nil then
+    --    p_state.use_osc52 = p_args.use_osc52
+    --end
 
     if p_args.script_path_1 ~= nil then
         p_state.script_path_1 = p_args.script_path_1
@@ -1079,6 +1346,9 @@ function mod.setup(p_state, p_args)
     end
     --ya.dbg("root_wd: " .. p_state.root_wd)
 
+    --if p_args.script_path_3 ~= nil then
+    --    p_state.script_path_3 = p_args.script_path_3
+    --end
 
     --2. Registrando el mensajes
     ps.sub_remote("go-fs", m_process_remote_event)
@@ -1106,8 +1376,10 @@ function mod.entry(p_self, p_job)
     ya.dbg("l_state  : " .. m_dump_table(l_state))
 
     local l_flag_get_cwd, l_flag_get_selected_files, l_flag_get_hovered_file = m_get_flags_ui_info(l_cmd_type, l_options)
+    --ya.dbg("l_flag_get_cwd : " .. tostring(l_flag_get_cwd))
     --ya.dbg("l_flag_get_selected_files : " .. tostring(l_flag_get_selected_files))
     --ya.dbg("l_flag_get_hovered_file   : " .. tostring(l_flag_get_hovered_file))
+
     local l_ui_info = {}
     if l_flag_get_cwd then
         l_ui_info = m_get_ui_info(l_flag_get_selected_files, l_flag_get_hovered_file)

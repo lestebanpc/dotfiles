@@ -1266,7 +1266,7 @@ function _setup_user_profile() {
     if [ $g_enviroment_type -eq 1 ] || [ $g_enviroment_type -eq 2 ]; then
         l_target_filename="yazi.toml"
         l_source_path="${g_repo_name}/yazi"
-        l_source_filename='yazi_desktop.toml'
+        l_source_filename='yazi_desktop_1.toml'
     else
         l_target_filename="yazi.toml"
         l_source_path="${g_repo_name}/yazi"

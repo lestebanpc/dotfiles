@@ -60,7 +60,7 @@ m_create_windowrule({ class = "org\\.gnome\\.Calculator" }, { float = true })
 m_create_windowrule({ class = "gnome-calculator" }, { float = true })
 m_create_windowrule({ class = "galculator" }, { float = true })
 m_create_windowrule({ class = "blueman-manager" }, { float = true })
-m_create_windowrule({ class = "org\\.gnome\\.Nautilus" }, { float = true })
+m_create_windowrule({ class = "org\\.gnome\\.Nautilus" }, { float = true, min_size = { 1200, 600 } })
 m_create_windowrule({ class = "xdg-desktop-portal" }, { float = true })
 
 -- Steam notifications

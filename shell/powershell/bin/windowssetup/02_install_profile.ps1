@@ -675,7 +675,7 @@ function m_create_all_symboliclinks($p_flag_overwrites_ln) {
         [PSCustomObject]@{
             target_link     = "${env:APPDATA}\yazi\config\yazi.toml"
             source_path     = "${env:USERPROFILE}\.files\yazi"
-            source_filename = "yazi_desktop.toml"
+            source_filename = "yazi_desktop_1.toml"
         },
         [PSCustomObject]@{
             target_link     = "${env:APPDATA}\yazi\config\theme.toml"
@@ -1646,7 +1646,7 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
 
     $l_target_path="${env:APPDATA}\yazi\config\yazi.toml"
     $l_source_path="${env:USERPROFILE}\.files\yazi"
-    $l_source_filename='yazi_desktop.toml'
+    $l_source_filename='yazi_desktop_1.toml'
     if ($g_setup_access_type -eq 0) {
         $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }

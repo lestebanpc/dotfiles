@@ -54,12 +54,22 @@ local m_root_wd = tostring(t_root_wd_url.path)
 -- Obtener la ruta de script para procesar archivos de texto en nuevo tab/windows del terminal
 local m_script_proccess_files = nil
 local m_script_proccess_folder = nil
+--local m_script_osc52 = nil
+--local m_use_tmux = false
+
 if m_is_windows then
     m_script_proccess_files = m_base_script_path .. "/go_files_new_termtab.cmd"
     m_script_proccess_folder = m_base_script_path .. "/go_folder_new_termtab.cmd"
 else
     m_script_proccess_files = m_base_script_path .. "/go_files_new_termtab.bash"
     m_script_proccess_folder = m_base_script_path .. "/go_folder_new_termtab.bash"
+    --m_script_osc52 = m_base_script_path .. "/osc52.bash"
+
+
+    --local t_tmux_env = os.getenv("TMUX")
+    --if t_tmux_env then
+    --    m_use_tmux = true
+    --end
 end
 
 
@@ -215,6 +225,9 @@ t_plugin:setup({
 t_plugin = require("go-fs")
 t_plugin:setup({
     root_wd =  m_root_wd,
+    --use_tmux = m_use_tmux,
+    --use_osc52 = false,
     script_path_1 = m_script_proccess_files,
     script_path_2 = m_script_proccess_folder,
+    --script_path_3 = m_script_osc52,
 })

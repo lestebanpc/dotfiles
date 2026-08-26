@@ -11,112 +11,128 @@
 # > Por el 'opener' selecionado (por el usuario o el por defecto), el comando del SO definido en 'run' se caracteriza por:
 #   > Lo items a procesar son los 'selected items'. Si no se tiene items selecionado, se usara 'hovered items'.
 #   > Si se tiene 'selected items' y en el comando se usa las variables especiales del shell:
-#     > '$@' (o '%*' en Windows), el comando en 'run' solo se ejecutara 1 vez el comando.
-#     > '$1' (o '%1' en Windows), el comando en 'run' se ejecutara tantas veces el comando cuando 'selected items' exista.
-#   > Para publicar un mensaje DDS de tipo 'go-fs' usando 'ya', usaremos '$@' o '%*' para:
+#     > Yazi < 25.5.12, la sintaxis era similar al usuado para parametros de una funcion o un script del shell.
+#       > '$@' (o '%*' en Windows), el comando en 'run' solo se ejecutara 1 vez el comando.
+#       > '$1' (o '%1' en Windows), el comando en 'run' se ejecutara tantas veces el comando cuando 'selected items' exista.
+#     > Yazi >= 25.5.12, se unifica un unico expresion unica independiente del shell a usar.
+#       > '%s'
+#       > '%s1'
+#   > Para evitar que un opener se ejecute multiples veces cuando se tiene selecionado diferentes items, siempre se usara '%s'
+#     aun cuando no se use requiera (si se usa '%s1' o no se especifica, se ejecutara tantos item selecionados).
+#     > Para emitir 1 solo evento DDS usando 'ya', por cada opener, usaremos '%s'.
 #     > Para que el comando siempre se emita un solo 'opener' selecionado, independiente de los 'selected items' existentes.
 #     > El controlador del plugin que procesa este evento, internamente tiene la logica para obtener los 'selected item' y
 #       los 'hovered items'.
+#  > Usaremos la notacion 'currect' para indicar que se usara los archivos selecionados y si no existe ningun selecionado, se
+#    se usara los archivos 'hovered'.
+#
 
 edit_text_file_1 = [
     # Para Windows
-	{ run = '%EDITOR% %*', desc = "Edit in Yazi", for = "windows", block = true },
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "vim"  "hovered" %*'  , desc = "Edit in VIM (New TermTab, Root WD)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "nvim" "hovered" %*'  , desc = "Edit in NVIM (New TermTab, Root WD)", for = "windows" },
+	{ run = '%EDITOR% %s', desc = "Edit current in Yazi", for = "windows", block = true },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "vim"  "both" %s'   , desc = "Edit current in VIM (New TermTab, Root WD)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "nvim" "both" %s'   , desc = "Edit current in NVIM (New TermTab, Root WD)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "vim" "hovered" %s' , desc = "Edit hovered in VIM (New TermTab, Root WD)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "nvim" "hovered" %s', desc = "Edit hovered in NVIM (New TermTab, Root WD)", for = "windows" },
 
     # Para Android (Termux)
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = '${EDITOR:-vim} "$@"', desc = "Edit in Yazi", for = "unix", block = true },
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "vim"  "hovered" "$@"'  , desc = "Edit in VIM (New TermTab, Root WD)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "nvim" "hovered" "$@"'  , desc = "Edit in NVIM (New TermTab, Root WD)", for = "linux" },
+	{ run = '${EDITOR:-vim} %s', desc = "Edit current in Yazi", for = "unix", block = true },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "vim"  "both" %s'   , desc = "Edit current in VIM (New TermTab, Root WD)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "nvim" "both" %s'   , desc = "Edit current in NVIM (New TermTab, Root WD)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "vim"  "hovered" %s', desc = "Edit hovered in VIM (New TermTab, Root WD)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "nvim" "hovered" %s', desc = "Edit hovered in NVIM (New TermTab, Root WD)", for = "linux" },
 ]
 
 edit_text_file_2 = [
     # Para Windows
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "vim"  "selected" %*' , desc = "Edit selected in VIM (New TermTab, Root WD)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "nvim" "selected" %*' , desc = "Edit selected in NVIM (New TermTab, Root WD)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim"  "hovered" %*'  , desc = "Edit in VIM (New TermTab, Root git)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "hovered" %*'  , desc = "Edit in NVIM (New TermTab, Root git)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim"  "selected" %*' , desc = "Edit selected in VIM (New TermTab, Root git)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "selected" %*' , desc = "Edit selected in NVIM (New TermTab, Root git)", for = "windows" },
-	{ run = 'code %*', desc = "Edit in VSCode", for = "windows", orphan = true },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim" "both" %s'    , desc = "Edit current in VIM (New TermTab, Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "both" %s'   , desc = "Edit current in NVIM (New TermTab, Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim" "hovered" %s' , desc = "Edit hovered in VIM (New TermTab, Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "hovered" %s', desc = "Edit hovered in NVIM (New TermTab, Root git)", for = "windows" },
 
     # Para Android (Termux)
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "vim"  "selected" "$@"' , desc = "Edit selected in VIM (New TermTab, Root WD)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "nvim" "selected" "$@"' , desc = "Edit selected in NVIM (New TermTab, Root WD)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim"  "hovered" "$@"'  , desc = "Edit in VIM (New TermTab, Root git)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "hovered" "$@"'  , desc = "Edit in NVIM (New TermTab, Root git)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim"  "selected" "$@"' , desc = "Edit selected in VIM (New TermTab, Root git)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "selected" "$@"' , desc = "Edit selected in NVIM (New TermTab, Root git)", for = "linux" },
-	{ run = 'code "$@"', desc = "Edit in VSCode", for = "unix", orphan = true },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim"  "both" %s'   , desc = "Edit current in VIM (New TermTab, Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "both" %s'   , desc = "Edit current in NVIM (New TermTab, Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "vim"  "hovered" %s', desc = "Edit hovered in VIM (New TermTab, Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "nvim" "hovered" %s', desc = "Edit hovered in NVIM (New TermTab, Root git)", for = "linux" },
+]
+
+open_folder = [
+    # Para Windows
+	{ run = 'code %s1', desc = "Open current in VSCode", for = "windows", orphan = true },
+
+    # Para Android (Termux)
+    # Para MacOS
+
+    # Para Linux y Unix
+	{ run = 'code %s1', desc = "Open current in VSCode", for = "unix", orphan = true },
 ]
 
 common_1 = [
     # Para Windows
-	#{ run = 'explorer /select,%1', desc = "View in Explorer", for = "windows", orphan = true },
-	{ run = 'ya pub go-fs --list "copycb" "rootwd" %*', desc = "Copy relative path (Root WD)", for = "windows" },
-	{ run = 'ya pub go-fs --list "copycb" "rootgit" %*', desc = "Copy relative path (Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "copycb" "rootwd" "both" %s' , desc = "Clipboard current paths (Root WD)", for = "windows" },
+	{ run = 'ya pub go-fs --list "copycb" "rootgit" "both" %s', desc = "Clipboard current paths (Root git)", for = "windows" },
 
     # Para Android (Termux)
     # Para MacOS
 
     # Para Linux y Unix
-	#{ run = 'nautilus --select "$1" &', desc = "View in Explorer", for = "linux", orphan = true },
-	{ run = 'ya pub go-fs --list "copycb" "rootwd" "$@"', desc = "Copy relative path (Root WD)", for = "linux" },
-	{ run = 'ya pub go-fs --list "copycb" "rootgit" "$@"', desc = "Copy relative path (Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "copycb" "rootwd" "both" %s' , desc = "Clipboard current paths (Root WD)", for = "linux" },
+	{ run = 'ya pub go-fs --list "copycb" "rootgit" "both" %s', desc = "Clipboard current paths (Root git)", for = "linux" },
 
 ]
 
 common_2 = [
     # Para Windows
-	{ run = 'ya pub go-fs --list "newtab" "rootwd" %*'   , desc = "New TermTab (Root WD)", for = "windows" },
-	{ run = 'ya pub go-fs --list "newtab" "rootgit" %*'   , desc = "New TermTab (Root git)", for = "windows" },
-	{ run = 'ya pub go-fs --list "newtab" "thisdir" %*', desc = "New TermTab (This directory)", for = "windows" },
-	{ run = 'ya pub go-fs --list "newtab" "cwd" %*' , desc = "New TermTab (CWD)", for = "windows" },
+	{ run = 'ya pub go-fs --list "newtab" "rootwd" %s' , desc = "New TermTab (Root WD)", for = "windows" },
+	{ run = 'ya pub go-fs --list "newtab" "rootgit" %s', desc = "New TermTab (Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "newtab" "thisdir" %s', desc = "New TermTab (This directory)", for = "windows" },
+	{ run = 'ya pub go-fs --list "newtab" "cwd" %s'    , desc = "New TermTab (CWD)", for = "windows" },
 
     # Para Android (Termux)
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = 'ya pub go-fs --list "newtab" "rootwd" "$@"'   , desc = "New TermTab (Root WD)", for = "linux" },
-	{ run = 'ya pub go-fs --list "newtab" "rootgit" "$@"'   , desc = "New TermTab (Root git)", for = "linux" },
-	{ run = 'ya pub go-fs --list "newtab" "thisdir" "$@"', desc = "New TermTab (This directory)", for = "linux" },
-	{ run = 'ya pub go-fs --list "newtab" "cwd" "$@"' , desc = "New TermTab (CWD)", for = "linux" },
+	{ run = 'ya pub go-fs --list "newtab" "rootwd" %s' , desc = "New TermTab (Root WD)", for = "linux" },
+	{ run = 'ya pub go-fs --list "newtab" "rootgit" %s', desc = "New TermTab (Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "newtab" "thisdir" %s', desc = "New TermTab (This directory)", for = "linux" },
+	{ run = 'ya pub go-fs --list "newtab" "cwd" %s'    , desc = "New TermTab (CWD)", for = "linux" },
 
 ]
 
 common_3 = [
     # Para Windows
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "file" "hovered" %*' , desc = "View file info (New TermTab, Root WD)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "file" "selected" %*', desc = "View selected file info (New TermTab, Root WD)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "hovered" %*' , desc = "View file info (New TermTab, Root git)", for = "windows" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "selected" %*', desc = "View selected file info (New TermTab, Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "file" "both" %s'    , desc = "View current file info (New TermTab, Root WD)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "file" "hovered" %s' , desc = "View hovered file info (New TermTab, Root WD)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "both" %s'   , desc = "View current file info (New TermTab, Root git)", for = "windows" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "hovered" %s', desc = "View hovered file info (New TermTab, Root git)", for = "windows" },
 
     # Para Android (Termux)
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "file" "hovered" "$@"' , desc = "View file info (New TermTab, Root WD)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "file" "selected" "$@"', desc = "View selected file info (New TermTab, Root WD)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "hovered" "$@"' , desc = "View file info (New TermTab, Root git)", for = "linux" },
-	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "selected" "$@"', desc = "View selected file info (New TermTab, Root git)", for = "linux" },
-	{ run = 'clear; exiftool "$1"; echo "Press enter to exit"; read _', desc = "Show metadata", for = "unix", block = true },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "file" "both" %s'    , desc = "View current info (New TermTab, Root WD)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootwd" "file" "hovered" %s' , desc = "View hovered file info (New TermTab, Root WD)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "both" %s'   , desc = "View current file info (New TermTab, Root git)", for = "linux" },
+	{ run = 'ya pub go-fs --list "editfiles" "rootgit" "file" "hovered" %s', desc = "View hovered file info (New TermTab, Root git)", for = "linux" },
+	{ run = 'clear; exiftool %s1; echo "Press enter to exit"; read _' , desc = "Show metadata", for = "unix", block = true },
 ]
 
 extract_compress_file = [
     # Para Windows
-	{ run = 'ya pub extract --list %*', desc = "Extract here", for = "windows" },
+	{ run = 'ya pub extract --list %s', desc = "Extract current here", for = "windows" },
 
     # Para Android (Termux)
     # Para MacOS
 
     # Para Linux y Unix
-	{ run = 'ya pub extract --list "$@"', desc = "Extract here", for = "linux" },
+	{ run = 'ya pub extract --list %s', desc = "Extract current here", for = "linux" },
 ]
 
 download_file = [
@@ -132,14 +148,18 @@ download_file = [
 ]
 
 
+
 [open]
 rules = [
 
 	# Folder> Folder en Unix (Linux)
-	{ mime = "inode/directory", use = [ "common_1", "common_2" ] },
+	{ mime = "inode/directory", use = [ "common_1", "open_folder", "common_2" ] },
 
 	# Folder> Folder en Windows
-	{ mime = "folder/local", use = [ "common_1", "common_2" ] },
+	{ mime = "folder/local", use = [ "common_1", "open_folder", "common_2" ] },
+
+    # File> Draw.IO (xml file that should be treated as binary)
+    { url = "*.drawio", use = [ "common_1", "common_2" ] },
 
 	# File> Text
 	{ mime = "text/*", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2", "common_3" ] },
@@ -150,6 +170,12 @@ rules = [
 	# File> JSON
 	{ mime = "application/{json,ndjson}", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2", "common_3" ] },
 	{ mime = "*/javascript", use = [ "edit_text_file_1", "common_1", "edit_text_file_2", "common_2", "common_3" ] },
+
+	# File> Image
+	{ mime = "image/*", use = [ "common_1", "common_3", "common_2" ] },
+
+	# File> Media
+	{ mime = "{audio,video}/*", use = [ "common_1", "common_3", "common_2" ] },
 
     # File> Office document
 	{ mime = "application/{msword,ms-excel,ms-powerpoint}", use = [ "common_1", "common_3", "common_2" ] },
