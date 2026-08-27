@@ -195,7 +195,7 @@ function Invoke-RcloneSync {
     }
 
     # Construir opciones de rclone
-    $options = @("-MvP", "--modify-window", "2s")
+    $options = @("-MvP", "--modify-window", "2s", "--fix-case")
 
     if ($remoteInfo.RemoteType -eq 'drive') {
         $options += "--drive-skip-gdocs"

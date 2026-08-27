@@ -124,8 +124,8 @@ _g_sync_folder () {
 
 
     #5. Obtener los opciones a usar en rclone
-    local -a la_options=("-MvP" "--modify-window" "2s")
-    local l_options="-MvP --modify-window 2s"
+    local -a la_options=("-MvP" "--modify-window" "2s" "--fix-case")
+    local l_options="-MvP --modify-window 2s --fix-case"
 
     if [ "$l_remote_type" = 'drive' ]; then
         la_options+=("--drive-skip-gdocs")
