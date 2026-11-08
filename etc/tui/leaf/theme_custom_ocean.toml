@@ -1,0 +1,6 @@
+# Custom 'ocean' theme
+base = "ocean"
+syntax = "base16-ocean.dark"
+
+[ui]
+content_bg = "#0f0f0f"

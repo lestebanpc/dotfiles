@@ -1174,7 +1174,7 @@ function _setup_user_profile() {
 
     #5. Creando enlaces simbolico independiente del tipo de distribución Linux
 
-    #Archivo de configuración del GNU ReadLine
+    # Archivo de configuración del GNU ReadLine
     l_source_path="${g_repo_name}/etc/cli/readline"
     l_source_filename='inputrc'
     l_target_path=""
@@ -1183,7 +1183,7 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
-    #Archivo de GDU (Go Disk Usage)
+    # Archivo de GDU (Go Disk Usage)
     create_folderpath_on_home ".config" "gdu"
     l_source_path="${g_repo_name}/etc/tui/gdu"
     l_source_filename='gdu_default.yaml'
@@ -1193,8 +1193,17 @@ function _setup_user_profile() {
     create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
     l_status=$?
 
+    # Archivo de jqp ('jq' playground)
+    l_source_path="${g_repo_name}/etc/tui/jqp"
+    l_source_filename='jqp_default.yaml'
+    l_target_path=""
+    l_target_filename=".jqp.yaml"
 
-    #Archivo de configuración para LFTP
+    create_filelink_on_home "$l_source_path" "$l_source_filename" "$l_target_path" "$l_target_filename" "Profile > " $l_flag_overwrites_file_notmodifiable
+    l_status=$?
+
+
+    # Archivo de configuración para LFTP
     l_source_path="${g_repo_name}/etc/cli/lftp"
     l_source_filename='lftprc_default.conf'
     l_target_path=""
@@ -1204,7 +1213,7 @@ function _setup_user_profile() {
     l_status=$?
 
 
-    #Crear el enlace de TMUX (no usaramos '~/.tmux.conf', usaramos '~/.config/tmux/tmux.conf')
+    # Crear el enlace de TMUX (no usaramos '~/.tmux.conf', usaramos '~/.config/tmux/tmux.conf')
     create_folderpath_on_home ".config" "tmux"
     l_source_path="${g_repo_name}/etc/cli/tmux"
     l_source_filename='tmux.conf'

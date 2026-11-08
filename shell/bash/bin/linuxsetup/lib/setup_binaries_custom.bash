@@ -43,6 +43,7 @@ declare -A gA_repos_artifact=(
         ['bat']='sharkdp/bat'
         ['ripgrep']='BurntSushi/ripgrep'
         ['delta']='dandavison/delta'
+        ['diffnav']='dlvhdr/diffnav'
         ['fzf']='junegunn/fzf'
         ['jq']='stedolan/jq'
         ['yq']='mikefarah/yq'
@@ -54,7 +55,8 @@ declare -A gA_repos_artifact=(
         ['tailspin']='bensadeh/tailspin'
         ['qsv']='dathere/qsv'
         ['xan']='medialab/xan'
-        ['glow']='charmbracelet/glow'
+        #['glow']='charmbracelet/glow'
+        ['leaf']='RivoLink/leaf'
         ['gum']='charmbracelet/gum'
         ['yazi']='sxyazi/yazi'
         ['lazygit']='jesseduffield/lazygit'
@@ -63,6 +65,8 @@ declare -A gA_repos_artifact=(
         ['websocat']='vi/websocat'
         ['jwt']='mike-engel/jwt-cli'
         ['step']='smallstep/cli'
+        ['workmux']='raine/workmux'
+        ['jqp']='noahgorstein/jqp'
         ['butane']='coreos/butane'
         ['evans']='ktr0731/evans'
         ['protoc']='protocolbuffers/protobuf'
@@ -160,6 +164,7 @@ declare -A gA_repos_artifact=(
         ['spotify-player']='aome510/spotify-player'
         ['stylua']='JohnnyMorganz/StyLua'
         ['oauth2c']='SecureAuthCorp/oauth2c'
+        ['omc']='gmeghnag/omc'
     )
 
 # Diccionario de los repositorios que tiene un repositorio de versiones diferente al repositorio de artefactos.
@@ -255,7 +260,7 @@ declare -a ga_menuoption_title=(
 declare -a ga_menuoption_repos=(
     "jq,yq,bat,ripgrep,delta,fzf,less,fd,oh-my-posh,zoxide,eza"
     "tmux-thumbs,tmux-fingers,sesh,grpcurl,websocat,protoc,jwt"
-    "rclone,tailspin,qsv,xan,evans,glow,gum,butane,biome,step,yazi,lazygit,rmpc,resvg,gdu"
+    "rclone,tailspin,qsv,xan,evans,diffnav,leaf,workmux,jqp,gum,butane,biome,step,yazi,lazygit,rmpc,resvg,gdu"
     "nerd-fonts"
     "neovim,tree-sitter"
     "powershell"
@@ -263,7 +268,7 @@ declare -a ga_menuoption_repos=(
     "containerd,buildkit,nerdctl"
     "dive,hadolint,trivy"
     "crictl,kubectl,cilium,helm"
-    "oc,operator-sdk,3scale-toolbox,pgo"
+    "oc,operator-sdk,omc,pgo"
     "k0s"
     "cni-plugins,kubectl,kubelet,kubeadm"
     "net-sdk,omnisharp-ls,roslyn-ls-lnx,roslyn-ls-win,netcoredbg"
@@ -294,6 +299,7 @@ declare -A gA_repo_config_os_type=(
         ['ctags-nowin']=14
         ['roslyn-ls-win']=1
         ['roslyn-ls-lnx']=14
+        ['workmux']=14
         ['wezterm']=1
         ['kitty']=14
         ['k0s']=4
@@ -501,11 +507,12 @@ declare -A gA_current_version_method_type=(
     ['powershell_es']=2
     ['llama-swap']=1
     ['oauth2c']=1
+    ['diffnav']=1
     )
 
 
 # Parametros usados para calcular la version actual (instalada) del repositorio.
-# Su valor depdende el metodo usado para obtener la version actual.
+# Su valor depedende el metodo usado para obtener la version actual.
 # > Si es '3', no usa parametros.
 # > Si es '2', es el nombre del archivo donde se almacena la version del programa.
 #   > Si no especifica el nombre del archivo esto sera '<repo-id>.info'
@@ -559,10 +566,11 @@ declare -A gA_current_version_parameter2=(
     ['net-rt-aspnet']='--list-runtimes version'
     ['rmpc']='version'
     ['oauth2c']='version'
+    ['omc']='version'
     )
 
 
-# Parametros usasdos para calcular la versiopn actual (instalada) del repositorio.
+# Parametros usados para calcular la version actual (instalada) del repositorio.
 # Su valor depdende el metodo usado para obtener la version actual.
 # > Si es '3' y '2', no usa estos parametros.
 # > Si es '0' y '1', indica la redireccion que se usara al ejecutar el comando:
@@ -574,7 +582,7 @@ declare -A gA_current_version_parameter3=(
     )
 
 
-# Parametros usasdos para calcular la versiopn actual (instalada) del repositorio.
+# Parametros usados para calcular la version actual (instalada) del repositorio.
 # Su valor depdende el metodo usado para obtener la version actual.
 # > Si es '3' y '2', no usa estos parametros.
 # > Si es '0' y '1', solo es usado para 'programas de usuario' y define la ruta relativa del comando respecto a la ruta
@@ -1627,6 +1635,12 @@ function _get_repo_current_pretty_version2() {
             l_status=0
             ;;
 
+        diffnav)
+
+            l_result=$(echo "$p_data" | tail -n 1 | sed "$g_regexp_sust_version1")
+            l_status=0
+            ;;
+
 
         shellcheck)
             l_result=$(echo "$p_data" | head -n 2 | tail -n 1)
@@ -2301,6 +2315,66 @@ function get_repo_artifacts() {
 
 
 
+        workmux)
+
+            #No soportado para Windows
+            if [ $p_is_win_binary -eq 0 ]; then
+                pna_artifact_baseurl=()
+                pna_artifact_names=()
+                return 2
+            fi
+
+            #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+            if [ $g_os_subtype_id -eq 1 ]; then
+                #No hay soporte para libc, solo musl
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("workmux-linux-arm64.tar.gz")
+                else
+                    pna_artifact_names=("workmux-linux-amd64.tar.gz")
+                fi
+            else
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("workmux-linux-arm64.tar.gz")
+                else
+                    pna_artifact_names=("workmux-linux-amd64.tar.gz")
+                fi
+            fi
+            pna_artifact_types=(10)
+            ;;
+
+
+        jqp)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("jqp_Windows_arm64.tar.gz")
+                else
+                    pna_artifact_names=("jqp_Windows_x86_64.tar.gz")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("jqp_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("jqp_Linux_x86_64.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("jqp_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("jqp_Linux_x86_64.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
+
+
         stylua)
 
             #Generar los datos de artefactado requeridos para su configuración:
@@ -2420,6 +2494,36 @@ function get_repo_artifacts() {
                 fi
                 pna_artifact_types=(20)
                 #pna_artifact_types=(10)
+            fi
+            ;;
+
+
+        diffnav)
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("diffnav_Windows_arm64.zip")
+                else
+                    pna_artifact_names=("diffnav_Windows_x86_64.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("diffnav_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("diffnav_Linux_x86_64.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("diffnav_Linux_arm64.tar.gz")
+                    else
+                        pna_artifact_names=("diffnav_Linux_x86_64.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
             fi
             ;;
 
@@ -3104,6 +3208,37 @@ function get_repo_artifacts() {
                         pna_artifact_names=("bat-v${p_repo_last_pretty_version}-aarch64-unknown-linux-gnu.tar.gz")
                     else
                         pna_artifact_names=("bat-v${p_repo_last_pretty_version}-x86_64-unknown-linux-gnu.tar.gz")
+                    fi
+                fi
+                pna_artifact_types=(10)
+            fi
+            ;;
+
+
+        omc)
+
+            #Generar los datos de artefactado requeridos para su configuración:
+            if [ $p_is_win_binary -eq 0 ]; then
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("omc_Windows_x86_64.zip")
+                else
+                    pna_artifact_names=("omc_Windows_x86_64.zip")
+                fi
+                pna_artifact_types=(11)
+            else
+                #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+                if [ $g_os_subtype_id -eq 1 ]; then
+                    #No hay soporte para libc, solo musl
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("omc_Linux_aarch64.tar.gz")
+                    else
+                        pna_artifact_names=("omc_Linux_x86_64.tar.gz")
+                    fi
+                else
+                    if [ "$g_os_architecture_type" = "aarch64" ]; then
+                        pna_artifact_names=("omc_Linux_aarch64.tar.gz")
+                    else
+                        pna_artifact_names=("omc_Linux_x86_64.tar.gz")
                     fi
                 fi
                 pna_artifact_types=(10)
@@ -4174,11 +4309,11 @@ function get_repo_artifacts() {
             if [ $p_is_win_binary -ne 0 ]; then
                 #Si es de la familia Debian
                 if [ $g_os_subtype_id -ge 30 ] && [ $g_os_subtype_id -lt 50 ]; then
-                    pna_artifact_names=("3scale-toolbox_${p_repo_last_pretty_version}-1_amd64.deb")
+                    pna_artifact_names=("3scale-toolbox-${p_repo_last_pretty_version}-1_amd64.deb")
                     pna_artifact_types=(1)
                 #Si es de la familia Fedora
                 elif [ $g_os_subtype_id -ge 10 ] && [ $g_os_subtype_id -lt 30 ]; then
-                    pna_artifact_names=("3scale-toolbox_${p_repo_last_pretty_version}-1.el8.x86_64.rpm")
+                    pna_artifact_names=("3scale-toolbox-${p_repo_last_pretty_version}-1.el8.x86_64.rpm")
                     pna_artifact_types=(1)
                 else
                     #No soportato en esta distribución Linux
@@ -4846,28 +4981,57 @@ function get_repo_artifacts() {
             ;;
 
 
-        glow)
+        #glow)
+        #    #Generar los datos de artefactado requeridos para su configuración:
+        #    if [ $p_is_win_binary -eq 0 ]; then
+        #        pna_artifact_names=("glow_${p_repo_last_pretty_version}_Windows_x86_64.zip")
+        #        pna_artifact_types=(11)
+        #    else
+        #        #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
+        #        if [ $g_os_subtype_id -eq 1 ]; then
+        #            #No hay soporte para libc, solo musl
+        #            if [ "$g_os_architecture_type" = "aarch64" ]; then
+        #                pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_arm64.tar.gz")
+        #            else
+        #                pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
+        #            fi
+        #        else
+        #            if [ "$g_os_architecture_type" = "aarch64" ]; then
+        #                pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_arm64.tar.gz")
+        #            else
+        #                pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
+        #            fi
+        #        fi
+        #        pna_artifact_types=(10)
+        #    fi
+        #    ;;
+
+        leaf)
             #Generar los datos de artefactado requeridos para su configuración:
             if [ $p_is_win_binary -eq 0 ]; then
-                pna_artifact_names=("glow_${p_repo_last_pretty_version}_Windows_x86_64.zip")
-                pna_artifact_types=(11)
+                if [ "$g_os_architecture_type" = "aarch64" ]; then
+                    pna_artifact_names=("leaf-windows-x86_64.exe")
+                else
+                    pna_artifact_names=("leaf-windows-x86_64.exe")
+                fi
+                pna_artifact_types=(0)
             else
                 #Si el SO es Linux Alpine (solo tiene soporta al runtime c++ 'musl')
                 if [ $g_os_subtype_id -eq 1 ]; then
                     #No hay soporte para libc, solo musl
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_arm64.tar.gz")
+                        pna_artifact_names=("leaf-linux-arm64")
                     else
-                        pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
+                        pna_artifact_names=("leaf-linux-x86_64")
                     fi
                 else
                     if [ "$g_os_architecture_type" = "aarch64" ]; then
-                        pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_arm64.tar.gz")
+                        pna_artifact_names=("leaf-linux-arm64")
                     else
-                        pna_artifact_names=("glow_${p_repo_last_pretty_version}_Linux_x86_64.tar.gz")
+                        pna_artifact_names=("leaf-linux-x86_64")
                     fi
                 fi
-                pna_artifact_types=(10)
+                pna_artifact_types=(0)
             fi
             ;;
 
@@ -5149,6 +5313,26 @@ function _copy_artifact_files() {
 
 
 
+        omc)
+
+            #Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -ne 0 ]; then
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "omc" 0 1
+
+            else
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "omc.exe" 1 1
+
+            fi
+            ;;
+
+
 
         xan)
 
@@ -5190,27 +5374,82 @@ function _copy_artifact_files() {
             ;;
 
 
-        oauth2c)
+        diffnav)
 
-            #Ruta local de los artefactos
+            # Ruta local de los artefactos
             l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            # Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $p_is_win_binary -ne 0 ]; then
 
-                #Copiar el comando
+                # Copiar el comando
+                copy_binary_file "${l_source_path}" "diffnav" 0 1
+
+            else
+
+                # Copiar el comando
+                copy_binary_file "${l_source_path}" "diffnav.exe" 1 1
+
+            fi
+            ;;
+
+
+        jqp)
+
+            # Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            # Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -ne 0 ]; then
+
+                # Copiar el comando
+                copy_binary_file "${l_source_path}" "jqp" 0 1
+
+            else
+
+                # Copiar el comando
+                copy_binary_file "${l_source_path}" "lqp.exe" 1 1
+
+            fi
+            ;;
+
+
+        oauth2c)
+
+            # Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            # Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            if [ $p_is_win_binary -ne 0 ]; then
+
+                # Copiar el comando
                 copy_binary_file "${l_source_path}" "oauth2c" 0 1
 
             else
 
-                #Copiar el comando
+                # Copiar el comando
                 copy_binary_file "${l_source_path}" "oauth2c.exe" 1 1
 
             fi
             ;;
 
 
+        workmux)
 
+            # Si es WSL de Windows y se copia binarios de windows
+            if [ $p_is_win_binary -eq 0 ]; then
+                printf 'El %bartefacto[%b%s%b] "%b%s%b" del repositorio "%b%s%b" solo esta habilitado para configurar binarios %s%b.\n' \
+                       "$g_color_red1" "$g_color_gray1" "$p_artifact_index" "$g_color_red1" "$g_color_gray1" "$p_artifact_filename" "$g_color_red1" \
+                       "$g_color_gray1" "$p_repo_id" "$g_color_red1" "Linux" "$g_color_reset"
+                return 40
+            fi
+
+            # Ruta local de los artefactos
+            l_source_path="${p_repo_id}/${p_artifact_index}"
+
+            # Copiar el comando y dar permiso de ejecucion a todos los usuarios
+            copy_binary_file "${l_source_path}" "workmux" 0 1
+            ;;
 
 
 
@@ -7025,50 +7264,79 @@ function _copy_artifact_files() {
 
 
 
-        glow)
+        #glow)
+
+        #    #Ruta local de los artefactos
+        #    l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
+
+        #    #A. Si es WSL de Windows
+        #    if [ $p_is_win_binary -eq 0 ]; then
+
+        #        copy_binary_file "${l_source_path}" "glow.exe" 1 1
+        #        return 0
+
+        #    fi
+
+        #    #B. Si es Linux (no WSL)
+
+        #    #Copiando el binario en una ruta del path
+        #    copy_binary_file "${l_source_path}" "glow" 0 1
+
+        #    #Copiar los archivos de ayuda man para comando
+        #    copy_man_files "${g_temp_path}/${l_source_path}/manpages" 1
+
+        #    #Copiar los archivos de autocompletado
+        #    create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
+        #    #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
+        #    create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
+        #    create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
+        #    #create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
+        #    #create_folderpath_on_tools 0 'shell/autocomplete' 'others'
+
+
+        #    copy_file_on_tools "${l_source_path}/completions" "glow.bash"     0 "shell/autocomplete/bash"       "glow.bash"  0
+        #    copy_file_on_tools "${l_source_path}/completions" "glow.zsh"      0 "shell/autocomplete/zsh"        "glow.zsh"   0
+        #    copy_file_on_tools "${l_source_path}/completions" "glow.fish"     0 "shell/autocomplete/fish"       "glow.fish"  0
+
+
+        #    #Copiar los script de keybindings
+        #    #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
+        #    #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
+        #    #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
+        #    #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
+        #    #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
+        #    #create_folderpath_on_tools 0 'shell/keybindings' 'others'
+
+        #    #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
+        #    ;;
+
+
+
+        leaf)
 
             #Ruta local de los artefactos
-            l_source_path="${p_repo_id}/${p_artifact_index}/${p_artifact_filename_woext}"
+            l_source_path="${p_repo_id}/${p_artifact_index}"
 
-            #A. Si es WSL de Windows
+            #Copiar el comando y dar permiso de ejecucion a todos los usuarios
             if [ $p_is_win_binary -eq 0 ]; then
 
-                copy_binary_file "${l_source_path}" "glow.exe" 1 1
+                echo "Renombrando \"${p_artifact_filename_woext}.exe\" como \"${g_temp_path}/${l_source_path}/leaf.exe\" ..."
+                mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}.exe" "${g_temp_path}/${l_source_path}/leaf.exe"
+
+                #Copiar el comando
+                copy_binary_file "${l_source_path}" "leaf.exe" 1 1
+
                 return 0
 
             fi
 
-            #B. Si es Linux (no WSL)
+            #Si es Linux non-WSL
+            echo "Renombrando \"${p_artifact_filename_woext}\" como \"${g_temp_path}/${l_source_path}/leaf\" ..."
+            mv "${g_temp_path}/${l_source_path}/${p_artifact_filename_woext}" "${g_temp_path}/${l_source_path}/leaf"
 
-            #Copiando el binario en una ruta del path
-            copy_binary_file "${l_source_path}" "glow" 0 1
+            #Copiar el comando
+            copy_binary_file "${l_source_path}" "leaf" 0 1
 
-            #Copiar los archivos de ayuda man para comando
-            copy_man_files "${g_temp_path}/${l_source_path}/manpages" 1
-
-            #Copiar los archivos de autocompletado
-            create_folderpath_on_tools 0 '' 'shell/autocomplete/bash'
-            #create_folderpath_on_tools 0 'shell/autocomplete' 'sh'
-            create_folderpath_on_tools 0 'shell/autocomplete' 'zsh'
-            create_folderpath_on_tools 0 'shell/autocomplete' 'fish'
-            #create_folderpath_on_tools 0 'shell/autocomplete' 'powershell'
-            #create_folderpath_on_tools 0 'shell/autocomplete' 'others'
-
-
-            copy_file_on_tools "${l_source_path}/completions" "glow.bash"     0 "shell/autocomplete/bash"       "glow.bash"  0
-            copy_file_on_tools "${l_source_path}/completions" "glow.zsh"      0 "shell/autocomplete/zsh"        "glow.zsh"   0
-            copy_file_on_tools "${l_source_path}/completions" "glow.fish"     0 "shell/autocomplete/fish"       "glow.fish"  0
-
-
-            #Copiar los script de keybindings
-            #create_folderpath_on_tools 0 '' 'shell/keybindings/bash'
-            #create_folderpath_on_tools 0 'shell/keybindings' 'sh'
-            #create_folderpath_on_tools 0 'shell/keybindings' 'zsh'
-            #create_folderpath_on_tools 0 'shell/keybindings' 'fish'
-            #create_folderpath_on_tools 0 'shell/keybindings' 'powershell'
-            #create_folderpath_on_tools 0 'shell/keybindings' 'others'
-
-            #copy_file_on_tools "${l_source_path}/shell" "key-bindings.bash" 0 "shell/keybindings/bash" "fzf.bash" 0
             ;;
 
 
@@ -7278,10 +7546,10 @@ function _copy_artifact_files() {
             mkdir -p ${g_repo_path}/etc/cli/podman
 
             #/etc/containers/storage.conf (default: overlayfs)
-            printf 'Descargando el archivo de configuracion requerido para "%s" con soporte a "Overlay" en "~/%s"\n' "/etc/containers/storage.conf" \
-                   ".files/etc/cli/podman/storage_overlay_default.toml"
-            curl -fLo ${g_repo_path}/etc/cli/podman/storage_overlay_default.toml \
-                 https://raw.githubusercontent.com/containers/podman/main/vendor/github.com/containers/storage/storage.conf
+            #printf 'Descargando el archivo de configuracion requerido para "%s" con soporte a "Overlay" en "~/%s"\n' "/etc/containers/storage.conf" \
+            #       ".files/etc/cli/podman/storage_overlay_default.toml"
+            #curl -fLo ${g_repo_path}/etc/cli/podman/storage_overlay_default.toml \
+            #     https://raw.githubusercontent.com/containers/podman/main/vendor/github.com/containers/storage/storage.conf
 
             #/etc/containers/storage.conf (btrfs)
             # cambiando 'driver = "overlay"' por 'driver = "btrfs"'

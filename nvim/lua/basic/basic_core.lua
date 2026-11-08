@@ -174,10 +174,9 @@ local sec_item_diagnostic = {
 --
 -- Confiugrar LuaLine
 --
-require('lualine').setup({
+local lualine_cfg = {
     options = {
         icons_enabled = true,
-        theme = vim.g.colorschema_main,
         component_separators = { left = '', right = ''},
         section_separators = { left = '', right = ''},
         disabled_filetypes = {
@@ -230,7 +229,15 @@ require('lualine').setup({
     winbar = {},
     inactive_winbar = {},
     extensions = {}
-})
+}
+
+if use_cs_tokyonight then
+    lualine_cfg.theme = vim.g.colorschema_main
+else
+    lualine_cfg.theme = "catppuccin-nvim"
+end
+
+require('lualine').setup(lualine_cfg)
 
 
 --------------------------------------------------------------------------------------------------

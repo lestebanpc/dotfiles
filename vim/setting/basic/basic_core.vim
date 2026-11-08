@@ -20,6 +20,7 @@ if g:is_neovim
     packadd nvim
 
     "Esquema de color se define dentro de 'ui_basic.lua'.
+    "let g:colorschema_main = 'catppuccin-nvim'
     let g:colorschema_main = 'catppuccin'
 
 

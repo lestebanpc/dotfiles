@@ -1638,6 +1638,17 @@ function m_setup_profile_files($p_flag_developer, $p_flag_overwrites_file_notmod
         $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
     }
 
+    #Configuracion por jqp (Jq Playground)
+    $l_target_path="${env:USERPROFILE}\.jqp.yaml"
+    $l_source_path="${env:USERPROFILE}\.files\etc\tui\jqp"
+    $l_source_filename='jqp_default.yaml'
+    if ($g_setup_access_type -eq 0) {
+        $l_status= m_copy_file "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    }
+    elseif ($g_setup_access_type -eq 2 -or ($g_setup_access_type -eq 1 -and $g_shell_with_admin_privileges)) {
+        $l_status= m_create_file_link "$l_source_path" "$l_source_filename" "$l_target_path" "$l_tag" $p_flag_overwrites_file_notmodifiable
+    }
+
 
     #Configuracion por Yazi
     $l_status= m_create_folder "${env:APPDATA}" "yazi\config" $l_tag

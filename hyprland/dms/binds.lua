@@ -337,15 +337,11 @@ hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
 -- Force full-screen
 hl.bind("SUPER + CTRL + F", hl.dsp.window.fullscreen({ action = "set" }))
 
--- Resize windows with mouse (LMB/RMB and dragging)
-hl.bind("SUPER + code:20", hl.dsp.window.resize({ x = -100, y = 0, relative = true }), { repeating = true })
-hl.bind("SUPER + code:21", hl.dsp.window.resize({ x = 100, y = 0, relative = true }), { repeating = true })
-
 -- Manual Sizing
-hl.bind("SUPER + SHIFT + minus",  hl.dsp.window.resize({ x = -1, y = 0, relative = true }), { repeating = true })
-hl.bind("SUPER + SHIFT + equal",  hl.dsp.window.resize({ x = 1, y = 0, relative = true }), { repeating = true })
-hl.bind("SUPER + minus", hl.dsp.window.resize({ x = 0, y = -1, relative = true }), { repeating = true })
-hl.bind("SUPER + equal", hl.dsp.window.resize({ x = 0, y = 1, relative = true }), { repeating = true })
+hl.bind("SUPER + minus",         hl.dsp.window.resize({ x = 0 , y = -2, relative = true }), { repeating = true })
+hl.bind("SUPER + equal",         hl.dsp.window.resize({ x = 0 , y = 2 , relative = true }), { repeating = true })
+hl.bind("SUPER + SHIFT + minus", hl.dsp.window.resize({ x = -2, y = 0 , relative = true }), { repeating = true })
+hl.bind("SUPER + SHIFT + equal", hl.dsp.window.resize({ x = 2 , y = 0 , relative = true }), { repeating = true })
 
 
 

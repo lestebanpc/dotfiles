@@ -591,6 +591,7 @@ function _install_artifacts() {
         #Si el tipo de item es 1 si es package del SO
         elif [ $l_artifact_type -eq 1 ]; then
 
+            # TODO Ampliar a otras distribuciones
             #Si no es de la familia Debian
             if [ $g_os_subtype_id -lt 30 ] || [ $g_os_subtype_id -ge 50 ]; then
                 printf 'ERROR (%s): No esta permitido instalar el artefacto "%b[%s]" ("%s") en SO que no sean de familia Debian\n' "22" "${l_tag}" \

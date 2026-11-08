@@ -32,6 +32,6 @@
     conflictstyle = diff3
 
 
-# Incluir los temas configuraciones personalizadas
+# Incluir configuraciones personalizadas (modificables por el usuario final)
 [include]
     path = ~/.config/git/user_main.toml

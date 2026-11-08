@@ -62,14 +62,15 @@ require("dms.outputs")
 require("dms.layout")
 require("dms.cursor")
 require("dms.colors")
+require("dms.windowrules")
 
 -- DMS reserved config
 require("dms.binds")
 require("dms.binds-user")
-require("dms.windowrules")
 
 -- Override 'dms.layout' config
 require("utils.config_layout")
 
 -- Mi config
+require("utils.window_rules")
 require("utils.workspace_rules")
