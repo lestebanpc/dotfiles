@@ -214,6 +214,43 @@ else
 endif
 
 
+" Permite habilitar el autoguardado automatico de los buffer nombrados (los cuales suelen darse cuando existe: cambio
+" de buffer, perder el foco o cerrar Vim). Por defecto esta capacidad no esta habilitada.
+" Es usada para implementar 'sticky notes'.
+" El valor real, se obtendra segun orden de prioridad:
+"  > El valor definido por la variable de entorno 'AUTOSAVING_BUF'
+"    > 0 ('true' ), si habilita el autosaving de los buffer nombreados.
+"      Ejemplo : 'AUTOSAVING_BUF=0 vim'
+"    > 1 ('false'), si no se habilita el autosaving de los buffer nombrados.
+"      Ejemplo : 'AUTOSAVING_BUF=1 vim'
+"    > Cualquiere otro valor se considera no definido.
+"  > El valor definido por esta variable VIM 'g:enable_autosaving_buffer'
+"    > v:true (o diferente a '0') si habilita el autosaving de los buffer nombrados.
+"    > v:false (o '0') no se habilita el autosaving de los buffer nombrados.
+"    > Si no se especifica, se considera no definido
+if $AUTOSAVING_BUF != ''
+
+    if $AUTOSAVING_BUF == 0
+        let g:enable_autosaving_buffer = v:true
+    elseif $AUTOSAVING_BUF == 1
+        let g:enable_autosaving_buffer = v:false
+    else
+        let g:enable_autosaving_buffer = v:false
+    endif
+
+elseif exists("g:enable_autosaving_buffer")
+
+    if empty(g:enable_autosaving_buffer)
+        let g:enable_autosaving_buffer = v:false
+    else
+        let g:enable_autosaving_buffer = v:true
+    endif
+
+else
+    let g:enable_autosaving_buffer = v:false
+endif
+
+
 " Deshabilitación manual de las capacidades de modo IDE
 "  > La deshabilitación automatica de las capacidades de modo IDE se realiza si no cumple requisitos
 "    minimos de un IDE.

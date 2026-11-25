@@ -62,6 +62,8 @@ m_create_windowrule({ class = "galculator" }, { float = true })
 m_create_windowrule({ class = "blueman-manager" }, { float = true })
 m_create_windowrule({ class = "org\\.gnome\\.Nautilus" }, { float = true, min_size = { 1200, 600 } })
 m_create_windowrule({ class = "xdg-desktop-portal" }, { float = true })
+m_create_windowrule({ class = "hyprland-share-picker" }, { float = true, min_size = { 980, 600 } })
+m_create_windowrule({ title = "teams\\.cloud\\.microsoft\\.mcas\\.ms is sharing a window\\." }, { center = true, min_size = { 980, 600 } })
 
 -- Steam notifications
 m_create_windowrule({ class = "steam", title = "^notificationtoasts.*" }, { no_initial_focus = true, pin = true })
@@ -91,6 +93,12 @@ m_create_windowrule({ class = "org\\.pwmt\\.zathura" }, { float = false })
 -- Player de videos 'mpv'
 m_create_windowrule({ class = "mpv" }, { float = false })
 
+
+------------------------------------------------------------------------------------
+-- Windows Rule> Sticky NVIM
+------------------------------------------------------------------------------------
+--
+m_create_windowrule({ class = "sticky-nvim" }, { workspace = "special:notes silent", float = true, size = { 1359, 1681 }, move = { "4", "44" } })
 
 
 ------------------------------------------------------------------------------------

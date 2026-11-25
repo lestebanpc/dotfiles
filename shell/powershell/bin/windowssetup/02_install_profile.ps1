@@ -35,7 +35,7 @@ $gd_repos_type= @{
         'junegunn/fzf' = 1
         'junegunn/fzf.vim' = 1
         'ibhagwan/fzf-lua' = 1
-        'girishji/vimsuggest' = 2
+        #'girishji/vimsuggest' = 2
         'tpope/vim-surround' = 4
         'mg979/vim-visual-multi' = 4
         'mattn/emmet-vim' = 4
@@ -87,10 +87,10 @@ $gd_repos_type= @{
         'zbirenbaum/copilot.lua' = 12
         'zbirenbaum/copilot-cmp' = 12
         'milanglacier/minuet-ai.nvim' = 12
-        'stevearc/dressing.nvim' = 13
-        'MunifTanjim/nui.nvim' = 13
-        'yetone/avante.nvim' = 13
-        'NickvanDyke/opencode.nvim' = 14
+        #'stevearc/dressing.nvim' = 13
+        #'MunifTanjim/nui.nvim' = 13
+        #'yetone/avante.nvim' = 13
+        #'NickvanDyke/opencode.nvim' = 14
     }
 
 # Repositorios Git - para VIM/NeoVIM. Por defecto es 3 (para ambos)
@@ -103,7 +103,7 @@ $gd_repos_scope= @{
         'vim-airline/vim-airline-themes' = 1
         'ryanoasis/vim-devicons' = 1
         'preservim/nerdtree' = 1
-        'girishji/vimsuggest' = 1
+        #'girishji/vimsuggest' = 1
         'liuchengxu/vista.vim' = 1
         'puremourning/vimspector' = 1
         'folke/tokyonight.nvim' = 2
@@ -146,10 +146,10 @@ $gd_repos_scope= @{
         'zbirenbaum/copilot.lua' = 2
         'zbirenbaum/copilot-cmp' = 2
         'milanglacier/minuet-ai.nvim' = 2
-        'stevearc/dressing.nvim' = 2
-        'MunifTanjim/nui.nvim' = 2
-        'yetone/avante.nvim' = 2
-        'NickvanDyke/opencode.nvim' = 2
+        #'stevearc/dressing.nvim' = 2
+        #'MunifTanjim/nui.nvim' = 2
+        #'yetone/avante.nvim' = 2
+        #'NickvanDyke/opencode.nvim' = 2
     }
 
 

@@ -309,20 +309,12 @@ set modelines=10
 
 
 "6. Menu de opciones de autocompletado de linea de comandos
-"   Actualmente no se usan, se usara el plugin de autocompletado 'girishji/vimsuggest' y 'nvim-cmp'.
-
-" - Mejora la forma de mostrar las opciones de autocompletado de la linea de comandos.
-"   Si se activa muestra una lista más visible y navegable.
-set wildmenu
-
-" - La primera vez que presionas <Tab>, se complete hasta la parte más larga en común.
-"   Si sigues presionando Tab, se muestren todas las opciones disponibles en una lista.
-set wildmode=longest:full,full
-
-"set wildoptions=pum
+"   > Para NeoVIM se usa el plugin de autocompletado 'nvim-cmp'.
+"   > Para VIM se usara el autocompletado nativo (vim > 9.2 y neovim > 0.11)
+"   > Vease './vim/setting/basic/basic_extended.vim'
 
 
-"7. Otros
+"7. Otras opciones
 
 " - Permite optimizar la redibujación y mejorar el rendimiento de la GUI de la terminal
 "   Vim reduce la cantidad de actualizaciones parciales en la pantalla, lo que lo hace más fluido
@@ -361,8 +353,9 @@ set t_ut=
 "Si su terminal no traduce bien los 16 bits de color que envia su servidor, COMENTE esta linea y habilite 'set t_Co=256'
 set termguicolors
 
-"Soporte a 'undercurl' (undercurled text)
-if g:is_neovim
+"Soporte a 'undercurl' (undercurled text) para VIM
+" > Las opciones t_Cs y t_Ce permiten especificar los códigos de inicio y finalización del subrayado ondulado.
+if !g:is_neovim
     let &t_Cs = "\e[4:3m"
     let &t_Ce = "\e[4:0m"
 endif
@@ -1134,6 +1127,38 @@ if g:clipboard_reader_cmd != ''
     inoremap <expr> <C-F12> <SID>PasteClipboardAfterCursor(v:true,"l")
 
 endif
+
+
+
+"-----------------------------------------------------------------------------------
+" Autosaving Buffer
+"-----------------------------------------------------------------------------------
+"
+" Habilitar el autosaving de buffer
+"   > Permite realizar un autosaving de buffer cuando este cambia de buffer, perder el foco o cierra Vim
+"   > Invoca a ':update' y ':wall' guarda el archivo únicamente cuando tiene modificaciones pendientes.
+if g:enable_autosaving_buffer
+
+    " Habilita el guardado automático en operaciones habituales
+    set autowriteall
+
+    augroup acmd_autosaving_buffers
+
+        autocmd!
+
+        " Guardar el buffer antes de cambiar a otro buffer
+        autocmd BufLeave * if &modified && !empty(bufname()) && &buftype ==# '' | update | endif
+
+        " Guardar todos los buffers modificados al perder el foco
+        autocmd FocusLost * wall
+
+        " Guardar todos los buffers modificados al cerrar Vim
+        autocmd VimLeavePre * wall
+
+    augroup END
+
+endif
+
 
 
 "-----------------------------------------------------------------------------------

@@ -51,29 +51,30 @@ endif
 "     > 1 Si integra con 'AI agent' externo en este caso un 'CLI AI agent' conocido como 'OpenCode'
 "       > Se usara el plugin 'NickvanDyke/opencode.nvim'.
 "     > Cualquier otro valor se considera no definido. Si se no esta definido, no se usara ningun plugin de agente AI.
+" > Se esta eliminado soporte a Agente AI interno. Se recomienda usar un agente externo.
 "
 
 " Si es NeoVIM y no usa CoC y ha definido usar 'AI completion'
-if g:is_neovim && !g:use_coc && g:use_ai_agent isnot v:null
+"if g:is_neovim && !g:use_coc && g:use_ai_agent isnot v:null
+"
+"    " Si se usa el agente de AI integrado ('yetone/avente.nvim')
+"    if g:use_ai_agent == 0
+"
+"        packadd dressing.nvim
+"        packadd nui.nvim
+"        packadd avante.nvim
+"
+"    " Si usa integra con un agente de AI 'OpenCode'
+"    elseif g:use_ai_agent == 1
+"
+"        packadd opencode.nvim
+"
+"    endif
+"
+"endif
 
-    " Si se usa el agente de AI integrado ('yetone/avente.nvim')
-    if g:use_ai_agent == 0
 
-        packadd dressing.nvim
-        packadd nui.nvim
-        packadd avante.nvim
-
-    " Si usa integra con un agente de AI 'OpenCode'
-    elseif g:use_ai_agent == 1
-
-        packadd opencode.nvim
-
-    endif
-
-endif
-
-
-" Para VIM
+" Para NeoVIM
 if g:is_neovim
 
     lua require('ide.ide_ai_tools')

@@ -8,7 +8,7 @@
 --local mm_ucommon = require("utils.common")
 
 ------------------------------------------------------------------------------------
--- Post-Autostart
+-- Pre - Main autostart
 ------------------------------------------------------------------------------------
 
 require("utils.config_generic")
@@ -20,7 +20,7 @@ require("utils.cursor")
 
 
 ------------------------------------------------------------------------------------
--- Autostart
+-- Main autostart
 ------------------------------------------------------------------------------------
 
 -- Variables de entorno Dark theme (GTK application)
@@ -54,14 +54,30 @@ hl.on("hyprland.start", function()
     -- Polkit, Barras de Quickshell, programas marcadas por inicio automatico (XGD AutoStart, exec-once de GUI, etc).
     hl.exec_cmd("systemctl --user start hyprland-session.target")
 
+
 end)
 
 
 ------------------------------------------------------------------------------------
--- Post-Autostart
+-- Post - Main autostart
 ------------------------------------------------------------------------------------
 
 require("utils.workspace_rules")
 require("utils.window_rules")
 require("utils.binds_generic")
 require("utils.binds_custom")
+
+
+------------------------------------------------------------------------------------
+-- Final autostart
+------------------------------------------------------------------------------------
+
+hl.on("hyprland.start", function()
+
+    -- Abrir el 'sticky notes' usando foot y nvim en un 'toogle workspace' "special:notes"
+    -- > El windows rule definido para 'sticky-nvim' lo envia a dicho al 'toogle workspace' "special:notes".
+    -- > Este se carga que no se muestra, hasta que se use el keymapping para mostrar el 'toggle workspace'.
+    hl.exec_cmd('foot -a "sticky-nvim" -D "${HOME}/notes" env AUTOSAVING_BUF=0 /var/opt/tools/neovim/bin/nvim "${HOME}/notes/main.md"')
+    --hl.exec_cmd('foot -a sticky-nvim -D "${HOME}/notes" env AUTOSAVING_BUF=0 nvim "${HOME}/notes/main.md"')
+
+end)

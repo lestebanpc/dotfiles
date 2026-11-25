@@ -24,6 +24,7 @@ vim ~/.custom_profile.bash
 
 # Variables de entorno usadas
 
+
 ## Builtin de tmux
 
 Antes de la creación del servidor tmux, se usa la variables de entorno (si existen):
@@ -37,6 +38,7 @@ Durante la ejecución del servidor tmux, se *crea automáticamente* las siguient
 
 - `TMUX_PANE`
     - A nivel de panel tmux.
+
 
 ## Mis variables de entorno
 

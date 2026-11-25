@@ -18,6 +18,6 @@ startup_command = "~/.files/shell/bash/bin/tmux_layout/tmx_upload_movies.bash"
 # Modificar el nombre de la sesion de carpetas de '~/works' para que inicien con el prefijo 'w-'
 # > Esto debido a que pueden existir carpetas con el mismo nombre en '~/code/' y '~/works/'.
 [[name_substitution]]
-find = "^~/works/(.*/)?([^/]+)$"
+find = "/home/.*/works/(.*/)?([^/]+)"
 replace = "w-$2"
 regex = true

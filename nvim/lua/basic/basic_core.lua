@@ -381,7 +381,8 @@ vim.keymap.set('n', '<leader>lg', ':lua require("fzf-lua").git_files()<CR>', { n
 vim.keymap.set('n', '<leader>ls', ':lua require("fzf-lua").git_status()<CR>', { noremap = true, silent = true })
 
 --Listar comandos VIM, seleccionar y ejecutar
-vim.keymap.set('n', '<leader>lc', ':lua require("fzf-lua").commands()<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>lc', ':lua require("fzf-lua").command_history()<CR>', { noremap = true, silent = true })
+--vim.keymap.set('n', '<leader>lc', ':lua require("fzf-lua").commands()<CR>', { noremap = true, silent = true })
 
 --Listar las marcas (marks), seleccionar e ir
 vim.keymap.set('n', '<leader>lm', ':lua require("fzf-lua").marks()<CR>', { noremap = true, silent = true })

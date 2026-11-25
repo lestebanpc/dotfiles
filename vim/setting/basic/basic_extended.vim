@@ -59,45 +59,41 @@ endif
 
 if g:cmdline_completion
 
-    packadd vimsuggest
+    if exists('*wildtrigger')
 
-    " Command Completion Configuration
-    let s:vim_suggest = {}
-    let s:vim_suggest.cmd = {
-        \ 'enable': v:true,
-        \ 'pum': v:true,
-        \ 'exclude': [],
-        \ 'onspace': ['b\%[uffer]','colo\%[rscheme]'],
-        \ 'alwayson': v:true,
-        \ 'popupattrs': {},
-        \ 'wildignore': v:true,
-        \ 'addons': v:true,
-        \ 'trigger': 't',
-        \ 'reverse': v:false,
-        \ 'prefixlen': 2,
-        \ 'complete_sg': v:false,
-    \ }
+        " Activa el popup para mostrar coincidencias
+        set wildmenu
 
-    " Search Completion Configuration
-    let s:vim_suggest.search = {
-        \ 'enable': v:true,
-        \ 'pum': v:true,
-        \ 'fuzzy': v:false,
-        \ 'alwayson': v:true,
-        \ 'popupattrs': {
-        \   'maxheight': 12
-        \ },
-        \ 'range': 100,
-        \ 'timeout': 200,
-        \ 'async': v:true,
-        \ 'async_timeout': 3000,
-        \ 'async_minlines': 1000,
-        \ 'highlight': v:true,
-        \ 'trigger': 't',
-        \ 'prefixlen': 3,
-    \ }
+        " Opciones del popup
+        set wildoptions=pum,fuzzy
 
-    " To apply your configuration
-    call g:VimSuggestSetOptions(s:vim_suggest)
+        " Opciones de modo del popup
+        " > No seleccionar automáticamente el primer resultado.
+        " > Ordenar buffers por último uso. Navegar por todas las coincidencias.
+        set wildmode=noselect:lastused,full
+
+        " Altura máxima del popup
+        set pumheight=12
+
+        " Ignorar mayúsculas/minúsculas al completar nombres de archivos
+        set wildignorecase
+
+        " Activar autocompletado mientras se escribe:
+        " : comandos
+        " / búsquedas hacia adelante
+        " ? búsquedas hacia atrás
+        augroup acmd_cmdline_completion
+            autocmd!
+            autocmd CmdlineChanged [:\/\?] call wildtrigger()
+        augroup END
+
+        " Cerrar el popup y mantener la navegación del historial de comandos usando flechas
+        "cnoremap <expr> <Up> wildmenumode()
+        "            \ ? "\<C-E>\<Up>" : "\<Up>"
+
+        "cnoremap <expr> <Down> wildmenumode()
+        "            \ ? "\<C-E>\<Down>" : "\<Down>"
+
+    endif
 
 endif

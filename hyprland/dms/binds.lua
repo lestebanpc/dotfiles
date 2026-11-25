@@ -354,9 +354,11 @@ hl.bind("SUPER + Space",   hl.dsp.exec_cmd("dms ipc call spotlight toggle"))
 hl.bind("SUPER + V",       hl.dsp.exec_cmd("dms ipc call clipboard toggle"))
 hl.bind("SUPER + comma",   hl.dsp.exec_cmd("dms ipc call settings focusOrToggle"))
 hl.bind("SUPER + M",       hl.dsp.exec_cmd("dms ipc call notifications toggle"))
-hl.bind("SUPER + SHIFT + N", hl.dsp.exec_cmd("dms ipc call notepad toggle"))
 hl.bind("SUPER + Y",       hl.dsp.exec_cmd("dms ipc call dankdash wallpaper"))
 hl.bind("SUPER + Tab",     hl.dsp.exec_cmd("dms ipc call hypr toggleOverview"))
+
+-- Abrir el 'sticky notes' usando 'DMS Notepad'
+hl.bind("SUPER + S",       hl.dsp.exec_cmd("dms ipc call notepad toggle"))
 
 -- Muestra/cierra el "Power Menu"
 hl.bind("SUPER + X",       hl.dsp.exec_cmd("dms ipc call powermenu toggle"))
@@ -407,6 +409,9 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("dms ipc call brightness decrem
 -- User launchers
 hl.bind("SUPER + T", hl.dsp.exec_cmd("footclient"))
 
+-- Abrir el 'sticky notes' usando foot y nvim
+hl.bind("SUPER + SHIFT + S", hl.dsp.workspace.toggle_special("notes"))
+--hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd('foot -a sticky-nvim -D "${HOME}/notes" env AUTOSAVING_BUF=0 nvim "${HOME}/notes/main.md"'))
 
 
 ------------------------------------------------------------------------------------
